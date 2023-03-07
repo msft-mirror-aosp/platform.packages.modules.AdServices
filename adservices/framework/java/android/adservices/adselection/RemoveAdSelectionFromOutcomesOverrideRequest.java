@@ -26,6 +26,7 @@ import android.annotation.NonNull;
  * <p>It contains one field, a {@link AdSelectionFromOutcomesConfig} which serves as the identifier
  * of the override to be removed
  *
+ * @hide
  */
 public class RemoveAdSelectionFromOutcomesOverrideRequest {
     @NonNull private final AdSelectionFromOutcomesConfig mAdSelectionFromOutcomesConfig;

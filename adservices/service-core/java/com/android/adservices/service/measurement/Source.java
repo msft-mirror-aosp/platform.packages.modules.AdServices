@@ -39,12 +39,11 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,8 +67,8 @@ public class Source {
     private UnsignedLong mEventId;
     private Uri mPublisher;
     @EventSurfaceType private int mPublisherType;
-    private Uri mAppDestination;
-    private Uri mWebDestination;
+    private List<Uri> mAppDestinations;
+    private List<Uri> mWebDestinations;
     private String mEnrollmentId;
     private Uri mRegistrant;
     private SourceType mSourceType;
@@ -77,19 +76,27 @@ public class Source {
     @Status private int mStatus;
     private long mEventTime;
     private long mExpiryTime;
-    private List<UnsignedLong> mDedupKeys;
+    private long mEventReportWindow;
+    private long mAggregatableReportWindow;
+    private List<UnsignedLong> mAggregateReportDedupKeys;
+    private List<UnsignedLong> mEventReportDedupKeys;
     @AttributionMode private int mAttributionMode;
     private long mInstallAttributionWindow;
     private long mInstallCooldownWindow;
     @Nullable private UnsignedLong mDebugKey;
     private boolean mIsInstallAttributed;
     private boolean mIsDebugReporting;
-    private String mFilterData;
+    private String mFilterDataString;
+    private FilterMap mFilterData;
     private String mAggregateSource;
     private int mAggregateContributions;
-    private AggregatableAttributionSource mAggregatableAttributionSource;
+    private Optional<AggregatableAttributionSource> mAggregatableAttributionSource;
     private boolean mAdIdPermission;
     private boolean mArDebugPermission;
+    @Nullable private String mRegistrationId;
+    @Nullable private String mSharedAggregationKeys;
+    @Nullable private Long mInstallTime;
+    @Nullable private String mParentId;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -129,7 +136,8 @@ public class Source {
     }
 
     private Source() {
-        mDedupKeys = new ArrayList<>();
+        mEventReportDedupKeys = new ArrayList<>();
+        mAggregateReportDedupKeys = new ArrayList<>();
         mStatus = Status.ACTIVE;
         mSourceType = SourceType.EVENT;
         // Making this default explicit since it anyway would occur on an uninitialised int field.
@@ -143,12 +151,12 @@ public class Source {
     public static class FakeReport {
         private final UnsignedLong mTriggerData;
         private final long mReportingTime;
-        private final Uri mDestination;
+        private final List<Uri> mDestinations;
 
-        public FakeReport(UnsignedLong triggerData, long reportingTime, Uri destination) {
+        public FakeReport(UnsignedLong triggerData, long reportingTime, List<Uri> destinations) {
             mTriggerData = triggerData;
             mReportingTime = reportingTime;
-            mDestination = destination;
+            mDestinations = destinations;
         }
 
         @Override
@@ -158,12 +166,12 @@ public class Source {
             FakeReport that = (FakeReport) o;
             return Objects.equals(mTriggerData, that.mTriggerData)
                     && mReportingTime == that.mReportingTime
-                    && Objects.equals(mDestination, that.mDestination);
+                    && Objects.equals(mDestinations, that.mDestinations);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mTriggerData, mReportingTime, mDestination);
+            return Objects.hash(mTriggerData, mReportingTime, mDestinations);
         }
 
         public long getReportingTime() {
@@ -174,14 +182,14 @@ public class Source {
             return mTriggerData;
         }
 
-        public Uri getDestination() {
-            return mDestination;
+        public List<Uri> getDestinations() {
+            return mDestinations;
         }
     }
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         int destinationMultiplier =
-                (mAppDestination != null && mWebDestination != null)
+                (mAppDestinations != null && mWebDestinations != null)
                         ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
                         : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
 
@@ -208,7 +216,7 @@ public class Source {
 
         for (long windowDelta : earlyWindows) {
             long window = mEventTime + windowDelta;
-            if (mExpiryTime <= window) {
+            if (mEventReportWindow <= window) {
                 continue;
             }
             windowList.add(window);
@@ -226,7 +234,7 @@ public class Source {
         List<Long> windowList = getEarlyReportingWindows(isInstallDetectionEnabled());
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
-                mExpiryTime + ONE_HOUR_IN_MILLIS;
+                mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -271,14 +279,14 @@ public class Source {
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability() {
         // Both destinations are set and install attribution is supported
-        if (mWebDestination != null && isInstallDetectionEnabled()) {
+        if (mWebDestinations != null && isInstallDetectionEnabled()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
         }
 
         // Both destinations are set but install attribution isn't supported
-        if (mAppDestination != null && mWebDestination != null) {
+        if (mAppDestinations != null && mWebDestinations != null) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
@@ -298,7 +306,7 @@ public class Source {
     }
 
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestination != null;
+        return mInstallCooldownWindow > 0 && mAppDestinations != null;
     }
 
     @Override
@@ -307,30 +315,36 @@ public class Source {
             return false;
         }
         Source source = (Source) obj;
-        return Objects.equals(mId, source.mId)
-                && Objects.equals(mPublisher, source.mPublisher)
+        return Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
-                && Objects.equals(mAppDestination, source.mAppDestination)
-                && Objects.equals(mWebDestination, source.mWebDestination)
+                && Objects.equals(mAppDestinations, source.mAppDestinations)
+                && Objects.equals(mWebDestinations, source.mWebDestinations)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
                 && mExpiryTime == source.mExpiryTime
+                && mEventReportWindow == source.mEventReportWindow
+                && mAggregatableReportWindow == source.mAggregatableReportWindow
                 && mEventTime == source.mEventTime
                 && mAdIdPermission == source.mAdIdPermission
                 && mArDebugPermission == source.mArDebugPermission
                 && Objects.equals(mEventId, source.mEventId)
                 && Objects.equals(mDebugKey, source.mDebugKey)
                 && mSourceType == source.mSourceType
-                && Objects.equals(mDedupKeys, source.mDedupKeys)
+                && Objects.equals(mEventReportDedupKeys, source.mEventReportDedupKeys)
+                && Objects.equals(mAggregateReportDedupKeys, source.mAggregateReportDedupKeys)
                 && Objects.equals(mRegistrant, source.mRegistrant)
                 && mAttributionMode == source.mAttributionMode
                 && mIsDebugReporting == source.mIsDebugReporting
-                && Objects.equals(mFilterData, source.mFilterData)
+                && Objects.equals(mFilterDataString, source.mFilterDataString)
                 && Objects.equals(mAggregateSource, source.mAggregateSource)
                 && mAggregateContributions == source.mAggregateContributions
                 && Objects.equals(
-                        mAggregatableAttributionSource, source.mAggregatableAttributionSource);
+                        mAggregatableAttributionSource, source.mAggregatableAttributionSource)
+                && Objects.equals(mRegistrationId, source.mRegistrationId)
+                && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
+                && Objects.equals(mParentId, source.mParentId)
+                && Objects.equals(mInstallTime, source.mInstallTime);
     }
 
     @Override
@@ -339,23 +353,29 @@ public class Source {
                 mId,
                 mPublisher,
                 mPublisherType,
-                mAppDestination,
-                mWebDestination,
+                mAppDestinations,
+                mWebDestinations,
                 mEnrollmentId,
                 mPriority,
                 mStatus,
                 mExpiryTime,
+                mEventReportWindow,
+                mAggregatableReportWindow,
                 mEventTime,
                 mEventId,
                 mSourceType,
-                mDedupKeys,
-                mFilterData,
+                mEventReportDedupKeys,
+                mAggregateReportDedupKeys,
+                mFilterDataString,
                 mAggregateSource,
                 mAggregateContributions,
                 mAggregatableAttributionSource,
                 mDebugKey,
                 mAdIdPermission,
-                mArDebugPermission);
+                mArDebugPermission,
+                mRegistrationId,
+                mSharedAggregationKeys,
+                mInstallTime);
     }
 
     /**
@@ -379,7 +399,7 @@ public class Source {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
-        return mExpiryTime + ONE_HOUR_IN_MILLIS;
+        return mEventReportWindow + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -417,12 +437,21 @@ public class Source {
                                             new FakeReport(
                                                     new UnsignedLong(Long.valueOf(reportConfig[0])),
                                                     getReportingTimeForNoising(reportConfig[1]),
-                                                    resolveFakeReportDestination(reportConfig[2])))
+                                                    resolveFakeReportDestinations(reportConfig[2])))
                             .collect(Collectors.toList());
         }
 
         mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
         return fakeReports;
+    }
+
+    /**
+     * Retrieve the attribution destinations corresponding to their destination type.
+     *
+     * @return a list of Uris.
+     */
+    public List<Uri> getAttributionDestinations(@EventSurfaceType int destinationType) {
+        return destinationType == EventSurfaceType.APP ? mAppDestinations : mWebDestinations;
     }
 
     /**
@@ -464,16 +493,16 @@ public class Source {
         return mPublisherType;
     }
 
-    /** Uri for the {@link Trigger}'s app destination. */
+    /** Uris for the {@link Trigger}'s app destinations. */
     @Nullable
-    public Uri getAppDestination() {
-        return mAppDestination;
+    public List<Uri> getAppDestinations() {
+        return mAppDestinations;
     }
 
-    /** Uri for the {@link Trigger}'s web destination. */
+    /** Uris for the {@link Trigger}'s web destinations. */
     @Nullable
-    public Uri getWebDestination() {
-        return mWebDestination;
+    public List<Uri> getWebDestinations() {
+        return mWebDestinations;
     }
 
     /**
@@ -483,9 +512,19 @@ public class Source {
         return mSourceType;
     }
 
-    /** Time when {@link Source} will expiry. */
+    /** Time when {@link Source} will expire. */
     public long getExpiryTime() {
         return mExpiryTime;
+    }
+
+    /** Time when {@link Source} event report window will expire. */
+    public long getEventReportWindow() {
+        return mEventReportWindow;
+    }
+
+    /** Time when {@link Source} aggregate report window will expire. */
+    public long getAggregatableReportWindow() {
+        return mAggregatableReportWindow;
     }
 
     /** Debug key of {@link Source}. */
@@ -510,11 +549,14 @@ public class Source {
         return mArDebugPermission;
     }
 
-    /**
-     * List of dedup keys for the attributed {@link Trigger}.
-     */
-    public List<UnsignedLong> getDedupKeys() {
-        return mDedupKeys;
+    /** List of dedup keys for the attributed {@link Trigger}. */
+    public List<UnsignedLong> getEventReportDedupKeys() {
+        return mEventReportDedupKeys;
+    }
+
+    /** List of dedup keys used for generating Aggregate Reports. */
+    public List<UnsignedLong> getAggregateReportDedupKeys() {
+        return mAggregateReportDedupKeys;
     }
 
     /** Current status of the {@link Source}. */
@@ -564,20 +606,13 @@ public class Source {
 
     /**
      * Returns aggregate filter data string used for aggregation. aggregate filter data json is a
-     * JSONObject in Attribution-Reporting-Register-Source header.
-     * Example:
-     * Attribution-Reporting-Register-Source: {
-     *   // some other fields.
-     *   "filter_data" : {
-     *    "conversion_subdomain": ["electronics.megastore"],
-     *    "product": ["1234", "2345"],
-     *    "ctid": ["id"],
-     *    ......
-     * }
-     * }
+     * JSONObject in Attribution-Reporting-Register-Source header. Example:
+     * Attribution-Reporting-Register-Source: { // some other fields. "filter_data" : {
+     * "conversion_subdomain": ["electronics.megastore"], "product": ["1234", "2345"], "ctid":
+     * ["id"], ...... } }
      */
-    public String getFilterData() {
-        return mFilterData;
+    public String getFilterDataString() {
+        return mFilterDataString;
     }
 
     /**
@@ -611,13 +646,65 @@ public class Source {
      * Returns the AggregatableAttributionSource object, which is constructed using the aggregate
      * source string and aggregate filter data string in Source.
      */
-    public AggregatableAttributionSource getAggregatableAttributionSource() {
+    public Optional<AggregatableAttributionSource> getAggregatableAttributionSource()
+            throws JSONException {
+        if (mAggregatableAttributionSource == null) {
+            if (mAggregateSource == null) {
+                mAggregatableAttributionSource = Optional.empty();
+                return mAggregatableAttributionSource;
+            }
+            JSONObject jsonObject = new JSONObject(mAggregateSource);
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+            for (String key : jsonObject.keySet()) {
+                // Remove "0x" prefix.
+                String hexString = jsonObject.getString(key).substring(2);
+                BigInteger bigInteger = new BigInteger(hexString, 16);
+                aggregateSourceMap.put(key, bigInteger);
+            }
+            AggregatableAttributionSource aggregatableAttributionSource =
+                    new AggregatableAttributionSource.Builder()
+                            .setAggregatableSource(aggregateSourceMap)
+                            .setFilterMap(getFilterData())
+                            .build();
+            mAggregatableAttributionSource = Optional.of(aggregatableAttributionSource);
+        }
+
         return mAggregatableAttributionSource;
+    }
+
+    /** Returns the registration id. */
+    @Nullable
+    public String getRegistrationId() {
+        return mRegistrationId;
+    }
+
+    /**
+     * Returns the shared aggregation keys of the source as a unique list of strings. Example:
+     * [“campaignCounts”]
+     */
+    @Nullable
+    public String getSharedAggregationKeys() {
+        return mSharedAggregationKeys;
+    }
+
+    /** Returns the install time of the source which is the same value as event time. */
+    @Nullable
+    public Long getInstallTime() {
+        return mInstallTime;
     }
 
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
+    }
+
+    /**
+     * @return if it's a derived source, returns the ID of the source it was created from. If it is
+     *     null, it is an original source.
+     */
+    @Nullable
+    public String getParentId() {
+        return mParentId;
     }
 
     /**
@@ -638,43 +725,23 @@ public class Source {
      * Generates AggregatableFilterData from aggregate filter string in Source, including an entry
      * for source type.
      */
-    public FilterMap parseFilterData() throws JSONException {
-        FilterMap filterMap;
-        if (mFilterData == null || mFilterData.isEmpty()) {
-            filterMap = new FilterMap.Builder().build();
+    public FilterMap getFilterData() throws JSONException {
+        if (mFilterData != null) {
+            return mFilterData;
+        }
+
+        if (mFilterDataString == null || mFilterDataString.isEmpty()) {
+            mFilterData = new FilterMap.Builder().build();
         } else {
-            filterMap =
+            mFilterData =
                     new FilterMap.Builder()
-                            .buildFilterData(new JSONObject(mFilterData))
+                            .buildFilterData(new JSONObject(mFilterDataString))
                             .build();
         }
-        filterMap.getAttributionFilterMap().put("source_type",
-                Collections.singletonList(mSourceType.getValue()));
-        return filterMap;
-    }
-
-    /**
-     * Generates AggregatableAttributionSource from aggregate source string and aggregate filter
-     * data string in Source.
-     */
-    public Optional<AggregatableAttributionSource> parseAggregateSource()
-            throws JSONException, NumberFormatException {
-        if (mAggregateSource == null) {
-            return Optional.empty();
-        }
-        JSONObject jsonObject = new JSONObject(mAggregateSource);
-        Map<String, BigInteger> aggregateSourceMap = new HashMap<>();
-        for (String key : jsonObject.keySet()) {
-            // Remove "0x" prefix.
-            String hexString = jsonObject.getString(key).substring(2);
-            BigInteger bigInteger = new BigInteger(hexString, 16);
-            aggregateSourceMap.put(key, bigInteger);
-        }
-        AggregatableAttributionSource.Builder aggregatableAttributionSourceBuilder =
-                new AggregatableAttributionSource.Builder()
-                        .setAggregatableSource(aggregateSourceMap);
-        aggregatableAttributionSourceBuilder.setFilterMap(parseFilterData());
-        return Optional.of(aggregatableAttributionSourceBuilder.build());
+        mFilterData
+                .getAttributionFilterMap()
+                .put("source_type", Collections.singletonList(mSourceType.getValue()));
+        return mFilterData;
     }
 
     private List<FakeReport> generateVtcDualDestinationPostInstallFakeReports() {
@@ -688,13 +755,13 @@ public class Source {
                                 new FakeReport(
                                         new UnsignedLong(Long.valueOf(reportConfig[0])),
                                         getReportingTimeForNoising(reportConfig[1]),
-                                        resolveFakeReportDestination(reportConfig[2])))
+                                        resolveFakeReportDestinations(reportConfig[2])))
                 .collect(Collectors.toList());
     }
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
         return mSourceType == SourceType.EVENT
-                && mWebDestination != null
+                && mWebDestinations != null
                 && isInstallDetectionEnabled();
     }
 
@@ -707,15 +774,15 @@ public class Source {
      * @param destinationIdentifier destination identifier, can be 0 (app) or 1 (web)
      * @return app or web destination {@link Uri}
      */
-    private Uri resolveFakeReportDestination(int destinationIdentifier) {
-        if (mAppDestination != null && mWebDestination != null) {
+    private List<Uri> resolveFakeReportDestinations(int destinationIdentifier) {
+        if (mAppDestinations != null && mWebDestinations != null) {
             // It could be a direct destinationIdentifier == 0 check, but
             return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
-                    ? mAppDestination
-                    : mWebDestination;
+                    ? mAppDestinations
+                    : mWebDestinations;
         }
 
-        return mAppDestination != null ? mAppDestination : mWebDestination;
+        return mAppDestinations != null ? mAppDestinations : mWebDestinations;
     }
 
     /**
@@ -727,10 +794,51 @@ public class Source {
             mBuilding = new Source();
         }
 
+        /**
+         * Copy builder.
+         *
+         * @param copyFrom copy from source
+         * @return copied source
+         */
+        public static Builder from(Source copyFrom) {
+            Builder builder = new Builder();
+            builder.setId(copyFrom.mId);
+            builder.setRegistrationId(copyFrom.mRegistrationId);
+            builder.setAggregateSource(copyFrom.mAggregateSource);
+            builder.setExpiryTime(copyFrom.mExpiryTime);
+            builder.setAppDestinations(copyFrom.mAppDestinations);
+            builder.setWebDestinations(copyFrom.mWebDestinations);
+            builder.setSharedAggregationKeys(copyFrom.mSharedAggregationKeys);
+            builder.setEventId(copyFrom.mEventId);
+            builder.setRegistrant(copyFrom.mRegistrant);
+            builder.setEventTime(copyFrom.mEventTime);
+            builder.setPublisher(copyFrom.mPublisher);
+            builder.setPublisherType(copyFrom.mPublisherType);
+            builder.setInstallCooldownWindow(copyFrom.mInstallCooldownWindow);
+            builder.setInstallAttributed(copyFrom.mIsInstallAttributed);
+            builder.setInstallAttributionWindow(copyFrom.mInstallAttributionWindow);
+            builder.setSourceType(copyFrom.mSourceType);
+            builder.setAdIdPermission(copyFrom.mAdIdPermission);
+            builder.setAggregateContributions(copyFrom.mAggregateContributions);
+            builder.setArDebugPermission(copyFrom.mArDebugPermission);
+            builder.setAttributionMode(copyFrom.mAttributionMode);
+            builder.setDebugKey(copyFrom.mDebugKey);
+            builder.setEventReportDedupKeys(copyFrom.mEventReportDedupKeys);
+            builder.setAggregateReportDedupKeys(copyFrom.mAggregateReportDedupKeys);
+            builder.setEventReportWindow(copyFrom.mEventReportWindow);
+            builder.setAggregatableReportWindow(copyFrom.mAggregatableReportWindow);
+            builder.setEnrollmentId(copyFrom.mEnrollmentId);
+            builder.setFilterData(copyFrom.mFilterDataString);
+            builder.setInstallTime(copyFrom.mInstallTime);
+            builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
+            builder.setPriority(copyFrom.mPriority);
+            builder.setStatus(copyFrom.mStatus);
+            return builder;
+        }
+
         /** See {@link Source#getId()}. */
         @NonNull
         public Builder setId(@NonNull String id) {
-            Validation.validateNonNull(id);
             mBuilding.mId = id;
             return this;
         }
@@ -757,18 +865,27 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAppDestination()}. */
-        public Builder setAppDestination(Uri appDestination) {
-            Optional.ofNullable(appDestination).ifPresent(Validation::validateUri);
-            mBuilding.mAppDestination = appDestination;
+        /** See {@link Source#getAppDestinations()}. */
+        public Builder setAppDestinations(List<Uri> appDestinations) {
+            Optional.ofNullable(appDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                if (uris.size() > 1) {
+                    throw new IllegalArgumentException("Received more than one app destination");
+                }
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mAppDestinations = appDestinations;
             return this;
         }
 
-        /** See {@link Source#getWebDestination()}. */
+        /** See {@link Source#getWebDestinations()}. */
         @NonNull
-        public Builder setWebDestination(@Nullable Uri webDestination) {
-            Optional.ofNullable(webDestination).ifPresent(Validation::validateUri);
-            mBuilding.mWebDestination = webDestination;
+        public Builder setWebDestinations(@Nullable List<Uri> webDestinations) {
+            Optional.ofNullable(webDestinations).ifPresent(uris -> {
+                Validation.validateNotEmpty(uris);
+                Validation.validateUri(uris.toArray(new Uri[0]));
+            });
+            mBuilding.mWebDestinations = webDestinations;
             return this;
         }
 
@@ -806,6 +923,22 @@ public class Source {
             return this;
         }
 
+        /**
+         * See {@link Source#getEventReportWindow()}.
+         */
+        public Builder setEventReportWindow(long eventReportWindow) {
+            mBuilding.mEventReportWindow = eventReportWindow;
+            return this;
+        }
+
+        /**
+         * See {@link Source#getAggregatableReportWindow()}.
+         */
+        public Builder setAggregatableReportWindow(long aggregateReportWindow) {
+            mBuilding.mAggregatableReportWindow = aggregateReportWindow;
+            return this;
+        }
+
         /** See {@link Source#getPriority()}. */
         @NonNull
         public Builder setPriority(long priority) {
@@ -833,10 +966,18 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getDedupKeys()}. */
+        /** See {@link Source#getEventReportDedupKeys()}. */
         @NonNull
-        public Builder setDedupKeys(@Nullable List<UnsignedLong> dedupKeys) {
-            mBuilding.mDedupKeys = dedupKeys;
+        public Builder setEventReportDedupKeys(@Nullable List<UnsignedLong> mEventReportDedupKeys) {
+            mBuilding.mEventReportDedupKeys = mEventReportDedupKeys;
+            return this;
+        }
+
+        /** See {@link Source#getAggregateReportDedupKeys()}. */
+        @NonNull
+        public Builder setAggregateReportDedupKeys(
+                @Nullable List<UnsignedLong> mAggregateReportDedupKeys) {
+            mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
 
@@ -883,9 +1024,9 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getFilterData()}. */
+        /** See {@link Source#getFilterDataString()}. */
         public Builder setFilterData(@Nullable String filterMap) {
-            mBuilding.mFilterData = filterMap;
+            mBuilding.mFilterDataString = filterMap;
             return this;
         }
 
@@ -902,11 +1043,36 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getRegistrationId()} */
+        public Builder setRegistrationId(@Nullable String registrationId) {
+            mBuilding.mRegistrationId = registrationId;
+            return this;
+        }
+
+        /** See {@link Source#getSharedAggregationKeys()} */
+        public Builder setSharedAggregationKeys(@Nullable String sharedAggregationKeys) {
+            mBuilding.mSharedAggregationKeys = sharedAggregationKeys;
+            return this;
+        }
+
+        /** See {@link Source#getInstallTime()} */
+        public Builder setInstallTime(@Nullable Long installTime) {
+            mBuilding.mInstallTime = installTime;
+            return this;
+        }
+
+        /** See {@link Source#getParentId()} */
+        public Builder setParentId(@Nullable String parentId) {
+            mBuilding.mParentId = parentId;
+            return this;
+        }
+
         /** See {@link Source#getAggregatableAttributionSource()} */
         @NonNull
         public Builder setAggregatableAttributionSource(
                 @Nullable AggregatableAttributionSource aggregatableAttributionSource) {
-            mBuilding.mAggregatableAttributionSource = aggregatableAttributionSource;
+            mBuilding.mAggregatableAttributionSource =
+                    Optional.ofNullable(aggregatableAttributionSource);
             return this;
         }
 
@@ -920,7 +1086,7 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
-            if (mBuilding.mAppDestination == null && mBuilding.mWebDestination == null) {
+            if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
                 throw new IllegalArgumentException("At least one destination is required");
             }
 

@@ -17,10 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -38,6 +34,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.AppInfo;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -81,6 +78,7 @@ public class OnDeviceClassifierTest {
     @Mock private PackageManagerUtil mPackageManagerUtil;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private ModelManager mModelManager;
+    @Mock private CacheManager mCacheManager;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     private OnDeviceClassifier mOnDeviceClassifier;
     @Mock AdServicesLogger mLogger;
@@ -101,7 +99,13 @@ public class OnDeviceClassifierTest {
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager, mLogger);
+                        sPreprocessor,
+                        mPackageManagerUtil,
+                        new Random(),
+                        mModelManager,
+                        mCacheManager,
+                        mLogger);
+        when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
     }
 
     @Test
@@ -118,7 +122,12 @@ public class OnDeviceClassifierTest {
         sPreprocessor = new Preprocessor(sContext);
         mOnDeviceClassifier =
                 new OnDeviceClassifier(
-                        sPreprocessor, mPackageManagerUtil, new Random(), mModelManager, mLogger);
+                        sPreprocessor,
+                        mPackageManagerUtil,
+                        new Random(),
+                        mModelManager,
+                        mCacheManager,
+                        mLogger);
 
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
@@ -148,7 +157,7 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Check all the returned labels for default empty string descriptions.
         assertThat(classifications.get(appPackage1))
-                .isEqualTo(createTopics(Arrays.asList(10230, 10253, 10227)));
+                .isEqualTo(createRealTopics(Arrays.asList(10230, 10253, 10227)));
 
         // Verify logged atom.
         verify(mLogger).logEpochComputationClassifierStats(argument.capture());
@@ -159,11 +168,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -188,10 +200,14 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage1)).hasSize(3);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
-        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Scores can currently differ when running tests on-server vs. on-device, as server
+        // tests use original Tensorflow model while device tests use exported TFLite model.
+        // Until this is changed, to ensure consistent test output across devices we only check the
+        // first top expected topic, which always scores high enough to be returned by both models.
+        // TODO (after b/264446621): Check all topics once server-side tests also use TFLite model.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
 
         // Set max classifier description length to 0. This should make description an empty string.
         setClassifierDescriptionLength(0);
@@ -202,7 +218,7 @@ public class OnDeviceClassifierTest {
 
         // Verify values are the same values as returned for an empty string.
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10230, 10253, 10227)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10230, 10253, 10227)));
     }
 
     @Test
@@ -237,13 +253,17 @@ public class OnDeviceClassifierTest {
         assertThat(classifications.get(appPackage2)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
-        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Scores can currently differ when running tests on-server vs. on-device, as server
+        // tests use original Tensorflow model while device tests use exported TFLite model.
+        // Until this is changed, to ensure consistent test output across devices we only check the
+        // first top expected topic, which always scores high enough to be returned by both models.
+        // TODO (after b/264446621): Check all topics once server-side tests also use TFLite model.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(classifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(classifications.get(appPackage2))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
 
         // Verify logged atom.
         verify(mLogger, times(2)).logEpochComputationClassifierStats(argument.capture());
@@ -256,11 +276,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
         // Log for appPackage2.
         assertThat(argument.getAllValues().get(1))
@@ -270,12 +293,95 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
+    }
+
+    @Test
+    public void testClassify_appWithBlockedTopic() {
+        // The expected classification will include this topic before it is blocked.
+        int blockedTopicId = 10253;
+
+        // Set up description for sample app.
+        String appPackage = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.of(appPackage, new AppInfo("appName", "Sample app description."));
+        ImmutableSet<String> appPackages = appInfoMap.keySet();
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+
+        // Check that the topic is returned before blocking it.
+        List<Integer> topTopicIdsBeforeBlocking =
+                mOnDeviceClassifier.classify(appPackages).get(appPackage).stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
+        assertThat(topTopicIdsBeforeBlocking).contains(blockedTopicId);
+
+        // Block the topic.
+        when(mCacheManager.getTopicsWithRevokedConsent())
+                .thenReturn(ImmutableList.of(createDummyTopic(blockedTopicId)));
+
+        // Reload classifier to refresh blocked topics.
+        mOnDeviceClassifier =
+                new OnDeviceClassifier(
+                        sPreprocessor,
+                        mPackageManagerUtil,
+                        new Random(),
+                        mModelManager,
+                        mCacheManager,
+                        mLogger);
+
+        // Check that the topic is not returned after blocking it.
+        List<Integer> topTopicIdsAfterBlocking =
+                mOnDeviceClassifier.classify(appPackages).get(appPackage).stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
+        assertThat(topTopicIdsAfterBlocking).doesNotContain(blockedTopicId);
+    }
+
+    @Test
+    public void testClassify_appWithAllTopicsBlocked() {
+        // The expected classification will include these three topics before they are blocked.
+        List<Integer> blockedTopicIds = ImmutableList.of(10253, 10230, 10237);
+
+        // Set up description for sample app.
+        String appPackage = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableMap<String, AppInfo> appInfoMap =
+                ImmutableMap.of(appPackage, new AppInfo("appName", "Sample app description."));
+        ImmutableSet<String> appPackages = appInfoMap.keySet();
+        when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
+
+        // Check that all the expected topics are returned before blocking.
+        List<Integer> topTopicIdsBeforeBlocking =
+                mOnDeviceClassifier.classify(appPackages).get(appPackage).stream()
+                        .map(Topic::getTopic)
+                        .collect(Collectors.toList());
+        assertThat(topTopicIdsBeforeBlocking).containsExactlyElementsIn(blockedTopicIds);
+
+        // Block all 10 topics.
+        when(mCacheManager.getTopicsWithRevokedConsent())
+                .thenReturn(ImmutableList.copyOf(createDummyTopics(blockedTopicIds)));
+
+        // Reload classifier to refresh blocked topics.
+        mOnDeviceClassifier =
+                new OnDeviceClassifier(
+                        sPreprocessor,
+                        mPackageManagerUtil,
+                        new Random(),
+                        mModelManager,
+                        mCacheManager,
+                        mLogger);
+
+        // The correct response should contain no topics.
+        List<Topic> topTopicsAfterBlocking =
+                mOnDeviceClassifier.classify(appPackages).get(appPackage);
+        assertThat(topTopicsAfterBlocking).isEmpty();
     }
 
     @Test
@@ -310,11 +416,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -378,14 +487,18 @@ public class OnDeviceClassifierTest {
         assertThat(secondClassifications.get(appPackage1)).hasSize(CLASSIFIER_NUMBER_OF_TOP_LABELS);
 
         // Check if the first category matches in the top CLASSIFIER_NUMBER_OF_TOP_LABELS.
-        // Scores can differ a little on devices. Using this technique to reduce flakiness.
+        // Scores can currently differ when running tests on-server vs. on-device, as server
+        // tests use original Tensorflow model while device tests use exported TFLite model.
+        // Until this is changed, to ensure consistent test output across devices we only check the
+        // first top expected topic, which always scores high enough to be returned by both models.
+        // TODO (after b/264446621): Check all topics once server-side tests also use TFLite model.
         // Check different expected scores for different descriptions.
         // Expected top 10: 10253, 10230, 10284, 10237, 10227, 10257, 10165, 10028, 10330, 10047
         assertThat(firstClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10253)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
         // Expected top 10: 10227, 10225, 10235, 10230, 10238, 10253, 10247, 10254, 10234, 10229
         assertThat(secondClassifications.get(appPackage1))
-                .containsAtLeastElementsIn(createTopics(Arrays.asList(10227)));
+                .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10227)));
     }
 
     @Test
@@ -427,7 +540,7 @@ public class OnDeviceClassifierTest {
         assertThat(topTopics).hasSize(numberOfTopTopics + numberOfRandomTopics);
         // Verify the top topics are from the description that was repeated.
         List<Topic> expectedLabelsForCommonDescription =
-                createTopics(Arrays.asList(10230, 10227, 10238, 10253));
+                createRealTopics(Arrays.asList(10230, 10227, 10238, 10253));
         assertThat(topTopics.subList(0, numberOfTopTopics))
                 .containsAnyIn(expectedLabelsForCommonDescription);
     }
@@ -482,15 +595,28 @@ public class OnDeviceClassifierTest {
                 .isEqualTo(mOnDeviceClassifier.getLabelsVersion());
     }
 
-    private Topic createTopic(int topicId) {
+    // Creates a dummy topic.  Not suitable for tests where
+    // label/model version are verified, but suitable for mocks
+    // where classifier methods cannot first be called.
+    private static Topic createDummyTopic(int topicId) {
+        return Topic.create(topicId, 0, 0);
+    }
+
+    private static List<Topic> createDummyTopics(List<Integer> topicIds) {
+        return topicIds.stream()
+                .map(OnDeviceClassifierTest::createDummyTopic)
+                .collect(Collectors.toList());
+    }
+
+    private Topic createRealTopic(int topicId) {
         return Topic.create(
                 topicId,
                 mOnDeviceClassifier.getLabelsVersion(),
                 mOnDeviceClassifier.getModelVersion());
     }
 
-    private List<Topic> createTopics(List<Integer> topicIds) {
-        return topicIds.stream().map(this::createTopic).collect(Collectors.toList());
+    private List<Topic> createRealTopics(List<Integer> topicIds) {
+        return topicIds.stream().map(this::createRealTopic).collect(Collectors.toList());
     }
 
     private void setClassifierNumberOfTopLabels(int overrideValue) {

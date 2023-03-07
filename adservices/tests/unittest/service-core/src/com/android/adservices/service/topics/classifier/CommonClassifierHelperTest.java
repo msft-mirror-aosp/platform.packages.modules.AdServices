@@ -30,19 +30,23 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,6 +88,7 @@ public class CommonClassifierHelperTest {
     private ImmutableMap<String, ImmutableMap<String, String>> productionClassifierAssetsMetadata;
     private long mProductionTaxonomyVersion;
     private long mProductionModelVersion;
+    private MockitoSession mMockitoSession = null;
 
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
@@ -92,6 +97,14 @@ public class CommonClassifierHelperTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
+
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -136,6 +149,13 @@ public class CommonClassifierHelperTest {
                                 .get("asset_version"));
     }
 
+    @After
+    public void tearDown() {
+        if (mMockitoSession != null) {
+            mMockitoSession.finishMocking();
+        }
+    }
+
     @Test
     public void testGetTopTopics_legalInput() {
         ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
@@ -157,8 +177,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
@@ -196,8 +216,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 15,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 15,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 11 topics.
@@ -226,8 +246,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 0,
-                                /* numberOfRandomTopics = */ 1,
+                                /* numberOfTopTopics */ 0,
+                                /* numberOfRandomTopics */ 1,
                                 mLogger));
     }
 
@@ -243,8 +263,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ 0,
+                                /* numberOfTopTopics */ 3,
+                                /* numberOfRandomTopics */ 0,
                                 mLogger));
     }
 
@@ -261,8 +281,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ -5,
-                                /* numberOfRandomTopics = */ 1,
+                                /* numberOfTopTopics */ -5,
+                                /* numberOfRandomTopics */ 1,
                                 mLogger));
     }
 
@@ -280,8 +300,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ -1,
+                                /* numberOfTopTopics */ 3,
+                                /* numberOfRandomTopics */ -1,
                                 mLogger));
     }
 
@@ -295,8 +315,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should be empty.
@@ -320,8 +340,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should be empty
@@ -359,8 +379,8 @@ public class CommonClassifierHelperTest {
                         testAppTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
@@ -383,8 +403,8 @@ public class CommonClassifierHelperTest {
                         productionAppTopics,
                         productionLabels,
                         new MockRandom(new long[] {50, 100, 300}),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
@@ -421,8 +441,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 7,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 7,
                         mLogger);
 
         // The response body should contain 5 topics + 7 random topic.
@@ -482,8 +502,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic
@@ -544,6 +564,20 @@ public class CommonClassifierHelperTest {
                         productionClassifierAssetsMetadata
                                 .get("precomputed_app_list")
                                 .get("checksum"));
+    }
+
+    @Test
+    public void testGetBundledModelBuildId() {
+        // Verify bundled model build_id. This should be changed along with model update.
+        assertThat(
+                        CommonClassifierHelper.getBundledModelBuildId(
+                                sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
+                .isEqualTo(1467);
+        // Verify test model build_id.
+        assertThat(
+                        CommonClassifierHelper.getBundledModelBuildId(
+                                sContext, TEST_CLASSIFIER_ASSETS_METADATA_PATH))
+                .isEqualTo(8);
     }
 
     private Topic getTestTopic(int topicId) {

@@ -149,7 +149,7 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
-    public void testNoEnrollment_selectAds() {
+    public void testNoEnrollment_selectAds_adSelectionConfig() {
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -168,7 +168,7 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
-    public void testWithEnrollment_selectAds() {
+    public void testWithEnrollment_selectAds_adSelectionConfig() {
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(

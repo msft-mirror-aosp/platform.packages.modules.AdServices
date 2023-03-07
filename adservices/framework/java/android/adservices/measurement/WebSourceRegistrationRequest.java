@@ -19,6 +19,7 @@ package android.adservices.measurement;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.InputEvent;
@@ -84,8 +85,14 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebSourceParams> sourceRegistrations = new ArrayList<>();
-        in.readList(
-                sourceRegistrations, WebSourceParams.class.getClassLoader(), WebSourceParams.class);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            in.readList(sourceRegistrations, WebSourceParams.class.getClassLoader());
+        } else {
+            in.readList(
+                    sourceRegistrations,
+                    WebSourceParams.class.getClassLoader(),
+                    WebSourceParams.class);
+        }
         mWebSourceParams = sourceRegistrations;
         mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         if (in.readBoolean()) {
@@ -327,10 +334,6 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         /** Pre-validates parameters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
         public WebSourceRegistrationRequest build() {
-            if (mAppDestination == null && mWebDestination == null) {
-                throw new IllegalArgumentException(
-                        "At least one of appDestination or webDestination needs to be provided");
-            }
             return new WebSourceRegistrationRequest(this);
         }
     }

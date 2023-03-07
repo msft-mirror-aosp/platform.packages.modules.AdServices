@@ -114,7 +114,7 @@ public class EnqueueAsyncRegistrationTest {
 
     @After
     public void cleanup() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().safeGetWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().safeGetWritableDatabase();
         for (String table : MeasurementTables.ALL_MSMT_TABLES) {
             db.delete(table, null, null);
         }
@@ -137,7 +137,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppSourceRegistrationRequest_event_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
@@ -152,11 +152,12 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.EVENT,
                         mEnrollmentDao,
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -191,7 +192,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppSourceRegistrationRequest_navigation_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
@@ -207,11 +208,12 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.NAVIGATION,
                         mEnrollmentDao,
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -246,7 +248,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testAppTriggerRegistrationRequest_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         RegistrationRequest registrationRequest =
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
@@ -261,11 +263,12 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        null,
                         mEnrollmentDao,
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -296,18 +299,19 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebSourceRegistrationRequest_event_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         Assert.assertTrue(
                 EnqueueAsyncRegistration.webSourceRegistrationRequest(
                         VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT,
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.EVENT,
                         mEnrollmentDao,
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -463,7 +467,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebSourceRegistrationRequest_navigation_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         List<WebSourceParams> sourceParamsList = new ArrayList<>();
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
         sourceParamsList.add(INPUT_SOURCE_REGISTRATION_2);
@@ -481,11 +485,12 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
+                        Source.SourceType.NAVIGATION,
                         mEnrollmentDao,
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -646,7 +651,7 @@ public class EnqueueAsyncRegistrationTest {
     @Test
     public void testWebTriggerRegistrationRequest_isValid() {
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         Assert.assertTrue(
                 EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                         VALID_WEB_TRIGGER_REGISTRATION,
@@ -657,7 +662,7 @@ public class EnqueueAsyncRegistrationTest {
                         datastoreManager));
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -809,17 +814,18 @@ public class EnqueueAsyncRegistrationTest {
                         .build();
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                 registrationRequest,
                 DEFAULT_AD_ID_PERMISSION,
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
+                Source.SourceType.EVENT,
                 mEnrollmentDao,
                 datastoreManager);
 
         try (Cursor cursor =
-                DbTestUtil.getDbHelperForTest()
+                DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
@@ -858,7 +864,8 @@ public class EnqueueAsyncRegistrationTest {
 
     private void enqueueSourceRegistrationRequestWithDebugRelatedKeys(
             final boolean adIdPermission, final boolean debugKeyAllowed) {
-        final DatastoreManager datastore = new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+        final DatastoreManager datastore =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         final List<WebSourceParams> params =
                 Collections.singletonList(
                         new WebSourceParams.Builder(REGISTRATION_URI_1)
@@ -878,13 +885,15 @@ public class EnqueueAsyncRegistrationTest {
                 adIdPermission,
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
+                Source.SourceType.NAVIGATION,
                 mEnrollmentDao,
                 datastore);
     }
 
     private void enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
             final boolean adIdPermission, final boolean debugKeyAllowed) {
-        final DatastoreManager datastore = new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+        final DatastoreManager datastore =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         final List<WebTriggerParams> params =
                 Collections.singletonList(
                         new WebTriggerParams.Builder(REGISTRATION_URI_1)

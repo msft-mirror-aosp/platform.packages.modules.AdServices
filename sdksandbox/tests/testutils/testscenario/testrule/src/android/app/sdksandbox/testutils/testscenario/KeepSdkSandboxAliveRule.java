@@ -57,14 +57,16 @@ public class KeepSdkSandboxAliveRule implements TestRule {
                     mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
                     final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
                     mSdkSandboxManager.loadSdk(mSdkName, new Bundle(), Runnable::run, callback);
-                    if (!callback.isLoadSdkSuccessful()) {
+                    try {
+                        callback.assertLoadSdkIsSuccessful();
+                    } catch (Exception e) {
                         if (callback.getLoadSdkErrorCode()
                                 == SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED) {
                             // TODO: Change this Log to an ExecutionCondition in Junit5 so that test
                             // suite is skipped if condition is not met
                             Log.w(TAG, "Sdk Sandbox is disabled");
                         } else {
-                            throw callback.getLoadSdkException();
+                            throw e;
                         }
                     }
                 }

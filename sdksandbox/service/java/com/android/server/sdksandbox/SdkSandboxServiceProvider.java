@@ -16,12 +16,16 @@
 
 package com.android.server.sdksandbox;
 
+import android.annotation.IntDef;
+import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.ServiceConnection;
 
 import com.android.sdksandbox.ISdkSandboxService;
 
 import java.io.PrintWriter;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
 /**
  * Interface to get hold of SdkSandbox service
@@ -29,10 +33,28 @@ import java.io.PrintWriter;
  * @hide
  */
 public interface SdkSandboxServiceProvider {
+
+    /** @hide */
+    @IntDef(value = {NON_EXISTENT, CREATE_PENDING, CREATED})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface SandboxStatus {}
+
+    // Represents the state of the sandbox process when it has either not yet been created or is
+    // dead.
+    int NON_EXISTENT = 1;
+
+    // Indicates that the sandbox is either in the middle of being created (after a call to bind
+    // was performed) or being restarted.
+    int CREATE_PENDING = 2;
+
+    // Indicates that the sandbox process is up and running.
+    int CREATED = 3;
+
     /**
      * Bind to and establish a connection with SdkSandbox service.
+     *
      * @param callingInfo represents the calling app.
-     * @param serviceConnection recieves information when service is started and stopped.
+     * @param serviceConnection receives information when service is started and stopped.
      */
     void bindService(CallingInfo callingInfo, ServiceConnection serviceConnection);
 
@@ -40,23 +62,52 @@ public interface SdkSandboxServiceProvider {
      * Unbind the SdkSandbox service associated with the app.
      *
      * @param callingInfo represents the app for which the sandbox should be unbound.
-     * @param shouldForgetConnection set to false if there is a possibility of still interacting
-     *     with the sandbox, and true otherwise for e.g. if the sandbox has been unbound when the
-     *     app goes to the background, but sandbox APIs could still be used.
      */
-    void unbindService(CallingInfo callingInfo, boolean shouldForgetConnection);
+    void unbindService(CallingInfo callingInfo);
 
     /**
-     * Return bound {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise
-     * {@code null}.
-    */
+     * Return {@link ISdkSandboxService} connected for {@code callingInfo} or otherwise {@code
+     * null}.
+     */
     @Nullable
-    ISdkSandboxService getBoundServiceForApp(CallingInfo callingInfo);
+    ISdkSandboxService getSdkSandboxServiceForApp(CallingInfo callingInfo);
 
     /**
-     * Set bound SdkSandbox service for {@code callingInfo}.
+     * Informs the provider when the sandbox service has connected.
+     *
+     * @param callingInfo represents the app for which the sandbox service has connected.
+     * @param service the binder object used to communicate with the sandbox service.
      */
-    void setBoundServiceForApp(CallingInfo callingInfo, @Nullable ISdkSandboxService service);
+    void onServiceConnected(CallingInfo callingInfo, @NonNull ISdkSandboxService service);
+
+    /**
+     * Informs the provider when the sandbox service has disconnected.
+     *
+     * @param callingInfo represents the app for which the sandbox service has disconnected.
+     */
+    void onServiceDisconnected(CallingInfo callingInfo);
+
+    /**
+     * Informs the provider when an app has died.
+     *
+     * @param callingInfo represents the app for which the sandbox has died.
+     */
+    void onAppDeath(CallingInfo callingInfo);
+
+    /**
+     * Informs the provider when the sandbox service has died.
+     *
+     * @param callingInfo represents the app for which the sandbox service has died.
+     */
+    void onSandboxDeath(CallingInfo callingInfo);
+
+    /**
+     * Returns the status of the sandbox for the given app.
+     *
+     * @param callingInfo app for which the sandbox status is being requested.
+     */
+    @SandboxStatus
+    int getSandboxStatusForApp(CallingInfo callingInfo);
 
     /** Dump debug information for adb shell dumpsys */
     default void dump(PrintWriter writer) {

@@ -41,9 +41,9 @@ public class Sdk1 extends SandboxedSdkProvider {
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 6000;
 
     // Expected Taxonomy version and Model version. This should be changed along with corresponding
-    // model change.
+    // model and taxonomy change.
     private static final long TAXONOMY_VERSION = 2L;
-    private static final long MODEL_VERSION = 2L;
+    private static final long MODEL_VERSION = 3L;
 
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.

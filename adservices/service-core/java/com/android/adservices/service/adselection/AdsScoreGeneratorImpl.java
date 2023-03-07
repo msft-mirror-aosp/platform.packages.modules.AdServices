@@ -31,9 +31,11 @@ import android.net.Uri;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -127,6 +129,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             throws AdServicesException {
         LogUtil.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
         ListenableFuture<String> scoreAdJs =
                 getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
@@ -148,16 +151,30 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         mScheduledExecutor)
                 .catching(
                         TimeoutException.class,
-                        this::handleTimeoutError,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SCORING, traceCookie);
+                            return handleTimeoutError(e);
+                        },
                         mLightweightExecutorService)
-                .transform(this::endSuccessfulRunAdScoring, mLightweightExecutorService)
+                .transform(
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SCORING, traceCookie);
+                            return endSuccessfulRunAdScoring(e);
+                        },
+                        mLightweightExecutorService)
                 .catching(
                         RuntimeException.class,
-                        this::endFailedRunAdScoringWithRuntimeException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SCORING, traceCookie);
+                            return endFailedRunAdScoringWithRuntimeException(e);
+                        },
                         mLightweightExecutorService)
                 .catching(
                         AdServicesException.class,
-                        this::endFailedRunAdScoringWithAdServicesException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.RUN_AD_SCORING, traceCookie);
+                            return endFailedRunAdScoringWithAdServicesException(e);
+                        },
                         mLightweightExecutorService);
     }
 
@@ -183,25 +200,35 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
         LogUtil.e(e, SCORING_TIMED_OUT);
+        // DO NOT SUBMIT: Do we need to end tracing here as well?
         throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
 
     private ListenableFuture<String> getAdSelectionLogic(
             @NonNull final Uri decisionLogicUri, @NonNull AdSelectionConfig adSelectionConfig) {
         mAdSelectionExecutionLogger.startGetAdSelectionLogic();
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_LOGIC);
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
                                 () ->
                                         mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
                                                 adSelectionConfig)));
+        AdServicesHttpClientRequest jsRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(decisionLogicUri)
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
         return jsOverrideFuture
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
                                 LogUtil.v("Fetching Ad Scoring Logic from the server");
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        decisionLogicUri, mFlags.getFledgeHttpJsCachingEnabled());
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(jsRequest))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
@@ -211,10 +238,17 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             }
                         },
                         mLightweightExecutorService)
+                .transform(
+                        input -> {
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
+                            return input;
+                        },
+                        mLightweightExecutorService)
                 .transform(this::endSuccessfulGetAdSelectionLogic, mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
                             LogUtil.e(e, "Exception encountered when fetching scoring logic");
                             throw new IllegalStateException(MISSING_SCORING_LOGIC);
                         },
@@ -237,14 +271,15 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         final FluentFuture<AdSelectionSignals> trustedScoringSignals =
                 getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
         final AdSelectionSignals contextualSignals = getContextualSignals();
-        return trustedScoringSignals
-                .transformAsync(
+        int traceCookie = Tracing.beginAsyncSection(Tracing.SCORE_AD);
+        FluentFuture<List<Double>> adScores =
+                trustedScoringSignals.transformAsync(
                         trustedSignals -> {
                             LogUtil.v("Invoking JS engine to generate Ad Scores");
                             return mAdSelectionScriptEngine.scoreAds(
                                     scoringLogic,
                                     adBiddingOutcomes.stream()
-                                            .map(a -> a.getAdWithBid())
+                                            .map(AdBiddingOutcome::getAdWithBid)
                                             .collect(Collectors.toList()),
                                     adSelectionConfig,
                                     sellerSignals,
@@ -258,11 +293,19 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                             .collect(Collectors.toList()),
                                     mAdSelectionExecutionLogger);
                         },
+                        mLightweightExecutorService);
+        return adScores.transform(
+                        result -> {
+                            Tracing.endAsyncSection(Tracing.SCORE_AD, traceCookie);
+                            return endSuccessfulGetAdScores(result);
+                        },
                         mLightweightExecutorService)
-                .transform(this::endSuccessfulGetAdScores, mLightweightExecutorService)
                 .catching(
                         JSONException.class,
-                        this::handleJSONException,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.SCORE_AD, traceCookie);
+                            return handleJSONException(e);
+                        },
                         mLightweightExecutorService);
     }
 
@@ -289,6 +332,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
         mAdSelectionExecutionLogger.startGetTrustedScoringSignals();
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_TRUSTED_SCORING_SIGNALS);
         final List<String> adRenderUris =
                 adBiddingOutcomes.stream()
                         .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
@@ -317,7 +361,11 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedScoringSignalsUri),
-                                        s -> s == null ? null : AdSelectionSignals.fromString(s),
+                                        s ->
+                                                s == null
+                                                        ? null
+                                                        : AdSelectionSignals.fromString(
+                                                                s.getResponseBody()),
                                         mLightweightExecutorService);
                             } else {
                                 LogUtil.d(
@@ -328,10 +376,18 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             }
                         },
                         mLightweightExecutorService)
-                .transform(this::endGetSuccessfulTrustedScoringSignals, mLightweightExecutorService)
+                .transform(
+                        input -> {
+                            Tracing.endAsyncSection(
+                                    Tracing.GET_TRUSTED_SCORING_SIGNALS, traceCookie);
+                            return endGetSuccessfulTrustedScoringSignals(input);
+                        },
+                        mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
+                            Tracing.endAsyncSection(
+                                    Tracing.GET_TRUSTED_SCORING_SIGNALS, traceCookie);
                             LogUtil.e(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },

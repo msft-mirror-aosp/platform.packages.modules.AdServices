@@ -109,7 +109,8 @@ public final class RegisterWebSource implements Action {
                                     Uri.parse(
                                             sourceParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(true)
+                            .setDebugKeyAllowed(
+                                    sourceParams.optBoolean(TestFormatJsonMapping.DEBUG_KEY, false))
                             .build());
         }
 

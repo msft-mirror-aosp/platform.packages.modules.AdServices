@@ -35,6 +35,7 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -215,6 +216,7 @@ public class AdSelectionScriptEngine {
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
         Objects.requireNonNull(runAdBiddingPerCAExecutionLogger);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GENERATE_BIDS);
 
         ImmutableList<JSScriptArgument> signals =
                 ImmutableList.<JSScriptArgument>builder()
@@ -248,12 +250,14 @@ public class AdSelectionScriptEngine {
                                 result -> {
                                     List<AdWithBid> bids = handleGenerateBidsOutput(result);
                                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
+                                    Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                                     return bids;
                                 },
                                 mExecutor))
                 .catchingAsync(
                         JSExecutionException.class,
                         e -> {
+                            Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                             LogUtil.e(
                                     e,
                                     "Encountered exception when generating bids, attempting to run"
@@ -619,9 +623,9 @@ public class AdSelectionScriptEngine {
 
     /**
      * @return Updates the args passed to bidding JS to maintain backward compatibility
-     *     (b/259718738), this shall be removed with TODO(b/260786980).
-     *     Throws back the original {@link JSExecutionException} if the js method does not match
-     *     signature of the backward compat.
+     *     (b/259718738), this shall be removed with TODO(b/260786980). Throws back the original
+     *     {@link JSExecutionException} if the js method does not match signature of the backward
+     *     compat.
      */
     private FluentFuture<List<JSScriptArgument>> updateArgsIfNeeded(
             String generateBidJS,

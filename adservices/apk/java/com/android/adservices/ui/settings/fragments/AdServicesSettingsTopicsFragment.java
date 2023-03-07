@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +23,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -29,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.delegates.TopicsActionDelegate;
 import com.android.adservices.ui.settings.viewadatpors.TopicsListViewAdapter;
@@ -37,6 +40,8 @@ import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import java.util.function.Function;
 
 /** Fragment for the topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsTopicsFragment extends Fragment {
 
     @Override
@@ -110,25 +115,34 @@ public class AdServicesSettingsTopicsFragment extends Fragment {
                         });
 
         // locked_topics_when_empty_state_button is disabled if there is no blocked topics
-        Button blockedTopicsWhenEmptyStateButton =
+        Button blockedTopicsEmptyStateButton =
                 rootView.findViewById(R.id.blocked_topics_when_empty_state_button);
         viewModel
                 .getBlockedTopics()
                 .observe(
                         getViewLifecycleOwner(),
                         blockedTopicsList -> {
+                            boolean ga = FlagsFactory.getFlags().getGaUxFeatureEnabled();
                             if (blockedTopicsList.isEmpty()) {
-                                blockedTopicsWhenEmptyStateButton.setEnabled(false);
-                                blockedTopicsWhenEmptyStateButton.setAlpha(
+                                blockedTopicsEmptyStateButton.setEnabled(false);
+                                blockedTopicsEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.disabled_button_alpha));
-                                blockedTopicsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_topics_view_no_blocked_topics_text);
+                                if (ga) {
+                                    blockedTopicsEmptyStateButton.setText(
+                                            R.string.settingsUI_no_blocked_topics_ga_text);
+                                } else {
+                                    blockedTopicsEmptyStateButton.setText(
+                                            R.string.settingsUI_topics_view_no_blocked_topics_text);
+                                }
+
                             } else {
-                                blockedTopicsWhenEmptyStateButton.setEnabled(true);
-                                blockedTopicsWhenEmptyStateButton.setAlpha(
+                                blockedTopicsEmptyStateButton.setEnabled(true);
+                                blockedTopicsEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.enabled_button_alpha));
-                                blockedTopicsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_blocked_topics_title);
+                                blockedTopicsEmptyStateButton.setText(
+                                        ga
+                                                ? R.string.settingsUI_view_blocked_topics_title
+                                                : R.string.settingsUI_blocked_topics_title);
                             }
                         });
     }

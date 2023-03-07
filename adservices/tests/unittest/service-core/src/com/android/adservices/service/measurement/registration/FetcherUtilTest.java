@@ -395,6 +395,22 @@ public final class FetcherUtilTest {
                                         .build()));
     }
 
+    @Test
+    public void isValidAggregateDeduplicationKey_negativeValue() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey("-1"));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_nonNumericalValue() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey("w"));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_success() {
+        assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("18446744073709551615"));
+        assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("0"));
+    }
+
     private Map<String, List<String>> createHeadersMap() {
         return new ImmutableMap.Builder<String, List<String>>()
                 .put("key1", Arrays.asList("val11", "val12"))

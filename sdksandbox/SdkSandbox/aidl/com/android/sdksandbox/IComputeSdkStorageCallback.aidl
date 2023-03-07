@@ -18,5 +18,5 @@ package com.android.sdksandbox;
 
 /** @hide */
 oneway interface IComputeSdkStorageCallback {
-    void onStorageInfoComputed(float sharedStorageKb, float sdkStorageKb);
+    void onStorageInfoComputed(int sharedStorageKb, int sdkStorageKb);
 }

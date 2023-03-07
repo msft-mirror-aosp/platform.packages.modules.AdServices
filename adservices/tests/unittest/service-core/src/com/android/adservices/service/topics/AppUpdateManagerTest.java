@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -50,6 +51,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,8 +119,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(Collections.singletonList(appInfo1));
+        mockInstalledApplications(Collections.singletonList(appInfo1));
 
         // Begin to persist data into database
         // Handle AppClassificationTopicsContract
@@ -193,7 +194,12 @@ public class AppUpdateManagerTest {
         mAppUpdateManager.reconcileUninstalledApps(mContext, epochId1);
 
         verify(mContext).getPackageManager();
-        verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+
+        if (SdkLevel.isAtLeastT()) {
+            verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+        } else {
+            verify(mMockPackageManager).getInstalledApplications(anyInt());
+        }
 
         // Each Table should have wiped off all data belonging to app2
         Set<String> setContainsOnlyApp1 = new HashSet<>(Collections.singletonList(app1));
@@ -252,8 +258,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -332,8 +337,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -639,8 +643,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo2 = new ApplicationInfo();
         appInfo2.packageName = app2;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1, appInfo2));
+        mockInstalledApplications(List.of(appInfo1, appInfo2));
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -870,13 +873,21 @@ public class AppUpdateManagerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
+            // Assign the returned topic for the app in this epoch.
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
-            // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
+
+            // Make the topic learnable to app-sdk caller for epochs in [current - 3, current - 1].
+            // In order to achieve this, persist learnability in [current - 5, current - 3]. This
+            // ensures to test the earliest epoch to be learnt from.
+            long earliestEpochIdToLearnFrom = epochId - numberOfLookBackEpochs + 1;
+            mTopicsDao.persistCallerCanLearnTopics(
+                    earliestEpochIdToLearnFrom, Map.of(topic, Set.of(sdk)));
         }
 
         // Check app-sdk doesn't have returned topic before calling the method
@@ -891,9 +902,10 @@ public class AppUpdateManagerTest {
 
         // Check app-sdk has been assigned with topic after calling the method
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
             expectedReturnedTopics.put(epochId, Map.of(appSdkCaller, topic, appOnlyCaller, topic));
         }
@@ -906,11 +918,11 @@ public class AppUpdateManagerTest {
     @Test
     public void testAssignTopicsToSdkForAppInstallation_NonSdk() {
         final String app = "app";
-        final String sdk = ""; // App calls Topics API directly
+        final String sdk = EMPTY_SDK; // App calls Topics API directly
         final int numberOfLookBackEpochs = 3;
         final long currentEpochId = 5L;
 
-        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
+        Pair<String, String> appOnlyCaller = Pair.create(app, sdk);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -919,9 +931,11 @@ public class AppUpdateManagerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
             mTopicsDao.persistCallerCanLearnTopics(epochId - 1, Map.of(topic, Set.of(sdk)));
@@ -938,27 +952,32 @@ public class AppUpdateManagerTest {
         final String sdk = "sdk";
         final int numberOfLookBackEpochs = 1;
 
-        Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
-        Pair<String, String> otherAppOnlyCaller = Pair.create("otherApp", /* sdk */ "");
+        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
+        Pair<String, String> otherAppOnlyCaller = Pair.create("otherApp", EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
         Topic topic = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        // For Epoch 2, no topic will be assigned to app because Epoch 1 doesn't have any
+        // For Epoch 3, no topic will be assigned to app because epoch in [0,2] doesn't have any
+        // returned topics.
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Persist returned topics to otherAppOnlyCaller instead of appOnlyCaller
+        // Also persist sdk to CallerCanLearnTopics Map to allow sdk to learn the topic.
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, Map.of(otherAppOnlyCaller, topic));
         mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
-        // Epoch 2 won't be assigned topics as app doesn't have a returned Topic
+        // Epoch 3 won't be assigned topics as appOnlyCaller doesn't have a returned Topic for epoch
+        // in [0,2].
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Persist returned topics to appOnlyCaller
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, Map.of(appOnlyCaller, topic));
 
         assertTrue(
@@ -998,20 +1017,15 @@ public class AppUpdateManagerTest {
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 3L, Map.of(topic, Set.of(sdk)));
-
-        // No topic will be assigned as topic is only learned in current Epoch 3
-        assertFalse(
-                mAppUpdateManager.assignTopicsToSdkForAppInstallation(
-                        app, sdk, /* currentEpochId */ 3L));
-
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(otherSDK)));
+        // Enable learnability for otherSDK instead of sdk
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 1L, Map.of(topic, Set.of(otherSDK)));
 
         // No topic will be assigned as topic is not learned by "sdk" in past epochs
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Enable learnability for sdk
         mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
         // Topic will be assigned as both app and sdk are satisfied
@@ -1218,5 +1232,16 @@ public class AppUpdateManagerTest {
         appUpdateManager.handleAppInstallationInRealTime(Uri.parse(app), epochId);
 
         verify(appUpdateManager).assignTopicsToNewlyInstalledApps(app, epochId);
+    }
+
+    private void mockInstalledApplications(List<ApplicationInfo> applicationInfos) {
+        if (SdkLevel.isAtLeastT()) {
+            when(mMockPackageManager.getInstalledApplications(
+                            any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(applicationInfos);
+        } else {
+            when(mMockPackageManager.getInstalledApplications(anyInt()))
+                    .thenReturn(applicationInfos);
+        }
     }
 }

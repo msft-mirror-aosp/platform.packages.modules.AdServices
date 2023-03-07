@@ -32,9 +32,11 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,6 +49,9 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -57,11 +62,14 @@ public class ConsentSettingsUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
     }
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        if (!ApkTestUtil.isDeviceSupported()) return;
+
+        ApkTestUtil.killApp();
     }
 
     @Test
@@ -144,21 +152,16 @@ public class ConsentSettingsUiAutomatorTest {
             throws UiObjectNotFoundException {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
+            UiObject dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+            UiObject positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
             assertThat(dialogTitle.exists()).isTrue();
             assertThat(positiveText.exists()).isTrue();
             positiveText.click();
         } else {
             mainSwitch.click();
         }
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
     }
 }

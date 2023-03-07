@@ -18,6 +18,8 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.common.AdDataFixture;
+import android.adservices.common.AdFiltersFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -224,14 +226,28 @@ public class PerBuyerBiddingRunnerTest {
 
         // Generate ads for with bids provided
         List<DBAdData> ads = new ArrayList<>();
-        List<Double> bids = ImmutableList.of(1.0, 2.0);
+        List<Double> bids = ImmutableList.of(1.0, 2.0, 3.0, 4.0);
         // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
-            ads.add(
-                    new DBAdData(
-                            Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)),
-                            "{\"result\":" + bids.get(i) + "}"));
+            DBAdData.Builder builder =
+                    new DBAdData.Builder()
+                            .setRenderUri(Uri.parse(AD_URI_PREFIX + buyer + "/ad" + (i + 1)))
+                            .setMetadata("{\"result\":" + bids.get(i) + "}");
+
+            switch (i % 4) {
+                case 0:
+                    builder.setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS);
+                    break;
+                case 1:
+                    builder.setAdFilters(AdFiltersFixture.VALID_AD_FILTERS);
+                    break;
+                case 2:
+                    builder.setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS);
+                    builder.setAdFilters(AdFiltersFixture.VALID_AD_FILTERS);
+                    break;
+            }
+            ads.add(builder.build());
         }
 
         return new DBCustomAudience.Builder()

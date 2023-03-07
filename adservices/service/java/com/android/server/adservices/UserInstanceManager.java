@@ -21,9 +21,16 @@ import android.util.ArrayMap;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
+import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.rollback.RollbackHandlingManager;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 /**
@@ -33,20 +40,38 @@ import java.util.Map;
  */
 public class UserInstanceManager {
 
+    private final Object mLock = new Object();
+
     // We have 1 ConsentManager per user/user profile. This is to isolate user's data.
-    @GuardedBy("UserInstanceManager.class")
+    @GuardedBy("mLock")
     private final Map<Integer, ConsentManager> mConsentManagerMapLocked = new ArrayMap<>();
+
+    @GuardedBy("mLock")
+    private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
+
+
+    @GuardedBy("UserInstanceManager.class")
+    private final Map<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
+            new ArrayMap<>();
+
+    // We have 1 RollbackManager per user/user profile, to isolate each user's data.
+    @GuardedBy("mLock")
+    private final Map<Integer, RollbackHandlingManager> mRollbackHandlingManagerMapLocked =
+            new ArrayMap<>();
 
     private final String mAdServicesBaseDir;
 
-    UserInstanceManager(String adServicesBaseDir) {
+    private final TopicsDao mTopicsDao;
+
+    UserInstanceManager(@NonNull TopicsDao topicsDao, @NonNull String adServicesBaseDir) {
+        mTopicsDao = topicsDao;
         mAdServicesBaseDir = adServicesBaseDir;
     }
 
     @NonNull
     ConsentManager getOrCreateUserConsentManagerInstance(int userIdentifier) throws IOException {
-        synchronized (UserInstanceManager.class) {
-            ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
+        synchronized (mLock) {
+            ConsentManager instance = getUserConsentManagerInstance(userIdentifier);
             if (instance == null) {
                 instance = ConsentManager.createConsentManager(mAdServicesBaseDir, userIdentifier);
                 mConsentManagerMapLocked.put(userIdentifier, instance);
@@ -55,11 +80,91 @@ public class UserInstanceManager {
         }
     }
 
+    @NonNull
+    AppConsentManager getOrCreateUserAppConsentManagerInstance(int userIdentifier)
+            throws IOException {
+        synchronized (mLock) {
+            AppConsentManager instance = mAppConsentManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        AppConsentManager.createAppConsentManager(
+                                mAdServicesBaseDir, userIdentifier);
+                mAppConsentManagerMapLocked.put(userIdentifier, instance);
+            }
+            return instance;
+        }
+    }
+
+    @NonNull
+    BlockedTopicsManager getOrCreateUserBlockedTopicsManagerInstance(int userIdentifier) {
+        synchronized (UserInstanceManager.class) {
+            BlockedTopicsManager instance = mBlockedTopicsManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance = new BlockedTopicsManager(mTopicsDao, userIdentifier);
+                mBlockedTopicsManagerMapLocked.put(userIdentifier, instance);
+            }
+            return instance;
+        }
+    }
+
+    @NonNull
+    RollbackHandlingManager getOrCreateUserRollbackHandlingManagerInstance(
+            int userIdentifier, int packageVersion) throws IOException {
+        synchronized (mLock) {
+            RollbackHandlingManager instance =
+                    mRollbackHandlingManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        RollbackHandlingManager.createRollbackHandlingManager(
+                                mAdServicesBaseDir, userIdentifier, packageVersion);
+                mRollbackHandlingManagerMapLocked.put(userIdentifier, instance);
+            }
+            return instance;
+        }
+    }
+
+    @VisibleForTesting
+    ConsentManager getUserConsentManagerInstance(int userIdentifier) {
+        synchronized (mLock) {
+            return mConsentManagerMapLocked.get(userIdentifier);
+        }
+    }
+
+    /**
+     * Deletes the user instance and remove the user consent related data. This will delete the
+     * directory: /data/system/adservices/user_id
+     */
+    void deleteUserInstance(int userIdentifier) throws Exception {
+        synchronized (mLock) {
+            ConsentManager instance = mConsentManagerMapLocked.get(userIdentifier);
+            if (instance != null) {
+                String userDirectoryPath = mAdServicesBaseDir + "/" + userIdentifier;
+                final Path packageDir = Paths.get(userDirectoryPath);
+                if (Files.exists(packageDir)) {
+                    if (!instance.deleteUserDirectory(new File(userDirectoryPath))) {
+                        LogUtil.e("Failed to delete " + userDirectoryPath);
+                    }
+                }
+                mConsentManagerMapLocked.remove(userIdentifier);
+            }
+
+            // Delete all data in the database that belongs to this user
+            mTopicsDao.clearAllBlockedTopicsOfUser(userIdentifier);
+        }
+    }
+
     @VisibleForTesting
     void tearDownForTesting() {
-        synchronized (UserInstanceManager.class) {
+        synchronized (mLock) {
             for (ConsentManager consentManager : mConsentManagerMapLocked.values()) {
                 consentManager.tearDownForTesting();
+            }
+            for (AppConsentManager appConsentManager : mAppConsentManagerMapLocked.values()) {
+                appConsentManager.tearDownForTesting();
+            }
+            for (RollbackHandlingManager rollbackHandlingManager :
+                    mRollbackHandlingManagerMapLocked.values()) {
+                rollbackHandlingManager.tearDownForTesting();
             }
         }
     }

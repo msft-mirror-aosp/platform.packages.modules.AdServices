@@ -9,10 +9,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -47,10 +48,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -119,6 +121,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 1643235573000,
             "expiryTime": 1643408373000,
+            "eventReportWindow": 1643408373000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -157,6 +160,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 1643235573000,
             "expiryTime": 1643408373000,
+            "eventReportWindow": 1643408373000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -194,10 +198,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example1.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -232,10 +237,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example1.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -274,10 +280,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -288,10 +295,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -327,10 +335,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -341,10 +350,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -413,6 +423,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -426,6 +437,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000002,
             "expiryTime": 8726400002,
+            "eventReportWindow": 8726400002,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -464,6 +476,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -477,6 +490,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000002,
             "expiryTime": 8726400002,
+            "eventReportWindow": 8726400002,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -546,6 +560,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -559,6 +574,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -599,6 +615,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -612,6 +629,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -685,6 +703,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -698,6 +717,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -739,6 +759,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -752,6 +773,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 1,
             "installCooldownWindow": 432000000,
@@ -825,6 +847,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -838,6 +861,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -879,6 +903,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -892,6 +917,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -965,6 +991,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -978,6 +1005,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1018,6 +1046,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1031,6 +1060,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
+            "eventReportWindow": 10368000000,
             "priority": 50,
             "status": 1,
             "installCooldownWindow": 432000000,
@@ -1101,10 +1131,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1140,10 +1171,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1209,10 +1241,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1247,10 +1280,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1316,10 +1350,11 @@
           "sourceType": "event",
           "publisher": "https://www.example1.test",
           "publisherType": 1,
-          "appDestination": "android-app://com.example2.app/d1",
+          "appDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1367,10 +1402,11 @@
           "sourceType": "event",
           "publisher": "https://www.example1.test",
           "publisherType": 1,
-          "appDestination": "android-app://com.example2.app/d1",
+          "appDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1447,10 +1483,11 @@
           "sourceType": "event",
           "publisher": "https://www.example1.test",
           "publisherType": 1,
-          "appDestination": "android-app://com.example2.app/d1",
+          "appDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1498,10 +1535,11 @@
           "sourceType": "event",
           "publisher": "https://www.example1.test",
           "publisherType": 1,
-          "appDestination": "android-app://com.example2.app/d1",
+          "appDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1595,6 +1633,7 @@
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1648,6 +1687,7 @@
           "enrollmentId": "enrollment-id-3",
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
+          "eventReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1739,10 +1779,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1828,10 +1869,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2017,10 +2059,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2107,10 +2150,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2295,10 +2339,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2309,10 +2354,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2348,10 +2394,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc",
@@ -2362,10 +2409,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2405,10 +2453,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2419,10 +2468,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2458,10 +2508,11 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc",
@@ -2472,10 +2523,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2516,10 +2568,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2560,10 +2613,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2637,10 +2691,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2682,10 +2737,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2731,10 +2787,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2776,10 +2833,11 @@
             "sourceType": "navigation",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2824,10 +2882,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2882,10 +2941,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2973,10 +3033,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3030,10 +3091,11 @@
             "eventId": 2,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3120,10 +3182,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3174,10 +3237,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3261,10 +3325,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3314,10 +3379,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3400,10 +3466,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3449,10 +3516,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3532,10 +3600,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3590,10 +3659,11 @@
             "sourceType": "event",
             "publisher": "https://www.example1.test",
             "publisherType": 1,
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3680,10 +3750,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3741,10 +3812,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3835,10 +3907,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3895,10 +3968,11 @@
             "eventId": 2,
             "sourceType": "event",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3987,11 +4061,13 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "webDestination": "https://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "aggregationKeys": {
@@ -4039,7 +4115,7 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.abc",
-            "appDestination": "android-app://com.example2.app/d1",
+            "appDestination": "android-app://com.example2.app",
             "webDestination": "https://example2.test",
             "enrollmentId": "enrollment-id-3",
             "aggregationKeys": {
@@ -4048,6 +4124,8 @@
             "aggregateContributions": 32678,
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4106,7 +4184,7 @@
             "scheduledReportTime": 8640000002,
             "enrollmentId": "enrollment-id-3",
             "status": 0,
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32678}]}",
+            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":\"1369\",\"value\":32678}]}",
             "apiVersion": "0.1",
             "sourceId": "S1",
             "triggerId": "T1"
@@ -4129,6 +4207,286 @@
       }
     },
     {
+      "name": "Simple 1-1 matching Web Destination, trigger outside event report window",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "webDestination": "https://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8726500001,
+            "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400002,
+            "priority": 100,
+            "status": 0,
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://subdomain.example2.test/a/path?query=6",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": [{
+                  "key_1": ["value_1"]
+                }]
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "webDestination": "https://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
+            "aggregateContributions": 32678,
+            "eventTime": 8640000001,
+            "expiryTime": 8726500001,
+            "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400002,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://subdomain.example2.test/a/path?query=6",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": [{
+                  "key_1": ["value_1"]
+                }]
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "aggregate_reports": [
+          {
+            "id": "unused",
+            "publisher": "android-app://com.example.abc",
+            "attributionDestination": "https://example2.test",
+            "sourceRegistrationTime": 8640000000,
+            "scheduledReportTime": 8726400002,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":\"1369\",\"value\":32678}]}",
+            "apiVersion": "0.1",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          }
+        ],
+        "attributions": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
+            "destinationSite": "https://example2.test",
+            "destinationOrigin": "https://subdomain.example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Simple 1-1 matching Web Destination, trigger outside aggregate report window",
+      "input": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "webDestination": "https://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "eventTime": 8640000001,
+            "expiryTime": 8726500001,
+            "eventReportWindow": 8726400002,
+            "aggregatableReportWindow": 8726400001,
+            "priority": 100,
+            "status": 0,
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://subdomain.example2.test/a/path?query=6",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 0,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": [{
+                  "key_1": ["value_1"]
+                }]
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [],
+        "attributions": []
+      },
+      "output": {
+        "sources": [
+          {
+            "id": "S1",
+            "eventId": 1,
+            "sourceType": "navigation",
+            "publisher": "android-app://com.example.abc",
+            "appDestination": "android-app://com.example2.app",
+            "webDestination": "https://example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
+            "aggregateContributions": 0,
+            "eventTime": 8640000001,
+            "expiryTime": 8726500001,
+            "eventReportWindow": 8726400002,
+            "aggregatableReportWindow": 8726400001,
+            "priority": 100,
+            "status": 0,
+            "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "triggers": [
+          {
+            "id": "T1",
+            "attributionDestination": "https://subdomain.example2.test/a/path?query=6",
+            "destinationType": 1,
+            "enrollmentId": "enrollment-id-3",
+            "status": 2,
+            "eventTriggers": [
+              {
+                "trigger_data": 2,
+                "priority": 101,
+                "filters": [{
+                  "key_1": ["value_1"]
+                }]
+              }
+            ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz"
+          }
+        ],
+        "event_reports": [{
+          "id": "unused",
+          "sourceEventId": 1,
+          "attributionDestination": "https://example2.test",
+          "enrollmentId": "enrollment-id-3",
+          "triggerData": 2,
+          "triggerTime": 8726400002,
+          "status": 0,
+          "reportTime": 8730000002,
+          "triggerPriority": 101,
+          "sourceType": "navigation",
+          "randomizedTriggerRate":  0.017022,
+          "sourceId": "S1",
+          "triggerId": "T1"
+        }],
+        "aggregate_reports": [],
+        "attributions": [
+          {
+            "id": "unused",
+            "sourceSite": "android-app://com.example.abc",
+            "sourceOrigin": "android-app://com.example.abc",
+            "destinationSite": "https://example2.test",
+            "destinationOrigin": "https://subdomain.example2.test",
+            "enrollmentId": "enrollment-id-3",
+            "triggerTime": 8726400002,
+            "registrant": "android-app://com.example.xyz",
+            "sourceId": "S1",
+            "triggerId": "T1"
+          }
+        ]
+      }
+    },
+    {
       "name": "Attribution independent of source event id",
       "description": "2 sources with the same enrollment id and event ids of 0 will still generate event reports",
       "input": {
@@ -4142,6 +4500,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4155,6 +4514,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4226,6 +4586,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4239,6 +4600,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
+            "eventReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4342,6 +4704,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -4372,6 +4735,7 @@
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
+            "eventReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"

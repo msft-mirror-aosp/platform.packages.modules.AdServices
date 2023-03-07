@@ -195,8 +195,7 @@ class SdkSandboxShellCommand extends BasicShellCommandHandler {
         LatchSandboxServiceConnectionCallback callback =
                 new LatchSandboxServiceConnectionCallback();
 
-        mService.addSandboxBindingCallback(mCallingInfo, callback);
-        mService.startSdkSandbox(mCallingInfo, -1);
+        mService.startSdkSandboxIfNeeded(mCallingInfo, callback);
         if (callback.isSuccessful()) {
             ISdkSandboxService service = callback.getService();
             if (mService.isSdkSandboxDisabled(service)) {

@@ -76,6 +76,8 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                     .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                     .build();
 
+    private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
+
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
 

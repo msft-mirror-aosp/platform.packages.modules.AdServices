@@ -182,7 +182,7 @@ public class PermissionsNoPermTest {
     }
 
     @Test
-    public void testPermissionNotRequested_selectAds() {
+    public void testPermissionNotRequested_selectAds_adSelectionConfig() {
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =

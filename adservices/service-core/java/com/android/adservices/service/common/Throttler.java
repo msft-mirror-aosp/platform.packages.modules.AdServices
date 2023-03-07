@@ -51,8 +51,14 @@ public class Throttler {
         // Key to throttle Report impressions API
         FLEDGE_API_REPORT_IMPRESSIONS,
 
+        // Key to throttle Report impressions API
+        FLEDGE_API_REPORT_INTERACTION,
+
         // Key to throttle Select Ads API
         FLEDGE_API_SELECT_ADS,
+
+        // Key to throttle Set App Install Advertisers API
+        FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
 
         // Key to throttle Measurement Deletion Registration API
         MEASUREMENT_API_DELETION_REGISTRATION,
@@ -152,6 +158,10 @@ public class Throttler {
         final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
         final double registerWebSource =
                 flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        final double topicsApiAppRequestPermitsPerSecond =
+                flags.getTopicsApiAppRequestPermitsPerSecond();
+        final double topicsApiSdkRequestPermitsPerSecond =
+                flags.getTopicsApiSdkRequestPermitsPerSecond();
 
         mRateLimitPerApiMap.put(ApiKey.UNKNOWN, defaultPermitsPerSecond);
 
@@ -161,6 +171,7 @@ public class Throttler {
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_IMPRESSIONS, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_INTERACTION, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_SELECT_ADS, defaultPermitsPerSecond);
 
         mRateLimitPerApiMap.put(
@@ -171,8 +182,9 @@ public class Throttler {
         mRateLimitPerApiMap.put(
                 ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER, defaultPermitsPerSecond);
 
-        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_APP_PACKAGE_NAME, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_SDK_NAME, defaultPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.TOPICS_API_APP_PACKAGE_NAME, topicsApiAppRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(ApiKey.TOPICS_API_SDK_NAME, topicsApiSdkRequestPermitsPerSecond);
     }
 
     /**

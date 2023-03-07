@@ -17,22 +17,21 @@
 package com.android.adservices.tests.cts.topics;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
-import android.util.Log;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,6 +50,10 @@ public class TopicsManagerTest {
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
+    // Expected model versions.
+    private static final long EXPECTED_MODEL_VERSION = 3L;
+    // Expected taxonomy version.
+    private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -79,12 +82,21 @@ public class TopicsManagerTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
-    private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
+    private static final String ADSERVICES_PACKAGE_NAME =
+            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+
+    // Assert message statements.
+    private static final String INCORRECT_MODEL_VERSION_MESSAGE =
+            "Incorrect model version detected. Please repo sync, build and install the new apex.";
+    private static final String INCORRECT_TAXONOMY_VERSION_MESSAGE =
+            "Incorrect taxonomy version detected. Please repo sync, build and install the new"
+                    + " apex.";
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -92,16 +104,24 @@ public class TopicsManagerTest {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        }
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        overrideConsentSourceOfTruth(null);
     }
 
     @Test
     public void testTopicsManager_runDefaultClassifier() throws Exception {
+        // Set classifier flag to use precomputed-then-on-device classifier.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.
@@ -136,11 +156,17 @@ public class TopicsManagerTest {
         assertThat(sdk1Result.getTopics()).hasSize(1);
         Topic topic = sdk1Result.getTopics().get(0);
 
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
         // topic is one of the 5 classification topics of the Test App.
         assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
-
-        assertThat(topic.getModelVersion()).isAtLeast(1L);
-        assertThat(topic.getTaxonomyVersion()).isAtLeast(1L);
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =
@@ -194,14 +220,20 @@ public class TopicsManagerTest {
         assertThat(sdk3Result.getTopics()).hasSize(1);
         Topic topic = sdk3Result.getTopics().get(0);
 
-        // Top 5 classifications for empty string with v2 model are [10230, 10253, 10227, 10250,
-        // 10257]. This is computed by running the model on the device for empty string.
-        // topic is one of the 5 classification topics of the Test App.
-        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10253, 10227, 10250, 10257);
-        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        assertThat(topic.getModelVersion()).isAtLeast(2L);
-        assertThat(topic.getTaxonomyVersion()).isAtLeast(2L);
+        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
+        // 10140]. This is computed by running the model on the device for empty string.
+        // topic is one of the 5 classification topics of the Test App.
+        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10228, 10253, 10232, 10140);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
 
         // Set classifier flag back to default.
         overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
@@ -247,36 +279,8 @@ public class TopicsManagerTest {
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            Log.e(
-                    TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            Log.e(
-                    TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            Log.e(TAG, "Failed to find serviceInfo for adServices service");
-            return null;
-        }
-
-        return serviceInfo.packageName;
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }
+

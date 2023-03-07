@@ -137,6 +137,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
      */
     @Test
     public void testSdkDataRootDirectory_IsCreatedOnUserCreate() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         {
             // Verify root directory exists for primary user
             final String cePath = getSdkDataRootPath(0, true);
@@ -157,6 +159,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         // delete the new user
         final int newUser = mUserUtils.createAndStartSecondaryUser();
         mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
@@ -606,6 +610,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkDataPackageDirectory_IsUserSpecific() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
 
@@ -1057,6 +1063,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         runPhase("testSdkDataIsAttributedToApp");
     }
 
+    @Ignore("b/261429833")
     @Test
     public void testSdkData_IsAttributedToApp_DisableQuota() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);

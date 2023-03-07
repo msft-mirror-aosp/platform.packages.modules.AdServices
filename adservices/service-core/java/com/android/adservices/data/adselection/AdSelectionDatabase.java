@@ -26,7 +26,6 @@ import androidx.room.RoomDatabase;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
-import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
 
@@ -36,28 +35,34 @@ import java.util.Objects;
             DBAdSelection.class,
             DBBuyerDecisionLogic.class,
             DBAdSelectionOverride.class,
-            DBAdSelectionFromOutcomesOverride.class
+            DBAdSelectionFromOutcomesOverride.class,
+            DBRegisteredAdInteraction.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
-        autoMigrations = {@AutoMigration(from = 1, to = 2)})
+        autoMigrations = {@AutoMigration(from = 1, to = 2), @AutoMigration(from = 2, to = 3)})
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "adselection.db";
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionDatabase sSingleton = null;
+    private static volatile AdSelectionDatabase sSingleton = null;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
     public static AdSelectionDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
+        Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        AdSelectionDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
-            if (Objects.isNull(sSingleton)) {
+            if (sSingleton == null) {
                 sSingleton =
                         Room.databaseBuilder(context, AdSelectionDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
                                 .build();
             }
             return sSingleton;

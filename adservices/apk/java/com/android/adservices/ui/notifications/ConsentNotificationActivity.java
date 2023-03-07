@@ -15,20 +15,33 @@
  */
 package com.android.adservices.ui.notifications;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.ui.OTAResourcesManager;
+
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationActivity extends FragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        setContentView(R.layout.consent_notification_activity);
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
+        }
+        setContentView(
+                FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                        ? R.layout.consent_notification_ga_activity
+                        : R.layout.consent_notification_activity);
     }
 }

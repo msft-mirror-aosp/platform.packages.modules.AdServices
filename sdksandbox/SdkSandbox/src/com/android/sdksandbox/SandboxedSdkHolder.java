@@ -44,12 +44,14 @@ import java.util.Random;
 class SandboxedSdkHolder {
 
     private static final String TAG = "SdkSandbox";
-    private static final int FAILED_LATENCY = -1;
 
     private boolean mInitialized = false;
     private SandboxedSdkProvider mSdk;
     private Context mContext;
     private SandboxedSdk mSandboxedSdk;
+    private ILoadSdkInSandboxCallback mLoadSdkInSandboxCallback;
+    private SdkSandboxServiceImpl.SdkHolderToSdkSandboxServiceCallback
+            mHolderToSdkSandboxServiceCallback;
 
     private DisplayManager mDisplayManager;
     private final Random mRandom = new SecureRandom();
@@ -61,17 +63,20 @@ class SandboxedSdkHolder {
 
     void init(
             Bundle params,
-            ILoadSdkInSandboxCallback callback,
+            ILoadSdkInSandboxCallback loadSdkInSandboxCallback,
             String sdkProviderClassName,
             ClassLoader loader,
             SandboxedSdkContext sandboxedSdkContext,
             SdkSandboxServiceImpl.Injector injector,
-            SandboxLatencyInfo sandboxLatencyInfo) {
+            SandboxLatencyInfo sandboxLatencyInfo,
+            SdkSandboxServiceImpl.SdkHolderToSdkSandboxServiceCallback holderToServiceCallback) {
         if (mInitialized) {
             throw new IllegalStateException("Already initialized!");
         }
         mInitialized = true;
         mContext = sandboxedSdkContext.getBaseContext();
+        mLoadSdkInSandboxCallback = loadSdkInSandboxCallback;
+        mHolderToSdkSandboxServiceCallback = holderToServiceCallback;
         mDisplayManager = mContext.getSystemService(DisplayManager.class);
         mInjector = injector;
         /**
@@ -89,8 +94,7 @@ class SandboxedSdkHolder {
                     new LoadSdkException(
                             ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not find class: " + sdkProviderClassName),
-                    sandboxLatencyInfo,
-                    callback);
+                    sandboxLatencyInfo);
         } catch (Exception e) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SANDBOX);
@@ -98,8 +102,7 @@ class SandboxedSdkHolder {
                     new LoadSdkException(
                             ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Could not instantiate SandboxedSdkProvider: " + e),
-                    sandboxLatencyInfo,
-                    callback);
+                    sandboxLatencyInfo);
         } catch (Throwable e) {
             sandboxLatencyInfo.setSandboxStatus(
                     SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SANDBOX);
@@ -107,8 +110,7 @@ class SandboxedSdkHolder {
                     new LoadSdkException(
                             ILoadSdkInSandboxCallback.LOAD_SDK_INTERNAL_ERROR,
                             "Error thrown during init: " + e),
-                    sandboxLatencyInfo,
-                    callback);
+                    sandboxLatencyInfo);
         }
 
         mHandler.post(
@@ -118,26 +120,24 @@ class SandboxedSdkHolder {
                         sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
                         mSandboxedSdk = mSdk.onLoadSdk(params);
                         sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
-                        sendLoadSdkSuccess(mSandboxedSdk, sandboxLatencyInfo, callback);
+                        sendLoadSdkSuccess(mSandboxedSdk, sandboxLatencyInfo);
                     } catch (LoadSdkException exception) {
                         sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
                         sandboxLatencyInfo.setSandboxStatus(
                                 SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SDK);
-                        sendLoadSdkError(exception, sandboxLatencyInfo, callback);
+                        sendLoadSdkError(exception, sandboxLatencyInfo);
                     } catch (RuntimeException exception) {
                         sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
                         sandboxLatencyInfo.setSandboxStatus(
                                 SandboxLatencyInfo.SANDBOX_STATUS_FAILED_AT_SDK);
                         sendLoadSdkError(
-                                new LoadSdkException(exception, new Bundle()),
-                                sandboxLatencyInfo,
-                                callback);
+                                new LoadSdkException(exception, new Bundle()), sandboxLatencyInfo);
                     }
                 });
     }
 
     void unloadSdk() {
-        mSdk.beforeUnloadSdk();
+        mHandler.post(() -> mSdk.beforeUnloadSdk());
     }
 
     void dump(PrintWriter writer) {
@@ -147,13 +147,12 @@ class SandboxedSdkHolder {
     }
 
     private void sendLoadSdkSuccess(
-            SandboxedSdk sandboxedSdk,
-            SandboxLatencyInfo sandboxLatencyInfo,
-            ILoadSdkInSandboxCallback callback) {
+            SandboxedSdk sandboxedSdk, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
-            callback.onLoadSdkSuccess(
+            mLoadSdkInSandboxCallback.onLoadSdkSuccess(
                     sandboxedSdk, new SdkSandboxCallbackImpl(), sandboxLatencyInfo);
+            mHolderToSdkSandboxServiceCallback.onSuccess();
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkSuccess: " + e);
         }
@@ -175,12 +174,10 @@ class SandboxedSdkHolder {
     }
 
     private void sendLoadSdkError(
-            LoadSdkException exception,
-            SandboxLatencyInfo sandboxLatencyInfo,
-            ILoadSdkInSandboxCallback callback) {
+            LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
-            callback.onLoadSdkError(exception, sandboxLatencyInfo);
+            mLoadSdkInSandboxCallback.onLoadSdkError(exception, sandboxLatencyInfo);
         } catch (RemoteException e) {
             Log.e(TAG, "Could not send onLoadSdkError: " + e);
         }

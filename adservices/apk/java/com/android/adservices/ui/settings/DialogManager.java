@@ -19,9 +19,11 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.os.Build;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
@@ -29,13 +31,14 @@ import com.android.adservices.service.consent.App;
 import com.android.adservices.service.topics.TopicsMapper;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
-import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 
 import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 /** Creates and displays dialogs for the Privacy Sandbox application. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class DialogManager {
     public static Semaphore sSemaphore = new Semaphore(1);
 
@@ -221,37 +224,6 @@ public class DialogManager {
                 .setMessage(R.string.settingsUI_dialog_reset_app_message)
                 .setPositiveButton(
                         R.string.settingsUI_dialog_reset_app_positive_text, positiveOnClickListener)
-                .setNegativeButton(
-                        R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
-                .setOnDismissListener(getOnDismissListener())
-                .show();
-    }
-
-    /**
-     * Shows the dialog for resetting Measurement data.
-     *
-     * @param context Application context.
-     * @param measurementViewModel {@link MeasurementViewModel}
-     */
-    public static void showResetMeasurementDialog(
-            @NonNull Context context, MeasurementViewModel measurementViewModel) {
-        if (!sSemaphore.tryAcquire()) return;
-        OnClickListener positiveOnClickListener =
-                (dialogInterface, buttonId) -> {
-                    measurementViewModel.resetMeasurement();
-                    sSemaphore.release();
-                    Toast.makeText(
-                                    context,
-                                    R.string.settingsUI_measurement_are_reset,
-                                    Toast.LENGTH_SHORT)
-                            .show();
-                };
-        new AlertDialog.Builder(context)
-                .setTitle(R.string.settingsUI_dialog_reset_measurement_title)
-                .setMessage(R.string.settingsUI_dialog_reset_measurement_message)
-                .setPositiveButton(
-                        R.string.settingsUI_dialog_reset_measurement_positive_text,
-                        positiveOnClickListener)
                 .setNegativeButton(
                         R.string.settingsUI_dialog_negative_text, getNegativeOnClickListener())
                 .setOnDismissListener(getOnDismissListener())

@@ -26,6 +26,7 @@ import androidx.room.migration.bundle.SchemaBundle;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 
 import com.google.common.collect.ImmutableList;
@@ -42,10 +43,15 @@ import java.util.Objects;
 
 /** This UT is a guardrail to schema migration managed by Room. */
 public class RoomSchemaMigrationGuardrailTest {
-    private static final Context CONTEXT =
+    // Note that this is not the context of this test, but the different context whose assets folder
+    // is adservices/service-core/schemas
+    private static final Context TARGET_CONTEXT =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
     private static final List<Class<? extends RoomDatabase>> DATABASE_CLASSES =
-            ImmutableList.of(CustomAudienceDatabase.class, AdSelectionDatabase.class);
+            ImmutableList.of(
+                    CustomAudienceDatabase.class,
+                    AdSelectionDatabase.class,
+                    SharedStorageDatabase.class);
     private static final List<DatabaseWithVersion> BYPASS_DATABASE_VERSIONS_NEW_FIELD_ONLY =
             ImmutableList.of(new DatabaseWithVersion(CustomAudienceDatabase.class, 2));
 
@@ -84,7 +90,7 @@ public class RoomSchemaMigrationGuardrailTest {
 
     private int getNewestDatabaseVersion(Class<? extends RoomDatabase> database)
             throws IOException {
-        return Arrays.stream(CONTEXT.getAssets().list(database.getCanonicalName()))
+        return Arrays.stream(TARGET_CONTEXT.getAssets().list(database.getCanonicalName()))
                 .map(p -> p.split("\\.")[0])
                 .mapToInt(Integer::parseInt)
                 .max()
@@ -142,7 +148,9 @@ public class RoomSchemaMigrationGuardrailTest {
     private SchemaBundle loadSchema(Class<? extends RoomDatabase> database, int version)
             throws IOException {
         InputStream input =
-                CONTEXT.getAssets().open(database.getCanonicalName() + "/" + version + ".json");
+                TARGET_CONTEXT
+                        .getAssets()
+                        .open(database.getCanonicalName() + "/" + version + ".json");
         return SchemaBundle.deserialize(input);
     }
 

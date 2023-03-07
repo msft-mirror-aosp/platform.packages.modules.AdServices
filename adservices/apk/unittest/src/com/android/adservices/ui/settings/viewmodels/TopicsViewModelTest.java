@@ -48,7 +48,8 @@ public class TopicsViewModelTest {
     public void setup() throws IOException {
         MockitoAnnotations.initMocks(this);
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
         mBlockedTopicsViewModel =
                 new BlockedTopicsViewModel(
                         ApplicationProvider.getApplicationContext(), mConsentManager);
@@ -61,7 +62,8 @@ public class TopicsViewModelTest {
         doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }
@@ -77,7 +79,8 @@ public class TopicsViewModelTest {
         doReturn(topicsList).when(mConsentManager).getKnownTopicsWithConsent();
 
         mTopicsViewModel =
-                new TopicsViewModel(ApplicationProvider.getApplicationContext(), mConsentManager);
+                new TopicsViewModel(
+                        ApplicationProvider.getApplicationContext(), mConsentManager, true);
 
         assertThat(mTopicsViewModel.getTopics().getValue()).containsExactlyElementsIn(topicsList);
     }

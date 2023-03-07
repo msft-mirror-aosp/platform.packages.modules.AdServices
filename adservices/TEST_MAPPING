@@ -5,6 +5,10 @@
       "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
@@ -79,6 +83,10 @@
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
+      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -92,7 +100,13 @@
       "name": "AdServicesJsEngineUnitTests"
     },
     {
-      "name": "AdServicesEndToEndTests"
+      "name": "AdServicesEndToEndTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "CtsAdServicesTopicsAppUpdateTests"
@@ -113,6 +127,9 @@
       "name": "AdServicesApkUITests"
     },
     {
+      "name": "AdServicesApkUITestsAppConsent"
+    },
+    {
       "name": "CtsAdServicesEndToEndTests"
     },
     {
@@ -126,6 +143,17 @@
     },
     {
       "name": "CtsAppSetIdEndToEndTest"
+    },
+    {
+      "name": "CtsRootAdServicesUiTest"
+    },
+    {
+      "name": "CtsAdServicesHostTests"
+    }
+  ],
+  "postsubmit": [
+    {
+      "name": "AdServicesMddIntegrationTests"
     }
   ]
 }

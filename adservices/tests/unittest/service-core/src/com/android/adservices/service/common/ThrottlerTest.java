@@ -191,6 +191,8 @@ public class ThrottlerTest {
         doReturn(permitsPerSecond)
                 .when(flags)
                 .getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(flags).getTopicsApiSdkRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(flags).getTopicsApiAppRequestPermitsPerSecond();
         return flags;
     }
 }

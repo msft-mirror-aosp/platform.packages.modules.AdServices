@@ -25,6 +25,8 @@ import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.android.adservices.AdServicesParcelableUtil;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
@@ -81,13 +83,19 @@ public final class CustomAudience implements Parcelable {
 
         mBuyer = AdTechIdentifier.CREATOR.createFromParcel(in);
         mName = in.readString();
-        mActivationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
-        mExpirationTime = in.readBoolean() ? Instant.ofEpochMilli(in.readLong()) : null;
+        mActivationTime =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, (sourceParcel) -> Instant.ofEpochMilli(sourceParcel.readLong()));
+        mExpirationTime =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, (sourceParcel) -> Instant.ofEpochMilli(sourceParcel.readLong()));
         mDailyUpdateUri = Uri.CREATOR.createFromParcel(in);
         mUserBiddingSignals =
-                in.readBoolean() ? AdSelectionSignals.CREATOR.createFromParcel(in) : null;
-        mTrustedBiddingData = in.readBoolean()
-                ? TrustedBiddingData.CREATOR.createFromParcel(in) : null;
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, AdSelectionSignals.CREATOR::createFromParcel);
+        mTrustedBiddingData =
+                AdServicesParcelableUtil.readNullableFromParcel(
+                        in, TrustedBiddingData.CREATOR::createFromParcel);
         mBiddingLogicUri = Uri.CREATOR.createFromParcel(in);
         mAds = in.createTypedArrayList(AdData.CREATOR);
     }
@@ -98,25 +106,27 @@ public final class CustomAudience implements Parcelable {
 
         mBuyer.writeToParcel(dest, flags);
         dest.writeString(mName);
-        writeNullable(dest, mActivationTime,
-                () -> dest.writeLong(mActivationTime.toEpochMilli()));
-        writeNullable(dest, mExpirationTime,
-                () -> dest.writeLong(mExpirationTime.toEpochMilli()));
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mActivationTime,
+                (targetParcel, sourceInstant) ->
+                        targetParcel.writeLong(sourceInstant.toEpochMilli()));
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mExpirationTime,
+                (targetParcel, sourceInstant) ->
+                        targetParcel.writeLong(sourceInstant.toEpochMilli()));
         mDailyUpdateUri.writeToParcel(dest, flags);
-        writeNullable(
-                dest, mUserBiddingSignals, () -> mUserBiddingSignals.writeToParcel(dest, flags));
-        writeNullable(dest, mTrustedBiddingData,
-                () -> mTrustedBiddingData.writeToParcel(dest, flags));
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mUserBiddingSignals,
+                (targetParcel, sourceSignals) -> sourceSignals.writeToParcel(targetParcel, flags));
+        AdServicesParcelableUtil.writeNullableToParcel(
+                dest,
+                mTrustedBiddingData,
+                (targetParcel, sourceData) -> sourceData.writeToParcel(targetParcel, flags));
         mBiddingLogicUri.writeToParcel(dest, flags);
         dest.writeTypedList(mAds);
-    }
-
-    private static void writeNullable(Parcel parcel, Object o, Runnable howToWrite) {
-        boolean isFieldPresents = o != null;
-        parcel.writeBoolean(isFieldPresents);
-        if (isFieldPresents) {
-            howToWrite.run();
-        }
     }
 
     /** @hide */

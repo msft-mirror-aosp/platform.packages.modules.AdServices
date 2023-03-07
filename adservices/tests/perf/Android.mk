@@ -25,6 +25,7 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
         mockwebserver \
         platform-test-annotations
 LOCAL_JAVA_LIBRARIES := \
+        framework-adservices-lib \
         androidx.test.rules \
         androidx.test.runner \
         app-helpers-handheld-interfaces \

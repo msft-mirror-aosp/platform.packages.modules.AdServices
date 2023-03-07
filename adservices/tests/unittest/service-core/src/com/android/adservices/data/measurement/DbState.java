@@ -257,13 +257,15 @@ public class DbState {
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
-                .setAppDestination(parseIfNonNull(sJSON.optString("appDestination", null)))
-                .setWebDestination(parseIfNonNull(sJSON.optString("webDestination", null)))
+                .setAppDestinations(parseIfNonNull(sJSON.optString("appDestination", null)))
+                .setWebDestinations(parseIfNonNull(sJSON.optString("webDestination", null)))
                 .setAggregateSource(sJSON.optString("aggregationKeys", null))
                 .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
                 .setEventTime(sJSON.getLong("eventTime"))
                 .setExpiryTime(sJSON.getLong("expiryTime"))
+                .setEventReportWindow(sJSON.getLong("eventReportWindow"))
+                .setAggregatableReportWindow(sJSON.optLong("aggregatableReportWindow"))
                 .setPriority(sJSON.getLong("priority"))
                 .setStatus(sJSON.getInt("status"))
                 .setRegistrant(Uri.parse(sJSON.getString("registrant")))
@@ -298,7 +300,8 @@ public class DbState {
         return new EventReport.Builder()
                 .setId(rJSON.getString("id"))
                 .setSourceEventId(new UnsignedLong(rJSON.getString("sourceEventId")))
-                .setAttributionDestination(Uri.parse(rJSON.getString("attributionDestination")))
+                .setAttributionDestinations(List.of(
+                        Uri.parse(rJSON.getString("attributionDestination"))))
                 .setEnrollmentId(rJSON.getString("enrollmentId"))
                 .setTriggerData(new UnsignedLong(rJSON.getString("triggerData")))
                 .setTriggerTime(rJSON.getLong("triggerTime"))
@@ -409,10 +412,10 @@ public class DbState {
                 .build();
     }
 
-    private Uri parseIfNonNull(String s) {
+    private List<Uri> parseIfNonNull(String s) {
         if (s == null) {
             return null;
         }
-        return Uri.parse(s);
+        return List.of(Uri.parse(s));
     }
 }

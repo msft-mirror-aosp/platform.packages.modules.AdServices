@@ -111,6 +111,7 @@
             android:forceQueryable="true"
             android:allowBackup="false"
             android:supportsRtl="true"
+            android:icon="@drawable/ic_android_icon"
             android:theme="@style/FilterTouches">
         <!-- Activity for the main view of Adservices Settings UI-->
         <activity

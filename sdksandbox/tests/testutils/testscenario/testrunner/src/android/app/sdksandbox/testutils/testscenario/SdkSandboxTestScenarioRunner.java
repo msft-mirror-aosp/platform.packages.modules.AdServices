@@ -43,29 +43,24 @@ import java.util.List;
 public abstract class SdkSandboxTestScenarioRunner extends SandboxedSdkProvider {
     private static final String TAG = SdkSandboxTestScenarioRunner.class.getName();
 
-    private Object mTestInstance;
+    private Object mTestInstance = this;
     private @Nullable IBinder mBinder;
 
     /**
-     * This API allows you to provide a separate test class to execute tests against. It will
-     * default to the class instance it is already attached to.
+     * This method can be used to provide a separate test class to execute tests against. In child
+     * classes, it should be called in the onLoadSdk method before calling super.
      */
-    public Object getTestInstance() {
-        return this;
+    public void setTestInstance(Object testInstance) {
+        mTestInstance = testInstance;
     }
 
-    public View beforeEachTest(Context windowContext, Bundle params, int width, int height) {
+    @Override
+    public View getView(Context windowContext, Bundle params, int width, int height) {
         return new View(windowContext);
     }
 
     @Override
-    public final View getView(Context windowContext, Bundle params, int width, int height) {
-        return beforeEachTest(windowContext, params, width, height);
-    }
-
-    @Override
-    public final SandboxedSdk onLoadSdk(Bundle params) {
-        mTestInstance = getTestInstance();
+    public SandboxedSdk onLoadSdk(Bundle params) {
         mBinder = params.getBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER);
 
         ISdkSandboxTestExecutor.Stub testExecutor =

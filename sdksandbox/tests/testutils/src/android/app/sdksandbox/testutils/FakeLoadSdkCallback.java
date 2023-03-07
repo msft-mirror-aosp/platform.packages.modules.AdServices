@@ -22,7 +22,6 @@ import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
-import android.app.sdksandbox.SdkSandboxManager;
 import android.os.OutcomeReceiver;
 
 import com.google.common.base.Preconditions;
@@ -58,23 +57,16 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
         mLoadSdkLatch.countDown();
     }
 
-    public boolean isLoadSdkSuccessful() {
-        return isLoadSdkSuccessful(false);
-    }
-
-    public boolean isLoadSdkSuccessful(boolean ignoreSdkAlreadyLoadedError) {
+    public void assertLoadSdkIsUnsuccessful() {
         mLoadSdkLatch.waitForLatch();
-        if (ignoreSdkAlreadyLoadedError
-                && ((mLoadSdkException == null)
-                        || (mLoadSdkException.getLoadSdkErrorCode()
-                                == SdkSandboxManager.LOAD_SDK_ALREADY_LOADED))) {
-            mLoadSdkSuccess = true;
+        if (mLoadSdkException == null) {
+            fail("Load SDK was successful, which was not expected.");
         }
-        return mLoadSdkSuccess;
     }
 
     public void assertLoadSdkIsSuccessful() {
-        if (!this.isLoadSdkSuccessful()) {
+        mLoadSdkLatch.waitForLatch();
+        if (mLoadSdkException != null) {
             fail(
                     "Load SDK was not successful. errorCode: "
                             + this.getLoadSdkErrorCode()

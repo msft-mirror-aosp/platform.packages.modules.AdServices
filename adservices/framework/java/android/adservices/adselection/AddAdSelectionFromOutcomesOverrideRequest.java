@@ -30,26 +30,27 @@ import java.util.Objects;
  * the specific override, a {@code String} selectionLogicJs and {@code String} selectionSignals
  * field representing the override value
  *
+ * @hide
  */
 public class AddAdSelectionFromOutcomesOverrideRequest {
     @NonNull private final AdSelectionFromOutcomesConfig mAdSelectionFromOutcomesConfig;
 
-    @NonNull private final String mSelectionLogicJs;
+    @NonNull private final String mOutcomeSelectionLogicJs;
 
-    @NonNull private final AdSelectionSignals mSelectionSignals;
+    @NonNull private final AdSelectionSignals mOutcomeSelectionTrustedSignals;
 
     /** Builds a {@link AddAdSelectionFromOutcomesOverrideRequest} instance. */
     public AddAdSelectionFromOutcomesOverrideRequest(
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
-            @NonNull String selectionLogicJs,
-            @NonNull AdSelectionSignals selectionSignals) {
+            @NonNull String outcomeSelectionLogicJs,
+            @NonNull AdSelectionSignals outcomeSelectionTrustedSignals) {
         Objects.requireNonNull(adSelectionFromOutcomesConfig);
-        Objects.requireNonNull(selectionLogicJs);
-        Objects.requireNonNull(selectionSignals);
+        Objects.requireNonNull(outcomeSelectionLogicJs);
+        Objects.requireNonNull(outcomeSelectionTrustedSignals);
 
         mAdSelectionFromOutcomesConfig = adSelectionFromOutcomesConfig;
-        mSelectionLogicJs = selectionLogicJs;
-        mSelectionSignals = selectionSignals;
+        mOutcomeSelectionLogicJs = outcomeSelectionLogicJs;
+        mOutcomeSelectionTrustedSignals = outcomeSelectionTrustedSignals;
     }
 
     /**
@@ -58,25 +59,26 @@ public class AddAdSelectionFromOutcomesOverrideRequest {
      *     flow that generates bids and scores to find a wining ad for rendering.
      */
     @NonNull
-    public AdSelectionFromOutcomesConfig getAdSelectionConfig() {
+    public AdSelectionFromOutcomesConfig getAdSelectionFromOutcomesConfig() {
         return mAdSelectionFromOutcomesConfig;
     }
 
     /**
      * @return The override javascript result, should be a string that contains valid JS code. The
-     *     code should contain the scoring logic that will be executed during Ad selection.
+     *     code should contain the outcome selection logic that will be executed during ad outcome
+     *     selection.
      */
     @NonNull
-    public String getSelectionLogicJs() {
-        return mSelectionLogicJs;
+    public String getOutcomeSelectionLogicJs() {
+        return mOutcomeSelectionLogicJs;
     }
 
     /**
      * @return The override trusted scoring signals, should be a valid json string. The trusted
-     *     signals would be fed into the scoring logic during Ad Selection.
+     *     signals would be fed into the outcome selection logic during ad outcome selection.
      */
     @NonNull
-    public AdSelectionSignals getSelectionSignals() {
-        return mSelectionSignals;
+    public AdSelectionSignals getOutcomeSelectionTrustedSignals() {
+        return mOutcomeSelectionTrustedSignals;
     }
 }

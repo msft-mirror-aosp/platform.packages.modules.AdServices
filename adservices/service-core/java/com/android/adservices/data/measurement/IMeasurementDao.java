@@ -33,6 +33,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -150,6 +151,8 @@ public interface IMeasurementDao {
 
     /**
      * Add an entry to the Source datastore.
+     *
+     * @param source Source data to be inserted.
      */
     void insertSource(Source source) throws DatastoreException;
 
@@ -174,7 +177,14 @@ public interface IMeasurementDao {
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException;
+    void updateSourceEventReportDedupKeys(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Update the set of Aggregate dedup keys contained in the provided {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
      * Updates the value of aggregate contributions for the corresponding {@link Source}
@@ -297,7 +307,7 @@ public interface IMeasurementDao {
     void deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords() throws DatastoreException;
+    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
@@ -502,5 +512,29 @@ public interface IMeasurementDao {
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Fetches the XNA relevant sources. It includes sources associated to the trigger's enrollment
+     * ID as well as the sources associated to the provided SAN enrollment IDs.
+     *
+     * @param trigger trigger to match
+     * @param xnaEnrollmentIds SAN enrollment IDs to match
+     * @return XNA relevant sources
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    List<Source> fetchTriggerMatchingSourcesForXna(
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
+            throws DatastoreException;
+
+    /**
+     * Insert an entry of source ID with enrollment ID into the {@link
+     * MeasurementTables.XnaIgnoredSourcesContract#TABLE}. It means that the provided source should
+     * be ignored to be picked up for doing XNA based attribution on the provided enrollment.
+     *
+     * @param sourceId source ID
+     * @param enrollmentId enrollment ID
+     */
+    void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
             throws DatastoreException;
 }

@@ -46,11 +46,11 @@ public final class AggregateReportTest {
             "{"
                     + "\"operation\": \"histogram\","
                     + "\"data\": [{"
-                    + "\"bucket\": 1369,"
+                    + "\"bucket\": \"1369\","
                     + "\"value\": 32768"
                     + "},"
                     + "{"
-                    + "\"bucket\": 3461,"
+                    + "\"bucket\": \"3461\","
                     + "\"value\": 1664"
                     + "}]"
                     + "}";

@@ -36,11 +36,13 @@ import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.ApplicationInfoFlags;
 import android.content.pm.SharedLibraryInfo;
 import android.os.Bundle;
 import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.UserHandle;
 import android.text.TextUtils;
 import android.util.ArraySet;
 import android.util.Log;
@@ -809,9 +811,12 @@ class LoadSdkSession {
     private SdkProviderInfo createSdkProviderInfo() {
         try {
             PackageManager pm = mContext.getPackageManager();
+            UserHandle userHandle = UserHandle.getUserHandleForUid(mCallingInfo.getUid());
             ApplicationInfo info =
-                    pm.getApplicationInfo(
-                            mCallingInfo.getPackageName(), PackageManager.GET_SHARED_LIBRARY_FILES);
+                    pm.getApplicationInfoAsUser(
+                            mCallingInfo.getPackageName(),
+                            ApplicationInfoFlags.of(PackageManager.GET_SHARED_LIBRARY_FILES),
+                            userHandle);
             List<SharedLibraryInfo> sharedLibraries = info.getSharedLibraryInfos();
             for (int j = 0; j < sharedLibraries.size(); j++) {
                 SharedLibraryInfo sharedLibrary = sharedLibraries.get(j);
@@ -836,7 +841,7 @@ class LoadSdkSession {
                 return new SdkProviderInfo(applicationInfo, sharedLibrary, sdkProviderClassName);
             }
             return null;
-        } catch (PackageManager.NameNotFoundException ignored) {
+        } catch (PackageManager.NameNotFoundException e) {
             return null;
         }
     }

@@ -25,6 +25,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scrollbars="vertical">
+
         <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -36,6 +37,12 @@
                 android:text="@string/settingsUI_measurement_view_intro_text"
                 style="@style/MainStyle.Body2" />
 
+            <com.android.settingslib.widget.MainSwitchBar
+            android:id="@+id/measurement_switch_bar"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:title="@string/settingsUI_measurement_switch_title"
+            android:textDirection="locale"/>
             <LinearLayout
                 android:id="@+id/reset_measurement_button"
                 android:layout_width="match_parent"
@@ -61,14 +68,14 @@
                 <ImageView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="18dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
 
                 <TextView
                     android:text="@string/settingsUI_measurement_view_footer_text"
-                    style="@style/MainStyle.Body1" />
+                    style="@style/MainStyle.Body2" />
             </LinearLayout>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

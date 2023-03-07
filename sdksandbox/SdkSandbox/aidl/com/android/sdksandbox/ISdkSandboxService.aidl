@@ -30,7 +30,7 @@ import com.android.sdksandbox.IComputeSdkStorageCallback;
 
 /** @hide */
 oneway interface ISdkSandboxService {
-    void initialize(in ISdkToServiceCallback sdkToService);
+    void initialize(in ISdkToServiceCallback sdkToService, boolean isCustomizedSdkContextEnabled);
     void computeSdkStorage(in List<String> sharedPaths, in List<String> sdkPaths,
                            in IComputeSdkStorageCallback callback);
     void isDisabled(in ISdkSandboxDisabledCallback callback);

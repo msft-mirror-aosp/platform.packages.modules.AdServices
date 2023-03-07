@@ -2,8 +2,7 @@
 
 ## Overview
 
-This directory contains utilities that allow you to run tests inside of an
-SDK.
+This directory contains utilities that allow you to run tests inside of an SDK.
 
 [design](http://go/sandbox-webview-cts-tests) (*only visible to Googlers)
 
@@ -199,11 +198,42 @@ public class ActuallyHasTests {
 }
 
 public class ExampleSandboxTestSdk extends SdkSandboxTestScenarioRunner {
-    // And then optionally override the API
-    // getTestInstance returning an instance to invoke tests from.
+    // And then optionally override the onLoadSdk method and use
+    // the API setTestInstance to set an instance to invoke tests from.
     @Override
-    public Object getTestInstance() {
-        return new ActuallyHasTests();
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        setTestInstance(new ActuallyHasTests());
+        return super.onLoadSdk(params);
+    }
+}
+```
+
+## Custom setup
+
+There may be times when you need to pass through custom setup information to your sdk.
+
+You can optionally provide a Bundle
+(https://developer.android.com/reference/android/os/Bundle) to SdkSandboxScenarioRule
+that can be retrieved and used from inside test SDKs via the onLoadSdk method.
+
+One example is if you want to reuse an sdk in order to test multiple test instances. For this you
+could pass setup information to determine the specific test instance to use:
+
+```java
+public class ExampleSandboxTestSdk extends SdkSandboxTestScenarioRunner {
+
+    private ExampleParentTestClass mTestInstance;
+
+    @Override
+    public SandboxedSdk onLoadSdk(Bundle params) {
+        Bundle setupParams = params.getBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS);
+        if (setupParams != null) {
+            //logic for setting mTestInstance based on params
+            mTestInstance = new ExampleChildTestClass();
+        }
+
+        setTestInstance(mTestInstance);
+        return super.onLoadSdk(params);
     }
 }
 ```

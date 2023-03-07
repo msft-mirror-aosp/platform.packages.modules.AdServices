@@ -21,12 +21,16 @@ import static java.util.stream.Collectors.toSet;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -44,6 +48,8 @@ import java.util.stream.Stream;
  * Manager class to control the classifier behaviour between available types of classifier based on
  * classifier flags.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
     private static ClassifierManager sSingleton;
 
@@ -73,11 +79,13 @@ public class ClassifierManager implements Classifier {
                                                         new PackageManagerUtil(context),
                                                         new Random(),
                                                         ModelManager.getInstance(context),
+                                                        CacheManager.getInstance(context),
                                                         AdServicesLoggerImpl.getInstance())),
                                 Suppliers.memoize(
                                         () ->
                                                 new PrecomputedClassifier(
                                                         ModelManager.getInstance(context),
+                                                        CacheManager.getInstance(context),
                                                         AdServicesLoggerImpl.getInstance())));
             }
         }

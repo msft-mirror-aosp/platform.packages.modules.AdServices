@@ -26,6 +26,7 @@ java_defaults {
     ],
     static_libs: [
         "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
@@ -41,6 +42,7 @@ java_defaults {
         "android.test.mock",
         "android.test.runner",
         "framework-sdksandbox.impl",
+        "framework-configinfrastructure",
     ],
     // Test coverage system runs on different devices. Need to
     // compile for all architecture.

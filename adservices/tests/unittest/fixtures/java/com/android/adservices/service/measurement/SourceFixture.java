@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -40,7 +42,7 @@ public final class SourceFixture {
     public static Source.Builder getValidSourceBuilder() {
         return new Source.Builder()
                 .setPublisher(ValidSourceParams.PUBLISHER)
-                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
+                .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT);
     }
@@ -49,14 +51,17 @@ public final class SourceFixture {
     // {@link ValidSourceParams}
     public static Source getValidSource() {
         return new Source.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setEventId(ValidSourceParams.SOURCE_EVENT_ID)
                 .setPublisher(ValidSourceParams.PUBLISHER)
-                .setAppDestination(ValidSourceParams.ATTRIBUTION_DESTINATION)
-                .setWebDestination(ValidSourceParams.WEB_DESTINATION)
+                .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setWebDestinations(ValidSourceParams.WEB_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
                 .setRegistrant(ValidSourceParams.REGISTRANT)
                 .setEventTime(ValidSourceParams.SOURCE_EVENT_TIME)
                 .setExpiryTime(ValidSourceParams.EXPIRY_TIME)
+                .setEventReportWindow(ValidSourceParams.EXPIRY_TIME)
+                .setAggregatableReportWindow(ValidSourceParams.EXPIRY_TIME)
                 .setPriority(ValidSourceParams.PRIORITY)
                 .setSourceType(ValidSourceParams.SOURCE_TYPE)
                 .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
@@ -65,6 +70,9 @@ public final class SourceFixture {
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterData(ValidSourceParams.buildFilterData())
                 .setIsDebugReporting(true)
+                .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
+                .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
+                .setInstallTime(ValidSourceParams.INSTALL_TIME)
                 .build();
     }
 
@@ -73,9 +81,9 @@ public final class SourceFixture {
         public static final Long PRIORITY = 100L;
         public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(1L);
         public static final Long SOURCE_EVENT_TIME = 8640000000L;
-        public static final Uri ATTRIBUTION_DESTINATION =
-                Uri.parse("android-app://com.destination");
-        public static Uri WEB_DESTINATION = Uri.parse("https://destination.com");
+        public static final List<Uri> ATTRIBUTION_DESTINATIONS =
+                List.of(Uri.parse("android-app://com.destination"));
+        public static List<Uri> WEB_DESTINATIONS = List.of(Uri.parse("https://destination.com"));
         public static final Uri PUBLISHER = Uri.parse("android-app://com.publisher");
         public static final Uri REGISTRANT = Uri.parse("android-app://com.registrant");
         public static final String ENROLLMENT_ID = "enrollment-id";
@@ -86,15 +94,16 @@ public final class SourceFixture {
         public static final @Source.AttributionMode int ATTRIBUTION_MODE =
                 Source.AttributionMode.TRUTHFULLY;
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
+        public static final String REGISTRATION_ID = "R1";
+        public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
+        public static final Long INSTALL_TIME = 100L;
 
         public static final String buildAggregateSource() {
             try {
-                JSONArray aggregatableSource = new JSONArray();
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("id", "campaignCounts");
-                jsonObject.put("key_piece", "0x159");
-                aggregatableSource.put(jsonObject);
-                return aggregatableSource.toString();
+                jsonObject.put("campaignCounts", "0x456");
+                jsonObject.put("geoValue", "0x159");
+                return jsonObject.toString();
             } catch (JSONException e) {
                 LogUtil.e("JSONException when building aggregate source.");
             }
@@ -115,8 +124,10 @@ public final class SourceFixture {
         }
 
         public static final AggregatableAttributionSource buildAggregatableAttributionSource() {
+            TreeMap<String, BigInteger> aggregateSourceMap = new TreeMap<>();
+            aggregateSourceMap.put("5", new BigInteger("345"));
             return new AggregatableAttributionSource.Builder()
-                    .setAggregatableSource(Map.of("5", new BigInteger("345")))
+                    .setAggregatableSource(aggregateSourceMap)
                     .setFilterMap(
                             new FilterMap.Builder()
                                     .setAttributionFilterMap(

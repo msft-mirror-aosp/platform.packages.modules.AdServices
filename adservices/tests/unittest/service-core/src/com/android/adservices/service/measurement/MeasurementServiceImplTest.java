@@ -595,6 +595,14 @@ public final class MeasurementServiceImplTest {
     }
 
     @Test
+    public void testGetMeasurementApiStatus_failureByConsentAccessResolver() throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByConsent(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1327,6 +1335,9 @@ public final class MeasurementServiceImplTest {
 
         // App Package Resolver Pp Api
         updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
+
+        // Consent Resolver
+        updateConsentDenied(accessDenier.mByConsent);
 
         // Results
         when(mMockMeasurementImpl.getMeasurementApiStatus())

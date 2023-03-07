@@ -22,6 +22,15 @@ import android.os.Bundle;
 import android.app.sdksandbox.testutils.testscenario.ISdkSandboxResultCallback;
 
 interface ISdkSandboxTestExecutor {
+
+    /*
+     * This constant is used for optionally passing setup parameters
+     * to the test sdk. This is useful for when a test author needs to
+     * pass specific information to setup the sdk.
+     * E.g. The test instance class
+     */
+    const String TEST_SETUP_PARAMS = "TEST_SETUP_PARAMS";
+
     /*
      * This constant is used for optionally loading a test author
      * binder. This is useful for when a test author wants their

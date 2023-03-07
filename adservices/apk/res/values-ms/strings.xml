@@ -14,6 +14,8 @@
      limitations under the License.
  -->
 
+<!--  IMPORTANT! If adding new strings, then run generate_adservices_public_xml.py  -->
+
 <resources xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="permlab_accessAdServicesTopics" msgid="1108993892369517728">"akses API Topik AdServices"</string>
@@ -67,6 +69,53 @@
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"Android menganggarkan minat teratas anda secara berkala berdasarkan apl yang anda gunakan, sebagai contoh, \"Sukan\" atau \"Perjalanan.\"\n\nKemudian, apl boleh meminta kebenaran daripada Android untuk menggunakan minat tersebut bagi memaparkan iklan yang lebih berkaitan kepada anda.\n\nAnda boleh melihat senarai minat semasa dalam tetapan privasi anda dan menyekat mana-mana minat yang anda tidak suka."</string>
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Minat yang dianggarkan oleh apl"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Apl boleh menganggarkan minat anda dan menyimpan minat ini dengan Android buat sementara waktu. Sebagai contoh, apl yang anda gunakan untuk membeli kasut lari mungkin menganggarkan minat anda sebagai \"berlari maraton.\"\n\nKemudian, berdasarkan minat ini, apl lain boleh memaparkan iklan yang berkaitan dengan maraton kepada anda.\n\nDalam tetapan privasi, anda boleh mengurus senarai apl yang telah menyimpan minat."</string>
+    <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Ciri privasi iklan baharu"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Topik iklan dan kawalan baharu memberi anda lebih banyak pilihan terhadap iklan yang anda lihat"</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android mengingati topik yang diminati berdasarkan apl yang anda gunakan baru-baru ini. Selain itu, apl yang anda gunakan boleh menentukan perkara yang anda sukai. Kemudian, apl boleh meminta maklumat ini untuk memaparkan iklan yang diperibadikan kepada anda. Anda boleh memilih topik dan apl yang digunakan untuk memaparkan iklan kepada anda."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Untuk mengukur prestasi iklan, jenis data yang terhad dikongsi antara apl."</string>
+    <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Lagi tentang iklan pada Android"</string>
+    <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Iklan yang lebih berguna"</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Apl boleh meminta maklumat daripada Android untuk membantu anda memeribadikan iklan yang anda lihat."</string>
+    <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android mengingati topik yang diminati berdasarkan apl yang telah anda gunakan baru-baru ini."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Apl yang anda gunakan juga boleh menentukan perkara yang anda sukai berdasarkan aktiviti anda pada apl tersebut. Contohnya, jika anda menggunakan apl yang menjual kasut lari jarak jauh, apl tersebut mungkin memutuskan bahawa anda berminat dalam larian maraton."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Kemudian, apl yang anda gunakan boleh meminta maklumat ini — sama ada topik iklan anda atau iklan yang dicadangkan oleh apl yang telah anda gunakan."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android mengautopadam topik dan data cadangan apl secara kerap. Anda juga boleh menyekat topik dan apl tertentu yang anda tidak ingin membuat cadangan."</string>
+    <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Mengukur prestasi iklan"</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Apl yang anda gunakan boleh meminta maklumat daripada Android untuk membantu apl mengukur prestasi iklan. Android membenarkan apl mengumpulkan jenis data yang terhad, seperti masa hari iklan dipaparkan kepada anda."</string>
+    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
+    <skip />
+    <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Cuba ciri privasi iklan baharu"</string>
+    <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Topik iklan memberi anda lebih banyak pilihan terhadap iklan yang anda lihat"</string>
+    <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Lihat Butiran"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Privasi iklan dipertingkatkan pada Android"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android akan melancarkan ciri privasi baharu yang memberi anda lebih banyak pilihan terhadap iklan yang anda lihat."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Topik iklan membantu apl memaparkan iklan yang berkaitan kepada anda sambil melindungi identiti dan maklumat tentang penggunaan apl anda. Android boleh mengetahui topik yang anda minati berdasarkan apl yang anda gunakan baru-baru ini. Kemudian, apl yang anda gunakan boleh meminta topik yang berkaitan daripada Android untuk memeribadikan iklan yang anda lihat."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Anda boleh melihat topik iklan dalam tetapan peranti anda dan menyekat topik yang tidak mahu dikongsi dengan apl. Android juga memadamkan topik iklan dengan kerap secara automatik."</string>
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Anda boleh mengubah fikiran pada bila-bila masa dalam tetapan privasi."</string>
+    <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Lagi tentang topik iklan"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Ketahui lebih lanjut tentang cara Android melindungi data anda dalam Dasar Privasi kami."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ya, saya setuju"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Jenis data yang digunakan"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Topik iklan anda adalah berdasarkan apl yang anda gunakan pada peranti ini baru-baru ini dan kekerapan anda menggunakan apl."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Cara kami menggunakan data ini"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android mengingati topik yang anda minati semasa anda menggunakan apl anda. Label topik dipratakrifkan dan merangkumi perkara seperti Seni &amp; Hiburan, Beli-belah dan Sukan. Kemudian, apl yang anda gunakan boleh meminta Android beberapa topik anda (tetapi bukan data tentang penggunaan apl atau identiti anda) untuk memeribadikan iklan yang anda lihat."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Cara anda dapat mengurus data anda"</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android mengautopadam topik secara kerap. Jika anda terus menggunakan apl, topik mungkin dipaparkan semula pada senarai. Anda juga boleh menyekat topik yang anda tidak mahu Android kongsikan dengan apl dan mematikan topik iklan pada bila-bila masa dalam tetapan privasi."</string>
+    <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Anda boleh membuat perubahan dalam tetapan privasi."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Ciri lain yang menjadikan iklan lebih peribadi"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android akan melancarkan cara baharu untuk mengehadkan perkara yang boleh dipelajari oleh apl tentang anda apabila aplikasi itu menunjukkan iklan diperibadikan kepada anda."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Iklan yang dicadangkan apl membantu untuk melindungi identiti anda dan maklumat tentang penggunaan anda pada apl sambil mendayakan apl untuk memaparkan iklan yang berkaitan kepada anda. Berdasarkan aktiviti anda, apl yang anda gunakan boleh mencadangkan iklan yang berkaitan pada apl lain. Anda boleh melihat senarai apl dan menyekat apl dalam tetapan privasi daripada membuat cadangan."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Dengan pengukuran iklan, jenis data yang terhad akan dikongsi antara apl untuk mengukur prestasi iklan apl, seperti masa dalam sehari iklan ditunjukkan kepada anda."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Lagi tentang iklan cadangan apl dan pengukuran iklan"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Iklan yang dicadangkan apl"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Jenis data yang digunakan"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Aktiviti anda dalam apl yang anda gunakan pada peranti ini."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Cara apl menggunakan data ini"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Apl boleh menyimpan maklumat tentang perkara yang anda sukai dengan Android. Contohnya, jika anda menggunakan apl tentang latihan maraton, apl tersebut mungkin memutuskan bahawa anda berminat dengan kasut lari. Kemudian, jika anda menggunakan apl lain, apl itu boleh memaparkan kepada anda iklan kasut lari yang dicadangkan oleh apl pertama."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Cara anda boleh mengurus data anda"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android mengautopadam data cadangan apl secara kerap. Apl yang anda gunakan sekali lagi mungkin akan dipaparkan semula pada senarai."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Anda juga boleh menyekat apl daripada mencadangkan iklan untuk anda, menetapkan semula semua data yang dicadangkan iklan atau mematikan iklan yang dicadangkan apl dalam tetapan privasi pada bila-bila masa."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apl yang anda gunakan boleh meminta Android maklumat yang membantu apl mengukur prestasi iklan apl. Android melindungi privasi anda dengan mengehadkan maklumat yang boleh dikongsi oleh apl dengan satu sama lain."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Sertai dalam beta privasi iklan Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Kotak Pasir Privasi"</string>
@@ -80,36 +129,79 @@
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Minat yang telah anda sekat"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Tetapkan semula semua minat"</string>
     <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Tiada minat untuk ditunjukkan sekarang"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Tiada topik untuk ditunjukkan sekarang"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Beta privasi iklan Android menyediakan ciri baharu yang boleh digunakan oleh apl untuk memaparkan iklan yang mungkin anda suka kepada anda. Teknologi ini tidak menggunakan pengecam peranti.\n\nAndroid boleh menganggarkan jenis iklan yang mungkin anda minati dan menyimpan minat ini pada peranti anda buat sementara waktu. Hal ini membolehkan apl memaparkan iklan yang berkaitan kepada anda tanpa menjejaki aktiviti anda merentas laman web dan apl daripada pembangun lain."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Anda tidak mempunyai minat yang disekat"</string>
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Tiada topik yang disekat"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Lihat topik yang disekat"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Minat ditetapkan semula"</string>
+    <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Topik ditetapkan semula"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Apl boleh menganggarkan minat anda dan menyimpan minat ini dengan Android buat sementara waktu. Kemudian, apl lain boleh memaparkan iklan berdasarkan minat ini kepada anda.\n\nJika anda menyekat apl, apl itu tidak akan menganggarkan minat lagi. Apl tersebut tidak akan ditambahkan pada senarai apl ini lagi melainkan anda menyahsekat apl. Minat yang telah dianggarkan oleh apl akan dipadamkan, tetapi anda mungkin masih melihat beberapa iklan yang berkaitan."</string>
-    <string name="settingsUI_blocked_apps_title" msgid="3902259560117462894">"Apl yang telah anda sekat"</string>
+    <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"Apl yang anda sekat"</string>
+    <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Lihat apl yang disekat"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Tetapkan semula minat yang dianggarkan oleh apl"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Tiada apl yang menjana minat untuk anda sekarang"</string>
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Tiada apl untuk ditunjukkan sekarang"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Kotak Pasir Privasi"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Beta privasi iklan Android menyediakan ciri baharu yang boleh digunakan oleh apl untuk memaparkan iklan yang mungkin anda suka kepada anda. Teknologi ini tidak menggunakan pengecam peranti.\n\nApl boleh menganggarkan jenis iklan yang mungkin anda minati dan menyimpan minat ini pada peranti anda buat sementara waktu. Hal ini membolehkan apl memaparkan iklan yang berkaitan kepada anda tanpa menjejaki aktiviti anda merentas laman web dan apl daripada pembangun lain."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Anda tidak mempunyai apl yang disekat"</string>
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Tiada apl yang disekat"</string>
+    <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Benarkan pengukuran iklan"</string>
+    <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apl dan pengiklan boleh meminta maklumat daripada Android yang membantu mereka mengukur prestasi iklan mereka.\n\nData pengukuran iklan dipadamkan dengan kerap daripada peranti anda."</string>
+    <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Tetapkan semula data pengukuran"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android melindungi privasi anda dengan mengehadkan maklumat yang boleh dikongsi oleh apl antara satu sama lain. Laporan dihantar kemudian untuk melindungi identiti anda.\n\nPenyemak imbas anda mungkin mempunyai tetapan yang serupa. Jika pengukuran iklan dihidupkan untuk Android dan juga penyemak imbas anda, syarikat mungkin dapat mengukur keberkesanan sesuatu iklan antara apl yang anda gunakan dengan laman yang anda lawati. Sejarah penyemakan imbas anda dirahsiakan pada peranti anda.\n\nKetahui lebih lanjut tentang cara Android melindungi data anda dalam Dasar Privasi kami."</string>
+    <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Data pengukuran iklan ditetapkan semula"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Batal"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Matikan Kotak Pasir Privasi?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Jika anda berubah fikiran atau ingin mengetahui lebih lanjut tentang beta privasi iklan Android, pergi ke tetapan privasi anda"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Matikan"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Sekat <xliff:g id="TOPIC">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_topic_message" msgid="2474902516721078270">"Minat ini akan disekat dan tidak akan ditambahkan pada senarai anda semula melainkan anda menambahkan minat itu semula. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Topik ini akan disekat dan tidak akan ditambahkan pada senarai anda lagi, melainkan anda menambahkan topik itu semula. Anda mungkin masih akan melihat beberapa iklan yang berkaitan."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Sekat"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"<xliff:g id="TOPIC">%1$s</xliff:g> dinyahsekat"</string>
-    <string name="settingsUI_dialog_unblock_topic_message" msgid="4058967523591550460">"Android mungkin menambahkan minat ini pada senarai anda semula tetapi minat ini mungkin tidak akan muncul dengan serta-merta"</string>
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android boleh menambahkan topik ini pada senarai anda semula, tetapi topik mungkin tidak kelihatan dengan serta-merta"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <string name="settingsUI_dialog_reset_topic_title" msgid="1949146936958849544">"Tetapkan semula semua minat anda?"</string>
-    <string name="settingsUI_dialog_reset_topic_message" msgid="3993838583084657398">"Senarai anda akan dikosongkan dan minat baharu akan dianggarkan pada masa hadapan. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan dengan minat yang dikosongkan."</string>
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Tetapkan semula semua topik iklan?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Senarai anda akan dikosongkan dan topik baharu akan ditambahkan pada masa akan datang. Anda mungkin masih akan melihat beberapa iklan yang berkaitan dengan topik yang anda tetapkan semula."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Tetapkan semula"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Sekat <xliff:g id="APP">%1$s</xliff:g>?"</string>
-    <string name="settingsUI_dialog_block_app_message" msgid="4703493174054204149">"Apl ini tidak akan menganggarkan minat untuk Kotak Pasir Privasi dan tidak akan ditambahkan pada senarai anda semula melainkan anda menyahsekat apl tersebut.\n\nMinat yang telah dianggarkan oleh apl ini akan dipadamkan tetapi anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Apl ini tidak akan mencadangkan iklan dan iklan tidak akan ditambahkan pada senarai anda lagi, melainkan anda menyahsekat apl. Anda mungkin masih akan melihat beberapa iklan yang berkaitan."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"<xliff:g id="APP">%1$s</xliff:g> dinyahsekat"</string>
-    <string name="settingsUI_dialog_unblock_app_message" msgid="7858109719986236041">"Apl ini boleh menganggarkan minat untuk anda semula tetapi minat tersebut mungkin tidak akan muncul pada senarai anda dengan serta-merta. Sedikit masa mungkin diperlukan untuk anda melihat iklan yang berkaitan."</string>
-    <string name="settingsUI_dialog_reset_app_title" msgid="7193520707240514769">"Tetapkan semula minat yang dijana oleh apl?"</string>
-    <string name="settingsUI_dialog_reset_app_message" msgid="1487583055097801881">"Minat yang dianggarkan oleh apl pada senarai anda akan dipadamkan daripada Kotak Pasir Privasi dan apl akan menganggarkan minat baharu pada masa hadapan. Anda mungkin masih akan melihat sesetengah iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Apl ini boleh mencadangkan iklan untuk anda semula, tetapi iklan tersebut mungkin tidak kelihatan dalam senarai anda dengan serta-merta. Sedikit masa mungkin diperlukan untuk anda melihat iklan yang berkaitan."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Tetapkan semula iklan yang dicadangkan oleh apl?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"Data cadangan iklan daripada apl pada senarai anda akan dipadamkan dan apl akan mencadangkan iklan baharu pada masa akan datang. Anda mungkin masih akan melihat beberapa iklan yang berkaitan."</string>
+    <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Data apl telah ditetapkan semula"</string>
+    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Tetapkan semula semua topik?"</string>
+    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Tetapkan semula iklan yang dicadangkan oleh apl?"</string>
+    <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privasi iklan"</string>
+    <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Topik iklan"</string>
+    <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Iklan cadangan apl"</string>
+    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
+    <skip />
+    <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android mengetahui topik yang anda minati berdasarkan apl yang anda gunakan baru-baru ini dan kekerapan anda menggunakan apl."</string>
+    <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apl yang anda gunakan juga boleh menentukan perkara yang anda suka berdasarkan cara anda menggunakan apl."</string>
+    <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apl yang anda gunakan boleh meminta maklumat daripada Android untuk membantu apl mengukur prestasi iklan apl. Android membolehkan apl mengumpulkan jenis data yang terhad."</string>
+    <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Hidup / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> topik"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Hidup / # topik}other{Hidup / # topik}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Hidup / <xliff:g id="APPS_COUNT">%1$d</xliff:g> apl"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Hidup / # apl}other{Hidup / # apl}}"</string>
+    <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Hidup"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Mati"</string>
+    <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Topik yang anda minati adalah berdasarkan apl yang anda gunakan baru-baru ini dan digunakan oleh apl untuk menunjukkan iklan diperibadikan kepada anda.\n\nAnda boleh menyekat topik yang tidak ingin anda kongsikan dengan apl. Android juga autopadam topik secara kerap."</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Benarkan topik iklan"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Topik iklan yang anda sekat"</string>
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Tetapkan semula semua topik iklan"</string>
+    <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android mengetahui topik yang anda minati berdasarkan apl yang telah anda gunakan dalam beberapa minggu lepas.\n\nKemudian, apl yang anda gunakan boleh meminta topik anda daripada Android untuk memeribadikan iklan yang anda lihat. Android berkongsi hingga 3 topik sambil melindungi identiti anda dan maklumat tentang penggunaan anda pada apl.\n\nAndroid mengautopadam topik secara kerap. Sementara anda terus menggunakan apl, topik mungkin dipaparkan semula pada senarai. Atau anda boleh menyekat topik yang anda tidak mahu Android berkongsi dengan apl.\n\nDalam apl anda, iklan yang anda lihat mungkin diperibadikan, bergantung pada tetapan ini, tetapan iklan cadangan apl, tetapan ID pengiklanan anda dan sama ada apl yang anda gunakan memperibadikan iklan atau tidak."</string>
+    <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Benarkan iklan cadangan apl"</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Apl yang anda gunakan boleh menentukan perkara yang anda suka dan mencadangkan iklan pada apl lain.\n\nAnda boleh menyekat apl daripada membuat cadangan. Android juga mengautopadam data cadangan apl secara kerap."</string>
+    <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apl yang anda sekat"</string>
+    <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tetapkan semula data cadangan apl"</string>
+    <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Apl yang anda gunakan biasanya akan mengingati perkara yang anda minati untuk memeribadikan pengalaman anda. Apl juga boleh menyimpan maklumat dengan Android tentang topik anda.\n\nSebagai contoh, jika anda menggunakan apl tentang latihan maraton, apl itu mungkin akan memutuskan bahawa anda berminat dengan kasut lari. Kemudian, jika anda menggunakan apl yang berbeza, apl itu boleh menunjukkan kepada anda iklan untuk kasut lari yang dicadangkan oleh apl pertama.\n\nAndroid akan autopadam data yang dicadangkan oleh apl secara kerap. Apl yang anda gunakan sekali lagi mungkin akan dipaparkan semula pada senarai. Anda juga boleh menyekat apl daripada mencadangkan iklan kepada anda.\n\nDalam apl anda, iklan yang anda lihat mungkin diperibadikan, bergantung pada tetapan ini, tetapan topik iklan, tetapan ID pengiklanan anda dan sama ada apl yang anda gunakan memeribadikan iklan."</string>
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol berwarna-warni yang mewakili topik yang diminati seperti muzik, berita dan sukan"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi berwarna-warni kunci di dalam bulatan"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi kecil hitam dan putih sembilan titik yang membentuk segi empat sama"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Ilustrasi kecil hitam dan putih bentuk mudah seperti hati, segi tiga dan segi empat sama"</string>
     <string name="topic10001" msgid="1636806320891333775">"Seni &amp; Hiburan"</string>
     <string name="topic10002" msgid="1226367977754287428">"Lakonan &amp; Teater"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime &amp; Manga"</string>

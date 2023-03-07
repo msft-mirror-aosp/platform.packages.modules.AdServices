@@ -227,7 +227,7 @@ public class MeasurementDataDeleterTest {
         Source source1 =
                 SourceFixture.getValidSourceBuilder()
                         .setId("sourceId1")
-                        .setDedupKeys(
+                        .setEventReportDedupKeys(
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 new UnsignedLong("1"),
@@ -237,7 +237,7 @@ public class MeasurementDataDeleterTest {
         Source source2 =
                 SourceFixture.getValidSourceBuilder()
                         .setId("sourceId2")
-                        .setDedupKeys(
+                        .setEventReportDedupKeys(
                                 new ArrayList<>(
                                         Arrays.asList(
                                                 new UnsignedLong("11"),
@@ -260,12 +260,14 @@ public class MeasurementDataDeleterTest {
                 mMeasurementDao, List.of(mEventReport1, mEventReport2, mEventReport3));
 
         // Verification
-        verify(mMeasurementDao, times(2)).updateSourceDedupKeys(source1);
-        verify(mMeasurementDao).updateSourceDedupKeys(source2);
-        assertEquals(Collections.singletonList(new UnsignedLong("2")), source1.getDedupKeys());
+        verify(mMeasurementDao, times(2)).updateSourceEventReportDedupKeys(source1);
+        verify(mMeasurementDao).updateSourceEventReportDedupKeys(source2);
+        assertEquals(
+                Collections.singletonList(new UnsignedLong("2")),
+                source1.getEventReportDedupKeys());
         assertEquals(
                 Arrays.asList(new UnsignedLong("11"), new UnsignedLong("33")),
-                source2.getDedupKeys());
+                source2.getEventReportDedupKeys());
     }
 
     @Test
@@ -280,7 +282,7 @@ public class MeasurementDataDeleterTest {
 
         // Verification
         verify(mMeasurementDao, never()).getSource(anyString());
-        verify(mMeasurementDao, never()).updateSourceDedupKeys(any());
+        verify(mMeasurementDao, never()).updateSourceEventReportDedupKeys(any());
     }
 
     @Test

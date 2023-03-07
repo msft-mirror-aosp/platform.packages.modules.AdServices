@@ -15,16 +15,19 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.delegates.MainActionDelegate;
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
@@ -33,6 +36,8 @@ import com.android.settingslib.widget.MainSwitchBar;
 import java.util.Objects;
 
 /** Fragment for the main view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMainFragment extends Fragment {
     public static final String ERROR_MESSAGE_VIEW_MODEL_EXCEPTION_WHILE_GET_CONSENT =
             "getConsent method failed. Will not change consent value in view model.";
@@ -47,7 +52,6 @@ public class AdServicesSettingsMainFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        setupViewModel();
     }
 
     @Override
@@ -61,13 +65,21 @@ public class AdServicesSettingsMainFragment extends Fragment {
         MainActionDelegate actionDelegate =
                 ((AdServicesSettingsMainActivity) requireActivity()).getActionDelegate();
         actionDelegate.initMainFragment(this);
+        setupViewModel();
     }
 
     private void setupViewModel() {
-        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            // the entry point of Apps, Topics, Measurement should be visible all the time
+            requireView().findViewById(R.id.privacy_sandbox_controls).setVisibility(View.VISIBLE);
+            return;
+        }
 
+        MainViewModel model = new ViewModelProvider(requireActivity()).get(MainViewModel.class);
         MainSwitchBar mainSwitchBar =
                 Objects.requireNonNull(requireView().findViewById(R.id.main_switch_bar));
+
+
         View privacySandboxControls = requireView().findViewById(R.id.privacy_sandbox_controls);
         model.getConsent()
                 .observe(

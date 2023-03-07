@@ -29,13 +29,18 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 
@@ -48,6 +53,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the AdSelection Override Logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -394,7 +401,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -408,7 +417,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -422,7 +433,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -438,7 +451,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -453,7 +468,9 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -467,13 +484,25 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            if (!mConsentManager.getConsent().isGiven()) {
+                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
+
+                            if (!userConsent.isGiven()) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
                             mAdSelectionDevOverridesHelper.removeAllSelectionLogicOverrides();
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
+    }
+
+    private AdServicesApiConsent getAdServicesApiConsent() {
+        AdServicesApiConsent userConsent;
+        if (mFlags.getGaUxFeatureEnabled()) {
+            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
+        } else {
+            userConsent = mConsentManager.getConsent();
+        }
+        return userConsent;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */

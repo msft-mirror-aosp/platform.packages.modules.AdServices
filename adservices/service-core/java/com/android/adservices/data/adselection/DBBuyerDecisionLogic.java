@@ -31,7 +31,6 @@ import java.util.Objects;
  *
  * @hide
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Entity(tableName = "buyer_decision_logic")
 public final class DBBuyerDecisionLogic {
     @ColumnInfo(name = "bidding_logic_uri")

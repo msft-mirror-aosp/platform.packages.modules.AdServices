@@ -19,6 +19,7 @@ package com.android.server.adservices.consent;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
+import static com.android.server.adservices.consent.ConsentManager.VERSION_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,12 +30,18 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.server.adservices.common.BooleanFileDatastore;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -49,7 +56,8 @@ public class ConsentManagerTest {
                 new BooleanFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
-                        STORAGE_VERSION);
+                        STORAGE_VERSION,
+                        VERSION_KEY);
     }
 
     @After
@@ -62,13 +70,16 @@ public class ConsentManagerTest {
         // The Data store is in folder with the following format.
         // /data/system/adservices/user_id/consent/
         assertThat(
-                        ConsentManager.getConsentDataStoreDir(
+                        ConsentDatastoreLocationHelper.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 0))
                 .isEqualTo("/data/system/adservices/0/consent");
         assertThat(
-                        ConsentManager.getConsentDataStoreDir(
+                        ConsentDatastoreLocationHelper.getConsentDataStoreDir(
                                 /* baseDir */ "/data/system/adservices", /* userIdentifier */ 1))
                 .isEqualTo("/data/system/adservices/1/consent");
+        assertThrows(
+                NullPointerException.class,
+                () -> ConsentDatastoreLocationHelper.getConsentDataStoreDir(null, 0));
     }
 
     @Test
@@ -260,5 +271,74 @@ public class ConsentManagerTest {
         consentManager.recordNotificationDisplayed();
 
         assertThat(consentManager.wasNotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testGaUxRecordNotificationDisplayed() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // First, the notification displayed is false.
+        assertThat(consentManager.wasGaUxNotificationDisplayed()).isFalse();
+        consentManager.recordGaUxNotificationDisplayed();
+
+        assertThat(consentManager.wasGaUxNotificationDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testTopicsConsentPageDisplayed() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // First, the topics consent page displayed is false.
+        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isFalse();
+        consentManager.recordTopicsConsentPageDisplayed();
+
+        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testFledgeAndMsmtConsentPageDisplayed() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        // First, the fledge consent page displayed is false.
+        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
+        consentManager.recordFledgeAndMsmtConsentPageDisplayed();
+
+        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDir() throws IOException {
+        int userIdentifier = 0;
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+        assertThat(Files.exists(packageDir)).isTrue();
+        String userDirectoryPath = BASE_DIR + "/" + userIdentifier;
+        assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
+
+        assertThat(Files.exists(packageDir)).isFalse();
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDirUserIdentifierNotPresent() throws IOException {
+        int userIdentifier = 0;
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+
+        int userIdentifierNotPresent = 3;
+        // Try deleting with non-existent user id. Nothing should happen and ensure userIdentifier
+        // is present.
+        assertThat(
+                        consentManager.deleteUserDirectory(
+                                new File(BASE_DIR + userIdentifierNotPresent)))
+                .isFalse();
+        assertThat(Files.exists(packageDir)).isTrue();
     }
 }

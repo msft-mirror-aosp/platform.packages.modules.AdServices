@@ -24,9 +24,13 @@ import android.os.Bundle;
 import android.view.View;
 
 public class TestProvider extends SandboxedSdkProvider {
+    private static final String THROW_EXCEPTION_KEY = "throw-exception";
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
+        if (params.containsKey(THROW_EXCEPTION_KEY)) {
+            throw new IllegalStateException("SDK failed to load.");
+        }
         return new SandboxedSdk(new Binder());
     }
 

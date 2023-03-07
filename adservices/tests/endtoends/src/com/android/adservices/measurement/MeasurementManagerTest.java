@@ -18,10 +18,12 @@ package com.android.adservices.measurement;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.measurement.DeletionParam;
@@ -61,6 +63,7 @@ import java.util.concurrent.TimeUnit;
 public class MeasurementManagerTest {
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long TIMEOUT = 5000L;
+    private static final long CALLBACK_TIMEOUT = 100L;
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -72,7 +75,8 @@ public class MeasurementManagerTest {
                     sContext.getApplicationInfo(),
                     "sdkName",
                     /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null);
+                    /* sdkDeDataDir = */ null,
+                    /* isCustomizedSdkContext = */ false);
 
     @After
     public void tearDown() {
@@ -103,6 +107,66 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         Assert.assertNotNull(captor.getValue().getAppPackageName());
         Assert.assertEquals(CLIENT_PACKAGE_NAME, captor.getValue().getAppPackageName());
+    }
+
+    @Test
+    public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
+        MeasurementManager measurementManager =
+                spy(sContext.getSystemService(MeasurementManager.class));
+        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+        measurementManager.registerSource(
+                Uri.parse("https://example.com"),
+                /* inputEvent = */ null,
+                /* executor = */ CALLBACK_EXECUTOR,
+                /* callback = */ callback);
+
+        verify(callback, after(CALLBACK_TIMEOUT)).onError(any());
+    }
+
+    @Test
+    public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
+        MeasurementManager measurementManager =
+                spy(sContext.getSystemService(MeasurementManager.class));
+        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        measurementManager.registerTrigger(
+                Uri.parse("https://example.com"),
+                /* executor = */ CALLBACK_EXECUTOR,
+                /* callback = */ callback);
+
+        verify(callback, after(CALLBACK_TIMEOUT)).onError(any());
+    }
+
+    @Test
+    public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
+        MeasurementManager measurementManager =
+                spy(sContext.getSystemService(MeasurementManager.class));
+        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        measurementManager.registerWebSource(
+                buildDefaultWebSourceRegistrationRequest(),
+                /* executor = */ CALLBACK_EXECUTOR,
+                /* callback = */ callback);
+
+        verify(callback, after(CALLBACK_TIMEOUT)).onError(any());
+    }
+
+    @Test
+    public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
+        MeasurementManager measurementManager =
+                spy(sContext.getSystemService(MeasurementManager.class));
+        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        OutcomeReceiver callback = mock(OutcomeReceiver.class);
+
+        measurementManager.registerWebTrigger(
+                buildDefaultWebTriggerRegistrationRequest(),
+                /* executor = */ CALLBACK_EXECUTOR,
+                /* callback = */ callback);
+
+        verify(callback, after(CALLBACK_TIMEOUT)).onError(any());
     }
 
     @Test

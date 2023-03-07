@@ -86,7 +86,7 @@ public class PermissionsValidTest {
     }
 
     @Test
-    public void testValidPermissions_selectAds() {
+    public void testValidPermissions_selectAds_adSelectionConfig() {
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =

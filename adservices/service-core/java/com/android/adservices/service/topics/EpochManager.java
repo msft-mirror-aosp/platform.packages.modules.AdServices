@@ -19,11 +19,12 @@ package com.android.adservices.service.topics;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.text.TextUtils;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -35,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -49,7 +51,9 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-public class EpochManager implements Dumpable {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class EpochManager {
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -58,9 +62,6 @@ public class EpochManager implements Dumpable {
                 Pair.create(
                         TopicsTables.AppClassificationTopicsContract.TABLE,
                         TopicsTables.AppClassificationTopicsContract.EPOCH_ID),
-                Pair.create(
-                        TopicsTables.CallerCanLearnTopicsContract.TABLE,
-                        TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID),
                 Pair.create(
                         TopicsTables.TopTopicsContract.TABLE,
                         TopicsTables.TopTopicsContract.EPOCH_ID),
@@ -97,6 +98,9 @@ public class EpochManager implements Dumpable {
     @VisibleForTesting
     public static final String PADDED_TOP_TOPICS_STRING = "no_contributors_due_to_padding!";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
+    @GuardedBy("SINGLETON_LOCK")
     private static EpochManager sSingleton;
 
     private final TopicsDao mTopicsDao;
@@ -126,7 +130,7 @@ public class EpochManager implements Dumpable {
     /** Returns an instance of the EpochManager given a context. */
     @NonNull
     public static EpochManager getInstance(@NonNull Context context) {
-        synchronized (EpochManager.class) {
+        synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 sSingleton =
                         new EpochManager(
@@ -156,6 +160,10 @@ public class EpochManager implements Dumpable {
         LogUtil.d("EpochManager.processEpoch for the current epochId %d", currentEpochId);
 
         try {
+            // Step 0: erase outdated epoch's data, i.e. epoch earlier than
+            // (currentEpoch - numberOfLookBackEpochs) (inclusive)
+            garbageCollectOutdatedEpochData(currentEpochId);
+
             // Step 1: Compute the UsageMap from the UsageHistory table.
             // appSdksUsageMap = Map<App, List<SDK>> has the app and its SDKs that called Topics API
             // in the current Epoch.
@@ -184,7 +192,8 @@ public class EpochManager implements Dumpable {
             mTopicsDao.persistCallerCanLearnTopics(currentEpochId, callersCanLearnThisEpochMap);
 
             // Step 4: For each topic, retrieve the callers (App or SDK) that can learn about that
-            // topic. We look at last 3 epochs.
+            // topic. We look at last 3 epochs. More specifically, epochs in
+            // [currentEpochId - 2, currentEpochId]. (inclusive)
             // Return callersCanLearnMap = Map<Topic, Set<Caller>>  where Caller = App or Sdk.
             Map<Topic, Set<String>> callersCanLearnMap =
                     mTopicsDao.retrieveCallerCanLearnTopicsMap(
@@ -233,9 +242,6 @@ public class EpochManager implements Dumpable {
 
             // And persist the map to DB so that we can reuse later.
             mTopicsDao.persistReturnedAppTopicsMap(currentEpochId, returnedAppSdkTopics);
-
-            // Finally erase outdated epoch's data
-            garbageCollectOutdatedEpochData(currentEpochId);
 
             // Mark the transaction successful.
             db.setTransactionSuccessful();
@@ -451,9 +457,10 @@ public class EpochManager implements Dumpable {
     // To garbage collect data for old epochs.
     @VisibleForTesting
     void garbageCollectOutdatedEpochData(long currentEpochID) {
+        int epochLookBackNumberForGarbageCollection = mFlags.getNumberOfEpochsToKeepInHistory();
         // Assume current Epoch is T, and the earliest epoch should be kept is T-3
         // Then any epoch data older than T-3-1 = T-4, including T-4 should be deleted.
-        long epochToDeleteFrom = currentEpochID - mFlags.getNumberOfEpochsToKeepInHistory() - 1;
+        long epochToDeleteFrom = currentEpochID - epochLookBackNumberForGarbageCollection - 1;
         // To do garbage collection for each table
         for (Pair<String, String> tableColumnPair : TABLE_INFO_FOR_EPOCH_GARBAGE_COLLECTION) {
             mTopicsDao.deleteDataOfOldEpochs(
@@ -467,6 +474,18 @@ public class EpochManager implements Dumpable {
                     TopicsTables.TopicContributorsContract.EPOCH_ID,
                     epochToDeleteFrom);
         }
+
+        // In app installation, we need to assign topics to newly installed app-sdk caller. In order
+        // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
+        // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app
+        // installation, topics will be assigned to T-1, T-2 and T-3. In order to check learnability
+        // at Epoch T-3, we need to check CallerCanLearnTopicsContract of epoch T-4, T-5 and T-6.
+        long epochToDeleteFromForCallerCanLearn =
+                currentEpochID - epochLookBackNumberForGarbageCollection * 2L - 1;
+        mTopicsDao.deleteDataOfOldEpochs(
+                TopicsTables.CallerCanLearnTopicsContract.TABLE,
+                TopicsTables.CallerCanLearnTopicsContract.EPOCH_ID,
+                epochToDeleteFromForCallerCanLearn);
     }
 
     // Compute the mapping of topic to its contributor apps. In an epoch, an app is a contributor to
@@ -511,7 +530,6 @@ public class EpochManager implements Dumpable {
                 && mTopicsDao.supportsTopicContributorsTable();
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();

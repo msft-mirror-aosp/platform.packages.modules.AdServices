@@ -33,7 +33,6 @@ import java.util.Objects;
  * This POJO represents the ad_selection_entry data that combines the data fields joined from the
  * ad_selection and buyer_decision_logic entities.
  */
-// TODO (b/229660121): Ad unit tests for this class
 public final class DBAdSelectionEntry {
     private static final int UNSET = 0;
 

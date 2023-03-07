@@ -16,30 +16,25 @@
 
 package com.android.tests.sandbox.adid;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.annotation.NonNull;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesCtsHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
@@ -51,8 +46,6 @@ import java.util.concurrent.TimeoutException;
 public class SandboxedAdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.adidsdk";
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String ADID_SERVICE_NAME = "android.adservices.ADID_SERVICE";
 
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
@@ -72,6 +65,9 @@ public class SandboxedAdIdManagerTest {
 
     @Test
     public void loadSdkAndRunAdIdApi() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
@@ -80,14 +76,8 @@ public class SandboxedAdIdManagerTest {
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies that the adidsdk in the Sandbox gets back the correct adid.
-        // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError.
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void overridingBeforeTest() {
@@ -122,34 +112,5 @@ public class SandboxedAdIdManagerTest {
     private void overridingAdservicesAdIdKillSwitch(boolean shouldOverride) {
         String overrideString = shouldOverride ? "false" : "null";
         ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
-    }
-
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    @NonNull
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(ADID_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            String errorMsg =
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + ADID_SERVICE_NAME;
-            throw new IllegalStateException(errorMsg);
-        }
-
-        if (resolveInfos.size() > 1) {
-            String errorMsg = "Found multiple services for the same intent action. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            String errorMsg = "Failed to find serviceInfo for adServices service. ";
-            throw new IllegalStateException(errorMsg);
-        }
-
-        return serviceInfo.packageName;
     }
 }
