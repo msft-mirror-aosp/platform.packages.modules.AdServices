@@ -32,6 +32,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -172,17 +173,8 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce a consent check
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
-     *     enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
+     * @throws FilterException if any filter assertion fails and wraps the exception thrown by the
+     *     failing filter
      */
     public abstract void filterRequest(
             @Nullable AdTechIdentifier adTech,
