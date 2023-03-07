@@ -22,6 +22,6 @@
     <string name="create_file">Create File</string>
     <string name="play_video">Play Video</string>
     <string name="sync_keys">Sync Keys</string>
-    <string name="enable_sdk_sdk">Enable SDK SDK comm</string>
+    <string name="enable_sdk_sdk">Enable SDK to SDK comm</string>
     <string name="start_activity">Start SandboxActivity</string>
 </resources>
