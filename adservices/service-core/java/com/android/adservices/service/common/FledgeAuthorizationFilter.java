@@ -118,26 +118,6 @@ public class FledgeAuthorizationFilter {
     }
 
     /**
-     * Check if the app had declared custom audience permission.
-     *
-     * @param context api service context
-     * @param apiNameLoggingId the id of the api being called
-     * @throws SecurityException if the package did not declare custom audience permission
-     */
-    public void assertAppDeclaredAppInstallPermission(
-            @NonNull Context context, int apiNameLoggingId) throws SecurityException {
-        Objects.requireNonNull(context);
-        if (!PermissionHelper.hasAppInstallPermission(context)) {
-            LogUtil.v("Permission not declared by caller in API %d", apiNameLoggingId);
-            mAdServicesLogger.logFledgeApiCallStats(
-                    apiNameLoggingId, STATUS_PERMISSION_NOT_REQUESTED, 0);
-            throw new SecurityException(
-                    AdServicesStatusUtils
-                            .SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE);
-        }
-    }
-
-    /**
      * Check if a certain ad tech is enrolled and authorized to perform the operation for the
      * package.
      *
