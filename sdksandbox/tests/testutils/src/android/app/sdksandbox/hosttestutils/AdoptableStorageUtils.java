@@ -37,7 +37,7 @@ public class AdoptableStorageUtils {
         boolean hasFstab =
                 Boolean.parseBoolean(
                         mTest.getDevice().executeShellCommand("sm has-adoptable").trim());
-        return hasFeature && hasFstab;
+        return hasFeature || hasFstab;
     }
 
     // Creates a new volume in adoptable storage and returns its uuid
