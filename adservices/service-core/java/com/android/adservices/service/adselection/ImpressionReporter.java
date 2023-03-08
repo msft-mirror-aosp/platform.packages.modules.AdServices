@@ -32,7 +32,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
@@ -49,6 +48,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -133,12 +133,8 @@ public class ImpressionReporter {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        // Clearing calling identity to check device config permission read by flags on the
-        // local process and not on the process called. Once the device configs are read,
-        // restore calling identity.
-        final long token = Binder.clearCallingIdentity();
-        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
-        Binder.restoreCallingIdentity(token);
+        boolean isRegisterAdBeaconEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
         ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
                 registerAdBeaconScriptEngineHelper;
@@ -202,12 +198,8 @@ public class ImpressionReporter {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        // Clearing calling identity to check device config permission read by flags on the
-        // local process and not on the process called. Once the device configs are read,
-        // restore calling identity.
-        final long token = Binder.clearCallingIdentity();
-        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
-        Binder.restoreCallingIdentity(token);
+        boolean isRegisterAdBeaconEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
         ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
                 registerAdBeaconScriptEngineHelper;
@@ -283,7 +275,7 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback) {
         LogUtil.v("Executing reportImpression API");
         long adSelectionId = requestParams.getAdSelectionId();
-        long timeoutMs = readFlagInBinderThread(mFlags::getReportImpressionOverallTimeoutMs);
+        long timeoutMs = BinderFlagReader.readFlag(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
         ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
@@ -659,13 +651,6 @@ public class ImpressionReporter {
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
-    }
-
-    private <T> T readFlagInBinderThread(Supplier<T> flagReadLambda) {
-        final long token = Binder.clearCallingIdentity();
-        T result = flagReadLambda.get();
-        Binder.restoreCallingIdentity(token);
-        return result;
     }
 
     private static class ReportingContext {
