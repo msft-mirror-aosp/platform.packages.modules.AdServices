@@ -47,3 +47,37 @@ android_test {
     test_mainline_modules: ["com.google.android.adservices.apex"],
     instrumentation_for: "AdServicesApk",
 }
+
+android_test {
+    name: "AdExtServicesFrameworkUnitTests",
+    srcs: [
+          "src/**/*.java"
+    ],
+    static_libs: [
+        "androidx.test.runner",
+        "androidx.test.core",
+        "truth-prebuilt",
+        "mockito-target-extended-minus-junit4",
+        "ub-uiautomator",
+        "adservices-test-fixtures",
+        "android.ext.adservices",
+    ],
+    libs: [
+        "android.test.base",
+        "android.test.mock",
+        "android.test.runner",
+        "framework-sdksandbox.impl",
+        "framework-annotations-lib",
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    target_sdk_version: "30",
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
+    test_config: "AndroidTest.ExtServices.xml",
+    test_mainline_modules: ["com.google.android.extservices.apex"],
+    instrumentation_for: "AdExtServicesApk",
+}
+
