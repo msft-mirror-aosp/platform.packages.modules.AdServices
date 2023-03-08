@@ -174,15 +174,7 @@ public class ConsentNotificationTrigger {
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
-        // EU needs a "View Details" CTA
-        return isEuDevice
-                ? notification
-                        .addAction(
-                                R.string.notificationUI_notification_ga_cta_eu,
-                                context.getString(R.string.notificationUI_notification_ga_cta_eu),
-                                pendingIntent)
-                        .build()
-                : notification.build();
+        return notification.build();
     }
 
     /**
@@ -222,15 +214,6 @@ public class ConsentNotificationTrigger {
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .addAction(
-                        isEuDevice
-                                ? R.string.notificationUI_notification_cta_eu
-                                : R.string.notificationUI_notification_cta,
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_cta_eu
-                                        : R.string.notificationUI_notification_cta),
-                        pendingIntent)
                 .build();
     }
 
