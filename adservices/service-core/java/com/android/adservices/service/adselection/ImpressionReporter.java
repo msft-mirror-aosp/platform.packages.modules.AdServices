@@ -34,7 +34,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
 import android.util.Pair;
@@ -50,7 +49,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -59,6 +57,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
@@ -243,24 +242,18 @@ public class ImpressionReporter {
                         throttlerSupplier);
     }
 
-    /** Invokes the onFailure function from the callback and handles the exception. */
+    /** Invokes the onFailure function from the callback. */
     private void invokeFailure(
-            @NonNull ReportImpressionCallback callback, int statusCode, String errorMessage) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+            @NonNull ReportImpressionCallback callback, int resultCode, String errorMessage) {
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
-                            .setStatusCode(statusCode)
+                            .setStatusCode(resultCode)
                             .setErrorMessage(errorMessage)
                             .build());
-            resultCode = statusCode;
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send failed result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 
@@ -270,13 +263,7 @@ public class ImpressionReporter {
             callback.onSuccess();
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send successful result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowFromSystemServer();
-        } finally {
-            // TODO(b/233681870): Investigate implementation of actual failures in
-            //  logs/metrics
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 
@@ -295,32 +282,8 @@ public class ImpressionReporter {
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
         LogUtil.v("Executing reportImpression API");
-        // Getting PH flags in a non binder thread
-        FluentFuture<Long> timeoutFuture =
-                FluentFuture.from(
-                        mLightweightExecutorService.submit(
-                                mFlags::getReportImpressionOverallTimeoutMs));
-
-        timeoutFuture.addCallback(
-                new FutureCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long timeout) {
-                        invokeReporting(requestParams, callback);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Report Impression failed!");
-                        notifyFailureToCaller(callback, t);
-                    }
-                },
-                mLightweightExecutorService);
-    }
-
-    private void invokeReporting(
-            @NonNull ReportImpressionInput requestParams,
-            @NonNull ReportImpressionCallback callback) {
         long adSelectionId = requestParams.getAdSelectionId();
+        long timeoutMs = readFlagInBinderThread(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
         ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
@@ -361,7 +324,7 @@ public class ImpressionReporter {
                                         reportingUrisAndContext.second),
                         mLightweightExecutorService)
                 .withTimeout(
-                        mFlags.getReportImpressionOverallTimeoutMs(),
+                        timeoutMs,
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
@@ -377,12 +340,23 @@ public class ImpressionReporter {
                             @Override
                             public void onSuccess(List<Void> result) {
                                 LogUtil.d("Report impression succeeded!");
+                                mAdServicesLogger.logFledgeApiCallStats(
+                                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                        AdServicesStatusUtils.STATUS_SUCCESS,
+                                        0);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 LogUtil.e(t, "Report Impression invocation failed!");
-                                if (t instanceof ConsentManager.RevokedConsentException) {
+                                if (t instanceof FilterException
+                                        && t.getCause()
+                                                instanceof ConsentManager.RevokedConsentException) {
+                                    // Skip logging if a FilterException occurs.
+                                    // AdSelectionServiceFilter ensures the failing assertion is
+                                    // logged internally.
+
+                                    // Fail Silently by notifying success to caller
                                     invokeSuccess(
                                             callback,
                                             AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
@@ -404,22 +378,27 @@ public class ImpressionReporter {
 
     private void notifyFailureToCaller(
             @NonNull ReportImpressionCallback callback, @NonNull Throwable t) {
-        if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
-        } else if (t instanceof WrongCallingApplicationStateException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
-        } else if (t instanceof LimitExceededException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
+        int resultCode;
+
+        boolean isFilterException = t instanceof FilterException;
+
+        if (isFilterException) {
+            resultCode = FilterException.getResultCode(t);
+        } else if (t instanceof IllegalArgumentException) {
+            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
+
+        // Skip logging if a FilterException occurs.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        // Note: Failure is logged before the callback to ensure deterministic testing.
+        if (!isFilterException) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
+        }
+
+        invokeFailure(callback, resultCode, t.getMessage());
     }
 
     @NonNull
@@ -680,6 +659,13 @@ public class ImpressionReporter {
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
+    }
+
+    private <T> T readFlagInBinderThread(Supplier<T> flagReadLambda) {
+        final long token = Binder.clearCallingIdentity();
+        T result = flagReadLambda.get();
+        Binder.restoreCallingIdentity(token);
+        return result;
     }
 
     private static class ReportingContext {

@@ -17,7 +17,7 @@ package {
 }
 
 filegroup {
-    name: "adservices-cts-utility-sources",
+    name: "adservices-test-utility-sources",
     srcs: [
         "java/**/*.java",
     ],
@@ -27,12 +27,12 @@ filegroup {
     ],
 }
 
-java_library {
-    name: "adservices-cts-utility",
+android_library {
+    name: "adservices-test-utility",
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "30",
     srcs: [
-        ":adservices-cts-utility-sources",
+        ":adservices-test-utility-sources",
     ],
     libs: [
         "framework-adservices-lib",
@@ -40,6 +40,7 @@ java_library {
     ],
     static_libs: [
         "androidx.test.runner",
+        "compatibility-device-util-axt",
     ],
     apex_available: ["com.android.adservices"],
 }

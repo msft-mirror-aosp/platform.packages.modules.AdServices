@@ -99,6 +99,7 @@ import com.android.adservices.service.customaudience.CustomAudienceServiceImpl;
 import com.android.adservices.service.customaudience.CustomAudienceValidator;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -1884,7 +1885,7 @@ public class FledgeE2ETest {
         doReturn(true)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
-        doThrow(new ConsentManager.RevokedConsentException())
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
