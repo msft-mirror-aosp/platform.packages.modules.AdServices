@@ -78,7 +78,7 @@ public class DBAdSelectionTest {
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUri() {
+    public void testFailsToBuildContextualAdWithNullBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -86,7 +86,7 @@ public class DBAdSelectionTest {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
-                            .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                            .setBiddingLogicUri(null)
                             .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
@@ -96,14 +96,14 @@ public class DBAdSelectionTest {
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullCustomAudienceSignals() {
+    public void testFailsToBuildContextualAdWithNullCustomAudienceSignalsAndBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                            .setCustomAudienceSignals(null)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
                             .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
