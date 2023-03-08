@@ -44,7 +44,7 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -83,7 +83,7 @@ public class MeasurementManagerSandboxCtsTest {
     @Before
     public void setUp() {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         mMockCallbackExecutor = mock(Executor.class);
         mMockOutcomeReceiver = mock(OutcomeReceiver.class);

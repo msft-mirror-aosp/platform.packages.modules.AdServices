@@ -39,6 +39,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -108,7 +109,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     public void teardown() throws UiObjectNotFoundException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // Reset epoch length.
         overrideEpochPeriod(FlagsFactory.getFlagsForTest().getTopicsEpochJobPeriodMs());
@@ -188,7 +189,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         sDevice.pressBack();
 
         // restart the app since scrollToBeginning does not work.
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         Thread.sleep(3000);
         launchSettingView();
 
