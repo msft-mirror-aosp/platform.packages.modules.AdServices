@@ -269,6 +269,8 @@ public class SqliteObjectMapper {
                 builder::setTriggerDebugKey);
         setTextColumn(cursor, MeasurementTables.AggregateReport.SOURCE_ID, builder::setSourceId);
         setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
+        setUnsignedLongColumn(
+                cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
         return builder.build();
     }
 

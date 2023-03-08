@@ -1065,6 +1065,13 @@ class MeasurementDao implements IMeasurementDao {
                                 + " = ?",
                         new String[] {uriStr, uriStr});
 
+        // Async Registration table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
+                        new String[] {uriStr});
+
         return numDeletions != 0;
     }
 
@@ -1158,6 +1165,15 @@ class MeasurementDao implements IMeasurementDao {
                                 + valueList.toString(),
                         /* whereArgs */ null);
 
+        // Async Registration table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                                + " NOT IN "
+                                + valueList.toString(),
+                        /* whereArgs */ null);
+
         return numDeletions != 0;
     }
 
@@ -1238,9 +1254,15 @@ class MeasurementDao implements IMeasurementDao {
                     String.valueOf(AggregateReport.Status.DELIVERED), earliestValidInsertionStr
                 });
         // Attribution table
-        db.delete(MeasurementTables.AttributionContract.TABLE,
+        db.delete(
+                MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.TRIGGER_TIME + " < ?",
-                new String[]{earliestValidInsertionStr});
+                new String[] {earliestValidInsertionStr});
+        // Async Registration table
+        db.delete(
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ?",
+                new String[] {earliestValidInsertionStr});
     }
 
     @Override
@@ -1664,6 +1686,11 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUnsignedLong(aggregateReport.getTriggerDebugKey()));
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
         values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
+        values.put(
+                MeasurementTables.AggregateReport.DEDUP_KEY,
+                aggregateReport.getDedupKey() != null
+                        ? aggregateReport.getDedupKey().getValue()
+                        : null);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1809,7 +1836,6 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.ID);
     }
-
     private void deleteRecordsColumnBased(
             List<String> columnValues, String tableName, String columnName)
             throws DatastoreException {
@@ -2129,6 +2155,21 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AsyncRegistrationContract.ID + " = ?",
                         new String[] {id});
         LogUtil.d("MeasurementDao: deleteAsyncRegistration: rows affected=" + rows);
+    }
+
+    @Override
+    public void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri)
+            throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        int rows =
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
+                        new String[] {uri});
+        LogUtil.d(
+                "MeasurementDao: deleteAsyncRegistrationsProvidedRegistrant: rows"
+                        + " affected="
+                        + rows);
     }
 
     @Override
