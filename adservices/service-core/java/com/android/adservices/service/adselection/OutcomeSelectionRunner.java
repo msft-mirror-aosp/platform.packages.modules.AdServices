@@ -39,13 +39,14 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
@@ -99,7 +100,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final Flags mFlags;
 
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
 
     /**
@@ -111,7 +112,7 @@ public class OutcomeSelectionRunner {
      * @param adServicesLogger logger for logging calls to PPAPI
      * @param context service context
      * @param flags for accessing feature flags
-     * @param fledgeServiceFilter to validate the request
+     * @param adSelectionServiceFilter to validate the request
      */
     public OutcomeSelectionRunner(
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -123,7 +124,7 @@ public class OutcomeSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Context context,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -156,7 +157,7 @@ public class OutcomeSelectionRunner {
                         mAdServicesHttpsClient,
                         new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao),
                         mFlags);
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -171,7 +172,7 @@ public class OutcomeSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Context context,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter) {
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter) {
         Objects.requireNonNull(adOutcomeSelector);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -180,7 +181,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -195,7 +196,7 @@ public class OutcomeSelectionRunner {
         mFlags = flags;
 
         mAdOutcomeSelector = adOutcomeSelector;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
     }
 
@@ -219,7 +220,7 @@ public class OutcomeSelectionRunner {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                     LogUtil.v("Starting filtering and validation.");
-                                    mFledgeServiceFilter.filterRequest(
+                                    mAdSelectionServiceFilter.filterRequest(
                                             adSelectionFromOutcomesConfig.getSeller(),
                                             inputParams.getCallerPackageName(),
                                             mFlags
@@ -256,10 +257,15 @@ public class OutcomeSelectionRunner {
 
                         @Override
                         public void onFailure(Throwable t) {
-                            if (t instanceof ConsentManager.RevokedConsentException) {
-                                notifyEmptySuccessToCaller(
-                                        callback,
-                                        AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                            if (t instanceof FilterException
+                                    && t.getCause()
+                                            instanceof ConsentManager.RevokedConsentException) {
+                                // Skip logging if a FilterException occurs.
+                                // AdSelectionServiceFilter ensures the failing assertion is logged
+                                // internally.
+
+                                // Fail Silently by notifying success to caller
+                                notifyEmptySuccessToCaller(callback);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
                                     notifyFailureToCaller(t.getCause(), callback);
@@ -317,6 +323,11 @@ public class OutcomeSelectionRunner {
     private void notifySuccessToCaller(AdSelectionOutcome result, AdSelectionCallback callback) {
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
+            // Note: Success is logged before the callback to ensure deterministic testing.
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                    AdServicesStatusUtils.STATUS_SUCCESS,
+                    0);
             if (result == null) {
                 callback.onSuccess(null);
             } else {
@@ -326,41 +337,42 @@ public class OutcomeSelectionRunner {
                                 .setRenderUri(result.getRenderUri())
                                 .build());
             }
-            resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
         } catch (RemoteException e) {
             LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             LogUtil.v("Ad Selection from outcomes completed and attempted notifying success");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
     /** Sends a successful response to the caller that represents a silent failure. */
-    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback, int resultCode) {
+    private void notifyEmptySuccessToCaller(@NonNull AdSelectionCallback callback) {
         try {
             // TODO(b/259522822): Determine what is an appropriate empty response for revoked
             //  consent for selectAdsFromOutcomes
             callback.onSuccess(null);
         } catch (RemoteException e) {
             LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             LogUtil.v(
                     "Ad Selection from outcomes completed, attempted notifying success for a"
                             + " silent failure");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
     /** Sends a failure notification to the caller */
     private void notifyFailureToCaller(Throwable t, AdSelectionCallback callback) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             LogUtil.e("Notify caller of error: " + t);
-            resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+            int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
+
+            // Skip logging if a FilterException occurs.
+            // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+            // Note: Failure is logged before the callback to ensure deterministic testing.
+            if (!(t instanceof FilterException)) {
+                mAdServicesLogger.logFledgeApiCallStats(
+                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+            }
+
             FledgeErrorResponse selectionFailureResponse =
                     new FledgeErrorResponse.Builder()
                             .setErrorMessage(
@@ -374,11 +386,8 @@ public class OutcomeSelectionRunner {
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } finally {
             LogUtil.v("Ad Selection From Outcomes failed");
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 

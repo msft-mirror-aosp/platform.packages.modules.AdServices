@@ -19,7 +19,13 @@ package com.android.adservices.ui.util;
 import android.app.Instrumentation;
 import android.content.pm.PackageManager;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
+import androidx.test.uiautomator.UiSelector;
 
 /** Util class for APK tests. */
 public class ApkTestUtil {
@@ -35,5 +41,53 @@ public class ApkTestUtil {
         return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    /** Returns the UiObject corresponding to a resource ID. */
+    public static UiObject getElement(UiDevice device, int resId) {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        if (!obj.exists()) {
+            obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
+        }
+        return obj;
+    }
+
+    /** Returns the string corresponding to a resource ID. */
+    public static String getString(int resourceId) {
+        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
+    }
+
+    /** Returns the UiObject corresponding to a resource ID after scrolling. */
+    public static void scrollToAndClick(UiDevice device, int resId)
+            throws UiObjectNotFoundException {
+        UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        scrollView.scrollIntoView(obj);
+        return obj;
+    }
+
+    /** Returns the string corresponding to a resource ID and index. */
+    public static UiObject getElement(UiDevice device, int resId, int index) {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
+        if (!obj.exists()) {
+            obj =
+                    device.findObject(
+                            new UiSelector().text(getString(resId).toUpperCase()).instance(index));
+        }
+        return obj;
+    }
+
+    /** Returns the UiObject corresponding to a resource ID. */
+    public static UiObject getPageElement(UiDevice device, int resId) {
+        return device.findObject(new UiSelector().text(getString(resId)));
     }
 }

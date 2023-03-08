@@ -41,7 +41,8 @@ import java.time.Clock;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomAudienceImplTest {
     private static final CustomAudience VALID_CUSTOM_AUDIENCE =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE =
             DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();

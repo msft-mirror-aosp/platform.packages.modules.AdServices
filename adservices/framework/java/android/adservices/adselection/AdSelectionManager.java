@@ -16,7 +16,6 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -242,6 +241,8 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
+     *
+     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
@@ -445,7 +446,7 @@ public class AdSelectionManager {
      *
      * @hide
      */
-    @RequiresPermission(ACCESS_ADSERVICES_APP_INSTALL)
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersRequest request,
             @NonNull Executor executor,

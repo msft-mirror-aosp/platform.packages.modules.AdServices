@@ -32,6 +32,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class ConsentSettingsUiAutomatorTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
@@ -67,7 +69,9 @@ public class ConsentSettingsUiAutomatorTest {
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        if (!ApkTestUtil.isDeviceSupported()) return;
+
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
     }
 
     @Test
@@ -150,21 +154,16 @@ public class ConsentSettingsUiAutomatorTest {
             throws UiObjectNotFoundException {
         if (dialogsOn && mainSwitch.isChecked()) {
             mainSwitch.click();
-            UiObject dialogTitle = getElement(R.string.settingsUI_dialog_opt_out_title);
-            UiObject positiveText = getElement(R.string.settingsUI_dialog_opt_out_positive_text);
+            UiObject dialogTitle =
+                    ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+            UiObject positiveText =
+                    ApkTestUtil.getElement(
+                            sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
             assertThat(dialogTitle.exists()).isTrue();
             assertThat(positiveText.exists()).isTrue();
             positiveText.click();
         } else {
             mainSwitch.click();
         }
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
     }
 }

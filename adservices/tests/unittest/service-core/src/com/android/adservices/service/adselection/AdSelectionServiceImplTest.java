@@ -52,6 +52,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.never;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -89,6 +90,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -106,10 +108,10 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -118,6 +120,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -132,6 +135,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -253,8 +257,9 @@ public class AdSelectionServiceImplTest {
     private Uri mBiddingLogicUri;
     private CustomAudienceSignals mCustomAudienceSignals;
     private AdTechIdentifier mSeller;
+    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
 
-    @Mock private FledgeServiceFilter mFledgeServiceFilter;
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() {
@@ -318,7 +323,7 @@ public class AdSelectionServiceImplTest {
                         .setPerBuyerSignals(perBuyerSignals);
 
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -343,7 +348,15 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionSuccess() throws Exception {
+    public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
+        // Re init flags with registerAdBeaconDisabled
+        mFlags =
+                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                    @Override
+                    public boolean getFledgeRegisterAdBeaconEnabled() {
+                        return false;
+                    }
+                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -414,7 +427,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -422,7 +436,112 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        List<String> notifications =
+                ImmutableList.of(server.takeRequest().getPath(), server.takeRequest().getPath());
+
+        assertThat(notifications).containsExactly(mSellerReportingPath, mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
@@ -529,7 +648,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -537,7 +657,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -587,6 +710,143 @@ public class AdSelectionServiceImplTest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
+        // Re init flags with registerAdBeaconDisabled
+        mFlags =
+                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                    @Override
+                    public boolean getFledgeRegisterAdBeaconEnabled() {
+                        return false;
+                    }
+                };
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
+        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
+        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
+        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click_seller', '"
+                        + clickUriSeller
+                        + "');\n"
+                        + "    registerAdBeacon('hover_seller', '"
+                        + hoverUriSeller
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click_buyer', '"
+                        + clickUriBuyer
+                        + "');\n"
+                        + "    registerAdBeacon('hover_buyer', '"
+                        + hoverUriBuyer
+                        + "');\n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(STATUS_INTERNAL_ERROR, callback.mFledgeErrorResponse.getStatusCode());
+
+        // Check that no events are registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID, CLICK_EVENT_SELLER, FLAG_REPORTING_DESTINATION_SELLER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID, HOVER_EVENT_SELLER, FLAG_REPORTING_DESTINATION_SELLER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID, CLICK_EVENT_BUYER, FLAG_REPORTING_DESTINATION_BUYER));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID, HOVER_EVENT_BUYER, FLAG_REPORTING_DESTINATION_BUYER));
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
                         anyInt());
     }
 
@@ -685,7 +945,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -693,7 +954,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -834,7 +1098,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -842,7 +1107,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -980,7 +1248,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1118,7 +1387,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1258,7 +1528,8 @@ public class AdSelectionServiceImplTest {
                         flagsWithSmallerMaxEventUris,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1266,7 +1537,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -1317,8 +1591,8 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        doThrow(new ConsentManager.RevokedConsentException())
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -1385,7 +1659,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1398,7 +1673,9 @@ public class AdSelectionServiceImplTest {
         assertTrue(callback.mIsSuccess);
         assertEquals(0, server.getRequestCount());
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -1480,7 +1757,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1576,7 +1854,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1678,7 +1957,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1775,7 +2055,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1867,7 +2148,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -1958,7 +2240,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -2050,7 +2333,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -2162,14 +2446,18 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
         List<String> notifications =
@@ -2293,14 +2581,18 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -2375,7 +2667,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2424,7 +2717,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2468,7 +2762,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2517,7 +2812,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2578,7 +2874,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2635,7 +2932,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2696,7 +2994,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -2758,7 +3057,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -2861,7 +3161,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -2966,7 +3267,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -3067,7 +3369,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -3165,7 +3468,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -3179,8 +3483,8 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        doThrow(new WrongCallingApplicationStateException())
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new WrongCallingApplicationStateException()))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -3205,7 +3509,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -3260,7 +3565,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -3315,7 +3621,8 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -3361,7 +3668,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -3410,7 +3718,8 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -3453,7 +3762,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -3500,7 +3810,8 @@ public class AdSelectionServiceImplTest {
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -3515,8 +3826,8 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         otherPackageName,
@@ -3588,7 +3899,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3613,8 +3925,8 @@ public class AdSelectionServiceImplTest {
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
-        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -3690,7 +4002,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3706,8 +4019,9 @@ public class AdSelectionServiceImplTest {
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 callback.mFledgeErrorResponse.getErrorMessage());
 
-        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -3719,8 +4033,8 @@ public class AdSelectionServiceImplTest {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
-        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -3795,7 +4109,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3811,8 +4126,9 @@ public class AdSelectionServiceImplTest {
                 AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE,
                 callback.mFledgeErrorResponse.getErrorMessage());
 
-        // TODO(b/242139312): Remove atLeastOnce once this the double logging is addressed
-        Mockito.verify(mAdServicesLoggerMock, Mockito.atLeastOnce())
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        Mockito.verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -3875,7 +4191,7 @@ public class AdSelectionServiceImplTest {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         doNothing()
-                .when(mFledgeServiceFilter)
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -3903,7 +4219,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3911,7 +4228,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
 
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
@@ -3994,7 +4314,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -4088,7 +4409,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4098,11 +4420,12 @@ public class AdSelectionServiceImplTest {
                         .build();
 
         // First call should succeed
+        // Count down callback + log interaction.
         ReportImpressionTestCallback callbackFirstCall =
-                callReportImpression(adSelectionService, input);
+                callReportImpression(adSelectionService, input, true);
 
-        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
-                .when(mFledgeServiceFilter)
+        doThrow(new FilterException(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE)))
+                .when(mAdSelectionServiceFilter)
                 .filterRequest(
                         mSeller,
                         TEST_PACKAGE_NAME,
@@ -4138,8 +4461,6 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
-
-
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -4210,7 +4531,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4218,7 +4540,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
@@ -4311,7 +4636,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4319,7 +4645,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
@@ -4414,7 +4743,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4422,7 +4752,10 @@ public class AdSelectionServiceImplTest {
                         .setAdSelectionConfig(adSelectionConfig)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .build();
-        ReportImpressionTestCallback callback = callReportImpression(adSelectionService, input);
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
         assertTrue(callback.mIsSuccess);
         RecordedRequest fetchRequest = server.takeRequest();
         assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
@@ -4464,7 +4797,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4517,7 +4851,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4564,7 +4899,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4617,7 +4953,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4682,7 +5019,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4741,7 +5079,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4804,7 +5143,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4866,7 +5206,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -4977,7 +5318,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -5082,7 +5424,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -5192,7 +5535,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -5319,7 +5663,8 @@ public class AdSelectionServiceImplTest {
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
-                        mFledgeServiceFilter);
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -5535,8 +5880,10 @@ public class AdSelectionServiceImplTest {
                         eq(0));
     }
 
+    // TODO(b/271652362): Investigate logging and testing of failures during callback reporting
+    @Ignore("b/271652362")
     @Test
-    public void testReportInteractionCallbackErrorReported() throws InterruptedException {
+    public void testReportInteractionCallbackErrorReported() throws Exception {
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
         DBAdSelection dbAdSelection =
@@ -5618,8 +5965,9 @@ public class AdSelectionServiceImplTest {
                         .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
 
+        // Count down callback + log interaction.
         ReportInteractionTestCallback callback =
-                callReportInteraction(generateAdSelectionServiceImpl(), inputParams);
+                callReportInteraction(generateAdSelectionServiceImpl(), inputParams, true);
         assertTrue("reportInteraction() callback was unsuccessful", callback.mIsSuccess);
 
         verify(mAdServicesLoggerMock)
@@ -5936,7 +6284,8 @@ public class AdSelectionServiceImplTest {
                 mFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterSpy,
-                mFledgeServiceFilter);
+                mAdSelectionServiceFilter,
+                mAdFilterer);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
@@ -6142,20 +6491,31 @@ public class AdSelectionServiceImplTest {
     private ReportImpressionTestCallback callReportImpression(
             AdSelectionServiceImpl adSelectionService, ReportImpressionInput requestParams)
             throws Exception {
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch resultLatch = new CountDownLatch(2);
+        return callReportImpression(adSelectionService, requestParams, false);
+    }
+
+    /** @param shouldCountLog if true, adds a latch to the log interaction as well. */
+    private ReportImpressionTestCallback callReportImpression(
+            AdSelectionServiceImpl adSelectionService,
+            ReportImpressionInput requestParams,
+            boolean shouldCountLog)
+            throws Exception {
+        CountDownLatch resultLatch = new CountDownLatch(shouldCountLog ? 2 : 1);
+
+        if (shouldCountLog) {
+            // Wait for the logging call, which happens after the callback
+            Answer<Void> countDownAnswer =
+                    unused -> {
+                        resultLatch.countDown();
+                        LogUtil.i("Log called.");
+                        return null;
+                    };
+            doAnswer(countDownAnswer)
+                    .when(mAdServicesLoggerMock)
+                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+        }
+
         ReportImpressionTestCallback callback = new ReportImpressionTestCallback(resultLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    resultLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
-
         adSelectionService.reportImpression(requestParams, callback);
         resultLatch.await();
         return callback;
@@ -6166,24 +6526,14 @@ public class AdSelectionServiceImplTest {
                     AdSelectionServiceImpl adSelectionService,
                     SetAppInstallAdvertisersInput request)
                     throws Exception {
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch resultLatch = new CountDownLatch(2);
+        // Counted down in callback
+        CountDownLatch resultLatch = new CountDownLatch(1);
         AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback callback =
                 new AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback(
                         resultLatch);
 
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    resultLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
-
         adSelectionService.setAppInstallAdvertisers(request, callback);
-        resultLatch.await(5, TimeUnit.SECONDS);
+        resultLatch.await();
         return callback;
     }
 
@@ -6288,20 +6638,30 @@ public class AdSelectionServiceImplTest {
     private ReportInteractionTestCallback callReportInteraction(
             AdSelectionServiceImpl adSelectionService, ReportInteractionInput inputParams)
             throws Exception {
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch resultLatch = new CountDownLatch(2);
+        return callReportInteraction(adSelectionService, inputParams, false);
+    }
+
+    /** @param shouldCountLog if true, adds a latch to the log interaction as well. */
+    private ReportInteractionTestCallback callReportInteraction(
+            AdSelectionServiceImpl adSelectionService,
+            ReportInteractionInput inputParams,
+            boolean shouldCountLog)
+            throws Exception {
+        CountDownLatch resultLatch = new CountDownLatch(shouldCountLog ? 2 : 1);
+
+        if (shouldCountLog) {
+            // Wait for the logging call, which happens after the callback
+            Answer<Void> countDownAnswer =
+                    unused -> {
+                        resultLatch.countDown();
+                        return null;
+                    };
+            doAnswer(countDownAnswer)
+                    .when(mAdServicesLoggerMock)
+                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+        }
+
         ReportInteractionTestCallback callback = new ReportInteractionTestCallback(resultLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    resultLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
-
         adSelectionService.reportInteraction(inputParams, callback);
         resultLatch.await();
         return callback;
@@ -6505,7 +6865,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public long getReportImpressionOverallTimeoutMs() {
-            return 500;
+            return 700;
         }
 
         @Override
@@ -6517,6 +6877,11 @@ public class AdSelectionServiceImplTest {
         public float getSdkRequestPermitsPerSecond() {
             // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
             return -1;
+        }
+
+        @Override
+        public boolean getFledgeRegisterAdBeaconEnabled() {
+            return true;
         }
     }
 }

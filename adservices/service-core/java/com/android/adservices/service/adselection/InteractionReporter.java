@@ -31,7 +31,6 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 import android.os.Trace;
 
@@ -40,13 +39,12 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
@@ -78,7 +76,7 @@ public class InteractionReporter {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
@@ -90,7 +88,7 @@ public class InteractionReporter {
             @NonNull ExecutorService backgroundExecutorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
-            @NonNull FledgeServiceFilter fledgeServiceFilter,
+            @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
         Objects.requireNonNull(context);
@@ -100,7 +98,7 @@ public class InteractionReporter {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
 
         mContext = context;
@@ -110,7 +108,7 @@ public class InteractionReporter {
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
@@ -138,7 +136,7 @@ public class InteractionReporter {
                                     try {
                                         Trace.beginSection(Tracing.VALIDATE_REQUEST);
                                         LogUtil.v("Starting filtering and validation.");
-                                        mFledgeServiceFilter.filterRequest(
+                                        mAdSelectionServiceFilter.filterRequest(
                                                 null,
                                                 callerPackageName,
                                                 mFlags
@@ -168,14 +166,14 @@ public class InteractionReporter {
                     @Override
                     public void onFailure(Throwable t) {
                         LogUtil.e(t, "Report Interaction failed!");
-                        if (t instanceof ConsentManager.RevokedConsentException) {
-                            // Fail Silently by notifying success to caller, but logging the error
-                            mAdServicesLogger.logFledgeApiCallStats(
-                                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                    AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
-                                    0);
-                            notifySuccessToCaller(callback);
+                        if (t instanceof FilterException
+                                && t.getCause() instanceof ConsentManager.RevokedConsentException) {
+                            // Skip logging if a FilterException occurs.
+                            // AdSelectionServiceFilter ensures the failing assertion is logged
+                            // internally.
 
+                            // Fail Silently by notifying success to caller
+                            notifySuccessToCaller(callback);
                         } else {
                             notifyFailureToCaller(callback, t);
                         }
@@ -289,20 +287,14 @@ public class InteractionReporter {
     /** Invokes the onFailure function from the callback and handles the exception. */
     private void invokeFailure(
             @NonNull ReportInteractionCallback callback, int statusCode, String errorMessage) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
                             .setStatusCode(statusCode)
                             .setErrorMessage(errorMessage)
                             .build());
-            resultCode = statusCode;
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send failed result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
@@ -311,29 +303,32 @@ public class InteractionReporter {
             callback.onSuccess();
         } catch (RemoteException e) {
             LogUtil.e(e, "Unable to send successful result to the callback");
-            int resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull ReportInteractionCallback callback, @NonNull Throwable t) {
-        if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
-        } else if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
-        } else if (t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
-        } else if (t instanceof LimitExceededException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
+        int resultCode;
+
+        boolean isFilterException = t instanceof FilterException;
+
+        if (isFilterException) {
+            resultCode = FilterException.getResultCode(t);
+        } else if (t instanceof IllegalArgumentException) {
+            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
+
+        // Skip logging if a FilterException occurs.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        // Note: Failure is logged before the callback to ensure deterministic testing.
+        if (!isFilterException) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+        }
+
+        invokeFailure(callback, resultCode, t.getMessage());
     }
 
     private boolean bitExists(

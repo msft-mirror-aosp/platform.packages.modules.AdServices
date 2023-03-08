@@ -109,7 +109,7 @@ public final class MeasurementImplTest {
 
     @Spy
     private DatastoreManager mDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
     @Mock
     private ContentProviderClient mMockContentProviderClient;
@@ -188,7 +188,7 @@ public final class MeasurementImplTest {
         MeasurementImpl measurement =
                 new MeasurementImpl(
                         DEFAULT_CONTEXT,
-                        new SQLDatastoreManager(DbTestUtil.getDbHelperForTest()),
+                        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
                         mClickVerifier,
                         mMeasurementDataDeleter,
                         mEnrollmentDao);

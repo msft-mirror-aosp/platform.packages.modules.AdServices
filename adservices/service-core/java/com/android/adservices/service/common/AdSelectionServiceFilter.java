@@ -21,12 +21,12 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.os.Build;
-import android.os.LimitExceededException;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -34,8 +34,8 @@ import java.util.function.Supplier;
 /** Utility class to filter FLEDGE requests. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
-    public FledgeServiceFilter(
+public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
+    public AdSelectionServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
             @NonNull Flags flags,
@@ -61,19 +61,10 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
      *     enrollment check will not be applied if it is null.
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
-     * @param enforceConsent Checks if the user has revoked global FLEDGE consent if set to true.
-     *     Should only be set to false if the caller is checking FLEDGE consent on their own.
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
-     *     enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
+     * @param enforceConsent whether to enforce a consent check
+     * @throws FilterException if any filter assertion fails and wraps the exception thrown by the
+     *     failing filter Note: Any consumer of this API should not log the failure. The failing
+     *     assertion logs it internally before throwing the corresponding exception.
      */
     @Override
     public void filterRequest(
@@ -84,20 +75,24 @@ public class FledgeServiceFilter extends AbstractFledgeServiceFilter {
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey) {
-        Objects.requireNonNull(callerPackageName);
-        Objects.requireNonNull(apiKey);
+        try {
+            Objects.requireNonNull(callerPackageName);
+            Objects.requireNonNull(apiKey);
 
-        assertCallerPackageName(callerPackageName, callerUid, apiName);
-        assertCallerNotThrottled(callerPackageName, apiKey);
-        if (enforceForeground) {
-            assertForegroundCaller(callerUid, apiName);
-        }
-        if (!Objects.isNull(adTech)) {
-            assertFledgeEnrollment(adTech, callerPackageName, apiName);
-        }
-        assertAppInAllowList(callerPackageName, apiName);
-        if (enforceConsent) {
-            assertCallerHasUserConsent();
+            assertCallerPackageName(callerPackageName, callerUid, apiName);
+            assertCallerNotThrottled(callerPackageName, apiKey);
+            if (enforceForeground) {
+                assertForegroundCaller(callerUid, apiName);
+            }
+            if (!Objects.isNull(adTech)) {
+                assertFledgeEnrollment(adTech, callerPackageName, apiName);
+            }
+            assertAppInAllowList(callerPackageName, apiName);
+            if (enforceConsent) {
+                assertCallerHasUserConsent();
+            }
+        } catch (Throwable t) {
+            throw new FilterException(t);
         }
     }
 }

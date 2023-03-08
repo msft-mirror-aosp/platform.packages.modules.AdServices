@@ -50,7 +50,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
@@ -149,7 +149,7 @@ public class TrustedServerAdSelectionRunnerTest {
             Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
-    @Mock FledgeServiceFilter mFledgeServiceFilter;
+    @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() {
@@ -206,7 +206,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
@@ -263,7 +263,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -322,7 +322,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -386,7 +386,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -434,7 +434,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         flags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         invokeRunAdSelection(

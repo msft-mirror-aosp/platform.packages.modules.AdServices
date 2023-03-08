@@ -30,7 +30,7 @@ import android.content.IntentFilter;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -41,6 +41,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 /**
  * This CTS test is to test app update flow for Topics API. It has two goals:
@@ -109,7 +110,7 @@ public class AppUpdateTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     // Expected topic responses used for assertion. This is the expected order of broadcasts that
     // the test sample app will send back to the main test app. So the order is important.
@@ -144,10 +145,10 @@ public class AppUpdateTest {
     @Before
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
-        killAdservicesProcess();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -268,10 +269,12 @@ public class AppUpdateTest {
                             int[] topics =
                                     intent.getExtras().getIntArray(TOPIC_RESPONSE_BROADCAST_KEY);
 
-                            // topic is one of the 5 classification topics of the Test App.
-                            assertThat(topics.length).isEqualTo(1);
-                            assertThat(topics[0])
-                                    .isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
+                            // In current test infra, it has the chance that multiple tests run
+                            // together. Instead of asserting the deterministic result, check if
+                            // the targeted topic exists in the Topics API result.
+                            assertThat(Arrays.stream(topics).boxed().collect(Collectors.toList()))
+                                    .containsAnyIn(
+                                            Arrays.asList(10147, 10253, 10175, 10254, 10333));
                         }
 
                         mExpectedTopicResponseBroadCastIndex++;
@@ -302,12 +305,6 @@ public class AppUpdateTest {
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.topics_epoch_job_period_ms " + overrideEpochPeriod);
-    }
-
-    // Force stop AdServices API.
-    public void killAdservicesProcess() {
-        // adb shell am force-stop com.google.android.adservices.api
-        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
     }
 
     // Override the Percentage For Random Topic in the test.

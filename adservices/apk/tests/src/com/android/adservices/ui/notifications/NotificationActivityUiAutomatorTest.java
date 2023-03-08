@@ -39,6 +39,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
@@ -119,13 +120,12 @@ public class NotificationActivityUiAutomatorTest {
 
     @After
     public void teardown() throws IOException {
+        if (!ApkTestUtil.isDeviceSupported()) return;
+
+        AdservicesTestHelper.killAdservicesProcess(sContext);
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
-        // kill the previous apps to avoid starting the same locality as the previous activity in
-        // the next test
-        Runtime.getRuntime()
-                .exec(new String[] {"am", "force-stop", "com.android.adservices.tests.ui"});
     }
 
     @Test

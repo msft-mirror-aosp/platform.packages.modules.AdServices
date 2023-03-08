@@ -25,7 +25,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 import com.android.compatibility.common.util.ShellIdentityUtils;
 
@@ -47,7 +47,7 @@ public class ApiPermissionTest {
     @Before
     public void setUp() throws Exception {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 

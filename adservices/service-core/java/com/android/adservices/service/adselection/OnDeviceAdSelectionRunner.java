@@ -36,7 +36,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -68,6 +68,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull protected final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
+    @NonNull protected final AdFilterer mAdFilterer;
 
     public OnDeviceAdSelectionRunner(
             @NonNull final Context context,
@@ -81,7 +82,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull AdFilterer adFilterer,
             final int callerUid) {
         super(
                 context,
@@ -93,12 +95,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 adSelectionExecutionLogger,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 callerUid);
 
         Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(adFilterer);
 
         mAdServicesHttpsClient = adServicesHttpsClient;
+        mAdFilterer = adFilterer;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -149,9 +153,10 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             int callerUid,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
-            @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner) {
+            @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
+            @NonNull final AdFilterer adFilterer) {
         super(
                 context,
                 customAudienceDao,
@@ -164,15 +169,17 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adServicesLogger,
                 flags,
                 callerUid,
-                fledgeServiceFilter,
+                adSelectionServiceFilter,
                 adSelectionExecutionLogger);
 
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(adFilterer);
 
         mAdsScoreGenerator = adsScoreGenerator;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mPerBuyerBiddingRunner = perBuyerBiddingRunner;
+        mAdFilterer = adFilterer;
     }
 
     /**
@@ -185,11 +192,16 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final String callerPackageName,
             ListenableFuture<List<DBCustomAudience>> buyerCustomAudience) {
+
+        ListenableFuture<List<DBCustomAudience>> filteredCas =
+                FluentFuture.from(buyerCustomAudience)
+                        .transform(mAdFilterer::filterCustomAudiences, mLightweightExecutorService);
+
         AsyncFunction<List<DBCustomAudience>, List<AdBiddingOutcome>> bidAds =
                 buyerCAs -> runAdBidding(buyerCAs, adSelectionConfig);
 
         ListenableFuture<List<AdBiddingOutcome>> biddingOutcome =
-                Futures.transformAsync(buyerCustomAudience, bidAds, mLightweightExecutorService);
+                Futures.transformAsync(filteredCas, bidAds, mLightweightExecutorService);
 
         AsyncFunction<List<AdBiddingOutcome>, List<AdScoringOutcome>> mapBidsToScores =
                 bids -> runAdScoring(bids, adSelectionConfig);
