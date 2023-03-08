@@ -105,55 +105,6 @@ public class WebTest {
     }
 
     @Test
-    public void topPrivateDomainAndPath_ForDomainAndPath_ReturnsDomainAndPath() {
-        String inputUrl =
-                String.format(
-                        "%s://%s.%s/%s",
-                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
-        Uri expectedUri = Uri.parse(inputUrl);
-        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(Uri.parse(inputUrl));
-        assertTrue(output.isPresent());
-        assertEquals(expectedUri, output.get());
-    }
-
-    @Test
-    public void topPrivateDomainAndPath_ForSubdomain_DoesNotReturnSubdomain() {
-        String inputUrl =
-                String.format(
-                        "%s://%s.%s.%s/%s",
-                        HTTPS_SCHEME, SUBDOMAIN, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
-        Uri uri = Uri.parse(inputUrl);
-        String expectedUri =
-                String.format(
-                        "%s://%s.%s/%s",
-                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH);
-        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(uri);
-        assertTrue(output.isPresent());
-        assertEquals(expectedUri, output.get().toString());
-    }
-
-    @Test
-    public void topPrivateDomainAndPath_ForMultiplePaths_ReturnsMultipleTokens() {
-        String inputUrl =
-                String.format(
-                        "%s://%s.%s.%s/%s/%s",
-                        HTTPS_SCHEME,
-                        SUBDOMAIN,
-                        TOP_PRIVATE_DOMAIN,
-                        VALID_PUBLIC_DOMAIN,
-                        PATH,
-                        SECOND_PATH);
-        Uri uri = Uri.parse(inputUrl);
-        String expectedUri =
-                String.format(
-                        "%s://%s.%s/%s/%s",
-                        HTTPS_SCHEME, TOP_PRIVATE_DOMAIN, VALID_PUBLIC_DOMAIN, PATH, SECOND_PATH);
-        Optional<Uri> output = Web.topPrivateDomainSchemeAndPath(uri);
-        assertTrue(output.isPresent());
-        assertEquals(expectedUri, output.get().toString());
-    }
-
-    @Test
     public void topPrivateDomainAndPath_ForInvalidUri_ReturnsEmptyOptional() {
         Optional<Uri> output = Web.topPrivateDomainAndScheme(INVALID_URL);
         assertFalse(output.isPresent());
