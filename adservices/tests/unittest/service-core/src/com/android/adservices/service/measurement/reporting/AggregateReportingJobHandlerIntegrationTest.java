@@ -96,7 +96,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
                 .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(new AggregateReportingJobHandler(
                         mEnrollmentDao, datastoreManager, mockKeyManager));

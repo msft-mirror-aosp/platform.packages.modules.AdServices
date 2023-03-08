@@ -20,13 +20,16 @@ import static com.android.adservices.service.topics.classifier.ModelManager.BUND
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
 
@@ -68,6 +71,8 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
     private static SynchronousFileStorage sSynchronousFileStorage;
@@ -255,7 +260,15 @@ public class MobileDataDownloadFactory {
                 .setContext(context)
                 // topics resources should not be downloaded pre-consent
                 .setEnabledSupplier(
-                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return ConsentManager.getInstance(context)
+                                        .getConsent(AdServicesApiType.TOPICS)
+                                        .isGiven();
+                            } else {
+                                return ConsentManager.getInstance(context).getConsent().isGiven();
+                            }
+                        })
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -304,9 +317,7 @@ public class MobileDataDownloadFactory {
                 .setEnabledSupplier(
                         () ->
                                 !ConsentManager.getInstance(context).wasGaUxNotificationDisplayed()
-                                        || ConsentManager.getInstance(context)
-                                                .getConsent()
-                                                .isGiven())
+                                        || isAnyConsentGiven(context, flags))
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)
@@ -328,6 +339,18 @@ public class MobileDataDownloadFactory {
                             }
                         })
                 .build();
+    }
+
+    private static boolean isAnyConsentGiven(@NonNull Context context, Flags flags) {
+        ConsentManager instance = ConsentManager.getInstance(context);
+        if (flags.getGaUxFeatureEnabled()
+                && (instance.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()
+                        || instance.getConsent(AdServicesApiType.TOPICS).isGiven()
+                        || instance.getConsent(AdServicesApiType.FLEDGE).isGiven())) {
+            return true;
+        }
+
+        return instance.getConsent().isGiven();
     }
 
     @NonNull
@@ -352,7 +375,13 @@ public class MobileDataDownloadFactory {
                 .setContext(context)
                 // measurement resources should not be downloaded pre-consent
                 .setEnabledSupplier(
-                        () -> ConsentManager.getInstance(context).getConsent().isGiven())
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return isAnyConsentGiven(context, flags);
+                            } else {
+                                return ConsentManager.getInstance(context).getConsent().isGiven();
+                            }
+                        })
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)

@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.customaudience;
 
+import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
@@ -31,6 +32,7 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.common.JsonUtils;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.util.Preconditions;
 
@@ -41,9 +43,11 @@ import org.json.JSONObject;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -540,6 +544,8 @@ public class DBCustomAudience {
 
         private static final String RENDER_URI_FIELD_NAME = "renderUri";
         private static final String METADATA_FIELD_NAME = "metadata";
+        private static final String AD_COUNTER_KEYS_FIELD_NAME = "adCounterKeys";
+        private static final String AD_FILTERS_FIELD_NAME = "adFilters";
 
         private Converters() {
         }
@@ -592,21 +598,48 @@ public class DBCustomAudience {
          * Serialize {@link DBAdData} to {@link JSONObject}.
          */
         private static JSONObject toJson(DBAdData adData) throws JSONException {
-            return new org.json.JSONObject()
-                    .put(
-                            RENDER_URI_FIELD_NAME,
-                            FledgeRoomConverters.serializeUri(adData.getRenderUri()))
-                    .put(METADATA_FIELD_NAME, adData.getMetadata());
+            JSONObject toReturn = new JSONObject();
+            toReturn.put(
+                    RENDER_URI_FIELD_NAME,
+                    FledgeRoomConverters.serializeUri(adData.getRenderUri()));
+            toReturn.put(METADATA_FIELD_NAME, adData.getMetadata());
+            if (!adData.getAdCounterKeys().isEmpty()) {
+                JSONArray jsonCounterKeys = new JSONArray(adData.getAdCounterKeys());
+                toReturn.put(AD_COUNTER_KEYS_FIELD_NAME, jsonCounterKeys);
+            }
+            if (adData.getAdFilters() != null) {
+                toReturn.put(AD_FILTERS_FIELD_NAME, adData.getAdFilters().toJson());
+            }
+            return toReturn;
         }
 
         /**
          * Deserialize {@link DBAdData} from {@link JSONObject}.
          */
         private static DBAdData fromJson(JSONObject json) throws JSONException {
-            String renderUriString = json.getString(RENDER_URI_FIELD_NAME);
+            String renderUriString = JsonUtils.getStringFromJson(json, RENDER_URI_FIELD_NAME);
             String metadata = json.getString(METADATA_FIELD_NAME);
             Uri renderUri = FledgeRoomConverters.deserializeUri(renderUriString);
-            return new DBAdData(renderUri, metadata);
+            Set<String> adCounterKeys = new HashSet<>();
+            if (json.has(AD_COUNTER_KEYS_FIELD_NAME)) {
+                JSONArray counterKeys = json.getJSONArray(AD_COUNTER_KEYS_FIELD_NAME);
+                for (int i = 0; i < counterKeys.length(); i++) {
+                    adCounterKeys.add(
+                            JsonUtils.getStringFromJsonArrayAtIndex(
+                                    counterKeys,
+                                    i,
+                                    "Index "
+                                            + i
+                                            + " in "
+                                            + AD_COUNTER_KEYS_FIELD_NAME
+                                            + " is not a String."));
+                }
+            }
+            AdFilters adFilters = null;
+            if (json.has(AD_FILTERS_FIELD_NAME)) {
+                adFilters = AdFilters.fromJson(json.getJSONObject(AD_FILTERS_FIELD_NAME));
+            }
+            return new DBAdData(renderUri, metadata, adCounterKeys, adFilters);
         }
     }
 }

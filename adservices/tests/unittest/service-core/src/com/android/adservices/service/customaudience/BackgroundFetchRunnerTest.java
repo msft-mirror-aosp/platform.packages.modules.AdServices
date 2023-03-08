@@ -22,6 +22,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
+import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.FluentFuture;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -54,10 +57,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
@@ -82,6 +87,7 @@ public class BackgroundFetchRunnerTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
 
@@ -170,12 +176,13 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
-    public void testUpdateCustomAudienceWithEmptyUpdate() {
+    public void testUpdateCustomAudienceWithEmptyUpdate()
+            throws ExecutionException, InterruptedException {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
-        doReturn(updatableData)
+        doReturn(FluentFuture.from(immediateFuture(updatableData)))
                 .when(mBackgroundFetchRunnerSpy)
                 .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
@@ -195,7 +202,9 @@ public class BackgroundFetchRunnerTest {
                         .setEligibleUpdateTime(expectedEligibleUpdateTime)
                         .build();
 
-        mBackgroundFetchRunnerSpy.updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData);
+        mBackgroundFetchRunnerSpy
+                .updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData)
+                .get();
 
         verify(mCustomAudienceDaoMock)
                 .updateCustomAudienceAndBackgroundFetchData(
@@ -204,10 +213,11 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
-    public void testUpdateCustomAudienceWithFailedUpdate() {
+    public void testUpdateCustomAudienceWithFailedUpdate()
+            throws ExecutionException, InterruptedException {
         CustomAudienceUpdatableData updatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptyFailedResponse().build();
-        doReturn(updatableData)
+        doReturn(FluentFuture.from(immediateFuture(updatableData)))
                 .when(mBackgroundFetchRunnerSpy)
                 .fetchAndValidateCustomAudienceUpdatableData(any(), any(), any());
 
@@ -224,7 +234,9 @@ public class BackgroundFetchRunnerTest {
                         .setNumValidationFailures(1)
                         .build();
 
-        mBackgroundFetchRunnerSpy.updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData);
+        mBackgroundFetchRunnerSpy
+                .updateCustomAudience(CommonFixture.FIXED_NOW, originalFetchData)
+                .get();
 
         verify(mCustomAudienceDaoMock, never())
                 .updateCustomAudienceAndBackgroundFetchData(any(), any());
@@ -245,8 +257,10 @@ public class BackgroundFetchRunnerTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderEmptySuccessfulResponse().build();
 
         CustomAudienceUpdatableData updatableData =
-                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
+                mBackgroundFetchRunnerSpy
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                        .get();
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -268,8 +282,10 @@ public class BackgroundFetchRunnerTest {
                 CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse().build();
 
         CustomAudienceUpdatableData updatableData =
-                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
+                mBackgroundFetchRunnerSpy
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                        .get();
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -327,8 +343,10 @@ public class BackgroundFetchRunnerTest {
                         .build();
 
         CustomAudienceUpdatableData updatableData =
-                runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
+                runnerWithSmallLimits
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                        .get();
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
         assertEquals(expectedUpdatableData, updatableData);
@@ -354,8 +372,12 @@ public class BackgroundFetchRunnerTest {
                         .build();
 
         CustomAudienceUpdatableData updatableData =
-                mBackgroundFetchRunnerSpy.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, invalidFetchUri);
+                mBackgroundFetchRunnerSpy
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                invalidFetchUri)
+                        .get();
 
         assertEquals(expectedUpdatableData, updatableData);
 
@@ -392,8 +414,10 @@ public class BackgroundFetchRunnerTest {
                         .build();
 
         CustomAudienceUpdatableData updatableData =
-                runnerWithSmallLimits.fetchAndValidateCustomAudienceUpdatableData(
-                        CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri);
+                runnerWithSmallLimits
+                        .fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW, CommonFixture.VALID_BUYER_1, mFetchUri)
+                        .get();
 
         assertEquals(expectedUpdatableData, updatableData);
 

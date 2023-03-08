@@ -70,7 +70,7 @@
     <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  Sovellusten arvioimat kiinnostuksen kohteet"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Sovellukset voivat arvioida kiinnostuksen kohteitasi ja tallentaa ne väliaikaisesti Androidiin. Sovellus, jonka kautta ostat juoksukengät, voi esimerkiksi arvioida kiinnostuksen kohteeksesi maratonin juoksun.\n\nMyöhemmin toinen sovellus voi näyttää sinulle tämän kiinnostuksen kohteen perusteella maratoneihin liittyviä mainoksia.\n\nVoit hallita kiinnostuksen kohteita tallentaneita sovelluksia yksityisyysasetuksissa."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Uusia mainosyksityisyysominaisuuksia"</string>
-    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Mainosten aiheiden ja uusien asetusten ansiosta voit paremmin vaikuttaa näkemiisi mainoksiin"</string>
+    <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Mainosaiheiden ja uusien asetusten ansiosta voit paremmin vaikuttaa näkemiisi mainoksiin"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android havaitsee äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Lisäksi käyttämäsi sovellukset voivat päätellä, mistä pidät. Sovellukset voivat myöhemmin pyytää näitä tietoja näyttääkseen sinulle personoituja mainoksia. Voit valita, minkä aiheiden ja sovellusten perusteella näet mainoksia."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Mainostulosten mittaamiseksi sovellusten välillä jaetaan rajoitetusti tietyntyyppistä dataa."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Lisätietoa mainoksista Androidissa"</string>
@@ -89,18 +89,18 @@
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Katso tiedot"</string>
     <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Parannettu mainosyksityisyys Android-laitteissa"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanseeraa uusia yksityisyysominaisuuksia, jotta voit paremmin vaikuttaa näkemiisi mainoksiin."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Mainosten aiheiden avulla sovellukset voivat näyttää sinulle osuvia mainoksia niin, että henkilöllisyytesi ja tiedot sovellusten käytöstä pysyvät suojattuina. Android voi havaita äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Käyttämäsi sovellus voi myöhemmin pyytää osuvia aiheita Androidilta personoidakseen näkemiäsi mainoksia."</string>
-    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Laitteen asetuksista näet mainosten aiheet ja voit estää sellaiset, joita et halua jakaa sovelluksille. Android myös poistaa mainosaiheita automaattisesti ja säännöllisesti."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Mainosaiheiden avulla sovellukset voivat näyttää sinulle osuvia mainoksia niin, että henkilöllisyytesi ja tiedot sovellusten käytöstä pysyvät suojattuina. Android voi havaita äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Käyttämäsi sovellus voi myöhemmin pyytää osuvia aiheita Androidilta personoidakseen näkemiäsi mainoksia."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Laitteen asetuksista näet mainosaiheet ja voit estää sellaiset, joita et halua jakaa sovelluksille. Android myös poistaa mainosaiheita automaattisesti ja säännöllisesti."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Voit milloin tahansa muuttaa mieltäsi yksityisyysasetuksissa."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Lue lisää mainosten aiheista"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Tietosuojakäytännöstä voit lukea lisää siitä, miten Android suojaa dataasi."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Kyllä"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Mitä dataa käytetään"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Mainosten aiheet perustuvat tällä laitteella äskettäin käyttämiisi sovelluksiin ja siihen, kuinka usein käytät niitä."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Mainosaiheet perustuvat tällä laitteella äskettäin käyttämiisi sovelluksiin ja siihen, kuinka usein käytät niitä."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Miten käytämme tätä dataa"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android havaitsee sinua kiinnostavia aiheita käyttäessäsi sovelluksia. Aiheiden tunnisteet ovat ennalta määritettyjä, ja niitä ovat esimerkiksi taide ja viihde, ostokset sekä urheilu. Käyttämäsi sovellus voi myöhemmin pyytää Androidilta muutamia aiheita (mutta ei dataa sovelluksen käytöstä tai henkilöllisyydestäsi) näkemiesi mainosten personointiin."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Miten voit ylläpitää dataasi"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android poistaa aiheita automaattisesti ja säännöllisesti. Kun jatkat sovellusten käyttöä, aihe voi näkyä listalla uudelleen. Voit myös estää aiheet, joita et halua Androidin jakavan sovelluksille, ja laittaa mainosten aiheet pois päältä yksityisyysasetuksista milloin tahansa."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android poistaa aiheita automaattisesti ja säännöllisesti. Kun jatkat sovellusten käyttöä, aihe voi näkyä listalla uudelleen. Voit myös estää aiheet, joita et halua Androidin jakavan sovelluksille, ja laittaa mainosaiheet pois päältä yksityisyysasetuksista milloin tahansa."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Voit tehdä muutoksia yksityisyysasetuksista."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Muut mainosten yksityisyyttä parantavat ominaisuudet"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android lanseeraa uusia tapoja, joilla voit rajoittaa sovellusten keräämiä tietoja, kun sinulle näytetään personoituja mainoksia."</string>
@@ -183,16 +183,14 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Käyttämäsi sovellukset voivat päätellä kiinnostuksen kohteitasi myös sen perusteella, miten käytät niitä."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android sallii sovellusten kerätä rajoitettuja datatyyppejä."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Päällä / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> aihetta"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Päällä / # aihe}other{Päällä / # aihetta}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Päällä / <xliff:g id="APPS_COUNT">%1$d</xliff:g> sovellusta"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{Päällä / # sovellus}other{Päällä / # sovellusta}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Päällä"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Pois päältä"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Kiinnostavat aiheet perustuvat äskettäin käyttämiisi sovelluksiin, ja sovellukset käyttävät niitä personoitujen mainosten näyttämiseen.\n\nVoit estää aiheet, joita et halua jaettavan sovelluksille. Android myös poistaa aiheet automaattisesti ja säännöllisesti."</string>
-    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Salli mainosten aiheet"</string>
-    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Estämäsi mainosten aiheet"</string>
+    <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Salli mainosaiheet"</string>
+    <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Estämäsi mainosaiheet"</string>
     <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Nollaa kaikki mainosaiheet"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android voi muistaa viime viikkoina käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita.\n\nMyöhemmin sovellus voi pyytää aiheita Androidilta personoidakseen näkemiäsi mainoksia. Android jakaa enintään kolme aihetta. Se ei paljasta henkilöllisyyttäsi eikä tietoja sovelluksen käytöstä.\n\nAndroid poistaa aiheita automaattisesti ja säännöllisesti. Kun jatkat sovellusten käyttöä, aihe voi näkyä listalla uudelleen. Voit myös estää aiheita, joita et halua Androidin jakavan sovelluksille.\n\nSovelluksessa näkemäsi mainokset voivat olla personoituja riippuen tästä asetuksesta, sovellusten ehdottamien mainosten asetuksesta, mainostunnusasetuksista ja siitä, personoiko käyttämäsi sovellus mainoksia."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Salli sovellusten ehdottamat mainokset"</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Estämäsi sovellukset"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nollaa sovellusten ehdottama data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Käyttämäsi sovellukset muistavat usein sinua kiinnostavia aiheita ja käyttävät niitä personoidessaan kokemustasi. Sovellukset voivat myös tallentaa tietoja aiheista Androidiin.\n\nJos esimerkiksi käytät sovellusta maratonille treenaamiseen, sovellus voi päätellä, että olet kiinnostunut juoksukengistä. Jos käytät myöhemmin toista sovellusta, se voi näyttää sinulle ensimmäisen sovelluksen ehdottamia mainoksia juoksukengistä.\n\nAndroid poistaa sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Jos käytät sovellusta uudelleen, se voi näkyä taas listalla. Voit milloin tahansa estää sovellusta ehdottamasta sinulle mainoksia.\n\nSovelluksessa näkemäsi mainokset voivat olla personoituja riippuen tästä asetuksesta, mainosten aiheasetuksesta, mainostunnusasetuksista ja siitä, personoiko käyttämäsi sovellus mainoksia."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Värikäs kuvituskuva symboleista, jotka edustavat musiikkia, uutisia, urheilua ja muita kiinnostavia aiheita"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Värikäs kuvituskuva ympyrän sisällä olevasta lukosta"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pieni mustavalkoinen kuvituskuva yhdeksän pisteen muodostamasta neliöstä"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"Pieni mustavalkoinen kuvituskuva, jossa on yksinkertaisia muotoja, esimerkiksi sydän, kolmio ja neliö"</string>
     <string name="topic10001" msgid="1636806320891333775">"Taide ja viihde"</string>
     <string name="topic10002" msgid="1226367977754287428">"Näytteleminen ja teatteri"</string>
     <string name="topic10003" msgid="6949890838957814881">"Anime ja manga"</string>

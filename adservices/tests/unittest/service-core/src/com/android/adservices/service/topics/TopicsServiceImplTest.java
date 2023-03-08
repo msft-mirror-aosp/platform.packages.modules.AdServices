@@ -82,9 +82,11 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -99,6 +101,7 @@ import org.mockito.stubbing.Answer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -112,7 +115,6 @@ public class TopicsServiceImplTest {
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
     private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
-    private static final int RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS = 1_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
@@ -162,7 +164,13 @@ public class TopicsServiceImplTest {
                 new BlockedTopicsManager(
                         mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
         CacheManager cacheManager =
-                new CacheManager(mTopicsDao, mMockFlags, mLogger, mBlockedTopicsManager);
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
 
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(dbHelper, mTopicsDao, new Random(), mMockFlags);
@@ -303,6 +311,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_backgroundCaller() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // R/S can't enforce foreground checks.
+
         final int uid = Process.myUid();
         // Mock AppImportanceFilter to throw WrongCallingApplicationStateException
         doThrow(new WrongCallingApplicationStateException())
@@ -321,6 +331,8 @@ public class TopicsServiceImplTest {
 
     @Test
     public void testEnforceForeground_sandboxCaller() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Only applicable for T+
+
         // Mock AppImportanceFilter to throw Exception when invoked. This is to verify getTopics()
         // doesn't throw if caller is via Sandbox.
         doThrow(new WrongCallingApplicationStateException())
@@ -400,6 +412,7 @@ public class TopicsServiceImplTest {
 
     @Test
     public void checkSdkNoPermission() throws InterruptedException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT()); // Sdk Sandbox only exists in T+
         when(mPackageManager.checkPermission(ACCESS_ADSERVICES_TOPICS, SDK_PACKAGE_NAME))
                 .thenReturn(PackageManager.PERMISSION_DENIED);
         when(Binder.getCallingUidOrThrow()).thenReturn(SANDBOX_UID);
@@ -995,7 +1008,7 @@ public class TopicsServiceImplTest {
         // getTopics method finished executing.
         assertThat(
                         logOperationCalledLatch.await(
-                                RECORD_USAGE_CALLED_LATCH_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
                 .isTrue();
 
         // Not record the call from App and Sdk to usage history when isRecordObservation is false.

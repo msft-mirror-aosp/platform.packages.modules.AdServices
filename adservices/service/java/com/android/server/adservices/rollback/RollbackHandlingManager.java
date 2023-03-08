@@ -20,8 +20,8 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.util.ArrayMap;
 
-import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;

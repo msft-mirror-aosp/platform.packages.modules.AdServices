@@ -23,12 +23,8 @@ import static org.junit.Assert.assertThrows;
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
-import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -81,10 +77,6 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                     .build();
 
     private static final AdSelectionSignals SELECTION_SIGNALS = AdSelectionSignals.EMPTY;
-
-    private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
-            AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                    SELLER, DECISION_LOGIC_URI);
 
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
@@ -219,61 +211,5 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                             result.get(10, TimeUnit.SECONDS);
                         });
         assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    public void testAddFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
-        Assume.assumeFalse(mIsDebugMode);
-
-        AddAdSelectionFromOutcomesOverrideRequest request =
-                new AddAdSelectionFromOutcomesOverrideRequest(
-                        AD_SELECTION_FROM_OUTCOMES_CONFIG, DECISION_LOGIC_JS, SELECTION_SIGNALS);
-
-        ListenableFuture<Void> result =
-                mTestAdSelectionClient.overrideAdSelectionFromOutcomesConfigRemoteInfo(request);
-
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
-    }
-
-    @Test
-    public void testRemoveFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
-        Assume.assumeFalse(mIsDebugMode);
-
-        RemoveAdSelectionFromOutcomesOverrideRequest request =
-                new RemoveAdSelectionFromOutcomesOverrideRequest(AD_SELECTION_FROM_OUTCOMES_CONFIG);
-
-        ListenableFuture<Void> result =
-                mTestAdSelectionClient.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
-                        request);
-
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
-    }
-
-    @Test
-    public void testResetAllFromOutcomesOverridesFailsWithDebugModeDisabled() throws Exception {
-        Assume.assumeFalse(mIsDebugMode);
-
-        ListenableFuture<Void> result =
-                mTestAdSelectionClient.resetAllAdSelectionFromOutcomesConfigRemoteOverrides();
-
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 }

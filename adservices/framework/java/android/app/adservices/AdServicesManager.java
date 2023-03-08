@@ -20,13 +20,17 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -42,6 +46,8 @@ import java.util.Objects;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
@@ -63,10 +69,11 @@ public final class AdServicesManager {
         mService = iAdServicesManager;
     }
 
-    /** Get the singleton of AdServicesManager */
+    /** Get the singleton of AdServicesManager. Only used on T+ */
+    @Nullable
     public static AdServicesManager getInstance(@NonNull Context context) {
         synchronized (SINGLETON_LOCK) {
-            if (sSingleton == null) {
+            if (sSingleton == null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 // TODO(b/262282035): Fix this work around in U+.
                 // Get the AdServicesManagerService's Binder from the SdkSandboxManager.
                 // This is a workaround for b/262282035.
@@ -203,6 +210,16 @@ public final class AdServicesManager {
     public List<TopicParcel> retrieveAllBlockedTopics() {
         try {
             return mService.retrieveAllBlockedTopics();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Clear all Blocked Topics */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllBlockedTopics() {
+        try {
+            mService.clearAllBlockedTopics();
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -349,6 +366,56 @@ public final class AdServicesManager {
         }
     }
 
+    /** Saves the PP API default consent of a user. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultConsent(boolean defaultConsent) {
+        try {
+            mService.recordDefaultConsent(defaultConsent);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the topics default consent of a user. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        try {
+            mService.recordTopicsDefaultConsent(defaultConsent);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the FLEDGE default consent of a user. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        try {
+            mService.recordFledgeDefaultConsent(defaultConsent);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the measurement default consent of a user. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        try {
+            mService.recordMeasurementDefaultConsent(defaultConsent);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the default AdId state of a user. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        try {
+            mService.recordDefaultAdIdState(defaultAdIdState);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /**
      * Checks whether the AdServices module needs to handle data reconciliation after a rollback.
      */
@@ -356,6 +423,76 @@ public final class AdServicesManager {
     public boolean needsToHandleRollbackReconciliation(@DeletionApiType int deletionType) {
         try {
             return mService.needsToHandleRollbackReconciliation(deletionType);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns the PP API default consent of a user.
+     *
+     * @return true if the PP API default consent is given, false otherwise.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean getDefaultConsent() {
+        try {
+            return mService.getDefaultConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns the topics default consent of a user.
+     *
+     * @return true if the topics default consent is given, false otherwise.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean getTopicsDefaultConsent() {
+        try {
+            return mService.getTopicsDefaultConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns the FLEDGE default consent of a user.
+     *
+     * @return true if the FLEDGE default consent is given, false otherwise.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean getFledgeDefaultConsent() {
+        try {
+            return mService.getFledgeDefaultConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns the measurement default consent of a user.
+     *
+     * @return true if the measurement default consent is given, false otherwise.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean getMeasurementDefaultConsent() {
+        try {
+            return mService.getMeasurementDefaultConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Returns the default AdId state of a user.
+     *
+     * @return true if the default AdId State is enabled, false otherwise.
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean getDefaultAdIdState() {
+        try {
+            return mService.getDefaultAdIdState();
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

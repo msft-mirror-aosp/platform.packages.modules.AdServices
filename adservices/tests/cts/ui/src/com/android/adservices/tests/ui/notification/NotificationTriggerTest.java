@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.ui.notification;
 
+import static android.Manifest.permission.POST_NOTIFICATIONS;
+
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_DISABLED;
@@ -27,9 +29,11 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.UiUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -50,9 +54,18 @@ public class NotificationTriggerTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = sContext.getSystemService(AdServicesCommonManager.class);
+        // TO-DO (b/271567864): grant the permission in our apk code and remove this in the future.
+        // Grant runtime permission to the AOSP adservices app.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
+
+        mCommonManager = AdServicesCommonManager.get(sContext);
 
         // consent debug mode is turned on for this test class as we only care about the
         // first trigger (API call).
@@ -63,6 +76,7 @@ public class NotificationTriggerTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) return;
         UiUtils.resetInitialParams(mInitialParams);
     }
 

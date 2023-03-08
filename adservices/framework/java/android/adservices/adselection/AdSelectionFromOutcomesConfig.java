@@ -21,6 +21,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -33,6 +34,8 @@ import java.util.Objects;
  *
  * <p>Instances of this class are created by SDKs to be provided as arguments to the {@link
  * AdSelectionManager#selectAds} methods in {@link AdSelectionManager}.
+ *
+ * @hide
  */
 public final class AdSelectionFromOutcomesConfig implements Parcelable {
     @NonNull private final AdTechIdentifier mSeller;
@@ -74,7 +77,10 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
         Objects.requireNonNull(in);
 
         this.mSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
-        this.mAdSelectionIds = in.readArrayList(Long.class.getClassLoader(), Long.class);
+        this.mAdSelectionIds =
+                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                        ? in.readArrayList(Long.class.getClassLoader())
+                        : in.readArrayList(Long.class.getClassLoader(), Long.class);
         this.mSelectionSignals = AdSelectionSignals.CREATOR.createFromParcel(in);
         this.mSelectionLogicUri = Uri.CREATOR.createFromParcel(in);
     }
@@ -146,6 +152,8 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
 
     /**
      * Builder for {@link AdSelectionFromOutcomesConfig} objects.
+     *
+     * @hide
      */
     public static final class Builder {
         @Nullable private AdTechIdentifier mSeller;

@@ -61,8 +61,11 @@ public class SqliteObjectMapper {
                 builder::setTriggerData);
         setUnsignedLongColumn(cursor, MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY,
                 builder::setTriggerDedupKey);
-        setUriColumn(cursor, MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                builder::setAttributionDestination);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                (destinations) ->
+                        builder.setAttributionDestinations(destinationsStringToList(destinations)));
         setTextColumn(cursor, MeasurementTables.EventReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
         setLongColumn(cursor, MeasurementTables.EventReportContract.REPORT_TIME,
@@ -103,14 +106,16 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
                 builder::setPublisherType);
-        setUriColumn(
+        setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.APP_DESTINATION,
-                builder::setAppDestination);
-        setUriColumn(
+                (destinations) ->
+                        builder.setAppDestinations(destinationsStringToList(destinations)));
+        setTextColumn(
                 cursor,
                 MeasurementTables.SourceContract.WEB_DESTINATION,
-                builder::setWebDestination);
+                (destinations) ->
+                        builder.setWebDestinations(destinationsStringToList(destinations)));
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
@@ -382,8 +387,8 @@ public class SqliteObjectMapper {
         setColumnValue(cursor, column, cursor::getString, (x) -> setter.apply(Uri.parse(x)));
     }
 
-    private static <BuilderType> void setIntColumn(Cursor cursor, String column,
-                                                   Function<Integer, BuilderType> setter) {
+    private static <BuilderType> void setIntColumn(
+            Cursor cursor, String column, Function<Integer, BuilderType> setter) {
         setColumnValue(cursor, column, cursor::getInt, setter);
     }
 
@@ -427,6 +432,14 @@ public class SqliteObjectMapper {
                 .map(String::trim)
                 .filter(not(String::isEmpty))
                 .map(UnsignedLong::new)
+                .collect(Collectors.toList());
+    }
+
+    private static List<Uri> destinationsStringToList(String destinations) {
+        return Arrays.stream(destinations.split(" "))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(destination -> Uri.parse(destination))
                 .collect(Collectors.toList());
     }
 }

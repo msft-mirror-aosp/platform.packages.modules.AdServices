@@ -24,6 +24,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -50,6 +51,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,8 +119,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(Collections.singletonList(appInfo1));
+        mockInstalledApplications(Collections.singletonList(appInfo1));
 
         // Begin to persist data into database
         // Handle AppClassificationTopicsContract
@@ -193,7 +194,12 @@ public class AppUpdateManagerTest {
         mAppUpdateManager.reconcileUninstalledApps(mContext, epochId1);
 
         verify(mContext).getPackageManager();
-        verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+
+        if (SdkLevel.isAtLeastT()) {
+            verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+        } else {
+            verify(mMockPackageManager).getInstalledApplications(anyInt());
+        }
 
         // Each Table should have wiped off all data belonging to app2
         Set<String> setContainsOnlyApp1 = new HashSet<>(Collections.singletonList(app1));
@@ -252,8 +258,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -332,8 +337,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -639,8 +643,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo2 = new ApplicationInfo();
         appInfo2.packageName = app2;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1, appInfo2));
+        mockInstalledApplications(List.of(appInfo1, appInfo2));
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -1229,5 +1232,16 @@ public class AppUpdateManagerTest {
         appUpdateManager.handleAppInstallationInRealTime(Uri.parse(app), epochId);
 
         verify(appUpdateManager).assignTopicsToNewlyInstalledApps(app, epochId);
+    }
+
+    private void mockInstalledApplications(List<ApplicationInfo> applicationInfos) {
+        if (SdkLevel.isAtLeastT()) {
+            when(mMockPackageManager.getInstalledApplications(
+                            any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(applicationInfos);
+        } else {
+            when(mMockPackageManager.getInstalledApplications(anyInt()))
+                    .thenReturn(applicationInfos);
+        }
     }
 }

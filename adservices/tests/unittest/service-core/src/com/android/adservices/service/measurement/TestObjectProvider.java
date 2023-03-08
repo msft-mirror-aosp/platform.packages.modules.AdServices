@@ -116,7 +116,7 @@ class TestObjectProvider {
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(new UnsignedLong(0L))
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestinations(source.getAppDestinations())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)

@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -51,6 +52,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -64,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -106,7 +109,14 @@ public class TopicsWorkerTest {
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
                         mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
-        mCacheManager = new CacheManager(mTopicsDao, mMockFlags, mLogger, mBlockedTopicsManager);
+        mCacheManager =
+                new CacheManager(
+                        mTopicsDao,
+                        mMockFlags,
+                        mLogger,
+                        mBlockedTopicsManager,
+                        new GlobalBlockedTopicsManager(
+                                /* globalBlockedTopicsManager = */ new HashSet<>()));
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 
@@ -668,12 +678,19 @@ public class TopicsWorkerTest {
         assertThat(getTopicsResultAppSdk1.getTopics())
                 .containsExactlyElementsIn(expectedGetTopicsResult.getTopics());
 
+        // Mock AdServicesManager.clearAllBlockedTopics
+        doNothing().when(mMockAdServicesManager).clearAllBlockedTopics();
         // Clear all data in database belonging to app except blocked topics table
         mTopicsWorker.clearAllTopicsData(tableExclusionList);
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isNotEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is not invoked because tableExclusionList
+        // contains blocked topics table
+        verify(mMockAdServicesManager, never()).clearAllBlockedTopics();
 
         mTopicsWorker.clearAllTopicsData(new ArrayList<>());
         assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager, times(1)).clearAllBlockedTopics();
 
         GetTopicsResult emptyGetTopicsResult =
                 new GetTopicsResult.Builder()
@@ -699,18 +716,24 @@ public class TopicsWorkerTest {
         Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
         mTopicsDao.persistTopicContributors(epochId, topicContributorsMap);
 
+        // Mock AdServicesManager.clearAllBlockedTopics
+        doNothing().when(mMockAdServicesManager).clearAllBlockedTopics();
         // To test feature flag is off
         doReturn(false).when(mMockEpochManager).supportsTopicContributorFeature();
         mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
         // TopicContributors table should remain the same
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId))
                 .isEqualTo(topicContributorsMap);
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager).clearAllBlockedTopics();
 
         // To test feature flag is on
         doReturn(true).when(mMockEpochManager).supportsTopicContributorFeature();
         mTopicsWorker.clearAllTopicsData(/* tables to exclude */ new ArrayList<>());
         // TopicContributors table be cleared.
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
+        // Verify AdServicesManager.clearAllBlockedTopics is invoked
+        verify(mMockAdServicesManager, times(2)).clearAllBlockedTopics();
     }
 
     @Test
@@ -755,8 +778,15 @@ public class TopicsWorkerTest {
         appInfo1.packageName = app1;
         ApplicationInfo appInfo3 = new ApplicationInfo();
         appInfo3.packageName = app3;
-        when(mockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1, appInfo3));
+
+        if (SdkLevel.isAtLeastT()) {
+            when(mockPackageManager.getInstalledApplications(
+                            any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(List.of(appInfo1, appInfo3));
+        } else {
+            when(mockPackageManager.getInstalledApplications(anyInt()))
+                    .thenReturn(List.of(appInfo1, appInfo3));
+        }
 
         // As selectAssignedTopicFromTopTopics() randomly assigns a top topic, pass in a Mocked
         // Random object to make the result deterministic.
@@ -846,7 +876,13 @@ public class TopicsWorkerTest {
 
         // Both reconciling uninstalled apps and installed apps call these mocked functions
         verify(mContext, times(2)).getPackageManager();
-        verify(mockPackageManager, times(2)).getInstalledApplications(Mockito.any());
+
+        PackageManager verifier = verify(mockPackageManager, times(2));
+        if (SdkLevel.isAtLeastT()) {
+            verifier.getInstalledApplications(any(PackageManager.ApplicationInfoFlags.class));
+        } else {
+            verifier.getInstalledApplications(anyInt());
+        }
 
         // App1 should get topics 1, 2, 3
         GetTopicsResult expectedGetTopicsResult1 =

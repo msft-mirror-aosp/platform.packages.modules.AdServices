@@ -93,7 +93,7 @@
                 <TextView
                     android:id="@+id/how_it_works_expander"
                     android:drawableEnd="@drawable/ic_expand"
-                    android:layout_marginTop="15dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/notificationUI_container1_control_ga_text_eu"
                     style="@style/MainStyle.Body1" />
                 <LinearLayout
@@ -123,14 +123,14 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:text="@string/notificationUI_learn_more_from_privacy_policy"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/notificationUI_change_any_time_in_privacy_settings_eu"
                     style="@style/MainStyle.Body1" />
             </LinearLayout>
@@ -169,6 +169,7 @@
             <Button
                 android:id="@+id/rightControlButton"
                 style="@style/MainStyle.PrimaryButton"
+                android:layout_marginStart="12dp"
                 android:text="@string/notificationUI_right_control_button_ga_text_eu"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />

@@ -1,5 +1,5 @@
 {
-  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. Debug reporting is enabled. The debug report type (source-destination-limit) is expected since there are two sources with different destinations and max_destinations_per_source_site_reporting_origin is 1",
+  "description": "Given two entries in the \"Attribution-Reporting-Register-Aggregatable-Source\" header, generate an aggregate report with two contributions. Debug reporting is enabled. AdId permission is enabled. The debug report type (source-destination-limit) is expected since there are two sources with different destinations and max_destinations_per_source_site_reporting_origin is 1",
   "api_config": {
     "max_destinations_per_source_site_reporting_origin": "1"
   },
@@ -9,7 +9,8 @@
         "attribution_src_url": "https://www.ad-tech1.com",
         "source_type": "navigation",
         "registrant": "example.1s1.com",
-        "debug_reporting": true
+        "debug_reporting": true,
+        "has_ad_id_permission": true
       },
       "responses": [{
         "url": "https://www.ad-tech1.com",
@@ -20,6 +21,7 @@
             "priority": "100",
             "expiry": "172801",
             "debug_reporting": true,
+            "debug_key": "347982378",
             "filter_data": {
               "conversion_subdomain": [
                 "electronics.megastore"
@@ -48,7 +50,8 @@
           "attribution_src_url": "https://www.ad-tech1.com",
           "source_type": "navigation",
           "registrant": "example.1s1.com",
-          "debug_reporting": true
+          "debug_reporting": true,
+          "has_ad_id_permission": true
         },
         "responses": [{
           "url": "https://www.ad-tech1.com",
@@ -59,6 +62,7 @@
               "priority": "100",
               "expiry": "172801",
               "debug_reporting": true,
+              "debug_key": "347982378",
               "filter_data": {
                 "conversion_subdomain": [
                   "electronics.megastore"
@@ -148,7 +152,8 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.0024263
+        "randomized_trigger_rate": 0.0024263,
+        "source_debug_key": "347982378"
       }
     }],
     "aggregatable_results": [{
@@ -160,7 +165,34 @@
         "histograms": [
           {"key": "0x559", "value": 32768},
           {"key": "0xa85", "value": 1664}
-        ]
+        ],
+        "source_debug_key": "347982378"
+      }
+    }],
+    "debug_event_level_results": [{
+      "report_time": "800176400001",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+      "payload": {
+        "attribution_destination": "android-app://example.2d1.com",
+        "scheduled_report_time": "800176400",
+        "source_event_id": "1",
+        "trigger_data": "2",
+        "source_type": "navigation",
+        "randomized_trigger_rate": 0.0024263,
+        "source_debug_key": "347982378"
+      }
+    }],
+    "debug_aggregatable_results": [{
+      "report_time": "800000600001",
+      "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/report-aggregate-attribution",
+      "payload": {
+        "attribution_destination": "android-app://example.2d1.com",
+        "source_site": "android-app://example.1s1.com",
+        "histograms": [
+          {"key": "0x559", "value": 32768},
+          {"key": "0xa85", "value": 1664}
+        ],
+        "source_debug_key": "347982378"
       }
     }],
     "debug_report_results": [{
@@ -171,7 +203,8 @@
           "source_event_id": "1",
           "attribution_destination": "android-app://example.2d2.com",
           "source_site": "android-app://example.1s1.com",
-          "limit": "1"
+          "limit": "1",
+          "source_debug_key": "347982378"
         }
       }
     }]
