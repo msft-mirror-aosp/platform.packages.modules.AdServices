@@ -27,8 +27,6 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
-import com.android.compatibility.common.util.ShellUtils;
-
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
@@ -91,10 +89,5 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getPageElement(UiDevice device, int resId) {
         return device.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    public static void killApp() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
     }
 }

@@ -16,8 +16,10 @@
 
 package com.android.adservices.common;
 
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.common.DBAdData;
 
@@ -25,6 +27,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DBAdDataFixture {
+
+    public static DBAdData.Builder getValidDbAdDataBuilder() {
+        AdData sampleAdData =
+                AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 1);
+        return new DBAdData.Builder()
+                .setRenderUri(sampleAdData.getRenderUri())
+                .setMetadata(sampleAdData.getMetadata())
+                .setAdCounterKeys(sampleAdData.getAdCounterKeys())
+                .setAdFilters(sampleAdData.getAdFilters());
+    }
+
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getValidFilterAdsByBuyer(buyer).stream()
                 .map(DBAdData::fromServiceObject)
