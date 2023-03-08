@@ -26,11 +26,11 @@ android_test {
         "compatibility-device-util-axt",
         "truth-prebuilt",
         "adservices-clients",
-        "adservices-cts-utility",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",
-        "framework-adservices.impl",
+        "framework-adservices",
         "framework-sdksandbox.impl",
     ],
     test_suites: [

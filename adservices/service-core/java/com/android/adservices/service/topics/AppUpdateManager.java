@@ -22,7 +22,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -31,6 +34,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -52,6 +56,8 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
     private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
@@ -641,9 +647,8 @@ public class AppUpdateManager {
     Set<String> getCurrentInstalledApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
     }
 

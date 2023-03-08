@@ -19,6 +19,8 @@ import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBO
 
 import android.annotation.NonNull;
 import android.annotation.SystemService;
+import android.app.Activity;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SandboxedSdkProvider;
@@ -26,7 +28,13 @@ import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.os.IBinder;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
+
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 
@@ -51,6 +59,7 @@ public class SdkSandboxController {
     private static final String TAG = "SdkSandboxController";
 
     private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
+    private SdkSandboxActivityRegistry mSdkSandboxActivityRegistry;
     private Context mContext;
 
     /**
@@ -77,7 +86,28 @@ public class SdkSandboxController {
     public SdkSandboxController initialize(@NonNull Context context) {
         mContext = context;
         mSdkSandboxLocalSingleton = SdkSandboxLocalSingleton.getExistingInstance();
+        mSdkSandboxActivityRegistry = SdkSandboxActivityRegistry.getInstance();
         return this;
+    }
+
+    /**
+     * Fetches all {@link AppOwnedSdkSandboxInterface} that are registered by the app.
+     *
+     * @return List of {@link AppOwnedSdkSandboxInterface} containing all currently registered
+     *     AppOwnedSdkSandboxInterface.
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context
+     */
+    public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        enforceSandboxedSdkContextInitialization();
+        try {
+            return mSdkSandboxLocalSingleton
+                    .getSdkToServiceCallback()
+                    .getAppOwnedSdkSandboxInterfaces(
+                            ((SandboxedSdkContext) mContext).getClientPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
     }
 
     /**
@@ -121,11 +151,67 @@ public class SdkSandboxController {
                 .getSharedPreferences(CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
     }
 
+    /**
+     * Returns an identifier for a {@link SdkSandboxActivityHandler} after registering it.
+     *
+     * <p>This function registers an implementation of {@link SdkSandboxActivityHandler} created by
+     * an SDK and returns an {@link IBinder} which uniquely identifies the passed {@link
+     * SdkSandboxActivityHandler} object.
+     *
+     * <p>If the same {@link SdkSandboxActivityHandler} registered multiple times without
+     * unregistering, the same {@link IBinder} token will be returned.
+     *
+     * @param sdkSandboxActivityHandler is the {@link SdkSandboxActivityHandler} to register.
+     * @return {@link IBinder} uniquely identify the passed {@link SdkSandboxActivityHandler}.
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @NonNull
+    public IBinder registerSdkSandboxActivityHandler(
+            @NonNull SdkSandboxActivityHandler sdkSandboxActivityHandler) {
+        if (!SdkLevel.isAtLeastU()) {
+            throw new UnsupportedOperationException();
+        }
+        enforceSandboxedSdkContextInitialization();
+
+        return mSdkSandboxActivityRegistry.register(getSdkName(), sdkSandboxActivityHandler);
+    }
+
+    /**
+     * Unregister an already registered {@link SdkSandboxActivityHandler}.
+     *
+     * <p>If the passed {@link SdkSandboxActivityHandler} is registered, it will be unregistered.
+     * Otherwise, it will do nothing.
+     *
+     * <p>After unregistering, SDK can register the same handler object again or create a new one in
+     * case it wants a new {@link Activity}.
+     *
+     * <p>If the {@link IBinder} token of the unregistered handler used to start a {@link Activity},
+     * the {@link Activity} will fail to start.
+     *
+     * @param sdkSandboxActivityHandler is the {@link SdkSandboxActivityHandler} to unregister.
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    @NonNull
+    public void unregisterSdkSandboxActivityHandler(
+            @NonNull SdkSandboxActivityHandler sdkSandboxActivityHandler) {
+        if (!SdkLevel.isAtLeastU()) {
+            throw new UnsupportedOperationException();
+        }
+        enforceSandboxedSdkContextInitialization();
+
+        mSdkSandboxActivityRegistry.unregister(sdkSandboxActivityHandler);
+    }
+
     private void enforceSandboxedSdkContextInitialization() {
         if (!(mContext instanceof SandboxedSdkContext)) {
             throw new UnsupportedOperationException(
                     "Only available from the context obtained by calling android.app.sdksandbox"
                             + ".SandboxedSdkProvider#getContext()");
         }
+    }
+
+    @NonNull
+    private String getSdkName() {
+        return ((SandboxedSdkContext) mContext).getSdkName();
     }
 }

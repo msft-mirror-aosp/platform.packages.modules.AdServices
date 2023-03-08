@@ -26,15 +26,21 @@ import android.annotation.SdkConstant;
 import android.annotation.SystemApi;
 import android.annotation.SystemService;
 import android.annotation.TestApi;
+import android.app.Activity;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.modules.utils.build.SdkLevel;
@@ -112,23 +118,24 @@ public final class SdkSandboxManager {
      */
     public static final int LOAD_SDK_SDK_SANDBOX_DISABLED = 103;
 
-    /** Internal error while loading SDK.
+    /**
+     * Internal error while loading SDK.
      *
-     * <p>This indicates a generic internal error happened while applying the call from
-     * client application.
+     * <p>This indicates a generic internal error happened while applying the call from client
+     * application.
      */
     public static final int LOAD_SDK_INTERNAL_ERROR = 500;
 
     /**
-     * Action name for the intent which starts {@link android.app.Activity} in sandbox.
+     * Action name for the intent which starts {@link Activity} in SDK sandbox.
      *
-     * <p>System services would know if the intent is created to start a sandbox {@link
-     * android.app.Activity} by comparing the action of the intent to the value of this field.
+     * <p>System services would know if the intent is created to start {@link Activity} in sandbox
+     * by comparing the action of the intent to the value of this field.
      *
      * <p>This intent should contain an extra param with key equals to {@link
      * #EXTRA_SANDBOXED_ACTIVITY_HANDLER} and value equals to the {@link IBinder} that identifies
-     * the {@code SandboxedActivityHandler} registered before by an SDK. If this extra param is
-     * missing, the {@link android.app.Activity} will fail to start.
+     * the {@link SdkSandboxActivityHandler} that registered before by an SDK. If the extra param is
+     * missing, the {@link Activity} will fail to start.
      *
      * @hide
      */
@@ -138,8 +145,8 @@ public final class SdkSandboxManager {
             "android.app.sdksandbox.action.START_SANDBOXED_ACTIVITY";
 
     /**
-     * The key for an element in {@code SandboxedActivity} intent extra params, the value is an
-     * {@code SandboxedActivityHandler} registered by an SDK.
+     * The key for an element in {@link Activity} intent extra params, the value is an {@link
+     * SdkSandboxActivityHandler} registered by an SDK.
      *
      * @hide
      */
@@ -348,6 +355,53 @@ public final class SdkSandboxManager {
     }
 
     /**
+     * Registers {@link AppOwnedSdkSandboxInterface} for an app process.
+     *
+     * <p>Registering an {@link AppOwnedSdkSandboxInterface} that has same name as a previously
+     * registered interface will result in {@link IllegalStateException}.
+     *
+     * <p>{@link AppOwnedSdkSandboxInterface#getName()} refers to the name of the interface.
+     *
+     * @param appOwnedSdkSandboxInterface the AppOwnedSdkSandboxInterface to be registered
+     */
+    public void registerAppOwnedSdkSandboxInterface(
+            @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+        try {
+            mService.registerAppOwnedSdkSandboxInterface(
+                    mContext.getPackageName(), appOwnedSdkSandboxInterface);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Unregisters {@link AppOwnedSdkSandboxInterfaces} for an app process.
+     *
+     * @param name the name under which AppOwnedSdkSandboxInterface was registered.
+     */
+    public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
+        try {
+            mService.unregisterAppOwnedSdkSandboxInterface(mContext.getPackageName(), name);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
+     * Fetches a list of {@link AppOwnedSdkSandboxInterface} registered for an app
+     *
+     * @return empty list if callingInfo not found in map otherwise a list of {@link
+     *     AppOwnedSdkSandboxInterface}
+     */
+    public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
+        try {
+            return mService.getAppOwnedSdkSandboxInterfaces(mContext.getPackageName());
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Loads SDK in an SDK sandbox java process.
      *
      * <p>Loads SDK library with {@code sdkName} to an SDK sandbox process asynchronously. The
@@ -429,7 +483,6 @@ public final class SdkSandboxManager {
      * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK to be unloaded.
-     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
         Objects.requireNonNull(sdkName, "sdkName should not be null");
@@ -533,6 +586,46 @@ public final class SdkSandboxManager {
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
+    }
+
+    /**
+     * Starts an {@link Activity} in the SDK sandbox.
+     *
+     * <p>This function will start a new {@link Activity} in the same task of the passed {@code
+     * fromActivity} and pass it to the SDK that shared the passed {@code sdkActivityToken} that
+     * identifies a request from that SDK to stat this {@link Activity}.
+     *
+     * <p>The {@link Activity} will not start in the following cases:
+     *
+     * <ul>
+     *   <li>The App calling this API is in the background.
+     *   <li>The passed {@code sdkActivityToken} does not map to a request for an {@link Activity}
+     *       form the SDK that shared it with the caller app.
+     *   <li>The SDK that shared the passed {@code sdkActivityToken} removed its request for this
+     *       {@link Activity}.
+     *   <li>The sandbox {@link Activity} is already created.
+     * </ul>
+     *
+     * @param fromActivity the {@link Activity} will be used to start the new sandbox {@link
+     *     Activity} by calling {@link Activity#startActivity(Intent)} against it.
+     * @param sdkActivityToken the identifier that is shared by the SDK which requests the {@link
+     *     Activity}.
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public void startSdkSandboxActivity(
+            @NonNull Activity fromActivity, @NonNull IBinder sdkActivityToken) {
+        if (!SdkLevel.isAtLeastU()) {
+            throw new UnsupportedOperationException();
+        }
+        Intent intent = new Intent();
+        intent.setAction(ACTION_START_SANDBOXED_ACTIVITY);
+        intent.setPackage(mContext.getPackageManager().getSdkSandboxPackageName());
+
+        Bundle params = new Bundle();
+        params.putBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER, sdkActivityToken);
+        intent.putExtras(params);
+
+        fromActivity.startActivity(intent);
     }
 
     /**

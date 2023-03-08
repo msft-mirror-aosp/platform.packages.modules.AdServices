@@ -42,6 +42,7 @@ java_library {
     libs: [
         "framework-annotations-lib",
         "framework-sdksandbox.impl",
+        "androidx.annotation_annotation",
     ],
     sdk_version: "module_current",
     apex_available: ["com.android.adservices"],
@@ -49,6 +50,8 @@ java_library {
         "sdksandbox-java-defaults",
     ],
     static_libs: [
+        "modules-utils-backgroundthread",
+        "modules-utils-build",
     ], //do not add any other static libs to SdkSandbox, else proguard will shrink it.
 }
 
@@ -57,6 +60,7 @@ android_app {
     libs: [
         "framework-annotations-lib",
         "framework-sdksandbox.impl",
+        "androidx.annotation_annotation",
     ],
     static_libs: [
         "SdkSandbox-java-lib",

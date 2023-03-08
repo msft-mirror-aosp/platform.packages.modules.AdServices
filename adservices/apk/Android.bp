@@ -29,6 +29,55 @@ android_app_certificate {
 }
 
 android_app {
+    name: "AdExtServicesApk",
+    sdk_version: "module_current",
+    min_sdk_version: "30",
+    // This is not enforced by PackageManager but we keep this
+    // here since this APK is used for S- only.
+    // TODO(b/263904312): Support for max_sdk_version.
+    max_sdk_version: "32",
+    certificate: ":com.android.adservices.api.certificate",
+    privileged: true,
+    srcs: [
+        "java/**/*.java",
+    ],
+    libs: ["android.ext.adservices"],
+    optional_uses_libs: ["android.ext.adservices"],
+    manifest: "AdExtServicesManifest.xml",
+    package_name: "android.ext.adservices",
+    static_libs: [
+        "adservices-service-core",
+        "androidx-constraintlayout_constraintlayout",
+        "androidx.preference_preference",
+        "androidx.fragment_fragment",
+        "androidx.recyclerview_recyclerview",
+        // TODO(b/230653497): Try to remove this.
+        "androidx.room_room-runtime",
+        "mobile_data_downloader_lib",
+        "tflite_support_classifiers_java",
+        "SettingsLibActionBarShadow",
+        "SettingsLibSettingsTheme",
+        "SettingsLibCollapsingToolbarBaseActivity",
+        "SettingsLibMainSwitchPreference",
+    ],
+    // TODO(b/269145496): Remove dex_preopt: false.
+    dex_preopt: {
+        enabled: false,
+    },
+    jarjar_rules: "jarjar_rules.txt",
+    resource_dirs: ["res"],
+    aaptflags: [
+        // Don't compress *.tflite files. Compressed models cannot be loaded on device.
+        "-0 .tflite",
+    ],
+    optimize: {
+        proguard_flags_files: ["proguard.flags"],
+    },
+    required: ["privapp_allowlist_com.android.adservices.api.xml"],
+    apex_available: ["com.android.extservices"],
+}
+
+android_app {
     name: "AdServicesApk",
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
@@ -77,7 +126,7 @@ android_app {
 android_library {
     name: "adservices-assets",
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "31",
     static_libs: [
         "androidx-constraintlayout_constraintlayout",
         "SettingsLibSettingsTheme",

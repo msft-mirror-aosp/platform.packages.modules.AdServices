@@ -17,8 +17,12 @@ package android.app.sdksandbox;
 
 import android.os.Bundle;
 import android.app.sdksandbox.SandboxedSdk;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 
 /** @hide */
 interface ISdkToServiceCallback {
+
+   List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(in String clientPackageName);
    List<SandboxedSdk> getSandboxedSdks(in String clientPackageName);
+   oneway void logLatenciesFromSandbox(int latencyFromSystemServerToSandboxMillis, int latencySandboxMillis, int method, boolean success);
 }

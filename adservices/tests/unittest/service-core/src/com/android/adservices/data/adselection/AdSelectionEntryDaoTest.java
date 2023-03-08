@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.content.Context;
 import android.net.Uri;
 
@@ -181,8 +181,10 @@ public class AdSelectionEntryDaoTest {
                     .build();
 
     // Event registering constants
-    private static final int BUYER_DESTINATION = ReportInteractionInput.DESTINATION_SELLER;
-    private static final int SELLER_DESTINATION = ReportInteractionInput.DESTINATION_BUYER;
+    private static final int BUYER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+    private static final int SELLER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String CLICK_EVENT = "click";
     private static final String HOVER_EVENT = "hover";

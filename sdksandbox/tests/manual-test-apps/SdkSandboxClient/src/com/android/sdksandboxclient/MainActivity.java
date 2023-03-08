@@ -29,6 +29,7 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -48,6 +49,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
+
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Set;
 
@@ -80,6 +83,7 @@ public class MainActivity extends Activity {
     private Button mPlayVideoButton;
     private Button mSyncKeysButton;
     private Button mSdkSdkCommButton;
+    private Button mStartActivity;
 
     private SurfaceView mRenderedView;
 
@@ -106,6 +110,7 @@ public class MainActivity extends Activity {
         mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
+        mStartActivity = findViewById(R.id.start_activity);
 
         registerLoadSdkProviderButton();
         registerLoadSurfacePackageButton();
@@ -113,6 +118,7 @@ public class MainActivity extends Activity {
         registerPlayVideoButton();
         registerSyncKeysButton();
         registerSdkSdkButton();
+        registerStartActivityButton();
     }
 
     private void registerLoadSdkProviderButton() {
@@ -326,6 +332,28 @@ public class MainActivity extends Activity {
                 });
     }
 
+    private void registerStartActivityButton() {
+        mStartActivity.setOnClickListener(
+                v -> {
+                    if (!mSdksLoaded) {
+                        makeToast("Sdk is not loaded");
+                        return;
+                    }
+                    if (!SdkLevel.isAtLeastU()) {
+                        makeToast("Device should have Android U or above!");
+                        return;
+                    }
+                    IBinder binder = mSandboxedSdk.getInterface();
+                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                    try {
+                        sdkApi.startActivity(new ActivityStarter(this, mSdkSandboxManager));
+                    } catch (RemoteException e) {
+                        makeToast("Failed to startActivity: " + e.getMessage());
+                        Log.e(TAG, "Failed to startActivity: " + e.getMessage(), e);
+                    }
+                });
+    }
+
     private Bundle getRequestSurfacePackageParams() {
         Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
@@ -359,6 +387,21 @@ public class MainActivity extends Activity {
         public void onError(@NonNull RequestSurfacePackageException error) {
             makeToast("Failed: " + error.getMessage());
             Log.e(TAG, error.getMessage(), error);
+        }
+    }
+
+    private static class ActivityStarter extends IActivityStarter.Stub {
+        private final Activity mActivity;
+        private final SdkSandboxManager mSdkSandboxManager;
+
+        ActivityStarter(Activity activity, SdkSandboxManager manager) {
+            this.mActivity = activity;
+            this.mSdkSandboxManager = manager;
+        }
+
+        @Override
+        public void startActivity(IBinder token) throws RemoteException {
+            mSdkSandboxManager.startSdkSandboxActivity(mActivity, token);
         }
     }
 

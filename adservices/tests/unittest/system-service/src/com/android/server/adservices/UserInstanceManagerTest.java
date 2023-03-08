@@ -16,38 +16,57 @@
 
 package com.android.server.adservices;
 
+import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.topics.Topic;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
+import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.data.topics.TopicsDbHelper;
+import com.android.server.adservices.data.topics.TopicsDbTestUtil;
+import com.android.server.adservices.data.topics.TopicsTables;
+import com.android.server.adservices.rollback.RollbackHandlingManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Set;
 
 /** Tests for {@link UserInstanceManager} */
 public class UserInstanceManagerTest {
     private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String TEST_BASE_PATH =
             APPLICATION_CONTEXT.getFilesDir().getAbsolutePath();
+    private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
+    private TopicsDao mTopicsDao;
 
     private UserInstanceManager mUserInstanceManager;
 
+    private static final int TEST_MODULE_VERSION = 339990000;
+
     @Before
     public void setup() throws IOException {
-        mUserInstanceManager = new UserInstanceManager(TEST_BASE_PATH);
+        mTopicsDao = new TopicsDao(mDBHelper);
+        mUserInstanceManager = new UserInstanceManager(mTopicsDao, TEST_BASE_PATH);
     }
 
     @After
     public void tearDown() {
         // We need tear down this instance since it can have underlying persisted Data Store.
         mUserInstanceManager.tearDownForTesting();
+
+        // Delete all data in the database
+        TopicsDbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
 
     @Test
@@ -64,6 +83,14 @@ public class UserInstanceManagerTest {
         AppConsentManager appConsentManager1 =
                 mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1);
 
+        RollbackHandlingManager rollbackHandlingManager0 =
+                mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                        0, TEST_MODULE_VERSION);
+
+        RollbackHandlingManager rollbackHandlingManager1 =
+                mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                        1, TEST_MODULE_VERSION);
+
         // One instance per user.
         assertThat(
                         mUserInstanceManager.getOrCreateUserConsentManagerInstance(
@@ -71,6 +98,10 @@ public class UserInstanceManagerTest {
                 .isNotSameInstanceAs(consentManager1);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
                 .isNotSameInstanceAs(appConsentManager1);
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                0, TEST_MODULE_VERSION))
+                .isNotSameInstanceAs(rollbackHandlingManager1);
 
         // Creating instance once per user.
         assertThat(
@@ -85,6 +116,65 @@ public class UserInstanceManagerTest {
                 .isSameInstanceAs(appConsentManager0);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(1))
                 .isSameInstanceAs(appConsentManager1);
+
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                0, TEST_MODULE_VERSION))
+                .isSameInstanceAs(rollbackHandlingManager0);
+        assertThat(
+                        mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
+                                1, TEST_MODULE_VERSION))
+                .isSameInstanceAs(rollbackHandlingManager1);
+    }
+
+    @Test
+    public void testGetOrCreateUserBlockedTopicsManagerInstance() {
+        final int user0 = 0;
+        final int user1 = 1;
+
+        BlockedTopicsManager blockedTopicsManager0 =
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0);
+        BlockedTopicsManager blockedTopicsManager1 =
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1);
+
+        // One instance per user.
+        assertThat(blockedTopicsManager0).isNotSameInstanceAs(blockedTopicsManager1);
+
+        // Creating instance once per user.
+        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0))
+                .isSameInstanceAs(blockedTopicsManager0);
+        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1))
+                .isSameInstanceAs(blockedTopicsManager1);
+    }
+
+    @Test
+    public void testRecordRemoveBlockedTopicsMultipleUsers() {
+        final int user0 = 0;
+        final int user1 = 1;
+        final TopicParcel topicParcel =
+                new TopicParcel.Builder()
+                        .setTopicId(/* topicId */ 1)
+                        .setTaxonomyVersion(/* taxonomyVersion */ 1)
+                        .setModelVersion(DUMMY_MODEL_VERSION)
+                        .build();
+
+        BlockedTopicsManager blockedTopicsManager0 =
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0);
+        BlockedTopicsManager blockedTopicsManager1 =
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1);
+
+        // Record topic for user 0
+        blockedTopicsManager0.recordBlockedTopic(List.of(topicParcel));
+        assertThat(blockedTopicsManager0.retrieveAllBlockedTopics())
+                .isEqualTo(List.of(topicParcel));
+        assertThat(blockedTopicsManager1.retrieveAllBlockedTopics()).isEmpty();
+
+        // Record topic also for user 1 and remove topic for user0;
+        blockedTopicsManager1.recordBlockedTopic(List.of(topicParcel));
+        blockedTopicsManager0.removeBlockedTopic(topicParcel);
+        assertThat(blockedTopicsManager0.retrieveAllBlockedTopics()).isEmpty();
+        assertThat(blockedTopicsManager1.retrieveAllBlockedTopics())
+                .isEqualTo(List.of(topicParcel));
     }
 
     @Test
@@ -107,5 +197,36 @@ public class UserInstanceManagerTest {
         mUserInstanceManager.deleteUserInstance(userIdentifierNotPresent);
 
         assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
+    }
+
+    @Test
+    public void testDeleteAllDataWhenDeletingUserInstance() throws Exception {
+        final int topicId1 = 1;
+        final int topicId2 = 2;
+        final int user0 = 0;
+        final int user1 = 1;
+        final long taxonomyVersion = 1L;
+        final long modelVersion = 1L;
+        Topic topicToBlock1 = new Topic(taxonomyVersion, modelVersion, topicId1);
+        Topic topicToBlock2 = new Topic(taxonomyVersion, modelVersion, topicId2);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), user0);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock2), user0);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), user1);
+
+        Set<Topic> blockedTopics0 = mTopicsDao.retrieveAllBlockedTopics(user0);
+        Set<Topic> blockedTopics1 = mTopicsDao.retrieveAllBlockedTopics(user1);
+
+        // Make sure that what we write to db is equal to what we read from db.
+        assertThat(blockedTopics0).hasSize(2);
+        assertThat(blockedTopics0).containsExactly(topicToBlock1, topicToBlock2);
+        assertThat(blockedTopics1).hasSize(1);
+        assertThat(blockedTopics1).containsExactly(topicToBlock1);
+
+        mUserInstanceManager.deleteUserInstance(user0);
+
+        // User 0 should have no blocked topics and User 1 should still have 1 blocked topic
+        assertThat(mTopicsDao.retrieveAllBlockedTopics(user0)).isEmpty();
+        assertThat(blockedTopics1).hasSize(1);
+        assertThat(blockedTopics1).containsExactly(topicToBlock1);
     }
 }

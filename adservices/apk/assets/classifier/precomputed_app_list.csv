@@ -10010,9 +10010,12 @@ com.example.adservices.samples.topics.sampleapp7	10291,10136,10359,10098,10001
 com.example.adservices.samples.topics.sampleapp8	10432,10132,10386,10344,10440
 com.example.adservices.samples.topics.sampleapp9	10123,10163,10249,10246,10422
 com.example.adservices.samples.topics.sampleapp10	10192,10136,10389,10332,10412
+com.android.adextservices.tests.cts.endtoendtest	10147,10253,10175,10254,10333
 com.android.adservices.tests.cts.endtoendtest	10147,10253,10175,10254,10333
 com.android.adservices.tests.cts.topics.connection	10147,10253,10175,10254,10333
 com.android.adservices.tests.cts.topics.appupdate	10147,10253,10175,10254,10333
 com.android.adservices.tests.cts.topics.testapp1	10147,10253,10175,10254,10333
+com.android.adservices.tests.ui	10147,10253,10175,10254,10333
 com.android.tests.sandbox.topics	10147,10253,10175,10254,10333
 android.platform.test.scenario	10147,10253,10175,10254,10333
+androidx.privacysandbox.ads.adservices.java.test	10147,10253,10175,10254,10333

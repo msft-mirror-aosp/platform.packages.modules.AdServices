@@ -22,8 +22,12 @@ import android.net.Uri;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ValidationTest {
     private static final Uri NULL_ARGUMENT = null;
+    private static final List<Integer> EMPTY_LIST = new ArrayList<>();
 
     @Test
     public void testValidateNonNull_throwsExceptionWhenNull_oneArgument() {
@@ -44,6 +48,27 @@ public class ValidationTest {
     @Test
     public void testValidateNonNull_doesNotThrowExceptionWhenNotNull() {
         Validation.validateNonNull(333, "xyz");
+    }
+
+    @Test
+    public void testValidateNotEmpty_throwsExceptionWhenEmpty_oneArgument() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Validation.validateNotEmpty(EMPTY_LIST)
+        );
+    }
+
+    @Test
+    public void testValidateNotEmpty_throwsExceptionWhenEmpty_twoArguments() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> Validation.validateNotEmpty(List.of(1), EMPTY_LIST)
+        );
+    }
+
+    @Test
+    public void testValidateNotEmpty_doesNotThrowExceptionWhenNotEmpty() {
+        Validation.validateNotEmpty(List.of(1, 2, 3));
     }
 
     @Test

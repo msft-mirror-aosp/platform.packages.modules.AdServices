@@ -21,6 +21,9 @@ import static java.util.stream.Collectors.toSet;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
@@ -45,6 +48,8 @@ import java.util.stream.Stream;
  * Manager class to control the classifier behaviour between available types of classifier based on
  * classifier flags.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
     private static ClassifierManager sSingleton;
 

@@ -19,7 +19,9 @@ package android.app.sdksandbox.sdkprovider;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkContext;
@@ -28,13 +30,16 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
+import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -60,20 +65,12 @@ public class SdkSandboxControllerUnitTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity();
-        try {
-            sCustomizedSdkContextEnabled =
-                    DeviceConfig.getBoolean(
-                            DeviceConfig.NAMESPACE_ADSERVICES,
-                            "sdksandbox_customized_sdk_context_enabled",
-                            false);
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
+        DeviceConfigStateManager stateManager =
+                new DeviceConfigStateManager(
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        "sdksandbox_customized_sdk_context_enabled");
+        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
     }
 
     @Before
@@ -120,6 +117,29 @@ public class SdkSandboxControllerUnitTest {
         // Does not fail on initialising with same context
         controller.initialize(mContext);
         assertThat(controller).isNotNull();
+    }
+
+    @Test
+    public void testGetAppOwnedSdkSandboxInterfaces() throws RemoteException {
+        final SdkSandboxController controller =
+                mContext.getSystemService(SdkSandboxController.class);
+        controller.initialize(mSandboxedSdkContext);
+
+        // Mock singleton methods
+        final ISdkToServiceCallback serviceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        ArrayList<AppOwnedSdkSandboxInterface> appOwnedInterfacesMock = new ArrayList<>();
+        appOwnedInterfacesMock.add(
+                new AppOwnedSdkSandboxInterface(
+                        "mockPackage", /*version=*/ 0, /*interfaceIBinder=*/ new Binder()));
+
+        Mockito.when(serviceCallback.getAppOwnedSdkSandboxInterfaces(Mockito.anyString()))
+                .thenReturn(appOwnedInterfacesMock);
+        Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(serviceCallback);
+        final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaces =
+                controller.getAppOwnedSdkSandboxInterfaces();
+
+        assertThat(appOwnedSdkSandboxInterfaces).isEqualTo(appOwnedInterfacesMock);
     }
 
     @Test
@@ -176,5 +196,40 @@ public class SdkSandboxControllerUnitTest {
                 mContext.getSharedPreferences(
                         SdkSandboxController.CLIENT_SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
         assertThat(sp).isSameInstanceAs(spFromOriginalContext);
+    }
+
+    @Test
+    public void testRegisterSdkSandboxActivityHandler() {
+        SdkSandboxController controller = new SdkSandboxController(mContext);
+        controller.initialize(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        IBinder token1 = controller.registerSdkSandboxActivityHandler(handler);
+        IBinder token2 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token2).isEqualTo(token1);
+
+        // cleaning
+        controller.unregisterSdkSandboxActivityHandler(handler);
+    }
+
+    @Test
+    public void testUnregisterSdkSandboxActivityHandler() {
+        SdkSandboxController controller = new SdkSandboxController(mContext);
+        controller.initialize(mSandboxedSdkContext);
+
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        SdkSandboxActivityHandler handler = activity -> {};
+
+        IBinder token1 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token1).isNotNull();
+
+        controller.unregisterSdkSandboxActivityHandler(handler);
+
+        IBinder token2 = controller.registerSdkSandboxActivityHandler(handler);
+        assertThat(token2).isNotEqualTo(token1);
     }
 }

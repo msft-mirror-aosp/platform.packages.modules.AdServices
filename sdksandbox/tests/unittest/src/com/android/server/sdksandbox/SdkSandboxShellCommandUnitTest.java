@@ -29,11 +29,17 @@ import android.os.UserHandle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.ISdkSandboxService;
+import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.FileDescriptor;
 
@@ -52,8 +58,23 @@ public class SdkSandboxShellCommandUnitTest {
 
     private PackageManager mPackageManager;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() throws Exception {
+        if (SdkLevel.isAtLeastU()) {
+            mStaticMockSession =
+                    ExtendedMockito.mockitoSession()
+                            // TODO(b/267320397): Remove LENIENT to enable mock Exceptions.
+                            .strictness(Strictness.LENIENT)
+                            .mockStatic(ActivityInterceptorCallbackRegistry.class)
+                            .startMocking();
+            ActivityInterceptorCallbackRegistry registryMock =
+                    Mockito.mock(ActivityInterceptorCallbackRegistry.class);
+            ExtendedMockito.doReturn(registryMock)
+                    .when(ActivityInterceptorCallbackRegistry::getInstance);
+        }
+
         mSpyContext = Mockito.spy(InstrumentationRegistry.getInstrumentation().getContext());
 
         InstrumentationRegistry.getInstrumentation()
@@ -92,6 +113,13 @@ public class SdkSandboxShellCommandUnitTest {
                         Mockito.eq(INVALID_PACKAGE),
                         Mockito.anyInt(),
                         Mockito.any(UserHandle.class));
+    }
+
+    @After
+    public void tearDown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test

@@ -22,10 +22,11 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -70,12 +71,12 @@ public class TopicContributorsTableEnableDisableTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, LOG_TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, LOG_TAG);
 
     @Before
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // We need to skip 4 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -89,6 +90,10 @@ public class TopicContributorsTableEnableDisableTest {
 
         // Set initial state of TopicsContributorsTable as disabled
         enableTopicContributorsTable(false);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        }
     }
 
     @After
@@ -96,6 +101,7 @@ public class TopicContributorsTableEnableDisableTest {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         overrideApiRateLimit(1);
+        overrideConsentSourceOfTruth(null);
     }
 
     @Test
@@ -143,7 +149,7 @@ public class TopicContributorsTableEnableDisableTest {
         enableTopicContributorsTable(true);
         // Kill Adservices to 1) allow database to re-create 2) clear CacheManager, so it will query
         // database again.
-        killAdServices();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Verify database is able to query. Skip checking detailed topics result.
@@ -154,7 +160,7 @@ public class TopicContributorsTableEnableDisableTest {
         enableTopicContributorsTable(false);
         // Kill Adservices to 1) allow database to re-create 2) clear CacheManager, so it will query
         // database again.
-        killAdServices();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         Thread.sleep(EXECUTION_WAITING_TIME);
 
         // Verify database is able to query. Skip checking detailed topics result.
@@ -193,9 +199,7 @@ public class TopicContributorsTableEnableDisableTest {
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
     }
 
-    // Force stop AdServices API.
-    public void killAdServices() {
-        // adb shell am force-stop com.google.android.adservices.api
-        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }

@@ -16,12 +16,18 @@
 
 package com.android.ctssdkprovider;
 
+import android.annotation.NonNull;
+import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
+import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.content.res.Resources;
+import android.os.IBinder;
 import android.os.Process;
+import android.os.RemoteException;
 
 import com.android.sdksandbox.SdkSandboxServiceImpl;
 
@@ -146,6 +152,30 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         return processInfo.importance;
     }
 
+    @Override
+    public void startActivity(com.android.ctssdkprovider.IActivityStarter iActivityStarter)
+            throws RemoteException {
+        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        IBinder token =
+                controller.registerSdkSandboxActivityHandler(
+                        new SdkSandboxActivityHandler() {
+                            @Override
+                            public void onActivityCreated(@NonNull Activity activity) {
+                                try {
+                                    iActivityStarter.activityStartedSuccessfully();
+                                } catch (RemoteException e) {
+                                    throw new IllegalStateException("Exception");
+                                }
+                            }
+                        });
+        iActivityStarter.startActivity(token);
+    }
+
+    @Override
+    public String getOpPackageName() {
+        return mContext.getOpPackageName();
+    }
+
     /* Sends an error if the expected resource/asset does not match the read value. */
     private String createErrorMessage(String expected, String actual) {
         return new String("Expected " + expected + ", actual " + actual);
@@ -159,6 +189,7 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
                         + "/sdksandbox/"
                         + CLIENT_PACKAGE_NAME
                         + "/"
-                        + SDK_NAME);
+                        + SDK_NAME
+                        + "@");
     }
 }

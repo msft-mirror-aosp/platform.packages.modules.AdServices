@@ -36,7 +36,8 @@ LOCAL_STATIC_JAVA_LIBRARIES := \
         launcher-aosp-tapl \
         handheld-app-helpers \
         framework-adservices-lib \
-	hamcrest-library
+        adservices-device-collectors-lib \
+        hamcrest-library
 
 LOCAL_CERTIFICATE := platform
 LOCAL_PRIVATE_PLATFORM_APIS := true

@@ -21,7 +21,10 @@ android_test_helper_app {
     defaults: ["platform_app_defaults"],
     platform_apis: true,
     srcs: ["src/**/sdksandboxclient/*.java"],
-    static_libs: ["SdkInterfaces"],
+    static_libs: [
+        "SdkInterfaces",
+        "modules-utils-build",
+    ],
     resource_dirs: ["res"],
     manifest: "AndroidManifest_Client.xml",
     test_suites: ["general-tests"],

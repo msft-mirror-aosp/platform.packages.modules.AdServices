@@ -17,15 +17,20 @@
 package com.android.adservices.service.measurement;
 
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import org.json.JSONArray;
+
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public final class TriggerFixture {
     private TriggerFixture() { }
@@ -43,6 +48,7 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
                 .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
@@ -52,6 +58,8 @@ public final class TriggerFixture {
                 .setAggregateValues(ValidTriggerParams.AGGREGATE_VALUES)
                 .setFilters(ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
+                .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
+                .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
                 .build();
     }
 
@@ -99,12 +107,49 @@ public final class TriggerFixture {
                 + "]";
 
         public static final String AGGREGATE_VALUES =
-                "{"
-                    + "\"campaignCounts\":32768,"
-                    + "\"geoValue\":1664"
-                + "}";
+                "{" + "\"campaignCounts\":32768," + "\"geoValue\":1664" + "}";
 
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(27836L);
+
+        public static final AttributionConfig ATTRIBUTION_CONFIG =
+                new AttributionConfig.Builder()
+                        .setExpiry(604800L)
+                        .setSourceAdtech("AdTech1-Ads")
+                        .setSourcePriorityRange(new Pair<>(100L, 1000L))
+                        .setSourceFilters(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(
+                                                        Map.of(
+                                                                "campaign_type",
+                                                                Collections.singletonList(
+                                                                        "install"),
+                                                                "source_type",
+                                                                Collections.singletonList(
+                                                                        "navigation")))
+                                                .build()))
+                        .setPriority(99L)
+                        .setExpiry(604800L)
+                        .setFilterData(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(
+                                                        Map.of(
+                                                                "campaign_type",
+                                                                Collections.singletonList(
+                                                                        "install")))
+                                                .build()))
+                        .build();
+
+        public static final String ATTRIBUTION_CONFIGS_STRING =
+                new JSONArray(Collections.singletonList(ATTRIBUTION_CONFIG.serializeAsJson()))
+                        .toString();
+
+        public static final String X_NETWORK_KEY_MAPPING =
+                "{"
+                        + "\"AdTechA-enrollment_id\": \"0x1\","
+                        + "\"AdTechB-enrollment_id\": \"0x2\""
+                        + "}";
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =

@@ -42,6 +42,7 @@ android_test_helper_app {
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     static_libs: [
         "androidx.core_core",
         "androidx.test.ext.junit",
@@ -64,7 +65,10 @@ java_library {
 android_test_helper_app {
     name: "CrashTestSdkProvider",
     manifest: "sdkprovider/CrashTestSdkProviderManifest.xml",
-    defaults: ["platform_app_defaults"],
+    defaults: [
+        "platform_app_defaults",
+        "framework-sdksandbox-jarjar-defaults",
+    ],
     srcs: [
        "sdkprovider/src/**/*.java",
     ],

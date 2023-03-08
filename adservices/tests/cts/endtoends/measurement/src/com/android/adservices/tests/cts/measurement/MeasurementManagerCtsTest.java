@@ -40,12 +40,14 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -85,6 +87,9 @@ public class MeasurementManagerCtsTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         // To grant access to all pp api app
         allowAllPackageNamesAccessMeasurementApis();
 
@@ -122,7 +127,7 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
         assertFalse(registerSourceAndVerifyRateLimitReached(manager));
@@ -176,7 +181,7 @@ public class MeasurementManagerCtsTest {
     @Test
     public void testRegisterWebSource_verifyRateLimitReached() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
         assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
@@ -271,7 +276,7 @@ public class MeasurementManagerCtsTest {
     public void testDeleteRegistrations_withRequest_withInvalidArguments_withCallback_hasError()
             throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -306,7 +311,7 @@ public class MeasurementManagerCtsTest {
     public void testMeasurementApiStatus_returnResultStatus() throws Exception {
         overrideDisableMeasurementEnrollmentCheck("1");
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        final MeasurementManager manager = sContext.getSystemService(MeasurementManager.class);
+        final MeasurementManager manager = MeasurementManager.get(sContext);
         List<Integer> resultCodes = new ArrayList<>();
 
         manager.getMeasurementApiStatus(

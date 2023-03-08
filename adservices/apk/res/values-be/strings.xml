@@ -71,57 +71,57 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Праграмы могуць аналізаваць інфармацыю пра вашы інтарэсы і часова захоўваць яе на прыладзе Android. Напрыклад, праграма, якую вы скарысталі для куплі красовак, можа занесці ў спіс вашых інтарэсаў \"бег на марафонах\".\n\nПазней іншая праграма, кіруючыся гэтымі данымі, можа паказаць вам рэкламу, звязаную з марафонамі.\n\nКіраваць спісам праграм, якія захоўваюць інфармацыю пра вашы інтарэсы, можна ў наладах прыватнасці."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Новыя функцыі прыватнасці рэкламы"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Дзякуючы тэмам рэкламы і новым наладам у вас ёсць магчымасць вызначаць рэкламу, якая вам паказваецца"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android вызначае цікавыя для вас тэмы на падставе звестак пра праграмы, якімі вы нядаўна карысталіся. Праграмы, якімі вы карыстаецеся, таксама могуць вызначаць вашы інтарэсы. Пазней яны могуць запытваць гэту інфармацыю для паказу вам персаналізаванай рэкламы. Вы можаце выбіраць тэмы і праграмы для паказу вам рэкламы."</string>
-    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Каб вымяраць эфектыўнасць рэкламы, праграмы абагульваюць паміж сабой асобныя тыпы даных."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android вызначае цікавыя для вас тэмы на падставе звестак пра праграмы, якімі вы нядаўна карысталіся. Акрамя таго, праграмы, якімі вы карыстаецеся, могуць вызначаць, што вам падабаецца. Праграмы, якія вы будзеце выкарыстоўваць пазней, могуць запытваць гэту інфармацыю, каб паказваць вам персаналізаваную рэкламу. Вы можаце выбраць, якія тэмы і праграмы будуць выкарыстоўвацца для паказу вам рэкламы."</string>
+    <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Для ацэнкі эфектыўнасці рэкламы праграмы абагульваюць адна з адной даныя пэўных тыпаў."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Падрабязней пра рэкламу на Android"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="8685034725335826096">"Больш карысная рэклама"</string>
-    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Праграмы могуць запытваць у Android інфармацыю, каб персаналізаваць рэкламу, якая будзе вам паказвацца."</string>
+    <string name="notificationUI_how_it_works_row_body1" msgid="5865369599951938718">"Праграмы могуць запытваць у Android інфармацыю, якая дапаможа персаналізаваць для вас рэкламу."</string>
     <string name="notificationUI_how_it_works_row_body2" msgid="6601773212442110369">"•  Android вызначае цікавыя для вас тэмы на падставе таго, якімі праграмамі вы нядаўна карысталіся."</string>
-    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  На падставе таго, як вы карыстаецеся праграмамі, яны могуць вызначаць, што вам даспадобы. Напрыклад, калі вы карыстаецеся праграмай, у якой прадаецца абутак для бегу на доўгія дыстанцыі, праграма можа вырашыць, што вас цікавяць марафоны."</string>
-    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Пазней праграма, якой вы карыстаецеся, можа запытаць гэту інфармацыю – вашы тэмы рэкламы альбо рэкламу, што прапаноўвалі праграмы, якімі вы карысталіся."</string>
-    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android рэгулярна выдаляе тэмы і даныя з прапановамі ад праграм. Вы таксама можаце заблакіраваць асобныя тэмы і забараніць пэўным праграмам стварэнне прапаноў."</string>
+    <string name="notificationUI_how_it_works_row_body3" msgid="3692457397642529055">"•  Праграмы, якімі вы карыстаецеся, таксама могуць вызначаць, што вам падабаецца, на аснове таго, як вы карыстаецеся праграмамі. Напрыклад, калі вы карыстаецеся праграмай, у якой прадаюцца красоўкі для бегу на доўгія дыстанцыі, праграма можа вызначыць, што вас цікавіць марафонскі бег."</string>
+    <string name="notificationUI_how_it_works_row_body4" msgid="8731138074016839243">"Праграма, якой вы будзеце карыстацца пазней, можа запытаць гэту інфармацыю – тэмы рэкламы або рэкламныя аб\'явы, прапанаваныя праграмамі, якімі вы карысталіся."</string>
+    <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android рэгулярна аўтаматычна выдаляе тэмы і даныя з прапановамі ад праграм. Вы таксама можаце блакіраваць асобныя тэмы і забараніць пэўным праграмам стварэнне прапаноў."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Ацэнка эфектыўнасці рэкламнай аб\'явы"</string>
-    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Праграмы, якімі вы карыстаецеся, могуць запытваць у Android інфармацыю для вымярэння эфектыўнасці рэкламы. Android дазваляе праграмам збіраць толькі абмежаваныя тыпы даных, такія як час сутак, калі вам паказвалася рэклама."</string>
+    <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Праграмы, якімі вы карыстаецеся, могуць запытваць у Android інфармацыю, каб выкарыстоўваць яе для ацэнкі эфектыўнасці сваёй рэкламы. Android дазваляе праграмам збіраць даныя пэўных тыпаў (напрыклад, пра час сутак, калі вам паказвалася пэўная рэкламная аб\'ява)."</string>
     <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
     <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Паспрабуйце новыя функцыі прыватнасці рэкламы"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Дзякуючы тэмам рэкламы ў вас ёсць магчымасць вызначаць рэкламу, якая вам паказваецца"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Прагледзець звесткі"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Палепшаная прыватнасць пры паказе рэкламы на Android"</string>
-    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android запускае новыя функцыі прыватнасці, дзякуючы якім вы зможаце вызначаць рэкламу, якая вам паказваецца."</string>
-    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"У залежнасці ад тэм праграмы могуць паказваць вам адпаведную рэкламу, забяспечваючы вашу прыватнасць і ахоўваючы інфармацыю пра ваша карыстанне праграмамі. Android можа вызначаць цікавыя для вас тэмы на падставе звестак пра праграмы, якімі вы нядаўна карысталіся. Пазней праграма, якой вы карыстаецеся, можа запытаць у Android інфармацыю пра вашы тэмы, каб персаналізаваць рэкламу, якая будзе вам паказвацца."</string>
-    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Вы можаце праглядаць тэмы рэкламы ў наладах прылады і блакіраваць тыя, якія не хочаце абагульваць з праграмамі. Android таксама рэгулярна выдаляе тэмы рэкламы."</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Палепшаная прыватнасць пры паказе рэкламы ў Android"</string>
+    <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android запускае новыя функцыі забеспячэння прыватнасці, якія дадуць вам магчымасць больш дакладна выбіраць, якая рэклама будзе вам паказвацца."</string>
+    <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Выкарыстанне тэм рэкламы дапамагае праграмам паказваць вам адпаведную рэкламу, забяспечваючы вашу прыватнасць і ахоўваючы інфармацыю пра ваша карыстанне праграмамі. Android можа вызначаць цікавыя для вас тэмы на падставе звестак пра праграмы, якімі вы нядаўна карысталіся. Пазней праграма, якой вы карыстаецеся, можа запытваць у Android рэлевантныя тэмы, каб персаналізаваць для вас рэкламу."</string>
+    <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"У наладах прылады можна праглядзець тэмы рэкламы і заблакіраваць тыя з іх, якія вы не хочаце абагульваць з праграмамі. Android таксама рэгулярна аўтаматычна выдаляе тэмы рэкламы."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Вы можаце ў любы час змяніць сваё рашэнне ў наладах прыватнасці."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Падрабязней пра тэмы рэкламы"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Падрабязней пра тое, як Android абараняе вашы даныя, можна даведацца ў нашай Палітыцы прыватнасці."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Даведацца больш пра тое, як Android абараняе вашы даныя, можна, прачытаўшы нашу Палітыку прыватнасці."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Так, я згаджаюся"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Якія даныя выкарыстоўваюцца"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Тэмы рэкламы, якая вам паказваецца, залежаць ад таго, якімі праграмамі і як часта вы нядаўна карысталіся на гэтай прыладзе."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Тэмы вашай рэкламы асноўваюцца на тым, якімі праграмамі і як часта вы нядаўна карысталіся на гэтай прыладзе."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Як мы выкарыстоўваем гэтыя даныя"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android вызначае цікавыя для вас тэмы, калі вы карыстаецеся праграмамі. Меткі тэм вызначаны загадзя – сярод іх ёсць, напрыклад, Мастацтва і забавы, Куплі, Спорт. Пазней праграма, якой вы карыстаецеся, можа запытаць у Android інфармацыю пра некаторыя вашы тэмы (але не даныя пра карыстанне праграмай ці асабістыя звесткі), каб персаналізаваць рэкламу, якая будзе вам паказвацца."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text6" msgid="6318275524155409408">"Android вызначае цікавыя для вас тэмы, калі вы карыстаецеся праграмамі. Меткі для тэм зададзены загадзя (напрыклад: \"Мастацтва і забавы\", \"Пакупкі\", \"Спорт\"). Праграма, якой вы карыстаецеся, пазней можа запытваць у Android тэмы рэкламы (але не даныя пра карыстанне праграмай ці асабістыя звесткі), каб персаналізаваць для вас рэкламу."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Як кіраваць сваімі данымі"</string>
-    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android рэгулярна выдаляе тэмы. Калі праграмы выкарыстоўваюцца далей, тэма можа зноў з\'явіцца ў спісе. Вы таксама можаце ў любы час у наладах прыватнасці забараніць пэўныя тэмы, каб Android не абагульваў іх з праграмамі, або выключыць іх."</string>
+    <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android рэгулярна аўтаматычна выдаляе тэмы. Па меры далейшага выкарыстання праграм тэма можа зноў з\'явіцца ў спісе. У наладах прыватнасці можна ў любы час забараніць Android абагульваць пэўныя тэмы з праграмамі або наогул адключыць тэмы рэкламы."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Вы можаце ўносіць змяненні ў наладах прыватнасці."</string>
     <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Іншыя функцыі, якія павышаюць прыватнасць рэкламы"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android запускае новыя магчымасці для абмежавання доступу праграм да вашых даных падчас паказу вам персаналізаванай рэкламы."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Рэклама, якую прапануюць праграмы, дапамагае забяспечваць вашу прыватнасць і ахоўваць інфармацыю пра ваша карыстанне праграмамі, але пры гэтым даюць праграмам магчымасць паказваць вам адпаведную рэкламу. На падставе вашых дзеянняў праграма, якой вы карыстаецеся, можа прапаноўваць адпаведную рэкламу для паказу ў іншых праграмах. Праглядзець спіс праграм і забараніць ім рабіць прапановы можна ў наладах прыватнасці."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Каб вымяраць эфектыўнасць рэкламы, праграмы абагульваюць паміж сабой асобныя тыпы даных, якія на яе ўплываюць (напрыклад, час сутак, калі вам паказвалася рэклама)."</string>
-    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Падрабязней пра рэкламу, якую прапануюць праграмы, і вымярэнне эфектыўнасці рэкламы"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Рэклама, якую прапануюць праграмы"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android прадстаўляе новыя спосабы абмежавання звестак, якія праграмы могуць збіраць пра вас пры паказе персаналізаванай рэкламы."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Выкарыстанне рэкламы, якая прапануецца праграмамі, дапамагае забяспечваць вашу прыватнасць і ахоўваць інфармацыю пра ваша карыстанне праграмамі, але пры гэтым дазваляе праграмам паказваць вам рэлевантныя рэкламныя аб\'явы. На падставе вашых дзеянняў праграма, якой вы карыстаецеся, можа паказваць звязаныя рэкламныя аб\'явы ў іншых праграмах. Вы можаце праглядзець спіс праграм і забараніць ім рабіць прапановы ў наладах прыватнасці."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Пры вымярэнні паказчыкаў, звязаных з рэкламай, праграмы, для ацэнкі яе эфектыўнасці, абагульваюць адна з адной даныя пэўных тыпаў (напрыклад, пра час сутак, калі вам паказвалася пэўная рэкламная аб\'ява)."</string>
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Падрабязней пра рэкламу, якая прапануецца праграмамі, і вымярэнне паказчыкаў, звязаных з рэкламай"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0" msgid="2456923104551938349">"Рэклама, якая прапануецца праграмамі"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1" msgid="5606895535548790900">"•  Якія даныя выкарыстоўваюцца"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Вашы дзеянні ў праграме, якой вы карыстаецеся на гэтай прыладзе."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2" msgid="6309052819494439288">"Звесткі пра вашы дзеянні ў праграме, якой вы карыстаецеся на гэтай прыладзе."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3" msgid="5347980571056638783">"•  Як праграмы выкарыстоўваюць гэтыя даныя"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Праграмы могуць захоўваць у Android інфармацыю пра вашы інтарэсы. Напрыклад, калі вы карыстаецеся праграмай з трэніроўкамі для марафону, праграма можа вырашыць, што вас цікавяць красоўкі. Пазней у іншай праграме вы можаце ўбачыць рэкламу красовак, прапанаваную першай праграмай."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4" msgid="4738335469671465639">"Праграмы могуць захоўваць звесткі пра вашы інтарэсы ў Android. Напрыклад, калі вы карыстаецеся праграмай, прысвечанай падрыхтоўцы да марафону, праграма можа вызначыць, што вас цікавяць бегавыя красоўкі. Пазней, калі вы выкарыстаеце іншую праграму, гэта праграма на падставе даных, атрыманых першай праграмай, можа паказаць вам рэкламу бегавых красовак."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5" msgid="8737925570089314631">"•  Як кіраваць сваімі данымі"</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android рэгулярна аўтаматычна выдаляе прапанаваныя праграмамі даныя. Калі вы працягваеце карыстацца праграмай, яе даныя могуць зноў з\'явіцца ў спісе."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Таксама вы можаце ў любы час у наладах прыватнасці забараніць праграме прапаноўваць вам рэкламу, скінуць усе даныя з прапановамі рэкламы ці выключыць рэкламу, прапанаваную праграмай."</string>
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Праграмы, якімі вы карыстаецеся, могуць запытваць у Android інфармацыю для вымярэння эфектыўнасці рэкламы. Android забяспечвае вашу прыватнасць, абмяжоўваючы інфармацыю, якую праграмы могуць абагульваць паміж сабой."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android рэгулярна аўтаматычна выдаляе прапанаваныя праграмамі даныя. Праграма, якой вы карыстаецеся паўторна, можа з\'явіцца ў спісе зноў."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Вы можаце забараніць праграме прапаноўваць вам рэкламу, скінуць усе даныя з прапановамі рэкламы або наогул адключыць рэкламу, якая прапануецца праграмамі, у любы час у наладах прыватнасці."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Праграмы, якімі вы карыстаецеся, могуць запытваць у Android інфармацыю, каб выкарыстоўваць яе для ацэнкі эфектыўнасці сваёй рэкламы. Android абараняе вашу прыватнасць, абмяжоўваючы даныя, якія праграмы могуць абагульваць адна з адной."</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Прыміце ўдзел у тэсціраванні бэта-версіі праграмы \"Прыватнасць у рэкламе на прыладах Android\""</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Аналіз інтарэсаў з боку Android"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Праграмы, якія аналізуюць інтарэсы"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Вымярэнне эфектыўнасці рэкламы"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Вымярэнне паказчыкаў, звязаных з рэкламай"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Праграмы могуць выкарыстоўваць Privacy Sandbox для вымярэння эфектыўнасці рэкламы. З гэтай мэтай рэкламадаўцы могуць часова захоўваць на прыладах Android даныя пра ваша ўзаемадзеянне з іх рэкламай і праграмамі. Такія даныя будуць рэгулярна выдаляцца, таму што іх аб\'ём моцна абмежаваны.\n\nВы можаце выдаліць гэтыя даныя ў любы час, выключыўшы Privacy Sandbox."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"На падставе інфармацыі пра тое, якімі праграмамі вы карыстаецеся, Android перыядычна аналізуе даныя пра вашы асноўныя інтарэсы. Праграмы могуць запытваць у Android дазвол на выкарыстанне гэтых даных пра інтарэсы для паказу вам больш рэлевантнай рэкламы.\n\nКалі заблакіраваць інтарэс, ён не будзе дадавацца ў спіс, пакуль вы не разблакіруеце яго. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Заблакіраваць"</string>
@@ -133,10 +133,8 @@
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nAndroid будзе аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"У вас няма заблакіраваных інтарэсаў"</string>
-    <!-- no translation found for settingsUI_no_blocked_topics_ga_text (377459829879121256) -->
-    <skip />
-    <!-- no translation found for settingsUI_view_blocked_topics_title (3705333677440361392) -->
-    <skip />
+    <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"Няма заблакіраваных тэм"</string>
+    <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"Паказаць заблакіраваныя тэмы"</string>
     <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"Інтарэсы скінуты"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"Тэмы скінуты"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"Праграмы могуць аналізаваць інфармацыю пра вашы інтарэсы і часова захоўваць яе на прыладзе Android. Пазней іншая праграма, кіруючыся гэтымі данымі, можа паказаць вам адпаведную рэкламу.\n\nКалі заблакіраваць праграму, яна не зможа аналізаваць даныя пра інтарэсы і не будзе дадавацца ў гэты спіс праграм, пакуль вы не разблакіруеце яе. Даныя пра інтарэсы, ужо прааналізаваныя праграмай, будуць выдалены, аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
@@ -148,8 +146,7 @@
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Праграма \"Прыватнасць у рэкламе на прыладах Android\" (бэта-версія) забяспечвае ўжыванне ў праграмах новых функцый для паказу вам рэкламы. Гэтыя тэхналогіі не выкарыстоўваюць ідэнтыфікатары прылады.\n\nПраграмы будуць аналізаваць, якія тыпы рэкламы могуць быць для вас цікавымі, і часова захоўваць інфармацыю пра вашы інтарэсы на вашай прыладзе. Гэта дазволіць праграмам паказваць вам рэлевантную рэкламу, не адсочваючы вашы дзеянні на вэб-сайтах і ў праграмах іншых распрацоўшчыкаў."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"У вас няма заблакіраваных праграм"</string>
-    <!-- no translation found for settingsUI_no_blocked_apps_ga_text (7488680173653861943) -->
-    <skip />
+    <string name="settingsUI_no_blocked_apps_ga_text" msgid="7488680173653861943">"Няма заблакіраваных праграм"</string>
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Дазволіць вымярэнне эфектыўнасці рэкламы"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Праграмы і рэкламадаўцы могуць запытваць у Android інфармацыю, якая дапамагае ім вымяраць эфектыўнасць рэкламы.\n\nДаныя пра эфектыўнасць рэкламы рэгулярна выдаляюцца з вашай прылады."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Скінуць даныя вымярэнняў"</string>
@@ -160,28 +157,20 @@
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"Калі вы перадумаеце ці захочаце даведацца больш пра бэта-версію праграмы \"Прыватнасць у рэкламе на прыладах Android\", перайдзіце ў налады прыватнасці"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"Выключыць"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"Заблакіраваць тэму \"<xliff:g id="TOPIC">%1$s</xliff:g>\"?"</string>
-    <!-- no translation found for settingsUI_dialog_block_topic_message (2581824495438333677) -->
-    <skip />
+    <string name="settingsUI_dialog_block_topic_message" msgid="2581824495438333677">"Гэта тэма будзе заблакіравана і не з\'явіцца ў спісе, пакуль вы самі не дадасце яе. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_dialog_block_topic_positive_text" msgid="2626152417590300510">"Заблакіраваць"</string>
     <string name="settingsUI_dialog_unblock_topic_title" msgid="7361000923920947234">"Праграма \"<xliff:g id="TOPIC">%1$s</xliff:g>\" разблакіравана"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_topic_message (1090743551997420666) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_topic_message" msgid="1090743551997420666">"Android можа зноў дадаць гэту тэму ў ваш спіс, аднак яна не з\'явіцца там неадкладна"</string>
     <string name="settingsUI_dialog_unblock_topic_positive_text" msgid="2192452325573789737">"OK"</string>
-    <!-- no translation found for settingsUI_dialog_reset_topic_title (8025836207966712435) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_topic_message (4243744527757134000) -->
-    <skip />
+    <string name="settingsUI_dialog_reset_topic_title" msgid="8025836207966712435">"Скінуць усе тэмы рэкламы?"</string>
+    <string name="settingsUI_dialog_reset_topic_message" msgid="4243744527757134000">"Ваш спіс будзе ачышчаны, а ў далейшым будуць дадавацца новыя тэмы. Аднак вам па-ранейшаму можа паказвацца рэклама, звязаная з выдаленымі тэмамі."</string>
     <string name="settingsUI_dialog_reset_topic_positive_text" msgid="8345697359799280761">"Скінуць"</string>
     <string name="settingsUI_dialog_block_app_title" msgid="421160714549264414">"Заблакіраваць праграму \"<xliff:g id="APP">%1$s</xliff:g>\"?"</string>
-    <!-- no translation found for settingsUI_dialog_block_app_message (758788973278770119) -->
-    <skip />
+    <string name="settingsUI_dialog_block_app_message" msgid="758788973278770119">"Гэта праграма не будзе прапаноўваць рэкламу і не з\'явіцца ў спісе зноў, пакуль вы яе не разблакіруеце. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_dialog_unblock_app_title" msgid="4360730780049298286">"Праграма \"<xliff:g id="APP">%1$s</xliff:g>\" разблакіравана"</string>
-    <!-- no translation found for settingsUI_dialog_unblock_app_message (5758218424845642060) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_title (5177572712117150557) -->
-    <skip />
-    <!-- no translation found for settingsUI_dialog_reset_app_message (7845329616145691006) -->
-    <skip />
+    <string name="settingsUI_dialog_unblock_app_message" msgid="5758218424845642060">"Гэта праграма можа зноў прапаноўваць вам рэкламу, аднак яна не з\'явіцца ў спісе неадкладна. Адпаведная рэклама пачне вам паказвацца толькі праз некаторы час."</string>
+    <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"Скінуць рэкламу, якую прапануюць праграмы?"</string>
+    <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"У праграмах з вашага спіса будуць выдалены даныя з прапановамі рэкламы, далей у гэтых праграмах будзе паказвацца новая рэклама. Аднак вам па-ранейшаму можа паказвацца адпаведная рэклама."</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"Даныя праграмы скінуты"</string>
     <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"Скінуць усе тэмы?"</string>
     <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"Скінуць рэкламу, якую прапануюць праграмы?"</string>
@@ -194,20 +183,31 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"На падставе таго, як вы карыстаецеся праграмамі, яны могуць вызначаць вашы інтарэсы."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Праграмы, якімі вы карыстаецеся, могуць запытваць у Android інфармацыю для вымярэння эфектыўнасці рэкламы. Android дазваляе праграмам збіраць толькі абмежаваныя тыпы даных."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Уключана (тэмы: <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>)"</string>
+    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
+    <skip />
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Уключана (праграмы: <xliff:g id="APPS_COUNT">%1$d</xliff:g>)"</string>
+    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
+    <skip />
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"Уключана"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"Выключана"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"Для паказу вам персаналізаванай рэкламы праграмы выкарыстоўваюць цікавыя для вас тэмы. Яны вызначаюцца тым, якімі праграмамі вы нядаўна карысталіся.\n\nВы можаце заблакіраваць тэмы, якія не хочаце абагульваць з праграмамі. Android таксама рэгулярна выдаляе тэмы."</string>
     <string name="settingsUI_topics_switch_title" msgid="5856255848598189791">"Дазволіць тэмы рэкламы"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="7163366621282449273">"Заблакіраваныя вамі тэмы рэкламы"</string>
-    <!-- no translation found for settingsUI_reset_topics_ga_title (5365554894399951300) -->
-    <skip />
+    <string name="settingsUI_reset_topics_ga_title" msgid="5365554894399951300">"Скінуць усе тэмы рэкламы"</string>
     <string name="settingsU_topics_view_footer" msgid="4769146330248953561">"Android вызначае цікавыя для вас тэмы на падставе таго, якімі праграмамі вы карысталіся за апошнія некалькі тыдняў.\n\nПазней праграма, якой вы карыстаецеся, можа запытаць у Android інфармацыю пра вашы тэмы, каб персаналізаваць рэкламу, якая будзе вам паказвацца. Android абагульвае да 3 тэм, забяспечваючы вашу прыватнасць і ахоўваючы інфармацыю пра ваша карыстанне праграмамі.\n\nAndroid рэгулярна выдаляе тэмы. Калі праграмы выкарыстоўваюцца далей, тэма можа зноў з\'явіцца ў спісе. Вы таксама можаце заблакіраваць пэўныя тэмы, каб Android не абагульваў іх з праграмамі.\n\nРэклама ў вашых праграмах можа персаналізавацца з улікам гэтай налады, налад рэкламы, якую прапануюць праграмы, налад рэкламнага ідэнтыфікатара, а таксама таго, ці персаналізуе рэкламу тая праграма, якой вы карыстаецеся."</string>
     <string name="settingsUI_apps_switch_title" msgid="1308209012769248890">"Дазволіць рэкламу, якую прапануе праграма"</string>
     <string name="settingsUI_apps_view_ga_subtitle" msgid="1911743837387384160">"Праграмы, якімі вы карыстаецеся, могуць вызначаць вашы інтарэсы і прапаноўваць рэкламу для паказу ў іншых праграмах.\n\nВы можаце забараніць праграмам рабіць прапановы. Акрамя таго, Android рэгулярна выдаляе даныя з прапановамі ад праграм."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Заблакіраваныя вамі праграмы"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Скінуць даныя рэкламы, якую прапануюць праграмы"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Праграмы, якімі вы карыстаецеся, звычайна запамінаюць цікавыя для вас тэмы, каб прапаноўваць вам персаналізаванае змесціва. Яны таксама могуць захоўваць інфармацыю пра вашы тэмы ў Android.\n\nНапрыклад, калі вы карыстаецеся праграмай з трэніроўкамі для марафону, праграма можа вырашыць, што вас цікавяць красоўкі. Пазней у іншай праграме вы можаце ўбачыць рэкламу красовак, прапанаваную першай праграмай.\n\nAndroid рэгулярна выдаляе даныя, якія прапануюцца праграмамі. Калі вы працягваеце карыстацца праграмай, яе даныя могуць зноў з\'явіцца ў спісе. Таксама вы можаце забараніць праграме прапаноўваць вам рэкламу.\n\nРэклама ў вашых праграмах можа персаналізавацца з улікам гэтай налады, налад тэм рэкламы і рэкламнага ідэнтыфікатара, а таксама таго, ці персаналізуе рэкламу тая праграма, якой вы карыстаецеся."</string>
+    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
+    <skip />
+    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
+    <skip />
+    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
+    <skip />
     <string name="topic10001" msgid="1636806320891333775">"Мастацтва і забавы"</string>
     <string name="topic10002" msgid="1226367977754287428">"Акцёрскае майстэрства і тэатр"</string>
     <string name="topic10003" msgid="6949890838957814881">"Анімэ і манга"</string>

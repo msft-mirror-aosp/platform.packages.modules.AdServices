@@ -36,8 +36,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -49,6 +47,8 @@ import android.webkit.WebView;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
+import com.android.modules.utils.build.SdkLevel;
 
 import dalvik.system.PathClassLoader;
 
@@ -103,6 +103,13 @@ public class SdkSandboxServiceImpl extends Service {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // This prevents the sandbox from restarting. This should be kept in sync with the status
+        // maintained in SdkSandboxServiceProviderImpl.SdkSandboxConnection.
+        return START_NOT_STICKY;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
@@ -136,30 +143,32 @@ public class SdkSandboxServiceImpl extends Service {
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(TAG, "Sandbox initialized");
+        LogUtil.d(
+                TAG,
+                "Sandbox initialized. isCustomizedSdkContextEnabled: "
+                        + isCustomizedSdkContextEnabled);
     }
 
     /** Computes the storage of the shared and SDK storage for an app */
     public void computeSdkStorage(
             List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
         // Start the handler thread.
-        HandlerThread handlerThread = new HandlerThread("SdkSandboxServiceImplHandler");
-        handlerThread.start();
-        Handler handler = new Handler(handlerThread.getLooper());
-        handler.post(
-                () -> {
-                    final int sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
-                    final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+        BackgroundThread.getExecutor()
+                .execute(
+                        () -> {
+                            final int sharedStorageKb =
+                                    FileUtil.getStorageInKbForPaths(sharedPaths);
+                            final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
 
-                    try {
-                        callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
-                    } catch (RemoteException e) {
-                        LogUtil.d(
-                                TAG,
-                                "Error while calling computeSdkStorage in sandbox: "
-                                        + e.getMessage());
-                    }
-                });
+                            try {
+                                callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+                            } catch (RemoteException e) {
+                                LogUtil.d(
+                                        TAG,
+                                        "Error while calling computeSdkStorage in sandbox: "
+                                                + e.getMessage());
+                            }
+                        });
     }
 
     /** Loads SDK. */
@@ -413,22 +422,28 @@ public class SdkSandboxServiceImpl extends Service {
                 sdkHolderToSdkSandboxServiceCallback);
     }
 
+    /**
+     * Create a new instance of ContextImpl to be used for SandboxedSdkContext.
+     *
+     * <p>We want to ensure that SandboxedSdkContext.getSystemService() will return different
+     * instances for different SandboxedSdkContext contexts, so that different SDKs running in the
+     * same sdk sandbox process don't share the same manager instance. Because SandboxedSdkContext
+     * is a ContextWrapper, it delegates the getSystemService() call to its base context. If we use
+     * an application context here as a base context when creating an instance of
+     * SandboxedSdkContext it will mean that all instances of SandboxedSdkContext will return the
+     * same manager instances.
+     *
+     * <p>This method ensures we return a new instance of ContextImpl.
+     */
     private Context createBaseContext(
             ApplicationInfo applicationInfo, String sdkCeDataDir, String sdkDeDataDir)
             throws PackageManager.NameNotFoundException {
-        // We want to ensure that SandboxedSdkContext.getSystemService() will return different
-        // instances for different SandboxedSdkContext contexts, so that different SDKs
-        // running in the same sdk sandbox process don't share the same manager instance.
-        // Because SandboxedSdkContext is a ContextWrapper, it delegates the getSystemService()
-        // call to its base context. If we use an application context here as a base context
-        // when creating an instance of SandboxedSdkContext it will mean that all instances of
-        // SandboxedSdkContext will return the same manager instances.
 
         // In order to create per-SandboxedSdkContext instances in getSystemService, each
         // SandboxedSdkContext needs to have its own instance of ContextImpl as a base context. The
         // instance should have sdk-specific information infused so that system services get the
         // correct information from the base context.
-        if (mCustomizedSdkContextEnabled) {
+        if (SdkLevel.isAtLeastU() && mCustomizedSdkContextEnabled) {
             final ApplicationInfo ai = new ApplicationInfo(applicationInfo);
             // Create customized context by modifying ApplicationInfo accordingly
             ai.dataDir = sdkCeDataDir;
@@ -439,10 +454,12 @@ public class SdkSandboxServiceImpl extends Service {
             // for the sandbox app.
             ai.packageName = mInjector.getContext().getPackageName();
 
-            return mInjector
-                    .getContext()
-                    .createContextForSdkInSandbox(
-                            ai, Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY);
+            // Context.CONTEXT_INCLUDE_CODE ensures SDK code is loaded in sandbox process along with
+            // its class loaders. There is a security check to ensure an app loads code that belongs
+            // to it only, but the check can be bypassed using Context.Context_IGNORE_SECURITY.
+            int flag = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
+
+            return mInjector.getContext().createContextForSdkInSandbox(ai, flag);
         } else {
             return mInjector.getContext().createCredentialProtectedStorageContext();
         }

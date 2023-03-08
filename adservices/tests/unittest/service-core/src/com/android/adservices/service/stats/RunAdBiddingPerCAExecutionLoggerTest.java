@@ -19,11 +19,11 @@ package com.android.adservices.service.stats;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.START_ELAPSED_TIMESTAMP;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.STOP_ELAPSED_TIMESTAMP;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GENERATE_BIDS;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GET_BUYER_DECISION_LOGIC;
 import static com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger.MISSING_END_GET_TRUSTED_BIDDING_SIGNALS;
@@ -94,19 +94,18 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
                             + "\t\"of\": \"of\",\n"
                             + "\t\"keys\": \"trusted bidding signal Values\"\n"
                             + "}");
-
-    @Mock private Clock mMockClock;
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
     private static final int NUM_OF_ADS_FOR_BIDDING = 4;
     private static final int NUM_OF_KEYS_OF_TRUSTED_BIDDING_SIGNALS = 3;
     private static final int FETCHED_BUYER_DECISION_LOGIC_SCRIPT_SIZE_IN_BYTES =
             BUYER_DECISION_LOGIC_JS.getBytes().length;
     private static final int FETCHED_TRUSTED_BIDDING_SIGNALS_DATA_SIZE_IN_BYTES =
             TRUSTED_BIDDING_SIGNALS.getSizeInBytes();
-
     @Captor
     ArgumentCaptor<RunAdBiddingPerCAProcessReportedStats>
             mRunAdBiddingPerCAProcessReportedStatsArgumentCaptor;
+
+    @Mock private Clock mMockClock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Before
     public void setUp() {
@@ -244,7 +243,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         assertThat(runAdBiddingPerCAProcessReportedStats.getGetTrustedBiddingSignalsResultCode())
                 .isEqualTo(STATUS_SUCCESS);
         assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingLatencyInMillis())
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
@@ -368,7 +367,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         assertThat(
                         runAdBiddingPerCAProcessReportedStats
                                 .getFetchedTrustedBiddingSignalsDataSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(
                         runAdBiddingPerCAProcessReportedStats
                                 .getGetTrustedBiddingSignalsLatencyInMillis())
@@ -379,7 +378,7 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         assertThat(runAdBiddingPerCAProcessReportedStats.getGetTrustedBiddingSignalsResultCode())
                 .isEqualTo(resultCode);
         assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingLatencyInMillis())
                 .isEqualTo((int) (STOP_ELAPSED_TIMESTAMP - RUN_BIDDING_START_TIMESTAMP));
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
@@ -423,25 +422,25 @@ public class RunAdBiddingPerCAExecutionLoggerTest {
         assertThat(
                         runAdBiddingPerCAProcessReportedStats
                                 .getFetchedBuyerDecisionLogicScriptSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getNumOfKeysOfTrustedBiddingSignals())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(
                         runAdBiddingPerCAProcessReportedStats
                                 .getFetchedTrustedBiddingSignalsDataSizeInBytes())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(
                         runAdBiddingPerCAProcessReportedStats
                                 .getGetTrustedBiddingSignalsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getGetTrustedBiddingSignalsResultCode())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getGenerateBidsLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingLatencyInMillis())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
         assertThat(runAdBiddingPerCAProcessReportedStats.getRunBiddingResultCode())
-                .isEqualTo(STATUS_UNSET);
+                .isEqualTo(FIELD_UNSET);
     }
 
     @Test

@@ -17,12 +17,12 @@
 package android.adservices.clients.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -46,7 +46,10 @@ public class AdSelectionClient {
     private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager = mContext.getSystemService(AdSelectionManager.class);
+        mAdSelectionManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(AdSelectionManager.class)
+                        : AdSelectionManager.get(context);
     }
 
     /**
@@ -73,33 +76,6 @@ public class AdSelectionClient {
                                 }
                             });
                     return "Ad Selection";
-                });
-    }
-
-    /**
-     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
-     * {@link AdSelectionOutcome} if succeeds, or an {@link Exception} if fails.
-     */
-    @NonNull
-    public ListenableFuture<AdSelectionOutcome> selectAds(
-            @NonNull AdSelectionFromOutcomesConfig config) {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mAdSelectionManager.selectAds(
-                            config,
-                            mExecutor,
-                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
-                                @Override
-                                public void onResult(@NonNull AdSelectionOutcome result) {
-                                    completer.set(result);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "Ad Selection from outcomes";
                 });
     }
 

@@ -34,6 +34,7 @@ import android.view.View;
 import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -74,20 +75,12 @@ public class SandboxedSdkContextUnitTest {
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity();
-        try {
-            sCustomizedSdkContextEnabled =
-                    DeviceConfig.getBoolean(
-                            DeviceConfig.NAMESPACE_ADSERVICES,
-                            "sdksandbox_customized_sdk_context_enabled",
-                            false);
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
+        DeviceConfigStateManager stateManager =
+                new DeviceConfigStateManager(
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        "sdksandbox_customized_sdk_context_enabled");
+        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
     }
 
     @Before
@@ -133,7 +126,9 @@ public class SandboxedSdkContextUnitTest {
 
     @After
     public void tearDown() throws Exception {
-        mStaticMockSession.finishMocking();
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test

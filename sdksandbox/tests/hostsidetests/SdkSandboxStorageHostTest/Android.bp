@@ -47,6 +47,7 @@ java_defaults {
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     static_libs: [
         "androidx.core_core",
         "androidx.test.ext.junit",

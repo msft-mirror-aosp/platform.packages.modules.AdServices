@@ -56,7 +56,7 @@ public class AggregateHistogramContribution {
      */
     public JSONObject toJSONObject() throws JSONException {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put(BUCKET, mKey);
+        jsonObject.put(BUCKET, mKey.toString());
         jsonObject.put(VALUE, mValue);
         return jsonObject;
     }
