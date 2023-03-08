@@ -494,7 +494,7 @@ public final class MeasurementImpl {
      * AdServices module version. This information is used for deleting data after it has been
      * restored by a module rollback.
      */
-    public void markDeletionInSystemService() {
+    private void markDeletionInSystemService() {
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
             LogUtil.e("Rollback deletion is disabled. Not storing status in system server.");
             return;
