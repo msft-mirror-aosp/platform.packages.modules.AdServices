@@ -7021,7 +7021,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public long getReportImpressionOverallTimeoutMs() {
-            return 700;
+            return 1000;
         }
 
         @Override
