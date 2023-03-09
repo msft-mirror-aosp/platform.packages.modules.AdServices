@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
@@ -36,11 +35,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * A parser and validator for a JSON response that is fetched during the Custom Audience background
@@ -56,6 +53,7 @@ public class CustomAudienceUpdatableDataReader {
     public static final String METADATA_KEY = "metadata";
     public static final String AD_COUNTERS_KEY = "ad_counter_keys";
     public static final String AD_FILTERS_KEY = "ad_filters";
+    public static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
 
     private static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
     private static final String VALIDATED_FIELD_LOG_FORMAT =
@@ -64,7 +62,6 @@ public class CustomAudienceUpdatableDataReader {
     private static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
             "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
                     + " ignoring and continuing.  Error message: %s";
-    private static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
@@ -73,6 +70,7 @@ public class CustomAudienceUpdatableDataReader {
     private final int mMaxTrustedBiddingDataSizeB;
     private final int mMaxAdsSizeB;
     private final int mMaxNumAds;
+    private final ReadFiltersFromJsonStrategy mGetFiltersFromJsonObjectStrategy;
 
     /**
      * Creates a {@link CustomAudienceUpdatableDataReader} that will read updatable data from a
@@ -88,6 +86,7 @@ public class CustomAudienceUpdatableDataReader {
      *     bidding data
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
+     * @param filteringEnabled whether or not ad selection filtering fields should be read
      */
     protected CustomAudienceUpdatableDataReader(
             @NonNull JSONObject responseObject,
@@ -96,7 +95,8 @@ public class CustomAudienceUpdatableDataReader {
             int maxUserBiddingSignalsSizeB,
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
-            int maxNumAds) {
+            int maxNumAds,
+            boolean filteringEnabled) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
         Objects.requireNonNull(buyer);
@@ -108,6 +108,8 @@ public class CustomAudienceUpdatableDataReader {
         mMaxTrustedBiddingDataSizeB = maxTrustedBiddingDataSizeB;
         mMaxAdsSizeB = maxAdsSizeB;
         mMaxNumAds = maxNumAds;
+        mGetFiltersFromJsonObjectStrategy =
+                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
     }
 
     /**
@@ -236,12 +238,13 @@ public class CustomAudienceUpdatableDataReader {
                 try {
                     JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
 
-                    String uri =
-                            JsonUtils.getStringFromJson(
-                                    adDataJsonObj,
-                                    RENDER_URI_KEY,
-                                    String.format(STRING_ERROR_FORMAT, RENDER_URI_KEY, ADS_KEY));
-                    Uri parsedUri = Uri.parse(uri);
+                    // Note: getString() coerces values to be strings; use get() instead
+                    Object uri = adDataJsonObj.get(RENDER_URI_KEY);
+                    if (!(uri instanceof String)) {
+                        throw new JSONException(
+                                "Unexpected format parsing " + RENDER_URI_KEY + " in " + ADS_KEY);
+                    }
+                    Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
 
                     // By passing in an empty ad tech identifier string, ad tech identifier host
                     // matching is skipped
@@ -257,38 +260,18 @@ public class CustomAudienceUpdatableDataReader {
                             Objects.requireNonNull(adDataJsonObj.getJSONObject(METADATA_KEY))
                                     .toString();
 
-                    Set<String> adCounterKeys = new HashSet<>();
-                    if (adDataJsonObj.has(AD_COUNTERS_KEY)) {
-                        JSONArray adCounterKeysJson = adDataJsonObj.getJSONArray(AD_COUNTERS_KEY);
-                        for (int j = 0; j < adCounterKeysJson.length(); j++) {
-                            adCounterKeys.add(
-                                    JsonUtils.getStringFromJsonArrayAtIndex(
-                                            adCounterKeysJson,
-                                            j,
-                                            String.format(
-                                                    STRING_ERROR_FORMAT,
-                                                    AD_COUNTERS_KEY,
-                                                    ADS_KEY)));
-                        }
-                    }
-                    AdFilters adFilters = null;
-                    if (adDataJsonObj.has(AD_FILTERS_KEY)) {
-                        adFilters = AdFilters.fromJson(adDataJsonObj.getJSONObject(AD_FILTERS_KEY));
-                    }
+                    DBAdData.Builder adDataBuilder =
+                            new DBAdData.Builder().setRenderUri(parsedUri).setMetadata(metadata);
 
-                    DBAdData adData =
-                            new DBAdData.Builder()
-                                    .setRenderUri(parsedUri)
-                                    .setMetadata(metadata)
-                                    .setAdCounterKeys(adCounterKeys)
-                                    .setAdFilters(adFilters)
-                                    .build();
+                    mGetFiltersFromJsonObjectStrategy.readFilters(adDataBuilder, adDataJsonObj);
+                    DBAdData adData = adDataBuilder.build();
                     adsList.add(adData);
                     adsSize += adData.size();
                 } catch (JSONException
                         | NullPointerException
                         | IllegalArgumentException exception) {
-                    // Skip any ads that are malformed and continue to the next in the list; note
+                    // Skip any ads that are malformed and continue to the next in the list;
+                    // note
                     // that if the entire given list of ads is junk, then any existing ads are
                     // cleared from the custom audience
                     LogUtil.v(
@@ -314,4 +297,6 @@ public class CustomAudienceUpdatableDataReader {
             return null;
         }
     }
+
+
 }
