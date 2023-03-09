@@ -50,7 +50,7 @@ public class PreviewApiTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 5_000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
