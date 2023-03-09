@@ -62,4 +62,19 @@ public final class AdFilteringFeatureFactory {
             return new AdFiltererNoOpImpl();
         }
     }
+
+    /**
+     * Gets the {@link AdCounterKeyCopier} implementation to use, dependent on whether the ad
+     * filtering features is enabled.
+     *
+     * @return an {@link AdCounterKeyCopierImpl} instance if the ad filtering feature is enabled, or
+     *     an {@link AdCounterKeyCopierNoOpImpl} instance otherwise
+     */
+    public AdCounterKeyCopier getAdCounterKeyCopier() {
+        if (mIsFledgeAdSelectionFilteringEnabled) {
+            return new AdCounterKeyCopierImpl();
+        } else {
+            return new AdCounterKeyCopierNoOpImpl();
+        }
+    }
 }

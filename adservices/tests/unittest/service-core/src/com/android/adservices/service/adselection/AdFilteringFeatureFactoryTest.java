@@ -46,6 +46,24 @@ public class AdFilteringFeatureFactoryTest {
         assertTrue(adFilteringFeatureFactory.getAdFilterer() instanceof AdFiltererNoOpImpl);
     }
 
+    @Test
+    public void testGetAdCounterKeyCopierFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(CONTEXT, new FlagsWithAdSelectionFilteringEnabled());
+        assertTrue(
+                adFilteringFeatureFactory.getAdCounterKeyCopier()
+                        instanceof AdCounterKeyCopierImpl);
+    }
+
+    @Test
+    public void testGetAdCounterKeyCopierFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(CONTEXT, new FlagsWithAdSelectionFilteringDisabled());
+        assertTrue(
+                adFilteringFeatureFactory.getAdCounterKeyCopier()
+                        instanceof AdCounterKeyCopierNoOpImpl);
+    }
+
     private static class FlagsWithAdSelectionFilteringDisabled implements Flags {
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
