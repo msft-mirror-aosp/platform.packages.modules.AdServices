@@ -49,7 +49,7 @@ public class TopicsManagerTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
     private static final long EXPECTED_MODEL_VERSION = 3L;
     // Expected taxonomy version.
