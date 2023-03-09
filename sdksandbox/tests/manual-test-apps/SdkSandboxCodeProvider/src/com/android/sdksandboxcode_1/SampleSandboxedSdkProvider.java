@@ -16,8 +16,10 @@
 
 package com.android.sdksandboxcode_1;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.interfaces.IAppOwnedSdkApi;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
@@ -31,6 +33,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -49,7 +52,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
-    private boolean mSdkSdkCommEnabled = false;
+    private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
+    private String mSdkSdkCommEnabled = null;
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
@@ -68,20 +72,22 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             String videoUrl = params.getString(VIDEO_URL_KEY, "");
             return new TestVideoView(windowContext, videoUrl);
         }
-        mSdkSdkCommEnabled = params.getBoolean(EXTRA_SDK_SDK_ENABLED_KEY, false);
+        mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
         return new TestView(windowContext, getContext(), mSdkSdkCommEnabled);
     }
 
     private static class TestView extends View {
 
         private static final CharSequence MEDIATEE_SDK = "com.android.sdksandboxcode_mediatee";
+        private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
+        private static final String DROPDOWN_KEY_SDK_APP = "SDK_IN_APP";
         private Context mSdkContext;
-        private boolean mSdkSdkCommEnabled;
+        private String mSdkToSdkCommEnabled;
 
-        TestView(Context windowContext, Context sdkContext, boolean sdkSdkCommEnabled) {
+        TestView(Context windowContext, Context sdkContext, String sdkSdkCommEnabled) {
             super(windowContext);
             mSdkContext = sdkContext;
-            mSdkSdkCommEnabled = sdkSdkCommEnabled;
+            mSdkToSdkCommEnabled = sdkSdkCommEnabled;
         }
 
         @Override
@@ -93,34 +99,55 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             paint.setColor(Color.WHITE);
             paint.setTextSize(50);
             Random random = new Random();
-            String message;
+            String message = null;
 
-            if (mSdkSdkCommEnabled) {
-                SandboxedSdk mediateeSdk;
-                try {
-                    // get message from another sandboxed SDK
-                    List<SandboxedSdk> sandboxedSdks =
-                            mSdkContext
-                                    .getSystemService(SdkSandboxController.class)
-                                    .getSandboxedSdks();
-                    mediateeSdk =
-                            sandboxedSdks.stream()
-                                    .filter(
-                                            s ->
-                                                    s.getSharedLibraryInfo()
-                                                            .getName()
-                                                            .contains(MEDIATEE_SDK))
-                                    .findAny()
-                                    .get();
-                } catch (Exception e) {
-                    throw new RuntimeException("Error in sdk-sdk communication ", e);
-                }
-                try {
-                    IBinder binder = mediateeSdk.getInterface();
-                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                    message = sdkApi.getMessage();
-                } catch (RemoteException e) {
-                    throw new RuntimeException(e);
+            if (!TextUtils.isEmpty(mSdkToSdkCommEnabled)) {
+                if (mSdkToSdkCommEnabled.equals(DROPDOWN_KEY_SDK_SANDBOX)) {
+                    SandboxedSdk mediateeSdk;
+                    try {
+                        // get message from another sandboxed SDK
+                        List<SandboxedSdk> sandboxedSdks =
+                                mSdkContext
+                                        .getSystemService(SdkSandboxController.class)
+                                        .getSandboxedSdks();
+                        mediateeSdk =
+                                sandboxedSdks.stream()
+                                        .filter(
+                                                s ->
+                                                        s.getSharedLibraryInfo()
+                                                                .getName()
+                                                                .contains(MEDIATEE_SDK))
+                                        .findAny()
+                                        .get();
+                    } catch (Exception e) {
+                        throw new IllegalStateException("Error in sdk-sdk communication ", e);
+                    }
+                    try {
+                        IBinder binder = mediateeSdk.getInterface();
+                        ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                        message = sdkApi.getMessage();
+                    } catch (RemoteException e) {
+                        throw new IllegalStateException(e);
+                    }
+                } else if (mSdkToSdkCommEnabled.equals(DROPDOWN_KEY_SDK_APP)) {
+                    try {
+                        // get message from an app owned SDK
+                        List<AppOwnedSdkSandboxInterface> appOwnedSdks =
+                                mSdkContext
+                                        .getSystemService(SdkSandboxController.class)
+                                        .getAppOwnedSdkSandboxInterfaces();
+
+                        AppOwnedSdkSandboxInterface appOwnedSdk =
+                                appOwnedSdks.stream()
+                                        .filter(s -> s.getName().contains(APP_OWNED_SDK_NAME))
+                                        .findAny()
+                                        .get();
+                        IAppOwnedSdkApi appOwnedSdkApi =
+                                IAppOwnedSdkApi.Stub.asInterface(appOwnedSdk.getInterface());
+                        message = appOwnedSdkApi.getMessage();
+                    } catch (RemoteException e) {
+                        throw new IllegalStateException(e);
+                    }
                 }
             } else {
                 message = mSdkContext.getResources().getString(R.string.view_message);

@@ -61,7 +61,7 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public String getMessage() {
-        return "Message Received from a sandboxedSDK";
+        return "Message from sdk in the sandbox process";
     }
 
     @Override

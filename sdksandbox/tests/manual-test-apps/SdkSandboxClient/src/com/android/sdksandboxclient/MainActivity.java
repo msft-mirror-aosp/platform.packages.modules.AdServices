@@ -25,6 +25,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import android.annotation.NonNull;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
@@ -45,9 +46,11 @@ import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import com.android.modules.utils.build.SdkLevel;
@@ -70,11 +73,14 @@ public class MainActivity extends Activity {
 
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
+    private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
+    private static final String DROPDOWN_KEY_SDK_APP = "SDK_IN_APP";
+    private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
 
     private static String sVideoUrl;
 
     private boolean mSdksLoaded = false;
-    private boolean mSdkSdkCommEnabled = false;
+    private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
 
     private Button mLoadButton;
@@ -82,7 +88,7 @@ public class MainActivity extends Activity {
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
     private Button mSyncKeysButton;
-    private Button mSdkSdkCommButton;
+    private Button mSdkToSdkCommButton;
     private Button mStartActivity;
 
     private SurfaceView mRenderedView;
@@ -109,7 +115,7 @@ public class MainActivity extends Activity {
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
-        mSdkSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
+        mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
         mStartActivity = findViewById(R.id.start_activity);
 
         registerLoadSdkProviderButton();
@@ -117,8 +123,12 @@ public class MainActivity extends Activity {
         registerCreateFileButton();
         registerPlayVideoButton();
         registerSyncKeysButton();
-        registerSdkSdkButton();
+        registerSdkToSdkButton();
         registerStartActivityButton();
+        // Register AppOwnedSdkInterface
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
     }
 
     private void registerLoadSdkProviderButton() {
@@ -185,7 +195,7 @@ public class MainActivity extends Activity {
                                 () -> {
                                     mSdkSandboxManager.requestSurfacePackage(
                                             SDK_NAME,
-                                            getRequestSurfacePackageParams(),
+                                            getRequestSurfacePackageParams(null),
                                             Runnable::run,
                                             receiver);
                                 });
@@ -246,7 +256,7 @@ public class MainActivity extends Activity {
                     if (mSdksLoaded) {
                         sHandler.post(
                                 () -> {
-                                    Bundle params = getRequestSurfacePackageParams();
+                                    Bundle params = getRequestSurfacePackageParams(null);
                                     params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
                                     params.putString(VIDEO_URL_KEY, sVideoUrl);
                                     mSdkSandboxManager.requestSurfacePackage(
@@ -258,16 +268,45 @@ public class MainActivity extends Activity {
                 });
     }
 
-    private void registerSdkSdkButton() {
-        mSdkSdkCommButton.setOnClickListener(
+    private void registerSdkToSdkButton() {
+        mSdkToSdkCommButton.setOnClickListener(
                 v -> {
-                    mSdkSdkCommEnabled = !mSdkSdkCommEnabled;
-                    if (mSdkSdkCommEnabled) {
-                        mSdkSdkCommButton.setText("Disable SDK SDK comm");
-                        makeToast("Sdk Sdk Comm Enabled");
+                    mSdkToSdkCommEnabled = !mSdkToSdkCommEnabled;
+                    if (mSdkToSdkCommEnabled) {
+                        mSdkToSdkCommButton.setText("Disable SDK to SDK comm");
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("Choose winning SDK");
+
+                        String[] items =
+                                new String[] {DROPDOWN_KEY_SDK_SANDBOX, DROPDOWN_KEY_SDK_APP};
+                        ArrayAdapter<String> adapter =
+                                new ArrayAdapter<>(
+                                        this, android.R.layout.simple_spinner_dropdown_item, items);
+                        final Spinner dropdown = new Spinner(this);
+                        dropdown.setAdapter(adapter);
+
+                        LinearLayout linearLayout = new LinearLayout(this);
+                        linearLayout.setOrientation(1); // 1 is for vertical orientation
+                        linearLayout.addView(dropdown);
+                        builder.setView(linearLayout);
+
+                        builder.setPositiveButton(
+                                "Request SP",
+                                (dialog, which) -> {
+                                    OutcomeReceiver<Bundle, RequestSurfacePackageException>
+                                            receiver = new RequestSurfacePackageReceiver();
+                                    mSdkSandboxManager.requestSurfacePackage(
+                                            SDK_NAME,
+                                            getRequestSurfacePackageParams(
+                                                    dropdown.getSelectedItem().toString()),
+                                            Runnable::run,
+                                            receiver);
+                                });
+                        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                        builder.show();
                     } else {
-                        mSdkSdkCommButton.setText("Enable SDK SDK comm");
-                        makeToast("Sdk Sdk Comm Disabled");
+                        mSdkToSdkCommButton.setText("Enable SDK to SDK comm");
+                        makeToast("Sdk to Sdk Comm Disabled");
                     }
                 });
     }
@@ -354,13 +393,13 @@ public class MainActivity extends Activity {
                 });
     }
 
-    private Bundle getRequestSurfacePackageParams() {
+    private Bundle getRequestSurfacePackageParams(String commType) {
         Bundle params = new Bundle();
         params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
         params.putInt(EXTRA_HEIGHT_IN_PIXELS, mRenderedView.getHeight());
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
         params.putBinder(EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
-        params.putBoolean(EXTRA_SDK_SDK_ENABLED_KEY, mSdkSdkCommEnabled);
+        params.putString(EXTRA_SDK_SDK_ENABLED_KEY, commType);
         return params;
     }
 
