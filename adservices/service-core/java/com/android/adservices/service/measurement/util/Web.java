@@ -59,19 +59,4 @@ public final class Web {
     public static Optional<Uri> topPrivateDomainAndScheme(String uri) {
         return topPrivateDomainAndScheme(Uri.parse(uri));
     }
-
-    /**
-     * Returns a {@code Uri} of the scheme concatenated with the first subdomain + path of the
-     * provided URL that is beneath the public suffix.
-     *
-     * @param uri the URL string to parse.
-     */
-    public static Optional<Uri> topPrivateDomainSchemeAndPath(Uri uri) {
-        Optional<Uri> topDomain = topPrivateDomainAndScheme(uri);
-        if (!topDomain.isPresent()) {
-            return Optional.empty();
-        }
-        String url = topDomain.get() + uri.getPath();
-        return Optional.of(Uri.parse(url));
-    }
 }
