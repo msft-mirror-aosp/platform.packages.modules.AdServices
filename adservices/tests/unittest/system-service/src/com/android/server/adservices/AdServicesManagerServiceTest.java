@@ -138,7 +138,7 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testAdServicesSystemService_enabled_then_disabled() {
+    public void testAdServicesSystemService_enabled_then_disabled() throws Exception {
         // First enable the flag.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -197,6 +197,12 @@ public class AdServicesManagerServiceTest {
                 KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
+
+        // When flag value is changed above, then TestableDeviceConfig invokes the DeviceConfig
+        // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
+        // need to add a wait time to ensure the listener gets executed. If listener gets
+        // executed after the test is finished, we hit READ_DEVICE_CONFIG exception.
+        Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
         mService.registerReceivers();
