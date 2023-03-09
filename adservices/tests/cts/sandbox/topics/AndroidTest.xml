@@ -30,8 +30,6 @@
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
         <option name="run-command" value="device_config put adservices topics_kill_switch false" />
-        <!-- Disable MDD background jobs. -->
-        <option name="run-command" value="device_config put adservices mdd_background_task_kill_switch true" />
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
@@ -44,7 +42,6 @@
 
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command" value="setprop debug.adservices.disable_topics_enrollment_check false" />
-        <option name="teardown-command" value="device_config put adservices mdd_background_task_kill_switch false" />
         <option name="teardown-command" value="device_config put adservices classifier_force_use_bundled_files false" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
 

@@ -96,6 +96,8 @@ public class TopicsManagerTest {
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
