@@ -196,7 +196,7 @@ public class AdSelectionServiceImplTest {
             AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
     private static final int SHORT_API_NAME_RESET_ALL_OVERRIDES =
             AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
-    private static final String TIMEOUT_MESSAGE = "Timed out:";
+    private static final String TIMEOUT_MESSAGE = "Timed out";
 
     // Interaction reporting contestants
     private static final String CLICK_EVENT_SELLER = "click_seller";
