@@ -291,7 +291,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -421,7 +422,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -522,7 +524,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -617,7 +620,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         Flags flagsWithSmallerLimits =
                 new Flags() {
                     @Override
@@ -711,7 +715,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -801,7 +806,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         List<String> emptyTrustedBiddingKeys = Collections.EMPTY_LIST;
         DBTrustedBiddingData trustedBiddingData =
                 new DBTrustedBiddingData.Builder()
@@ -934,7 +940,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1007,7 +1014,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1068,7 +1076,8 @@ public class AdBidGeneratorImplTest {
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
                         customAudienceDevOverridesHelper,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        FlagsFactory.getFlagsForTest());
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,

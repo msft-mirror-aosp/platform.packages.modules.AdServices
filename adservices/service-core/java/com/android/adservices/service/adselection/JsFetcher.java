@@ -22,17 +22,21 @@ import android.net.Uri;
 import android.os.Trace;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.List;
 import java.util.Objects;
 
 /** Class to fetch JavaScript code both on and off device. */
@@ -44,21 +48,25 @@ public class JsFetcher {
     private final ListeningExecutorService mLightweightExecutorService;
     private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     private final AdServicesHttpsClient mAdServicesHttpsClient;
+    private final Flags mFlags;
 
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull Flags flags) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(adServicesHttpsClient);
+        Objects.requireNonNull(flags);
 
         mBackgroundExecutorService = backgroundExecutorService;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
+        mFlags = flags;
     }
 
     /**
@@ -136,32 +144,15 @@ public class JsFetcher {
 
     /**
      * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
-     * present, otherwise fetch from server. Does not use caching by default.
-     *
-     * @return buyer decision logic
-     */
-    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
-            @NonNull final Uri decisionLogicUri,
-            @NonNull String owner,
-            @NonNull AdTechIdentifier buyer,
-            @NonNull String name,
-            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
-        return getBuyerDecisionLogicWithLogger(
-                decisionLogicUri, owner, buyer, name, false, runAdBiddingPerCAExecutionLogger);
-    }
-
-    /**
-     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
      * present, otherwise fetch from server. Make use of caching optional.
      *
      * @return buyer decision logic
      */
-    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
-            @NonNull final Uri decisionLogicUri,
+    public FluentFuture<AdServicesHttpClientResponse> getBuyerDecisionLogicWithLogger(
+            @NonNull final AdServicesHttpClientRequest decisionLogicUri,
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
-            boolean useCaching,
             @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
@@ -180,27 +171,29 @@ public class JsFetcher {
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
                                 return FluentFuture.from(
-                                                mAdServicesHttpsClient.fetchPayload(
-                                                        AdServicesHttpClientRequest.builder()
-                                                                .setUri(decisionLogicUri)
-                                                                .setUseCache(useCaching)
-                                                                .build()))
-                                        .transform(
-                                                response -> response.getResponseBody(),
-                                                mLightweightExecutorService);
+                                        mAdServicesHttpsClient.fetchPayload(decisionLogicUri));
                             } else {
                                 LogUtil.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
-                                return Futures.immediateFuture(jsOverride);
+                                final ImmutableMap<String, List<String>> versionHeader =
+                                        JsVersionHelper.constructVersionHeader(
+                                                JsVersionHelper
+                                                        .JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                                mFlags.getFledgeAdSelectionBiddingLogicJsVersion());
+                                return Futures.immediateFuture(
+                                        AdServicesHttpClientResponse.builder()
+                                                .setResponseBody(jsOverride)
+                                                .setResponseHeaders(versionHeader)
+                                                .build());
                             }
                         },
                         mLightweightExecutorService)
                 .transform(
                         buyerDecisionLogicJs -> {
                             runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(
-                                    buyerDecisionLogicJs);
+                                    buyerDecisionLogicJs.getResponseBody());
                             return buyerDecisionLogicJs;
                         },
                         mLightweightExecutorService)

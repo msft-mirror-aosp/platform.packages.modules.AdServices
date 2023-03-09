@@ -192,6 +192,8 @@ public final class PhFlags implements Flags {
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_off_device_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
+            "fledge_ad_selection_bidding_logic_js_version";
     // Whether to call trusted servers for off device ad selection.
     static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
             "fledge_ad_selection_off_device_enabled";
@@ -996,6 +998,14 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
                 /* defaultValue */ FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+    }
+
+    @Override
+    public long getFledgeAdSelectionBiddingLogicJsVersion() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION);
     }
 
     @Override
@@ -2373,6 +2383,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
+                        + " = "
+                        + getFledgeAdSelectionBiddingLogicJsVersion());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
