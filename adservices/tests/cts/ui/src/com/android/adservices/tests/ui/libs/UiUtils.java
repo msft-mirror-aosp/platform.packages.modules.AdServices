@@ -16,7 +16,6 @@
 package com.android.adservices.tests.ui.libs;
 
 import static com.android.adservices.tests.ui.libs.UiConstants.LAUNCH_TIMEOUT_MS;
-import static com.android.adservices.tests.ui.libs.UiConstants.SIM_REGION;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
@@ -31,30 +30,8 @@ import androidx.test.uiautomator.UiSelector;
 import com.android.adservices.api.R;
 import com.android.compatibility.common.util.ShellUtils;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class UiUtils {
-
-    public static Map<String, String> getInitialParams(boolean getSimRegion) {
-        Map<String, String> initialParams = new HashMap<String, String>();
-
-        if (getSimRegion) {
-            String simRegion = ShellUtils.runShellCommand("getprop gsm.sim.operator.iso-country");
-            initialParams.put(SIM_REGION, simRegion);
-        }
-
-        return initialParams;
-    }
-
-    public static void resetInitialParams(Map<String, String> initialParams) {
-        for (String initialParam : initialParams.keySet()) {
-            if (initialParam.equals(SIM_REGION)) {
-                ShellUtils.runShellCommand(
-                        "setprop gsm.sim.operator.iso-country " + initialParams.get(initialParam));
-            }
-        }
-    }
 
     public static void setAsNonWorkingHours() {
         // set the notification interval start time to 9:00 AM
@@ -93,15 +70,27 @@ public class UiUtils {
     }
 
     public static void setAsEuDevice() {
-        ShellUtils.runShellCommand("setprop gsm.sim.operator.iso-country DE");
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices is_eea_device true");
     }
 
     public static void setAsRowDevice() {
-        ShellUtils.runShellCommand("setprop gsm.sim.operator.iso-country ROW");
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
+    }
+
+    public static void enableGa() {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+    }
+
+    public static void enableBeta() {
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
     }
 
     public static void verifyNotification(
-            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest)
+            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest, boolean isGa)
             throws Exception {
         device.openNotification();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
@@ -114,26 +103,32 @@ public class UiUtils {
 
         int notificationTitle =
                 isEuTest
-                        ? R.string.notificationUI_notification_title_eu
-                        : R.string.notificationUI_notification_title;
+                        ? isGa
+                                ? R.string.notificationUI_notification_ga_title_eu
+                                : R.string.notificationUI_notification_title_eu
+                        : isGa
+                                ? R.string.notificationUI_notification_ga_title
+                                : R.string.notificationUI_notification_title;
+
         int notificationHeader =
                 isEuTest
-                        ? R.string.notificationUI_header_title_eu
-                        : R.string.notificationUI_header_title;
+                        ? isGa
+                                ? R.string.notificationUI_header_ga_title_eu
+                                : R.string.notificationUI_header_title_eu
+                        : isGa
+                                ? R.string.notificationUI_header_ga_title
+                                : R.string.notificationUI_header_title;
 
         UiSelector notificationCardSelector =
                 new UiSelector().text(getResourceString(context, notificationTitle));
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
+
         UiObject notificationCard = scroller.getChild(notificationCardSelector);
         if (!isDisplayed) {
             assertThat(notificationCard.exists()).isFalse();
-            device.pressHome();
-            Thread.sleep(LAUNCH_TIMEOUT_MS);
             return;
-        } else {
-            assertThat(notificationCard.exists()).isTrue();
         }
 
+        assertThat(notificationCard.exists()).isTrue();
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
         UiObject title = getUiElement(device, context, notificationHeader);

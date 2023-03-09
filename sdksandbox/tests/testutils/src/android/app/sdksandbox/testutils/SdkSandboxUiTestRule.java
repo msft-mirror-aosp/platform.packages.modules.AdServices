@@ -24,6 +24,7 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.app.Activity;
+import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -144,10 +145,19 @@ public class SdkSandboxUiTestRule implements TestRule {
         mLoadSdkInSandboxRule.renderInView(viewResId, width, height);
     }
 
+    public void switchActivity(Class activityClass) {
+        mLoadSdkInSandboxRule.switchActivity(activityClass);
+    }
+
+    public SandboxedSdk getSandboxedSdk() {
+        return mLoadSdkInSandboxRule.getSandboxedSdk();
+    }
+
     private static class LoadSdkInSandboxRule extends ExternalResource {
         final Class mActivityClass;
         ActivityScenario mActivityScenario;
         SdkSandboxManager mSdkSandboxManager;
+        SandboxedSdk mSandboxedSdk;
 
         LoadSdkInSandboxRule(Context context, Class activityClass) {
             mActivityClass = activityClass;
@@ -163,6 +173,7 @@ public class SdkSandboxUiTestRule implements TestRule {
                         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
                         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
                         callback.assertLoadSdkIsSuccessful();
+                        mSandboxedSdk = callback.getSandboxedSdk();
                     });
         }
 
@@ -177,6 +188,15 @@ public class SdkSandboxUiTestRule implements TestRule {
 
         private ActivityScenario getActivityScenario() {
             return mActivityScenario;
+        }
+
+        private void switchActivity(Class activityClass) {
+            mActivityScenario = ActivityScenario.launch(activityClass);
+            assertThat(mActivityScenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
+        }
+
+        private SandboxedSdk getSandboxedSdk() {
+            return mSandboxedSdk;
         }
 
         private void renderInView(int viewResId, int width, int height) {
