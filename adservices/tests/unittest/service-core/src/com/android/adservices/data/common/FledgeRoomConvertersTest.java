@@ -16,9 +16,12 @@
 
 package com.android.adservices.data.common;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
@@ -29,6 +32,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 public class FledgeRoomConvertersTest {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
@@ -90,5 +94,30 @@ public class FledgeRoomConvertersTest {
                 FledgeRoomConverters.deserializeAdSelectionSignals(serializedIdentifier);
 
         assertEquals(adSelectionSignals, deserializedIdentifier);
+    }
+
+    @Test
+    public void testSerializeNullStringSet() {
+        assertThat(FledgeRoomConverters.serializeStringSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeNullStringSet() {
+        assertThat(FledgeRoomConverters.deserializeStringSet(null)).isNull();
+    }
+
+    @Test
+    public void testDeserializeMangledStringSet() {
+        assertThat(FledgeRoomConverters.deserializeStringSet("This is not a JSON string")).isNull();
+    }
+
+    @Test
+    public void testSerializeDeserializeStringSet() {
+        String serializedStringSet =
+                FledgeRoomConverters.serializeStringSet(AdDataFixture.AD_COUNTER_KEYS);
+        Set<String> deserializeStringSet =
+                FledgeRoomConverters.deserializeStringSet(serializedStringSet);
+
+        assertThat(deserializeStringSet).containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
     }
 }
