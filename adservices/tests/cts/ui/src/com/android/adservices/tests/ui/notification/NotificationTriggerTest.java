@@ -15,8 +15,6 @@
  */
 package com.android.adservices.tests.ui.notification;
 
-import static android.Manifest.permission.POST_NOTIFICATIONS;
-
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_DISABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.AD_ID_ENABLED;
 import static com.android.adservices.tests.ui.libs.UiConstants.ENTRY_POINT_DISABLED;
@@ -58,9 +56,7 @@ public class NotificationTriggerTest {
 
         // TO-DO (b/271567864): grant the permission in our apk code and remove this in the future.
         // Grant runtime permission to the AOSP adservices app.
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
+        UiUtils.enableNotificationPermission();
 
         mCommonManager = AdServicesCommonManager.get(sContext);
 
