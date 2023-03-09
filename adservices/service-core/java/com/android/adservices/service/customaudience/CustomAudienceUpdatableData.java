@@ -185,7 +185,8 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
                         flags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
                         flags.getFledgeCustomAudienceMaxAdsSizeB(),
-                        flags.getFledgeCustomAudienceMaxNumAds());
+                        flags.getFledgeCustomAudienceMaxNumAds(),
+                        flags.getFledgeAdSelectionFilteringEnabled());
 
         ReadStatus userBiddingSignalsReadStatus =
                 readUserBiddingSignals(reader, responseHash, dataBuilder);

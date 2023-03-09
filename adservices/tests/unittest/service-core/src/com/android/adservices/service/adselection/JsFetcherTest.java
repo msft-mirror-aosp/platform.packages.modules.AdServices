@@ -36,6 +36,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -95,6 +96,7 @@ public class JsFetcherTest {
             Room.inMemoryDatabaseBuilder(
                             ApplicationProvider.getApplicationContext(),
                             CustomAudienceDatabase.class)
+                    .addTypeConverter(new DBCustomAudience.Converters(true))
                     .build()
                     .customAudienceDao();
     private ListeningExecutorService mLightweightExecutorService;
@@ -126,6 +128,7 @@ public class JsFetcherTest {
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
 
