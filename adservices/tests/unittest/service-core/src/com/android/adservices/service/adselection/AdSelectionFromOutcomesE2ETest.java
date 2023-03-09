@@ -64,6 +64,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -208,6 +209,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
         mAppInstallDao =

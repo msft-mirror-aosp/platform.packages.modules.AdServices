@@ -309,6 +309,11 @@ public class CustomAudienceUpdatableDataTest {
             public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
                 return 1;
             }
+
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
         }
 
         String validUserBiddingSignalsAsJsonObjectString =
