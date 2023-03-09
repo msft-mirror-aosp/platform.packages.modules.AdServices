@@ -43,7 +43,9 @@ import org.junit.runners.JUnit4;
 public class SdkSandboxScreenshotTest {
 
     // Slight delay used to ensure view has rendered before screenshot testing.
-    private static final int RENDERING_DELAY_MS = 100;
+    // TODO(b/268204038): Figure out how to decrease this delay using graphics acceleration
+    // in testing environments.
+    private static final int RENDERING_DELAY_MS = 1000;
 
     // TODO(b/268204038): Have multiple golden images to render.
     private static final int WIDTH_PX = 500;
