@@ -543,6 +543,7 @@ public interface Flags {
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 3;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -594,6 +595,11 @@ public interface Flags {
      */
     default long getAdSelectionOffDeviceOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
+    }
+
+    /** Returns the default JS version for running bidding. */
+    default long getFledgeAdSelectionBiddingLogicJsVersion() {
+        return FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
     }
 
     /**
