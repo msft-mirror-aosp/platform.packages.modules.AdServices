@@ -294,34 +294,6 @@ public class ReportImpressionScriptEngine {
         }
     }
 
-    /**
-     * Parses each entry of {@code interactionUriJsonArray} into an {@link
-     * InteractionUriRegistrationInfo} object and adds it to the resulting list. Any entry that
-     * fails to parse properly into an {@link InteractionUriRegistrationInfo} object will be skipped
-     * and not added to the list.
-     */
-    @NonNull
-    private static List<InteractionUriRegistrationInfo>
-            extractInteractionUriRegistrationInfoFromArray(JSONArray interactionUriJsonArray) {
-        ImmutableList.Builder<InteractionUriRegistrationInfo> interactionReportingUris =
-                ImmutableList.builder();
-
-        for (int i = 0; i < interactionUriJsonArray.length(); i++) {
-            try {
-                InteractionUriRegistrationInfo interactionUriRegistrationInfoToAdd =
-                        InteractionUriRegistrationInfo.fromJson(
-                                interactionUriJsonArray.getJSONObject(i));
-                interactionReportingUris.add(interactionUriRegistrationInfoToAdd);
-            } catch (Exception e) {
-                LogUtil.v(
-                        "Error converting this JSONObject to InteractionUriRegistrationInfo,"
-                                + " skipping");
-                LogUtil.v(e.toString());
-            }
-        }
-        return interactionReportingUris.build();
-    }
-
     static class ReportingScriptResult {
         public final int status;
         @NonNull public final JSONObject results;
@@ -438,6 +410,12 @@ public class ReportImpressionScriptEngine {
     public static class RegisterAdBeaconScriptEngineHelperEnabled
             implements RegisterAdBeaconScriptEngineHelper {
 
+        long mMaxInteractionReportingUrisSize;
+
+        public RegisterAdBeaconScriptEngineHelperEnabled(long maxInteractionReportingUrisSize) {
+            mMaxInteractionReportingUrisSize = maxInteractionReportingUrisSize;
+        }
+
         @Override
         public String injectReportingJs(@NonNull String reportingJs, @NonNull String entryJS) {
             return String.format(
@@ -507,6 +485,39 @@ public class ReportImpressionScriptEngine {
                 LogUtil.e(e.getMessage());
                 throw new IllegalStateException("Result does not match expected structure!");
             }
+        }
+
+        /**
+         * Parses each entry of {@code interactionUriJsonArray} into an {@link
+         * InteractionUriRegistrationInfo} object and adds it to the resulting list. Any entry that
+         * fails to parse properly into an {@link InteractionUriRegistrationInfo} object will be
+         * skipped and not added to the list. If the size of {@code interactionUriJsonArray} is
+         * larger than {@link #mMaxInteractionReportingUrisSize}, we will only add the first {@link
+         * #mMaxInteractionReportingUrisSize} entries to the result.
+         */
+        @NonNull
+        private List<InteractionUriRegistrationInfo> extractInteractionUriRegistrationInfoFromArray(
+                JSONArray interactionUriJsonArray) {
+            ImmutableList.Builder<InteractionUriRegistrationInfo> interactionReportingUris =
+                    ImmutableList.builder();
+
+            long maxResultArraySize =
+                    Math.min(interactionUriJsonArray.length(), mMaxInteractionReportingUrisSize);
+
+            for (int i = 0; i < maxResultArraySize; i++) {
+                try {
+                    InteractionUriRegistrationInfo interactionUriRegistrationInfoToAdd =
+                            InteractionUriRegistrationInfo.fromJson(
+                                    interactionUriJsonArray.getJSONObject(i));
+                    interactionReportingUris.add(interactionUriRegistrationInfoToAdd);
+                } catch (Exception e) {
+                    LogUtil.v(
+                            "Error converting this JSONObject to InteractionUriRegistrationInfo,"
+                                    + " skipping");
+                    LogUtil.v(e.toString());
+                }
+            }
+            return interactionReportingUris.build();
         }
     }
 
