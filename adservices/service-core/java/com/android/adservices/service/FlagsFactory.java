@@ -69,6 +69,11 @@ public class FlagsFactory {
             public boolean getFledgeRegisterAdBeaconEnabled() {
                 return true;
             }
+
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
         };
     }
 }
