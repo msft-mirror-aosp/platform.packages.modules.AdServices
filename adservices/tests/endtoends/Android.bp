@@ -33,6 +33,7 @@ android_test {
         "framework-adservices.impl",
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",
