@@ -25,6 +25,7 @@ import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxService;
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Process;
@@ -99,7 +100,7 @@ public class LoadSdkSessionUnitTest {
                         mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -116,7 +117,7 @@ public class LoadSdkSessionUnitTest {
                         mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -124,7 +125,7 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, "", "", -1, -1));
+                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
 
@@ -136,7 +137,7 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, "", "", -1, -1));
+                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
         // Since the SDK had already been loaded, its status should still show as loaded regardless
         // of any invalid requests.
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);
@@ -152,7 +153,7 @@ public class LoadSdkSessionUnitTest {
 
         // Throw a DeadObjectException when loading the SDK.
         mSdkSandboxService.dieOnLoad = true;
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
     }
@@ -176,13 +177,28 @@ public class LoadSdkSessionUnitTest {
                         mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
 
         // Load the SDK in this session.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
 
         // Before invoking the callback, kill the sandbox.
         sdkSession.onSandboxDeath();
 
         callback.assertLoadSdkIsUnsuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
+    }
+
+    @Test
+    public void testLoadSdk_CustomizedApplicationInfoIsPassedToService() throws Exception {
+        // Create a new load session.
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        LoadSdkSession sdkSession =
+                new LoadSdkSession(
+                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+
+        // Load the SDK in this session with customized application info
+        final ApplicationInfo customizedInfo = new ApplicationInfo();
+        sdkSession.load(mSdkSandboxService, customizedInfo, -1, -1);
+
+        assertThat(mSdkSandboxService.getCustomizedInfo()).isSameInstanceAs(customizedInfo);
     }
 
     @Test
@@ -205,7 +221,7 @@ public class LoadSdkSessionUnitTest {
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
 
         // Request to load the SDK in this session, but don't complete the request.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
 
         // Unloading SDK should throw exception.
         assertThrows(IllegalArgumentException.class, () -> sdkSession.unload(-1));
@@ -226,7 +242,7 @@ public class LoadSdkSessionUnitTest {
                         mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
 
         // Load the SDK in this session and fail it.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
         mSdkSandboxService.sendLoadCodeError();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_FAILED);
         callback.assertLoadSdkIsUnsuccessful();
@@ -263,7 +279,7 @@ public class LoadSdkSessionUnitTest {
         // Trying to load the SDK again as part of the same session should fail.
         assertThrows(
                 IllegalArgumentException.class,
-                () -> sdkSession.load(mSdkSandboxService, "", "", -1, -1));
+                () -> sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1));
     }
 
     @Test
@@ -321,7 +337,7 @@ public class LoadSdkSessionUnitTest {
                         mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
 
         // Load the SDK in this session.
-        sdkSession.load(mSdkSandboxService, "", "", -1, -1);
+        sdkSession.load(mSdkSandboxService, new ApplicationInfo(), -1, -1);
         // Assert it was successful
         mSdkSandboxService.sendLoadCodeSuccessful();
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOADED);

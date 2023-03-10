@@ -89,6 +89,7 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService.TargetUser;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -106,6 +107,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -2721,6 +2723,29 @@ public class SdkSandboxManagerServiceUnitTest {
                         Mockito.eq(mService.getListOfStoragePaths(internalStorageDirInfo)),
                         Mockito.eq(mService.getListOfStoragePaths(sdkStorageDirInfo)),
                         Mockito.any(IComputeSdkStorageCallback.class));
+    }
+
+    @Test
+    public void testLoadSdk_CustomizedApplicationInfoIsPopulatedProperly() throws Exception {
+        final int userId = UserHandle.getUserId(Process.myUid());
+
+        // Create fake storage directories
+        mSdkSandboxStorageManagerUtility.createSdkStorageForTest(
+                userId, TEST_PACKAGE, Arrays.asList(SDK_NAME), Collections.emptyList());
+        StorageDirInfo storageInfo =
+                mSdkSandboxStorageManagerUtility
+                        .getSdkStorageDirInfoForTest(
+                                null, userId, TEST_PACKAGE, Arrays.asList(SDK_NAME))
+                        .get(0);
+
+        // Load SDK so that information is passed to sandbox service
+        loadSdk(SDK_NAME);
+
+        // Verify customized application info is overloaded with per-sdk storage paths
+        ApplicationInfo ai = mSdkSandboxService.getCustomizedInfo();
+        assertThat(ai.dataDir).isEqualTo(storageInfo.getCeDataDir());
+        assertThat(ai.credentialProtectedDataDir).isEqualTo(storageInfo.getCeDataDir());
+        assertThat(ai.deviceProtectedDataDir).isEqualTo(storageInfo.getDeDataDir());
     }
 
     @Test

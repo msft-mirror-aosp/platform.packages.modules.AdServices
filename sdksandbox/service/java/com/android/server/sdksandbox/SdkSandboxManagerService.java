@@ -1734,12 +1734,31 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                 callingInfo.getUid());
 
+        ApplicationInfo customizedInfo =
+                createCustomizedApplicationInfo(loadSdkSession.getApplicationInfo(), sdkDataInfo);
+
         loadSdkSession.load(
                 service,
-                sdkDataInfo.getCeDataDir(),
-                sdkDataInfo.getDeDataDir(),
+                customizedInfo,
                 timeSystemServerCalledSandbox,
                 timeSystemServerReceivedCallFromApp);
+    }
+
+    /** The customized ApplicationInfo is used to create CustomizedSdkContext for sdks. */
+    ApplicationInfo createCustomizedApplicationInfo(
+            ApplicationInfo original, StorageDirInfo dirInfo) {
+        ApplicationInfo custom = new ApplicationInfo(original);
+
+        // Assign per-sdk storage path as data dir
+        custom.dataDir = dirInfo.getCeDataDir();
+        custom.credentialProtectedDataDir = dirInfo.getCeDataDir();
+        custom.deviceProtectedDataDir = dirInfo.getDeDataDir();
+
+        // Package name still needs to be that of the sandbox because permissions are defined
+        // for the sandbox app.
+        custom.packageName = mContext.getPackageManager().getSdkSandboxPackageName();
+
+        return custom;
     }
 
     private void failStartOrBindService(Intent intent) {
