@@ -172,6 +172,11 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
     }
 
     @Override
+    public String getPackageName() {
+        return mContext.getPackageName();
+    }
+
+    @Override
     public String getOpPackageName() {
         return mContext.getOpPackageName();
     }
