@@ -143,6 +143,12 @@ public class InteractionReporterTest {
                 }
             };
 
+    private final long mMaxRegisteredAdBeaconsTotalCount =
+            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+
+    private final long mMaxRegisteredAdBeaconsPerDestination =
+            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
@@ -237,10 +243,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionSuccessfullyReportsRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -279,10 +294,19 @@ public class InteractionReporterTest {
     public void testReportInteractionOnlyReportsBuyersRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -328,10 +352,19 @@ public class InteractionReporterTest {
     public void testReportInteractionOnlyReportsSellerRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -377,10 +410,19 @@ public class InteractionReporterTest {
     public void testReportInteractionReturnsOnlyReportsUriThatPassesEnrollmentCheck()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
@@ -455,10 +497,19 @@ public class InteractionReporterTest {
             testReportInteractionReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
                     throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
@@ -517,10 +568,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWithInvalidPackageName() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -572,10 +632,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenForegroundCheckFails() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         doThrow(
                         new FilterException(
@@ -628,10 +697,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenThrottled() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -712,10 +790,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenAppNotInAllowList() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         doThrow(new FilterException(new FledgeAllowListsFilter.AppNotAllowedException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -763,10 +850,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsSilentlyWithoutConsent() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -813,10 +909,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWithUnknownAdSelectionId() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {

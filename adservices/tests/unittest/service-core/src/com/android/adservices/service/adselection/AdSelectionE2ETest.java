@@ -219,16 +219,6 @@ public class AdSelectionE2ETest {
                     + " selection_signals.bid_floor) ? outcome_1p : null};\n"
                     + "}";
 
-    private static final AdTechIdentifier TRUSTED_BIDDING_SIGNALS =
-            AdTechIdentifier.fromString(
-                    "{\n"
-                            + "\t\"example\": \"example\",\n"
-                            + "\t\"valid\": \"Also valid\",\n"
-                            + "\t\"list\": \"list\",\n"
-                            + "\t\"of\": \"of\",\n"
-                            + "\t\"keys\": \"trusted bidding signal Values\"\n"
-                            + "}");
-
     private static final Map<String, String> TRUSTED_BIDDING_SIGNALS_SERVER_DATA =
             new ImmutableMap.Builder<String, String>()
                     .put("example", "example")
