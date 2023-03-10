@@ -1246,6 +1246,18 @@ public interface Flags {
         return ENABLE_BACK_COMPAT;
     }
 
+    /**
+     * Enable AppSearch read for consent data feature flag. The default value is false which means
+     * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
+     * support of consent data on T+ devices.
+     */
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+
+    /** @return value of enable appsearch consent data flag */
+    default boolean getEnableAppsearchConsentData() {
+        return ENABLE_APPSEARCH_CONSENT_DATA;
+    }
+
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
