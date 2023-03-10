@@ -54,27 +54,27 @@ android_test {
           "src/**/*.java"
     ],
     static_libs: [
-        "androidx.test.runner",
-        "androidx.test.core",
-        "truth-prebuilt",
-        "mockito-target-extended-minus-junit4",
-        "ub-uiautomator",
         "adservices-test-fixtures",
-        "android.ext.adservices",
+        "androidx.test.core",
+        "androidx.test.runner",
+        "mockito-target-extended-minus-junit4",
+        "truth-prebuilt",
+        "ub-uiautomator",
     ],
     libs: [
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock",
         "android.test.runner",
-        "framework-sdksandbox.impl",
         "framework-annotations-lib",
+        "framework-sdksandbox.impl",
     ],
     sdk_version: "module_current",
     min_sdk_version: "30",
     target_sdk_version: "30",
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],
