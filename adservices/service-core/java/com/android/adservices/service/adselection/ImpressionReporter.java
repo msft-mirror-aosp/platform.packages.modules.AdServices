@@ -72,6 +72,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -329,21 +330,12 @@ public class ImpressionReporter {
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         mScheduledExecutor)
-                .transformAsync(
-                        reportingUrisAndContext ->
-                                doReport(
-                                        reportingUrisAndContext.first,
-                                        reportingUrisAndContext.second),
-                        mLightweightExecutorService)
                 .addCallback(
-                        new FutureCallback<List<Void>>() {
+                        new FutureCallback<Pair<ReportingUris, ReportingContext>>() {
                             @Override
-                            public void onSuccess(List<Void> result) {
-                                LogUtil.d("Report impression succeeded!");
-                                mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        AdServicesStatusUtils.STATUS_SUCCESS,
-                                        0);
+                            public void onSuccess(Pair<ReportingUris, ReportingContext> result) {
+                                LogUtil.d("Computed reporting uris successfully!");
+                                performReporting(result.first, result.second);
                             }
 
                             @Override
@@ -366,6 +358,37 @@ public class ImpressionReporter {
                             }
                         },
                         mLightweightExecutorService);
+    }
+
+    private void performReporting(ReportingUris reportingUris, ReportingContext ctx) {
+        FluentFuture<List<Void>> reportingFuture = FluentFuture.from(doReport(reportingUris, ctx));
+        reportingFuture.addCallback(
+                new FutureCallback<List<Void>>() {
+                    @Override
+                    public void onSuccess(List<Void> result) {
+                        LogUtil.d("Reporting finished successfully!");
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_SUCCESS,
+                                0);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        LogUtil.e(t, "Report Impression failure encountered during reporting!");
+                        if (t instanceof IOException) {
+                            mAdServicesLogger.logFledgeApiCallStats(
+                                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                    AdServicesStatusUtils.STATUS_IO_ERROR,
+                                    0);
+                        }
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                0);
+                    }
+                },
+                mLightweightExecutorService);
     }
 
     private Pair<ReportingUris, ReportingContext> notifySuccessToCaller(
