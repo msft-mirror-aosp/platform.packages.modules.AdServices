@@ -30,7 +30,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -60,6 +60,7 @@ import java.util.function.Supplier;
  * per thread. See the threading comments for {@link JSScriptEngine}.
  */
 public class ReportImpressionScriptEngine {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String TAG = "ReportImpressionScriptEngine";
 
     // TODO: (b/228094391): Put these common constants in a separate class
@@ -164,7 +165,7 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(renderUri);
         Objects.requireNonNull(contextualSignals);
 
-        LogUtil.v("Reporting result");
+        sLogger.v("Reporting result");
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
@@ -215,7 +216,7 @@ public class ReportImpressionScriptEngine {
         Objects.requireNonNull(signalsForBuyer);
         Objects.requireNonNull(contextualSignals);
         Objects.requireNonNull(customAudienceSignals);
-        LogUtil.v("Reporting win");
+        sLogger.v("Reporting win");
 
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
@@ -241,7 +242,7 @@ public class ReportImpressionScriptEngine {
 
     ListenableFuture<ReportingScriptResult> runReportingScript(
             String jsScript, String functionName, List<JSScriptArgument> args) {
-        LogUtil.v("Executing reporting script");
+        sLogger.v("Executing reporting script");
         try {
             return transform(
                     callReportingScript(jsScript, functionName, args),
@@ -278,7 +279,7 @@ public class ReportImpressionScriptEngine {
     @NonNull
     private ReportingScriptResult parseReportingOutput(@NonNull String reportScriptResult) {
         Objects.requireNonNull(reportScriptResult);
-        LogUtil.v("Parsing Reporting output");
+        sLogger.v("Parsing Reporting output");
         try {
             Preconditions.checkState(
                     !reportScriptResult.equals("null"),
@@ -431,7 +432,7 @@ public class ReportImpressionScriptEngine {
         public BuyerReportingResult handleReportWinOutput(
                 @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
-            LogUtil.v("Handling report win output");
+            sLogger.v("Handling report win output");
 
             Preconditions.checkState(
                     reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
@@ -458,7 +459,7 @@ public class ReportImpressionScriptEngine {
         public SellerReportingResult handleReportResultOutput(
                 @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
-            LogUtil.v("Handling reporting result output");
+            sLogger.v("Handling reporting result output");
             Preconditions.checkState(
                     reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
                     "Report Result script failed!");
@@ -482,7 +483,7 @@ public class ReportImpressionScriptEngine {
                 return new SellerReportingResult(
                         adSelectionSignals, reportingUri, interactionUriRegistrationInfoList);
             } catch (Exception e) {
-                LogUtil.e(e.getMessage());
+                sLogger.e(e.getMessage());
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
@@ -511,10 +512,10 @@ public class ReportImpressionScriptEngine {
                                     interactionUriJsonArray.getJSONObject(i));
                     interactionReportingUris.add(interactionUriRegistrationInfoToAdd);
                 } catch (Exception e) {
-                    LogUtil.v(
+                    sLogger.v(
                             "Error converting this JSONObject to InteractionUriRegistrationInfo,"
                                     + " skipping");
-                    LogUtil.v(e.toString());
+                    sLogger.v(e.toString());
                 }
             }
             return interactionReportingUris.build();
@@ -537,7 +538,7 @@ public class ReportImpressionScriptEngine {
         public BuyerReportingResult handleReportWinOutput(
                 @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
-            LogUtil.v("Handling report win output");
+            sLogger.v("Handling report win output");
 
             Preconditions.checkState(
                     reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
@@ -559,7 +560,7 @@ public class ReportImpressionScriptEngine {
         public SellerReportingResult handleReportResultOutput(
                 @NonNull ReportingScriptResult reportResult) {
             Objects.requireNonNull(reportResult);
-            LogUtil.v("Handling reporting result output");
+            sLogger.v("Handling reporting result output");
             Preconditions.checkState(
                     reportResult.status == JS_SCRIPT_STATUS_SUCCESS,
                     "Report Result script failed!");
@@ -576,7 +577,7 @@ public class ReportImpressionScriptEngine {
 
                 return new SellerReportingResult(adSelectionSignals, reportingUri, null);
             } catch (Exception e) {
-                LogUtil.e(e.getMessage());
+                sLogger.e(e.getMessage());
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
