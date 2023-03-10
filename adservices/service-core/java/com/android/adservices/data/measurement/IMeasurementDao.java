@@ -303,8 +303,9 @@ public interface IMeasurementDao {
      * Deletes all records in measurement tables that correspond with the provided Uri.
      *
      * @param uri the Uri to match on
+     * @return if any entry was deleted.
      */
-    void deleteAppRecords(Uri uri) throws DatastoreException;
+    boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
     void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
@@ -431,8 +432,9 @@ public interface IMeasurementDao {
      *
      * @param uriList a {@link List} of Uris whos related records won't be deleted.
      * @throws DatastoreException
+     * @return If any entry was deleted.
      */
-    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
+    boolean deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 
     /**
      * Fetches aggregate reports that match either given source or trigger IDs. If A1 is set of
