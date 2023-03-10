@@ -44,7 +44,7 @@ android_app {
     libs: ["android.ext.adservices"],
     optional_uses_libs: ["android.ext.adservices"],
     manifest: "AdExtServicesManifest.xml",
-    package_name: "android.ext.adservices",
+    package_name: "com.android.ext.adservices.api",
     static_libs: [
         "adservices-service-core",
         "androidx-constraintlayout_constraintlayout",

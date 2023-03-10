@@ -25,6 +25,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
@@ -100,6 +101,7 @@ public class ClassifierManager implements Classifier {
     @Override
     public Map<String, List<Topic>> classify(Set<String> apps) {
         @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
+        LogUtil.v("Classifying with ClassifierType: " + classifierTypeFlag);
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
             return mPrecomputedClassifier.get().classify(apps);
         } else if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
