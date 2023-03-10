@@ -1,115 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.0.0-dev" type="baseline" client="" dependencies="true" name="" variant="all" version="8.0.0-dev">
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`"
-        errorLine1="                    Intent intent = info.getIntent();"
-        errorLine2="                                         ~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="365"
-            column="42"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingPackage`"
-        errorLine1="                                    .toSandboxProcessName(info.getCallingPackage());"
-        errorLine2="                                                               ~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="376"
-            column="64"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingUid`"
-        errorLine1="                    final int sandboxUid = Process.toSdkSandboxUid(info.getCallingUid());"
-        errorLine2="                                                                        ~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="377"
-            column="73"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getActivityInfo`"
-        errorLine1="                    ActivityInfo activityInfo = info.getActivityInfo();"
-        errorLine2="                                                     ~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="380"
-            column="54"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `new com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptResult`"
-        errorLine1="                    return new ActivityInterceptorCallback.ActivityInterceptResult("
-        errorLine2="                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="384"
-            column="28"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCheckedOptions`"
-        errorLine1="                            info.getIntent(), info.getCheckedOptions(), true);"
-        errorLine2="                                                   ~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="385"
-            column="52"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`"
-        errorLine1="                            info.getIntent(), info.getCheckedOptions(), true);"
-        errorLine2="                                 ~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="385"
-            column="34"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#getInstance`"
-        errorLine1="                ActivityInterceptorCallbackRegistry.getInstance();"
-        errorLine2="                                                    ~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="388"
-            column="53"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#registerActivityInterceptorCallback`"
-        errorLine1="        registry.registerActivityInterceptorCallback("
-        errorLine2="                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="389"
-            column="18"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.am.ActivityManagerLocal#killSdkSandboxClientAppProcess`"
-        errorLine1="        mActivityManagerLocal.killSdkSandboxClientAppProcess(callingInfo.getAppProcessToken());"
-        errorLine2="                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="1272"
-            column="31"/>
-    </issue>
+<issues format="6" by="lint 8.0.0-dev" type="baseline" dependencies="true" variant="all" version="8.0.0-dev">
 
     <issue
         id="NewApi"
@@ -120,6 +10,86 @@
             file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxServiceProviderImpl.java"
             line="212"
             column="35"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.am.ActivityManagerLocal#killSdkSandboxClientAppProcess`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="1273"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getActivityInfo`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="381"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingPackage`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="377"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingUid`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="378"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCheckedOptions`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="386"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="366"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="386"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#getInstance`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="389"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#registerActivityInterceptorCallback`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="390"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 34 (current min is 33): `new com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptResult`">
+        <location
+            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
+            line="385"/>
     </issue>
 
 </issues>
