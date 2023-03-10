@@ -34,6 +34,7 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -54,6 +55,9 @@ public class ReconsentNotificationTriggerTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         mCommonManager = AdServicesCommonManager.get(sContext);
@@ -66,11 +70,13 @@ public class ReconsentNotificationTriggerTest {
         UiUtils.disableSchedulingParams();
         UiUtils.setSourceOfTruthToPPAPI();
         UiUtils.clearSavedStatus();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) return;
+
+        mDevice.pressHome();
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
