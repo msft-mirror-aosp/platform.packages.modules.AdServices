@@ -104,7 +104,7 @@ public class AdServicesCommonServiceImplTest {
         doReturn(mPackageManager).when(mContext).getPackageManager();
         doReturn(mEditor).when(mSharedPreferences).edit();
         doReturn(mEditor).when(mEditor).putInt(anyString(), anyInt());
-        Mockito.doNothing().when(mEditor).apply();
+        doReturn(true).when(mEditor).commit();
         doReturn(true).when(mSharedPreferences).contains(anyString());
 
         ExtendedMockito.doReturn(mConsentManager)

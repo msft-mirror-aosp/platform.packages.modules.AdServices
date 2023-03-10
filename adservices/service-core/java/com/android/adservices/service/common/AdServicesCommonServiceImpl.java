@@ -122,7 +122,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putInt(
                                 KEY_ADSERVICES_ENTRY_POINT_STATUS, adServiceEntryPointStatusInt);
-                        editor.apply();
+                        if (!editor.commit()) {
+                            LogUtil.e("saving to the sharedpreference failed");
+                        }
                         LogUtil.d(
                                 "adid status is "
                                         + adIdEnabled
