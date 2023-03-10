@@ -220,36 +220,6 @@ public final class ConsentManager {
         }
     }
 
-    /**
-     * Saves information to the storage that topics consent page was displayed for the first time to
-     * the user.
-     */
-    public void recordTopicsConsentPageDisplayed() throws IOException {
-        synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record topics consent page failed due to"
-                                + " IOException thrown by Datastore.");
-            }
-        }
-    }
-
-    /**
-     * Returns information whether topics consent page was displayed or not.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
-     */
-    public boolean wasTopicsConsentPageDisplayed() {
-        synchronized (this) {
-            Boolean displayed = mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
-        }
-    }
-
     /** Saves the default consent of a user. */
     public void recordDefaultConsent(boolean defaultConsent) throws IOException {
         synchronized (this) {
@@ -380,36 +350,6 @@ public final class ConsentManager {
         synchronized (this) {
             Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
             return defaultAdIdState != null ? defaultAdIdState : false;
-        }
-    }
-
-    /**
-     * Saves information to the storage that Fledge and Msmt consent was displayed for the first
-     * time to the user.
-     */
-    public void recordFledgeAndMsmtConsentPageDisplayed() throws IOException {
-        synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record fledge and Msmt consent page failed due to "
-                                + "IOException thrown by Datastore.");
-            }
-        }
-    }
-
-    /**
-     * Returns information whether fledge and msmt consent page was displayed or not.
-     *
-     * @return true if fledge and msmt consent page was displayed, otherwise false.
-     */
-    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
-        synchronized (this) {
-            Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
         }
     }
 
