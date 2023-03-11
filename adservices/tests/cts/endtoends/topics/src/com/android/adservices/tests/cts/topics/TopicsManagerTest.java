@@ -27,7 +27,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -49,7 +49,7 @@ public class TopicsManagerTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
     private static final long EXPECTED_MODEL_VERSION = 3L;
     // Expected taxonomy version.
@@ -83,7 +83,7 @@ public class TopicsManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     // Assert message statements.
     private static final String INCORRECT_MODEL_VERSION_MESSAGE =
@@ -95,7 +95,9 @@ public class TopicsManagerTest {
     @Before
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -119,6 +121,9 @@ public class TopicsManagerTest {
 
     @Test
     public void testTopicsManager_runDefaultClassifier() throws Exception {
+        // Set classifier flag to use precomputed-then-on-device classifier.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
+
         // Default classifier uses the precomputed list first, then on-device classifier.
         // The Test App has 2 SDKs: sdk1 calls the Topics API and sdk2 does not.
         // Sdk1 calls the Topics API.

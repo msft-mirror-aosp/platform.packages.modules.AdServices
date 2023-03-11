@@ -46,12 +46,10 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
-        if (obj.exists()) {
-            return obj;
-        } else {
-            // account for UI themes which auto CAPS dialog buttons.
-            return device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
+        if (!obj.exists()) {
+            obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
         }
+        return obj;
     }
 
     /** Returns the string corresponding to a resource ID. */
@@ -62,24 +60,30 @@ public class ApkTestUtil {
     /** Returns the UiObject corresponding to a resource ID after scrolling. */
     public static void scrollToAndClick(UiDevice device, int resId)
             throws UiObjectNotFoundException {
+        UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
                         new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject element = ApkTestUtil.getPageElement(device, resId);
-        scrollView.scrollIntoView(element);
-        element.click();
+
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        scrollView.scrollIntoView(obj);
+        return obj;
     }
 
     /** Returns the string corresponding to a resource ID and index. */
     public static UiObject getElement(UiDevice device, int resId, int index) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
-        if (obj.exists()) {
-            return obj;
-        } else {
-            // account for UI themes which auto CAPS dialog buttons.
-            return device.findObject(
-                    new UiSelector().text(getString(resId).toUpperCase()).instance(index));
+        if (!obj.exists()) {
+            obj =
+                    device.findObject(
+                            new UiSelector().text(getString(resId).toUpperCase()).instance(index));
         }
+        return obj;
     }
 
     /** Returns the UiObject corresponding to a resource ID. */

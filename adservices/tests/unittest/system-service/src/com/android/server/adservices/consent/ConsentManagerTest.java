@@ -285,28 +285,6 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testTopicsConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isFalse();
-        consentManager.recordTopicsConsentPageDisplayed();
-
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testFledgeAndMsmtConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the fledge consent page displayed is false.
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        consentManager.recordFledgeAndMsmtConsentPageDisplayed();
-
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
     public void testDeleteConsentDataStoreDir() throws IOException {
         int userIdentifier = 0;
         ConsentManager consentManager =
