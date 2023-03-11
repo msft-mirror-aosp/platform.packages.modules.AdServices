@@ -381,12 +381,6 @@ public final class PhFlags implements Flags {
     static final String KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_async_registration_job_queue_interval_ms";
 
-    // Feature Flags
-    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
-
-    // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
-
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
 
@@ -2001,22 +1995,6 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
-    }
-
-    @Override
-    public boolean getEnableTopicContributorsCheck() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
-                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
-    }
-
-    @Override
-    public boolean getEnableTopicMigration() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
     }
 
     @Override
