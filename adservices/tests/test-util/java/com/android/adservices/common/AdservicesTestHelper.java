@@ -28,13 +28,16 @@ import android.util.Log;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.compatibility.common.util.ShellUtils;
 
 import java.util.List;
 
 /** Class to place Adservices CTS related helper method. */
-public class AdservicesCtsHelper {
+public class AdservicesTestHelper {
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
+    private static final String DEFAULT_LOG_TAG = "adservices";
+    private static final String FORCE_KILL_PROCESS_COMMAND = "am force-stop";
 
     /**
      * Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
@@ -57,6 +60,48 @@ public class AdservicesCtsHelper {
         }
 
         return serviceInfo.packageName;
+    }
+
+    /**
+     * Used to get the package name. An overloading method of {@code
+     * getAdservicesPackageName(context, logTag)} by using {@code DEFAULT_LOG_TAG}.
+     *
+     * @param context the context
+     * @return Adservices package name
+     */
+    public static String getAdServicesPackageName(@NonNull Context context) {
+        return getAdServicesPackageName(context, DEFAULT_LOG_TAG);
+    }
+
+    /**
+     * Kill the Adservices process.
+     *
+     * @param context the context used to get Adservices package name.
+     * @param logTag the tag used for logging
+     */
+    public static void killAdservicesProcess(@NonNull Context context, @NonNull String logTag) {
+        ShellUtils.runShellCommand(
+                "%s %s", FORCE_KILL_PROCESS_COMMAND, getAdServicesPackageName(context, logTag));
+    }
+
+    /**
+     * Kill the Adservices process. An overloading method of {@code killAdservicesProcess(context,
+     * logTag)} by using {@code DEFAULT_LOG_TAG}.
+     *
+     * @param context the context used to get Adservices package name.
+     */
+    public static void killAdservicesProcess(@NonNull Context context) {
+        killAdservicesProcess(context, DEFAULT_LOG_TAG);
+    }
+
+    /**
+     * Kill the Adservices process. An overloading method of {@code killAdservicesProcess(context,
+     * logTag)} by using Adservices package name directly.
+     *
+     * @param adservicesPackageName the Adservices package name.
+     */
+    public static void killAdservicesProcess(@NonNull String adservicesPackageName) {
+        ShellUtils.runShellCommand("%s %s", FORCE_KILL_PROCESS_COMMAND, adservicesPackageName);
     }
 
     /**

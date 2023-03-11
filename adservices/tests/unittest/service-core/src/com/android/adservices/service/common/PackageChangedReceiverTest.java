@@ -75,7 +75,7 @@ public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
-    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
     private static final int DEFAULT_PACKAGE_UID = -1;
 
     @Mock EpochManager mMockEpochManager;
@@ -155,7 +155,8 @@ public class PackageChangedReceiverTest {
         doNothing().when(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
     }
 
-    private Intent createDefaultIntentWithAction(String value) {
+    // This intent is sent from the AdServices system service.
+    private Intent createIntentSentByAdServiceSystemService(String value) {
         Intent intent = new Intent();
         intent.setAction(PackageChangedReceiver.PACKAGE_CHANGED_BROADCAST);
         intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
@@ -165,10 +166,240 @@ public class PackageChangedReceiverTest {
         return intent;
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_topicsKillSwitchOff() throws InterruptedException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+    // The ExtServices module registers PackageChangedReceiver to receive these broadcasts from the
+    // system.
+    private Intent createIntentSentBySystem(String action) {
+        Intent intent = new Intent();
+        intent.setAction(action);
+        intent.setData(Uri.parse(PACKAGE_SCHEME + SAMPLE_PACKAGE));
+        return intent;
+    }
 
+    @Test
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForTopicsKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOff_backCompat() throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForTopicsKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOn() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForTopicsKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_topicsKillSwitchOn_backCompat() throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForTopicsKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_measurementKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForMsmtKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_measurementKillSwitchOff_backCompat()
+            throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForMsmtKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_measurementKillSwitchOn() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForMsmtKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_measurementKillSwitchOn_backCompat()
+            throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForMsmtKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOn() {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOn_backCompat() {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_consent() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForConsent(intent);
+    }
+
+    /**
+     * Tests that when no packageUid is present via the Intent Extra, consent data for this app is
+     * cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_noPackageUid()
+            throws InterruptedException, IOException {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.removeExtra(Intent.EXTRA_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    /**
+     * Tests that when packageUid is explicitly set to the default value via the Intent Extra,
+     * consent data for this app is cleared when the app is removed.
+     */
+    @Test
+    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
+            throws InterruptedException, IOException {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
+            throws InterruptedException, IOException {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        intent.removeExtra(Intent.EXTRA_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
+            throws InterruptedException, IOException {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
+        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
+
+        validateConsentWhenPackageUidAbsent(intent, false);
+        validateConsentWhenPackageUidAbsent(intent, true);
+    }
+
+    @Test
+    public void testReceivePackageAdded_topics() throws Exception {
+        runPackageAddedForTopics(
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED));
+    }
+
+    @Test
+    public void testReceivePackageAdded_measurementKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+        runPackageAddedMsmtKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageAdded_measurementKillSwitchOn() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+        runPackageAddedForMsmtKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_measurementKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForMsmtKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_measurementKillSwitchOff_backCompat()
+            throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForMsmtKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_measurementKillSwitchOn() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForMsmtKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_measurementKillSwitchOn_backCompat()
+            throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForMsmtKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOff() throws Exception {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForFledgeKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOff_backCompat() throws Exception {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForFledgeKillSwitchOff(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOn() {
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForFledgeKillSwitchOn(intent);
+    }
+
+    @Test
+    public void testReceivePackageDataCleared_fledgeKillSwitchOn_backCompat() {
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_DATA_CLEARED);
+        runPackageDataClearedForFledgeKillSwitchOn(intent);
+    }
+
+    private void runPackageFullyRemovedForTopicsKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -184,9 +415,6 @@ public class PackageChangedReceiverTest {
 
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
-
-            // Enable TopicContributors feature
-            when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
 
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
@@ -210,10 +438,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_topicsKillSwitchOn() throws InterruptedException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForTopicsKillSwitchOn(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -241,10 +466,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_measurementKillSwitchOff() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForMsmtKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -282,10 +504,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_measurementKillSwitchOn() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForMsmtKillSwitchOn(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -323,10 +542,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_fledgeKillSwitchOff() throws InterruptedException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForFledgeKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -369,10 +585,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_fledgeKillSwitchOn() {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForFledgeKillSwitchOn(Intent intent) {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -400,10 +613,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageFullyRemoved_consent() throws InterruptedException, IOException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-
+    private void runPackageFullyRemovedForConsent(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -437,34 +647,6 @@ public class PackageChangedReceiverTest {
         } finally {
             session.finishMocking();
         }
-    }
-
-    /**
-     * Tests that when no packageUid is present via the Intent Extra, consent data for this app is
-     * cleared when the app is removed.
-     */
-    @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid()
-            throws InterruptedException, IOException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        intent.removeExtra(Intent.EXTRA_UID);
-
-        validateConsentWhenPackageUidAbsent(intent, false);
-        validateConsentWhenPackageUidAbsent(intent, true);
-    }
-
-    /**
-     * Tests that when packageUid is explicitly set to the default value via the Intent Extra,
-     * consent data for this app is cleared when the app is removed.
-     */
-    @Test
-    public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
-            throws InterruptedException, IOException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        intent.putExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
-
-        validateConsentWhenPackageUidAbsent(intent, false);
-        validateConsentWhenPackageUidAbsent(intent, true);
     }
 
     private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
@@ -513,10 +695,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageAdded_topics() throws InterruptedException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_ADDED);
-
+    private void runPackageAddedForTopics(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -549,10 +728,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageAdded_measurementKillSwitchOff() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_ADDED);
-
+    private void runPackageAddedMsmtKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -590,10 +766,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageAdded_measurementKillSwitchOn() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_ADDED);
-
+    private void runPackageAddedForMsmtKillSwitchOn(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -631,10 +804,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageDataCleared_measurementKillSwitchOff() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
-
+    private void runPackageDataClearedForMsmtKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -672,10 +842,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageDataCleared_measurementKillSwitchOn() throws Exception {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
-
+    private void runPackageDataClearedForMsmtKillSwitchOn(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -713,10 +880,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageDataCleared_fledgeKillSwitchOff() throws InterruptedException {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
-
+    private void runPackageDataClearedForFledgeKillSwitchOff(Intent intent) throws Exception {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -759,10 +923,7 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    @Test
-    public void testReceivePackageDataCleared_fledgeKillSwitchOn() {
-        Intent intent = createDefaultIntentWithAction(PackageChangedReceiver.PACKAGE_DATA_CLEARED);
-
+    private void runPackageDataClearedForFledgeKillSwitchOn(Intent intent) {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =

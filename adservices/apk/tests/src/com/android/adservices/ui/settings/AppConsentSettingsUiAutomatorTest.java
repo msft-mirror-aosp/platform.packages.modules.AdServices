@@ -34,6 +34,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -44,6 +45,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class AppConsentSettingsUiAutomatorTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String TEST_APP_NAME = "com.example.adservices.samples.ui.consenttestapp";
     private static final String TEST_APP_APK_PATH =
             "/data/local/tmp/cts/install/" + TEST_APP_NAME + ".apk";
@@ -69,7 +71,7 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
@@ -154,7 +156,7 @@ public class AppConsentSettingsUiAutomatorTest {
                 "device_config put adservices consent_source_of_truth " + consentSourceOfTruth);
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_dialogs_feature_enabled " + dialogsOn);
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();

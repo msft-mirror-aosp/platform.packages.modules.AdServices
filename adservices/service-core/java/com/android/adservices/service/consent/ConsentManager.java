@@ -27,6 +27,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -49,8 +50,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -81,7 +80,6 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
-    private final ExecutorService mExecutor;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
 
@@ -117,7 +115,6 @@ public class ConsentManager {
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
-        mExecutor = Executors.newSingleThreadExecutor();
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
@@ -1254,132 +1251,6 @@ public class ConsentManager {
         }
     }
 
-    /**
-     * Saves information to the storage that topics consent page was displayed for the first time to
-     * the user.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
-    public void recordTopicsConsentPageDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, true);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordTopicsConsentPageDisplayed();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, true);
-                        mAdServicesManager.recordTopicsConsentPageDisplayed();
-                        break;
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record Topics Consent Page Displayed failed", e);
-            }
-        }
-    }
-
-    /**
-     * Retrieves if topics consent page has been displayed.
-     *
-     * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
-     * if source of truth is system server or dual sources.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
-     */
-    public Boolean wasTopicsConsentPageDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        return mDatastore.get(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED);
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        // Intentional fallthrough
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        return mAdServicesManager.wasTopicsConsentPageDisplayed();
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                        return false;
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Get Topics Consent Page Displayed failed.");
-            }
-
-            return false;
-        }
-    }
-
-    /**
-     * Saves information to the storage that fledge and msmt consent page was displayed for the
-     * first time to the user.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
-    public void recordFledgeAndMsmtConsentPageDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(
-                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(
-                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
-                        mAdServicesManager.recordFledgeAndMsmtConsentPageDisplayed();
-                        break;
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException(
-                        "Record FLEDGE and MSMT Consent Page Displayed failed", e);
-            }
-        }
-    }
-
-    /**
-     * Retrieves if fledge and msmt consent page has been displayed.
-     *
-     * <p>To read from PPAPI consent if source of truth is PPAPI. To read from system server consent
-     * if source of truth is system server or dual sources.
-     *
-     * @return true if fledge and msmt consent page was displayed, otherwise false.
-     */
-    public Boolean wasFledgeAndMsmtConsentPageDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        return mDatastore.get(
-                                ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        // Intentional fallthrough
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        return mAdServicesManager.wasFledgeAndMsmtConsentPageDisplayed();
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                        return false;
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Get Fledge Consent Page Displayed failed.");
-            }
-
-            return false;
-        }
-    }
-
     @VisibleForTesting
     static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
         BooleanFileDatastore booleanFileDatastore =
@@ -1399,14 +1270,6 @@ public class ConsentManager {
             if (booleanFileDatastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
                 booleanFileDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
-            }
-            if (booleanFileDatastore.get(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
-                booleanFileDatastore.put(ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED, false);
-            }
-            if (booleanFileDatastore.get(ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED)
-                    == null) {
-                booleanFileDatastore.put(
-                        ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
             }
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             throw new RuntimeException("Failed to initialize the File Datastore!", e);
@@ -1694,6 +1557,6 @@ public class ConsentManager {
     }
 
     private void asyncExecute(Runnable runnable) {
-        mExecutor.execute(runnable);
+        AdServicesExecutors.getBackgroundExecutor().execute(runnable);
     }
 }

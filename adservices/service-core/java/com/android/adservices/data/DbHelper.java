@@ -34,7 +34,6 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
-import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -51,11 +50,7 @@ import java.util.stream.Stream;
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
-    // Version 7: Add TopicContributors Table for Topics API, guarded by feature flag.
-    public static final int DATABASE_VERSION_V7 = 7;
-
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    public static final int CURRENT_DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 7;
 
     private static final String DATABASE_NAME = "adservices.db";
 
@@ -83,7 +78,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public static DbHelper getInstance(@NonNull Context ctx) {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME, getDatabaseVersionToCreate());
+                sSingleton = new DbHelper(ctx, DATABASE_NAME, DATABASE_VERSION);
             }
             return sSingleton;
         }
@@ -178,14 +173,6 @@ public class DbHelper extends SQLiteOpenHelper {
         return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
     }
 
-    /**
-     * Check whether TopContributors Table is supported in current database. TopContributors is
-     * introduced in Version 6.
-     */
-    public boolean supportsTopicContributorsTable() {
-        return mDbVersion >= DATABASE_VERSION_V7;
-    }
-
     /** Get Migrators in order for Measurement. */
     @VisibleForTesting
     public List<IMeasurementDbMigrator> getOrderedDbMigrators() {
@@ -199,15 +186,5 @@ public class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
         return ImmutableList.of(new TopicDbMigratorV7());
-    }
-
-    // Get the database version to create. It may be different as CURRENT_DATABASE_VERSION,
-    // depending
-    // on Flags status.
-    @VisibleForTesting
-    static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableTopicMigration()
-                ? DATABASE_VERSION_V7
-                : CURRENT_DATABASE_VERSION;
     }
 }

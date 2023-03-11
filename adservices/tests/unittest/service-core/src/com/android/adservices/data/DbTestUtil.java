@@ -44,7 +44,7 @@ public final class DbTestUtil {
             return;
         }
 
-        db.delete(tableName, /* whereClause = */ null, /* whereArgs = */ null);
+        db.delete(tableName, /* whereClause= */ null, /* whereArgs= */ null);
     }
 
     /**
@@ -56,10 +56,7 @@ public final class DbTestUtil {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
                 sSingleton =
-                        new DbHelper(
-                                sContext,
-                                DATABASE_NAME_FOR_TEST,
-                                DbHelper.CURRENT_DATABASE_VERSION);
+                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION);
             }
             return sSingleton;
         }

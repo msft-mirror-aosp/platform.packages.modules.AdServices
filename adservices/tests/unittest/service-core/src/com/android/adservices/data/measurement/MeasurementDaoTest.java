@@ -3044,10 +3044,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
         assertEquals(3, count);
@@ -3111,10 +3111,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, TriggerContract.TABLE, /* selection */ null);
         assertEquals(1, count);
@@ -3171,10 +3171,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
         assertEquals(1, count);
@@ -3250,10 +3250,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count =
                 DatabaseUtils.queryNumEntries(
@@ -3339,10 +3339,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, AttributionContract.TABLE, /* selection */ null);
         assertEquals(1, count);
@@ -3433,10 +3433,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, EventReportContract.TABLE, /* selection */ null);
         assertEquals(1, count);
@@ -3485,7 +3485,8 @@ public class MeasurementDaoTest {
                     ContentValues values = new ContentValues();
                     values.put(SourceContract.ID, source.getId());
                     values.put(SourceContract.EVENT_ID, source.getEventId().toString());
-                    values.put(SourceContract.APP_DESTINATION,
+                    values.put(
+                            SourceContract.APP_DESTINATION,
                             source.getAppDestinations().get(0).toString());
                     values.put(SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
                     values.put(SourceContract.REGISTRANT, source.getRegistrant().toString());
@@ -3503,10 +3504,10 @@ public class MeasurementDaoTest {
 
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
+                        .runInTransactionWithResult(
                                 measurementDao ->
-                                        measurementDao.deleteAppRecordsNotPresent(
-                                                installedUriList)));
+                                        measurementDao.deleteAppRecordsNotPresent(installedUriList))
+                        .get());
 
         count = DatabaseUtils.queryNumEntries(db, SourceContract.TABLE, /* selection */ null);
         assertEquals(1, count);

@@ -17,7 +17,6 @@
 package android.adservices.clients.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
@@ -77,33 +76,6 @@ public class AdSelectionClient {
                                 }
                             });
                     return "Ad Selection";
-                });
-    }
-
-    /**
-     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
-     * {@link AdSelectionOutcome} if succeeds, or an {@link Exception} if fails.
-     */
-    @NonNull
-    public ListenableFuture<AdSelectionOutcome> selectAds(
-            @NonNull AdSelectionFromOutcomesConfig config) {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mAdSelectionManager.selectAds(
-                            config,
-                            mExecutor,
-                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
-                                @Override
-                                public void onResult(@NonNull AdSelectionOutcome result) {
-                                    completer.set(result);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "Ad Selection from outcomes";
                 });
     }
 

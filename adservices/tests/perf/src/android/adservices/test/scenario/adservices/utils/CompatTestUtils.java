@@ -17,11 +17,14 @@
 package android.adservices.test.scenario.adservices.utils;
 
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 /** Utils for back-compat CB tests. */
 public final class CompatTestUtils {
     private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final String ADSERVICES_PACKAGE = "com.google.android.adservices.api";
+    private static final String COMPAT_ADSERVICES_PACKAGE = "com.google.android.ext.adservices.api";
 
     private CompatTestUtils() {
         /* cannot be instantiated */
@@ -44,6 +47,14 @@ public final class CompatTestUtils {
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         enableMeasurementRollbackDelete();
+    }
+
+    /**
+     * AdServices on S- is accessible via ExtServices apex with a different package name compared to
+     * T+. Returns appropriate package name based on SDK level.
+     */
+    public static String getAdServicesPackageName() {
+        return SdkLevel.isAtLeastT() ? ADSERVICES_PACKAGE : COMPAT_ADSERVICES_PACKAGE;
     }
 
     private static void setConsentSourceOfTruth(int source) {

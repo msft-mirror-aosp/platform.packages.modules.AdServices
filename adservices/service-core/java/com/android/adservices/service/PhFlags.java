@@ -173,8 +173,13 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_filtering_enabled";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
-    static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT =
-            "fledge_report_impression_max_event_uri_entries_count";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT =
+            "fledge_report_impression_max_registered_ad_beacons_total_count";
+    static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT =
+            "fledge_report_impression_max_registered_ad_beacons_per_ad_tech_count";
+    static final String
+            KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
+                    "fledge_report_impression_registered_ad_beacons_max_interaction_key_size_b";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
     static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
@@ -187,6 +192,8 @@ public final class PhFlags implements Flags {
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_off_device_overall_timeout_ms";
+    static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
+            "fledge_ad_selection_bidding_logic_js_version";
     // Whether to call trusted servers for off device ad selection.
     static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
             "fledge_ad_selection_off_device_enabled";
@@ -293,6 +300,8 @@ public final class PhFlags implements Flags {
             "topics_api_app_request_permits_per_second";
     static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
             "topics_api_sdk_request_permits_per_second";
+    static final String KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND =
+            "fledge_report_interaction_request_permits_per_second";
 
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -307,6 +316,18 @@ public final class PhFlags implements Flags {
 
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
+
+    // Consent Notification interval begin ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            "consent_notification_interval_begin_ms";
+
+    // Consent Notification interval end ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            "consent_notification_interval_end_ms";
+
+    // Consent Notification minimal delay before interval ms.
+    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            "consent_notification_minimal_delay_before_interval_ends";
 
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
@@ -348,6 +369,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
+    static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -357,12 +380,6 @@ public final class PhFlags implements Flags {
     // Interval in which to run Registration Job Queue Service.
     static final String KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_async_registration_job_queue_interval_ms";
-
-    // Feature Flags
-    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
-
-    // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -992,6 +1009,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeAdSelectionBiddingLogicJsVersion() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+                /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION);
+    }
+
+    @Override
     public long getReportImpressionOverallTimeoutMs() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1000,11 +1025,29 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public long getReportImpressionMaxEventUriEntriesCount() {
+    public long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
         return DeviceConfig.getLong(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT,
-                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT);
+                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT,
+                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT);
+    }
+
+    @Override
+    public long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT,
+                /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT);
+    }
+
+    @Override
+    public long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */
+                KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
+                /* defaultValue */
+                FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B);
     }
 
     @Override
@@ -1546,6 +1589,13 @@ public final class PhFlags implements Flags {
                 TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND);
     }
 
+    @Override
+    public float getFledgeReportInteractionRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+    }
+
     private float getPermitsPerSecond(String flagName, float defaultValue) {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
@@ -1826,6 +1876,30 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getConsentNotificationIntervalBeginMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
+    }
+
+    @Override
+    public long getConsentNotificationIntervalEndMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
+    }
+
+    @Override
+    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
+                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
+    }
+
+    @Override
     public boolean getConsentNotificationDebugMode() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -1921,22 +1995,6 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
-    }
-
-    @Override
-    public boolean getEnableTopicContributorsCheck() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
-                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
-    }
-
-    @Override
-    public boolean getEnableTopicMigration() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
     }
 
     @Override
@@ -2343,14 +2401,29 @@ public final class PhFlags implements Flags {
                         + getFledgeAdSelectionFilteringEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
+                        + " = "
+                        + getFledgeAdSelectionBiddingLogicJsVersion());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS
                         + " = "
                         + getReportImpressionOverallTimeoutMs());
         writer.println(
                 "\t"
-                        + KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT
+                        + KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT
                         + " = "
-                        + getReportImpressionMaxEventUriEntriesCount());
+                        + getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT
+                        + " = "
+                        + getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
+                        + " = "
+                        + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
@@ -2402,6 +2475,12 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S
                         + " = "
                         + getAdSelectionExpirationWindowS());
+        writer.println("==== AdServices PH Flags Throttling Related Flags ====");
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
+                        + " = "
+                        + getFledgeReportInteractionRequestPermitsPerSecond());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
@@ -2445,6 +2524,8 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
         writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
+        writer.println(
+                "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
     }
 
     @Override
@@ -2481,6 +2562,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public boolean getEnableAppsearchConsentData() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override

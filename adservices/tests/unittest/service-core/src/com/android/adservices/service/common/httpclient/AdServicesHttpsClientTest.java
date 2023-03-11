@@ -19,6 +19,7 @@ package com.android.adservices.service.common.httpclient;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -69,6 +70,7 @@ import org.mockito.junit.MockitoRule;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -84,7 +86,7 @@ public class AdServicesHttpsClientTest {
     private static final String RESPONSE_HEADER_VALUE_1 = "fake_response_header_value_1";
     private static final String RESPONSE_HEADER_VALUE_2 = "fake_response_header_value_2";
     private static final String REQUEST_PROPERTY_KEY = "X_REQUEST_KEY";
-    private static final String REQUEST_PROPERTY_VALUE = "Dummy_Value";
+    private static final String REQUEST_PROPERTY_VALUE = "Fake_Value";
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
@@ -342,6 +344,108 @@ public class AdServicesHttpsClientTest {
     }
 
     @Test
+    public void testFetchPayloadResponsesSkipsHeaderIfAbsent() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                return new MockResponse().setBody(mJsScript);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+        AdServicesHttpClientResponse response =
+                mClient.fetchPayload(
+                                AdServicesHttpClientRequest.builder()
+                                        .setUri(Uri.parse(url.toString()))
+                                        .setUseCache(false)
+                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
+                                        .build())
+                        .get();
+        assertEquals(mJsScript, response.getResponseBody());
+        assertEquals(
+                "No header should have been returned", 0, response.getResponseHeaders().size());
+    }
+
+    @Test
+    public void testFetchPayloadContainsRequestProperties() throws Exception {
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                assertEquals(
+                                        "Request header mismatch",
+                                        REQUEST_PROPERTY_VALUE,
+                                        request.getHeader(REQUEST_PROPERTY_KEY));
+                                return new MockResponse().setBody(mJsScript);
+                            }
+                        });
+        URL url = server.getUrl(mFetchPayloadPath);
+        mClient.fetchPayload(
+                        AdServicesHttpClientRequest.builder()
+                                .setUri(Uri.parse(url.toString()))
+                                .setUseCache(false)
+                                .setRequestProperties(
+                                        ImmutableMap.of(
+                                                REQUEST_PROPERTY_KEY, REQUEST_PROPERTY_VALUE))
+                                .build())
+                .get();
+    }
+
+    @Test
+    public void testAdServiceRequestResponseDefault_Empty() {
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder().setUri(Uri.EMPTY).build();
+
+        assertEquals(request.getRequestProperties(), ImmutableMap.of());
+        assertEquals(request.getResponseHeaderKeys(), ImmutableSet.of());
+        assertFalse(request.getUseCache());
+
+        AdServicesHttpClientResponse response =
+                AdServicesHttpClientResponse.builder().setResponseBody("").build();
+
+        assertEquals(response.getResponseHeaders(), ImmutableMap.of());
+    }
+
+    @Test
+    public void testCreateAdServicesRequestResponse_Success() {
+        final Uri uri = Uri.parse("www.google.com");
+        final ImmutableMap requestProperties = ImmutableMap.of("key", "value");
+        final ImmutableSet responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
+
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.create(
+                        uri, requestProperties, responseHeaderKeys, false);
+
+        assertEquals(uri, request.getUri());
+        assertEquals(requestProperties, request.getRequestProperties());
+        assertEquals(responseHeaderKeys, request.getResponseHeaderKeys());
+        assertFalse(request.getUseCache());
+
+        final String body = "Fake response body";
+        final ImmutableMap responseHeaders = ImmutableMap.of("key", List.of("value1", "value2"));
+        AdServicesHttpClientResponse response =
+                AdServicesHttpClientResponse.create(body, responseHeaders);
+
+        assertEquals(body, response.getResponseBody());
+        assertEquals(responseHeaders, response.getResponseHeaders());
+    }
+
+    @Test
+    public void testRequestPropertiesNull_disallowed() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    AdServicesHttpClientRequest.builder()
+                            .setUri(Uri.parse(mFakeUrl))
+                            .setUseCache(false)
+                            .setRequestProperties(ImmutableMap.of(null, null))
+                            .build();
+                });
+    }
+
+    @Test
     public void testFetchPayloadResponsesUsesCache() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -391,56 +495,6 @@ public class AdServicesHttpsClientTest {
         assertEquals(
                 "Only one header should have been cached", 1, response.getResponseHeaders().size());
         assertEquals("This call should have been cached", 1, server.getRequestCount());
-    }
-
-    @Test
-    public void testFetchPayloadResponsesSkipsHeaderIfAbsent() throws Exception {
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        new Dispatcher() {
-                            @Override
-                            public MockResponse dispatch(RecordedRequest request) {
-                                return new MockResponse().setBody(mJsScript);
-                            }
-                        });
-        URL url = server.getUrl(mFetchPayloadPath);
-        AdServicesHttpClientResponse response =
-                mClient.fetchPayload(
-                                AdServicesHttpClientRequest.builder()
-                                        .setUri(Uri.parse(url.toString()))
-                                        .setUseCache(false)
-                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
-                                        .build())
-                        .get();
-        assertEquals(mJsScript, response.getResponseBody());
-        assertEquals(
-                "No one header should have been returned", 0, response.getResponseHeaders().size());
-    }
-
-    @Test
-    public void testFetchPayloadContainsRequestProperties() throws Exception {
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        new Dispatcher() {
-                            @Override
-                            public MockResponse dispatch(RecordedRequest request) {
-                                assertEquals(
-                                        "Request header mismatch",
-                                        REQUEST_PROPERTY_VALUE,
-                                        request.getHeader(REQUEST_PROPERTY_KEY));
-                                return new MockResponse().setBody(mJsScript);
-                            }
-                        });
-        URL url = server.getUrl(mFetchPayloadPath);
-        mClient.fetchPayload(
-                        AdServicesHttpClientRequest.builder()
-                                .setUri(Uri.parse(url.toString()))
-                                .setUseCache(false)
-                                .setRequestProperties(
-                                        ImmutableMap.of(
-                                                REQUEST_PROPERTY_KEY, REQUEST_PROPERTY_VALUE))
-                                .build())
-                .get();
     }
 
     @Test

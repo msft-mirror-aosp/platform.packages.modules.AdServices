@@ -32,18 +32,19 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsGaUiAutomatorTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
@@ -68,7 +69,8 @@ public class SettingsGaUiAutomatorTest {
     @After
     public void teardown() {
         if (!ApkTestUtil.isDeviceSupported()) return;
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
     }
 
     @Test
@@ -214,7 +216,6 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    @Ignore("b/268351419")
     public void measurementDialogTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
