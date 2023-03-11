@@ -16,8 +16,6 @@
 
 package com.android.adservices.data.topics.migration;
 
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
-
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.topics.TopicsTables;
@@ -28,6 +26,7 @@ import com.android.internal.annotations.VisibleForTesting;
  * TopicContributors Table.
  */
 public class TopicDbMigratorV7 extends AbstractTopicsDbMigrator {
+    private static final int DATABASE_VERSION_V7 = 7;
     // Following go/gmscore-flagging-best-practices, we should clean dated table when upgrading and
     // do nothing when downgrading.
     private static final String[] QUERIES_TO_PERFORM = {
