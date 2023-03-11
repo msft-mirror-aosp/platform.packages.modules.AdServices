@@ -27,7 +27,7 @@ public class UiConstants {
 
     public static final boolean AD_ID_DISABLED = false; /* zeroed out AdId */
 
-    public static final int LAUNCH_TIMEOUT_MS = 10000; /* wait time for UI elements to launch */
+    public static final int LAUNCH_TIMEOUT_MS = 8000; /* wait time for UI elements to launch */
 
     public static final String SYSTEM_UI_NAME = "com.android.systemui";
 

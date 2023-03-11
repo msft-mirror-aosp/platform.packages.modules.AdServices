@@ -910,155 +910,172 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void deleteAppRecords(Uri uri) throws DatastoreException {
+    public boolean deleteAppRecords(Uri uri) throws DatastoreException {
+        int numDeletions = 0;
         String uriStr = uri.toString();
         SQLiteDatabase db = mSQLTransaction.getDatabase();
         // For all Source records matching the given Uri
         // as REGISTRANT, obtains EventReport records who's SOURCE_ID
         // matches a Source records' EVENT_ID.
-        db.delete(
-                MeasurementTables.EventReportContract.TABLE,
-                String.format(
-                        Locale.ENGLISH,
-                        "%1$s IN ("
-                                + "SELECT e.%1$s FROM %2$s e"
-                                + " INNER JOIN %3$s s"
-                                + " ON (e.%4$s = s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s)"
-                                + " WHERE s.%10$s = ?"
-                                + ")",
-                        MeasurementTables.EventReportContract.ID,
+        numDeletions +=
+                db.delete(
                         MeasurementTables.EventReportContract.TABLE,
-                        MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_ID,
-                        MeasurementTables.SourceContract.ID,
-                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                        MeasurementTables.SourceContract.APP_DESTINATION,
-                        MeasurementTables.EventReportContract.ENROLLMENT_ID,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
-                        MeasurementTables.SourceContract.REGISTRANT),
-                new String[] {uriStr});
+                        String.format(
+                                Locale.ENGLISH,
+                                "%1$s IN (SELECT e.%1$s FROM %2$s e INNER JOIN %3$s s ON (e.%4$s ="
+                                        + " s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s) WHERE"
+                                        + " s.%10$s = ?)",
+                                MeasurementTables.EventReportContract.ID,
+                                MeasurementTables.EventReportContract.TABLE,
+                                MeasurementTables.SourceContract.TABLE,
+                                MeasurementTables.EventReportContract.SOURCE_ID,
+                                MeasurementTables.SourceContract.ID,
+                                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                                MeasurementTables.SourceContract.APP_DESTINATION,
+                                MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                                MeasurementTables.SourceContract.ENROLLMENT_ID,
+                                MeasurementTables.SourceContract.REGISTRANT),
+                        new String[] {uriStr});
 
         // EventReport table
-        db.delete(MeasurementTables.EventReportContract.TABLE,
-                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
-                new String[]{uriStr});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION + " = ?",
+                        new String[] {uriStr});
         // AggregateReport table
-        db.delete(
-                MeasurementTables.AggregateReport.TABLE,
-                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
-                        + " = ? "
-                        + " OR "
-                        + MeasurementTables.AggregateReport.PUBLISHER
-                        + " = ? ",
-                new String[] {uriStr, uriStr});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
+                                + " = ? "
+                                + " OR "
+                                + MeasurementTables.AggregateReport.PUBLISHER
+                                + " = ? ",
+                        new String[] {uriStr, uriStr});
         // Source table
-        db.delete(
-                MeasurementTables.SourceContract.TABLE,
-                "( "
-                        + MeasurementTables.SourceContract.REGISTRANT
-                        + " = ? ) OR "
-                        + "("
-                        + MeasurementTables.SourceContract.STATUS
-                        + " = ? AND "
-                        + MeasurementTables.SourceContract.APP_DESTINATION
-                        + " = ? )",
-                new String[] {uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.SourceContract.TABLE,
+                        "( "
+                                + MeasurementTables.SourceContract.REGISTRANT
+                                + " = ? ) OR "
+                                + "("
+                                + MeasurementTables.SourceContract.STATUS
+                                + " = ? AND "
+                                + MeasurementTables.SourceContract.APP_DESTINATION
+                                + " = ? )",
+                        new String[] {uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
         // Trigger table
-        db.delete(MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTRANT + " = ?",
-                new String[]{uriStr});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.TriggerContract.TABLE,
+                        MeasurementTables.TriggerContract.REGISTRANT + " = ?",
+                        new String[] {uriStr});
         // Attribution table
-        db.delete(MeasurementTables.AttributionContract.TABLE,
-                MeasurementTables.AttributionContract.SOURCE_SITE + " = ? OR "
-                        + MeasurementTables.AttributionContract.DESTINATION_SITE + " = ?",
-                new String[]{uriStr, uriStr});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AttributionContract.TABLE,
+                        MeasurementTables.AttributionContract.SOURCE_SITE
+                                + " = ? OR "
+                                + MeasurementTables.AttributionContract.DESTINATION_SITE
+                                + " = ?",
+                        new String[] {uriStr, uriStr});
+
+        return numDeletions != 0;
     }
 
     @Override
-    public void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException {
+    public boolean deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException {
+        int numDeletions = 0;
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-
         String inQuery = constructDeleteQueryAppsNotPresent(uriList);
 
         // For all Source records not in the given list
         // as REGISTRANT, obtains EventReport records whose SOURCE_ID
         // matches Source records' SOURCE_ID.
-        db.delete(
-                MeasurementTables.EventReportContract.TABLE,
-                String.format(
-                        Locale.ENGLISH,
-                        "%1$s IN ("
-                                + "SELECT e.%1$s FROM %2$s e"
-                                + " INNER JOIN %3$s s"
-                                + " ON (e.%4$s = s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s)"
-                                + " WHERE s.%10$s NOT IN "
-                                + inQuery
-                                + ")",
-                        MeasurementTables.EventReportContract.ID,
+        numDeletions +=
+                db.delete(
                         MeasurementTables.EventReportContract.TABLE,
-                        MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.EventReportContract.SOURCE_ID,
-                        MeasurementTables.SourceContract.ID,
-                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                        MeasurementTables.SourceContract.APP_DESTINATION,
-                        MeasurementTables.EventReportContract.ENROLLMENT_ID,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
-                        MeasurementTables.SourceContract.REGISTRANT),
-                /* whereArgs */ null);
+                        String.format(
+                                Locale.ENGLISH,
+                                "%1$s IN (SELECT e.%1$s FROM %2$s e INNER JOIN %3$s s ON (e.%4$s ="
+                                        + " s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s) WHERE"
+                                        + " s.%10$s NOT IN "
+                                        + inQuery
+                                        + ")",
+                                MeasurementTables.EventReportContract.ID,
+                                MeasurementTables.EventReportContract.TABLE,
+                                MeasurementTables.SourceContract.TABLE,
+                                MeasurementTables.EventReportContract.SOURCE_ID,
+                                MeasurementTables.SourceContract.ID,
+                                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                                MeasurementTables.SourceContract.APP_DESTINATION,
+                                MeasurementTables.EventReportContract.ENROLLMENT_ID,
+                                MeasurementTables.SourceContract.ENROLLMENT_ID,
+                                MeasurementTables.SourceContract.REGISTRANT),
+                        /* whereArgs */ null);
 
         // Event Report table
-        db.delete(
-                MeasurementTables.EventReportContract.TABLE,
-                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
-                        + " NOT IN "
-                        + inQuery,
-                /* whereArgs */ null);
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.EventReportContract.TABLE,
+                        MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
+                                + " NOT IN "
+                                + inQuery,
+                        /* whereArgs */ null);
 
         // AggregateReport table
-        db.delete(
-                MeasurementTables.AggregateReport.TABLE,
-                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
-                        + " NOT IN "
-                        + inQuery.toString()
-                        + " OR "
-                        + MeasurementTables.AggregateReport.PUBLISHER
-                        + " NOT IN "
-                        + inQuery.toString(),
-                /* whereArgs */ null);
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AggregateReport.TABLE,
+                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
+                                + " NOT IN "
+                                + inQuery.toString()
+                                + " OR "
+                                + MeasurementTables.AggregateReport.PUBLISHER
+                                + " NOT IN "
+                                + inQuery.toString(),
+                        /* whereArgs */ null);
 
         // Source table
-        db.delete(
-                MeasurementTables.SourceContract.TABLE,
-                "(("
-                        + MeasurementTables.SourceContract.REGISTRANT
-                        + " NOT IN "
-                        + inQuery
-                        + ") OR ("
-                        + MeasurementTables.SourceContract.STATUS
-                        + " = ? AND "
-                        + MeasurementTables.SourceContract.APP_DESTINATION
-                        + " NOT IN "
-                        + inQuery
-                        + "))",
-                new String[] {String.valueOf(Source.Status.IGNORED)});
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.SourceContract.TABLE,
+                        "(("
+                                + MeasurementTables.SourceContract.REGISTRANT
+                                + " NOT IN "
+                                + inQuery
+                                + ") OR ("
+                                + MeasurementTables.SourceContract.STATUS
+                                + " = ? AND "
+                                + MeasurementTables.SourceContract.APP_DESTINATION
+                                + " NOT IN "
+                                + inQuery
+                                + "))",
+                        new String[] {String.valueOf(Source.Status.IGNORED)});
 
         // Trigger table
-        db.delete(
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery,
-                /* whereArgs */ null);
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.TriggerContract.TABLE,
+                        MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery,
+                        /* whereArgs */ null);
 
         // Attribution table
-        db.delete(
-                MeasurementTables.AttributionContract.TABLE,
-                MeasurementTables.AttributionContract.SOURCE_SITE
-                        + " NOT IN "
-                        + inQuery.toString()
-                        + " OR "
-                        + MeasurementTables.AttributionContract.DESTINATION_SITE
-                        + " NOT IN "
-                        + inQuery.toString(),
-                /* whereArgs */ null);
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AttributionContract.TABLE,
+                        MeasurementTables.AttributionContract.SOURCE_SITE
+                                + " NOT IN "
+                                + inQuery.toString()
+                                + " OR "
+                                + MeasurementTables.AttributionContract.DESTINATION_SITE
+                                + " NOT IN "
+                                + inQuery.toString(),
+                        /* whereArgs */ null);
+
+        return numDeletions != 0;
     }
 
     @Override

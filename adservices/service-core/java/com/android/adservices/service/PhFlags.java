@@ -317,6 +317,18 @@ public final class PhFlags implements Flags {
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
+    // Consent Notification interval begin ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS =
+            "consent_notification_interval_begin_ms";
+
+    // Consent Notification interval end ms.
+    static final String KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS =
+            "consent_notification_interval_end_ms";
+
+    // Consent Notification minimal delay before interval ms.
+    static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
+            "consent_notification_minimal_delay_before_interval_ends";
+
     // Consent Notification debug mode keys.
     static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
 
@@ -356,6 +368,8 @@ public final class PhFlags implements Flags {
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
     static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
+
+    static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
@@ -1868,6 +1882,30 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getConsentNotificationIntervalBeginMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
+    }
+
+    @Override
+    public long getConsentNotificationIntervalEndMs() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
+                /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
+    }
+
+    @Override
+    public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
+                /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
+    }
+
+    @Override
     public boolean getConsentNotificationDebugMode() {
         return DeviceConfig.getBoolean(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -2508,6 +2546,8 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
         writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
+        writer.println(
+                "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
     }
 
     @Override
@@ -2544,6 +2584,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public boolean getEnableAppsearchConsentData() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override
