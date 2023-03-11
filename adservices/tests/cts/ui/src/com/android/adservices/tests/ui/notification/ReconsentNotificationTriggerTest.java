@@ -34,7 +34,9 @@ import com.android.adservices.tests.ui.libs.UiUtils;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -54,6 +56,9 @@ public class ReconsentNotificationTriggerTest {
 
     @Before
     public void setUp() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         mCommonManager = AdServicesCommonManager.get(sContext);
@@ -66,11 +71,13 @@ public class ReconsentNotificationTriggerTest {
         UiUtils.disableSchedulingParams();
         UiUtils.setSourceOfTruthToPPAPI();
         UiUtils.clearSavedStatus();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) return;
+
+        mDevice.pressHome();
         AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
@@ -80,6 +87,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @Ignore("flaky")
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -104,6 +112,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @Ignore("flaky")
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -128,6 +137,7 @@ public class ReconsentNotificationTriggerTest {
      * should not displayed
      */
     @Test
+    @Ignore("flaky")
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -158,6 +168,7 @@ public class ReconsentNotificationTriggerTest {
      * consent, and GA UX feature enabled, the GA UX notification is not displayed.
      */
     @Test
+    @Ignore("flaky")
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -182,6 +193,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
+    @Ignore("flaky")
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();

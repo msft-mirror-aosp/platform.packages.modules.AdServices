@@ -72,12 +72,6 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
-     * Saves information to the storage that topics consent page was displayed for the
-     * first time to the user.
-     */
-    void recordTopicsConsentPageDisplayed();
-
-    /**
      * Record a blocked topic.
      */
     void recordBlockedTopic(in List<TopicParcel> blockedTopicParcels);
@@ -96,26 +90,6 @@ interface IAdServicesManager {
      * Clear all blocked topics.
      */
     void clearAllBlockedTopics();
-
-    /**
-     * Returns information whether topics consent page was displayed or not.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
-     */
-    boolean wasTopicsConsentPageDisplayed();
-
-    /**
-     * Saves information to the storage that fledge consent page was displayed for the
-     * first time to the user.
-     */
-    void recordFledgeAndMsmtConsentPageDisplayed();
-
-    /**
-     * Returns information whether fledge and measurement consent page was displayed or not.
-     *
-     * @return true if fledge and measurement consent page was displayed, otherwise false.
-     */
-    boolean wasFledgeAndMsmtConsentPageDisplayed();
 
     /**
       * Saves the PP API default consent of a user.

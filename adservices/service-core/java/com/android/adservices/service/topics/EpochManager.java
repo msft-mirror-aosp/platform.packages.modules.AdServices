@@ -73,7 +73,10 @@ public class EpochManager {
                         TopicsTables.UsageHistoryContract.EPOCH_ID),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.EPOCH_ID)
+                        TopicsTables.AppUsageHistoryContract.EPOCH_ID),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.EPOCH_ID)
             };
 
     /**
@@ -226,12 +229,10 @@ public class EpochManager {
             // contributor to a topic if the app has called Topics API in this epoch and is
             // classified to the topic.
             // Do this only when feature is enabled.
-            if (supportsTopicContributorFeature()) {
-                Map<Integer, Set<String>> topTopicsToContributorsMap =
-                        computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
-                // Then save Topic Contributors into DB
-                mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
-            }
+            Map<Integer, Set<String>> topTopicsToContributorsMap =
+                    computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
+            // Then save Topic Contributors into DB
+            mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently, hard-code the taxonomyVersion and the modelVersion.
@@ -467,14 +468,6 @@ public class EpochManager {
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
 
-        // Handle TopicContributors Table if feature flag is ON
-        if (supportsTopicContributorFeature()) {
-            mTopicsDao.deleteDataOfOldEpochs(
-                    TopicsTables.TopicContributorsContract.TABLE,
-                    TopicsTables.TopicContributorsContract.EPOCH_ID,
-                    epochToDeleteFrom);
-        }
-
         // In app installation, we need to assign topics to newly installed app-sdk caller. In order
         // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
         // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app
@@ -519,15 +512,6 @@ public class EpochManager {
         }
 
         return topicToContributorMap;
-    }
-
-    /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
-     * table is supported and the feature flag is on.
-     */
-    public boolean supportsTopicContributorFeature() {
-        return mFlags.getEnableTopicContributorsCheck()
-                && mTopicsDao.supportsTopicContributorsTable();
     }
 
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {

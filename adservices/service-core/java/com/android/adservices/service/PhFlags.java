@@ -369,6 +369,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
+    static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+
     // Maximum possible percentage for percentage variables
     static final int MAX_PERCENTAGE = 100;
 
@@ -378,12 +380,6 @@ public final class PhFlags implements Flags {
     // Interval in which to run Registration Job Queue Service.
     static final String KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS =
             "key_async_registration_job_queue_interval_ms";
-
-    // Feature Flags
-    static final String KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK = "enable_topic_contributors_check";
-
-    // Database Schema Version Flags
-    static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_7 = "enable_database_schema_version_7";
 
     // Enrollment flags.
     static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
@@ -2002,22 +1998,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableTopicContributorsCheck() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
-                /* defaultValue */ ENABLE_TOPIC_CONTRIBUTORS_CHECK);
-    }
-
-    @Override
-    public boolean getEnableTopicMigration() {
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                /* defaultValue */ ENABLE_TOPIC_MIGRATION);
-    }
-
-    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2544,6 +2524,8 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_COMPAT_LOGGING_KILL_SWITCH + " = " + getCompatLoggingKillSwitch());
         writer.println("==== Enable Back-Compat PH Flags Dump STATUS ====");
         writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
+        writer.println(
+                "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
     }
 
     @Override
@@ -2580,6 +2562,15 @@ public final class PhFlags implements Flags {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
+    }
+
+    @Override
+    public boolean getEnableAppsearchConsentData() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override
