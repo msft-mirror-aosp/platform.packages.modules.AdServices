@@ -152,8 +152,6 @@ public class MobileDataDownloadTest {
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
 
-        doReturn(/* Default value */ false).when(mMockFlags).getEnableTopicMigration();
-
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);

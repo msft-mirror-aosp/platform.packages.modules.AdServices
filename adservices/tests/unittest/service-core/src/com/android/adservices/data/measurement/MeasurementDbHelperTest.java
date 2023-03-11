@@ -72,10 +72,10 @@ public class MeasurementDbHelperTest {
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.DATABASE_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(6, oldDb.getVersion());
+        assertEquals(DbHelper.DATABASE_VERSION, oldDb.getVersion());
 
         MeasurementDbHelper measurementDbHelper =
                 new MeasurementDbHelper(
@@ -96,10 +96,10 @@ public class MeasurementDbHelperTest {
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.DATABASE_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(6, oldDb.getVersion());
+        assertEquals(DbHelper.DATABASE_VERSION, oldDb.getVersion());
         // Sorted map because we want source/trigger to be inserted before other tables to
         // respect foreign key constraints
         Map<String, List<ContentValues>> fakeData = createFakeData();
