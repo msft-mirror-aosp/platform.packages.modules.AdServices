@@ -81,7 +81,10 @@ public class AppUpdateManager {
                         TopicsTables.UsageHistoryContract.APP),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.APP)
+                        TopicsTables.AppUsageHistoryContract.APP),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.APP)
             };
 
     private final DbHelper mDbHelper;
@@ -149,9 +152,7 @@ public class AppUpdateManager {
         db.beginTransaction();
 
         try {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, packageName);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, packageName);
 
             deleteAppDataFromTableByApps(List.of(packageName));
 
@@ -405,12 +406,6 @@ public class AppUpdateManager {
     void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
         List<Pair<String, String>> tableToEraseData =
                 Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
-        if (supportsTopicContributorFeature()) {
-            tableToEraseData.add(
-                    Pair.create(
-                            TopicsTables.TopicContributorsContract.TABLE,
-                            TopicsTables.TopicContributorsContract.APP));
-        }
 
         mTopicsDao.deleteFromTableByColumn(
                 /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
@@ -453,10 +448,7 @@ public class AppUpdateManager {
 
             // Regular Topics are placed at the beginning of top topic list.
             List<Topic> regularTopics = topTopics.subList(0, numberOfTopTopics);
-            // If enabled, filter out topics without contributors.
-            if (supportsTopicContributorFeature()) {
-                regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
-            }
+            regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
             List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
 
             if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
@@ -579,16 +571,6 @@ public class AppUpdateManager {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
-     * table is supported and the feature flag is on.
-     */
-    @VisibleForTesting
-    boolean supportsTopicContributorFeature() {
-        return mFlags.getEnableTopicContributorsCheck()
-                && mDbHelper.supportsTopicContributorsTable();
-    }
-
     // An app will be regarded as an unhandled uninstalled app if it has an entry in any epoch of
     // either usage table or returned topics table, but the app doesn't show up in package manager.
     //
@@ -677,9 +659,7 @@ public class AppUpdateManager {
     private void handleUninstalledAppsInReconciliation(
             @NonNull Set<String> newlyUninstalledApps, long currentEpochId) {
         for (String app : newlyUninstalledApps) {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, app);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, app);
 
             deleteAppDataFromTableByApps(List.of(app));
         }

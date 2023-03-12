@@ -39,6 +39,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.never;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportInteractionCallback;
@@ -75,6 +76,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -140,6 +142,12 @@ public class InteractionReporterTest {
                     return false;
                 }
             };
+
+    private final long mMaxRegisteredAdBeaconsTotalCount =
+            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+
+    private final long mMaxRegisteredAdBeaconsPerDestination =
+            mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
 
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
@@ -235,10 +243,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionSuccessfullyReportsRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -253,7 +270,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -276,10 +294,19 @@ public class InteractionReporterTest {
     public void testReportInteractionOnlyReportsBuyersRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -305,7 +332,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(BUYER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -324,10 +352,19 @@ public class InteractionReporterTest {
     public void testReportInteractionOnlyReportsSellerRegisteredInteractions() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -353,7 +390,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(SELLER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -372,10 +410,19 @@ public class InteractionReporterTest {
     public void testReportInteractionReturnsOnlyReportsUriThatPassesEnrollmentCheck()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
@@ -429,7 +476,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -442,12 +490,6 @@ public class InteractionReporterTest {
         // Assert only one reporting call to http client was made
         RecordedRequest recordedRequest = server.takeRequest();
         assertTrue(recordedRequest.getPath().contains(CLICK_EVENT));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
     }
 
     @Test
@@ -455,10 +497,19 @@ public class InteractionReporterTest {
             testReportInteractionReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
                     throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mFlags = FLAGS_ENROLLMENT_CHECK;
 
@@ -502,7 +553,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -516,12 +568,21 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWithInvalidPackageName() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
 
-        doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
@@ -559,7 +620,9 @@ public class InteractionReporterTest {
                 AdServicesStatusUtils
                         .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ON_BEHALF_ERROR_MESSAGE);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_UNAUTHORIZED),
@@ -569,12 +632,23 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenForegroundCheckFails() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
 
-        doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        doThrow(
+                        new FilterException(
+                                new AppImportanceFilter.WrongCallingApplicationStateException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
@@ -611,7 +685,9 @@ public class InteractionReporterTest {
                 callback.mFledgeErrorResponse.getErrorMessage(),
                 AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_BACKGROUND_CALLER),
@@ -621,10 +697,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenThrottled() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -653,9 +738,10 @@ public class InteractionReporterTest {
                         .build();
 
         // First call should succeed
-        ReportInteractionTestCallback callbackFirstCall = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callbackFirstCall = callReportInteraction(inputParams, true);
 
-        doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
+        doThrow(new FilterException(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE)))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
@@ -691,7 +777,10 @@ public class InteractionReporterTest {
         assertEquals(
                 callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage(),
                 RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        verify(mAdServicesLoggerMock)
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_RATE_LIMIT_REACHED),
@@ -701,12 +790,21 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWhenAppNotInAllowList() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
 
-        doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        doThrow(new FilterException(new FledgeAllowListsFilter.AppNotAllowedException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
@@ -740,7 +838,9 @@ public class InteractionReporterTest {
         assertFalse(callback.mIsSuccess);
         assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_CALLER_NOT_ALLOWED);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_CALLER_NOT_ALLOWED),
@@ -750,12 +850,21 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsSilentlyWithoutConsent() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
 
-        doThrow(new ConsentManager.RevokedConsentException())
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
                         null,
@@ -788,7 +897,9 @@ public class InteractionReporterTest {
 
         assertTrue(callback.mIsSuccess);
 
-        verify(mAdServicesLoggerMock)
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -798,10 +909,19 @@ public class InteractionReporterTest {
     @Test
     public void testReportInteractionFailsWithUnknownAdSelectionId() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                List.of(
-                        mDBRegisteredAdInteractionBuyerClick,
-                        mDBRegisteredAdInteractionSellerClick));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -834,7 +954,7 @@ public class InteractionReporterTest {
     }
 
     @Test
-    public void testReportInteractionSuccedsWhenNotFindingRegisteredAdInteractions()
+    public void testReportInteractionSucceedsWhenNotFindingRegisteredAdInteractions()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
 
@@ -857,7 +977,8 @@ public class InteractionReporterTest {
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
 
-        ReportInteractionTestCallback callback = callReportInteraction(inputParams);
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
 
         assertTrue(callback.mIsSuccess);
 
@@ -868,22 +989,32 @@ public class InteractionReporterTest {
                         anyInt());
     }
 
+
+
     private ReportInteractionTestCallback callReportInteraction(ReportInteractionInput inputParams)
             throws Exception {
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch resultLatch = new CountDownLatch(2);
+        return callReportInteraction(inputParams, false);
+    }
+
+    /** @param shouldCountLog if true, adds a latch to the log interaction as well. */
+    private ReportInteractionTestCallback callReportInteraction(
+            ReportInteractionInput inputParams, boolean shouldCountLog) throws Exception {
+        // Counted down in callback
+        CountDownLatch resultLatch = new CountDownLatch(shouldCountLog ? 2 : 1);
+
+        if (shouldCountLog) {
+            // Wait for the logging call, which happens after the callback
+            Answer<Void> countDownAnswer =
+                    unused -> {
+                        resultLatch.countDown();
+                        return null;
+                    };
+            doAnswer(countDownAnswer)
+                    .when(mAdServicesLoggerMock)
+                    .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
+        }
+
         ReportInteractionTestCallback callback = new ReportInteractionTestCallback(resultLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    resultLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
-
         mInteractionReporter.reportInteraction(inputParams, callback);
         resultLatch.await();
         return callback;

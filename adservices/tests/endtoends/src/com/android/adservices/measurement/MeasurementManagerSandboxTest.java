@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-
-package com.android.adservices.tests.cts.measurement;
+package com.android.adservices.measurement;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -44,7 +43,7 @@ import android.test.suitebuilder.annotation.SmallTest;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -61,7 +60,7 @@ import java.util.concurrent.Executor;
 
 @SmallTest
 @RunWith(AndroidJUnit4.class)
-public class MeasurementManagerSandboxCtsTest {
+public class MeasurementManagerSandboxTest {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     protected static final Context sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -83,7 +82,7 @@ public class MeasurementManagerSandboxCtsTest {
     @Before
     public void setUp() {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         mMockCallbackExecutor = mock(Executor.class);
         mMockOutcomeReceiver = mock(OutcomeReceiver.class);

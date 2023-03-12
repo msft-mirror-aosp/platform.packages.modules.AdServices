@@ -142,7 +142,13 @@
       "name": "CtsAdIdEndToEndTest"
     },
     {
-      "name": "CtsAppSetIdEndToEndTest"
+      "name": "CtsAppSetIdEndToEndTest",
+      "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
     },
     {
       "name": "CtsRootAdServicesUiTest"
