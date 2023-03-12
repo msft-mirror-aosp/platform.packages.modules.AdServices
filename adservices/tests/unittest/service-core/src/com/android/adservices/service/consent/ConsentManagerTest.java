@@ -2357,8 +2357,6 @@ public class ConsentManagerTest {
                                 mBlockedTopicsManager,
                                 mAppUpdateManager,
                                 mMockFlags));
-        // Enable TopicContributors feature
-        when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
 
         ConsentManager consentManager =
                 new ConsentManager(
