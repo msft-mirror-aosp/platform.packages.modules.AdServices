@@ -67,7 +67,6 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-service-core",
-        "android.ext.adservices",
         "androidx.fragment_fragment",
         "androidx.room_room-runtime",
         "androidx.test.espresso.contrib",
@@ -78,13 +77,14 @@ android_test {
         "truth-prebuilt",
     ],
     libs: [
+    	"android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
     ],
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
-        "mts-adservices",
+        "mts-extservices",
     ],
     test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "AdExtServicesApk",
