@@ -27,6 +27,12 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
@@ -216,23 +222,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
     @Mock private PerBuyerBiddingRunner mPerBuyerBiddingRunner;
 
-    private final Flags mFlags =
-            new Flags() {
-                @Override
-                public long getAdSelectionOverallTimeoutMs() {
-                    return 300;
-                }
-
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return true;
-                }
-
-                @Override
-                public boolean getFledgeAdSelectionFilteringEnabled() {
-                    return true;
-                }
-            };
+    private Flags mFlags = new OnDeviceAdSelectionRunnerTestFlags();
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
@@ -1740,10 +1730,10 @@ public class OnDeviceAdSelectionRunnerTest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Flags flagsWithSmallerLimits =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
-                        return 100;
+                        return 1000;
                     }
 
                     @Override
@@ -2805,5 +2795,47 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+    }
+
+    private static class OnDeviceAdSelectionRunnerTestFlags implements Flags {
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getReportImpressionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+        }
     }
 }

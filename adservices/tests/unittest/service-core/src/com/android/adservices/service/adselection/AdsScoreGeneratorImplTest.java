@@ -19,6 +19,8 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORES_COUNT_LESS_THAN_EXPECTED;
@@ -164,6 +166,8 @@ public class AdsScoreGeneratorImplTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+
+        mFlags = new AdsScoreGeneratorImplTestFlags();
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -249,18 +253,7 @@ public class AdsScoreGeneratorImplTest {
 
         mRequestMatcherExactMatch =
                 (actualRequest, expectedRequest) -> actualRequest.equals(expectedRequest);
-        mFlags =
-                new Flags() {
-                    @Override
-                    public long getAdSelectionScoringTimeoutMs() {
-                        return 300;
-                    }
 
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-                };
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
                 .thenReturn(START_ELAPSED_TIMESTAMP);
         mAdSelectionExecutionLogger =
@@ -1171,6 +1164,23 @@ public class AdsScoreGeneratorImplTest {
 
     interface ThrowingSupplier<T> {
         T get() throws Exception;
+    }
+
+    private static class AdsScoreGeneratorImplTestFlags implements Flags {
+        @Override
+        public boolean getFledgeAdSelectionContextualAdsEnabled() {
+            return true;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
     }
 }
 
