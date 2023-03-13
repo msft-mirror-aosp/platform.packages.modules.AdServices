@@ -45,6 +45,7 @@ import com.android.adservices.service.adselection.AdSelectionScriptEngine.Auctio
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 
@@ -54,6 +55,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import org.json.JSONObject;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -139,17 +141,21 @@ public class AdSelectionScriptEngineTest {
                     .build();
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-    private final AdSelectionScriptEngine mAdSelectionScriptEngine =
-            new AdSelectionScriptEngine(
-                    sContext,
-                    () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
-                    () -> mIsolateSettings.getMaxHeapSizeBytes());
+    private AdSelectionScriptEngine mAdSelectionScriptEngine;
 
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLoggerMock;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
 
     @Before
     public void setUp() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        mAdSelectionScriptEngine =
+                new AdSelectionScriptEngine(
+                        sContext,
+                        () -> mIsolateSettings.getEnforceMaxHeapSizeFeature(),
+                        () -> mIsolateSettings.getMaxHeapSizeBytes());
+
         MockitoAnnotations.initMocks(this);
     }
 
