@@ -26,7 +26,9 @@
     -->
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
 
-    <application android:debuggable="true" />
+    <application android:debuggable="true">
+        <uses-library android:name="android.ext.adservices" android:required="false"/>
+    </application>
 
     <instrumentation
             android:name="androidx.test.runner.AndroidJUnitRunner"
