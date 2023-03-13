@@ -14,143 +14,62 @@
  * limitations under the License.
  */
 
-package com.android.adservices.data.measurement;
+package com.android.adservices.data.measurement.migration;
 
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.createReferenceDbAtVersion;
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
-
-import static org.junit.Assert.assertEquals;
+import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.data.measurement.MeasurementDbHelper;
+import com.android.adservices.data.measurement.MeasurementTables;
 
-import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.DbHelperTest;
-import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.data.measurement.migration.ContentValueFixtures;
-
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 
-public class MeasurementDbHelperTest {
+@RunWith(MockitoJUnitRunner.class)
+public class MeasurementDbMigratorV7Test extends MeasurementDbMigratorTestBase {
+    @Override
+    int getTargetVersion() {
+        return 7;
+    }
 
-    private static final String MIGRATION_DB_REFERENCE_NAME =
-            "adservices_msmt_db_migrate_reference.db";
-    private static final String OLD_TEST_DB_NAME = "old_test_db.db";
-    private static final String MEASUREMENT_DB_NAME = "adservices_msmt_db_test.db";
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    @Before
-    public void setup() {
-        Stream.of(MIGRATION_DB_REFERENCE_NAME, OLD_TEST_DB_NAME, MEASUREMENT_DB_NAME)
-                .map(sContext::getDatabasePath)
-                .filter(File::exists)
-                .forEach(File::delete);
+    @Override
+    AbstractMeasurementDbMigrator getTestSubject() {
+        return new MeasurementDbMigratorV7();
     }
 
     @Test
-    public void testNewInstall() {
-        MeasurementDbHelper measurementDbHelper =
+    public void performMigration_v6ToV7WithData_maintainsDataIntegrity() {
+        // Setup
+        MeasurementDbHelper dbHelper =
                 new MeasurementDbHelper(
-                        sContext,
-                        MEASUREMENT_DB_NAME,
-                        MeasurementDbHelper.CURRENT_DATABASE_VERSION,
-                        DbTestUtil.getDbHelperForTest());
-        SQLiteDatabase db = measurementDbHelper.safeGetWritableDatabase();
-        SQLiteDatabase referenceLatestDb =
-                createReferenceDbAtVersion(
-                        sContext,
-                        MIGRATION_DB_REFERENCE_NAME,
-                        MeasurementDbHelper.CURRENT_DATABASE_VERSION);
-        DbTestUtil.assertDatabasesEqual(referenceLatestDb, db);
+                        sContext, MEASUREMENT_DATABASE_NAME_FOR_MIGRATION, 6, getDbHelperForTest());
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        Map<String, List<ContentValues>> fakeData = createFakeDataV6();
+        MigrationTestHelper.populateDb(db, fakeData);
+
+        // Execution
+        getTestSubject().performMigration(db, 6, 7);
+
+        // Assertion
+        MigrationTestHelper.verifyDataInDb(db, fakeData);
     }
 
-    @Test
-    public void testMigrationFromOldDatabase() {
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
-        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
-
-        assertEquals(1, db.getVersion());
-
-        DbHelper dbHelper = new DbHelper(sContext, OLD_TEST_DB_NAME, DbHelper.DATABASE_VERSION);
-        SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
-
-        assertEquals(6, oldDb.getVersion());
-
-        MeasurementDbHelper measurementDbHelper =
-                new MeasurementDbHelper(
-                        sContext,
-                        MEASUREMENT_DB_NAME,
-                        MeasurementDbHelper.CURRENT_DATABASE_VERSION,
-                        dbHelper);
-        SQLiteDatabase actualMigratedDb = measurementDbHelper.safeGetWritableDatabase();
-
-        SQLiteDatabase referenceLatestDb =
-                createReferenceDbAtVersion(
-                        sContext,
-                        MIGRATION_DB_REFERENCE_NAME,
-                        MeasurementDbHelper.CURRENT_DATABASE_VERSION);
-        DbTestUtil.assertDatabasesEqual(referenceLatestDb, actualMigratedDb);
-        DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
-    }
-
-    @Test
-    public void testMigrationDataIntegrityToV6FromOldDatabase() {
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
-        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
-
-        assertEquals(1, db.getVersion());
-
-        DbHelper dbHelper =
-                new DbHelper(
-                        sContext, OLD_TEST_DB_NAME, MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION);
-        SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
-
-        assertEquals(MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION, oldDb.getVersion());
-        // Sorted map because we want source/trigger to be inserted before other tables to
-        // respect foreign key constraints
-        Map<String, List<ContentValues>> fakeData = createFakeData();
-
-        populateDb(oldDb, fakeData);
-        MeasurementDbHelper measurementDbHelper =
-                new MeasurementDbHelper(
-                        sContext,
-                        MEASUREMENT_DB_NAME,
-                        MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION,
-                        dbHelper);
-        SQLiteDatabase newDb = measurementDbHelper.safeGetWritableDatabase();
-        DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
-        SQLiteDatabase referenceLatestDb =
-                createReferenceDbAtVersion(
-                        sContext,
-                        MIGRATION_DB_REFERENCE_NAME,
-                        MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION);
-        DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
-        assertEquals(MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION, newDb.getVersion());
-        verifyDataInDb(newDb, fakeData);
-        emptyTables(newDb, MeasurementTables.V6_TABLES);
-    }
-
-    private Map<String, List<ContentValues>> createFakeData() {
-
+    private Map<String, List<ContentValues>> createFakeDataV6() {
         Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
         // Source Table
         List<ContentValues> sourceRows = new ArrayList<>();
         ContentValues source1 = ContentValueFixtures.generateSourceContentValuesV6();
-        source1.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
+        String source1Id = UUID.randomUUID().toString();
+        source1.put(MeasurementTables.SourceContract.ID, source1Id);
         sourceRows.add(source1);
         sourceRows.add(ContentValueFixtures.generateSourceContentValuesV6());
         tableRowsMap.put(MeasurementTables.SourceContract.TABLE, sourceRows);
@@ -228,15 +147,6 @@ public class MeasurementDbHelperTest {
         xnaIgnoredSources.add(xnaIgnoredSources1);
         xnaIgnoredSources.add(ContentValueFixtures.generateXnaIgnoredSourcesContentValuesV6());
         tableRowsMap.put(MeasurementTables.XnaIgnoredSourcesContract.TABLE, xnaIgnoredSources);
-
         return tableRowsMap;
-    }
-
-    private void emptyTables(SQLiteDatabase db, String[] tables) {
-        Arrays.stream(tables)
-                .forEach(
-                        (table) -> {
-                            db.delete(table, null, null);
-                        });
     }
 }

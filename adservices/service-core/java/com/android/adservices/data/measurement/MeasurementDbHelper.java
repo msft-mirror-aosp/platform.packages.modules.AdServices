@@ -29,12 +29,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.migration.IMeasurementDbMigrator;
+import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV7;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,21 +45,13 @@ import java.util.stream.Stream;
 public class MeasurementDbHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "adservices_msmt.db";
 
-    public static final int CURRENT_DATABASE_VERSION = 6;
+    public static final int CURRENT_DATABASE_VERSION = 7;
     public static final int OLD_DATABASE_FINAL_VERSION = 6;
 
     private static MeasurementDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
     private final DbHelper mDbHelper;
-
-    @VisibleForTesting
-    public MeasurementDbHelper(@NonNull Context context, @NonNull String dbName, int dbVersion) {
-        super(context, dbName, null, dbVersion);
-        mDbFile = context.getDatabasePath(dbName);
-        this.mDbVersion = dbVersion;
-        this.mDbHelper = DbHelper.getInstance(context);
-    }
 
     @VisibleForTesting
     public MeasurementDbHelper(
@@ -73,7 +67,12 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     public static MeasurementDbHelper getInstance(@NonNull Context ctx) {
         synchronized (MeasurementDbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new MeasurementDbHelper(ctx, DATABASE_NAME, CURRENT_DATABASE_VERSION);
+                sSingleton =
+                        new MeasurementDbHelper(
+                                ctx,
+                                DATABASE_NAME,
+                                CURRENT_DATABASE_VERSION,
+                                DbHelper.getInstance(ctx));
             }
             return sSingleton;
         }
@@ -95,10 +94,10 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
             createV6Schema(db);
             migrateOldDataToNewDatabase(oldDb, db);
             deleteV6TablesFromDatabase(oldDb);
-            upgradeToLatestSchema(db);
+            upgradeSchema(db, OLD_DATABASE_FINAL_VERSION, mDbVersion);
         } else {
             LogUtil.d("MeasurementDbHelper.onCreate creating empty database");
-            createLatestSchema(db);
+            createSchema(db);
         }
     }
 
@@ -107,8 +106,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
         LogUtil.d(
                 "MeasurementDbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
-        getOrderedDbMigrators()
-                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+        upgradeSchema(db, oldVersion, newVersion);
     }
 
     @Override
@@ -118,7 +116,7 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
     }
 
     private List<IMeasurementDbMigrator> getOrderedDbMigrators() {
-        return Collections.emptyList();
+        return ImmutableList.of(new MeasurementDbMigratorV7());
     }
 
     private boolean hasAllV6MeasurementTables(SQLiteDatabase db) {
@@ -159,9 +157,16 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
         Arrays.stream(MeasurementTables.CREATE_INDEXES_V6).forEach(db::execSQL);
     }
 
-    private void createLatestSchema(SQLiteDatabase db) {
-        MeasurementTables.CREATE_STATEMENTS.forEach(db::execSQL);
-        Arrays.stream(MeasurementTables.CREATE_INDEXES).forEach(db::execSQL);
+    private void createSchema(SQLiteDatabase db) {
+        if (mDbVersion == CURRENT_DATABASE_VERSION) {
+            MeasurementTables.CREATE_STATEMENTS.forEach(db::execSQL);
+            Arrays.stream(MeasurementTables.CREATE_INDEXES).forEach(db::execSQL);
+        } else {
+            // If the provided DB version is not the latest, create the starting schema and upgrade
+            // to that. This branch is primarily for testing purpose.
+            createV6Schema(db);
+            upgradeSchema(db, OLD_DATABASE_FINAL_VERSION, mDbVersion);
+        }
     }
 
     private void migrateOldDataToNewDatabase(SQLiteDatabase oldDb, SQLiteDatabase db) {
@@ -192,15 +197,12 @@ public class MeasurementDbHelper extends SQLiteOpenHelper {
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 
-    private void upgradeToLatestSchema(SQLiteDatabase db) {
+    private void upgradeSchema(SQLiteDatabase db, int oldVersion, int newVersion) {
         LogUtil.d(
                 "MeasurementDbHelper.upgradeToLatestSchema. "
                         + "Attempting to upgrade version from %d to %d.",
-                OLD_DATABASE_FINAL_VERSION, mDbVersion);
+                oldVersion, newVersion);
         getOrderedDbMigrators()
-                .forEach(
-                        dbMigrator ->
-                                dbMigrator.performMigration(
-                                        db, OLD_DATABASE_FINAL_VERSION, mDbVersion));
+                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
     }
 }
