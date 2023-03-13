@@ -29,8 +29,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.exception.FilterException;
 
@@ -75,21 +73,16 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
+     * Asserts that the calling app, FLEDGE APIs and the Privacy Sandbox have user consent.
      *
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
+     * @param callerPackageName String package name that uniquely identifies an installed
+     *     application that has used a FLEDGE API
+     * @throws ConsentManager.RevokedConsentException if the app or FLEDGE or the Privacy Sandbox do
+     *     not have user consent
      */
-    protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
-        if (!userConsent.isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
+    protected void assertCallerHasUserConsent(String callerPackageName)
+            throws ConsentManager.RevokedConsentException {
+        mConsentManager.assertFledgeCallerHasUserConsent(callerPackageName);
     }
 
     /**

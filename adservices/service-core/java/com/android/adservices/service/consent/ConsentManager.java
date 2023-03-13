@@ -747,6 +747,44 @@ public class ConsentManager {
     }
 
     /**
+     * Asserts that the calling app, FLEDGE APIs and the Privacy Sandbox have user consent.
+     *
+     * @param callerPackageName String package name that uniquely identifies an installed
+     *     application that has used a FLEDGE API
+     * @throws RevokedConsentException if the app or FLEDGE or the Privacy Sandbox do not have user
+     *     consent
+     */
+    public void assertFledgeCallerHasUserConsent(String callerPackageName)
+            throws RevokedConsentException {
+        boolean isConsentRevoked;
+        // Note:
+        // The FLEDGE_PER_APP_CONSENT_ENABLED flag piggybacks on the GA_UX_FEATURE_ENABLED flag,
+        // that is, FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED && (true | false).
+        // This means there are 3 levels of "consent":
+        //     1. PPAPI-wide: When GA UX is disabled, this is the only option.
+        //     2. FLEDGE-wide: When GA UX is enabled but not per-app consent.
+        //     3. Per-app: When GA UX and per-app consent is enabled.
+
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = true + GA_UX_FEATURE_ENABLED = true
+            // Checking for FLEDGE-wide and per-app consent.
+            isConsentRevoked = isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName);
+        } else if (mFlags.getGaUxFeatureEnabled()) {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = true
+            // Checking for FLEDGE-wide and per-app consent.
+            isConsentRevoked = !getConsent(AdServicesApiType.FLEDGE).isGiven();
+        } else {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = false
+            // Checking for PPAPI-wide consent.
+            isConsentRevoked = !getConsent().isGiven();
+        }
+
+        if (isConsentRevoked) {
+            throw new ConsentManager.RevokedConsentException();
+        }
+    }
+
+    /**
      * Clear consent data after an app was uninstalled.
      *
      * @param packageName the package name that had been uninstalled.

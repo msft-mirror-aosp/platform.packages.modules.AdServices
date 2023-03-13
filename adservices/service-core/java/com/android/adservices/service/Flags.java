@@ -1732,6 +1732,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    // Enable per-app consent in FLEDGE if GA UX is enabled
+    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
+
+    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
+    default boolean getFledgePerAppConsentEnabled() {
+        return FLEDGE_PER_APP_CONSENT_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
