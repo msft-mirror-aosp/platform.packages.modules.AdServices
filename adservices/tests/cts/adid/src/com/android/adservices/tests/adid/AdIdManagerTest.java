@@ -48,14 +48,18 @@ public class AdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
+    private String mPreviousAppAllowList;
+
     @Before
     public void setup() {
         overrideAdIdKillSwitch(true);
+        overridePpapiAppAllowList();
     }
 
     @After
     public void tearDown() throws Exception {
         overrideAdIdKillSwitch(false);
+        setPpapiAppAllowList(mPreviousAppAllowList);
         // Cool-off rate limiter
         TimeUnit.SECONDS.sleep(1);
     }
@@ -67,6 +71,17 @@ public class AdIdManagerTest {
     private void overrideAdIdKillSwitch(boolean shouldOverride) {
         String overrideString = shouldOverride ? "false" : "null";
         ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
+    }
+
+    private void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    private void overridePpapiAppAllowList() {
+        mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
     }
 
     @Test
