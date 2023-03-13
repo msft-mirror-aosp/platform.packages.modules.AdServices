@@ -67,6 +67,7 @@ public class AdSelectionManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link AdSelectionManager} instance
+     * @hide
      */
     @NonNull
     public static AdSelectionManager get(@NonNull Context context) {

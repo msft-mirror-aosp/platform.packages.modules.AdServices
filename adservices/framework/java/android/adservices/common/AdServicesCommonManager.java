@@ -66,6 +66,7 @@ public class AdServicesCommonManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link AdServicesCommonManager} instance
+     * @hide
      */
     @NonNull
     public static AdServicesCommonManager get(@NonNull Context context) {

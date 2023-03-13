@@ -61,6 +61,7 @@ public class AppSetIdManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link AppSetIdManager} instance
+     * @hide
      */
     @NonNull
     public static AppSetIdManager get(@NonNull Context context) {
