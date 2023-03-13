@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.reporting;
 import android.annotation.NonNull;
 import android.content.Context;
 
+import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -39,6 +40,7 @@ public class DebugReportApi {
     private interface Type {
         String SOURCE_NOISED = "source-noised";
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
+        String SOURCE_STORAGE_LIMIT = "source-storage-limit";
     }
 
     private interface Body {
@@ -64,6 +66,9 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit Debug Report */
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
+            return;
+        }
         try {
             boolean isAppSource = source.getPublisherType() == EventSurfaceType.APP;
             JSONObject body = new JSONObject();
@@ -83,33 +88,43 @@ public class DebugReportApi {
             }
             scheduleReport(Type.SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
         } catch (JSONException e) {
-            LogUtil.e(e, "Json error in destination limit debug report");
+            LogUtil.e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
         }
     }
 
     /** Schedules the Source Noised Debug Report */
     public void scheduleSourceNoisedDebugReport(Source source, IMeasurementDao dao) {
-        if (getAdIdPermissionState(source) == PermissionState.DENIED
-                || getArDebugPermissionState(source) == PermissionState.DENIED) {
-            LogUtil.d("Skipping source noised debug report");
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED)) {
             return;
         }
-        try {
-            JSONObject body = new JSONObject();
-            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(
-                    Body.ATTRIBUTION_DESTINATION,
-                    source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestinations().get(0).toString()
-                            : source.getWebDestinations().get(0).toString());
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
-            body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
-            scheduleReport(Type.SOURCE_NOISED, body, source.getEnrollmentId(), dao);
-        } catch (JSONException e) {
-            LogUtil.e(e, "Json error in source noised debug report");
+        if (getAdIdPermissionState(source) == PermissionState.DENIED
+                || getArDebugPermissionState(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_NOISED);
+            return;
         }
+        scheduleReport(
+                Type.SOURCE_NOISED,
+                generateSourceDebugReportBody(source, null),
+                source.getEnrollmentId(),
+                dao);
+    }
+
+    /** Schedules Source Storage Limit Debug Report */
+    public void scheduleSourceStorageLimitDebugReport(
+            Source source, String limit, IMeasurementDao dao) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT)) {
+            return;
+        }
+        if (getAdIdPermissionState(source) == PermissionState.DENIED
+                || getArDebugPermissionState(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT);
+            return;
+        }
+        scheduleReport(
+                Type.SOURCE_STORAGE_LIMIT,
+                generateSourceDebugReportBody(source, limit),
+                source.getEnrollmentId(),
+                dao);
     }
 
     /**
@@ -130,11 +145,11 @@ public class DebugReportApi {
         Objects.requireNonNull(enrollmentId);
         Objects.requireNonNull(dao);
         if (type.isEmpty() || body.length() == 0) {
-            LogUtil.d("Empty debug report found");
+            LogUtil.d("Empty debug report found %s", type);
             return;
         }
         if (enrollmentId.isEmpty()) {
-            LogUtil.d("Empty enrollment found");
+            LogUtil.d("Empty enrollment found %s", type);
             return;
         }
         DebugReport debugReport =
@@ -147,7 +162,7 @@ public class DebugReportApi {
         try {
             dao.insertDebugReport(debugReport);
         } catch (DatastoreException e) {
-            LogUtil.e(e, "Failed to insert debug report");
+            LogUtil.e(e, "Failed to insert debug report %s", type);
         }
 
         DebugReportingJobService.scheduleIfNeeded(
@@ -178,5 +193,35 @@ public class DebugReportApi {
             }
         }
         return PermissionState.NONE;
+    }
+
+    /* Get is Ad tech not op-in and log */
+    private boolean isAdTechNotOptIn(boolean optIn, String type) {
+        if (!optIn) {
+            LogUtil.d("Ad-tech not opt-in. Skipping debug report %s", type);
+        }
+        return !optIn;
+    }
+
+    /*Generates source debug report body*/
+    private JSONObject generateSourceDebugReportBody(
+            @NonNull Source source, @Nullable String limit) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(
+                    Body.ATTRIBUTION_DESTINATION,
+                    source.getPublisherType() == EventSurfaceType.APP
+                            ? source.getAppDestinations().get(0).toString()
+                            : source.getWebDestinations().get(0).toString());
+            body.put(
+                    Body.SOURCE_SITE,
+                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.LIMIT, limit);
+            body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
+        } catch (JSONException e) {
+            LogUtil.e(e, "Json error in source debug report");
+        }
+        return body;
     }
 }
