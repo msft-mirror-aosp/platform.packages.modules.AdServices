@@ -49,7 +49,7 @@ public class Combinatorics {
         // (n choose i) is fractional, which we know is not the case.
         int result = 1;
         for (int i = 1; i <= k; i++) {
-            result = Math.multiplyExact(result, (n + 1 - i));
+            result = Math.multiplyExact(result, n + 1 - i);
             result = result / i;
         }
         return result;
@@ -165,5 +165,20 @@ public class Combinatorics {
             starIndices[i] = starIndex - (starIndices.length - 1 - i);
         }
         return starIndices;
+    }
+
+    /**
+     * Compute number of states from the trigger specification
+     *
+     * @param numBucketIncrements number of bucket increments (equivalent to number of triggers)
+     * @param numTriggerData number of trigger data. (equivalent to number of metadata)
+     * @param numWindows number of reporting windows
+     * @return number of states
+     */
+    public static int getNumStatesArithmetic(
+            int numBucketIncrements, int numTriggerData, int numWindows) {
+        int numStars = numBucketIncrements;
+        int numBars = Math.multiplyExact(numTriggerData, numWindows);
+        return getNumberOfStarsAndBarsSequences(numStars, numBars);
     }
 }
