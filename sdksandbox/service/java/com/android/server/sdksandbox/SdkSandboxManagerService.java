@@ -377,6 +377,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSandboxLifecycleCallbacks.put(callingInfo, sandboxLifecycleCallbacks);
             }
         }
+
+        // addSdkSandboxProcessDeathCallback() can be called without calling loadSdk(). Register for
+        // app death to make sure cleanup occurs.
+        registerForAppDeath(callingInfo, callback.asBinder());
+
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
                 SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__ADD_SDK_SANDBOX_LIFECYCLE_CALLBACK,
@@ -385,6 +390,29 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 /*success=*/ true,
                 SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
                 callingUid);
+    }
+
+    // Register a handler for app death using any binder object originating from the app. Returns
+    // true if registering the handle succeeded and false if it failed (because the app died by
+    // then).
+    private boolean registerForAppDeath(CallingInfo callingInfo, IBinder appBinderObject) {
+        // Register a death recipient to clean up app related state and unbind its service after
+        // the app dies.
+        try {
+            synchronized (mLock) {
+                if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
+                    Log.d(TAG, "Registering " + callingInfo + " for death notification");
+                    appBinderObject.linkToDeath(() -> onAppDeath(callingInfo), 0);
+                    mCallingInfosWithDeathRecipients.put(callingInfo, appBinderObject);
+                }
+            }
+        } catch (RemoteException re) {
+            // App has already died, cleanup sdk link, and unbind its service
+            onAppDeath(callingInfo);
+            return false;
+        }
+
+        return true;
     }
 
     @Override
@@ -543,31 +571,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             mLoadSdkSessions.get(callingInfo).put(sdkName, loadSdkSession);
         }
 
-        // Register a death recipient to clean up app related state and unbind its service after
-        // the app dies.
-        try {
-            synchronized (mLock) {
-                if (!mCallingInfosWithDeathRecipients.containsKey(callingInfo)) {
-                    Log.d(TAG, "Registering " + callingInfo + " for death notification");
-                    callback.asBinder().linkToDeath(() -> onAppDeath(callingInfo), 0);
-                    mCallingInfosWithDeathRecipients.put(callingInfo, callback.asBinder());
-                    mUidImportanceListener.startListening();
-                }
+        synchronized (mLock) {
+            mUidImportanceListener.startListening();
+            if (!registerForAppDeath(callingInfo, callback.asBinder())) {
+                // Log the time taken in System Server before the exception occurred
+                SdkSandboxStatsLog.write(
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                        SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                        /*latency=*/ (int)
+                                (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
+                        /*success=*/ false,
+                        SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                        callingInfo.getUid());
+                // App has already died and there is no point in loading the SDK.
+                return;
             }
-        } catch (RemoteException re) {
-            // Log the time taken in System Server before the exception occurred
-            SdkSandboxStatsLog.write(
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED,
-                    SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
-                    /*latency=*/ (int)
-                            (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
-                    /*success=*/ false,
-                    SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
-                    callingInfo.getUid());
-
-            // App has already died, cleanup sdk link, and unbind its service
-            onAppDeath(callingInfo);
-            return;
         }
 
         // Callback to be invoked once the sandbox has been created;
