@@ -69,6 +69,7 @@ public class Trigger {
     private boolean mArDebugPermission;
     @Nullable private String mAttributionConfig;
     @Nullable private String mAdtechKeyMapping;
+    @Nullable private String mDebugJoinKey;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -112,7 +113,8 @@ public class Trigger {
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
                 && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
-                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys);
+                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
+                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey);
     }
 
     @Override
@@ -135,7 +137,8 @@ public class Trigger {
                 mArDebugPermission,
                 mAttributionConfig,
                 mAdtechKeyMapping,
-                mAggregateDeduplicationKeys);
+                mAggregateDeduplicationKeys,
+                mDebugJoinKey);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -304,6 +307,15 @@ public class Trigger {
     @Nullable
     public String getAdtechKeyMapping() {
         return mAdtechKeyMapping;
+    }
+
+    /**
+     * Returns join key that should be matched with source's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
     }
 
     /**
@@ -617,6 +629,13 @@ public class Trigger {
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
             mBuilding.mAggregatableAttributionTrigger =
                     Optional.ofNullable(aggregatableAttributionTrigger);
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
             return this;
         }
 
