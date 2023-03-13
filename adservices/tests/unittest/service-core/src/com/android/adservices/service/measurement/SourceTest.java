@@ -81,6 +81,7 @@ public class SourceTest {
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -117,6 +118,7 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -153,6 +155,7 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
                         .build());
     }
 
@@ -301,6 +304,9 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
     }
 
     @Test
