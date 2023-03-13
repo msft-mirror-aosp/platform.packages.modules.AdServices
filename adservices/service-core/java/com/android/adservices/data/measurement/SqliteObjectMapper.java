@@ -176,6 +176,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.REGISTRATION_ID,
                 builder::setRegistrationId);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
         setLongColumn(
                 cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
         return builder.build();
@@ -235,6 +237,8 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 builder::setAdtechBitMapping);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
         return builder.build();
     }
 
