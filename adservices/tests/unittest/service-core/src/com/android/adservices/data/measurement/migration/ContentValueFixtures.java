@@ -419,6 +419,10 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV7() {
+        return generateSourceContentValuesV6();
+    }
+
     public static ContentValues generateTriggerContentValuesV1() {
         ContentValues trigger = new ContentValues();
 
@@ -490,6 +494,10 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateTriggerContentValuesV7() {
+        return generateTriggerContentValuesV6();
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -535,6 +543,10 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV6() {
         return generateAttributionContentValuesV3();
+    }
+
+    public static ContentValues generateAttributionContentValuesV7() {
+        return generateAttributionContentValuesV6();
     }
 
     public static ContentValues generateEventReportContentValuesV1() {
@@ -609,6 +621,10 @@ public class ContentValueFixtures {
         return generateEventReportContentValuesV3();
     }
 
+    public static ContentValues generateEventReportContentValuesV7() {
+        return generateEventReportContentValuesV6();
+    }
+
     public static ContentValues generateAggregateReportContentValuesV1() {
         ContentValues aggregateReport = new ContentValues();
 
@@ -669,6 +685,10 @@ public class ContentValueFixtures {
         return generateAggregateReportContentValuesV3();
     }
 
+    public static ContentValues generateAggregateReportContentValuesV7() {
+        return generateAggregateReportContentValuesV6();
+    }
+
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {
         ContentValues aggregateEncryptionKey = new ContentValues();
 
@@ -701,6 +721,10 @@ public class ContentValueFixtures {
         return generateAggregateEncryptionKeyContentValuesV3();
     }
 
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV7() {
+        return generateAggregateEncryptionKeyContentValuesV6();
+    }
+
     public static ContentValues generateDebugReportContentValuesV3() {
         ContentValues debugReport = new ContentValues();
 
@@ -718,6 +742,10 @@ public class ContentValueFixtures {
         return generateDebugReportContentValuesV3();
     }
 
+    public static ContentValues generateDebugReportContentValuesV7() {
+        return generateDebugReportContentValuesV6();
+    }
+
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
         ContentValues values = new ContentValues();
         values.put(
@@ -728,5 +756,9 @@ public class ContentValueFixtures {
                 XnaIgnoredSourcesValues.ENROLLMENT_ID);
 
         return values;
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV7() {
+        return generateXnaIgnoredSourcesContentValuesV6();
     }
 }

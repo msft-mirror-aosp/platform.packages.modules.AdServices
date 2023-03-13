@@ -37,7 +37,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTestBase {
+public class MeasurementDbMigratorV6Test extends MeasurementDbMigratorTestBaseDeprecated {
 
     private static final String[][] INSERTED_ASYNC_REGISTRATION = {
         // id, enrollment_id
