@@ -36,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
 public interface Flags {
     /** Topics Epoch Job Period. */
