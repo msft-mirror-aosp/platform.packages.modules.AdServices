@@ -40,19 +40,27 @@ public class DBAdDataFixture {
 
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getValidFilterAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
     }
 
     public static List<DBAdData> getValidDbAdDataListByBuyerNoFilters(AdTechIdentifier buyer) {
         return AdDataFixture.getValidAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
     }
 
     public static List<DBAdData> getInvalidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getInvalidAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
+    }
+
+    public static DBAdData convertAdDataToDBAdData(AdData adData) {
+        return new DBAdData(
+                adData.getRenderUri(),
+                adData.getMetadata(),
+                adData.getAdCounterKeys(),
+                adData.getAdFilters());
     }
 }
