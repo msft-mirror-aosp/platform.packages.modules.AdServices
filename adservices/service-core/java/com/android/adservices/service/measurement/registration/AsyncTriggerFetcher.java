@@ -88,8 +88,7 @@ public class AsyncTriggerFetcher {
     }
 
     /**
-     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given
-     * list.
+     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given list.
      */
     @VisibleForTesting
     public boolean parseTrigger(
