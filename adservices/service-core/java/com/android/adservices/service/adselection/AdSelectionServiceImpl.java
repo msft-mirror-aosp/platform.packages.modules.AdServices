@@ -204,7 +204,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         () -> Throttler.getInstance(FlagsFactory.getFlags())),
-                AdFiltererFactory.getAdFilterer(context, FlagsFactory.getFlags()));
+                AdFilteringFeatureFactory.getAdFilterer(context, FlagsFactory.getFlags()));
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.

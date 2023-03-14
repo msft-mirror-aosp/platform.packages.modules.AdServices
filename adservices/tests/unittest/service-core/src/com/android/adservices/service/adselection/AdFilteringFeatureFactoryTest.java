@@ -31,7 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AdFiltererFactoryTest {
+public class AdFilteringFeatureFactoryTest {
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     @Mock private Flags mFlagsMock;
@@ -39,13 +39,16 @@ public class AdFiltererFactoryTest {
     @Test
     public void testFiltersEnabled() {
         doReturn(true).when(mFlagsMock).getFledgeAdSelectionFilteringEnabled();
-        assertTrue(AdFiltererFactory.getAdFilterer(CONTEXT, mFlagsMock) instanceof AdFiltererImpl);
+        assertTrue(
+                AdFilteringFeatureFactory.getAdFilterer(CONTEXT, mFlagsMock)
+                        instanceof AdFiltererImpl);
     }
 
     @Test
     public void testFiltersDisabled() {
         doReturn(false).when(mFlagsMock).getFledgeAdSelectionFilteringEnabled();
         assertTrue(
-                AdFiltererFactory.getAdFilterer(CONTEXT, mFlagsMock) instanceof AdFiltererNoOpImpl);
+                AdFilteringFeatureFactory.getAdFilterer(CONTEXT, mFlagsMock)
+                        instanceof AdFiltererNoOpImpl);
     }
 }

@@ -25,7 +25,7 @@ import com.android.adservices.service.common.BinderFlagReader;
 import java.time.Clock;
 
 /** Factory for implementations of the {@link AdFilterer} interface */
-public final class AdFiltererFactory {
+public final class AdFilteringFeatureFactory {
     /**
      * Returns the correct {@link AdFilterer} implementation to use based on the given {@link
      * Flags}.
