@@ -27,7 +27,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +39,7 @@ import java.util.List;
  */
 @Dao
 public abstract class AdSelectionEntryDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
@@ -448,7 +449,7 @@ public abstract class AdSelectionEntryDao {
         long currentNumRegisteredInteractions = getTotalNumRegisteredAdInteractions();
 
         if (currentNumRegisteredInteractions >= maxTotalNumRegisteredInteractions) {
-            LogUtil.v("Registered Ad Interaction max table size reached! Skipping entire list.");
+            sLogger.v("Registered Ad Interaction max table size reached! Skipping entire list.");
             return;
         }
 
@@ -458,7 +459,7 @@ public abstract class AdSelectionEntryDao {
 
         if (currentNumRegisteredInteractionsPerDestination
                 >= maxPerDestinationNumRegisteredInteractions) {
-            LogUtil.v(
+            sLogger.v(
                     "Maximum number of Registered Ad Interactions for this adSelectionId and"
                             + " reportingDestination reached! Skipping entire list.");
             return;

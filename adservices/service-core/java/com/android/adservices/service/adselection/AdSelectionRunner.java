@@ -36,7 +36,7 @@ import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
@@ -84,6 +84,7 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting static final String AD_SELECTION_ERROR_PATTERN = "%s: %s";
 
@@ -239,7 +240,7 @@ public abstract class AdSelectionRunner {
                             () -> {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                    LogUtil.v("Starting filtering and validation.");
+                                    sLogger.v("Starting filtering and validation.");
                                     mAdSelectionServiceFilter.filterRequest(
                                             adSelectionConfig.getSeller(),
                                             inputParams.getCallerPackageName(),
@@ -252,7 +253,7 @@ public abstract class AdSelectionRunner {
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
                                     validateAdSelectionConfig(adSelectionConfig);
                                 } finally {
-                                    LogUtil.v("Completed filtering and validation.");
+                                    sLogger.v("Completed filtering and validation.");
                                     Trace.endSection();
                                 }
                             },
@@ -310,14 +311,14 @@ public abstract class AdSelectionRunner {
                     mLightweightExecutorService);
         } catch (Throwable t) {
             Tracing.endAsyncSection(Tracing.RUN_AD_SELECTION, traceCookie);
-            LogUtil.v("run ad selection fails fast with exception %s.", t.toString());
+            sLogger.v("run ad selection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(callback, t);
         }
     }
 
     @Nullable
     private DBAdSelection closeFailedAdSelectionWithRuntimeException(RuntimeException e) {
-        LogUtil.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
+        sLogger.v("Close failed ad selection and rethrow the RuntimeException %s.", e.toString());
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
         mAdSelectionExecutionLogger.close(resultCode);
         throw e;
@@ -327,7 +328,7 @@ public abstract class AdSelectionRunner {
     private DBAdSelection closeFailedAdSelectionWithAdServicesException(AdServicesException e) {
         int resultCode = AdServicesLoggerUtil.getResultCodeFromException(e);
         mAdSelectionExecutionLogger.close(resultCode);
-        LogUtil.v(
+        sLogger.v(
                 "Close failed ad selection and wrap the AdServicesException with"
                         + " an RuntimeException with message: %s and log with resultCode : %d",
                 e.getMessage(), resultCode);
@@ -345,7 +346,7 @@ public abstract class AdSelectionRunner {
         try {
             int overallLatencyMs =
                     mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            LogUtil.v(
+            sLogger.v(
                     "Ad Selection with Id:%d completed with overall latency %d in ms, "
                             + "attempted notifying success",
                     result.getAdSelectionId(), overallLatencyMs);
@@ -363,7 +364,7 @@ public abstract class AdSelectionRunner {
                             .setRenderUri(result.getWinningAdRenderUri())
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
@@ -376,14 +377,14 @@ public abstract class AdSelectionRunner {
                             .setRenderUri(Uri.EMPTY)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull AdSelectionCallback callback, @NonNull Throwable t) {
         try {
-            LogUtil.e(t, "Ad Selection failure: ");
+            sLogger.e(t, "Ad Selection failure: ");
 
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
 
@@ -393,7 +394,7 @@ public abstract class AdSelectionRunner {
             if (!(t instanceof FilterException)) {
                 int overallLatencyMs =
                         mAdSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-                LogUtil.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
+                sLogger.v("Ad Selection failed with overall latency %d in ms", overallLatencyMs);
                 // TODO(b//253522566): When including logging data from bidding & auction server
                 // side
                 //  should be able to differentiate the data from the on-device telemetry.
@@ -412,7 +413,7 @@ public abstract class AdSelectionRunner {
                             .build();
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelection callback");
+            sLogger.e(e, "Encountered exception during notifying AdSelection callback");
         }
     }
 
@@ -426,7 +427,7 @@ public abstract class AdSelectionRunner {
     private ListenableFuture<DBAdSelection> orchestrateAdSelection(
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final String callerPackageName) {
-        LogUtil.v("Beginning Ad Selection Orchestration");
+        sLogger.v("Beginning Ad Selection Orchestration");
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
                 getBuyersCustomAudience(adSelectionConfig);
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelection =
@@ -458,7 +459,7 @@ public abstract class AdSelectionRunner {
 
     @Nullable
     private DBAdSelection handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Ad Selection exceeded time limit");
+        sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
@@ -523,7 +524,7 @@ public abstract class AdSelectionRunner {
                     while (mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId)) {
                         adSelectionId = mAdSelectionIdGenerator.generateId();
                     }
-                    LogUtil.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
+                    sLogger.v("Persisting Ad Selection Result for Id:%d", adSelectionId);
                     DBAdSelection dbAdSelection;
                     dbAdSelectionBuilder
                             .setAdSelectionId(adSelectionId)

@@ -80,7 +80,7 @@ import android.os.SystemClock;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.DbTestUtil;
@@ -156,6 +156,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  * this test are invoked and used in real time.
  */
 public class AdSelectionE2ETest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int CALLER_UID = Process.myUid();
     private static final String ERROR_SCORE_AD_LOGIC_MISSING = "scoreAd is not defined";
 
@@ -379,7 +380,7 @@ public class AdSelectionE2ETest {
                                                 + SELLER_TRUSTED_SIGNAL_PARAMS)) {
                             return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
                         }
-                        LogUtil.w("Unexpected call to MockWebServer " + request.getPath());
+                        sLogger.w("Unexpected call to MockWebServer " + request.getPath());
                         return new MockResponse().setResponseCode(404);
                     }
                 };
@@ -2418,7 +2419,7 @@ public class AdSelectionE2ETest {
         int networkRequestCountWithTightTimeout =
                 server.getRequestCount() - networkRequestCountWithLenientTimeout;
 
-        LogUtil.v(
+        sLogger.v(
                 String.format(
                         "Network calls with buyer timeout :%d, network calls with"
                                 + " lenient timeout :%d",
