@@ -19,6 +19,7 @@ package android.adservices.common;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
@@ -29,10 +30,22 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /** Unit tests for {@link AdFilters}. */
 // TODO(b/221876775): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class AdFiltersTest {
+
+    private static final String DIFFERENT_PACKAGE_NAME =
+            CommonFixture.TEST_PACKAGE_NAME_1 + "arbitrary";
+
+    private static final AdFilters APP_INSTALL_ONLY_FILTER =
+            new AdFilters.Builder()
+                    .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                    .build();
+
     @Test
     public void testBuildValidAdFilters_success() {
         final AdFilters originalFilters =
@@ -189,6 +202,112 @@ public class AdFiltersTest {
                 FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS.getSizeInBytes()
                         + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS.getSizeInBytes();
         assertEquals(size, originalFilters.getSizeInBytes());
+    }
+
+    @Test
+    public void testBuildValidAdFiltersAppInstallOnly_success() {
+        assertNull(APP_INSTALL_ONLY_FILTER.getFrequencyCapFilters());
+        assertThat(APP_INSTALL_ONLY_FILTER.getAppInstallFilters())
+                .isEqualTo(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
+    }
+
+    @Test
+    public void testParcelAdFiltersAppInstallOnly_success() {
+        Parcel targetParcel = Parcel.obtain();
+        APP_INSTALL_ONLY_FILTER.writeToParcel(targetParcel, 0);
+        targetParcel.setDataPosition(0);
+        final AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
+
+        assertThat(filtersFromParcel.getFrequencyCapFilters())
+                .isEqualTo(APP_INSTALL_ONLY_FILTER.getFrequencyCapFilters());
+        assertThat(filtersFromParcel.getAppInstallFilters())
+                .isEqualTo(APP_INSTALL_ONLY_FILTER.getAppInstallFilters());
+    }
+
+    @Test
+    public void testEqualsIdenticalAppInstallOnly_success() {
+        final AdFilters identicalFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+
+        assertThat(APP_INSTALL_ONLY_FILTER.equals(identicalFilters)).isTrue();
+    }
+
+    @Test
+    public void testEqualsDifferentAppInstallOnly_success() {
+        final AdFilters differentFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(
+                                new AppInstallFilters.Builder()
+                                        .setPackageNames(
+                                                new HashSet<>(
+                                                        Arrays.asList(DIFFERENT_PACKAGE_NAME)))
+                                        .build())
+                        .build();
+
+        assertThat(APP_INSTALL_ONLY_FILTER.equals(differentFilters)).isFalse();
+    }
+
+    @Test
+    public void testHashCodeIdenticalAppInstallOnly_success() {
+        final AdFilters identicalFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+
+        assertThat(APP_INSTALL_ONLY_FILTER.hashCode()).isEqualTo(identicalFilters.hashCode());
+    }
+
+    @Test
+    public void testHashCodeDifferentAppInstallOnly_success() {
+        final AdFilters differentFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(
+                                new AppInstallFilters.Builder()
+                                        .setPackageNames(
+                                                new HashSet<>(
+                                                        Arrays.asList(DIFFERENT_PACKAGE_NAME)))
+                                        .build())
+                        .build();
+
+        assertThat(APP_INSTALL_ONLY_FILTER.hashCode()).isNotEqualTo(differentFilters.hashCode());
+    }
+
+    @Test
+    public void testToStringAppInstallOnly() {
+        final String expectedString =
+                String.format(
+                        "AdFilters{mFrequencyCapFilters=%s, mAppInstallFilters=%s}",
+                        null, AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
+        assertThat(APP_INSTALL_ONLY_FILTER.toString()).isEqualTo(expectedString);
+    }
+
+    @Test
+    public void testGetSizeInBytesAppInstallOnly() {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                        .build();
+        int size = AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS.getSizeInBytes();
+        assertEquals(size, originalFilters.getSizeInBytes());
+    }
+
+    @Test
+    public void testGetSizeInBytesFrequencyCapOnly() {
+        final AdFilters originalFilters =
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                        .build();
+        int size = FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS.getSizeInBytes();
+        assertEquals(size, originalFilters.getSizeInBytes());
+    }
+
+    @Test
+    public void testGetSizeInBytesNulls() {
+        final AdFilters originalFilters = new AdFilters.Builder().build();
+        assertEquals(0, originalFilters.getSizeInBytes());
     }
 
     @Test
