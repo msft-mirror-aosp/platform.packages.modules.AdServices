@@ -30,7 +30,7 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -65,6 +65,7 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull protected final AdsScoreGenerator mAdsScoreGenerator;
     @NonNull protected final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
@@ -233,7 +234,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig) {
         try {
             if (customAudiences.isEmpty()) {
-                LogUtil.w("Cannot invoke bidding on empty list of CAs");
+                sLogger.w("Cannot invoke bidding on empty list of CAs");
                 endSilentFailedBidding(new RuntimeException("No CAs found for selection."));
                 return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
             }
@@ -241,7 +242,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap =
                     mapBuyerToCustomAudience(customAudiences);
 
-            LogUtil.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
+            sLogger.v("Invoking bidding for #%d buyers", buyerToCustomAudienceMap.size());
             long perBuyerBiddingTimeoutMs = mFlags.getAdSelectionBiddingTimeoutPerBuyerMs();
             return FluentFuture.from(
                             Futures.successfulAsList(
@@ -292,13 +293,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
-        LogUtil.v("Got %d total bidding outcomes", adBiddingOutcomes.size());
+        sLogger.v("Got %d total bidding outcomes", adBiddingOutcomes.size());
         List<AdBiddingOutcome> validBiddingOutcomes =
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
-        LogUtil.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
+        sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
         if (validBiddingOutcomes.isEmpty()) {
-            LogUtil.w("Received empty list of successful Bidding outcomes");
+            sLogger.w("Received empty list of successful Bidding outcomes");
             throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
@@ -306,7 +307,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
     private AdScoringOutcome getWinningOutcome(
             @NonNull List<AdScoringOutcome> overallAdScoringOutcome) {
-        LogUtil.v("Scoring completed, generating winning outcome");
+        sLogger.v("Scoring completed, generating winning outcome");
         return overallAdScoringOutcome.stream()
                 .filter(a -> a.getAdWithScore().getScore() > 0)
                 .max(
@@ -330,7 +331,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     AdSelectionOrchestrationResult createAdSelectionResult(
             @NonNull AdScoringOutcome scoringWinner) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
-        LogUtil.v("Creating Ad Selection result from scoring winner");
+        sLogger.v("Creating Ad Selection result from scoring winner");
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
                 .setCustomAudienceSignals(
@@ -355,7 +356,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                     .computeIfAbsent(customAudience.getBuyer(), k -> new ArrayList<>())
                     .add(customAudience);
         }
-        LogUtil.v("Created mapping for #%d buyers", buyerToCustomAudienceMap.size());
+        sLogger.v("Created mapping for #%d buyers", buyerToCustomAudienceMap.size());
         return buyerToCustomAudienceMap;
     }
 

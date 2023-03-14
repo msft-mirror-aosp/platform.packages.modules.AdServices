@@ -36,7 +36,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -54,6 +54,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class TestAdSelectionManagerTest extends ForegroundCtsTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String DECISION_LOGIC_JS = "function test() { return \"hello world\"; }";
@@ -102,7 +103,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionId() throws Exception {
-        LogUtil.i("Calling Report Impression");
+        sLogger.i("Calling Report Impression");
 
         AdSelectionClient adSelectionClient =
                 new AdSelectionClient.Builder()
@@ -187,7 +188,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Test
     public void testFailsWithInvalidAdSelectionConfigNoBuyers() throws Exception {
-        LogUtil.i("Calling Ad Selection");
+        sLogger.i("Calling Ad Selection");
         AdSelectionConfig adSelectionConfigNoBuyers =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                         .setSeller(SELLER)
