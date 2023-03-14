@@ -50,16 +50,23 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // TODO(b/269798827): Enable for R.
+        // On T+ devices, always disable the AdExtServices activities.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
-                || !FlagsFactory.getFlags().getEnableBackCompat()
+                && Build.VERSION.SDK_INT != Build.VERSION_CODES.S_V2) {
+            // If this is not an S- device, disable the service activities and do not register the
+            // broadcast receivers.
+            updateAdExtServicesActivities(context, /* enable= */ false);
+            return;
+        }
+        // If this is an S- device but the flags are disabled, do nothing.
+        if (!FlagsFactory.getFlags().getEnableBackCompat()
                 || !FlagsFactory.getFlags().getAdServicesEnabled()
                 || FlagsFactory.getFlags().getGlobalKillSwitch()) {
-            // If this is not an S- device or if any of the flags are disabled, do nothing.
             return;
         }
 
         registerPackagedChangedBroadcastReceivers(context);
-        enableAdExtServicesActivities(context);
+        updateAdExtServicesActivities(context, /* enable= */ true);
     }
 
     /**
@@ -78,16 +85,19 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
      * the flag is enabled, we enable the activities.
      */
     @VisibleForTesting
-    void enableAdExtServicesActivities(Context context) {
+    void updateAdExtServicesActivities(Context context, boolean enable) {
         PackageManager packageManager = context.getPackageManager();
         try {
             PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
             for (String activity : CONSENT_ACTIVITIES_CLASSES) {
                 packageManager.setComponentEnabledSetting(
                         new ComponentName(packageInfo.packageName, activity),
-                        PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                        enable
+                                ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                                : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                         PackageManager.DONT_KILL_APP);
             }
+            LogUtil.d("Updated state of AdExtServices activities: [enabled=" + enable + "]");
         } catch (Exception e) {
             LogUtil.e("Error when enabling activities: " + e.getMessage());
             e.printStackTrace();
