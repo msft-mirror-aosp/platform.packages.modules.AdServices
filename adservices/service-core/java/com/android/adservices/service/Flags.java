@@ -36,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
 public interface Flags {
     /** Topics Epoch Job Period. */
@@ -1769,6 +1771,13 @@ public interface Flags {
         return ImmutableList.of();
     }
 
+    long DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT = 100L;
+
+    /** Returns debug keys hash limit. */
+    default long getMeasurementDebugJoinKeyHashLimit() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
@@ -1783,5 +1792,19 @@ public interface Flags {
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
         return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /**
+     * Default allowlist of the enrollments for whom debug key insertion based on join key matching
+     * is allowed.
+     */
+    String DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST = "";
+
+    /**
+     * Allowlist of the enrollments for whom debug key insertion based on join key matching is
+     * allowed.
+     */
+    default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 }

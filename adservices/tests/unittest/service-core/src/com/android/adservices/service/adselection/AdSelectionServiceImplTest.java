@@ -105,6 +105,7 @@ import com.android.adservices.data.adselection.DBBuyerDecisionLogic;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
@@ -128,12 +129,15 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -227,10 +231,13 @@ public class AdSelectionServiceImplTest {
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
+
+    @Spy
     private final AdServicesHttpsClient mClient =
             new AdServicesHttpsClient(
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
+
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -274,6 +281,7 @@ public class AdSelectionServiceImplTest {
                         .startMocking();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
 
@@ -349,6 +357,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Re init flags with registerAdBeaconDisabled
         mFlags =
                 new FlagsWithEnrollmentCheckEnabledSwitch(false) {
@@ -459,6 +468,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessWithRegisterAdBeaconEnabled() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -560,7 +571,228 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
+    public void testReportImpressionSuccessAndDoesNotCrashAfterSellerThrowsAnException()
+            throws Exception {
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        ListenableFuture<Void> failedFuture =
+                Futures.submit(
+                        () -> {
+                            throw new IllegalStateException("Exception for test!");
+                        },
+                        mLightweightExecutorService);
+
+        doReturn(failedFuture).when(mClient).getAndReadNothing(sellerReportingUri);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        // Start mockserver with throttling for seller reporting
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        assertEquals(server.takeRequest().getPath(), mBuyerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionSuccessAndDoesNotCrashAfterBuyerReportThrowsAnException()
+            throws Exception {
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        ListenableFuture<Void> failedFuture =
+                Futures.submit(
+                        () -> {
+                            throw new IllegalStateException("Exception for test!");
+                        },
+                        mLightweightExecutorService);
+
+        doReturn(failedFuture).when(mClient).getAndReadNothing(buyerReportingUri);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        // Start mockserver with throttling for buyer reporting
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse().setBody(sellerDecisionLogicJs),
+                                new MockResponse(),
+                                new MockResponse()));
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilterer);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        assertEquals(server.takeRequest().getPath(), mSellerReportingPath);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_INTERNAL_ERROR),
+                        anyInt());
+    }
+
+    @Test
     public void testReportImpressionSuccessfullyRegistersEventUris() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -715,6 +947,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Re init flags with registerAdBeaconDisabled
         mFlags =
                 new FlagsWithEnrollmentCheckEnabledSwitch(false) {
@@ -853,6 +1086,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterUrisThatFailDomainValidation()
             throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1006,7 +1240,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsButDesNotRegisterMalformedUris() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1159,7 +1393,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionOnlyRegisterSellerUrisWhenBuyerJSFails() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1298,6 +1532,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoesNotRegisterUrisWhenSellerJSFails() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1427,6 +1663,8 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1576,6 +1814,7 @@ public class AdSelectionServiceImplTest {
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1743,6 +1982,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionWithRevokedUserConsentSuccess() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1840,7 +2081,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportResultTakesTooLong() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1937,7 +2178,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenReportWinTakesTooLong() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2034,7 +2275,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenOverallJSTimesOut() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2137,7 +2378,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenJSFetchTakesTooLong() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2235,7 +2476,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidAdSelectionId() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2328,7 +2569,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadSellerJavascriptFailsWithInternalError() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2420,7 +2661,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionBadBuyerJavascriptFailsWithInternalError() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2513,7 +2754,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionUseDevOverrideForSellerJS() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2631,6 +2872,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionUseDevOverrideForSellerJSSuccessfullyRegistersEventUris()
             throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -3607,7 +3849,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        when(JSScriptEngine.getInstance(any())).thenReturn(jsScriptEngineMock);
+        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -3633,7 +3875,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionForegroundCheckEnabledFails_throwsException() throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -3976,6 +4218,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWithInvalidPackageName() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "incorrectPackage";
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4077,6 +4320,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -4186,6 +4430,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4293,6 +4538,8 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         // Reset flags to perform enrollment check
         mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
 
@@ -4407,6 +4654,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testAdSelectionConfigInvalidSellerAndSellerUris() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4496,6 +4744,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionSuccessThrottledSubsequentCallFailure() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4617,6 +4866,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testReportImpressionDoestNotReportWhenUrisDoNotMatchDomain() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Instantiate a server with different domain from buyer and seller for reporting
         MockWebServer reportingServer = new MockWebServer();
         reportingServer.play();
@@ -4717,7 +4967,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsBuyerWhenSellerReportingUriDoesNotMatchDomain()
             throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4824,7 +5074,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriDoesNotMatchDomain()
             throws Exception {
-
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
 
@@ -5777,6 +6027,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -7021,7 +7272,7 @@ public class AdSelectionServiceImplTest {
 
         @Override
         public long getReportImpressionOverallTimeoutMs() {
-            return 700;
+            return 1000;
         }
 
         @Override
