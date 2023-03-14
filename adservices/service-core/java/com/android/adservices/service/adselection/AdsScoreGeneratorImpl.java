@@ -28,7 +28,7 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -63,6 +63,7 @@ import java.util.stream.Collectors;
  * <p>A new instance is assumed to be created for every call.
  */
 public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting static final String QUERY_PARAM_RENDER_URIS = "renderuris";
 
@@ -127,7 +128,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
             @NonNull final AdSelectionConfig adSelectionConfig)
             throws AdServicesException {
-        LogUtil.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
+        sLogger.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
@@ -199,7 +200,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @Nullable
     private List<AdScoringOutcome> handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, SCORING_TIMED_OUT);
+        sLogger.e(e, SCORING_TIMED_OUT);
         // DO NOT SUBMIT: Do we need to end tracing here as well?
         throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
     }
@@ -223,14 +224,14 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                LogUtil.v("Fetching Ad Scoring Logic from the server");
+                                sLogger.v("Fetching Ad Scoring Logic from the server");
                                 return FluentFuture.from(
                                                 mAdServicesHttpsClient.fetchPayload(jsRequest))
                                         .transform(
                                                 response -> response.getResponseBody(),
                                                 mLightweightExecutorService);
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current ad selection config. "
                                                 + "Skipping call to server.");
@@ -249,7 +250,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         Exception.class,
                         e -> {
                             Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
-                            LogUtil.e(e, "Exception encountered when fetching scoring logic");
+                            sLogger.e(e, "Exception encountered when fetching scoring logic");
                             throw new IllegalStateException(MISSING_SCORING_LOGIC);
                         },
                         mLightweightExecutorService);
@@ -275,7 +276,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         FluentFuture<List<Double>> adScores =
                 trustedScoringSignals.transformAsync(
                         trustedSignals -> {
-                            LogUtil.v("Invoking JS engine to generate Ad Scores");
+                            sLogger.v("Invoking JS engine to generate Ad Scores");
                             return mAdSelectionScriptEngine.scoreAds(
                                     scoringLogic,
                                     adBiddingOutcomes.stream()
@@ -357,7 +358,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                LogUtil.v("Fetching trusted scoring signals from server");
+                                sLogger.v("Fetching trusted scoring signals from server");
                                 return Futures.transform(
                                         mAdServicesHttpsClient.fetchPayload(
                                                 trustedScoringSignalsUri),
@@ -368,7 +369,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                                                 s.getResponseBody()),
                                         mLightweightExecutorService);
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override trusted scoring"
                                                 + " signals are is provided for the current ad"
                                                 + " selection config. Skipping call to server.");
@@ -388,7 +389,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                         e -> {
                             Tracing.endAsyncSection(
                                     Tracing.GET_TRUSTED_SCORING_SIGNALS, traceCookie);
-                            LogUtil.e(e, "Exception encountered when fetching trusted signals");
+                            sLogger.e(e, "Exception encountered when fetching trusted signals");
                             throw new IllegalStateException(MISSING_TRUSTED_SCORING_SIGNALS);
                         },
                         mLightweightExecutorService);
@@ -410,7 +411,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private List<AdScoringOutcome> mapAdsToScore(
             List<AdBiddingOutcome> adBiddingOutcomes, List<Double> adScores) {
         List<AdScoringOutcome> adScoringOutcomes = new ArrayList<>();
-        LogUtil.v(
+        sLogger.v(
                 "Mapping #%d bidding outcomes to #%d ads with scores",
                 adBiddingOutcomes.size(), adScores.size());
         for (int i = 0; i < adScores.size(); i++) {
@@ -427,7 +428,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
                             .build());
         }
-        LogUtil.v("Returning Ad Scoring Outcome");
+        sLogger.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
     }
 }
