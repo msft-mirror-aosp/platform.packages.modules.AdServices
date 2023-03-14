@@ -32,7 +32,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
@@ -49,6 +48,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
@@ -72,6 +72,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -133,12 +134,8 @@ public class ImpressionReporter {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        // Clearing calling identity to check device config permission read by flags on the
-        // local process and not on the process called. Once the device configs are read,
-        // restore calling identity.
-        final long token = Binder.clearCallingIdentity();
-        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
-        Binder.restoreCallingIdentity(token);
+        boolean isRegisterAdBeaconEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
         ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
                 registerAdBeaconScriptEngineHelper;
@@ -202,12 +199,8 @@ public class ImpressionReporter {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
-        // Clearing calling identity to check device config permission read by flags on the
-        // local process and not on the process called. Once the device configs are read,
-        // restore calling identity.
-        final long token = Binder.clearCallingIdentity();
-        boolean isRegisterAdBeaconEnabled = flags.getFledgeRegisterAdBeaconEnabled();
-        Binder.restoreCallingIdentity(token);
+        boolean isRegisterAdBeaconEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
 
         ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
                 registerAdBeaconScriptEngineHelper;
@@ -283,7 +276,7 @@ public class ImpressionReporter {
             @NonNull ReportImpressionCallback callback) {
         LogUtil.v("Executing reportImpression API");
         long adSelectionId = requestParams.getAdSelectionId();
-        long timeoutMs = readFlagInBinderThread(mFlags::getReportImpressionOverallTimeoutMs);
+        long timeoutMs = BinderFlagReader.readFlag(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
         ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
@@ -329,21 +322,12 @@ public class ImpressionReporter {
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         mScheduledExecutor)
-                .transformAsync(
-                        reportingUrisAndContext ->
-                                doReport(
-                                        reportingUrisAndContext.first,
-                                        reportingUrisAndContext.second),
-                        mLightweightExecutorService)
                 .addCallback(
-                        new FutureCallback<List<Void>>() {
+                        new FutureCallback<Pair<ReportingUris, ReportingContext>>() {
                             @Override
-                            public void onSuccess(List<Void> result) {
-                                LogUtil.d("Report impression succeeded!");
-                                mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
-                                        AdServicesStatusUtils.STATUS_SUCCESS,
-                                        0);
+                            public void onSuccess(Pair<ReportingUris, ReportingContext> result) {
+                                LogUtil.d("Computed reporting uris successfully!");
+                                performReporting(result.first, result.second);
                             }
 
                             @Override
@@ -366,6 +350,37 @@ public class ImpressionReporter {
                             }
                         },
                         mLightweightExecutorService);
+    }
+
+    private void performReporting(ReportingUris reportingUris, ReportingContext ctx) {
+        FluentFuture<List<Void>> reportingFuture = FluentFuture.from(doReport(reportingUris, ctx));
+        reportingFuture.addCallback(
+                new FutureCallback<List<Void>>() {
+                    @Override
+                    public void onSuccess(List<Void> result) {
+                        LogUtil.d("Reporting finished successfully!");
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_SUCCESS,
+                                0);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        LogUtil.e(t, "Report Impression failure encountered during reporting!");
+                        if (t instanceof IOException) {
+                            mAdServicesLogger.logFledgeApiCallStats(
+                                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                    AdServicesStatusUtils.STATUS_IO_ERROR,
+                                    0);
+                        }
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                0);
+                    }
+                },
+                mLightweightExecutorService);
     }
 
     private Pair<ReportingUris, ReportingContext> notifySuccessToCaller(
@@ -659,13 +674,6 @@ public class ImpressionReporter {
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
-    }
-
-    private <T> T readFlagInBinderThread(Supplier<T> flagReadLambda) {
-        final long token = Binder.clearCallingIdentity();
-        T result = flagReadLambda.get();
-        Binder.restoreCallingIdentity(token);
-        return result;
     }
 
     private static class ReportingContext {

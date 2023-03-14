@@ -125,7 +125,8 @@ public class CustomAudienceImpl {
                         customAudience,
                         callerPackageName,
                         currentTime,
-                        customAudienceDefaultExpireIn);
+                        customAudienceDefaultExpireIn,
+                        mFlags);
 
         LogUtil.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
