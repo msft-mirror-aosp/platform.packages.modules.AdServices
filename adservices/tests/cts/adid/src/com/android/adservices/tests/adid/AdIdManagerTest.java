@@ -23,6 +23,8 @@ import android.adservices.adid.AdIdManager;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
+import android.os.SystemProperties;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -46,14 +48,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RunWith(AndroidJUnit4.class)
 public class AdIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
+    private static final int DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND = 5;
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
     private String mPreviousAppAllowList;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         overrideAdIdKillSwitch(true);
         overridePpapiAppAllowList();
+        // Cool-off rate limiter in case it was initialized by another test
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @After
@@ -111,18 +116,24 @@ public class AdIdManagerTest {
         final AdIdManager adIdManager = AdIdManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
-        assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
-        assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
-        assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
-        assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getAdIdRequestPerSecond();
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(getAdIdAndVerifyRateLimitReached(adIdManager));
+        }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         getAdIdAndVerifyRateLimitReached(adIdManager);
 
         // Verify limit reached
-        assertTrue(getAdIdAndVerifyRateLimitReached(adIdManager));
+        // If the test takes less than 1 second, this test is reliable due to the rate limiter
+        // limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = getAdIdAndVerifyRateLimitReached(adIdManager);
+        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
     }
 
     private boolean getAdIdAndVerifyRateLimitReached(AdIdManager manager)
@@ -154,5 +165,25 @@ public class AdIdManagerTest {
                 countDownLatch.countDown();
             }
         };
+    }
+
+    private int getAdIdRequestPerSecond() {
+        try {
+            String permitString =
+                    SystemProperties.get("debug.adservices.adid_request_permits_per_second");
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+
+            permitString =
+                    ShellUtils.runShellCommand(
+                            "device_config get adservices adid_request_permits_per_second");
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
+        } catch (Exception e) {
+            return DEFAULT_ADID_REQUEST_PERMITS_PER_SECOND;
+        }
     }
 }
