@@ -70,7 +70,7 @@ public class AdSelectionService extends Service {
         }
 
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, mFlags);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
             MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }

@@ -76,7 +76,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
      */
     @VisibleForTesting
     void registerPackagedChangedBroadcastReceivers(Context context) {
-        PackageChangedReceiver.enableReceiver(context);
+        PackageChangedReceiver.enableReceiver(context, FlagsFactory.getFlags());
         LogUtil.d("Package changed broadcast receivers registered.");
     }
 
