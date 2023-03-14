@@ -154,6 +154,7 @@ public abstract class E2ETest {
         String REGISTRATION_URI_KEY = "attribution_src_url";
         String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_PERMISSION_KEY = "debug_permission";
         String DEBUG_REPORTING_KEY = "debug_reporting";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
@@ -312,6 +313,40 @@ public abstract class E2ETest {
             inputStreams.add(assetManager.open(testDirName + "/" + testFile));
         }
         return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
+    }
+
+    public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
+        JSONObject urlToResponse =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0);
+        return urlToResponse.optBoolean(TestFormatJsonMapping.DEBUG_PERMISSION_KEY, false);
+    }
+
+    public static boolean hasAdIdPermission(JSONObject obj) throws JSONException {
+        JSONObject urlToResponse =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0);
+        return urlToResponse.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION, false);
+    }
+
+    public static boolean hasSourceDebugReportingPermission(JSONObject obj) throws JSONException {
+        JSONObject headersMapJson =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0)
+                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
+        JSONObject registerSource =
+                headersMapJson.getJSONObject("Attribution-Reporting-Register-Source");
+        return registerSource.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
+    }
+
+    public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
+        JSONObject headersMapJson =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0)
+                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
+        JSONObject registerTrigger =
+                headersMapJson.getJSONObject("Attribution-Reporting-Register-Trigger");
+        return registerTrigger.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
     }
 
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
