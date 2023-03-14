@@ -17,24 +17,38 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
-
+    @NonNull private final Clock mClock;
     @NonNull private final AppInstallDao mAppInstallDao;
+    @NonNull private final FrequencyCapDao mFrequencyCapDao;
 
-    public AdFiltererImpl(@NonNull AppInstallDao appInstallDao) {
+    public AdFiltererImpl(
+            @NonNull AppInstallDao appInstallDao,
+            @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull Clock clock) {
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(frequencyCapDao);
+        Objects.requireNonNull(clock);
         mAppInstallDao = appInstallDao;
+        mFrequencyCapDao = frequencyCapDao;
+        mClock = clock;
     }
 
     /**
@@ -51,10 +65,12 @@ public final class AdFiltererImpl implements AdFilterer {
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
         List<DBCustomAudience> toReturn = new ArrayList<>();
+        Instant currentTime = mClock.instant();
         for (DBCustomAudience ca : cas) {
             List<DBAdData> filteredAds = new ArrayList<>();
             for (DBAdData ad : ca.getAds()) {
-                if (shouldAdBeFiltered(ad, ca.getBuyer())) {
+                if (doesAdPassFilters(
+                        ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
                     filteredAds.add(ad);
                 }
             }
@@ -79,22 +95,30 @@ public final class AdFiltererImpl implements AdFilterer {
     @Override
     public List<DBAdData> filterContextualAds(List<DBAdData> ads, AdTechIdentifier buyer) {
         List<DBAdData> toReturn = new ArrayList<>();
+        Instant currentTime = mClock.instant();
         for (DBAdData ad : ads) {
-            if (shouldAdBeFiltered(ad, buyer)) {
+            if (doesAdPassFilters(ad, buyer, null, null, currentTime)) {
                 toReturn.add(ad);
             }
         }
         return toReturn;
     }
 
-    private boolean shouldAdBeFiltered(DBAdData ad, AdTechIdentifier buyer) {
+    private boolean doesAdPassFilters(
+            DBAdData ad,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
         if (ad.getAdFilters() == null) {
             return true;
         }
-        return shouldAppInstallAdBeFiltered(ad, buyer);
+        return doesAdPassAppInstallFilters(ad, buyer)
+                && doesAdPassFrequencyCapFilters(
+                        ad, buyer, customAudienceOwner, customAudienceName, currentTime);
     }
 
-    private boolean shouldAppInstallAdBeFiltered(DBAdData ad, AdTechIdentifier buyer) {
+    private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
         /* This could potentially be optimized by grouping the ads by package name before running
          * the queries, but unless the DB cache is playing poorly with these queries there might
          * not be a major performance improvement.
@@ -107,6 +131,111 @@ public final class AdFiltererImpl implements AdFilterer {
                 return false;
             }
         }
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFilters(
+            DBAdData ad,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
+        if (ad.getAdFilters().getFrequencyCapFilters() == null) {
+            return true;
+        }
+
+        FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
+
+        // TODO(b/265205439): Compare the performance of loading the histograms once for each custom
+        //  audience and buyer versus querying for every filter
+
+        // Contextual ads cannot filter on win-typed events
+        boolean adIsFromCustomAudience =
+                (customAudienceOwner != null) && (customAudienceName != null);
+        if (adIsFromCustomAudience
+                && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForWinType(
+                        filters.getKeyedFrequencyCapsForWinEvents(),
+                        buyer,
+                        customAudienceOwner,
+                        customAudienceName,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForImpressionEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForViewEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForClickEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFiltersForWinType(
+            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
+        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+            Instant intervalStartTime =
+                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+            int numEventsSinceStartTime =
+                    mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
+                            frequencyCap.getAdCounterKey(),
+                            buyer,
+                            customAudienceOwner,
+                            customAudienceName,
+                            FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                            intervalStartTime);
+
+            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFiltersForNonWinType(
+            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            int adEventType,
+            AdTechIdentifier buyer,
+            Instant currentTime) {
+        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+            Instant intervalStartTime =
+                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+            int numEventsSinceStartTime =
+                    mFrequencyCapDao.getNumEventsForBuyerAfterTime(
+                            frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
+
+            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+                return false;
+            }
+        }
+
         return true;
     }
 }

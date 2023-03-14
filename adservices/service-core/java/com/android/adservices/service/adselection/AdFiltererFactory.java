@@ -22,6 +22,8 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.BinderFlagReader;
 
+import java.time.Clock;
+
 /** Factory for implementations of the {@link AdFilterer} interface */
 public final class AdFiltererFactory {
     /**
@@ -35,7 +37,10 @@ public final class AdFiltererFactory {
      */
     public static AdFilterer getAdFilterer(Context context, Flags flags) {
         if (BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled)) {
-            return new AdFiltererImpl(SharedStorageDatabase.getInstance(context).appInstallDao());
+            return new AdFiltererImpl(
+                    SharedStorageDatabase.getInstance(context).appInstallDao(),
+                    SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                    Clock.systemUTC());
         } else {
             return new AdFiltererNoOpImpl();
         }
