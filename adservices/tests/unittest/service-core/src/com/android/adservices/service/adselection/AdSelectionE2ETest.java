@@ -273,7 +273,8 @@ public class AdSelectionE2ETest {
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdTechIdentifier mSeller;
-    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
+    private final AdFilteringFeatureFactory mAdFilteringFeatureFactory =
+            new AdFilteringFeatureFactory(ApplicationProvider.getApplicationContext(), mFlags);
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -337,7 +338,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -757,7 +758,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -864,7 +865,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -977,7 +978,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -2102,7 +2103,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -2335,7 +2336,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2402,7 +2403,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -2512,7 +2513,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -3153,7 +3154,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -3273,7 +3274,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -3394,7 +3395,7 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -3650,6 +3651,11 @@ public class AdSelectionE2ETest {
             // Unlimited rate for unit tests to avoid flake in tests due to rate
             // limiting
             return -1;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return false;
         }
     }
 }

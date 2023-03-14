@@ -17,7 +17,6 @@
 package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
 
 import android.content.Context;
 
@@ -27,28 +26,37 @@ import com.android.adservices.service.Flags;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AdFilteringFeatureFactoryTest {
-
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    @Mock private Flags mFlagsMock;
 
     @Test
-    public void testFiltersEnabled() {
-        doReturn(true).when(mFlagsMock).getFledgeAdSelectionFilteringEnabled();
-        assertTrue(
-                AdFilteringFeatureFactory.getAdFilterer(CONTEXT, mFlagsMock)
-                        instanceof AdFiltererImpl);
+    public void testGetAdFiltererFilteringEnabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(CONTEXT, new FlagsWithAdSelectionFilteringEnabled());
+        assertTrue(adFilteringFeatureFactory.getAdFilterer() instanceof AdFiltererImpl);
     }
 
     @Test
-    public void testFiltersDisabled() {
-        doReturn(false).when(mFlagsMock).getFledgeAdSelectionFilteringEnabled();
-        assertTrue(
-                AdFilteringFeatureFactory.getAdFilterer(CONTEXT, mFlagsMock)
-                        instanceof AdFiltererNoOpImpl);
+    public void testGetAdFiltererFilteringDisabled() {
+        AdFilteringFeatureFactory adFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(CONTEXT, new FlagsWithAdSelectionFilteringDisabled());
+        assertTrue(adFilteringFeatureFactory.getAdFilterer() instanceof AdFiltererNoOpImpl);
+    }
+
+    private static class FlagsWithAdSelectionFilteringDisabled implements Flags {
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return false;
+        }
+    }
+
+    private static class FlagsWithAdSelectionFilteringEnabled implements Flags {
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
     }
 }

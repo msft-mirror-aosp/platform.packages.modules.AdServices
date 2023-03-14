@@ -88,8 +88,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdFilterer;
-import com.android.adservices.service.adselection.AdFiltererNoOpImpl;
+import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.adselection.InteractionReporter;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -212,7 +211,8 @@ public class FledgeE2ETest {
     private Uri mLocalhostBuyerDomain;
     private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
-    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
+    private final AdFilteringFeatureFactory mAdFilteringFeatureFactory =
+            new AdFilteringFeatureFactory(CONTEXT, DEFAULT_FLAGS);
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
@@ -1260,7 +1260,7 @@ public class FledgeE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1467,7 +1467,7 @@ public class FledgeE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
@@ -2872,7 +2872,7 @@ public class FledgeE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
     }
 
     private AdSelectionTestCallback invokeRunAdSelection(
@@ -3211,6 +3211,11 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeRegisterAdBeaconEnabled() {
             return mRegisterAdBeaconEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return false;
         }
     }
 }
