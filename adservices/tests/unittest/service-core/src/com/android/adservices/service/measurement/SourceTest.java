@@ -81,7 +81,7 @@ public class SourceTest {
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
-        String debugJoinKey = "debug-join-key";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")

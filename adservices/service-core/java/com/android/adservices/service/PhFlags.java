@@ -370,6 +370,12 @@ public final class PhFlags implements Flags {
     // New Feature Flags
     static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
 
+    static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
+            "measurement_debug_join_key_hash_limit";
+
+    static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST =
+            "measurement_debug_join_key_enrollment_allowlist";
+
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -1378,6 +1384,14 @@ public final class PhFlags implements Flags {
                                 defaultValue));
     }
 
+    @Override
+    public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DeviceConfig.getString(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
+                /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST);
+    }
+
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
@@ -2151,6 +2165,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementRollbackDeletionKillSwitch());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT
+                        + " = "
+                        + getMeasurementDebugJoinKeyHashLimit());
+        writer.println(
+                "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
                         + " = "
                         + getWebContextClientAppAllowList());
@@ -2513,5 +2532,13 @@ public final class PhFlags implements Flags {
             }
         }
         return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
+    }
+
+    @Override
+    public long getMeasurementDebugJoinKeyHashLimit() {
+        return DeviceConfig.getLong(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
+                /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
     }
 }
