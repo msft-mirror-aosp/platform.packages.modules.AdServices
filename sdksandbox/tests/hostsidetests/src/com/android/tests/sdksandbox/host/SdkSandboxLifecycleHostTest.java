@@ -206,6 +206,26 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testAppOwnedSdkSandboxInterfaceRemoval_AppDies() throws Exception {
+        startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
+        assertThat(
+                        runDeviceTests(
+                                APP_SHARED_2_PACKAGE,
+                                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
+                                "testRegisterAppOwedSdkSandboxInterfacesBeforeAppDeath"))
+                .isTrue();
+
+        // APP_SHARED_2_PACKAGE dies after running device-side tests.
+        waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
+        assertThat(
+                        runDeviceTests(
+                                APP_SHARED_2_PACKAGE,
+                                "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
+                                "testGetAppOwedSdkSandboxInterfacesOnAppDeath"))
+                .isTrue();
+    }
+
+    @Test
     public void testSandboxIsKilledWhenKillswitchEnabled() throws Exception {
         try {
             getDevice()

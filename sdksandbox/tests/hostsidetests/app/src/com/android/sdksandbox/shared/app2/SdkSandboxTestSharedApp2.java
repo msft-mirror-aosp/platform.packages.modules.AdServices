@@ -18,9 +18,11 @@ package com.android.sdksandbox.shared.app2;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
+import android.os.Binder;
 import android.os.Bundle;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -35,6 +37,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class SdkSandboxTestSharedApp2  {
 
+    private static final String APP_OWNED_SDK_SANDBOX_INTERFACE_NAME = "com.android.testinterface";
     private static final String SDK_PACKAGE_NAME = "com.android.testcode";
 
     private SdkSandboxManager mSdkSandboxManager;
@@ -59,5 +62,24 @@ public class SdkSandboxTestSharedApp2  {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE_NAME, params, Runnable::run, callback);
         callback.assertLoadSdkIsSuccessful();
+    }
+
+    @Test
+    public void testRegisterAppOwedSdkSandboxInterfacesBeforeAppDeath() {
+        mRule.getScenario();
+
+        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()));
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).hasSize(1);
+    }
+
+    @Test
+    public void testGetAppOwedSdkSandboxInterfacesOnAppDeath() {
+        mRule.getScenario();
+
+        assertThat(mSdkSandboxManager.getAppOwnedSdkSandboxInterfaces()).hasSize(0);
     }
 }
