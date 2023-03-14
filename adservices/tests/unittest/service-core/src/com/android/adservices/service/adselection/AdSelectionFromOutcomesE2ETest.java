@@ -179,7 +179,8 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
+    private AdFilteringFeatureFactory mAdFilteringFeatureFactory =
+            new AdFilteringFeatureFactory(mContext, mFlags);
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -242,7 +243,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -574,6 +575,11 @@ public class AdSelectionFromOutcomesE2ETest {
             // Unlimited rate for unit tests to avoid flake in tests due to rate
             // limiting
             return -1;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return false;
         }
     }
 }
