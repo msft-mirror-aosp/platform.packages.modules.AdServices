@@ -55,7 +55,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -98,7 +98,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
-
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -224,7 +224,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            LogUtil.v(
+            sLogger.v(
                     "The selectAds(AdSelectionConfig) arguments should not be null, failed with"
                             + " overall latency %d in ms.",
                     overallLatencyMs);
@@ -339,7 +339,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
         } catch (NullPointerException e) {
-            LogUtil.v(
+            sLogger.v(
                     "The selectAds(AdSelectionFromOutcomesConfig) arguments should not be null,"
                             + " failed");
             mAdServicesLogger.logFledgeApiCallStats(
@@ -905,7 +905,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Close down method to be invoked when the PPAPI process is shut down. */
     @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
-        LogUtil.i("Shutting down AdSelectionService");
+        sLogger.i("Shutting down AdSelectionService");
         JSScriptEngine.getInstance(mContext).shutdown();
     }
 }
