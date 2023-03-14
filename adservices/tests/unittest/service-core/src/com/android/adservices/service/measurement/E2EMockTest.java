@@ -147,6 +147,7 @@ public abstract class E2EMockTest extends E2ETest {
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
         when(mFlags.getWebContextClientAppAllowList()).thenReturn(AllowLists.ALLOW_ALL);
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
     }
 
     @Override

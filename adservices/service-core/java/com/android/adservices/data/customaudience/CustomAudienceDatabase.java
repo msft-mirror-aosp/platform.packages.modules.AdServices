@@ -28,6 +28,8 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 
 import java.util.Objects;
 
@@ -78,9 +80,16 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                DBCustomAudience.Converters converters =
+                        new DBCustomAudience.Converters(
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAdSelectionFilteringEnabled()));
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
+                                .addTypeConverter(converters)
                                 .build();
             }
             return sSingleton;

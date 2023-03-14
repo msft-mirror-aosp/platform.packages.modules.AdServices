@@ -211,12 +211,6 @@ public class AdBidGeneratorImplTest {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
-        mCustomAudienceDao =
-                Room.inMemoryDatabaseBuilder(
-                                ApplicationProvider.getApplicationContext(),
-                                CustomAudienceDatabase.class)
-                        .build()
-                        .customAudienceDao();
 
         mBuyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -276,6 +270,13 @@ public class AdBidGeneratorImplTest {
         mRunAdBiddingPerCAExecutionLogger =
                 new RunAdBiddingPerCAExecutionLogger(
                         mRunAdBiddingPerCAClockMock, mAdServicesLoggerMock);
+        mCustomAudienceDao =
+                Room.inMemoryDatabaseBuilder(
+                                ApplicationProvider.getApplicationContext(),
+                                CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
+                        .build()
+                        .customAudienceDao();
     }
 
     @Test

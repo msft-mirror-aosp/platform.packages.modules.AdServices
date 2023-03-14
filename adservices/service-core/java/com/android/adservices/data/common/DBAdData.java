@@ -55,21 +55,6 @@ public class DBAdData {
         mAdFilters = adFilters;
     }
 
-    /**
-     * Parse parcelable {@link AdData} to storage model {@link DBAdData}.
-     *
-     * @param parcelable the service model.
-     * @return storage model
-     */
-    @NonNull
-    public static DBAdData fromServiceObject(@NonNull AdData parcelable) {
-        return new DBAdData(
-                parcelable.getRenderUri(),
-                parcelable.getMetadata(),
-                parcelable.getAdCounterKeys(),
-                parcelable.getAdFilters());
-    }
-
     /** Returns the estimated size, in bytes, of the components of this object. */
     public int size() {
         int totalSize = mRenderUri.toString().getBytes().length + mMetadata.getBytes().length;
