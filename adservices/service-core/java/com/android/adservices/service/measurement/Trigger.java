@@ -24,7 +24,6 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
@@ -477,7 +476,7 @@ public class Trigger {
     @Nullable
     public Uri getAttributionDestinationBaseUri() {
         if (mDestinationType == EventSurfaceType.APP) {
-            return BaseUriExtractor.getBaseUri(mAttributionDestination);
+            return mAttributionDestination;
         } else {
             Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
