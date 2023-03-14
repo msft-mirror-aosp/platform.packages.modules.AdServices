@@ -2630,6 +2630,26 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testRemoveAppOwnedSdkSandboxInterfacesOnAppDeath() throws Exception {
+        IBinder iBinder = Mockito.mock(IBinder.class);
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ iBinder));
+        ArgumentCaptor<IBinder.DeathRecipient> deathRecipient =
+                ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
+
+        Mockito.verify(iBinder).linkToDeath(deathRecipient.capture(), ArgumentMatchers.eq(0));
+
+        // App Died
+        deathRecipient.getValue().binderDied();
+
+        assertThat(mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE)).hasSize(0);
+    }
+
+    @Test
     public void testUnloadSdkNotCalledOnAppDeath() throws Exception {
         disableKillUid();
         disableForegroundCheck();
