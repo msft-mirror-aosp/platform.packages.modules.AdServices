@@ -23,7 +23,7 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 import androidx.room.TypeConverter;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import org.json.JSONArray;
 
@@ -38,6 +38,8 @@ import java.util.Set;
  * <p>Register custom type converters here.
  */
 public class FledgeRoomConverters {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     private FledgeRoomConverters() {}
 
     /** Serialize {@link Instant} to Long. */
@@ -121,7 +123,7 @@ public class FledgeRoomConverters {
         try {
             jsonSet = new JSONArray(serializedSet);
         } catch (Exception exception) {
-            LogUtil.d(exception, "Error deserializing set of strings from DB; ");
+            sLogger.d(exception, "Error deserializing set of strings from DB; ");
             return null;
         }
 
@@ -132,7 +134,7 @@ public class FledgeRoomConverters {
             } catch (Exception exception) {
                 // getString() coerces elements into Strings, so this should only happen if we get
                 // out of bounds
-                LogUtil.d(
+                sLogger.d(
                         exception,
                         "Error deserializing set string #%d from DB; skipping any other elements",
                         arrayIndex);

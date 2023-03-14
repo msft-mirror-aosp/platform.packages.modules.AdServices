@@ -32,7 +32,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -52,6 +52,7 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceOverrider {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final ListeningExecutorService mListeningExecutorService;
@@ -144,13 +145,13 @@ public class CustomAudienceOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Add dev override succeeded!");
+                                sLogger.d("Add dev override succeeded!");
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Add dev override failed!");
+                                sLogger.e(t, "Add dev override failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -194,13 +195,13 @@ public class CustomAudienceOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing dev override succeeded with status %d", result);
+                                sLogger.d("Removing dev override succeeded with status %d", result);
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing dev override failed!");
+                                sLogger.e(t, "Removing dev override failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -235,13 +236,13 @@ public class CustomAudienceOverrider {
                         new FutureCallback<Integer>() {
                             @Override
                             public void onSuccess(Integer result) {
-                                LogUtil.d("Removing all dev overrides succeeded!");
+                                sLogger.d("Removing all dev overrides succeeded!");
                                 invokeSuccess(callback, shortApiName, result);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Removing all dev overrides failed!");
+                                sLogger.e(t, "Removing all dev overrides failed!");
                                 notifyFailureToCaller(callback, t, shortApiName);
                             }
                         },
@@ -259,7 +260,7 @@ public class CustomAudienceOverrider {
                         () -> {
                             if (mConsentManager.isFledgeConsentRevokedForApp(
                                     mDevContext.getCallingAppPackageName())) {
-                                LogUtil.v("User consent is revoked!");
+                                sLogger.v("User consent is revoked!");
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -312,7 +313,7 @@ public class CustomAudienceOverrider {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send failed result to the callback");
+            sLogger.e(e, "Unable to send failed result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
@@ -330,7 +331,7 @@ public class CustomAudienceOverrider {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send successful result to the callback");
+            sLogger.e(e, "Unable to send successful result to the callback");
             resultCodeInt = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
             throw e.rethrowAsRuntimeException();
         } finally {
