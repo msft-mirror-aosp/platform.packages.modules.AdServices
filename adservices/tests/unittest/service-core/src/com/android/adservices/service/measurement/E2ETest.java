@@ -29,6 +29,7 @@ import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.DeviceConfig;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent.PointerCoords;
@@ -88,6 +89,7 @@ public abstract class E2ETest {
     static final Context sContext = ApplicationProvider.getApplicationContext();
     private final Collection<Action> mActionsList;
     final ReportObjects mExpectedOutput;
+    private final Map<String, String> mPhFlagsMap;
     // Extenders of the class populate in their own ways this container for actual output.
     final ReportObjects mActualOutput;
 
@@ -104,12 +106,15 @@ public abstract class E2ETest {
 
     private interface EventReportPayloadKeys {
         // Keys used to compare actual with expected output
-        List<String> STRINGS = ImmutableList.of(
-                "attribution_destination",
-                "scheduled_report_time",
-                "source_event_id",
-                "trigger_data",
-                "source_type");
+        List<String> STRINGS =
+                ImmutableList.of(
+                        "attribution_destination",
+                        "scheduled_report_time",
+                        "source_event_id",
+                        "trigger_data",
+                        "source_type",
+                        "source_debug_key",
+                        "trigger_debug_key");
         String DOUBLE = "randomized_trigger_rate";
     }
 
@@ -132,6 +137,7 @@ public abstract class E2ETest {
 
     public interface TestFormatJsonMapping {
         String API_CONFIG_KEY = "api_config";
+        String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
         String TEST_INPUT_KEY = "input";
         String TEST_OUTPUT_KEY = "output";
         String SOURCE_REGISTRATIONS_KEY = "sources";
@@ -400,15 +406,21 @@ public abstract class E2ETest {
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
     // unused by this constructor.
-    E2ETest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
+    E2ETest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            String name,
+            Map<String, String> phFlagsMap) {
         mActionsList = actions;
         mExpectedOutput = expectedOutput;
         mActualOutput = new ReportObjects();
+        mPhFlagsMap = phFlagsMap;
     }
 
     @Test
-    public void runTest() throws IOException, JSONException {
+    public void runTest() throws IOException, JSONException, DeviceConfig.BadConfigException {
         clearDatabase();
+        setupDeviceConfigForPhFlags();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -923,10 +935,25 @@ public abstract class E2ETest {
 
             ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
 
-            testCases.add(new Object[] {actions, expectedOutput, paramsProvider, name});
+            testCases.add(
+                    new Object[] {
+                        actions, expectedOutput, paramsProvider, name, extractPhFlags(testObj)
+                    });
         }
 
         return testCases;
+    }
+
+    private static Map<String, String> extractPhFlags(JSONObject testObj) {
+        Map<String, String> phFlagsMap = new HashMap<>();
+        if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
+            return phFlagsMap;
+        }
+
+        JSONObject phFlagsObject =
+                testObj.optJSONObject(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY);
+        phFlagsObject.keySet().forEach((key) -> phFlagsMap.put(key, phFlagsObject.optString(key)));
+        return phFlagsMap;
     }
 
     private static List<Action> createSourceBasedActions(JSONObject input) throws JSONException {
@@ -1147,5 +1174,12 @@ public abstract class E2ETest {
         sortDebugReportObjects(OutputType.ACTUAL, mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
+    }
+
+    private void setupDeviceConfigForPhFlags() throws DeviceConfig.BadConfigException {
+        DeviceConfig.Properties.Builder propertiesBuilder =
+                new DeviceConfig.Properties.Builder(DeviceConfig.NAMESPACE_ADSERVICES);
+        mPhFlagsMap.keySet().forEach(key -> propertiesBuilder.setString(key, mPhFlagsMap.get(key)));
+        DeviceConfig.setProperties(propertiesBuilder.build());
     }
 }

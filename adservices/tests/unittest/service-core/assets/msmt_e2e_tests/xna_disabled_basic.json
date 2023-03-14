@@ -1,7 +1,7 @@
 {
-  "description": "Given a source with matching enrollment ID with trigger and another source with non-matching enrollment ID. 2nd source transforms into a derived source and wins attribution. Two entries in \"Attribution-Reporting-Register-Aggregatable-Source\" header, many \"Attribution-Reporting-Register-Aggregatable-Trigger-Data\", generate an aggregate report with two contributions and the value is accumulated for each entry.",
+  "description": "Given a source with matching enrollment ID with trigger and another source with non-matching enrollment ID. 2nd source could've transformed into a derived source and win attribution but xna is disabled so first source wins and gets attributed.",
   "phflags_override": {
-    "measurement_enable_xna" : "true",
+    "measurement_enable_xna" : "false",
     "web_context_client_allow_list" : "*"
   },
   "input": {
@@ -183,14 +183,27 @@
     ]
   },
   "output": {
-    "event_level_results": [],
+    "event_level_results": [
+      {
+        "report_time": "800176400001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "800176400",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ],
     "aggregatable_results": [
       {
         "report_time": "800000600001",
         "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
-          "source_site": "android-app://example.1s2.test",
+          "source_site": "android-app://example.1s1.test",
           "histograms": [
             {
               "key": "0x559",
