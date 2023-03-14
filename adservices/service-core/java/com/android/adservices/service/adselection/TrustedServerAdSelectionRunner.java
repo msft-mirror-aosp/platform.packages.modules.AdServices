@@ -27,7 +27,7 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
@@ -83,6 +83,7 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String GZIP = new Codec.Gzip().getMessageEncoding(); // "gzip"
 
     @NonNull private final JsFetcher mJsFetcher;
@@ -384,7 +385,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
 
     @Nullable
     private AdSelectionOrchestrationResult handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Ad Selection exceeded time limit");
+        sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 }
