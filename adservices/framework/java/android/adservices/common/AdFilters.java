@@ -108,7 +108,14 @@ public final class AdFilters implements Parcelable {
      * @hide
      */
     public int getSizeInBytes() {
-        return mFrequencyCapFilters.getSizeInBytes() + mAppInstallFilters.getSizeInBytes();
+        int size = 0;
+        if (mFrequencyCapFilters != null) {
+            size += mFrequencyCapFilters.getSizeInBytes();
+        }
+        if (mAppInstallFilters != null) {
+            size += mAppInstallFilters.getSizeInBytes();
+        }
+        return size;
     }
 
     /**
