@@ -351,6 +351,9 @@ public final class PhFlags implements Flags {
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
 
+    static final String KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED =
+            "is_check_activity_feature_enabled";
+
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
@@ -1984,6 +1987,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isBackCompatActivityFeatureEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
+    }
+
+    @Override
     public String getUiEeaCountries() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         String uiEeaCountries =
@@ -2507,6 +2519,11 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t" + KEY_IS_EEA_DEVICE_FEATURE_ENABLED + " = " + isEeaDeviceFeatureEnabled());
         writer.println("\t" + KEY_IS_EEA_DEVICE + " = " + isEeaDevice());
+        writer.println(
+                "\t"
+                        + KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED
+                        + " = "
+                        + isBackCompatActivityFeatureEnabled());
         writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
