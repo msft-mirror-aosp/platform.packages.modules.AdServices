@@ -24,7 +24,6 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
-import android.os.Build;
 import android.os.OutcomeReceiver;
 import android.view.InputEvent;
 
@@ -45,10 +44,7 @@ public class MeasurementClient {
     private MeasurementClient(@NonNull Context context, @Nullable Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mMeasurementManager =
-                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        ? mContext.getSystemService(MeasurementManager.class)
-                        : MeasurementManager.get(context);
+        mMeasurementManager = mContext.getSystemService(MeasurementManager.class);
     }
 
     /**

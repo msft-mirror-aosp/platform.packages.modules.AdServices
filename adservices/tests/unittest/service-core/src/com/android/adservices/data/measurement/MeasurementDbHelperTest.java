@@ -85,10 +85,12 @@ public class MeasurementDbHelperTest {
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, OLD_TEST_DB_NAME, DbHelper.DATABASE_VERSION);
+        DbHelper dbHelper =
+                new DbHelper(
+                        sContext, OLD_TEST_DB_NAME, MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(6, oldDb.getVersion());
+        assertEquals(MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION, oldDb.getVersion());
 
         MeasurementDbHelper measurementDbHelper =
                 new MeasurementDbHelper(
