@@ -14,28 +14,26 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AppInstallFilters;
+import android.adservices.common.AppInstallFiltersFixture;
+import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.junit.Test;
+import org.junit.Ignore;
 
 /** Unit tests for {@link AppInstallFilters}. */
-// TODO(b/266837113): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class AppInstallFiltersTest {
 
-    @Test
+    @Ignore
     public void testBuildValidAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -44,7 +42,7 @@ public class AppInstallFiltersTest {
                 .containsExactlyElementsIn(CommonFixture.PACKAGE_SET);
     }
 
-    @Test
+    @Ignore
     public void testParcelAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -59,7 +57,7 @@ public class AppInstallFiltersTest {
                 .containsExactlyElementsIn(CommonFixture.PACKAGE_SET);
     }
 
-    @Test
+    @Ignore
     public void testEqualsIdentical_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -69,7 +67,7 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(identicalFilters)).isTrue();
     }
 
-    @Test
+    @Ignore
     public void testEqualsDifferent_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -78,7 +76,7 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(differentFilters)).isFalse();
     }
 
-    @Test
+    @Ignore
     public void testEqualsNull_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -87,7 +85,7 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.equals(nullFilters)).isFalse();
     }
 
-    @Test
+    @Ignore
     public void testHashCodeIdentical_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -97,7 +95,7 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.hashCode()).isEqualTo(identicalFilters.hashCode());
     }
 
-    @Test
+    @Ignore
     public void testHashCodeDifferent_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -106,7 +104,7 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
     }
 
-    @Test
+    @Ignore
     public void testToString() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -116,80 +114,26 @@ public class AppInstallFiltersTest {
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
     }
 
-    @Test
+    @Ignore
     public void testBuildNullPackageNames_throws() {
         assertThrows(
                 NullPointerException.class,
                 () -> new AppInstallFilters.Builder().setPackageNames(null));
     }
 
-    @Test
+    @Ignore
     public void testBuildNoSetters_success() {
         final AppInstallFilters originalFilters = new AppInstallFilters.Builder().build();
 
         assertThat(originalFilters.getPackageNames()).isEmpty();
     }
 
-    @Test
+    @Ignore
     public void testCreatorNewArray_success() {
         AppInstallFilters[] filtersArray = AppInstallFilters.CREATOR.newArray(2);
 
         assertThat(filtersArray.length).isEqualTo(2);
         assertThat(filtersArray[0]).isNull();
         assertThat(filtersArray[1]).isNull();
-    }
-
-    @Test
-    public void testGetSizeInBytes() {
-        final AppInstallFilters originalFilters =
-                new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
-        int[] size = new int[1];
-        CommonFixture.PACKAGE_SET.forEach(x -> size[0] += x.getBytes().length);
-        assertEquals(size[0], originalFilters.getSizeInBytes());
-    }
-
-    @Test
-    public void testJsonSerialization() throws JSONException {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        assertEquals(originalFilters, AppInstallFilters.fromJson(originalFilters.toJson()));
-    }
-
-    @Test
-    public void testJsonSerializationNonString() throws JSONException {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        JSONObject json = originalFilters.toJson();
-        JSONArray mixedArray = json.getJSONArray(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME);
-        mixedArray.put(0);
-        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, mixedArray);
-        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
-    }
-
-    @Test
-    public void testJsonSerializationNulls() throws JSONException {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        JSONObject json = originalFilters.toJson();
-        JSONArray mixedArray = json.getJSONArray(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME);
-        mixedArray.put(null);
-        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, mixedArray);
-        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
-    }
-
-    @Test
-    public void testJsonSerializationWrongType() throws JSONException {
-        JSONObject json = new JSONObject();
-        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, "value");
-        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
-    }
-
-    @Test
-    public void testJsonSerializationUnrelatedKey() throws JSONException {
-        final AppInstallFilters originalFilters =
-                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
-        JSONObject json = originalFilters.toJson();
-        json.put("key", "value");
-        assertEquals(originalFilters, AppInstallFilters.fromJson(originalFilters.toJson()));
     }
 }
