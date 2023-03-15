@@ -22,7 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
@@ -42,6 +42,8 @@ import java.util.Objects;
 /** This class represents the result of a daily fetch that will update a custom audience. */
 @AutoValue
 public abstract class CustomAudienceUpdatableData {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     @VisibleForTesting
     enum ReadStatus {
         STATUS_UNKNOWN,
@@ -146,7 +148,7 @@ public abstract class CustomAudienceUpdatableData {
 
         // Use the hash of the response string as a session identifier for logging purposes
         final String responseHash = "[" + response.hashCode() + "]";
-        LogUtil.v("Parsing JSON response string with hash %s", responseHash);
+        sLogger.v("Parsing JSON response string with hash %s", responseHash);
 
         // By default unset nullable AutoValue fields are null
         CustomAudienceUpdatableData.Builder dataBuilder =
@@ -157,13 +159,13 @@ public abstract class CustomAudienceUpdatableData {
 
         // No need to continue if an error occurred upstream for this custom audience update
         if (initialUpdateResult != BackgroundFetchRunner.UpdateResultType.SUCCESS) {
-            LogUtil.v("%s Skipping response string parsing due to upstream failure", responseHash);
+            sLogger.v("%s Skipping response string parsing due to upstream failure", responseHash);
             dataBuilder.setContainsSuccessfulUpdate(false);
             return dataBuilder.build();
         }
 
         if (response.isEmpty()) {
-            LogUtil.v("%s Response string was empty", responseHash);
+            sLogger.v("%s Response string was empty", responseHash);
             dataBuilder.setContainsSuccessfulUpdate(true);
             return dataBuilder.build();
         }
@@ -172,7 +174,7 @@ public abstract class CustomAudienceUpdatableData {
         try {
             responseObject = new JSONObject(response);
         } catch (JSONException exception) {
-            LogUtil.e("%s Error parsing JSON response into an object", responseHash);
+            sLogger.e("%s Error parsing JSON response into an object", responseHash);
             dataBuilder.setContainsSuccessfulUpdate(false);
             return dataBuilder.build();
         }
@@ -203,7 +205,7 @@ public abstract class CustomAudienceUpdatableData {
                         || (userBiddingSignalsReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && trustedBiddingDataReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && adsReadStatus == ReadStatus.STATUS_NOT_FOUND);
-        LogUtil.v(
+        sLogger.v(
                 "%s Completed parsing JSON response with containsSuccessfulUpdate = %b",
                 responseHash, containsSuccessfulUpdate);
         dataBuilder.setContainsSuccessfulUpdate(containsSuccessfulUpdate);
@@ -227,7 +229,7 @@ public abstract class CustomAudienceUpdatableData {
                 return ReadStatus.STATUS_FOUND_VALID;
             }
         } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     INVALID_JSON_TYPE_ERROR_FORMAT,
                     responseHash,
@@ -235,7 +237,7 @@ public abstract class CustomAudienceUpdatableData {
             dataBuilder.setUserBiddingSignals(null);
             return ReadStatus.STATUS_FOUND_INVALID;
         } catch (IllegalArgumentException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     VALIDATION_FAILED_ERROR_FORMAT,
                     responseHash,
@@ -261,7 +263,7 @@ public abstract class CustomAudienceUpdatableData {
                 return ReadStatus.STATUS_FOUND_VALID;
             }
         } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     INVALID_JSON_TYPE_ERROR_FORMAT,
                     responseHash,
@@ -269,7 +271,7 @@ public abstract class CustomAudienceUpdatableData {
             dataBuilder.setTrustedBiddingData(null);
             return ReadStatus.STATUS_FOUND_INVALID;
         } catch (IllegalArgumentException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     VALIDATION_FAILED_ERROR_FORMAT,
                     responseHash,
@@ -295,7 +297,7 @@ public abstract class CustomAudienceUpdatableData {
                 return ReadStatus.STATUS_FOUND_VALID;
             }
         } catch (JSONException | NullPointerException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     INVALID_JSON_TYPE_ERROR_FORMAT,
                     responseHash,
@@ -303,7 +305,7 @@ public abstract class CustomAudienceUpdatableData {
             dataBuilder.setAds(null);
             return ReadStatus.STATUS_FOUND_INVALID;
         } catch (IllegalArgumentException exception) {
-            LogUtil.e(
+            sLogger.e(
                     exception,
                     VALIDATION_FAILED_ERROR_FORMAT,
                     responseHash,

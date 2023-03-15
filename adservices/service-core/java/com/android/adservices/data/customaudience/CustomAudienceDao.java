@@ -28,7 +28,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
  */
 @Dao
 public abstract class CustomAudienceDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add user to a new custom audience. As designed, will override existing one.
      *
@@ -445,7 +446,7 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(flags);
 
         if (flags.getDisableFledgeEnrollmentCheck()) {
-            LogUtil.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
+            sLogger.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
             return CustomAudienceStats.builder()
                     .setTotalCustomAudienceCount(0)
                     .setTotalBuyerCount(0)

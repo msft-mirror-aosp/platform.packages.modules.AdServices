@@ -16,14 +16,20 @@
 
 package com.android.adservices.service.common.compat;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +38,19 @@ public final class PackageManagerCompatUtils {
     private PackageManagerCompatUtils() {
         // Prevent instantiation
     }
+
+    // TODO(b/272737642) scan activities instead of hardcode
+    private static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
+            ImmutableList.copyOf(
+                    Arrays.asList(
+                            "com.android.adservices.ui.settings.activities."
+                                    + "AdServicesSettingsMainActivity",
+                            "com.android.adservices.ui.settings.activities.TopicsActivity",
+                            "com.android.adservices.ui.settings.activities.BlockedTopicsActivity",
+                            "com.android.adservices.ui.settings.activities.AppsActivity",
+                            "com.android.adservices.ui.settings.activities.BlockedAppsActivity",
+                            "com.android.adservices.ui.settings.activities.MeasurementActivity",
+                            "com.android.adservices.ui.notifications.ConsentNotificationActivity"));
 
     /**
      * Invokes the appropriate overload of {@code getInstalledPackages} on {@link PackageManager}
@@ -124,5 +143,33 @@ public final class PackageManagerCompatUtils {
                 ? packageManager.getPackageUid(
                         packageName, PackageManager.PackageInfoFlags.of(flags))
                 : packageManager.getPackageUid(packageName, flags);
+    }
+
+    /**
+     * Activities for user consent and control are disabled by default. Check whether the activities
+     * are enabled
+     *
+     * @param context the context
+     * @return true if AdServices activities are enabled, otherwise false
+     */
+    @NonNull
+    public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            for (String activity : CONSENT_ACTIVITIES_CLASSES) {
+                int componentEnabledState =
+                        packageManager.getComponentEnabledSetting(
+                                new ComponentName(packageInfo.packageName, activity));
+                if (componentEnabledState != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                    return false;
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e("Error when checking if activities are enabled: " + e.getMessage());
+            return false;
+        }
+        return true;
     }
 }
