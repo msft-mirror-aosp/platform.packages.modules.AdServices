@@ -157,6 +157,26 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
+    private static final String BUYER_2_BIDDING_LOGIC_JS_V3 =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_2_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
     private static final String BUYER_1_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_REPORTING_PATH);
 
@@ -165,6 +185,26 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_1_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final String BUYER_1_BIDDING_LOGIC_JS_V3 =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -272,14 +312,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -356,7 +396,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience.getBuyer())
                         .setName(customAudience.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -538,14 +578,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -624,7 +664,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
@@ -775,7 +815,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         // We do not provide override for CA 2, that should lead to failure to get biddingLogic
@@ -920,14 +960,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -1008,14 +1048,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
@@ -1077,12 +1117,19 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
         String readBidFromAdMetadataWithDelayJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals,"
-                        + " custom_audience_signals) { \n"
+                "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = customAudience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
                         + jsWaitMoreThanAllowedForBiddingPerCa
-                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                        + "}";
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n";
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1098,7 +1145,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
