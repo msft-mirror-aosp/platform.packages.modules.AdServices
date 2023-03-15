@@ -95,8 +95,6 @@ public final class AdFilters implements Parcelable {
      * ad.
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
-     *
-     * @hide
      */
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
@@ -203,8 +201,7 @@ public final class AdFilters implements Parcelable {
     }
 
     private String generateAppInstallString() {
-        // TODO(b/266837113) Add app install once it is unhidden
-        return "";
+        return "mAppInstallFilters=" + mAppInstallFilters;
     }
 
     /** Builder for creating {@link AdFilters} objects. */
@@ -231,8 +228,6 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
-         *
-         * @hide
          */
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {

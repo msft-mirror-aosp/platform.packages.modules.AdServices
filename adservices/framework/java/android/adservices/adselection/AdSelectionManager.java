@@ -454,7 +454,6 @@ public class AdSelectionManager {
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
      *
-     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAppInstallAdvertisers(

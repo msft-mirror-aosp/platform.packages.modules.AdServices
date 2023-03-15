@@ -1767,7 +1767,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         assertThat(selectAdsException.getCause()).isInstanceOf(TimeoutException.class);
     }
 
-    @Ignore
     @Test
     public void testFledgeAuctionAppFilteringFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
@@ -1901,7 +1900,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    @Ignore
     @Test
     public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
         /**

@@ -177,8 +177,7 @@ public final class AdData implements Parcelable {
     }
 
     private String generateAdFilterString() {
-        // TODO(b/266837113) Add ad filters String when unhidden
-        return "";
+        return ", mAdFilters=" + mAdFilters;
     }
 
     /** Builder for {@link AdData} objects. */
