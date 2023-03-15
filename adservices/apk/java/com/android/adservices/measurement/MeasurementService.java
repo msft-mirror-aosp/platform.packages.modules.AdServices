@@ -81,7 +81,7 @@ public class MeasurementService extends Service {
         }
 
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, flags);
             schedulePeriodicJobsIfNeeded();
         }
     }
