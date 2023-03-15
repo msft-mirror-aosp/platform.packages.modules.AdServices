@@ -61,6 +61,7 @@ public class CustomAudienceManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link CustomAudienceManager} instance
+     * @hide
      */
     @NonNull
     public static CustomAudienceManager get(@NonNull Context context) {
