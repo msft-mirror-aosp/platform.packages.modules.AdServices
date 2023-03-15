@@ -29,7 +29,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
@@ -66,6 +66,7 @@ import java.util.stream.Collectors;
  * per thread. See the threading comments for {@link JSScriptEngine}.
  */
 public class AdSelectionScriptEngine {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private static final String JS_EXECUTION_STATUS_UNSUCCESSFUL =
             "Outcome selection script failed with status '%s' or returned unexpected result '%s'";
@@ -258,7 +259,7 @@ public class AdSelectionScriptEngine {
                         JSExecutionException.class,
                         e -> {
                             Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
-                            LogUtil.e(
+                            sLogger.e(
                                     e,
                                     "Encountered exception when generating bids, attempting to run"
                                             + " backward compatible JS");
@@ -351,7 +352,7 @@ public class AdSelectionScriptEngine {
                 ImmutableList.<JSScriptArgument>builder()
                         .add(jsonArg("selection_signals", selectionSignals.toString()))
                         .build();
-        LogUtil.v("Other args creates " + args);
+        sLogger.v("Other args creates " + args);
 
         ImmutableList.Builder<JSScriptArgument> adSelectionIdWithBidArguments =
                 new ImmutableList.Builder<>();
@@ -362,7 +363,7 @@ public class AdSelectionScriptEngine {
                             SCRIPT_ARGUMENT_NAME_IGNORED, curr));
         }
         ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
-        LogUtil.v("Advert args created " + advertArgs);
+        sLogger.v("Advert args created " + advertArgs);
 
         return transform(
                 runAuctionScriptBatch(selectionLogic, advertArgs, args, this::callSelectOutcome),
@@ -379,7 +380,7 @@ public class AdSelectionScriptEngine {
      */
     private List<AdWithBid> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
-            LogUtil.v("Bid script failed, returning empty result.");
+            sLogger.v("Bid script failed, returning empty result.");
             return ImmutableList.of();
         } else {
             try {
@@ -391,7 +392,7 @@ public class AdSelectionScriptEngine {
                 }
                 return result.build();
             } catch (IllegalArgumentException e) {
-                LogUtil.w(
+                sLogger.w(
                         e,
                         "Invalid ad with bid returned by a generateBid script. Returning empty"
                                 + " list of ad with bids.");
@@ -412,7 +413,7 @@ public class AdSelectionScriptEngine {
             AdSelectionExecutionLogger adSelectionExecutionLogger) {
         ImmutableList.Builder<Double> result = ImmutableList.builder();
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
-            LogUtil.v("Scoring script failed, returning empty result.");
+            sLogger.v("Scoring script failed, returning empty result.");
         } else {
             for (int i = 0; i < batchBidResult.results.length(); i++) {
                 // If the output of the score for this advert is invalid JSON or doesn't have a
@@ -447,7 +448,7 @@ public class AdSelectionScriptEngine {
                             JS_EXECUTION_STATUS_UNSUCCESSFUL,
                             scriptResults.status,
                             scriptResults.results);
-            LogUtil.v(errorMsg);
+            sLogger.v(errorMsg);
             throw new IllegalStateException(errorMsg);
         }
 
@@ -462,7 +463,7 @@ public class AdSelectionScriptEngine {
                     resultOutcomeJson.optString(SelectAdsFromOutcomesArgument.ID_FIELD_NAME));
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
-            LogUtil.v(errorMsg);
+            sLogger.v(errorMsg);
             throw new IllegalStateException(errorMsg);
         }
     }
@@ -650,7 +651,7 @@ public class AdSelectionScriptEngine {
                                                     AdSelectionSignals.EMPTY));
                                     return updatedArgList;
                                 } catch (JSONException e) {
-                                    LogUtil.e(
+                                    sLogger.e(
                                             "Could not create JS argument: %s",
                                             USER_SIGNALS_ARG_NAME);
                                 }
@@ -703,7 +704,7 @@ public class AdSelectionScriptEngine {
             throws JSONException {
         ImmutableList.Builder<JSScriptArgument> advertsArg = ImmutableList.builder();
         advertsArg.addAll(adverts);
-        LogUtil.v(
+        sLogger.v(
                 "script: %s%nadverts: %s%nother args: %s%nprocessor script: %s%n",
                 jsScript, advertsArg, otherArgs, adSelectionProcessorJS);
 

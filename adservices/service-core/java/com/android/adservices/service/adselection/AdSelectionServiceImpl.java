@@ -55,7 +55,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -98,7 +98,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceImpl extends AdSelectionService.Stub {
-
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -113,7 +113,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
-    @NonNull protected final AdFilterer mAdFilterer;
+    @NonNull private final AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
@@ -135,7 +135,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull AdFilterer adFilterer) {
+            @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -147,7 +147,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(adFilteringFeatureFactory);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -163,7 +163,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
-        mAdFilterer = adFilterer;
+        mAdFilteringFeatureFactory = adFilteringFeatureFactory;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
@@ -204,7 +204,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         () -> Throttler.getInstance(FlagsFactory.getFlags())),
-                AdFiltererFactory.getAdFilterer(context, FlagsFactory.getFlags()));
+                new AdFilteringFeatureFactory(context, FlagsFactory.getFlags()));
     }
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
@@ -224,7 +224,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             int overallLatencyMs = adSelectionExecutionLogger.getRunAdSelectionOverallLatencyInMs();
-            LogUtil.v(
+            sLogger.v(
                     "The selectAds(AdSelectionConfig) arguments should not be null, failed with"
                             + " overall latency %d in ms.",
                     overallLatencyMs);
@@ -281,7 +281,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         adSelectionExecutionLogger,
                         adSelectionServiceFilter,
-                        mAdFilterer,
+                        mAdFilteringFeatureFactory.getAdFilterer(),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
@@ -339,7 +339,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(inputParams);
             Objects.requireNonNull(callback);
         } catch (NullPointerException e) {
-            LogUtil.v(
+            sLogger.v(
                     "The selectAds(AdSelectionFromOutcomesConfig) arguments should not be null,"
                             + " failed");
             mAdServicesLogger.logFledgeApiCallStats(
@@ -905,7 +905,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     /** Close down method to be invoked when the PPAPI process is shut down. */
     @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
-        LogUtil.i("Shutting down AdSelectionService");
+        sLogger.i("Shutting down AdSelectionService");
         JSScriptEngine.getInstance(mContext).shutdown();
     }
 }

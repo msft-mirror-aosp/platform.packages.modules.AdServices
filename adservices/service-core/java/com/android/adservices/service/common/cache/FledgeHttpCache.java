@@ -18,7 +18,7 @@ package com.android.adservices.service.common.cache;
 
 import android.annotation.NonNull;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService;
  * to Fledge web requests
  */
 public class FledgeHttpCache implements HttpCache {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final CacheEntryDao mCacheEntryDao;
     private final ExecutorService mExecutorService;
     private final long mMaxAgeSeconds;
@@ -83,7 +84,7 @@ public class FledgeHttpCache implements HttpCache {
         incrementRequestCount();
         DBCacheEntry entry = mCacheEntryDao.getCacheEntry(url.toString(), Instant.now());
         if (entry != null) {
-            LogUtil.v("Returning Cached results for Url: %s", url.toString());
+            sLogger.v("Returning Cached results for Url: %s", url.toString());
             incrementHitCount();
         }
         notifyObservers(CacheEventType.GET);
@@ -120,7 +121,7 @@ public class FledgeHttpCache implements HttpCache {
             return;
         }
         long requestMaxAge = getRequestMaxAgeSeconds(cacheProperties);
-        LogUtil.v("Caching results for Url: %s", url.toString());
+        sLogger.v("Caching results for Url: %s", url.toString());
         DBCacheEntry entry =
                 DBCacheEntry.builder()
                         .setUrl(url.toString())
@@ -231,7 +232,7 @@ public class FledgeHttpCache implements HttpCache {
     public static class HttpCacheObserver implements CacheObserver {
         @Override
         public void update(CacheEventType cacheEvent) {
-            LogUtil.v("Fledge Cache event completed: %s", cacheEvent);
+            sLogger.v("Fledge Cache event completed: %s", cacheEvent);
         }
     }
 }
