@@ -18,6 +18,8 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
+import static com.android.adservices.service.js.JSScriptArgument.recordArg;
+import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
 
 import static com.google.common.util.concurrent.Futures.transform;
@@ -31,6 +33,8 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
@@ -80,6 +84,7 @@ public class AdSelectionScriptEngine {
     public static final String RESULTS_FIELD_NAME = "results";
     public static final String STATUS_FIELD_NAME = "status";
     // This is a local variable and doesn't need any prefix.
+    public static final String CUSTOM_AUDIENCE_ARG_NAME = "__rb_custom_audience";
     public static final String AD_VAR_NAME = "ad";
     public static final String ADS_ARG_NAME = "__rb_ads";
     public static final String AUCTION_SIGNALS_ARG_NAME = "__rb_auction_signals";
@@ -149,6 +154,25 @@ public class AdSelectionScriptEngine {
                     + "  return { 'status': status, 'results': results};\n"
                     + "};";
 
+    public static final String AD_SELECTION_GENERATE_BID_JS_V3 =
+            "function "
+                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + "(%s) {\n"
+                    + "    let status = 0;\n"
+                    + "    let results = null;\n"
+                    + "    const script_result = %s;\n"
+                    + "    if (script_result === Object(script_result) &&\n"
+                    + "        'ad' in script_result &&\n"
+                    + "        'bid' in script_result &&\n"
+                    + "        'render' in script_result) {\n"
+                    + "        results = [{'ad': script_result.ad,'bid': script_result.bid},];\n"
+                    + "    } else {\n"
+                    + "        // invalid script\n"
+                    + "        status = -1;\n"
+                    + "    }\n"
+                    + "    return { 'status': status, 'results': results };\n"
+                    + "};";
+
     public static final String CHECK_FUNCTIONS_EXIST_JS =
             "function "
                     + JSScriptEngine.ENTRY_POINT_FUNC_NAME
@@ -178,6 +202,7 @@ public class AdSelectionScriptEngine {
                     + "}";
     private static final String TAG = AdSelectionScriptEngine.class.getName();
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
+    private static final String ARG_PASSING_SEPARATOR = ", ";
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
@@ -271,6 +296,54 @@ public class AdSelectionScriptEngine {
                                     e);
                         },
                         mExecutor);
+    }
+
+    /**
+     * @return The result of invoking the {@code generateBidV3} function in the given {@code
+     *     generateBidJS} JS script for the args provided. Will return an empty list if the script
+     *     fails for any reason.
+     * @throws JSONException If any of the signals is not a valid JSON object.
+     */
+    @NonNull
+    public ListenableFuture<List<AdWithBid>> generateBidsV3(
+            @NonNull String generateBidJS,
+            @NonNull DBCustomAudience customAudience,
+            @NonNull AdSelectionSignals auctionSignals,
+            @NonNull AdSelectionSignals perBuyerSignals,
+            @NonNull AdSelectionSignals trustedBiddingSignals,
+            @NonNull AdSelectionSignals contextualSignals,
+            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger)
+            throws JSONException {
+        Objects.requireNonNull(generateBidJS);
+        Objects.requireNonNull(customAudience);
+        Objects.requireNonNull(auctionSignals);
+        Objects.requireNonNull(perBuyerSignals);
+        Objects.requireNonNull(trustedBiddingSignals);
+        Objects.requireNonNull(contextualSignals);
+        Objects.requireNonNull(runAdBiddingPerCAExecutionLogger);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GENERATE_BIDS);
+
+        ImmutableList<JSScriptArgument> signals =
+                ImmutableList.<JSScriptArgument>builder()
+                        .add(translateCustomAudience(customAudience))
+                        .add(jsonArg(AUCTION_SIGNALS_ARG_NAME, auctionSignals))
+                        .add(jsonArg(PER_BUYER_SIGNALS_ARG_NAME, perBuyerSignals))
+                        .add(jsonArg(TRUSTED_BIDDING_SIGNALS_ARG_NAME, trustedBiddingSignals))
+                        .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals))
+                        .build();
+        runAdBiddingPerCAExecutionLogger.startGenerateBids();
+
+        return FluentFuture.from(
+                transform(
+                        runAuctionScriptGenerateBidV3(
+                                generateBidJS, signals, this::callGenerateBidV3),
+                        result -> {
+                            List<AdWithBid> bids = handleGenerateBidsOutput(result);
+                            runAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
+                            return bids;
+                        },
+                        mExecutor));
     }
 
     /**
@@ -508,6 +581,25 @@ public class AdSelectionScriptEngine {
         }
     }
 
+    ListenableFuture<AuctionScriptResult> runAuctionScriptGenerateBidV3(
+            String jsScript,
+            List<JSScriptArgument> args,
+            Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator) {
+        try {
+            return transform(
+                    callAuctionScript(
+                            jsScript,
+                            args,
+                            auctionFunctionCallGenerator,
+                            AD_SELECTION_GENERATE_BID_JS_V3),
+                    this::parseAuctionScriptResult,
+                    mExecutor);
+        } catch (JSONException e) {
+            throw new JSExecutionException(
+                    "Illegal result returned by our internal batch calling function.", e);
+        }
+    }
+
     /**
      * Runs the function call generated by {@code auctionFunctionCallGenerator} in the JS script
      * {@code jsScript} for the list of {@code ads} provided. The function will be called by a
@@ -697,6 +789,50 @@ public class AdSelectionScriptEngine {
      */
     private ListenableFuture<String> callAuctionScript(
             String jsScript,
+            List<JSScriptArgument> args,
+            Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator,
+            String adSelectionProcessorJS)
+            throws JSONException {
+
+        String argPassing =
+                args.stream()
+                        .map(JSScriptArgument::name)
+                        .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
+
+        IsolateSettings isolateSettings =
+                mEnforceMaxHeapSizeFeatureSupplier.get()
+                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
+                                mMaxHeapSizeBytesSupplier.get())
+                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+
+        return mJsEngine.evaluate(
+                jsScript
+                        + "\n"
+                        + String.format(
+                                adSelectionProcessorJS,
+                                argPassing,
+                                auctionFunctionCallGenerator.apply(args)),
+                args,
+                isolateSettings);
+    }
+
+    /**
+     * @return a {@link ListenableFuture} containing the string representation of a JSON object
+     *     containing two fields:
+     *     <p>
+     *     <ul>
+     *       <li>{@code status} field that will be 0 in case of successful processing of all ads or
+     *           non-zero if any of the calls to processed an ad returned a non-zero status. In the
+     *           last case the returned status will be the same returned in the failing invocation.
+     *           The function {@code auctionFunctionName} is assumed to return a JSON object
+     *           containing at least a {@code status} field.
+     *       <li>{@code results} with the results of the invocation of {@code auctionFunctionName}
+     *           to all the given ads.
+     *     </ul>
+     *     <p>
+     */
+    private ListenableFuture<String> callAuctionScript(
+            String jsScript,
             List<JSScriptArgument> adverts,
             List<JSScriptArgument> otherArgs,
             Function<List<JSScriptArgument>, String> auctionFunctionCallGenerator,
@@ -715,7 +851,9 @@ public class AdSelectionScriptEngine {
                         .build();
 
         String argPassing =
-                allArgs.stream().map(JSScriptArgument::name).collect(Collectors.joining(", "));
+                allArgs.stream()
+                        .map(JSScriptArgument::name)
+                        .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
 
         IsolateSettings isolateSettings =
                 mEnforceMaxHeapSizeFeatureSupplier.get()
@@ -741,6 +879,14 @@ public class AdSelectionScriptEngine {
             callArgs.append(String.format(",%s", currArg.name()));
         }
         return String.format(GENERATE_BID_FUNCTION_NAME + "(%s)", callArgs);
+    }
+
+    private String callGenerateBidV3(List<JSScriptArgument> args) {
+        return String.format(
+                GENERATE_BID_FUNCTION_NAME + "(%s)",
+                args.stream()
+                        .map(JSScriptArgument::name)
+                        .collect(Collectors.joining(ARG_PASSING_SEPARATOR)));
     }
 
     private String callScoreAd(List<JSScriptArgument> otherArgs) {
@@ -774,5 +920,19 @@ public class AdSelectionScriptEngine {
             this.status = status;
             this.results = results;
         }
+    }
+
+    JSScriptArgument translateCustomAudience(DBCustomAudience customAudience) throws JSONException {
+        ImmutableList.Builder<JSScriptArgument> adsArg = ImmutableList.builder();
+        for (DBAdData ad : customAudience.getAds()) {
+            adsArg.add(AdDataArgument.asRecordArgument("ignored", ad));
+        }
+        // TODO(b/273357664): Verify with product on the set of fields we want to include.
+        return recordArg(
+                CUSTOM_AUDIENCE_ARG_NAME,
+                stringArg("owner", customAudience.getOwner()),
+                stringArg("name", customAudience.getName()),
+                jsonArg("userBiddingSignals", customAudience.getUserBiddingSignals()),
+                arrayArg("ads", adsArg.build()));
     }
 }

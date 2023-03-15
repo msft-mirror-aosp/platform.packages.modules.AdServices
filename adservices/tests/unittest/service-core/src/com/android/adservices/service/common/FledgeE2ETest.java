@@ -91,6 +91,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.adselection.InteractionReporter;
+import com.android.adservices.service.adselection.JsVersionHelper;
+import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -129,6 +131,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -351,10 +354,17 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals,"
-                        + " custom_audience_signals) { \n"
-                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -520,13 +530,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -712,13 +730,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -905,13 +931,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1097,13 +1131,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1310,10 +1352,17 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals,"
-                        + " custom_audience_signals) { \n"
-                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -1514,13 +1563,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1699,13 +1756,21 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1871,10 +1936,17 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                        + " trusted_bidding_signals, contextual_signals,"
-                        + " custom_audience_signals) { \n"
-                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -1987,7 +2059,7 @@ public class FledgeE2ETest {
     }
 
     @Test
-    public void testFledgeFlowSuccessWithMockServer() throws Exception {
+    public void testFledgeFlowSuccessWithMockServer_preV3BiddingLogic() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -2172,6 +2244,181 @@ public class FledgeE2ETest {
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 10,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_v3BiddingLogic() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+
+        mAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(
+                                ImmutableList.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost())))
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setPerBuyerSignals(
+                                ImmutableMap.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost()),
+                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
+                        .build();
+
+        String decisionLogicJs =
+                "function scoreAd(ad, bid, auction_config, seller_signals,"
+                        + " trusted_scoring_signals, contextual_signal, user_signal,"
+                        + " custom_audience_signal) { \n"
+                        + "  return {'status': 0, 'score': bid };\n"
+                        + "}\n"
+                        + "function reportResult(ad_selection_config, render_uri, bid,"
+                        + " contextual_signals) { \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+        String biddingLogicJs =
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
+
+        // Reporting should ping twice (once each for buyer/seller)
+        CountDownLatch reportingResponseLatch = new CountDownLatch(2);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        request -> {
+                            String versionHeaderName =
+                                    JsVersionHelper.getVersionHeaderName(
+                                            JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
+                            long jsVersion =
+                                    JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
+                            switch (request.getPath()) {
+                                case SELLER_DECISION_LOGIC_URI_PATH:
+                                    return new MockResponse().setBody(decisionLogicJs);
+                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
+                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
+                                    if (Objects.equals(
+                                            request.getHeader(versionHeaderName),
+                                            Long.toString(jsVersion))) {
+                                        return new MockResponse()
+                                                .setBody(biddingLogicJs)
+                                                .setHeader(versionHeaderName, jsVersion);
+                                    }
+                                    break;
+                                case SELLER_REPORTING_PATH: // Intentional fallthrough
+                                case BUYER_REPORTING_PATH:
+                                    reportingResponseLatch.countDown();
+                                    return new MockResponse().setResponseCode(200);
+                            }
+
+                            // The seller params vary based on runtime, so we are returning trusted
+                            // signals based on correct path prefix
+                            if (request.getPath()
+                                    .startsWith(
+                                            SELLER_TRUSTED_SIGNAL_URI_PATH
+                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
+                            }
+                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                                return new MockResponse()
+                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                            }
+                            return new MockResponse().setResponseCode(404);
+                        });
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        // Join first custom audience
+        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
+        mCustomAudienceService.joinCustomAudience(
+                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
+        assertTrue(joinCallback1.isSuccess());
+
+        // Join second custom audience
+        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
+        mCustomAudienceService.joinCustomAudience(
+                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
+        assertTrue(joinCallback2.isSuccess());
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        // Run Ad Selection
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+
+        // Run Report Impression
+        ReportImpressionInput reportImpressioninput =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionConfig(mAdSelectionConfig)
+                        .setAdSelectionId(resultSelectionId)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        ReportImpressionTestCallback reportImpressionTestCallback =
+                callReportImpression(mAdSelectionService, reportImpressioninput);
+
+        assertTrue(reportImpressionTestCallback.mIsSuccess);
+        reportingResponseLatch.await();
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                8,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,

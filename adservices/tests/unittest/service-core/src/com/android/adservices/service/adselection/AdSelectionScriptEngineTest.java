@@ -41,6 +41,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionScriptEngine.AuctionScriptResult;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
@@ -278,6 +280,53 @@ public class AdSelectionScriptEngineTest {
                 .containsExactly(
                         new AdWithBid(AD_DATA_WITH_DOUBLE_RESULT_1, BID_1),
                         new AdWithBid(AD_DATA_WITH_DOUBLE_RESULT_2, BID_2));
+    }
+
+    @Test
+    public void testGenerateBidV3SuccessfulCase() throws Exception {
+        doNothing().when(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        // Logger calls come after the callback is returned
+        CountDownLatch loggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            loggerLatch.countDown();
+                            return null;
+                        })
+                .when(mRunAdBiddingPerCAExecutionLoggerMock)
+                .endGenerateBids();
+        final List<AdWithBid> result =
+                generateBidsV3(
+                        "function generateBid(custom_audience, auction_signals,"
+                            + " per_buyer_signals,\n"
+                            + "    trusted_bidding_signals, contextual_signals) {\n"
+                            + "    const ads = custom_audience.ads;\n"
+                            + "    let result = null;\n"
+                            + "    for (const ad of ads) {\n"
+                            + "        if (!result || ad.metadata.result > result.metadata.result)"
+                            + " {\n"
+                            + "            result = ad;\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "    return { 'status': 0, 'ad': result, 'bid':"
+                            + " result.metadata.result, 'render': result.render_uri };\n"
+                            + "}",
+                        DBCustomAudience.fromServiceObject(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .setAds(AD_DATA_WITH_DOUBLE_RESULT_LIST)
+                                        .build(),
+                                CustomAudienceFixture.VALID_OWNER,
+                                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                                CustomAudienceFixture.CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN,
+                                FlagsFactory.getFlagsForTest()),
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY,
+                        AdSelectionSignals.EMPTY);
+        loggerLatch.await();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).startGenerateBids();
+        verify(mRunAdBiddingPerCAExecutionLoggerMock).endGenerateBids();
+        assertThat(result).containsExactly(new AdWithBid(AD_DATA_WITH_DOUBLE_RESULT_2, BID_2));
     }
 
     @Test
@@ -626,6 +675,28 @@ public class AdSelectionScriptEngineTest {
                             trustedBiddingSignals,
                             contextualSignals,
                             customAudienceSignals,
+                            mRunAdBiddingPerCAExecutionLoggerMock);
+                });
+    }
+
+    private List<AdWithBid> generateBidsV3(
+            String jsScript,
+            DBCustomAudience customAudience,
+            AdSelectionSignals auctionSignals,
+            AdSelectionSignals perBuyerSignals,
+            AdSelectionSignals trustedBiddingSignals,
+            AdSelectionSignals contextualSignals)
+            throws Exception {
+        return waitForFuture(
+                () -> {
+                    Log.i(TAG, "Calling generateBids");
+                    return mAdSelectionScriptEngine.generateBidsV3(
+                            jsScript,
+                            customAudience,
+                            auctionSignals,
+                            perBuyerSignals,
+                            trustedBiddingSignals,
+                            contextualSignals,
                             mRunAdBiddingPerCAExecutionLoggerMock);
                 });
     }
