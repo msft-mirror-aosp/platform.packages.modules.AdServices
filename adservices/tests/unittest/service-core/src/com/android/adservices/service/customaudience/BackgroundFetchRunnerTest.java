@@ -33,7 +33,7 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -66,6 +66,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
     private final String mFetchPath = "/fetch";
 
@@ -329,7 +330,7 @@ public class BackgroundFetchRunnerTest {
                                                     CustomAudienceUpdatableDataFixture
                                                             .getFullSuccessfulJsonResponseString());
                                 } catch (JSONException exception) {
-                                    LogUtil.e(exception, "Failed to create JSON full response");
+                                    sLogger.e(exception, "Failed to create JSON full response");
                                     return null;
                                 } finally {
                                     responseLatch.countDown();

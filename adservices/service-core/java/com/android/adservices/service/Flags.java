@@ -36,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
 public interface Flags {
     /** Topics Epoch Job Period. */
@@ -1657,6 +1659,17 @@ public interface Flags {
     /** Returns if device is in the EEA region. */
     default boolean isEeaDevice() {
         return IS_EEA_DEVICE;
+    }
+
+    /**
+     * The check activity feature is off by default. When enabled, we check whether all Rubidium
+     * activities are enabled when we determine whether AdServices is enabled
+     */
+    boolean IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED = false;
+
+    /** Returns if the check activity feature has been enabled. */
+    default boolean isBackCompatActivityFeatureEnabled() {
+        return IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
     }
 
     String UI_EEA_COUNTRIES =
