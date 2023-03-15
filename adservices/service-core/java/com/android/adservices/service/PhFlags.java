@@ -195,8 +195,10 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
             "fledge_ad_selection_bidding_logic_js_version";
     // Whether to call trusted servers for off device ad selection.
-    static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED =
             "fledge_ad_selection_off_device_enabled";
+    static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
+            "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -1703,8 +1705,16 @@ public final class PhFlags implements Flags {
     public boolean getAdSelectionOffDeviceEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
-                KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
+                FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED);
     }
 
     @Override
@@ -2502,7 +2512,7 @@ public final class PhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
