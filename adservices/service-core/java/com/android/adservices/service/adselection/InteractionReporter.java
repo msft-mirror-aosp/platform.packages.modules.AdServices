@@ -56,6 +56,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -204,10 +205,17 @@ public class InteractionReporter {
                                 LogUtil.e(
                                         t,
                                         "Report Interaction failure encountered during reporting!");
-                                mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                        AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                        0);
+                                if (t instanceof IOException) {
+                                    mAdServicesLogger.logFledgeApiCallStats(
+                                            AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            AdServicesStatusUtils.STATUS_IO_ERROR,
+                                            0);
+                                } else {
+                                    mAdServicesLogger.logFledgeApiCallStats(
+                                            AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                            AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                            0);
+                                }
                             }
                         },
                         mLightweightExecutorService);

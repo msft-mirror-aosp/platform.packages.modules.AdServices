@@ -82,6 +82,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilterer;
@@ -224,6 +225,7 @@ public class FledgeE2ETest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
 

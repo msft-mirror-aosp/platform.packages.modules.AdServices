@@ -77,6 +77,7 @@ public final class TopicsManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link TopicsManager} instance
+     * @hide
      */
     @NonNull
     public static TopicsManager get(@NonNull Context context) {

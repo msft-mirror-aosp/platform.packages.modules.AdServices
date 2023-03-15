@@ -512,6 +512,7 @@ public class CustomAudienceDaoTest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
     }

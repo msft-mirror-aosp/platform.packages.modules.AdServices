@@ -89,6 +89,7 @@ public class MeasurementManager {
      *
      * @param context The {@link Context} to use
      * @return A {@link MeasurementManager} instance
+     * @hide
      */
     @NonNull
     public static MeasurementManager get(@NonNull Context context) {
