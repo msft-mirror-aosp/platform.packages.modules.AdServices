@@ -77,6 +77,10 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     static final String BIDDING_TIMED_OUT = "Bidding exceeded allowed time limit";
 
     @VisibleForTesting
+    static final String TOO_HIGH_JS_VERSION =
+            "Requested js version is %d while the returned version is %d";
+
+    @VisibleForTesting
     static final String BIDDING_ENCOUNTERED_UNEXPECTED_ERROR =
             "Bidding failed for unexpected error";
 
@@ -124,8 +128,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         backgroundExecutorService,
                         lightweightExecutorService,
                         mCustomAudienceDevOverridesHelper,
-                        adServicesHttpsClient,
-                        mFlags);
+                        adServicesHttpsClient);
     }
 
     @VisibleForTesting
@@ -189,11 +192,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         // TODO(b/221862406): implement ads filtering logic.
 
+        long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
         AdServicesHttpClientRequest biddingLogicUriHttpRequest =
                 JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
                         JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                        mFlags.getFledgeAdSelectionBiddingLogicJsVersion(),
+                        versionRequested,
                         mFlags.getFledgeHttpJsCachingEnabled());
 
         FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogic =
@@ -208,8 +212,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 buyerDecisionLogic.transformAsync(
                         decisionLogic -> {
                             return runBidding(
-                                    customAudience,
                                     decisionLogic,
+                                    versionRequested,
+                                    customAudience,
                                     buyerSignals,
                                     contextualSignals,
                                     customAudienceSignals,
@@ -361,8 +366,9 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
-            @NonNull DBCustomAudience customAudience,
             @NonNull AdServicesHttpClientResponse buyerDecisionLogicJs,
+            long versionRequested,
+            @NonNull DBCustomAudience customAudience,
             @NonNull AdSelectionSignals buyerSignals,
             @NonNull AdSelectionSignals contextualSignals,
             @NonNull CustomAudienceSignals customAudienceSignals,
@@ -378,31 +384,59 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         customAudience.getBuyer(),
                         customAudience.getName(),
                         runAdBiddingPerCAExecutionLogger);
-        // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
-        //  classes and remove this conversion.
-        List<AdData> ads =
-                customAudience.getAds().stream()
-                        .map(
-                                adData ->
-                                        new AdData.Builder()
-                                                .setRenderUri(adData.getRenderUri())
-                                                .setMetadata(adData.getMetadata())
-                                                .build())
-                        .collect(Collectors.toList());
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_BIDDING);
-        FluentFuture<List<AdWithBid>> adsWithBids =
-                trustedBiddingSignals.transformAsync(
-                        biddingSignals ->
-                                mAdSelectionScriptEngine.generateBids(
-                                        buyerDecisionLogicJs.getResponseBody(),
-                                        ads,
-                                        adSelectionSignals,
-                                        buyerSignals,
-                                        biddingSignals,
-                                        contextualSignals,
-                                        customAudienceSignals,
-                                        runAdBiddingPerCAExecutionLogger),
-                        mLightweightExecutorService);
+
+        FluentFuture<List<AdWithBid>> adsWithBids;
+        long jsVersion =
+                JsVersionHelper.getVersionFromHeader(
+                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                        buyerDecisionLogicJs.getResponseHeaders());
+        sLogger.v("Get buyer bidding logic version %d", jsVersion);
+        if (jsVersion > versionRequested) {
+            throw new IllegalStateException(
+                    String.format(TOO_HIGH_JS_VERSION, versionRequested, jsVersion));
+        }
+        if (JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3 == jsVersion) {
+            adsWithBids =
+                    trustedBiddingSignals.transformAsync(
+                            biddingSignals ->
+                                    mAdSelectionScriptEngine.generateBidsV3(
+                                            buyerDecisionLogicJs.getResponseBody(),
+                                            customAudience,
+                                            adSelectionSignals,
+                                            buyerSignals,
+                                            biddingSignals,
+                                            contextualSignals,
+                                            runAdBiddingPerCAExecutionLogger),
+                            mLightweightExecutorService);
+        } else {
+            // We are currently graceful for missing or malformed js version, and fall back to run
+            // the old generate bid.
+            // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
+            //  classes and remove this conversion.
+            List<AdData> ads =
+                    customAudience.getAds().stream()
+                            .map(
+                                    adData ->
+                                            new AdData.Builder()
+                                                    .setRenderUri(adData.getRenderUri())
+                                                    .setMetadata(adData.getMetadata())
+                                                    .build())
+                            .collect(Collectors.toList());
+            adsWithBids =
+                    trustedBiddingSignals.transformAsync(
+                            biddingSignals ->
+                                    mAdSelectionScriptEngine.generateBids(
+                                            buyerDecisionLogicJs.getResponseBody(),
+                                            ads,
+                                            adSelectionSignals,
+                                            buyerSignals,
+                                            biddingSignals,
+                                            contextualSignals,
+                                            customAudienceSignals,
+                                            runAdBiddingPerCAExecutionLogger),
+                            mLightweightExecutorService);
+        }
         return adsWithBids
                 .transform(
                         adWithBids -> {
