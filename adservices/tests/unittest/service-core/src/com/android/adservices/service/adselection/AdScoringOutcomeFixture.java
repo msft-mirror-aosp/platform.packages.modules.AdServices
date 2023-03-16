@@ -28,9 +28,22 @@ public class AdScoringOutcomeFixture {
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(buyerName, 1.0).build();
 
         return AdScoringOutcome.builder()
-                .setAdWithScore(AdWithScore.builder()
-                        .setAdWithBid(adBiddingOutcome.getAdWithBid())
-                        .setScore(score).build())
-                .setCustomAudienceBiddingInfo(adBiddingOutcome.getCustomAudienceBiddingInfo());
+                .setAdWithScore(
+                        AdWithScore.builder()
+                                .setAdWithBid(adBiddingOutcome.getAdWithBid())
+                                .setScore(score)
+                                .build())
+                .setDecisionLogicUri(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
+                .setCustomAudienceSignals(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
+                .setDecisionLogicJs(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
+                .setDecisionLogicJsDownloaded(true)
+                .setBuyer(
+                        adBiddingOutcome
+                                .getCustomAudienceBiddingInfo()
+                                .getCustomAudienceSignals()
+                                .getBuyer());
     }
 }
