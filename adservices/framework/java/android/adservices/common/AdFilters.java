@@ -44,8 +44,9 @@ public final class AdFilters implements Parcelable {
     @VisibleForTesting public static final String FREQUENCY_CAP_FIELD_NAME = "frequency_cap";
     /** @hide */
     @VisibleForTesting public static final String APP_INSTALL_FIELD_NAME = "app_install";
-
+    /** @hide */
     @Nullable private final FrequencyCapFilters mFrequencyCapFilters;
+
     @Nullable private final AppInstallFilters mAppInstallFilters;
 
     @NonNull
@@ -86,6 +87,8 @@ public final class AdFilters implements Parcelable {
      * the ad.
      *
      * <p>If {@code null}, there are no frequency cap filters which apply to the ad.
+     *
+     * @hide
      */
     @Nullable
     public FrequencyCapFilters getFrequencyCapFilters() {
@@ -97,6 +100,8 @@ public final class AdFilters implements Parcelable {
      * ad.
      *
      * <p>If {@code null}, there are no app install filters which apply to the ad.
+     *
+     * @hide
      */
     @Nullable
     public AppInstallFilters getAppInstallFilters() {
@@ -108,7 +113,14 @@ public final class AdFilters implements Parcelable {
      * @hide
      */
     public int getSizeInBytes() {
-        return mFrequencyCapFilters.getSizeInBytes() + mAppInstallFilters.getSizeInBytes();
+        int size = 0;
+        if (mFrequencyCapFilters != null) {
+            size += mFrequencyCapFilters.getSizeInBytes();
+        }
+        if (mAppInstallFilters != null) {
+            size += mAppInstallFilters.getSizeInBytes();
+        }
+        return size;
     }
 
     /**
@@ -185,14 +197,11 @@ public final class AdFilters implements Parcelable {
         return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
+    // TODO(b/221876775) Add fcap once it is unhidden
+    // TODO(b/266837113) Add app install once it is unhidden
     @Override
     public String toString() {
-        return "AdFilters{"
-                + "mFrequencyCapFilters="
-                + mFrequencyCapFilters
-                + ", mAppInstallFilters="
-                + mAppInstallFilters
-                + '}';
+        return "AdFilters{}";
     }
 
     /** Builder for creating {@link AdFilters} objects. */
@@ -207,6 +216,8 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no frequency cap filters will be associated with
          * the ad.
+         *
+         * @hide
          */
         @NonNull
         public Builder setFrequencyCapFilters(@Nullable FrequencyCapFilters frequencyCapFilters) {
@@ -219,6 +230,8 @@ public final class AdFilters implements Parcelable {
          *
          * <p>If set to {@code null} or not set, no app install filters will be associated with the
          * ad.
+         *
+         * @hide
          */
         @NonNull
         public Builder setAppInstallFilters(@Nullable AppInstallFilters appInstallFilters) {

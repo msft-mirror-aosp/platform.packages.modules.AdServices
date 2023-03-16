@@ -31,15 +31,16 @@ import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.Flags.DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_BACK_COMPAT;
-import static com.android.adservices.service.Flags.ENABLE_TOPIC_CONTRIBUTORS_CHECK;
-import static com.android.adservices.service.Flags.ENABLE_TOPIC_MIGRATION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
@@ -47,8 +48,10 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLE
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
@@ -88,8 +91,11 @@ import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.Flags.FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.Flags.GA_UX_FEATURE_ENABLED;
@@ -179,13 +185,13 @@ import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLME
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_BACK_COMPAT;
-import static com.android.adservices.service.PhFlags.KEY_ENABLE_DATABASE_SCHEMA_VERSION_7;
-import static com.android.adservices.service.PhFlags.KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
@@ -226,8 +232,11 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABL
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
-import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.PhFlags.KEY_GA_UX_FEATURE_ENABLED;
@@ -252,6 +261,8 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_REGISTE
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DB_SIZE_LIMIT;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_XNA;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
@@ -842,6 +853,41 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetFledgeAdSelectionContextualAdsEnabled() {
+        assertThat(FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+                .isEqualTo(FLEDGE_AD_SELECTION_FILTERING_ENABLED);
+
+        assertThat(FlagsFactory.getFlags().getFledgeAdSelectionContextualAdsEnabled())
+                .isEqualTo(FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+
+        final boolean phOverrideValue = !FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                Boolean.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAdSelectionContextualAdsEnabled()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetFledgeAdSelectionBiddingLogicJsVersion() {
+        assertThat(FlagsFactory.getFlags().getFledgeAdSelectionBiddingLogicJsVersion())
+                .isEqualTo(FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAdSelectionBiddingLogicJsVersion()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
     public void testGetDownloaderConnectionTimeoutMs() {
         // without any overriding, the value is hard coded constant
         assertThat(FlagsFactory.getFlags().getDownloaderConnectionTimeoutMs())
@@ -1164,6 +1210,43 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementEnableXNA()).isTrue();
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeyHashLimit() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementDebugJoinKeyHashLimit())
+                .isEqualTo(DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
+
+        final long phOverridingValue = 1234567L;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementDebugJoinKeyHashLimit()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementDebugJoinKeyEnrollmentAllowList() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementDebugJoinKeyEnrollmentAllowlist())
+                .isEqualTo(DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST);
+
+        final String phOverridingValue = "enrollment1,enrollment2,enrollment3";
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -3518,6 +3601,29 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetFledgeReportInteractionRequestPermitsPerSecond() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeReportInteractionRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+
+        final float phOverridingValue = 7;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
+                Float.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        // Now verify that the PhFlag value was overridden.
+        final Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeReportInteractionRequestPermitsPerSecond())
+                .isEqualTo(phOverridingValue);
+
+        final Flags flags = FlagsFactory.getFlagsForTest();
+        assertThat(flags.getFledgeReportInteractionRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
     public void testGetNumberOfEpochsToKeepInHistory() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getNumberOfEpochsToKeepInHistory())
@@ -3620,20 +3726,64 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void testGetReportImpressionMaxEventUriEntriesCount() {
+    public void testGetReportImpressionMaxRegisteredAdBeaconsTotalCount() {
         // without any overriding, the value is hard coded constant
-        assertThat(FlagsFactory.getFlags().getReportImpressionMaxEventUriEntriesCount())
-                .isEqualTo(FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT);
+        assertThat(
+                        FlagsFactory.getFlags()
+                                .getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                .isEqualTo(FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT);
 
         final int phOverrideValue = 4;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT,
+                KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT,
                 Integer.toString(phOverrideValue),
                 false);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getReportImpressionMaxEventUriEntriesCount()).isEqualTo(phOverrideValue);
+        assertThat(phFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySize_B() {
+        // without any overriding, the value is hard coded constant
+        assertThat(
+                        FlagsFactory.getFlags()
+                                .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                .isEqualTo(
+                        FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+        // without any overriding, the value is hard coded constant
+        assertThat(
+                        FlagsFactory.getFlags()
+                                .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                .isEqualTo(FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT);
+
+        final int phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT,
+                Integer.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount())
+                .isEqualTo(phOverrideValue);
     }
 
     @Test
@@ -3807,38 +3957,6 @@ public class PhFlagsTest {
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getAdSelectionOffDeviceRequestCompressionEnabled())
                 .isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetEnableTopicContributorsCheck() {
-        assertThat(FlagsFactory.getFlags().getEnableTopicContributorsCheck())
-                .isEqualTo(ENABLE_TOPIC_CONTRIBUTORS_CHECK);
-
-        final boolean phOverridingValue = true;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_TOPIC_CONTRIBUTORS_CHECK,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getEnableTopicContributorsCheck()).isEqualTo(phOverridingValue);
-    }
-
-    @Test
-    public void testGetEnableDatabaseSchemaVersion7() {
-        assertThat(FlagsFactory.getFlags().getEnableTopicMigration())
-                .isEqualTo(ENABLE_TOPIC_MIGRATION);
-
-        final boolean phOverridingValue = true;
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_ENABLE_DATABASE_SCHEMA_VERSION_7,
-                Boolean.toString(phOverridingValue),
-                /* makeDefault */ false);
-
-        Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getEnableTopicMigration()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -4058,6 +4176,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getEnableBackCompat()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnableBackCompatAppsearch() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnableAppsearchConsentData())
+                .isEqualTo(ENABLE_APPSEARCH_CONSENT_DATA);
+
+        boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableAppsearchConsentData()).isEqualTo(phOverridingValue);
     }
     // CHECKSTYLE:ON IndentationCheck
 }

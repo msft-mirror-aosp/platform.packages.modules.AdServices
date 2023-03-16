@@ -35,7 +35,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
@@ -127,10 +127,11 @@ public abstract class E2EMockTest extends E2ETest {
             Collection<Action> actions,
             ReportObjects expectedOutput,
             ParamsProvider paramsProvider,
-            String name) {
-        super(actions, expectedOutput, name);
+            String name,
+            Map<String, String> phFlagsMap) {
+        super(actions, expectedOutput, name, phFlagsMap);
         mClickVerifier = mock(ClickVerifier.class);
-        mFlags = mock(Flags.class);
+        mFlags = FlagsFactory.getFlags();
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
 
@@ -145,8 +146,6 @@ public abstract class E2EMockTest extends E2ETest {
         mDebugReportApi = new DebugReportApi(sContext);
 
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
-        when(mFlags.getMeasurementEnableXNA()).thenReturn(true);
-        when(mFlags.getWebContextClientAppAllowList()).thenReturn(AllowLists.ALLOW_ALL);
     }
 
     @Override

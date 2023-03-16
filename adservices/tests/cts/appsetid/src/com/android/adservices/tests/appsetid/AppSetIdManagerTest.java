@@ -26,6 +26,7 @@ import android.os.OutcomeReceiver;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.compatibility.common.util.ShellUtils;
@@ -71,6 +72,7 @@ public class AppSetIdManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager() throws Exception {
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
@@ -93,6 +95,7 @@ public class AppSetIdManagerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
         final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
 

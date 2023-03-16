@@ -97,6 +97,7 @@ public class Source {
     @Nullable private String mSharedAggregationKeys;
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
+    @Nullable private String mDebugJoinKey;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -344,7 +345,8 @@ public class Source {
                 && Objects.equals(mRegistrationId, source.mRegistrationId)
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
                 && Objects.equals(mParentId, source.mParentId)
-                && Objects.equals(mInstallTime, source.mInstallTime);
+                && Objects.equals(mInstallTime, source.mInstallTime)
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey);
     }
 
     @Override
@@ -375,7 +377,8 @@ public class Source {
                 mArDebugPermission,
                 mRegistrationId,
                 mSharedAggregationKeys,
-                mInstallTime);
+                mInstallTime,
+                mDebugJoinKey);
     }
 
     /**
@@ -693,6 +696,15 @@ public class Source {
         return mInstallTime;
     }
 
+    /**
+     * Returns join key that should be matched with trigger's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
+    }
+
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
@@ -833,6 +845,7 @@ public class Source {
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
             builder.setPriority(copyFrom.mPriority);
             builder.setStatus(copyFrom.mStatus);
+            builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
             return builder;
         }
 
@@ -1031,6 +1044,7 @@ public class Source {
         }
 
         /** See {@link Source#getAggregateSource()} */
+        @NonNull
         public Builder setAggregateSource(@Nullable String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
             return this;
@@ -1044,24 +1058,28 @@ public class Source {
         }
 
         /** See {@link Source#getRegistrationId()} */
+        @NonNull
         public Builder setRegistrationId(@Nullable String registrationId) {
             mBuilding.mRegistrationId = registrationId;
             return this;
         }
 
         /** See {@link Source#getSharedAggregationKeys()} */
+        @NonNull
         public Builder setSharedAggregationKeys(@Nullable String sharedAggregationKeys) {
             mBuilding.mSharedAggregationKeys = sharedAggregationKeys;
             return this;
         }
 
         /** See {@link Source#getInstallTime()} */
+        @NonNull
         public Builder setInstallTime(@Nullable Long installTime) {
             mBuilding.mInstallTime = installTime;
             return this;
         }
 
         /** See {@link Source#getParentId()} */
+        @NonNull
         public Builder setParentId(@Nullable String parentId) {
             mBuilding.mParentId = parentId;
             return this;
@@ -1076,9 +1094,15 @@ public class Source {
             return this;
         }
 
-        /**
-         * Build the {@link Source}.
-         */
+        /** See {@link Source#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
+            return this;
+        }
+
+        /** Build the {@link Source}. */
+        @NonNull
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,

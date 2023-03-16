@@ -41,6 +41,8 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.Flags;
@@ -62,6 +64,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -75,7 +78,7 @@ public class PackageChangedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
-    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 50;
+    private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
     private static final int DEFAULT_PACKAGE_UID = -1;
 
     @Mock EpochManager mMockEpochManager;
@@ -83,7 +86,9 @@ public class PackageChangedReceiverTest {
     @Mock BlockedTopicsManager mBlockedTopicsManager;
     @Mock AppUpdateManager mMockAppUpdateManager;
     @Mock CustomAudienceDatabase mCustomAudienceDatabaseMock;
+    @Mock SharedStorageDatabase mSharedStorageDatabaseMock;
     @Mock CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock AppInstallDao mAppInstallDaoMock;
     @Mock ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -102,6 +107,8 @@ public class PackageChangedReceiverTest {
                                 mBlockedTopicsManager,
                                 mMockAppUpdateManager,
                                 FlagsFactory.getFlagsForTest()));
+        doReturn(true).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
@@ -238,13 +245,24 @@ public class PackageChangedReceiverTest {
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent);
+        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
+    }
+
+    @Test
+    public void testReceivePackageFullyRemoved_fledgeKillSwitchOffFilteringDisabled()
+            throws Exception {
+        doReturn(false).when(mMockFlags).getFledgeAdSelectionFilteringEnabled();
+        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        Intent intent =
+                createIntentSentByAdServiceSystemService(
+                        PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
+        runPackageFullyRemovedForFledgeKillSwitchOff(intent, false);
     }
 
     @Test
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOff_backCompat() throws Exception {
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
-        runPackageFullyRemovedForFledgeKillSwitchOff(intent);
+        runPackageFullyRemovedForFledgeKillSwitchOff(intent, true);
     }
 
     @Test
@@ -416,9 +434,6 @@ public class PackageChangedReceiverTest {
             // Mock static method FlagsFactory.getFlags() to return Mock Flags.
             when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
-            // Enable TopicContributors feature
-            when(mMockEpochManager.supportsTopicContributorFeature()).thenReturn(true);
-
             // Stubbing TopicsWorker.getInstance() to return mocked TopicsWorker instance
             doReturn(mSpyTopicsWorker).when(() -> TopicsWorker.getInstance(any()));
             doReturn(epochId).when(mMockEpochManager).getCurrentEpochId();
@@ -545,7 +560,8 @@ public class PackageChangedReceiverTest {
         }
     }
 
-    private void runPackageFullyRemovedForFledgeKillSwitchOff(Intent intent) throws Exception {
+    private void runPackageFullyRemovedForFledgeKillSwitchOff(
+            Intent intent, boolean filteringEnabled) throws Exception {
         // Start a mockitoSession to mock static method
         // Lenient added to allow easy disabling of other APIs' methods
         MockitoSession session =
@@ -559,30 +575,44 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method CustomAudienceDatabase.getInstance() executed on a separate thread
+            // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+            doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
 
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mCustomAudienceDaoMock)
-                    .deleteCustomAudienceDataByOwner(any());
+            CountDownLatch caCompletionLatch = new CountDownLatch(1);
+            Answer<Void> caAnswer =
+                    unusedInvocation -> {
+                        caCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(caAnswer).when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+            CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
+            Answer<Void> appInstallanswer =
+                    unusedInvocation -> {
+                        appInstallCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(appInstallanswer).when(mAppInstallDaoMock).deleteByPackageName(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
             doReturn(mCustomAudienceDatabaseMock)
                     .when(spyReceiver)
                     .getCustomAudienceDatabase(any());
+            doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
             spyReceiver.onReceive(sContext, intent);
 
             verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
             // Verify method inside background thread executes
-            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+            if (filteringEnabled) {
+                assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+                verify(mAppInstallDaoMock).deleteByPackageName(any());
+            } else {
+                verifyZeroInteractions(mAppInstallDaoMock);
+            }
         } finally {
             session.finishMocking();
         }
@@ -611,6 +641,8 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+            verify(spyReceiver, never()).getSharedStorageDatabase(any());
+            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
         } finally {
             session.finishMocking();
         }
@@ -897,30 +929,40 @@ public class PackageChangedReceiverTest {
             doReturn(false).when(mMockFlags).getFledgeCustomAudienceServiceKillSwitch();
             doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
-            // Mock static method CustomAudienceDatabase.getInstance() executed on a separate thread
+            // Mock static database .getInstance() methods executed on a separate thread
             doReturn(mCustomAudienceDaoMock).when(mCustomAudienceDatabaseMock).customAudienceDao();
+            doReturn(mAppInstallDaoMock).when(mSharedStorageDatabaseMock).appInstallDao();
 
-            CountDownLatch completionLatch = new CountDownLatch(1);
-            doAnswer(
-                            unusedInvocation -> {
-                                completionLatch.countDown();
-                                return null;
-                            })
-                    .when(mCustomAudienceDaoMock)
-                    .deleteCustomAudienceDataByOwner(any());
+            CountDownLatch caCompletionLatch = new CountDownLatch(1);
+            Answer<Void> caAnswer =
+                    unusedInvocation -> {
+                        caCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(caAnswer).when(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+            CountDownLatch appInstallCompletionLatch = new CountDownLatch(1);
+            Answer<Void> appInstallAnswer =
+                    unusedInvocation -> {
+                        appInstallCompletionLatch.countDown();
+                        return null;
+                    };
+            doAnswer(appInstallAnswer).when(mAppInstallDaoMock).deleteByPackageName(any());
 
             // Initialize package receiver meant for FLEDGE
             PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
             doReturn(mCustomAudienceDatabaseMock)
                     .when(spyReceiver)
                     .getCustomAudienceDatabase(any());
+            doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
             spyReceiver.onReceive(sContext, intent);
 
             verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
             // Verify method inside background thread executes
-            assertThat(completionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(caCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
+            assertThat(appInstallCompletionLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
             verify(mCustomAudienceDaoMock).deleteCustomAudienceDataByOwner(any());
+            verify(mAppInstallDaoMock).deleteByPackageName(any());
         } finally {
             session.finishMocking();
         }
@@ -949,6 +991,7 @@ public class PackageChangedReceiverTest {
             // Verify no executions
             verify(spyReceiver, never()).getCustomAudienceDatabase(any());
             verifyZeroInteractions(mCustomAudienceDatabaseMock, mCustomAudienceDaoMock);
+            verifyZeroInteractions(mSharedStorageDatabaseMock, mAppInstallDaoMock);
         } finally {
             session.finishMocking();
         }
