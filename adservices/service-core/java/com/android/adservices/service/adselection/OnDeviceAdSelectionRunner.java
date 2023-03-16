@@ -37,6 +37,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -53,6 +54,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 
 import java.time.Clock;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -217,11 +219,12 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         ListenableFuture<AdScoringOutcome> winningOutcome =
                 Futures.transform(scoredAds, reduceScoresToWinner, mLightweightExecutorService);
 
-        Function<AdScoringOutcome, AdSelectionOrchestrationResult> mapWinnerToDBResult =
+        AsyncFunction<AdScoringOutcome, AdSelectionOrchestrationResult> mapWinnerToDBResult =
                 scoringWinner -> createAdSelectionResult(scoringWinner);
 
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelectionBuilder =
-                Futures.transform(winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
+                Futures.transformAsync(
+                        winningOutcome, mapWinnerToDBResult, mLightweightExecutorService);
 
         // Clean up after the future is complete, out of critical path
         dbAdSelectionBuilder.addListener(() -> cleanUpCache(), mLightweightExecutorService);
@@ -234,9 +237,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig) {
         try {
             if (customAudiences.isEmpty()) {
-                sLogger.w("Cannot invoke bidding on empty list of CAs");
-                endSilentFailedBidding(new RuntimeException("No CAs found for selection."));
-                return Futures.immediateFailedFuture(new Throwable("No CAs found for selection"));
+                sLogger.w("Need not invoke bidding on empty list of CAs");
+                // Return empty list of bids
+                return Futures.immediateFuture(Collections.EMPTY_LIST);
             }
             mAdSelectionExecutionLogger.startRunAdBidding(customAudiences);
             Map<AdTechIdentifier, List<DBCustomAudience>> buyerToCustomAudienceMap =
@@ -298,9 +301,9 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 adBiddingOutcomes.stream().filter(Objects::nonNull).collect(Collectors.toList());
         sLogger.v("Got %d valid bidding outcomes", validBiddingOutcomes.size());
 
-        if (validBiddingOutcomes.isEmpty()) {
-            sLogger.w("Received empty list of successful Bidding outcomes");
-            throw new IllegalStateException(ERROR_NO_VALID_BIDS_FOR_SCORING);
+        if (validBiddingOutcomes.isEmpty() && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
+            sLogger.w("Received empty list of successful bidding outcomes and contextual ads");
+            throw new IllegalStateException(ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         }
         return mAdsScoreGenerator.runAdScoring(validBiddingOutcomes, adSelectionConfig);
     }
@@ -328,23 +331,41 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
      *     and a string containing the JS with the decision logic from this buyer.
      */
     @VisibleForTesting
-    AdSelectionOrchestrationResult createAdSelectionResult(
+    ListenableFuture<AdSelectionOrchestrationResult> createAdSelectionResult(
             @NonNull AdScoringOutcome scoringWinner) {
         DBAdSelection.Builder dbAdSelectionBuilder = new DBAdSelection.Builder();
         sLogger.v("Creating Ad Selection result from scoring winner");
         dbAdSelectionBuilder
                 .setWinningAdBid(scoringWinner.getAdWithScore().getAdWithBid().getBid())
-                .setCustomAudienceSignals(
-                        scoringWinner.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
+                .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
-                .setBiddingLogicUri(
-                        scoringWinner.getCustomAudienceBiddingInfo().getBiddingLogicUri())
+                .setBiddingLogicUri(scoringWinner.getDecisionLogicUri())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
-        return new AdSelectionOrchestrationResult(
-                dbAdSelectionBuilder,
-                scoringWinner.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs());
+
+        return getOutcomeDecisionLogic(scoringWinner)
+                .transform(
+                        decisionLogic ->
+                                new AdSelectionOrchestrationResult(
+                                        dbAdSelectionBuilder, decisionLogic),
+                        mLightweightExecutorService);
+    }
+
+    @VisibleForTesting
+    FluentFuture<String> getOutcomeDecisionLogic(AdScoringOutcome scoringOutcome) {
+        if (scoringOutcome.getDecisionLogicJsDownloaded()) {
+            return FluentFuture.from(Futures.immediateFuture(scoringOutcome.getDecisionLogicJs()));
+        }
+
+        final AdServicesHttpClientRequest downloadRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(scoringOutcome.getDecisionLogicUri())
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
+
+        return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(downloadRequest))
+                .transform(response -> response.getResponseBody(), mLightweightExecutorService);
     }
 
     private Map<AdTechIdentifier, List<DBCustomAudience>> mapBuyerToCustomAudience(
