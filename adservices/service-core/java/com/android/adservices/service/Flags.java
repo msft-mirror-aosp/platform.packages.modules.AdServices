@@ -656,6 +656,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
     }
 
+    // Enable contextual Ads feature, based on Filtering feature enabled or not
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
