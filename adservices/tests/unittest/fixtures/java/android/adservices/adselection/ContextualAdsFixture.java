@@ -25,6 +25,7 @@ import android.net.Uri;
 import com.google.common.collect.ImmutableList;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This is a static class meant to help with tests that involve creating an {@link ContextualAds}.
@@ -41,7 +42,7 @@ public class ContextualAdsFixture {
             CommonFixture.getUri(BUYER, DECISION_LOGIC_FRAGMENT);
 
     private static final AdData VALID_AD_DATA = AdDataFixture.getValidAdDataByBuyer(BUYER, 0);
-    private static final double TEST_BID = 1.0;
+    private static final double TEST_BID = 0.1;
 
     public static final AdWithBid AD_WITH_BID_1 = new AdWithBid(VALID_AD_DATA, TEST_BID);
     public static final AdWithBid AD_WITH_BID_2 = new AdWithBid(VALID_AD_DATA, TEST_BID * 2);
@@ -53,6 +54,22 @@ public class ContextualAdsFixture {
                 .setBuyer(BUYER)
                 .setDecisionLogicUri(DECISION_LOGIC_URI)
                 .setAdsWithBid(ADS_WITH_BID);
+    }
+
+    public static ContextualAds.Builder generateContextualAds(
+            AdTechIdentifier buyer, List<Double> bids) {
+        return new ContextualAds.Builder()
+                .setBuyer(buyer)
+                .setDecisionLogicUri(CommonFixture.getUri(buyer, DECISION_LOGIC_FRAGMENT))
+                .setAdsWithBid(
+                        bids.stream()
+                                .map(
+                                        bid ->
+                                                new AdWithBid(
+                                                        AdDataFixture.getValidAdDataByBuyer(
+                                                                buyer, bid.intValue()),
+                                                        bid))
+                                .collect(Collectors.toList()));
     }
 
     public static ContextualAds aContextualAd() {

@@ -21,22 +21,27 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Trace;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.List;
 import java.util.Objects;
 
 /** Class to fetch JavaScript code both on and off device. */
 public class JsFetcher {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     @VisibleForTesting
     static final String MISSING_BIDDING_LOGIC = "Error fetching bidding js logic";
 
@@ -102,7 +107,7 @@ public class JsFetcher {
                         jsOverride -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
-                                LogUtil.v(
+                                sLogger.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
                                 return FluentFuture.from(
@@ -115,7 +120,7 @@ public class JsFetcher {
                                                 response -> response.getResponseBody(),
                                                 mLightweightExecutorService);
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
@@ -127,7 +132,7 @@ public class JsFetcher {
                         Exception.class,
                         e -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
-                            LogUtil.w(
+                            sLogger.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
                         },
@@ -136,32 +141,15 @@ public class JsFetcher {
 
     /**
      * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
-     * present, otherwise fetch from server. Does not use caching by default.
-     *
-     * @return buyer decision logic
-     */
-    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
-            @NonNull final Uri decisionLogicUri,
-            @NonNull String owner,
-            @NonNull AdTechIdentifier buyer,
-            @NonNull String name,
-            @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
-        return getBuyerDecisionLogicWithLogger(
-                decisionLogicUri, owner, buyer, name, false, runAdBiddingPerCAExecutionLogger);
-    }
-
-    /**
-     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
      * present, otherwise fetch from server. Make use of caching optional.
      *
      * @return buyer decision logic
      */
-    public FluentFuture<String> getBuyerDecisionLogicWithLogger(
-            @NonNull final Uri decisionLogicUri,
+    public FluentFuture<AdServicesHttpClientResponse> getBuyerDecisionLogicWithLogger(
+            @NonNull final AdServicesHttpClientRequest decisionLogicUri,
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
-            boolean useCaching,
             @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
@@ -176,31 +164,33 @@ public class JsFetcher {
                         jsOverride -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
-                                LogUtil.v(
+                                sLogger.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
                                 return FluentFuture.from(
-                                                mAdServicesHttpsClient.fetchPayload(
-                                                        AdServicesHttpClientRequest.builder()
-                                                                .setUri(decisionLogicUri)
-                                                                .setUseCache(useCaching)
-                                                                .build()))
-                                        .transform(
-                                                response -> response.getResponseBody(),
-                                                mLightweightExecutorService);
+                                        mAdServicesHttpsClient.fetchPayload(decisionLogicUri));
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
-                                return Futures.immediateFuture(jsOverride);
+                                final ImmutableMap<String, List<String>> versionHeader =
+                                        JsVersionHelper.constructVersionHeader(
+                                                JsVersionHelper
+                                                        .JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                                decisionLogicUri.getRequestProperties());
+                                return Futures.immediateFuture(
+                                        AdServicesHttpClientResponse.builder()
+                                                .setResponseBody(jsOverride)
+                                                .setResponseHeaders(versionHeader)
+                                                .build());
                             }
                         },
                         mLightweightExecutorService)
                 .transform(
                         buyerDecisionLogicJs -> {
                             runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(
-                                    buyerDecisionLogicJs);
+                                    buyerDecisionLogicJs.getResponseBody());
                             return buyerDecisionLogicJs;
                         },
                         mLightweightExecutorService)
@@ -208,7 +198,7 @@ public class JsFetcher {
                         Exception.class,
                         e -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
-                            LogUtil.w(
+                            sLogger.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
                         },

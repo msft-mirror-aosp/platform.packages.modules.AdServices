@@ -19,14 +19,20 @@ package com.android.adservices.data.adselection;
 import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
+
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.FledgeRoomConverters;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
@@ -34,7 +40,8 @@ import java.util.List;
  * <p>Annotation will generate Room based SQLite Dao implementation.
  */
 @Dao
-public interface AdSelectionEntryDao {
+public abstract class AdSelectionEntryDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
@@ -43,7 +50,7 @@ public interface AdSelectionEntryDao {
      */
     // TODO(b/230568647): retry adSelectionId generation in case of collision
     @Insert(onConflict = OnConflictStrategy.ABORT)
-    void persistAdSelection(DBAdSelection adSelection);
+    public abstract void persistAdSelection(DBAdSelection adSelection);
 
     /**
      * Write a buyer decision logic entry into the table buyer_decision_logic.
@@ -51,7 +58,7 @@ public interface AdSelectionEntryDao {
      * @param buyerDecisionLogic is the BuyerDecisionLogic to write to table buyer_decision_logic.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
+    public abstract void persistBuyerDecisionLogic(DBBuyerDecisionLogic buyerDecisionLogic);
 
     /**
      * Add an ad selection override into the table ad_selection_overrides
@@ -61,16 +68,20 @@ public interface AdSelectionEntryDao {
      *     exists, this will replace the existing object.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
+    public abstract void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
      * Adds a list of registered ad interactions to the table registered_ad_interactions
+     *
+     * <p>This method is not meant to be used on its own, since it doesn't take into account the
+     * maximum size of {@code registered_ad_interactions}. Use {@link
+     * #safelyInsertRegisteredAdInteractions(long, List, long, long, int)} instead.
      *
      * @param registeredAdInteractions is the list of {@link DBRegisteredAdInteraction} objects to
      *     write to the table registered_ad_interactions.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistDBRegisteredAdInteractions(
+    protected abstract void persistDBRegisteredAdInteractions(
             List<DBRegisteredAdInteraction> registeredAdInteractions);
 
     /**
@@ -82,7 +93,7 @@ public interface AdSelectionEntryDao {
     @Query(
             "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId LIMIT"
                     + " 1)")
-    boolean doesAdSelectionIdExist(long adSelectionId);
+    public abstract boolean doesAdSelectionIdExist(long adSelectionId);
 
     /**
      * Checks if there is a row in the buyer decision logic data with the unique key
@@ -94,7 +105,7 @@ public interface AdSelectionEntryDao {
     @Query(
             "SELECT EXISTS(SELECT 1 FROM buyer_decision_logic WHERE bidding_logic_uri ="
                     + " :biddingLogicUri LIMIT 1)")
-    boolean doesBuyerDecisionLogicExist(Uri biddingLogicUri);
+    public abstract boolean doesBuyerDecisionLogicExist(Uri biddingLogicUri);
 
     /**
      * Checks if there is a row in the ad selection override data with the unique key
@@ -107,7 +118,7 @@ public interface AdSelectionEntryDao {
     @Query(
             "SELECT EXISTS(SELECT 1 FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName LIMIT 1)")
-    boolean doesAdSelectionOverrideExistForPackageName(
+    public abstract boolean doesAdSelectionOverrideExistForPackageName(
             String adSelectionConfigId, String appPackageName);
 
     /**
@@ -123,7 +134,7 @@ public interface AdSelectionEntryDao {
             "SELECT EXISTS(SELECT 1 FROM registered_ad_interactions WHERE ad_selection_id ="
                     + " :adSelectionId AND interaction_key = :interactionKey AND destination"
                     + " = :destination LIMIT 1)")
-    boolean doesRegisteredAdInteractionExist(
+    public abstract boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
             @ReportInteractionRequest.ReportingDestination int destination);
@@ -152,7 +163,7 @@ public interface AdSelectionEntryDao {
                 + " buyer_decision_logic_js FROM ad_selection LEFT JOIN buyer_decision_logic ON"
                 + " ad_selection.bidding_logic_uri = buyer_decision_logic.bidding_logic_uri WHERE"
                 + " ad_selection.ad_selection_id = :adSelectionId")
-    DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
+    public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
      * Get the ad selection entries with a batch of ad_selection_ids.
@@ -179,7 +190,7 @@ public interface AdSelectionEntryDao {
                 + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
                 + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) ")
-    List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
+    public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
      * Get the ad selection entries with a batch of ad_selection_ids.
@@ -206,7 +217,7 @@ public interface AdSelectionEntryDao {
                 + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri"
                 + " = buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
                 + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
-    List<DBAdSelectionEntry> getAdSelectionEntities(
+    public abstract List<DBAdSelectionEntry> getAdSelectionEntities(
             List<Long> adSelectionIds, String callerPackageName);
 
     /**
@@ -219,7 +230,8 @@ public interface AdSelectionEntryDao {
             "SELECT decision_logic FROM ad_selection_overrides WHERE ad_selection_config_id ="
                     + " :adSelectionConfigId AND app_package_name = :appPackageName")
     @Nullable
-    String getDecisionLogicOverride(String adSelectionConfigId, String appPackageName);
+    public abstract String getDecisionLogicOverride(
+            String adSelectionConfigId, String appPackageName);
 
     /**
      * Get ad selection trusted scoring signals override by its unique key and the package name of
@@ -232,7 +244,8 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
                     + " :appPackageName")
     @Nullable
-    String getTrustedScoringSignalsOverride(String adSelectionConfigId, String appPackageName);
+    public abstract String getTrustedScoringSignalsOverride(
+            String adSelectionConfigId, String appPackageName);
 
     /**
      * Gets the interaction reporting uri that was registered with the primary key combination of
@@ -245,10 +258,40 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_id = :adSelectionId AND interaction_key = :interactionKey AND"
                     + " destination = :destination")
     @Nullable
-    Uri getRegisteredAdInteractionUri(
+    public abstract Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
             @ReportInteractionRequest.ReportingDestination int destination);
+
+    /**
+     * Gets the ad counter keys, serialized as a JSON array, associated with a given ad selection.
+     *
+     * <p>This method is not intended to be used on its own. Please use {@link
+     * #getAdCounterKeysForAdSelection(long, String)} to obtain a deserialized {@link Set} of keys.
+     *
+     * @return the serialized {@link Set} of ad counter keys associated with the ad which was
+     *     selected, or {@code null} if no match is found
+     */
+    @Query(
+            "SELECT ad_counter_keys FROM ad_selection "
+                    + "WHERE ad_selection_id = :adSelectionId "
+                    + "AND caller_package_name = :callerPackageName")
+    @Nullable
+    protected abstract String getSerializedAdCounterKeysForAdSelection(
+            long adSelectionId, @NonNull String callerPackageName);
+
+    /**
+     * Gets the ad counter keys associated with a given ad selection.
+     *
+     * @return the {@link Set} of ad counter keys associated with the ad which was selected, or
+     *     {@code null} if no match is found
+     */
+    @Transaction
+    public Set<String> getAdCounterKeysForAdSelection(
+            long adSelectionId, @NonNull String callerPackageName) {
+        return FledgeRoomConverters.deserializeStringSet(
+                getSerializedAdCounterKeysForAdSelection(adSelectionId, callerPackageName));
+    }
 
     /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
@@ -258,7 +301,7 @@ public interface AdSelectionEntryDao {
      * @param expirationTime is the cutoff time to expire the AdSelectionEntry.
      */
     @Query("DELETE FROM ad_selection WHERE creation_timestamp < :expirationTime")
-    void removeExpiredAdSelection(Instant expirationTime);
+    public abstract void removeExpiredAdSelection(Instant expirationTime);
 
     /**
      * Clean up selected ad selection data entry data in batch by their ad_selection_ids.
@@ -267,7 +310,7 @@ public interface AdSelectionEntryDao {
      *     removed from ad_selection and buyer_decision_logic tables.
      */
     @Query("DELETE FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
-    void removeAdSelectionEntriesByIds(List<Long> adSelectionIds);
+    public abstract void removeAdSelectionEntriesByIds(List<Long> adSelectionIds);
 
     /**
      * Clean up selected ad selection override data by its {@code adSelectionConfigId}
@@ -278,7 +321,7 @@ public interface AdSelectionEntryDao {
     @Query(
             "DELETE FROM ad_selection_overrides WHERE ad_selection_config_id = :adSelectionConfigId"
                     + " AND app_package_name = :appPackageName")
-    void removeAdSelectionOverrideByIdAndPackageName(
+    public abstract void removeAdSelectionOverrideByIdAndPackageName(
             String adSelectionConfigId, String appPackageName);
 
     /**
@@ -290,11 +333,11 @@ public interface AdSelectionEntryDao {
                     + "( SELECT DISTINCT bidding_logic_uri "
                     + "FROM ad_selection "
                     + "WHERE bidding_logic_uri is NOT NULL)")
-    void removeExpiredBuyerDecisionLogic();
+    public abstract void removeExpiredBuyerDecisionLogic();
 
     /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
-    void removeAllAdSelectionOverrides(String appPackageName);
+    public abstract void removeAllAdSelectionOverrides(String appPackageName);
 
     /**
      * Checks if there is a row in the ad selection data with the unique combination of
@@ -309,7 +352,7 @@ public interface AdSelectionEntryDao {
             "SELECT EXISTS(SELECT 1 FROM ad_selection WHERE ad_selection_id = :adSelectionId"
                     + " AND caller_package_name = :callerPackageName LIMIT"
                     + " 1)")
-    boolean doesAdSelectionMatchingCallerPackageNameExist(
+    public abstract boolean doesAdSelectionMatchingCallerPackageNameExist(
             long adSelectionId, String callerPackageName);
 
     /**
@@ -322,7 +365,7 @@ public interface AdSelectionEntryDao {
      *     object.
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void persistAdSelectionFromOutcomesOverride(
+    public abstract void persistAdSelectionFromOutcomesOverride(
             DBAdSelectionFromOutcomesOverride adSelectionFromOutcomesOverride);
 
     /**
@@ -338,7 +381,7 @@ public interface AdSelectionEntryDao {
                     + "ad_selection_from_outcomes_config_id = "
                     + ":adSelectionFromOutcomesConfigId AND app_package_name = :appPackageName "
                     + "LIMIT 1)")
-    boolean doesAdSelectionFromOutcomesOverrideExistForPackageName(
+    public abstract boolean doesAdSelectionFromOutcomesOverrideExistForPackageName(
             String adSelectionFromOutcomesConfigId, String appPackageName);
 
     /**
@@ -352,7 +395,8 @@ public interface AdSelectionEntryDao {
                     + "ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
                     + "AND app_package_name = :appPackageName")
     @Nullable
-    String getSelectionLogicOverride(String adSelectionFromOutcomesConfigId, String appPackageName);
+    public abstract String getSelectionLogicOverride(
+            String adSelectionFromOutcomesConfigId, String appPackageName);
 
     /**
      * Get ad selection from outcomes signals override by its unique key and the package name of the
@@ -365,7 +409,7 @@ public interface AdSelectionEntryDao {
                     + " ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId "
                     + "AND app_package_name = :appPackageName")
     @Nullable
-    String getSelectionSignalsOverride(
+    public abstract String getSelectionSignalsOverride(
             String adSelectionFromOutcomesConfigId, String appPackageName);
 
     /**
@@ -379,14 +423,14 @@ public interface AdSelectionEntryDao {
             "DELETE FROM ad_selection_from_outcomes_overrides WHERE "
                     + "ad_selection_from_outcomes_config_id = :adSelectionFromOutcomesConfigId AND "
                     + "app_package_name = :appPackageName")
-    void removeAdSelectionFromOutcomesOverrideByIdAndPackageName(
+    public abstract void removeAdSelectionFromOutcomesOverrideByIdAndPackageName(
             String adSelectionFromOutcomesConfigId, String appPackageName);
 
     /** Clean up all ad selection from outcomes override data */
     @Query(
             "DELETE FROM ad_selection_from_outcomes_overrides WHERE app_package_name = "
                     + ":appPackageName")
-    void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
+    public abstract void removeAllAdSelectionFromOutcomesOverrides(String appPackageName);
 
     /**
      * Clean up registered_ad_interaction entries in batch if the {@code adSelectionId} no longer
@@ -397,5 +441,79 @@ public interface AdSelectionEntryDao {
                     + "( SELECT DISTINCT ad_selection_id "
                     + "FROM ad_selection "
                     + "WHERE ad_selection_id is NOT NULL)")
-    void removeExpiredRegisteredAdInteractions();
+    public abstract void removeExpiredRegisteredAdInteractions();
+
+    /** Returns total size of the {@code registered_ad_interaction} table. */
+    @Query("SELECT COUNT(*) FROM registered_ad_interactions")
+    public abstract long getTotalNumRegisteredAdInteractions();
+
+    /**
+     * Returns total number of the {@code registered_ad_interaction}s that match a given {@code
+     * adSelectionId} and {@code reportingDestination}.
+     */
+    @Query(
+            "SELECT COUNT(*) FROM registered_ad_interactions WHERE ad_selection_id ="
+                    + " :adSelectionId AND destination = :reportingDestination")
+    public abstract long getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+            long adSelectionId,
+            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+
+    /**
+     * Inserts a list of {@link DBRegisteredAdInteraction}s into the database, enforcing these
+     * limitations:
+     *
+     * <p>We will not allow the total size of the {@code registered_ad_interaction} to exceed {@code
+     * maxTotalNumRegisteredInteractions}
+     *
+     * <p>We will not allow the number of registered ad interactions {@code adSelectionId} and
+     * {@code reportingDestination} to exceed {@code maxPerDestinationNumRegisteredInteractions}.
+     *
+     * <p>This transaction is separate in order to minimize the critical region while locking the
+     * database.
+     */
+    @Transaction
+    public void safelyInsertRegisteredAdInteractions(
+            long adSelectionId,
+            @NonNull List<DBRegisteredAdInteraction> registeredAdInteractions,
+            long maxTotalNumRegisteredInteractions,
+            long maxPerDestinationNumRegisteredInteractions,
+            int reportingDestination) {
+        long currentNumRegisteredInteractions = getTotalNumRegisteredAdInteractions();
+
+        if (currentNumRegisteredInteractions >= maxTotalNumRegisteredInteractions) {
+            sLogger.v("Registered Ad Interaction max table size reached! Skipping entire list.");
+            return;
+        }
+
+        long currentNumRegisteredInteractionsPerDestination =
+                getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        adSelectionId, reportingDestination);
+
+        if (currentNumRegisteredInteractionsPerDestination
+                >= maxPerDestinationNumRegisteredInteractions) {
+            sLogger.v(
+                    "Maximum number of Registered Ad Interactions for this adSelectionId and"
+                            + " reportingDestination reached! Skipping entire list.");
+            return;
+        }
+
+        long numAvailableRowsInTable =
+                Math.max(0, maxTotalNumRegisteredInteractions - currentNumRegisteredInteractions);
+
+        long numAvailableRowsInTablePerAdSelectionIdAndDestination =
+                Math.max(
+                        0,
+                        maxPerDestinationNumRegisteredInteractions
+                                - currentNumRegisteredInteractionsPerDestination);
+
+        int numEntriesToCommit =
+                (int)
+                        Math.min(
+                                numAvailableRowsInTablePerAdSelectionIdAndDestination,
+                                Math.min(registeredAdInteractions.size(), numAvailableRowsInTable));
+        List<DBRegisteredAdInteraction> registeredAdInteractionsToCommit =
+                registeredAdInteractions.subList(0, numEntriesToCommit);
+
+        persistDBRegisteredAdInteractions(registeredAdInteractionsToCommit);
+    }
 }

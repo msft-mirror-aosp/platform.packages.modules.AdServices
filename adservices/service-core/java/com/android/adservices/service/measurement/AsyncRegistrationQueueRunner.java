@@ -373,6 +373,8 @@ public class AsyncRegistrationQueueRunner {
             LogUtil.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
                     SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
+            debugReportApi.scheduleSourceStorageLimitDebugReport(
+                    source, numOfSourcesPerPublisher.toString(), dao);
             return false;
         }
         if (source.getAppDestinations() != null) {
@@ -392,10 +394,8 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: App destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
-                    if (source.isDebugReporting()) {
                         debugReportApi.scheduleSourceDestinationLimitDebugReport(
                                 source, optionalAppDestinationCount.toString(), dao);
-                    }
                     return false;
                 }
             } else {
@@ -459,6 +459,8 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner:  Web destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
+                    debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                            source, optionalDestinationCountWeb.toString(), dao);
                     return false;
                 }
             } else {
@@ -602,7 +604,7 @@ public class AsyncRegistrationQueueRunner {
     @VisibleForTesting
     void insertSourceFromTransaction(Source source, IMeasurementDao dao) throws DatastoreException {
         List<EventReport> eventReports = generateFakeEventReports(source);
-        if (!eventReports.isEmpty() && source.isDebugReporting()) {
+        if (!eventReports.isEmpty()) {
             mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
         }
         dao.insertSource(source);

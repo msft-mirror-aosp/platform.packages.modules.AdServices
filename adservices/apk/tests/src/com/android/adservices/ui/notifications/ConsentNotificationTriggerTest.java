@@ -42,6 +42,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -115,7 +116,7 @@ public class ConsentNotificationTriggerTest {
     public void tearDown() throws IOException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         mStaticMockSession.finishMocking();
     }
 

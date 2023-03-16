@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.noising;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -162,5 +163,43 @@ public class CombinatoricsTest {
         Arrays.stream(testCases).forEach((testCase) ->
                 assertArrayEquals(testCase[1],
                         Combinatorics.getBarsPrecedingEachStar(/*starIndices=*/testCase[0])));
+    }
+
+    @Test
+    public void getNumStatesArithmeticNoOverflow() {
+        // Test Case: {numBucketIncrements, numTriggerData, numWindows}, {expected number of states}
+        int[][][] testCases = {
+            {{3, 8, 3}, {2925}},
+            {{1, 1, 1}, {2}},
+            {{1, 2, 3}, {7}},
+            {{3, 2, 1}, {10}}
+        };
+
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) ->
+                                assertEquals(
+                                        testCase[1][0],
+                                        Combinatorics.getNumStatesArithmetic(
+                                                testCase[0][0], testCase[0][1], testCase[0][2])));
+    }
+
+    @Test
+    public void getNumStatesArithmeticOverflow() {
+        // Test Case: {numBucketIncrements, numTriggerData, numWindows}
+        int[][] testCasesOverflow = {
+            {3, Integer.MAX_VALUE - 1, 3},
+            {3, 8, Integer.MAX_VALUE - 1},
+            {8, 10, 6},
+        };
+
+        Arrays.stream(testCasesOverflow)
+                .forEach(
+                        (testCase) ->
+                                assertThrows(
+                                        ArithmeticException.class,
+                                        () ->
+                                                Combinatorics.getNumStatesArithmetic(
+                                                        testCase[0], testCase[1], testCase[2])));
     }
 }

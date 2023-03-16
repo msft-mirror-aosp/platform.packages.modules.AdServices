@@ -29,7 +29,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -38,6 +38,7 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TestCustomAudienceManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private final CustomAudienceManager mCustomAudienceManager;
     private final String mCallerPackageName;
@@ -99,7 +100,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -145,7 +146,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -184,7 +185,7 @@ public class TestCustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }

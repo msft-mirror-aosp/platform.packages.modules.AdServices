@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 
@@ -78,9 +79,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
                         reconsentIfNeededForEU();
+                        boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
+                        if (mFlags.isBackCompatActivityFeatureEnabled()) {
+                            isAdServicesEnabled &=
+                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
+                        }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
-                                        .setAdServicesEnabled(mFlags.getAdServicesEnabled())
+                                        .setAdServicesEnabled(isAdServicesEnabled)
                                         .build());
                     } catch (Exception e) {
                         try {
@@ -141,7 +147,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         mContext, adIdEnabled, false);
                             }
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
-                                PackageChangedReceiver.enableReceiver(mContext);
+                                PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
                         }

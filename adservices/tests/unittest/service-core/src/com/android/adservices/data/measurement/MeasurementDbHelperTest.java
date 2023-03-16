@@ -16,16 +16,14 @@
 
 package com.android.adservices.data.measurement;
 
-import static com.android.adservices.data.DbTestUtil.doesIndexExist;
-import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.data.measurement.migration.MigrationTestHelper.createReferenceDbAtVersion;
+import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
+import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -33,89 +31,116 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbHelperTest;
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.data.measurement.migration.AbstractMeasurementDbMigratorTestBase;
 import com.android.adservices.data.measurement.migration.ContentValueFixtures;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public class MeasurementDbHelperTest {
 
+    private static final String MIGRATION_DB_REFERENCE_NAME =
+            "adservices_msmt_db_migrate_reference.db";
+    private static final String OLD_TEST_DB_NAME = "old_test_db.db";
+    private static final String MEASUREMENT_DB_NAME = "adservices_msmt_db_test.db";
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
-    private static final float FLOAT_COMPARISON_EPSILON = 0.00005f;
+    @Before
+    public void setup() {
+        Stream.of(MIGRATION_DB_REFERENCE_NAME, OLD_TEST_DB_NAME, MEASUREMENT_DB_NAME)
+                .map(sContext::getDatabasePath)
+                .filter(File::exists)
+                .forEach(File::delete);
+    }
 
     @Test
     public void testNewInstall() {
         MeasurementDbHelper measurementDbHelper =
                 new MeasurementDbHelper(
                         sContext,
-                        "msmt_test_db",
+                        MEASUREMENT_DB_NAME,
                         MeasurementDbHelper.CURRENT_DATABASE_VERSION,
                         DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = measurementDbHelper.safeGetWritableDatabase();
-        verifyLatestSchema(db);
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        MeasurementDbHelper.CURRENT_DATABASE_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, db);
     }
 
     @Test
     public void testMigrationFromOldDatabase() {
-        String dbName = "test_db-1";
-        String migrationDbName = "msmt_db_migrate-1";
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, OLD_TEST_DB_NAME, DbHelper.DATABASE_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(6, oldDb.getVersion());
+        assertEquals(DbHelper.DATABASE_VERSION, oldDb.getVersion());
 
         MeasurementDbHelper measurementDbHelper =
                 new MeasurementDbHelper(
                         sContext,
-                        migrationDbName,
+                        MEASUREMENT_DB_NAME,
                         MeasurementDbHelper.CURRENT_DATABASE_VERSION,
                         dbHelper);
-        verifyLatestSchema(measurementDbHelper.safeGetWritableDatabase());
+        SQLiteDatabase actualMigratedDb = measurementDbHelper.safeGetWritableDatabase();
+
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        MeasurementDbHelper.CURRENT_DATABASE_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, actualMigratedDb);
         DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
     }
 
     @Test
     public void testMigrationDataIntegrityToV6FromOldDatabase() {
-        String dbName = "test_db-2";
-        String migrationDbName = "msmt_db_migrate-2";
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DbHelper.CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper =
+                new DbHelper(
+                        sContext, OLD_TEST_DB_NAME, MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(6, oldDb.getVersion());
+        assertEquals(MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION, oldDb.getVersion());
         // Sorted map because we want source/trigger to be inserted before other tables to
         // respect foreign key constraints
         Map<String, List<ContentValues>> fakeData = createFakeData();
 
-        populateOldDb(oldDb, fakeData);
+        populateDb(oldDb, fakeData);
         MeasurementDbHelper measurementDbHelper =
                 new MeasurementDbHelper(
                         sContext,
-                        migrationDbName,
+                        MEASUREMENT_DB_NAME,
                         MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION,
                         dbHelper);
         SQLiteDatabase newDb = measurementDbHelper.safeGetWritableDatabase();
         DbHelperTest.assertMeasurementTablesDoNotExist(oldDb);
-        verifyLatestSchema(newDb);
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
         assertEquals(MeasurementDbHelper.OLD_DATABASE_FINAL_VERSION, newDb.getVersion());
-        verifyNewDb(newDb, fakeData);
+        verifyDataInDb(newDb, fakeData);
         emptyTables(newDb, MeasurementTables.V6_TABLES);
     }
 
@@ -193,6 +218,17 @@ public class MeasurementDbHelperTest {
         asyncRegistrationRows.add(ContentValueFixtures.generateAsyncRegistrationContentValuesV6());
         tableRowsMap.put(MeasurementTables.AsyncRegistrationContract.TABLE, asyncRegistrationRows);
 
+        // XNA ignored sources Table
+        List<ContentValues> xnaIgnoredSources = new ArrayList<>();
+        ContentValues xnaIgnoredSources1 =
+                ContentValueFixtures.generateXnaIgnoredSourcesContentValuesV6();
+        xnaIgnoredSources1.put(
+                MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID,
+                UUID.randomUUID().toString());
+        xnaIgnoredSources.add(xnaIgnoredSources1);
+        xnaIgnoredSources.add(ContentValueFixtures.generateXnaIgnoredSourcesContentValuesV6());
+        tableRowsMap.put(MeasurementTables.XnaIgnoredSourcesContract.TABLE, xnaIgnoredSources);
+
         return tableRowsMap;
     }
 
@@ -202,101 +238,5 @@ public class MeasurementDbHelperTest {
                         (table) -> {
                             db.delete(table, null, null);
                         });
-    }
-
-    private void verifyNewDb(SQLiteDatabase newDb, Map<String, List<ContentValues>> fakeData) {
-        fakeData.forEach(
-                (table, rows) -> {
-                    List<ContentValues> newRows = new ArrayList<>();
-                    try (Cursor cursor =
-                            newDb.query(table, null, null, null, null, null, null, null)) {
-                        while (cursor.moveToNext()) {
-                            newRows.add(
-                                    AbstractMeasurementDbMigratorTestBase.cursorRowToContentValues(
-                                            cursor));
-                        }
-                    }
-                    rows.sort(
-                            (c1, c2) ->
-                                    String.CASE_INSENSITIVE_ORDER.compare(
-                                            c1.getAsString("_id"), c2.getAsString("_id")));
-                    newRows.sort(
-                            (c1, c2) ->
-                                    String.CASE_INSENSITIVE_ORDER.compare(
-                                            c1.getAsString("_id"), c2.getAsString("_id")));
-
-                    assertEquals(table + " row count matching failed", rows.size(), newRows.size());
-
-                    for (int i = 0; i < rows.size(); i++) {
-                        ContentValues expected = rows.get(i);
-                        ContentValues actual = newRows.get(i);
-                        assertTrue(
-                                String.format(
-                                        "Table: %s, Row: %d, Expected: %s, Actual: %s",
-                                        table, i, expected, actual),
-                                doContentValueMatch(expected, actual));
-                    }
-                });
-    }
-
-    private void populateOldDb(SQLiteDatabase oldDb, Map<String, List<ContentValues>> fakeData) {
-        fakeData.forEach(
-                (table, rows) -> {
-                    rows.forEach(
-                            (row) -> {
-                                assertNotEquals(-1, oldDb.insert(table, null, row));
-                            });
-                });
-    }
-
-    private void verifyLatestSchema(SQLiteDatabase db) {
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 31));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_debug_report", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_xna_ignored_sources", 2));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
-    }
-
-    private boolean doContentValueMatch(ContentValues values1, ContentValues values2) {
-        for (Map.Entry<String, Object> element : values1.valueSet()) {
-            String key1 = element.getKey();
-            Object value1 = element.getValue();
-            if (!values2.containsKey(key1)) {
-                return false;
-            }
-            Object value2 = values2.get(key1);
-            if (value1.equals(value2)) {
-                continue;
-            }
-            if (value1 instanceof Number
-                    && !nearlyEqual(
-                            ((Number) value1).floatValue(),
-                            ((Number) value2).floatValue(),
-                            FLOAT_COMPARISON_EPSILON)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public static boolean nearlyEqual(float a, float b, float epsilon) {
-        if (a == b) {
-            return true;
-        }
-        final float absA = Math.abs(a);
-        final float absB = Math.abs(b);
-        final float diff = Math.abs(a - b);
-
-        return diff / (absA + absB) < epsilon;
     }
 }

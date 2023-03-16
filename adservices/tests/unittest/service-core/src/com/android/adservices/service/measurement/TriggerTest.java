@@ -99,6 +99,7 @@ public class TriggerTest {
         values.put("geoValue", 1664);
         JSONObject adtechBitMapping = new JSONObject();
         adtechBitMapping.put("AdTechA-enrollment_id", "0x1");
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -123,6 +124,7 @@ public class TriggerTest {
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
+                        .setDebugJoinKey(debugJoinKey)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -147,6 +149,7 @@ public class TriggerTest {
                                         .orElse(null))
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
+                        .setDebugJoinKey(debugJoinKey)
                         .build());
     }
 
@@ -275,6 +278,9 @@ public class TriggerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setAdtechBitMapping(adtechBitMapping2.toString())
                         .build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-1").build(),
+                TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-2").build());
     }
 
     @Test

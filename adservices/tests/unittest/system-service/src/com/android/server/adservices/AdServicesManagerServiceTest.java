@@ -138,7 +138,7 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testAdServicesSystemService_enabled_then_disabled() {
+    public void testAdServicesSystemService_enabled_then_disabled() throws Exception {
         // First enable the flag.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -197,6 +197,12 @@ public class AdServicesManagerServiceTest {
                 KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
+
+        // When flag value is changed above, then TestableDeviceConfig invokes the DeviceConfig
+        // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
+        // need to add a wait time to ensure the listener gets executed. If listener gets
+        // executed after the test is finished, we hit READ_DEVICE_CONFIG exception.
+        Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
         mService.registerReceivers();
@@ -561,32 +567,6 @@ public class AdServicesManagerServiceTest {
         assertThat(service.wasGaUxNotificationDisplayed()).isFalse();
         service.recordGaUxNotificationDisplayed();
         assertThat(service.wasGaUxNotificationDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testRecordTopicsConsentPageDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        // Since unit test cannot execute an IPC call currently, disable the permission check.
-        disableEnforceAdServicesManagerPermission(service);
-
-        // First, the topic consent page displayed is false.
-        assertThat(service.wasTopicsConsentPageDisplayed()).isFalse();
-        service.recordTopicsConsentPageDisplayed();
-        assertThat(service.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testRecordFledgeConsentPageDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        // Since unit test cannot execute an IPC call currently, disable the permission check.
-        disableEnforceAdServicesManagerPermission(service);
-
-        // First, the fledge consent page displayed is false.
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        service.recordFledgeAndMsmtConsentPageDisplayed();
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
     }
 
     @Test

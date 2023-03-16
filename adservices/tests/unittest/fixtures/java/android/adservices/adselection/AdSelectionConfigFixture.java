@@ -93,7 +93,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
 
@@ -109,7 +108,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
@@ -126,8 +124,16 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
+    }
+
+    /**
+     * @return returns a pre-loaded builder, where the internal members of the object can be changed
+     *     for the unit tests, this version of Ad Selection builder includes contextual Ads as well
+     * @hide
+     */
+    public static AdSelectionConfig.Builder anAdSelectionConfigWithContextualAdsBuilder() {
+        return anAdSelectionConfigBuilder().setBuyerContextualAds(BUYER_CONTEXTUAL_ADS);
     }
 }
