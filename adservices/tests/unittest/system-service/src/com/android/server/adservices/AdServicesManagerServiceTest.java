@@ -564,29 +564,16 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testRecordTopicsConsentPageDisplayed() throws IOException {
+    public void recordUserManualInteractionWithConsent() throws IOException {
         AdServicesManagerService service =
                 spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
         // First, the topic consent page displayed is false.
-        assertThat(service.wasTopicsConsentPageDisplayed()).isFalse();
-        service.recordTopicsConsentPageDisplayed();
-        assertThat(service.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testRecordFledgeConsentPageDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        // Since unit test cannot execute an IPC call currently, disable the permission check.
-        disableEnforceAdServicesManagerPermission(service);
-
-        // First, the fledge consent page displayed is false.
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        service.recordFledgeAndMsmtConsentPageDisplayed();
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(0);
+        service.recordUserManualInteractionWithConsent(1);
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(1);
     }
 
     @Test

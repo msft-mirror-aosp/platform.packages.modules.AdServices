@@ -91,7 +91,7 @@ public class NotificationActivityUiAutomatorTest {
 
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
-
+        doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));

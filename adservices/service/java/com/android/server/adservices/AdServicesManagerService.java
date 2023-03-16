@@ -399,6 +399,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "recordUserManualInteractionWithConsent() for User Identifier %d, interaction %d",
+                userIdentifier, interaction);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordUserManualInteractionWithConsent(interaction);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e, "Fail to record default manual interaction with consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getTopicsDefaultConsent() {
         enforceAdServicesManagerPermission();
 
@@ -462,6 +481,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get default AdId state.");
             return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public int getUserManualInteractionWithConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "wasUserManualInteractionWithConsentRecorded() for User Identifier %d",
+                userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getUserManualInteractionWithConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get manual interaction with consent recorded.");
+            return 0;
         }
     }
 
