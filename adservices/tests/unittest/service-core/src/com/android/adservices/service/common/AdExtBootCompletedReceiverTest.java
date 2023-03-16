@@ -180,7 +180,7 @@ public class AdExtBootCompletedReceiverTest {
                 .thenReturn(packageInfo);
 
         // Call the method we're testing.
-        bootCompletedReceiver.updateAdExtServicesActivities(mockContext, eq(true));
+        bootCompletedReceiver.updateAdExtServicesActivities(mockContext, true);
 
         verify(mPackageManager, times(7))
                 .setComponentEnabledSetting(
