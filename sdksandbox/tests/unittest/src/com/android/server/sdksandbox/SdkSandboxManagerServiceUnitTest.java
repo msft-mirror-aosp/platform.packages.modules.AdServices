@@ -302,9 +302,11 @@ public class SdkSandboxManagerServiceUnitTest {
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                         /*version=*/ 0,
-                        /*interfaceIBinder=*/ iBinder));
+                        /*interfaceIBinder=*/ iBinder),
+                TIME_APP_CALLED_SYSTEM_SERVER);
         final List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaceList =
-                mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE);
+                mService.getAppOwnedSdkSandboxInterfaces(
+                        TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
 
         assertThat(appOwnedSdkSandboxInterfaceList).hasSize(1);
         assertThat(appOwnedSdkSandboxInterfaceList.get(0).getName())
@@ -320,7 +322,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                         /*version=*/ 0,
-                        /*interfaceIBinder=*/ new Binder()));
+                        /*interfaceIBinder=*/ new Binder()),
+                TIME_APP_CALLED_SYSTEM_SERVER);
 
         assertThrows(
                 IllegalStateException.class,
@@ -330,7 +333,8 @@ public class SdkSandboxManagerServiceUnitTest {
                                 new AppOwnedSdkSandboxInterface(
                                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                                         /*version=*/ 0,
-                                        /*interfaceIBinder=*/ new Binder())));
+                                        /*interfaceIBinder=*/ new Binder()),
+                                TIME_APP_CALLED_SYSTEM_SERVER));
     }
 
     @Test
@@ -340,11 +344,15 @@ public class SdkSandboxManagerServiceUnitTest {
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                         /*version=*/ 0,
-                        /*interfaceIBinder=*/ new Binder()));
+                        /*interfaceIBinder=*/ new Binder()),
+                TIME_APP_CALLED_SYSTEM_SERVER);
         mService.unregisterAppOwnedSdkSandboxInterface(
-                TEST_PACKAGE, APP_OWNED_SDK_SANDBOX_INTERFACE_NAME);
+                TEST_PACKAGE, APP_OWNED_SDK_SANDBOX_INTERFACE_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
 
-        assertThat(mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE)).hasSize(0);
+        assertThat(
+                        mService.getAppOwnedSdkSandboxInterfaces(
+                                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
+                .hasSize(0);
     }
 
     @Test
@@ -1523,6 +1531,189 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_RegisterAppOwnedSdkSandboxInterface()
+            throws Exception {
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()),
+                TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_UnregisterAppOwnedSdkSandboxInterface()
+            throws Exception {
+        mService.unregisterAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE, APP_OWNED_SDK_SANDBOX_INTERFACE_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_IpcFromAppToSystemServer_GetAppOwnedSdkSandboxInterfaces()
+            throws Exception {
+        mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP
+                                                - TIME_APP_CALLED_SYSTEM_SERVER),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void
+            testLatencyMetrics_SystemServerAppToSandbox_RegisterAppOwnedSdkSandboxInterface_NoFailure()
+                    throws Exception {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_CALLS_SANDBOX);
+
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ new Binder()),
+                TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALLS_SANDBOX
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void
+            testLatencyMetrics_SystemServerAppToSandbox_RegisterAppOwnedSdkSandboxInterface_FailureOnAppDeath()
+                    throws RemoteException {
+        IBinder binder = Mockito.mock(IBinder.class);
+
+        Mockito.doThrow(new RemoteException())
+                .when(binder)
+                .linkToDeath(Mockito.any(), Mockito.anyInt());
+
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP, TIME_FAILURE_HANDLED);
+
+        mService.registerAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE,
+                new AppOwnedSdkSandboxInterface(
+                        APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
+                        /*version=*/ 0,
+                        /*interfaceIBinder=*/ binder),
+                TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_FAILURE_HANDLED
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ false,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_UnregisterAppOwnedSdkSandboxInterface()
+            throws Exception {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_CALLS_SANDBOX);
+
+        mService.unregisterAppOwnedSdkSandboxInterface(
+                TEST_PACKAGE, APP_OWNED_SDK_SANDBOX_INTERFACE_NAME, TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALLS_SANDBOX
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                                mClientAppUid));
+    }
+
+    @Test
+    public void testLatencyMetrics_SystemServerAppToSandbox_GetAppOwnedSdkSandboxInterfaces()
+            throws Exception {
+        Mockito.when(mInjector.getCurrentTime())
+                .thenReturn(
+                        TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP,
+                        TIME_SYSTEM_SERVER_CALLS_SANDBOX);
+
+        mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER);
+
+        ExtendedMockito.verify(
+                () ->
+                        SdkSandboxStatsLog.write(
+                                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                                (int)
+                                        (TIME_SYSTEM_SERVER_CALLS_SANDBOX
+                                                - TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP),
+                                /*success=*/ true,
+                                SdkSandboxStatsLog
+                                        .SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                                mClientAppUid));
+    }
+
+    @Test
     public void testLatencyMetrics_IpcFromAppToSystemServer_LoadSdk() throws Exception {
         loadSdk(SDK_NAME);
 
@@ -2660,7 +2851,8 @@ public class SdkSandboxManagerServiceUnitTest {
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_SANDBOX_INTERFACE_NAME,
                         /*version=*/ 0,
-                        /*interfaceIBinder=*/ iBinder));
+                        /*interfaceIBinder=*/ iBinder),
+                TIME_APP_CALLED_SYSTEM_SERVER);
         ArgumentCaptor<IBinder.DeathRecipient> deathRecipient =
                 ArgumentCaptor.forClass(IBinder.DeathRecipient.class);
 
@@ -2669,7 +2861,10 @@ public class SdkSandboxManagerServiceUnitTest {
         // App Died
         deathRecipient.getValue().binderDied();
 
-        assertThat(mService.getAppOwnedSdkSandboxInterfaces(TEST_PACKAGE)).hasSize(0);
+        assertThat(
+                        mService.getAppOwnedSdkSandboxInterfaces(
+                                TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER))
+                .hasSize(0);
     }
 
     @Test

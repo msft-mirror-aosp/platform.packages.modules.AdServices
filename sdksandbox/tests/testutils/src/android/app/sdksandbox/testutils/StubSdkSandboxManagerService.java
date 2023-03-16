@@ -41,10 +41,13 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public void registerAppOwnedSdkSandboxInterface(
-            String callingPackageName, AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {}
+            String callingPackageName,
+            AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface,
+            long timeAppCalledSystemServer) {}
 
     @Override
-    public void unregisterAppOwnedSdkSandboxInterface(String callingPackageName, String name) {}
+    public void unregisterAppOwnedSdkSandboxInterface(
+            String callingPackageName, String name, long timeAppCalledSystemServer) {}
 
     @Override
     public void loadSdk(
@@ -73,7 +76,7 @@ public class StubSdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
-            String callingPackageName) {
+            String callingPackageName, long timeAppCalledSystemServer) {
         return Collections.emptyList();
     }
 
