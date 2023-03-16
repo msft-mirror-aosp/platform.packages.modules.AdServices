@@ -154,17 +154,9 @@ public class AdExtBootCompletedReceiverTest {
     @Test
     public void testRegisterReceivers() {
         Assume.assumeTrue(Build.VERSION.SDK_INT == 31 || Build.VERSION.SDK_INT == 32);
-        AdExtBootCompletedReceiver bootCompletedReceiver =
-                Mockito.spy(new AdExtBootCompletedReceiver());
-
+        AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
         bootCompletedReceiver.registerPackagedChangedBroadcastReceivers(sContext);
-
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
-        doReturn(true)
-                .when(
-                        () ->
-                                PackageChangedReceiver.enableReceiver(
-                                        eq(sContext), eq(FlagsFactory.getFlags())));
     }
 
     @Test
