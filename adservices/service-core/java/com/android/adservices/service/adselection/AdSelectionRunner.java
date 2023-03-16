@@ -66,6 +66,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -94,13 +95,16 @@ public abstract class AdSelectionRunner {
     @VisibleForTesting static final String ERROR_NO_WINNING_AD_FOUND = "No winning Ads found";
 
     @VisibleForTesting
-    static final String ERROR_NO_VALID_BIDS_FOR_SCORING = "No valid bids for scoring";
-
-    @VisibleForTesting static final String ERROR_NO_CA_AVAILABLE = "No Custom Audience available";
+    static final String ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING =
+            "No valid bids or contextual ads available for scoring";
 
     @VisibleForTesting
-    static final String ERROR_NO_BUYERS_AVAILABLE =
-            "The list of the custom audience buyers should not be empty.";
+    static final String ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE =
+            "No Custom Audience or contextual ads available";
+
+    @VisibleForTesting
+    static final String ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE =
+            "The list of the custom audience buyers and contextual ads both should not be empty.";
 
     @VisibleForTesting
     static final String AD_SELECTION_TIMED_OUT = "Ad selection exceeded allowed time limit";
@@ -428,10 +432,18 @@ public abstract class AdSelectionRunner {
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final String callerPackageName) {
         sLogger.v("Beginning Ad Selection Orchestration");
+
+        AdSelectionConfig adSelectionConfigInput = adSelectionConfig;
+        if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
+            // Empty all contextual ads if the feature is disabled
+            adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
+        }
+
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
-                getBuyersCustomAudience(adSelectionConfig);
+                getBuyersCustomAudience(adSelectionConfigInput);
         ListenableFuture<AdSelectionOrchestrationResult> dbAdSelection =
-                orchestrateAdSelection(adSelectionConfig, callerPackageName, buyerCustomAudience);
+                orchestrateAdSelection(
+                        adSelectionConfigInput, callerPackageName, buyerCustomAudience);
 
         AsyncFunction<AdSelectionOrchestrationResult, DBAdSelection> saveResultToPersistence =
                 adSelectionAndJs ->
@@ -468,9 +480,12 @@ public abstract class AdSelectionRunner {
         final int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYERS_CUSTOM_AUDIENCE);
         return mBackgroundExecutorService.submit(
                 () -> {
+                    boolean atLeastOnePresent =
+                            !(adSelectionConfig.getCustomAudienceBuyers().isEmpty()
+                                    && adSelectionConfig.getBuyerContextualAds().isEmpty());
+
                     Preconditions.checkArgument(
-                            !adSelectionConfig.getCustomAudienceBuyers().isEmpty(),
-                            ERROR_NO_BUYERS_AVAILABLE);
+                            atLeastOnePresent, ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
                     // Set start of bidding stage.
                     mAdSelectionExecutionLogger.startBiddingProcess(
                             countBuyersRequested(adSelectionConfig));
@@ -479,11 +494,10 @@ public abstract class AdSelectionRunner {
                                     adSelectionConfig.getCustomAudienceBuyers(),
                                     mClock.instant(),
                                     mFlags.getFledgeCustomAudienceActiveTimeWindowInMs());
-                    if (buyerCustomAudience == null || buyerCustomAudience.isEmpty()) {
-                        // TODO(b/233296309) : Remove this exception after adding contextual
-                        // ads
+                    if ((buyerCustomAudience == null || buyerCustomAudience.isEmpty())
+                            && adSelectionConfig.getBuyerContextualAds().isEmpty()) {
                         IllegalStateException exception =
-                                new IllegalStateException(ERROR_NO_CA_AVAILABLE);
+                                new IllegalStateException(ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
                         mAdSelectionExecutionLogger.endBiddingProcess(
                                 null, getResultCodeFromException(exception));
                         throw exception;
@@ -554,6 +568,20 @@ public abstract class AdSelectionRunner {
             throws IllegalArgumentException {
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         adSelectionConfigValidator.validate(adSelectionConfig);
+    }
+
+    private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(
+            AdSelectionConfig adSelectionConfig) {
+        return new AdSelectionConfig.Builder()
+                .setSeller(adSelectionConfig.getSeller())
+                .setBuyerContextualAds(Collections.EMPTY_MAP)
+                .setAdSelectionSignals(adSelectionConfig.getAdSelectionSignals())
+                .setCustomAudienceBuyers(adSelectionConfig.getCustomAudienceBuyers())
+                .setDecisionLogicUri(adSelectionConfig.getDecisionLogicUri())
+                .setPerBuyerSignals(adSelectionConfig.getPerBuyerSignals())
+                .setSellerSignals(adSelectionConfig.getSellerSignals())
+                .setTrustedScoringSignalsUri(adSelectionConfig.getTrustedScoringSignalsUri())
+                .build();
     }
 
     static class AdSelectionOrchestrationResult {
