@@ -535,15 +535,50 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     @Override
     public List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces(
-            String callingPackageName) {
+            String callingPackageName, long timeAppCalledSystemServer) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
+        final int callingUid = Binder.getCallingUid();
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                callingUid);
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-        return getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
+        List<AppOwnedSdkSandboxInterface> appOwnedSdkSandboxInterfaces =
+                getRegisteredAppOwnedSdkSandboxInterfacesForApp(callingInfo);
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__GET_APP_OWNED_SDK_SANDBOX_INTERFACES,
+                /*latency=*/ (int)
+                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                callingUid);
+        return appOwnedSdkSandboxInterfaces;
     }
 
     @Override
     public void registerAppOwnedSdkSandboxInterface(
-            String callingPackageName, AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
+            String callingPackageName,
+            AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface,
+            long timeAppCalledSystemServer) {
+        // Log the IPC latency from app to system server
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        final int callingUid = callingInfo.getUid();
+
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                callingUid);
+
         synchronized (mLock) {
             if (mHeldInterfaces.containsKey(callingInfo)) {
                 if (mHeldInterfaces
@@ -561,17 +596,52 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
         // registerAppOwnedSdkSandboxInterface() can be called without calling loadSdk(). Register
         // for app death to make sure cleanup occurs.
-        registerForAppDeath(callingInfo, appOwnedSdkSandboxInterface.getInterface());
+        boolean isRegistrationForAppDeathSuccessful =
+                registerForAppDeath(callingInfo, appOwnedSdkSandboxInterface.getInterface());
+        // Log the time taken in System Server before the exception occurred
+        // or no exception occurred in registerForAppDeath method
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__REGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                /*latency=*/ (int)
+                        (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
+                /*success=*/ isRegistrationForAppDeathSuccessful,
+                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                callingUid);
     }
 
     @Override
-    public void unregisterAppOwnedSdkSandboxInterface(String callingPackageName, String name) {
+    public void unregisterAppOwnedSdkSandboxInterface(
+            String callingPackageName, String name, long timeAppCalledSystemServer) {
+        final long timeSystemServerReceivedCallFromApp = mInjector.getCurrentTime();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
+        final int callingUid = callingInfo.getUid();
+
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                /*latency=*/ (int)
+                        (timeSystemServerReceivedCallFromApp - timeAppCalledSystemServer),
+                /*success=*/ true,
+                SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__APP_TO_SYSTEM_SERVER,
+                callingUid);
+
         synchronized (mLock) {
             if (mHeldInterfaces.containsKey(callingInfo)) {
                 mHeldInterfaces.get(callingInfo).remove(name);
             }
         }
+
+        SdkSandboxStatsLog.write(
+                SdkSandboxStatsLog.SANDBOX_API_CALLED,
+                SdkSandboxStatsLog
+                        .SANDBOX_API_CALLED__METHOD__UNREGISTER_APP_OWNED_SDK_SANDBOX_INTERFACE,
+                (int) (mInjector.getCurrentTime() - timeSystemServerReceivedCallFromApp),
+                /*success=*/ true,
+                SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_APP_TO_SANDBOX,
+                callingUid);
     }
 
     @Override
