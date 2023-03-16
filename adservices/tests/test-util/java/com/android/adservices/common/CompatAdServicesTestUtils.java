@@ -40,7 +40,7 @@ public class CompatAdServicesTestUtils {
         disableMeasurementRollbackDelete();
     }
 
-    /** Reset system-server related flags to their default values after CB tests. */
+    /** Reset system-server related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
