@@ -40,9 +40,6 @@ public class AdDataFixture {
                             KeyedFrequencyCapFixture.KEY4)
                     .build();
 
-    public static final AdData VALID_AD_DATA_WITH_FILTERS =
-            getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
-
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
