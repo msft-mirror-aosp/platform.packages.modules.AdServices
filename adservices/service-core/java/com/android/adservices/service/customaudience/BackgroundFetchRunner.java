@@ -24,6 +24,7 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -42,6 +43,7 @@ import java.util.concurrent.CancellationException;
 public class BackgroundFetchRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final CustomAudienceDao mCustomAudienceDao;
+    private final AppInstallDao mAppInstallDao;
     private final PackageManager mPackageManager;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -49,14 +51,17 @@ public class BackgroundFetchRunner {
 
     public BackgroundFetchRunner(
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull AppInstallDao appInstallDao,
             @NonNull PackageManager packageManager,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags) {
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(packageManager);
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(flags);
         mCustomAudienceDao = customAudienceDao;
+        mAppInstallDao = appInstallDao;
         mPackageManager = packageManager;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
@@ -96,6 +101,15 @@ public class BackgroundFetchRunner {
         sLogger.d(
                 "Deleted %d custom audiences belonging to %d disallowed owner apps",
                 deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalOwnerCount());
+    }
+
+    /**
+     * Deletes app install data whose packages are not installed or are not in the app allowlist.
+     */
+    public void deleteDisallowedPackageAppInstallEntries() {
+        sLogger.d("Starting app install disallowed package garbage collection");
+        int numDeleted = mAppInstallDao.deleteAllDisallowedPackageEntries(mPackageManager, mFlags);
+        sLogger.d("Deleted %d app install entries", numDeleted);
     }
 
     /**
