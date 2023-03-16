@@ -570,6 +570,19 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
+    public void recordUserManualInteractionWithConsent() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // First, the topic consent page displayed is false.
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(0);
+        service.recordUserManualInteractionWithConsent(1);
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(1);
+    }
+
+    @Test
     public void testSetAppConsent() {
         mService = spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         disableEnforceAdServicesManagerPermission(mService);

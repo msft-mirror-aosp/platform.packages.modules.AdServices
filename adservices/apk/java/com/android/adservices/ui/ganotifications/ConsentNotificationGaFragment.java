@@ -46,6 +46,7 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
@@ -123,6 +124,11 @@ public class ConsentNotificationGaFragment extends Fragment {
                         // opt-out confirmation activity
                         ConsentManager.getInstance(requireContext())
                                 .disable(requireContext(), AdServicesApiType.TOPICS);
+                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                            ConsentManager.getInstance(requireContext())
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -250,6 +256,11 @@ public class ConsentNotificationGaFragment extends Fragment {
                     // opt-in confirmation activity
                     ConsentManager.getInstance(requireContext())
                             .enable(requireContext(), AdServicesApiType.TOPICS);
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance(requireContext())
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                    }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);
@@ -257,6 +268,11 @@ public class ConsentNotificationGaFragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_GOT_IT_CLICKED, getContext());
 
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance(requireContext())
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                    }
                     // acknowledge and dismiss
                     requireActivity().finish();
                 }
