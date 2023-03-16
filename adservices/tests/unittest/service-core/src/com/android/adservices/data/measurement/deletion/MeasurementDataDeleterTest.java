@@ -151,6 +151,11 @@ public class MeasurementDataDeleterTest {
         public IMeasurementDao getMeasurementDao() {
             return mMeasurementDao;
         }
+
+        @Override
+        protected int getDataStoreVersion() {
+            return 0;
+        }
     }
 
     @Before
