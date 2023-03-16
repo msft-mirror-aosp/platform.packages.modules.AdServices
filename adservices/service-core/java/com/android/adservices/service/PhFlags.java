@@ -324,6 +324,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
 
+    static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED = "record_manual_interaction_enabled";
+
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
@@ -1864,8 +1866,16 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isEeaDevice() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+    }
+
+    @Override
+    public boolean getRecordManualInteractionEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+                NAMESPACE_ADSERVICES,
+                KEY_RECORD_MANUAL_INTERACTION_ENABLED,
+                RECORD_MANUAL_INTERACTION_ENABLED);
     }
 
     @Override

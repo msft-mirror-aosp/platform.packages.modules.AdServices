@@ -25,6 +25,7 @@
         application cannot be granted this permission
     -->
     <uses-permission android:name="android.permission.READ_DEVICE_CONFIG" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_MANAGER" />
 
     <application android:debuggable="true" />
 
