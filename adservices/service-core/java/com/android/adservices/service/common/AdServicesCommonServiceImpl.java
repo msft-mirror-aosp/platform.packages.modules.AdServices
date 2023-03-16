@@ -147,7 +147,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         mContext, adIdEnabled, false);
                             }
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
-                                PackageChangedReceiver.enableReceiver(mContext);
+                                PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
                         }

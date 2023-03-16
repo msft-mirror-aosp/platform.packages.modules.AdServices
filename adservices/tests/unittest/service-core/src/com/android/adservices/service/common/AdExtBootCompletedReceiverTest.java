@@ -159,8 +159,12 @@ public class AdExtBootCompletedReceiverTest {
 
         bootCompletedReceiver.registerPackagedChangedBroadcastReceivers(sContext);
 
-        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
-        doReturn(true).when(() -> PackageChangedReceiver.enableReceiver(eq(sContext)));
+        verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
+        doReturn(true)
+                .when(
+                        () ->
+                                PackageChangedReceiver.enableReceiver(
+                                        eq(sContext), eq(FlagsFactory.getFlags())));
     }
 
     @Test
