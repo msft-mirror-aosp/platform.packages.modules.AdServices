@@ -1211,10 +1211,15 @@ public abstract class E2ETest {
                 areEqual(mExpectedOutput, mActualOutput));
     }
 
-    private void setupDeviceConfigForPhFlags() throws DeviceConfig.BadConfigException {
-        DeviceConfig.Properties.Builder propertiesBuilder =
-                new DeviceConfig.Properties.Builder(DeviceConfig.NAMESPACE_ADSERVICES);
-        mPhFlagsMap.keySet().forEach(key -> propertiesBuilder.setString(key, mPhFlagsMap.get(key)));
-        DeviceConfig.setProperties(propertiesBuilder.build());
+    private void setupDeviceConfigForPhFlags() {
+        mPhFlagsMap
+                .keySet()
+                .forEach(
+                        key ->
+                                DeviceConfig.setProperty(
+                                        DeviceConfig.NAMESPACE_ADSERVICES,
+                                        key,
+                                        mPhFlagsMap.get(key),
+                                        false));
     }
 }
