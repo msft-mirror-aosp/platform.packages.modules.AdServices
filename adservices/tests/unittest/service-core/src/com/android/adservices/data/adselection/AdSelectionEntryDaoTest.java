@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -23,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.common.AdDataFixture;
 import android.content.Context;
 import android.net.Uri;
 
@@ -40,6 +43,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class AdSelectionEntryDaoTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -93,6 +97,19 @@ public class AdSelectionEntryDaoTest {
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .build();
+
+    public static final DBAdSelection DB_AD_SELECTION_WITH_AD_COUNTER_KEYS =
+            new DBAdSelection.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setWinningAdRenderUri(RENDER_URI)
+                    .setWinningAdBid(BID)
+                    .setCreationTimestamp(ACTIVATION_TIME)
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
@@ -1154,6 +1171,47 @@ public class AdSelectionEntryDaoTest {
                 0,
                 mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
                         AD_SELECTION_ID_2, SELLER_DESTINATION));
+    }
+
+    @Test
+    public void testGetAdCounterKeysForMissingAdSelection() {
+        assertThat(
+                        mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
+                .isNull();
+    }
+
+    @Test
+    public void testGetNullAdCounterKeysForAdSelection() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_1.getAdSelectionId()))
+                .isTrue();
+
+        assertThat(
+                        mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+                                DB_AD_SELECTION_1.getAdSelectionId(),
+                                DB_AD_SELECTION_1.getCallerPackageName()))
+                .isNull();
+    }
+
+    @Test
+    public void testGetAdCounterKeysForAdSelection() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId()))
+                .isTrue();
+
+        Set<String> adCounterKeys =
+                mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName());
+        assertThat(adCounterKeys).isNotNull();
+        assertThat(adCounterKeys)
+                .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
     }
 
     /**
