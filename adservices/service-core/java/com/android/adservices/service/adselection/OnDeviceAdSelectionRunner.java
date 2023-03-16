@@ -72,6 +72,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
     @NonNull protected final AdFilterer mAdFilterer;
+    @NonNull protected final AdCounterKeyCopier mAdCounterKeyCopier;
 
     public OnDeviceAdSelectionRunner(
             @NonNull final Context context,
@@ -86,7 +87,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
-            @NonNull AdFilterer adFilterer,
+            @NonNull final AdFilterer adFilterer,
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid) {
         super(
                 context,
@@ -103,9 +105,11 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
 
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(adCounterKeyCopier);
 
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
+        mAdCounterKeyCopier = adCounterKeyCopier;
         mAdsScoreGenerator =
                 new AdsScoreGeneratorImpl(
                         new AdSelectionScriptEngine(
@@ -159,7 +163,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final PerBuyerBiddingRunner perBuyerBiddingRunner,
-            @NonNull final AdFilterer adFilterer) {
+            @NonNull final AdFilterer adFilterer,
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier) {
         super(
                 context,
                 customAudienceDao,
@@ -178,11 +183,13 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adsScoreGenerator);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(adFilterer);
+        Objects.requireNonNull(adCounterKeyCopier);
 
         mAdsScoreGenerator = adsScoreGenerator;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mPerBuyerBiddingRunner = perBuyerBiddingRunner;
         mAdFilterer = adFilterer;
+        mAdCounterKeyCopier = adCounterKeyCopier;
     }
 
     /**
@@ -344,11 +351,14 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
+        final DBAdSelection.Builder copiedDBAdSelectionBuilder =
+                mAdCounterKeyCopier.copyAdCounterKeys(dbAdSelectionBuilder, scoringWinner);
+
         return getOutcomeDecisionLogic(scoringWinner)
                 .transform(
                         decisionLogic ->
                                 new AdSelectionOrchestrationResult(
-                                        dbAdSelectionBuilder, decisionLogic),
+                                        copiedDBAdSelectionBuilder, decisionLogic),
                         mLightweightExecutorService);
     }
 
