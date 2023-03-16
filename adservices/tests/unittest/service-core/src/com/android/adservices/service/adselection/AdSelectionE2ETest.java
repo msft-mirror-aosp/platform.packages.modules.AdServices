@@ -27,9 +27,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
-import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_AVAILABLE;
-import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AVAILABLE;
-import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_FOR_SCORING;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_SCORING_LOGIC;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
@@ -60,6 +60,9 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -825,7 +828,6 @@ public class AdSelectionE2ETest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(any());
-
         mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -899,7 +901,6 @@ public class AdSelectionE2ETest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(any());
-
         mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC_HEADER_WITH_V2_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -965,7 +966,6 @@ public class AdSelectionE2ETest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(any());
-
         mMockWebServerRule.startMockWebServer(DISPATCHER_TOO_HIGH_BIDDING_LOGIC_JS_VERSION);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1002,6 +1002,386 @@ public class AdSelectionE2ETest {
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_INTERNAL_ERROR),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionContextualAds_Success() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The contextual Ad with maximum bid should have won
+        assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionContextualAds_Disabled_Success() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        Flags flagsWithContextualAdsDisabled =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+                        return false;
+                    }
+                };
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        flagsWithContextualAdsDisabled,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The remarketing ad with maximum bid should have won, as contextual ads are excluded
+        assertEquals(
+                AD_URI_PREFIX + BUYER_2 + "/ad3",
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionOnlyContextualAds_NoBuyers_Success() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of())
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The contextual Ad with maximum bid should have won
+        assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionOnlyContextualAds_NoCAs_Success() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The contextual Ad with maximum bid should have won
+        assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionNoContextualAds_NoCAs_Failure() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The contextual Ad with maximum bid should have won
+        assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
     }
 
@@ -2008,7 +2388,7 @@ public class AdSelectionE2ETest {
                         Locale.ENGLISH,
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
-                        AdSelectionRunner.ERROR_NO_CA_AVAILABLE));
+                        ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE));
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
         verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
@@ -2048,7 +2428,8 @@ public class AdSelectionE2ETest {
         runAdSelectionProcessLoggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_CA_AVAILABLE);
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE);
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
         verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
@@ -2095,7 +2476,8 @@ public class AdSelectionE2ETest {
         runAdSelectionProcessLoggerLatch.await();
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
-                resultsCallback.mFledgeErrorResponse.getErrorMessage(), ERROR_NO_BUYERS_AVAILABLE);
+                resultsCallback.mFledgeErrorResponse.getErrorMessage(),
+                ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE);
         verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
         verify(mAdServicesLoggerMock, never()).logRunAdBiddingProcessReportedStats(any());
         verify(mAdServicesLoggerMock)
@@ -2287,7 +2669,7 @@ public class AdSelectionE2ETest {
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
-                ERROR_NO_VALID_BIDS_FOR_SCORING);
+                ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
         verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
@@ -3816,7 +4198,7 @@ public class AdSelectionE2ETest {
         assertCallbackFailed(resultsCallback);
         verifyErrorMessageIsCorrect(
                 resultsCallback.mFledgeErrorResponse.getErrorMessage(),
-                ERROR_NO_VALID_BIDS_FOR_SCORING);
+                ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING);
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
         verify(mAdServicesLoggerMock, never()).logRunAdScoringProcessReportedStats(any());
@@ -4623,6 +5005,32 @@ public class AdSelectionE2ETest {
                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 
+    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+
+        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        ContextualAds contextualAds1 =
+                ContextualAdsFixture.generateContextualAds(
+                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(
+                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1))
+                        .build();
+
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        ContextualAds contextualAds2 =
+                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(
+                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2))
+                        .build();
+
+        buyerContextualAds.put(buyer1, contextualAds1);
+        buyerContextualAds.put(buyer2, contextualAds2);
+
+        return buyerContextualAds;
+    }
+
     private void verifyErrorMessageIsCorrect(
             final String actualErrorMassage, final String expectedErrorReason) {
         assertTrue(
@@ -4749,8 +5157,14 @@ public class AdSelectionE2ETest {
             return false;
         }
 
+        @Override
         public long getFledgeAdSelectionBiddingLogicJsVersion() {
             return mBiddingLogicVersion;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionContextualAdsEnabled() {
+            return true;
         }
     }
 }
