@@ -19,6 +19,7 @@ package com.android.adservices.common;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.common.DBAdData;
 
@@ -30,15 +31,19 @@ public class DBAdDataFixture {
             getValidDbAdDataNoFiltersBuilder().build();
 
     public static DBAdData.Builder getValidDbAdDataBuilder() {
+        AdData mirrorAdData =
+                AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
         return getValidDbAdDataNoFiltersBuilder()
-                .setAdCounterKeys(AdDataFixture.VALID_AD_DATA_WITH_FILTERS.getAdCounterKeys())
-                .setAdFilters(AdDataFixture.VALID_AD_DATA_WITH_FILTERS.getAdFilters());
+                .setAdCounterKeys(mirrorAdData.getAdCounterKeys())
+                .setAdFilters(mirrorAdData.getAdFilters());
     }
 
     public static DBAdData.Builder getValidDbAdDataNoFiltersBuilder() {
+        AdData mirrorAdData =
+                AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
         return new DBAdData.Builder()
-                .setRenderUri(AdDataFixture.VALID_AD_DATA_WITH_FILTERS.getRenderUri())
-                .setMetadata(AdDataFixture.VALID_AD_DATA_WITH_FILTERS.getMetadata());
+                .setRenderUri(mirrorAdData.getRenderUri())
+                .setMetadata(mirrorAdData.getMetadata());
     }
 
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
