@@ -21,6 +21,8 @@ import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -89,6 +91,8 @@ public class BackgroundFetchWorker {
                 if (sBackgroundFetchWorker == null) {
                     CustomAudienceDao customAudienceDao =
                             CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                    AppInstallDao appInstallDao =
+                            SharedStorageDatabase.getInstance(context).appInstallDao();
                     Flags flags = FlagsFactory.getFlags();
                     sBackgroundFetchWorker =
                             new BackgroundFetchWorker(
@@ -96,6 +100,7 @@ public class BackgroundFetchWorker {
                                     flags,
                                     new BackgroundFetchRunner(
                                             customAudienceDao,
+                                            appInstallDao,
                                             context.getPackageManager(),
                                             EnrollmentDao.getInstance(context),
                                             flags),
@@ -125,7 +130,7 @@ public class BackgroundFetchWorker {
 
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
         Instant jobStartTime = mClock.instant();
-        return cleanupCustomAudiences(jobStartTime)
+        return cleanupFledgeData(jobStartTime)
                 .transform(
                         ignored -> getFetchDataList(shouldStop, jobStartTime),
                         AdServicesExecutors.getBackgroundExecutor())
@@ -191,7 +196,7 @@ public class BackgroundFetchWorker {
                 jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
     }
 
-    private FluentFuture<?> cleanupCustomAudiences(Instant jobStartTime) {
+    private FluentFuture<?> cleanupFledgeData(Instant jobStartTime) {
         return FluentFuture.from(
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(
@@ -202,6 +207,10 @@ public class BackgroundFetchWorker {
                                             jobStartTime);
                                     mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
                                     mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
+                                    if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
+                                        mBackgroundFetchRunner
+                                                .deleteDisallowedPackageAppInstallEntries();
+                                    }
                                 }));
     }
 }
