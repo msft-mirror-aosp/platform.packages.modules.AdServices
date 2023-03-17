@@ -72,6 +72,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -525,13 +526,16 @@ public class ImpressionReporter {
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
         try {
+            // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    ctx.mAdSelectionConfig
-                                            .getPerBuyerSignals()
-                                            .get(customAudienceSignals.getBuyer()),
+                                    Optional.ofNullable(
+                                                    ctx.mAdSelectionConfig
+                                                            .getPerBuyerSignals()
+                                                            .get(customAudienceSignals.getBuyer()))
+                                            .orElse(AdSelectionSignals.EMPTY),
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
