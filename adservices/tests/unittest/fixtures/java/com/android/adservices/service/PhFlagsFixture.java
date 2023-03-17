@@ -48,7 +48,7 @@ import android.provider.DeviceConfig;
  */
 public class PhFlagsFixture {
     public static final long DEFAULT_API_RATE_LIMIT_SLEEP_MS =
-            (long) (1000 / SDK_REQUEST_PERMITS_PER_SECOND) + 10L;
+            (long) (1500 / SDK_REQUEST_PERMITS_PER_SECOND) + 100L;
 
     public static void configureFledgeBackgroundFetchEligibleUpdateBaseIntervalS(
             final long phOverridingValue) {
