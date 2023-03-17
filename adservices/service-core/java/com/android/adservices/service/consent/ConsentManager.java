@@ -38,6 +38,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -1374,6 +1375,79 @@ public class ConsentManager {
             }
 
             return false;
+        }
+    }
+
+    /*
+     * Set the current privacy sandbox feature.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(currentFeatureType.name(), true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setCurrentPrivacySandboxFeature(
+                                currentFeatureType.name());
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(currentFeatureType.name(), true);
+                        mAdServicesManager.setCurrentPrivacySandboxFeature(
+                                currentFeatureType.name());
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("Set current privacy sandbox feature failed.", e);
+            }
+        }
+    }
+
+    /**
+     * Get the current privacy sandbox feature.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (mDatastore.get(featureType.name())) {
+                                return featureType;
+                            }
+                        }
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (mAdServicesManager
+                                    .getCurrentPrivacySandboxFeature()
+                                    .equals(featureType.name())) {
+                                return featureType;
+                            }
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get privacy sandbox feature failed.");
+            }
+            return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
         }
     }
 

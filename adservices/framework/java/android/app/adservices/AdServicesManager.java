@@ -497,4 +497,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns the current privacy sandbox feature. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getCurrentPrivacySandboxFeature() {
+        try {
+            return mService.getCurrentPrivacySandboxFeature();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current privacy sandbox feature. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setCurrentPrivacySandboxFeature(String featureType) {
+        try {
+            mService.setCurrentPrivacySandboxFeature(featureType);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
