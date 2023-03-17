@@ -45,6 +45,17 @@ public class BroadcastsTestSandboxedSdkProvider extends SandboxedSdkProvider {
                     new IntentFilter(Intent.ACTION_SEND),
                     Context.RECEIVER_EXPORTED);
         }
+
+        @Override
+        public void registerBroadcastReceiverWithoutAction() {
+            mContext.registerReceiver(
+                    new BroadcastReceiver() {
+                        @Override
+                        public void onReceive(Context context, Intent intent) {}
+                    },
+                    new IntentFilter(),
+                    Context.RECEIVER_EXPORTED);
+        }
     }
 
     @Override

@@ -2079,6 +2079,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return true;
             }
 
+            if (intentFilter.countActions() == 0) {
+                return false;
+            }
+
             /**
              * By clearing the calling identity, system server identity is set which allows us to
              * call {@DeviceConfig.getBoolean}
