@@ -114,10 +114,11 @@ public class FledgeRoomConvertersTest {
     @Test
     public void testSerializeDeserializeStringSet() {
         String serializedStringSet =
-                FledgeRoomConverters.serializeStringSet(AdDataFixture.AD_COUNTER_KEYS);
+                FledgeRoomConverters.serializeStringSet(AdDataFixture.getAdCounterKeys());
         Set<String> deserializeStringSet =
                 FledgeRoomConverters.deserializeStringSet(serializedStringSet);
 
-        assertThat(deserializeStringSet).containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
+        assertThat(deserializeStringSet)
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 }
