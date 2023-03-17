@@ -318,6 +318,8 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED = "ui_feature_type_logging_enabled";
+
     static final String KEY_IS_EEA_DEVICE_FEATURE_ENABLED = "is_eea_device_feature_enabled";
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
@@ -1573,6 +1575,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isUiFeatureTypeLoggingEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
+                /* defaultValue */ UI_FEATURE_TYPE_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getAdServicesEnabled() {
         // if the global kill switch is enabled, feature should be disabled.
         if (getGlobalKillSwitch()) {
@@ -2356,6 +2366,11 @@ public final class PhFlags implements Flags {
                         + getAdSelectionExpirationWindowS());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
+        writer.println(
+                "\t"
+                        + KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
+                        + " = "
+                        + isUiFeatureTypeLoggingEnabled());
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
         writer.println(

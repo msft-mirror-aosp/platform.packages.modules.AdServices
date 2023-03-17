@@ -1577,6 +1577,14 @@ public interface Flags extends Dumpable {
         return IS_EEA_DEVICE;
     }
 
+    /** Default is that the ui feature type logging is enabled. */
+    boolean UI_FEATURE_TYPE_LOGGING_ENABLED = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isUiFeatureTypeLoggingEnabled() {
+        return UI_FEATURE_TYPE_LOGGING_ENABLED;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium

@@ -153,6 +153,7 @@ import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPIC
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
+import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
@@ -287,6 +288,7 @@ import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_RANDOM
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
+import static com.android.adservices.service.PhFlags.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -3915,6 +3917,22 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.isEeaDevice()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testIsUiFeatureTypeLoggingEnabled() {
+        assertThat(FlagsFactory.getFlags().isUiFeatureTypeLoggingEnabled())
+                .isEqualTo(UI_FEATURE_TYPE_LOGGING_ENABLED);
+
+        final boolean phOverridingValue = false;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.isUiFeatureTypeLoggingEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test

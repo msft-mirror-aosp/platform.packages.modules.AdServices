@@ -86,6 +86,7 @@ public class NotificationActivityUiAutomatorTest {
                         .startMocking();
 
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
@@ -188,6 +189,7 @@ public class NotificationActivityUiAutomatorTest {
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
         verify(mConsentManager).getDefaultConsent();
         verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
     }
 
@@ -207,6 +209,7 @@ public class NotificationActivityUiAutomatorTest {
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
         verify(mConsentManager).getDefaultConsent();
         verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
     }
 
@@ -235,6 +238,7 @@ public class NotificationActivityUiAutomatorTest {
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
     }
 
@@ -263,6 +267,7 @@ public class NotificationActivityUiAutomatorTest {
         verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
         verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
     }
 
