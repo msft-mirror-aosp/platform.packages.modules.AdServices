@@ -273,7 +273,7 @@ public abstract class E2EMockTest extends E2ETest {
         processDebugReportJob(triggerRegistration.mTimestamp + TimeUnit.MINUTES.toMillis(30));
     }
 
-    // Triggers debug reports to be sent
+    // Process debug event reports and debug aggregate reports.
     void processDebugReportJob(long timestamp) throws IOException, JSONException {
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
@@ -302,7 +302,7 @@ public abstract class E2EMockTest extends E2ETest {
                 (List<JSONObject>) aggregateCaptures[2]);
     }
 
-    // Triggers debug report api job
+    // Process additional debug reports.
     protected void processDebugReportApiJob() throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
