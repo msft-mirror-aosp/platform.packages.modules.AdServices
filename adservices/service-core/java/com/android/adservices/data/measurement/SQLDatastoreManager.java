@@ -40,7 +40,8 @@ public class SQLDatastoreManager extends DatastoreManager {
         return sSingleton;
     }
 
-    private SQLDatastoreManager(Context context) {
+    @VisibleForTesting
+    SQLDatastoreManager(Context context) {
         mDbHelper = MeasurementDbHelper.getInstance(context);
     }
 
@@ -67,5 +68,10 @@ public class SQLDatastoreManager extends DatastoreManager {
                 () ->
                         mDbHelper.getDbFileSize()
                                 >= FlagsFactory.getFlags().getMeasurementDbSizeLimit());
+    }
+
+    @Override
+    protected int getDataStoreVersion() {
+        return mDbHelper.getReadableDatabase().getVersion();
     }
 }

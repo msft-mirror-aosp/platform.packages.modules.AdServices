@@ -39,8 +39,14 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,6 +63,35 @@ public class PermissionsNoPermTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Permission was not requested.";
+
+    private String mPreviousAppAllowList;
+
+    @Before
+    public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            overridePpapiAppAllowList();
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
+
+    private void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    private void overridePpapiAppAllowList() {
+        mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    }
 
     @Test
     public void testNoPerm_topics() {
