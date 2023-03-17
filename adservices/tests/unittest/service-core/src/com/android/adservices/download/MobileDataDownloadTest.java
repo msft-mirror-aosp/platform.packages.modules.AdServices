@@ -85,7 +85,7 @@ public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
-    private static final int WIFI_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int WIFI_CONNECTION_TIMEOUT_MS = 20_000;
 
     // Two files are from cts_test_1 folder.
     // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
