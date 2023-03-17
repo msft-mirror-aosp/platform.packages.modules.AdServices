@@ -30,10 +30,7 @@ import java.util.Objects;
 
 /**
  * Request object wrapping the required arguments needed to report an interaction.
- *
- * @hide
  */
-// TODO(b/261812140): Unhide for report interaction API review
 public class ReportInteractionRequest {
     public static final int FLAG_REPORTING_DESTINATION_SELLER = 1 << 0;
     public static final int FLAG_REPORTING_DESTINATION_BUYER = 1 << 1;

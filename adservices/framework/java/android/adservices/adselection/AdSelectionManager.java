@@ -384,10 +384,7 @@ public class AdSelectionManager {
      * or permission is not requested.
      *
      * <p>Interactions will be reported at most once as a best-effort attempt.
-     *
-     * @hide
      */
-    // TODO(b/261812140): Unhide for report interaction API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportInteraction(
             @NonNull ReportInteractionRequest request,
