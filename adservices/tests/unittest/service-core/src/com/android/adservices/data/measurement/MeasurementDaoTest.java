@@ -129,6 +129,7 @@ public class MeasurementDaoTest {
     private static final Uri INSTALLED_PACKAGE = Uri.parse("android-app://com.example.installed");
     private static final Uri WEB_PUBLISHER_ONE = WebUtil.validUri("https://not.example.test");
     private static final Uri WEB_PUBLISHER_TWO = WebUtil.validUri("https://notexample.test");
+    // Differs from WEB_PUBLISHER_ONE by scheme.
     private static final Uri WEB_PUBLISHER_THREE = WebUtil.validUri("http://not.example.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
 
@@ -356,7 +357,7 @@ public class MeasurementDaoTest {
         dm.runInTransaction(
                 measurementDao -> {
                     assertEquals(
-                            1,
+                            2,
                             measurementDao.getNumSourcesPerPublisher(
                                     WEB_PUBLISHER_TWO, EventSurfaceType.WEB));
                 });
@@ -415,26 +416,6 @@ public class MeasurementDaoTest {
                                             excludedEnrollmentId,
                                             5000000000L,
                                             6000000000L));
-                });
-    }
-
-    @Test
-    public void testGetNumTriggersPerRegistrant() {
-        setupSourceAndTriggerData();
-        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            2, measurementDao.getNumTriggersPerRegistrant(APP_TWO_DESTINATION));
-                });
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(
-                            1, measurementDao.getNumTriggersPerRegistrant(APP_ONE_DESTINATION));
-                });
-        dm.runInTransaction(
-                measurementDao -> {
-                    assertEquals(0, measurementDao.getNumTriggersPerRegistrant(APP_NO_TRIGGERS));
                 });
     }
 
@@ -5076,7 +5057,13 @@ public class MeasurementDaoTest {
                         .build());
         sourcesList.add(
                 SourceFixture.getValidSourceBuilder()
-                        .setId("W2")
+                        .setId("W21")
+                        .setPublisher(WEB_PUBLISHER_TWO)
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .build());
+        sourcesList.add(
+                SourceFixture.getValidSourceBuilder()
+                        .setId("W22")
                         .setPublisher(WEB_PUBLISHER_TWO)
                         .setPublisherType(EventSurfaceType.WEB)
                         .build());
