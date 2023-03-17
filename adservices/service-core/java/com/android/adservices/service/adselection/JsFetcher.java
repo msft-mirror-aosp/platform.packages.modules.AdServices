@@ -22,7 +22,6 @@ import android.net.Uri;
 import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -50,25 +49,21 @@ public class JsFetcher {
     private final ListeningExecutorService mLightweightExecutorService;
     private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     private final AdServicesHttpsClient mAdServicesHttpsClient;
-    private final Flags mFlags;
 
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull Flags flags) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(flags);
 
         mBackgroundExecutorService = backgroundExecutorService;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
-        mFlags = flags;
     }
 
     /**
@@ -183,7 +178,7 @@ public class JsFetcher {
                                         JsVersionHelper.constructVersionHeader(
                                                 JsVersionHelper
                                                         .JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                                mFlags.getFledgeAdSelectionBiddingLogicJsVersion());
+                                                decisionLogicUri.getRequestProperties());
                                 return Futures.immediateFuture(
                                         AdServicesHttpClientResponse.builder()
                                                 .setResponseBody(jsOverride)

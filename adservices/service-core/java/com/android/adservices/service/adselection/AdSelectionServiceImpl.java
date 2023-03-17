@@ -282,6 +282,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         adSelectionExecutionLogger,
                         adSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getAdFilterer(),
+                        mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
