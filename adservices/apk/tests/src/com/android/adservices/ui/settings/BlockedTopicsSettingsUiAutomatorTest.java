@@ -204,6 +204,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);
