@@ -72,8 +72,8 @@
       }
     }],
     "debug_event_level_results": [{
-      "report_time": "800176400001",
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+      "report_time": "800000600001",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
       "payload": {
         "attribution_destination": "https://2d1.test",
         "scheduled_report_time": "800176400",
