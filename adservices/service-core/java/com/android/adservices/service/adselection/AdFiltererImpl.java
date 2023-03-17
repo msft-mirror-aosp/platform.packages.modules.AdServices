@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
@@ -82,26 +84,32 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     /**
-     * Takes a list of ads, and returns a new list with the ads that should not be in the auction
-     * removed.
+     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
+     * auction
      *
-     * <p>Note that DBAdData objects are shallow copied to the new list.
-     *
-     * @param ads The list of ads to filter.
-     * @param buyer The buyer adtech who is trying to display the ad.
-     * @return A list of ads identical to the ads input, but with any ads that should be filtered
-     *     removed.
+     * @param contextualAds An object containing contextual ads corresponding to a buyer
+     * @return A list of object identical to the input, but without any ads that should be filtered
      */
     @Override
-    public List<DBAdData> filterContextualAds(List<DBAdData> ads, AdTechIdentifier buyer) {
-        List<DBAdData> toReturn = new ArrayList<>();
+    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        List<AdWithBid> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
-        for (DBAdData ad : ads) {
-            if (doesAdPassFilters(ad, buyer, null, null, currentTime)) {
+        for (AdWithBid ad : contextualAds.getAdsWithBid()) {
+            DBAdData dbAdData =
+                    new DBAdData(
+                            ad.getAdData().getRenderUri(),
+                            ad.getAdData().getMetadata(),
+                            ad.getAdData().getAdCounterKeys(),
+                            ad.getAdData().getAdFilters());
+            if (doesAdPassFilters(dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
                 toReturn.add(ad);
             }
         }
-        return toReturn;
+        return new ContextualAds.Builder()
+                .setAdsWithBid(toReturn)
+                .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
+                .setBuyer(contextualAds.getBuyer())
+                .build();
     }
 
     private boolean doesAdPassFilters(
