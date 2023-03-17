@@ -1020,6 +1020,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                // The key deliberately kept same as Filtering as the two features are coupled
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                /* defaultValue */ FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+    }
+
+    @Override
     public long getFledgeAdSelectionBiddingLogicJsVersion() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
@@ -2431,6 +2440,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionFilteringEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionContextualAdsEnabled());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION

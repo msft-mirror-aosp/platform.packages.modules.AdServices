@@ -69,7 +69,7 @@ public class CustomAudienceService extends Service {
         }
 
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, mFlags);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
     }

@@ -31,7 +31,9 @@ import android.content.IntentFilter;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -141,11 +143,19 @@ public class AppUpdateTest {
 
     private int mExpectedTopicResponseBroadCastIndex = 0;
     private BroadcastReceiver mTopicsResponseReceiver;
+    private String mPreviousAppAllowList;
 
     @Before
     public void setup() throws InterruptedException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+
         // Kill AdServices process so that background jobs don't get skipped due to starting
         // with same params.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
@@ -164,6 +174,9 @@ public class AppUpdateTest {
     public void tearDown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(DEFAULT_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test

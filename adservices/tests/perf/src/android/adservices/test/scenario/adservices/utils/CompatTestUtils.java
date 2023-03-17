@@ -20,6 +20,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 /** Utils for back-compat CB tests. */
+// TODO: Deprecate in favor of CompatAdServicesTestUtils after ag/21613299 is merged (b/273531108).
 public final class CompatTestUtils {
     private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;

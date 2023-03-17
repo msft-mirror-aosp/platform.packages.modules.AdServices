@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.getResul
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -75,6 +76,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
     @VisibleForTesting
     static final String SCORING_TIMED_OUT = "Scoring exceeded allowed time limit";
+
+    @VisibleForTesting
+    static final String SCORES_COUNT_LESS_THAN_EXPECTED = "Not enough scores returned by scoreAd";
 
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -132,17 +136,26 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
+        final List<ContextualAds> contextualAds =
+                adSelectionConfig.getBuyerContextualAds().values().stream()
+                        .collect(Collectors.toList());
+
         ListenableFuture<String> scoreAdJs =
                 getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
 
         AsyncFunction<String, List<Double>> getScoresFromLogic =
-                adScoringLogic -> getAdScores(adScoringLogic, adBiddingOutcomes, adSelectionConfig);
+                adScoringLogic ->
+                        getAdScores(
+                                adScoringLogic,
+                                adBiddingOutcomes,
+                                contextualAds,
+                                adSelectionConfig);
 
         ListenableFuture<List<Double>> adScores =
                 Futures.transformAsync(scoreAdJs, getScoresFromLogic, mLightweightExecutorService);
 
         Function<List<Double>, List<AdScoringOutcome>> adsToScore =
-                scores -> mapAdsToScore(adBiddingOutcomes, scores);
+                scores -> mapAdsToScore(adBiddingOutcomes, contextualAds, scores);
 
         return FluentFuture.from(adScores)
                 .transform(adsToScore, mLightweightExecutorService)
@@ -266,6 +279,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private ListenableFuture<List<Double>> getAdScores(
             @NonNull String scoringLogic,
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
+            @NonNull List<ContextualAds> contextualAds,
             @NonNull final AdSelectionConfig adSelectionConfig) {
         mAdSelectionExecutionLogger.startGetAdScores();
         final AdSelectionSignals sellerSignals = adSelectionConfig.getSellerSignals();
@@ -273,15 +287,26 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 getTrustedScoringSignals(adSelectionConfig, adBiddingOutcomes);
         final AdSelectionSignals contextualSignals = getContextualSignals();
         int traceCookie = Tracing.beginAsyncSection(Tracing.SCORE_AD);
+        List<AdWithBid> adsWithBid =
+                adBiddingOutcomes.stream()
+                        .map(AdBiddingOutcome::getAdWithBid)
+                        .collect(Collectors.toList());
+        sLogger.v("Total Remarketing AdsWithBid count: %d", adsWithBid.size());
+
+        List<AdWithBid> contextualBidAds = new ArrayList<>();
+        for (ContextualAds ctx : contextualAds) {
+            contextualBidAds.addAll(ctx.getAdsWithBid());
+        }
+        sLogger.v("Total Contextual Ads count: %d", contextualBidAds.size());
+        adsWithBid.addAll(contextualBidAds);
+
         FluentFuture<List<Double>> adScores =
                 trustedScoringSignals.transformAsync(
                         trustedSignals -> {
                             sLogger.v("Invoking JS engine to generate Ad Scores");
                             return mAdSelectionScriptEngine.scoreAds(
                                     scoringLogic,
-                                    adBiddingOutcomes.stream()
-                                            .map(AdBiddingOutcome::getAdWithBid)
-                                            .collect(Collectors.toList()),
+                                    adsWithBid,
                                     adSelectionConfig,
                                     sellerSignals,
                                     trustedSignals,
@@ -295,6 +320,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                     mAdSelectionExecutionLogger);
                         },
                         mLightweightExecutorService);
+
         return adScores.transform(
                         result -> {
                             Tracing.endAsyncSection(Tracing.SCORE_AD, traceCookie);
@@ -409,12 +435,17 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
      *     with its score
      */
     private List<AdScoringOutcome> mapAdsToScore(
-            List<AdBiddingOutcome> adBiddingOutcomes, List<Double> adScores) {
+            List<AdBiddingOutcome> adBiddingOutcomes,
+            List<ContextualAds> contextualAds,
+            List<Double> adScores) {
         List<AdScoringOutcome> adScoringOutcomes = new ArrayList<>();
+
         sLogger.v(
-                "Mapping #%d bidding outcomes to #%d ads with scores",
-                adBiddingOutcomes.size(), adScores.size());
-        for (int i = 0; i < adScores.size(); i++) {
+                "Mapping #%d bidding outcomes + #%d contextual ads to #%d ads with scores",
+                adBiddingOutcomes.size(), contextualAds.size(), adScores.size());
+
+        int contextualAdsIdx = 0;
+        for (int i = 0; i < adBiddingOutcomes.size(); i++, contextualAdsIdx++) {
             final Double score = adScores.get(i);
             final AdWithBid adWithBid = adBiddingOutcomes.get(i).getAdWithBid();
             final AdWithScore adWithScore =
@@ -425,9 +456,40 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             adScoringOutcomes.add(
                     AdScoringOutcome.builder()
                             .setAdWithScore(adWithScore)
-                            .setCustomAudienceBiddingInfo(customAudienceBiddingInfo)
+                            .setDecisionLogicUri(customAudienceBiddingInfo.getBiddingLogicUri())
+                            .setCustomAudienceSignals(
+                                    customAudienceBiddingInfo.getCustomAudienceSignals())
+                            .setDecisionLogicJs(customAudienceBiddingInfo.getBuyerDecisionLogicJs())
+                            .setDecisionLogicJsDownloaded(true)
+                            .setBuyer(
+                                    customAudienceBiddingInfo.getCustomAudienceSignals().getBuyer())
                             .build());
         }
+
+        int i = contextualAdsIdx;
+        for (ContextualAds ctx : contextualAds) {
+            for (AdWithBid adWithBid : ctx.getAdsWithBid()) {
+                if (i >= adScores.size()) {
+                    throw new IllegalStateException(SCORES_COUNT_LESS_THAN_EXPECTED);
+                }
+                final Double score = adScores.get(i);
+                final AdWithScore adWithScore =
+                        AdWithScore.builder().setScore(score).setAdWithBid(adWithBid).build();
+
+                adScoringOutcomes.add(
+                        AdScoringOutcome.builder()
+                                .setAdWithScore(adWithScore)
+                                .setDecisionLogicUri(ctx.getDecisionLogicUri())
+                                .setBuyer(ctx.getBuyer())
+                                .build());
+                i++;
+            }
+        }
+
+        if (i < adScores.size()) {
+            sLogger.w("Scores returned more than ads sent for scoring");
+        }
+
         sLogger.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
     }

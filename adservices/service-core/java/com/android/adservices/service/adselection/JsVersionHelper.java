@@ -19,18 +19,22 @@ package com.android.adservices.service.adselection;
 import android.annotation.IntDef;
 import android.net.Uri;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
+import java.util.Map;
 
 /** Provides JS version related payload helper methods. */
 public class JsVersionHelper {
+    private static final LoggerFactory.Logger LOGGER = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
     public static final String VERSION_HEADER_NAME_FORMAT = "X_FLEDGE_%s_VERSION";
@@ -68,18 +72,38 @@ public class JsVersionHelper {
                         ImmutableMap.of(
                                 getVersionHeaderName(jsPayloadType), Long.toString(version)))
                 .setUseCache(useCache)
+                .setResponseHeaderKeys(ImmutableSet.of(getVersionHeaderName(jsPayloadType)))
                 .build();
     }
 
     /** Returns a payload header contains the js version attribute. */
     public static ImmutableMap<String, List<String>> constructVersionHeader(
-            @JsPayloadType int jsPayloadType, long version) {
-        return ImmutableMap.of(
-                getVersionHeaderName(jsPayloadType), ImmutableList.of(Long.toString(version)));
+            @JsPayloadType int jsPayloadType, Map<String, String> requestProperties) {
+        String versionHeaderName = getVersionHeaderName(jsPayloadType);
+        String version = requestProperties.get(versionHeaderName);
+
+        return ImmutableMap.of(getVersionHeaderName(jsPayloadType), ImmutableList.of(version));
     }
 
     @VisibleForTesting
-    static String getVersionHeaderName(@JsPayloadType int jsPayloadType) {
+    public static String getVersionHeaderName(@JsPayloadType int jsPayloadType) {
         return JS_PAYLOAD_TYPE_HEADER_NAME_MAP.get(jsPayloadType);
+    }
+
+    /** Returns the version extracted from a response header. */
+    public static long getVersionFromHeader(
+            @JsPayloadType int jsPayloadType, Map<String, List<String>> responseHeader) {
+        if (responseHeader.containsKey(getVersionHeaderName(jsPayloadType))
+                && responseHeader.get(getVersionHeaderName(jsPayloadType)).size() == 1) {
+            try {
+                return Long.parseLong(
+                        responseHeader.get(getVersionHeaderName(jsPayloadType)).get(0));
+            } catch (NumberFormatException numberFormatException) {
+                LOGGER.w(
+                        "Got malformed js version %s, fall back to -1",
+                        responseHeader.get(getVersionHeaderName(jsPayloadType)).get(0));
+            }
+        }
+        return -1;
     }
 }
