@@ -101,11 +101,6 @@ public interface IMeasurementDao {
     long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
             throws DatastoreException;
 
-    /**
-     * Gets the number of triggers a registrant has registered.
-     */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
     /** Gets the number of triggers associated to a destination. */
     long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
             throws DatastoreException;
