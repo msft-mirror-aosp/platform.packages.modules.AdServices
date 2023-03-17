@@ -155,15 +155,17 @@ public class AdFiltersTest {
 
     @Test
     public void testToString() {
-        final AdFilters originalFilters =
-                new AdFilters.Builder()
-                        .setFrequencyCapFilters(
-                                FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
-                        .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
-                        .build();
-
-        final String expectedString = String.format("AdFilters{}");
-        assertThat(originalFilters.toString()).isEqualTo(expectedString);
+        // To avoid conflicts we want to disable this as soon as we unhide an API
+        if (!AdDataFixture.APP_INSTALL_ENABLED && !AdDataFixture.FCAP_ENABLED) {
+            final AdFilters originalFilters =
+                    new AdFilters.Builder()
+                            .setFrequencyCapFilters(
+                                    FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
+                            .setAppInstallFilters(
+                                    AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                            .build();
+            assertThat(originalFilters.toString()).isEqualTo("AdFilters{}");
+        }
     }
 
     @Test
@@ -268,12 +270,6 @@ public class AdFiltersTest {
                         .build();
 
         assertThat(APP_INSTALL_ONLY_FILTER.hashCode()).isNotEqualTo(differentFilters.hashCode());
-    }
-
-    @Test
-    public void testToStringAppInstallOnly() {
-        final String expectedString = String.format("AdFilters{}");
-        assertThat(APP_INSTALL_ONLY_FILTER.toString()).isEqualTo(expectedString);
     }
 
     @Test

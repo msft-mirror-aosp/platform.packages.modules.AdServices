@@ -110,7 +110,7 @@ public class AdSelectionEntryDaoTest {
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
-                    .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
