@@ -56,10 +56,6 @@ public class ConsentNotificationTrigger {
         UiStatsLogger.logRequestedNotification(context);
 
         boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
-        // Set OTA resources if it exists.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
-        }
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance(context);
@@ -69,12 +65,18 @@ public class ConsentNotificationTrigger {
             return;
         }
 
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
+
         setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         createNotificationChannel(context);
         Notification notification = getNotification(context, isEuDevice, gaUxFeatureEnabled);
         notificationManager.notify(NOTIFICATION_ID, notification);
 
+        UiStatsLogger.logNotificationDisplayed(context);
         recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
     }
 
