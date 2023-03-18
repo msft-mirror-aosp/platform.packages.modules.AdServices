@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdTechIdentifier;
+import android.adservices.adselection.ContextualAds;
 
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import java.util.List;
@@ -40,12 +39,11 @@ public final class AdFiltererNoOpImpl implements AdFilterer {
     /**
      * Identity function that returns its input.
      *
-     * @param ads A list of Ads.
-     * @param buyer An AdtechIdentifier (ignored).
-     * @return ads
+     * @param contextualAds An object containing ads.
+     * @return contextual ads
      */
     @Override
-    public List<DBAdData> filterContextualAds(List<DBAdData> ads, AdTechIdentifier buyer) {
-        return ads;
+    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        return contextualAds;
     }
 }
