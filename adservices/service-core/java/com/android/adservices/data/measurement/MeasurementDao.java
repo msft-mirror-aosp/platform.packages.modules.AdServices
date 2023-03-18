@@ -796,16 +796,8 @@ class MeasurementDao implements IMeasurementDao {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
-                getPublisherWhereStatement(publisherUri, publisherType));
-    }
-
-    @Override
-    public long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException {
-        return DatabaseUtils.queryNumEntries(
-                mSQLTransaction.getDatabase(),
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTRANT + " = ? ",
-                new String[]{registrant.toString()});
+                MeasurementTables.SourceContract.PUBLISHER + " = ?",
+                new String[] { publisherUri.toString() });
     }
 
     @Override
@@ -1877,8 +1869,7 @@ class MeasurementDao implements IMeasurementDao {
             return Optional.of(
                     Pair.create(
                             MeasurementTables.SourceContract.APP_DESTINATION,
-                            BaseUriExtractor.getBaseUri(
-                                    trigger.getAttributionDestination()).toString()));
+                            trigger.getAttributionDestination().toString()));
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());

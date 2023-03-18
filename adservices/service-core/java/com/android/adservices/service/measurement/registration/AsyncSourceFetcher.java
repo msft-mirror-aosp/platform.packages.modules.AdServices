@@ -293,7 +293,7 @@ public class AsyncSourceFetcher {
             boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
         result.setRegistrationId(registrationId);
-        result.setPublisher(publisher);
+        result.setPublisher(getBaseUri(publisher));
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
         result.setSourceType(sourceType);

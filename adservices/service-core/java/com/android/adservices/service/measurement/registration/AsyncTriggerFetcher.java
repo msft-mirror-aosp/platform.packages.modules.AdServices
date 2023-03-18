@@ -39,6 +39,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -105,7 +106,7 @@ public class AsyncTriggerFetcher {
             boolean arDebugPermission) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
-        result.setAttributionDestination(topOrigin);
+        result.setAttributionDestination(getAttributionDestination(topOrigin, registrationType));
         result.setRegistrant(registrant);
         result.setAdIdPermission(adIdPermission);
         result.setArDebugPermission(arDebugPermission);
@@ -566,6 +567,13 @@ public class AsyncTriggerFetcher {
             }
         }
         return true;
+    }
+
+    private static Uri getAttributionDestination(Uri destination,
+            AsyncRegistration.RegistrationType registrationType) {
+        return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
+                ? BaseUriExtractor.getBaseUri(destination)
+                : destination;
     }
 
     private interface TriggerHeaderContract {

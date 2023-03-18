@@ -22,7 +22,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -61,7 +61,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -211,7 +211,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d2",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -250,7 +250,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d2",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
@@ -308,7 +308,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -363,7 +363,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1144,7 +1144,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1184,7 +1184,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1254,7 +1254,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1293,7 +1293,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1361,7 +1361,7 @@
         }],
         "triggers": [{
           "id": "T1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status":0,
           "eventTriggers": [
@@ -1377,7 +1377,7 @@
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
@@ -1413,7 +1413,7 @@
         }],
         "triggers": [{
           "id": "T1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
@@ -1429,7 +1429,7 @@
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 1,
           "eventTriggers": [
@@ -1494,7 +1494,7 @@
         }],
         "triggers": [{
           "id": "T1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
@@ -1510,7 +1510,7 @@
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 0,
           "eventTriggers": [
@@ -1546,7 +1546,7 @@
         }],
         "triggers": [{
           "id": "T1",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
@@ -1562,7 +1562,7 @@
           "registrant": "android-app://com.example.xyz"
         }, {
           "id": "T2",
-          "attributionDestination": "android-app://com.example2.app/d1",
+          "attributionDestination": "android-app://com.example2.app",
           "enrollmentId": "enrollment-id-3",
           "status": 2,
           "eventTriggers": [
@@ -1792,7 +1792,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1809,7 +1809,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1826,7 +1826,7 @@
           },
           {
             "id": "T3",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1843,7 +1843,7 @@
           },
           {
             "id": "T4",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -1882,7 +1882,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1899,7 +1899,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1916,7 +1916,7 @@
           },
           {
             "id": "T3",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -1933,7 +1933,7 @@
           },
           {
             "id": "T4",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2072,7 +2072,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2089,7 +2089,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2106,7 +2106,7 @@
           },
           {
             "id": "T3",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2123,7 +2123,7 @@
           },
           {
             "id": "T4",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2163,7 +2163,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2180,7 +2180,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2197,7 +2197,7 @@
           },
           {
             "id": "T3",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2214,7 +2214,7 @@
           },
           {
             "id": "T4",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2368,7 +2368,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2423,7 +2423,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
@@ -2482,7 +2482,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2537,7 +2537,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
@@ -2585,7 +2585,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2630,7 +2630,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -2709,7 +2709,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2755,7 +2755,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
@@ -2805,7 +2805,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -2851,7 +2851,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [
@@ -2900,7 +2900,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [{"trigger_data": 1}],
@@ -2915,7 +2915,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [{"trigger_data": 2}],
@@ -2959,7 +2959,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [{"trigger_data": 1}],
@@ -2974,7 +2974,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [{"trigger_data": 2}],
@@ -3051,7 +3051,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [{"trigger_data": 1}],
@@ -3066,7 +3066,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [{"trigger_data": 2}],
@@ -3109,7 +3109,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 1,
             "eventTriggers": [{"trigger_data": 1}],
@@ -3124,7 +3124,7 @@
           },
           {
             "id": "T2",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [{"trigger_data": 2}],
@@ -3199,7 +3199,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3254,7 +3254,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -3342,7 +3342,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3396,7 +3396,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -3483,7 +3483,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3533,7 +3533,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -3618,7 +3618,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3677,7 +3677,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -3767,7 +3767,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3829,7 +3829,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
@@ -3924,7 +3924,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 0,
             "eventTriggers": [
@@ -3985,7 +3985,7 @@
         "triggers": [
           {
             "id": "T1",
-            "attributionDestination": "android-app://com.example2.app/d1",
+            "attributionDestination": "android-app://com.example2.app",
             "enrollmentId": "enrollment-id-3",
             "status": 2,
             "eventTriggers": [
