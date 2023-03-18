@@ -64,6 +64,7 @@ import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -178,7 +179,8 @@ public class AdSelectionFromOutcomesE2ETest {
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private AdFilterer mAdFilterer = new AdFiltererNoOpImpl();
+    private AdFilteringFeatureFactory mAdFilteringFeatureFactory =
+            new AdFilteringFeatureFactory(mContext, mFlags);
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -208,6 +210,7 @@ public class AdSelectionFromOutcomesE2ETest {
         mScheduledExecutor = AdServicesExecutors.getScheduler();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
         mAppInstallDao =
@@ -240,7 +243,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilterer);
+                        mAdFilteringFeatureFactory);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -572,6 +575,11 @@ public class AdSelectionFromOutcomesE2ETest {
             // Unlimited rate for unit tests to avoid flake in tests due to rate
             // limiting
             return -1;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return false;
         }
     }
 }

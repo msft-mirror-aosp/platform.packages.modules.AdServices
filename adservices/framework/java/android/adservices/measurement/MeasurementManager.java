@@ -247,7 +247,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -330,7 +332,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         registerWebSourceWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -429,7 +433,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         registerWebTriggerWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -504,7 +510,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,

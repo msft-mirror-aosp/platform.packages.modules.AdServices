@@ -30,7 +30,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -44,6 +44,8 @@ import org.json.JSONObject;
 import java.util.List;
 
 public class CustomAudienceUpdatableDataFixture {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     public static String getEmptyJsonResponseString() throws JSONException {
         return toJsonResponseString(null, null, null);
     }
@@ -251,7 +253,7 @@ public class CustomAudienceUpdatableDataFixture {
                 try {
                     adJson.put(METADATA_KEY, new JSONObject(ad.getMetadata()));
                 } catch (JSONException exception) {
-                    LogUtil.v(
+                    sLogger.v(
                             "Trying to add invalid JSON to test object (%s); inserting as String"
                                     + " instead",
                             exception.getMessage());

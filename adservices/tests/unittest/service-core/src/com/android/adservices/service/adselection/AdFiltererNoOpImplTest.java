@@ -18,14 +18,19 @@ package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertEquals;
 
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -39,19 +44,16 @@ import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AdFiltererNoOpImplTest {
-    private static final String PACKAGE_NAME_TO_FILTER =
-            CommonFixture.TEST_PACKAGE_NAME_1 + ".filter";
-    private static final AppInstallFilters APP_INSTALL_FILTERS_TO_FILTER =
-            new AppInstallFilters.Builder()
-                    .setPackageNames(new HashSet<>(Arrays.asList(PACKAGE_NAME_TO_FILTER)))
-                    .build();
-    private static final DBAdData AD_TO_FILTER =
-            DBAdDataFixture.getValidDbAdDataBuilder()
-                    .setAdFilters(
-                            new AdFilters.Builder()
-                                    .setAppInstallFilters(APP_INSTALL_FILTERS_TO_FILTER)
-                                    .build())
-                    .build();
+    private static final AdData.Builder AD_DATA_BUILDER =
+            AdDataFixture.getValidFilterAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0);
+
+    private static final ContextualAds.Builder CONTEXTUAL_ADS_BUILDER =
+            ContextualAdsFixture.aContextualAdBuilder()
+                    .setAdsWithBid(ImmutableList.of(new AdWithBid(AD_DATA_BUILDER.build(), 1.0)))
+                    .setBuyer(CommonFixture.VALID_BUYER_1)
+                    .setDecisionLogicUri(
+                            CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/decisionPath/"));
+
     private AdFilterer mAdFilterer;
 
     @Before
@@ -61,25 +63,30 @@ public class AdFiltererNoOpImplTest {
 
     @Test
     public void testFilterNullAdFilters() {
-        DBAdData dbAdData = DBAdDataFixture.getValidDbAdDataBuilder().setAdFilters(null).build();
-        List<DBAdData> inputList = Arrays.asList(dbAdData);
-        assertEquals(
-                inputList, mAdFilterer.filterContextualAds(inputList, CommonFixture.VALID_BUYER_1));
+        final AdData adData = AD_DATA_BUILDER.setAdFilters(null).build();
+        final ContextualAds contextualAds =
+                CONTEXTUAL_ADS_BUILDER
+                        .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
+                        .build();
+
+        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
     public void testFilterNullComponentFilters() {
-        DBAdData dbAdData =
-                DBAdDataFixture.getValidDbAdDataBuilder()
+        final AdData adData =
+                AD_DATA_BUILDER
                         .setAdFilters(
                                 new AdFilters.Builder()
                                         .setAppInstallFilters(null)
                                         .setFrequencyCapFilters(null)
                                         .build())
                         .build();
-        List<DBAdData> inputList = Arrays.asList(dbAdData);
-        assertEquals(
-                inputList, mAdFilterer.filterContextualAds(inputList, CommonFixture.VALID_BUYER_1));
+        final ContextualAds contextualAds =
+                CONTEXTUAL_ADS_BUILDER
+                        .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
+                        .build();
+        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -88,14 +95,16 @@ public class AdFiltererNoOpImplTest {
                 new AppInstallFilters.Builder()
                         .setPackageNames(Collections.singleton(CommonFixture.TEST_PACKAGE_NAME_1))
                         .build();
-        DBAdData dbAdData =
-                DBAdDataFixture.getValidDbAdDataBuilder()
+        final AdData adData =
+                AD_DATA_BUILDER
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        List<DBAdData> inputList = Arrays.asList(dbAdData);
-        assertEquals(
-                inputList, mAdFilterer.filterContextualAds(inputList, CommonFixture.VALID_BUYER_1));
+        final ContextualAds contextualAds =
+                CONTEXTUAL_ADS_BUILDER
+                        .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
+                        .build();
+        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -108,14 +117,16 @@ public class AdFiltererNoOpImplTest {
                                                 CommonFixture.TEST_PACKAGE_NAME_1,
                                                 CommonFixture.TEST_PACKAGE_NAME_2)))
                         .build();
-        DBAdData dbAdData =
-                DBAdDataFixture.getValidDbAdDataBuilder()
+        final AdData adData =
+                AD_DATA_BUILDER
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters).build())
                         .build();
-        List<DBAdData> inputList = Arrays.asList(dbAdData);
-        assertEquals(
-                inputList, mAdFilterer.filterContextualAds(inputList, CommonFixture.VALID_BUYER_1));
+        final ContextualAds contextualAds =
+                CONTEXTUAL_ADS_BUILDER
+                        .setAdsWithBid(ImmutableList.of(new AdWithBid(adData, 1.0)))
+                        .build();
+        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
@@ -130,25 +141,27 @@ public class AdFiltererNoOpImplTest {
                         .setPackageNames(
                                 new HashSet<>(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME_2)))
                         .build();
-        DBAdData dbAdData1 =
-                DBAdDataFixture.getValidDbAdDataBuilder()
+        final AdData adData1 =
+                AD_DATA_BUILDER
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters1).build())
                         .build();
-        DBAdData dbAdData2 =
-                DBAdDataFixture.getValidDbAdDataBuilder()
+        final AdData adData2 =
+                AD_DATA_BUILDER
                         .setAdFilters(
                                 new AdFilters.Builder().setAppInstallFilters(appFilters2).build())
                         .build();
-        List<DBAdData> inputList = Arrays.asList(dbAdData1, dbAdData2);
-        assertEquals(
-                inputList,
-                mAdFilterer.filterContextualAds(
-                        Arrays.asList(dbAdData1, dbAdData2), CommonFixture.VALID_BUYER_1));
+        final ContextualAds contextualAds =
+                CONTEXTUAL_ADS_BUILDER
+                        .setAdsWithBid(
+                                ImmutableList.of(
+                                        new AdWithBid(adData1, 1.0), new AdWithBid(adData2, 2.0)))
+                        .build();
+        assertEquals(contextualAds, mAdFilterer.filterContextualAds(contextualAds));
     }
 
     @Test
-    public void testCas() {
+    public void testFilterOnCustomAudience() {
         List<DBCustomAudience> caList =
                 DBCustomAudienceFixture.getListOfBuyersCustomAudiences(
                         Arrays.asList(CommonFixture.VALID_BUYER_1, CommonFixture.VALID_BUYER_2));

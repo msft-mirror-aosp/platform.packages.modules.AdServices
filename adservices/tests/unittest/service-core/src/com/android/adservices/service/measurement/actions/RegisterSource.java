@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement.actions;
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.content.AttributionSource;
@@ -68,8 +70,8 @@ public final class RegisterSource implements Action {
                         .build();
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
-        mAdIdPermission = regParamsJson.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION);
+        mDebugReporting = hasSourceDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
     }
 
     @Override
