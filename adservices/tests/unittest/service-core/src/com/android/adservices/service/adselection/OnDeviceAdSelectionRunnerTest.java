@@ -104,6 +104,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -157,7 +158,6 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -588,11 +588,12 @@ public class OnDeviceAdSelectionRunnerTest {
         assertEquals(
                 expectedAdSelectionResult,
                 mAdSelectionEntryDao.getAdSelectionEntityById(AD_SELECTION_ID));
-        assertThat(
-                        mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
-                                resultsCallback.mAdSelectionResponse.getAdSelectionId(),
-                                MY_APP_PACKAGE_NAME))
-                .isNull();
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        resultsCallback.mAdSelectionResponse.getAdSelectionId(),
+                        MY_APP_PACKAGE_NAME);
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getAdCounterKeys()).isNull();
         verifyLogForSuccessfulBiddingProcess(mAdBiddingOutcomeList);
         verifyLogForSuccessfulAdSelectionProcess();
         verify(mAdServicesLoggerMock)
@@ -2453,11 +2454,14 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.doesAdSelectionIdExist(
                         callback.mAdSelectionResponse.getAdSelectionId()));
 
-        Set<String> persistedKeys =
-                mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
                         callback.mAdSelectionResponse.getAdSelectionId(), MY_APP_PACKAGE_NAME);
-        assertThat(persistedKeys).isNotNull();
-        assertThat(persistedKeys).containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer()).isEqualTo(BUYER_1);
+        assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
+        assertThat(histogramInfo.getAdCounterKeys())
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 
     private void verifyErrorMessageIsCorrect(
