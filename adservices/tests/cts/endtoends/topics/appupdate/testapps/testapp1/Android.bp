@@ -26,6 +26,11 @@ android_app {
     libs: [
         "android.ext.adservices",
     ],
+    optional_uses_libs: ["android.ext.adservices"],
+    // TODO(b/269145496): Remove dex_preopt: false.
+    dex_preopt: {
+        enabled: false,
+    },
     static_libs: [
         "adservices-clients",
         "androidx.concurrent_concurrent-futures",
