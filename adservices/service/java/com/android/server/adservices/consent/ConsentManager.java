@@ -15,6 +15,7 @@
  */
 package com.android.server.adservices.consent;
 
+
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
@@ -66,6 +67,10 @@ public final class ConsentManager {
     static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
 
     @VisibleForTesting static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
+    @VisibleForTesting
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
@@ -290,6 +295,50 @@ public final class ConsentManager {
                         e,
                         "Record default AdId failed due to IOException thrown by Datastore: "
                                 + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the information whether the user interated manually with the consent. */
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        synchronized (this) {
+            try {
+                switch (interaction) {
+                    case -1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                        break;
+                    case 0:
+                        mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        break;
+                    case 1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                        break;
+                    default:
+                        throw new IllegalArgumentException(
+                                String.format(
+                                        "InteractionId < %d > can not be handled.", interaction));
+                }
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record manual interaction with consent failed due to IOException thrown"
+                                + " by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns information whether user interacted with consent manually. */
+    public int getUserManualInteractionWithConsent() {
+        synchronized (this) {
+            Boolean userManualInteractionWithConsent =
+                    mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+            if (userManualInteractionWithConsent == null) {
+                return 0;
+            } else if (Boolean.TRUE.equals(userManualInteractionWithConsent)) {
+                return 1;
+            } else {
+                return -1;
             }
         }
     }
