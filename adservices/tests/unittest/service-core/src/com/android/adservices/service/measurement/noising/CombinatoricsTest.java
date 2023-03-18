@@ -202,4 +202,37 @@ public class CombinatoricsTest {
                                                 Combinatorics.getNumStatesArithmetic(
                                                         testCase[0], testCase[1], testCase[2])));
     }
+
+    @Test
+    public void getNumStatesFlexAPI() {
+        // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
+        // states}
+        int[][][][] testCases = {
+            {{{3}, {3, 3, 3, 3, 3, 3, 3, 3}, {3, 3, 3, 3, 3, 3, 3, 3}}, {{2925}}},
+            {{{3}, {8, 8}, {2, 2}}, {{-1}}},
+            {{{2}, {6, 7}, {1, 2}}, {{-1}}},
+            {{{3}, {2, 2}, {3, 3}}, {{35}}},
+            {{{7}, {2, 2}, {3, 3}}, {{100}}},
+            {{{7}, {2, 2}, {4, 5}}, {{236}}},
+            {{{1000}, {2, 2}, {4, 5}}, {{315}}},
+            {{{1000}, {2, 2, 2}, {4, 5, 4}}, {{4725}}},
+            {{{1000}, {2, 2, 2, 2}, {4, 5, 4, 2}}, {{28350}}},
+            {{{5}, {2}, {5}}, {{21}}},
+            {{{100}, {2, 2, 2, 2}, {5, 6, 6, 6}}, {{-1}}},
+            // number of trigger events out of range
+            {{{5}, {2, 2, 2, 2, 2, 2, 2, 2, 2}, {1, 1, 1, 1, 1, 1, 1, 1, 1}}, {{-1}}},
+            // trigger data cardinality out of range
+            {{{5}, {6}, {5}}, {{-1}}} // number reporting windows out of range
+        };
+
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) ->
+                                assertEquals(
+                                        testCase[1][0][0],
+                                        Combinatorics.getNumStatesFlexAPI(
+                                                testCase[0][0][0],
+                                                testCase[0][1],
+                                                testCase[0][2])));
+    }
 }
