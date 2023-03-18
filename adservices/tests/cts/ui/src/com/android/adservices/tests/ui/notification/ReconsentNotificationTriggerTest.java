@@ -24,7 +24,6 @@ import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiDevice;
@@ -37,6 +36,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -87,7 +87,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
+    @Ignore("flaky")
     public void testRowAdIdDisabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -112,7 +112,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
+    @Ignore("flaky")
     public void testRowAdIdEnabledGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -137,7 +137,7 @@ public class ReconsentNotificationTriggerTest {
      * should not displayed
      */
     @Test
-    @FlakyTest(bugId = 272946901)
+    @Ignore("flaky")
     public void testRowAdIdEnabledGaUxEnabledReConsentSecondNotDisplayed() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -168,7 +168,7 @@ public class ReconsentNotificationTriggerTest {
      * consent, and GA UX feature enabled, the GA UX notification is not displayed.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
+    @Ignore("flaky")
     public void testRowAdIdEnabledConsentOptoutGaUxEnabledReConsent() throws Exception {
         UiUtils.setAsRowDevice();
         UiUtils.enableBeta();
@@ -193,7 +193,7 @@ public class ReconsentNotificationTriggerTest {
      * notification feature.
      */
     @Test
-    @FlakyTest(bugId = 272946901)
+    @Ignore("flaky")
     public void testEuAdIdEnabledGaUxEnabledReconsent() throws Exception {
         UiUtils.setAsEuDevice();
         UiUtils.enableBeta();
@@ -215,7 +215,6 @@ public class ReconsentNotificationTriggerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 272946901)
     public void testDeleteStatus() {
         UiUtils.clearSavedStatus();
         AdservicesTestHelper.killAdservicesProcess(sContext);
