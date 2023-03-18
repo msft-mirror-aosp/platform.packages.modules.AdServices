@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.measurement.noising;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.PrivacyParams;
+
+import java.util.Arrays;
+import java.util.HashMap;
+
 /**
  * Combinatorics utilities used for randomization.
  */
@@ -180,5 +186,108 @@ public class Combinatorics {
         int numStars = numBucketIncrements;
         int numBars = Math.multiplyExact(numTriggerData, numWindows);
         return getNumberOfStarsAndBarsSequences(numStars, numBars);
+    }
+
+    /**
+     * Using dynamic programming to compute number of states. Assuming the parameter validation has
+     * been checked to avoid overflow or out of memory error
+     *
+     * @param parameter number of bucket increments (equivalent to number of triggers)
+     * @param dp storage for dynamic programming)
+     * @return number of states
+     */
+    private static int getNumStatesDynamicProgrammingRecursive(
+            ReportParametersWrapper parameter, HashMap<ReportParametersWrapper, Integer> dp) {
+        if (!dp.containsKey(parameter)) {
+            if (parameter.getPerTypeNumWindowList().length == 0) dp.put(parameter, 1);
+            else if (parameter.getPerTypeNumWindowList()[parameter.getLengthOfWindowList() - 1]
+                    == 0) {
+                ReportParametersWrapper newPara =
+                        new ReportParametersWrapper(
+                                parameter.getTotalCap(),
+                                Arrays.copyOfRange(
+                                        parameter.getPerTypeNumWindowList(),
+                                        0,
+                                        parameter.getLengthOfWindowList() - 1),
+                                Arrays.copyOfRange(
+                                        parameter.getPerTypeCapList(),
+                                        0,
+                                        parameter.getLengthOfWindowList() - 1));
+                int result = getNumStatesDynamicProgrammingRecursive(newPara, dp);
+                dp.put(parameter, result);
+            } else {
+                int result = 0;
+                for (int i = 0;
+                        i
+                                <= Math.min(
+                                        parameter
+                                                .getPerTypeCapList()[
+                                                parameter.getLengthOfWindowList() - 1],
+                                        parameter.getTotalCap());
+                        i++) {
+                    ReportParametersWrapper newPara =
+                            new ReportParametersWrapper(
+                                    parameter.getTotalCap(),
+                                    parameter.getPerTypeNumWindowList(),
+                                    parameter.getPerTypeCapList());
+                    newPara.modifyTotalCap(-i);
+                    newPara.modifyLastElementPerTypeCapListWrapper(-i);
+                    newPara.modifyLastElementPerTypeNumWindowList(-1);
+                    result =
+                            Math.addExact(
+                                    result, getNumStatesDynamicProgrammingRecursive(newPara, dp));
+                }
+                dp.put(parameter, result);
+            }
+        }
+        return dp.get(parameter);
+    }
+
+    /**
+     * Compute number of states for flexible event report API
+     *
+     * @param totalCap number of total increments
+     * @param perTypeNumWindowList reporting window for each trigger data
+     * @param perTypeCapList limit of the increment of each trigger data
+     * @return number of states
+     */
+    public static int getNumStatesFlexAPI(
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        if (!validateInputReportingPara(totalCap, perTypeNumWindowList, perTypeCapList)) {
+            LogUtil.e("Input parameters are out of range");
+            return -1;
+        }
+        boolean canComputeArithmetic = true;
+        for (int i = 1; i < perTypeNumWindowList.length; i++) {
+            if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
+                canComputeArithmetic = false;
+                break;
+            }
+        }
+        for (int n : perTypeCapList) {
+            if (n < totalCap) {
+                canComputeArithmetic = false;
+                break;
+            }
+        }
+        if (canComputeArithmetic) {
+            return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
+        }
+
+        HashMap<ReportParametersWrapper, Integer> dp = new HashMap<>();
+        ReportParametersWrapper para =
+                new ReportParametersWrapper(totalCap, perTypeNumWindowList, perTypeCapList);
+        return getNumStatesDynamicProgrammingRecursive(para, dp);
+    }
+
+    private static boolean validateInputReportingPara(
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        for (int n : perTypeNumWindowList) {
+            if (n > PrivacyParams.getMaxFlexibleEventReportingWindows()) return false;
+        }
+        return PrivacyParams.getMaxFlexibleEventReports()
+                        >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
+                && perTypeNumWindowList.length
+                        <= PrivacyParams.getMaxFlexibleEventTriggerDataCardinality();
     }
 }

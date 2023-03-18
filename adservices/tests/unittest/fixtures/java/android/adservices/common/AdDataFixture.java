@@ -102,11 +102,16 @@ public class AdDataFixture {
     }
 
     // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
-    public static AdData getValidFilterAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+    public static AdData.Builder getValidFilterAdDataBuilderByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
         return getValidAdDataBuilderByBuyer(buyer, sequenceNumber)
                 .setAdCounterKeys(getAdCounterKeys())
-                .setAdFilters(AdFiltersFixture.getValidAdFilters())
-                .build();
+                .setAdFilters(AdFiltersFixture.getValidAdFilters());
+    }
+
+    // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
+    public static AdData getValidFilterAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber).build();
     }
 
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
