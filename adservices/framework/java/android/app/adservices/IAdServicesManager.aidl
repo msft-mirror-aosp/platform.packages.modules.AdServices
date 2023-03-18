@@ -151,6 +151,10 @@ interface IAdServicesManager {
        */
      boolean getDefaultAdIdState();
 
+    String getCurrentPrivacySandboxFeature();
+
+    void setCurrentPrivacySandboxFeature(in String featureType);
+
     List<String> getKnownAppsWithConsent(in List<String> installedPackages);
 
     List<String> getAppsWithRevokedConsent(in List<String> installedPackages);

@@ -21,6 +21,7 @@ import android.app.adservices.consent.ConsentParcel;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import java.io.File;
 import java.io.IOException;
@@ -350,6 +351,33 @@ public final class ConsentManager {
         synchronized (this) {
             Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
             return defaultAdIdState != null ? defaultAdIdState : false;
+        }
+    }
+
+    /** Set the current enabled privacy sandbox feature. */
+    public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
+        synchronized (this) {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                try {
+                    if (featureType.name().equals(currentFeatureType)) {
+                        mDatastore.put(featureType.name(), true);
+                    } else {
+                        mDatastore.put(featureType.name(), false);
+                    }
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature."
+                                    + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /** Returns whether a privacy sandbox feature is enabled. */
+    public boolean isPrivacySandboxFeatureEnabled(PrivacySandboxFeatureType featureType) {
+        synchronized (this) {
+            Boolean isFeatureEnabled = mDatastore.get(featureType.name());
+            return isFeatureEnabled != null ? isFeatureEnabled : false;
         }
     }
 

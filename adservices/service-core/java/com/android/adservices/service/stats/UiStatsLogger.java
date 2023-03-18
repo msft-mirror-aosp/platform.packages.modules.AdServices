@@ -51,6 +51,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__PP_API_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_IN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_OUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_UNSUPPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 
@@ -61,6 +65,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
@@ -282,12 +287,36 @@ public class UiStatsLogger {
         }
     }
 
+    private static int getPrivacySandboxFeatureType(@NonNull Context context) {
+        if (FlagsFactory.getFlags().isUiFeatureTypeLoggingEnabled()) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
+        }
+
+        PrivacySandboxFeatureType featureType =
+                ConsentManager.getInstance(context).getCurrentPrivacySandboxFeature();
+        if (featureType == null) {
+            return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
+        }
+
+        switch (featureType) {
+            case PRIVACY_SANDBOX_FIRST_CONSENT:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
+            case PRIVACY_SANDBOX_RECONSENT:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT;
+            case PRIVACY_SANDBOX_UNSUPPORTED:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_UNSUPPORTED;
+            default:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
+        }
+    }
+
     private static UIStats getBaseUiStats(@NonNull Context context) {
         return new UIStats.Builder()
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context))
-                .setAdIdState(getDefaultAdIdState(context))
+                .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setPrivacySandboxFeatureType(getPrivacySandboxFeatureType(context))
                 .build();
     }
 
@@ -296,7 +325,8 @@ public class UiStatsLogger {
                 .setCode(AD_SERVICES_SETTINGS_USAGE_REPORTED)
                 .setRegion(getRegion(context))
                 .setDefaultConsent(getDefaultConsent(context, apiType))
-                .setAdIdState(getDefaultAdIdState(context))
+                .setDefaultAdIdState(getDefaultAdIdState(context))
+                .setPrivacySandboxFeatureType(getPrivacySandboxFeatureType(context))
                 .build();
     }
 }
