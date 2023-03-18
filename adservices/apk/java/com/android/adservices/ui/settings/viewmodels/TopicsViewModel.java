@@ -194,6 +194,11 @@ public class TopicsViewModel extends AndroidViewModel {
             mConsentManager.disable(getApplication(), AdServicesApiType.TOPICS);
         }
         mTopicsConsent.postValue(getTopicsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
     /**
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since

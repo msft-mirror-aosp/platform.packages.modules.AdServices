@@ -46,6 +46,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.IOException;
@@ -398,6 +399,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "recordUserManualInteractionWithConsent() for User Identifier %d, interaction %d",
+                userIdentifier, interaction);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordUserManualInteractionWithConsent(interaction);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e, "Fail to record default manual interaction with consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getTopicsDefaultConsent() {
         enforceAdServicesManagerPermission();
 
@@ -461,6 +481,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get default AdId state.");
             return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public int getUserManualInteractionWithConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "wasUserManualInteractionWithConsentRecorded() for User Identifier %d",
+                userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getUserManualInteractionWithConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get manual interaction with consent recorded.");
+            return 0;
         }
     }
 
@@ -564,6 +603,44 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get the default consent: " + e.getMessage());
             return false;
+        }
+    }
+
+    /** Get the currently running privacy sandbox feature on device. */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getCurrentPrivacySandboxFeature() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
+        try {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                if (mUserInstanceManager
+                        .getOrCreateUserConsentManagerInstance(userIdentifier)
+                        .isPrivacySandboxFeatureEnabled(featureType)) {
+                    return featureType.name();
+                }
+            }
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the privacy sandbox feature state: " + e.getMessage());
+        }
+        return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name();
+    }
+
+    /** Set the currently running privacy sandbox feature on device. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setCurrentPrivacySandboxFeature(String featureType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setCurrentPrivacySandboxFeature(featureType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to set current privacy sandbox feature: " + e.getMessage());
         }
     }
 
