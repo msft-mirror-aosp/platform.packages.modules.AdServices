@@ -27,6 +27,7 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -119,6 +120,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 272511638)
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         // Enable Beta UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(false);
@@ -202,6 +204,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);

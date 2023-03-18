@@ -21,8 +21,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Trace;
 
-import com.android.adservices.LogUtil;
-import com.android.adservices.service.Flags;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -41,6 +40,8 @@ import java.util.Objects;
 
 /** Class to fetch JavaScript code both on and off device. */
 public class JsFetcher {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     @VisibleForTesting
     static final String MISSING_BIDDING_LOGIC = "Error fetching bidding js logic";
 
@@ -48,25 +49,21 @@ public class JsFetcher {
     private final ListeningExecutorService mLightweightExecutorService;
     private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     private final AdServicesHttpsClient mAdServicesHttpsClient;
-    private final Flags mFlags;
 
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull Flags flags) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
         Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(flags);
 
         mBackgroundExecutorService = backgroundExecutorService;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
-        mFlags = flags;
     }
 
     /**
@@ -110,7 +107,7 @@ public class JsFetcher {
                         jsOverride -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
-                                LogUtil.v(
+                                sLogger.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
                                 return FluentFuture.from(
@@ -123,7 +120,7 @@ public class JsFetcher {
                                                 response -> response.getResponseBody(),
                                                 mLightweightExecutorService);
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
@@ -135,7 +132,7 @@ public class JsFetcher {
                         Exception.class,
                         e -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
-                            LogUtil.w(
+                            sLogger.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
                         },
@@ -167,13 +164,13 @@ public class JsFetcher {
                         jsOverride -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
                             if (jsOverride == null) {
-                                LogUtil.v(
+                                sLogger.v(
                                         "Fetching buyer decision logic from server: %s",
                                         decisionLogicUri.toString());
                                 return FluentFuture.from(
                                         mAdServicesHttpsClient.fetchPayload(decisionLogicUri));
                             } else {
-                                LogUtil.d(
+                                sLogger.d(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
@@ -181,7 +178,7 @@ public class JsFetcher {
                                         JsVersionHelper.constructVersionHeader(
                                                 JsVersionHelper
                                                         .JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                                mFlags.getFledgeAdSelectionBiddingLogicJsVersion());
+                                                decisionLogicUri.getRequestProperties());
                                 return Futures.immediateFuture(
                                         AdServicesHttpClientResponse.builder()
                                                 .setResponseBody(jsOverride)
@@ -201,7 +198,7 @@ public class JsFetcher {
                         Exception.class,
                         e -> {
                             Trace.endAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC, traceCookie);
-                            LogUtil.w(
+                            sLogger.w(
                                     e, "Exception encountered when fetching buyer decision logic");
                             throw new IllegalStateException(MISSING_BIDDING_LOGIC);
                         },

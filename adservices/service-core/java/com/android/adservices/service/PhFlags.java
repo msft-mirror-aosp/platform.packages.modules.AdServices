@@ -351,6 +351,9 @@ public final class PhFlags implements Flags {
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
 
+    static final String KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED =
+            "is_check_activity_feature_enabled";
+
     static final String KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "mdd_ui_ota_strings_manifest_file_url";
 
@@ -387,6 +390,14 @@ public final class PhFlags implements Flags {
     // New Feature Flags
     static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED = "fledge_register_ad_beacon_enabled";
 
+    static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
+            "measurement_debug_join_key_hash_limit";
+
+    static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST =
+            "measurement_debug_join_key_enrollment_allowlist";
+
+    // AdServices Namespace String from DeviceConfig class not available in S Minus
+    static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
@@ -399,7 +410,7 @@ public final class PhFlags implements Flags {
     public long getAsyncRegistrationJobQueueIntervalMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS,
                 /* defaultValue */ ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS);
     }
@@ -412,7 +423,7 @@ public final class PhFlags implements Flags {
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_PERIOD_MS),
                         /* defaultValue */ DeviceConfig.getLong(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
                                 /* defaultValue */ TOPICS_EPOCH_JOB_PERIOD_MS));
         if (topicsEpochJobPeriodMs <= 0) {
@@ -429,7 +440,7 @@ public final class PhFlags implements Flags {
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
                         /* defaultValue */ DeviceConfig.getLong(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_TOPICS_EPOCH_JOB_FLEX_MS,
                                 /* defaultValue */ TOPICS_EPOCH_JOB_FLEX_MS));
         if (topicsEpochJobFlexMs <= 0) {
@@ -446,7 +457,7 @@ public final class PhFlags implements Flags {
                 SystemProperties.getInt(
                         getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
                         /* defaultValue */ DeviceConfig.getInt(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
                                 /* defaultValue */ TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
         if (topicsPercentageForRandomTopic < 0 || topicsPercentageForRandomTopic > MAX_PERCENTAGE) {
@@ -461,7 +472,7 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfTopTopics =
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_TOPICS_NUMBER_OF_TOP_TOPICS,
                         /* defaultValue */ TOPICS_NUMBER_OF_TOP_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
@@ -476,7 +487,7 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfTopTopics =
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS,
                         /* defaultValue */ TOPICS_NUMBER_OF_RANDOM_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
@@ -491,7 +502,7 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         int topicsNumberOfLookBackEpochs =
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS,
                         /* defaultValue */ TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
         if (topicsNumberOfLookBackEpochs < 1) {
@@ -508,7 +519,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getInt(
                 getSystemPropertyName(KEY_CLASSIFIER_TYPE),
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_TYPE,
                         /* defaultValue */ DEFAULT_CLASSIFIER_TYPE));
     }
@@ -520,7 +531,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getInt(
                 getSystemPropertyName(KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS,
                         /* defaultValue */ CLASSIFIER_NUMBER_OF_TOP_LABELS));
     }
@@ -529,7 +540,7 @@ public final class PhFlags implements Flags {
     public float getClassifierThreshold() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getFloat(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_THRESHOLD,
                 /* defaultValue */ CLASSIFIER_THRESHOLD);
     }
@@ -538,7 +549,7 @@ public final class PhFlags implements Flags {
     public int getClassifierDescriptionMaxWords() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_DESCRIPTION_MAX_WORDS,
                 /* defaultValue */ CLASSIFIER_DESCRIPTION_MAX_WORDS);
     }
@@ -547,7 +558,7 @@ public final class PhFlags implements Flags {
     public int getClassifierDescriptionMaxLength() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_DESCRIPTION_MAX_LENGTH,
                 /* defaultValue */ CLASSIFIER_DESCRIPTION_MAX_LENGTH);
     }
@@ -556,7 +567,7 @@ public final class PhFlags implements Flags {
     public boolean getClassifierForceUseBundledFiles() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES,
                 /* defaultValue */ CLASSIFIER_FORCE_USE_BUNDLED_FILES);
     }
@@ -569,7 +580,7 @@ public final class PhFlags implements Flags {
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_MAINTENANCE_JOB_PERIOD_MS),
                         /* defaultValue */ DeviceConfig.getLong(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MAINTENANCE_JOB_PERIOD_MS,
                                 /* defaultValue */ MAINTENANCE_JOB_PERIOD_MS));
         if (maintenanceJobPeriodMs < 0) {
@@ -587,7 +598,7 @@ public final class PhFlags implements Flags {
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_MAINTENANCE_JOB_FLEX_MS),
                         /* defaultValue */ DeviceConfig.getLong(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MAINTENANCE_JOB_FLEX_MS,
                                 /* defaultValue */ MAINTENANCE_JOB_FLEX_MS));
 
@@ -603,7 +614,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementEventMainReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS);
     }
@@ -612,7 +623,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementEventFallbackReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
@@ -621,7 +632,7 @@ public final class PhFlags implements Flags {
     public String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL);
     }
@@ -630,7 +641,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementAggregateMainReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_PERIOD_MS);
     }
@@ -639,7 +650,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementAggregateFallbackReportingJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS);
     }
@@ -648,7 +659,7 @@ public final class PhFlags implements Flags {
     public int getMeasurementNetworkConnectTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS,
                 /* defaultValue */ MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS);
     }
@@ -657,7 +668,7 @@ public final class PhFlags implements Flags {
     public int getMeasurementNetworkReadTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS,
                 /* defaultValue */ MEASUREMENT_NETWORK_READ_TIMEOUT_MS);
     }
@@ -666,7 +677,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementDbSizeLimit() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DB_SIZE_LIMIT,
                 /* defaultValue */ MEASUREMENT_DB_SIZE_LIMIT);
     }
@@ -675,7 +686,7 @@ public final class PhFlags implements Flags {
     public String getMeasurementManifestFileUrl() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_MANIFEST_FILE_URL,
                 /* defaultValue */ MEASUREMENT_MANIFEST_FILE_URL);
     }
@@ -684,7 +695,7 @@ public final class PhFlags implements Flags {
     public long getMeasurementRegistrationInputEventValidWindowMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS,
                 /* defaultValue */ MEASUREMENT_REGISTRATION_INPUT_EVENT_VALID_WINDOW_MS);
     }
@@ -693,7 +704,7 @@ public final class PhFlags implements Flags {
     public boolean getMeasurementIsClickVerificationEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED,
                 /* defaultValue */ MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED);
     }
@@ -702,7 +713,7 @@ public final class PhFlags implements Flags {
     public boolean getMeasurementIsClickVerifiedByInputEvent() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT,
                 /* defaultValue */ MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT);
     }
@@ -711,7 +722,7 @@ public final class PhFlags implements Flags {
     public boolean getMeasurementEnableXNA() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENABLE_XNA,
                 /* defaultValue */ MEASUREMENT_ENABLE_XNA);
     }
@@ -719,7 +730,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getMeasurementDataExpiryWindowMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
                 /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
     }
@@ -728,7 +739,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudienceMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT);
     }
@@ -737,7 +748,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudiencePerAppMaxCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT);
     }
@@ -746,7 +757,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudienceMaxOwnerCount() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT);
     }
@@ -755,7 +766,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudienceDefaultExpireInMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS);
     }
@@ -764,7 +775,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudienceMaxActivationDelayInMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS);
     }
@@ -773,7 +784,7 @@ public final class PhFlags implements Flags {
     public long getFledgeCustomAudienceMaxExpireInMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_EXPIRE_IN_MS);
     }
@@ -781,7 +792,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getFledgeCustomAudienceMaxNameSizeB() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
     }
@@ -789,7 +800,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getFledgeCustomAudienceMaxDailyUpdateUriSizeB() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_DAILY_UPDATE_URI_SIZE_B);
     }
@@ -797,7 +808,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getFledgeCustomAudienceMaxBiddingLogicUriSizeB() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_BIDDING_LOGIC_URI_SIZE_B);
     }
@@ -806,7 +817,7 @@ public final class PhFlags implements Flags {
     public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B);
     }
@@ -815,7 +826,7 @@ public final class PhFlags implements Flags {
     public int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B);
     }
@@ -824,7 +835,7 @@ public final class PhFlags implements Flags {
     public int getFledgeCustomAudienceMaxAdsSizeB() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B);
     }
@@ -833,7 +844,7 @@ public final class PhFlags implements Flags {
     public int getFledgeCustomAudienceMaxNumAds() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS);
     }
@@ -841,7 +852,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeCustomAudienceActiveTimeWindowInMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS,
                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS);
     }
@@ -850,7 +861,7 @@ public final class PhFlags implements Flags {
     public boolean getFledgeBackgroundFetchEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_ENABLED,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ENABLED);
     }
@@ -859,7 +870,7 @@ public final class PhFlags implements Flags {
     public long getFledgeBackgroundFetchJobPeriodMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS);
     }
@@ -868,7 +879,7 @@ public final class PhFlags implements Flags {
     public long getFledgeBackgroundFetchJobFlexMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS);
     }
@@ -877,7 +888,7 @@ public final class PhFlags implements Flags {
     public long getFledgeBackgroundFetchJobMaxRuntimeMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS);
     }
@@ -886,7 +897,7 @@ public final class PhFlags implements Flags {
     public long getFledgeBackgroundFetchMaxNumUpdated() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_MAX_NUM_UPDATED);
     }
@@ -895,7 +906,7 @@ public final class PhFlags implements Flags {
     public int getFledgeBackgroundFetchThreadPoolSize() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_THREAD_POOL_SIZE);
     }
@@ -904,7 +915,7 @@ public final class PhFlags implements Flags {
     public long getFledgeBackgroundFetchEligibleUpdateBaseIntervalS() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S);
     }
@@ -913,7 +924,7 @@ public final class PhFlags implements Flags {
     public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS);
     }
@@ -922,7 +933,7 @@ public final class PhFlags implements Flags {
     public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS);
     }
@@ -931,7 +942,7 @@ public final class PhFlags implements Flags {
     public int getFledgeBackgroundFetchMaxResponseSizeB() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B,
                 /* defaultValue */ FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B);
     }
@@ -939,7 +950,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
                 /* defaultValue */ FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT);
     }
@@ -947,7 +958,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionBiddingTimeoutPerCaMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS);
     }
@@ -955,7 +966,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS);
     }
@@ -963,7 +974,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionScoringTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS);
     }
@@ -971,7 +982,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionSelectingOutcomeTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS);
     }
@@ -979,7 +990,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionOverallTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
     }
@@ -987,7 +998,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionFromOutcomesOverallTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS);
     }
@@ -995,7 +1006,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionOffDeviceOverallTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS);
     }
@@ -1003,15 +1014,24 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getFledgeAdSelectionFilteringEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
                 /* defaultValue */ FLEDGE_AD_SELECTION_FILTERING_ENABLED);
     }
 
     @Override
+    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                // The key deliberately kept same as Filtering as the two features are coupled
+                /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
+                /* defaultValue */ FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+    }
+
+    @Override
     public long getFledgeAdSelectionBiddingLogicJsVersion() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
                 /* defaultValue */ FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION);
     }
@@ -1019,7 +1039,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getReportImpressionOverallTimeoutMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS);
     }
@@ -1027,7 +1047,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT);
     }
@@ -1035,7 +1055,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT,
                 /* defaultValue */ FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT);
     }
@@ -1043,7 +1063,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */
                 KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
                 /* defaultValue */
@@ -1053,7 +1073,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getFledgeHttpCachingEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE,
                 /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE);
     }
@@ -1061,7 +1081,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getFledgeHttpJsCachingEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING,
                 /* defaultValue */ FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING);
     }
@@ -1069,7 +1089,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeHttpCacheMaxEntries() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES,
                 /* defaultValue */ FLEDGE_HTTP_CACHE_MAX_ENTRIES);
     }
@@ -1077,7 +1097,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getFledgeHttpCacheMaxAgeSeconds() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
                 /* defaultValue */ FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
     }
@@ -1087,7 +1107,7 @@ public final class PhFlags implements Flags {
     public int getDownloaderConnectionTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS,
                 /* defaultValue */ DOWNLOADER_CONNECTION_TIMEOUT_MS);
     }
@@ -1096,7 +1116,7 @@ public final class PhFlags implements Flags {
     public int getDownloaderReadTimeoutMs() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_DOWNLOADER_READ_TIMEOUT_MS,
                 /* defaultValue */ DOWNLOADER_READ_TIMEOUT_MS);
     }
@@ -1105,7 +1125,7 @@ public final class PhFlags implements Flags {
     public int getDownloaderMaxDownloadThreads() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS,
                 /* defaultValue */ DOWNLOADER_MAX_DOWNLOAD_THREADS);
     }
@@ -1114,7 +1134,7 @@ public final class PhFlags implements Flags {
     public String getMddTopicsClassifierManifestFileUrl() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL,
                 /* defaultValue */ MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
     }
@@ -1127,7 +1147,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_GLOBAL_KILL_SWITCH,
                         /* defaultValue */ GLOBAL_KILL_SWITCH));
     }
@@ -1142,7 +1162,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_KILL_SWITCH));
     }
@@ -1159,7 +1179,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
                                 defaultValue));
     }
@@ -1175,7 +1195,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_API_STATUS_KILL_SWITCH));
     }
@@ -1191,7 +1211,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH));
     }
@@ -1207,7 +1227,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH));
     }
@@ -1224,7 +1244,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
                                 defaultValue));
     }
@@ -1241,7 +1261,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
                                 defaultValue));
     }
@@ -1259,7 +1279,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                                NAMESPACE_ADSERVICES, flagName, defaultValue));
     }
 
     @Override
@@ -1274,7 +1294,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
                                 defaultValue));
     }
@@ -1290,7 +1310,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH));
     }
@@ -1306,7 +1326,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
     }
@@ -1322,7 +1342,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH));
     }
@@ -1340,7 +1360,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                                NAMESPACE_ADSERVICES, flagName, defaultValue));
     }
 
     @Override
@@ -1354,7 +1374,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
                                 /* defaultValue */ MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
     }
@@ -1372,7 +1392,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                                NAMESPACE_ADSERVICES, flagName, defaultValue));
     }
 
     @Override
@@ -1388,7 +1408,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue));
+                                NAMESPACE_ADSERVICES, flagName, defaultValue));
     }
 
     @Override
@@ -1403,7 +1423,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
                                 defaultValue));
     }
@@ -1416,9 +1436,17 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
                                 defaultValue));
+    }
+
+    @Override
+    public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST,
+                /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST);
     }
 
     // ADID Killswitches
@@ -1430,7 +1458,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ADID_KILL_SWITCH),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ADID_KILL_SWITCH,
                         /* defaultValue */ ADID_KILL_SWITCH));
     }
@@ -1444,7 +1472,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_APPSETID_KILL_SWITCH),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_APPSETID_KILL_SWITCH,
                         /* defaultValue */ APPSETID_KILL_SWITCH));
     }
@@ -1459,7 +1487,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_TOPICS_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_TOPICS_KILL_SWITCH,
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
@@ -1474,7 +1502,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
                                 /* defaultValue */ MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
@@ -1489,7 +1517,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MDD_LOGGER_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MDD_LOGGER_KILL_SWITCH,
                                 /* defaultValue */ MDD_LOGGER_KILL_SWITCH));
     }
@@ -1505,7 +1533,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_SELECT_ADS_KILL_SWITCH));
     }
@@ -1519,7 +1547,7 @@ public final class PhFlags implements Flags {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH),
                         /* defaultValue */ DeviceConfig.getBoolean(
-                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
                                 /* defaultValue */ FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
@@ -1528,7 +1556,7 @@ public final class PhFlags implements Flags {
     public String getPpapiAppAllowList() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
@@ -1537,7 +1565,7 @@ public final class PhFlags implements Flags {
     @Override
     public String getPpapiAppSignatureAllowList() {
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_SIGNATURE_ALLOW_LIST);
     }
@@ -1609,7 +1637,7 @@ public final class PhFlags implements Flags {
             return defaultValue;
         }
 
-        return DeviceConfig.getFloat(DeviceConfig.NAMESPACE_ADSERVICES, flagName, defaultValue);
+        return DeviceConfig.getFloat(NAMESPACE_ADSERVICES, flagName, defaultValue);
     }
 
     @Override
@@ -1617,7 +1645,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.get(
                 getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
                 /* defaultValue */ DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL,
                         /* defaultValue */ UI_OTA_STRINGS_MANIFEST_FILE_URL));
     }
@@ -1630,7 +1658,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_OTA_STRINGS_FEATURE_ENABLED));
     }
@@ -1638,7 +1666,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getUiOtaStringsDownloadDeadline() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE,
                 /* defaultValue */ UI_OTA_STRINGS_DOWNLOAD_DEADLINE);
     }
@@ -1651,7 +1679,7 @@ public final class PhFlags implements Flags {
         }
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ADSERVICES_ENABLED,
                 /* defaultValue */ ADSERVICES_ENABLED);
     }
@@ -1660,7 +1688,7 @@ public final class PhFlags implements Flags {
     public int getNumberOfEpochsToKeepInHistory() {
         int numberOfEpochsToKeepInHistory =
                 DeviceConfig.getInt(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
                         /* defaultValue */ NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
 
@@ -1674,7 +1702,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getAdSelectionOffDeviceEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
     }
@@ -1682,7 +1710,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getAdSelectionOffDeviceRequestCompressionEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED);
     }
@@ -1692,7 +1720,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_TOPICS_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_TOPICS_ENROLLMENT_CHECK));
     } //
@@ -1702,7 +1730,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
     }
@@ -1712,7 +1740,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK,
                         /* defaultValue */ DISABLE_FLEDGE_ENROLLMENT_CHECK));
     }
@@ -1722,7 +1750,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_TOPICS,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_TOPICS));
     }
@@ -1732,7 +1760,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_ADID),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_ADID,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_ADID));
     }
@@ -1742,7 +1770,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
                         /* defaultValue */ ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
@@ -1750,7 +1778,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION);
     }
@@ -1758,7 +1786,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION);
     }
@@ -1766,7 +1794,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION);
     }
@@ -1774,7 +1802,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getForegroundStatuslLevelForValidation() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FOREGROUND_STATUS_LEVEL,
                 /* defaultValue */ FOREGROUND_STATUS_LEVEL);
     }
@@ -1782,7 +1810,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeOverrides() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES);
     }
@@ -1790,7 +1818,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE,
                 /* defaultValue */ ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE);
     }
@@ -1798,7 +1826,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getFledgeRegisterAdBeaconEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
                 /* defaultValue */ FLEDGE_REGISTER_AD_BEACON_ENABLED);
     }
@@ -1806,7 +1834,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementDeleteRegistrations() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS);
     }
@@ -1814,7 +1842,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementRegisterSource() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE);
     }
@@ -1822,7 +1850,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementRegisterTrigger() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER);
     }
@@ -1830,7 +1858,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementRegisterWebSource() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE);
     }
@@ -1838,7 +1866,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementRegisterWebTrigger() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER);
     }
@@ -1846,7 +1874,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceForegroundStatusForMeasurementStatus() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS,
                 /* defaultValue */ MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS);
     }
@@ -1854,7 +1882,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnforceIsolateMaxHeapSize() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE,
                 /* defaultValue */ ENFORCE_ISOLATE_MAX_HEAP_SIZE);
     }
@@ -1862,7 +1890,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getIsolateMaxHeapSizeBytes() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ISOLATE_MAX_HEAP_SIZE_BYTES,
                 /* defaultValue */ ISOLATE_MAX_HEAP_SIZE_BYTES);
     }
@@ -1870,7 +1898,7 @@ public final class PhFlags implements Flags {
     @Override
     public String getWebContextClientAppAllowList() {
         return DeviceConfig.getString(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST,
                 /* defaultValue */ WEB_CONTEXT_CLIENT_ALLOW_LIST);
     }
@@ -1878,7 +1906,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getConsentNotificationIntervalBeginMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS,
                 /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS);
     }
@@ -1886,7 +1914,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getConsentNotificationIntervalEndMs() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS,
                 /* defaultValue */ CONSENT_NOTIFICATION_INTERVAL_END_MS);
     }
@@ -1894,7 +1922,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS,
                 /* defaultValue */ CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS);
     }
@@ -1902,7 +1930,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getConsentNotificationDebugMode() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 /* defaultValue */ CONSENT_NOTIFICATION_DEBUG_MODE);
     }
@@ -1917,7 +1945,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getConsentSourceOfTruth() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_CONSENT_SOURCE_OF_TRUTH,
                 /* defaultValue */ DEFAULT_CONSENT_SOURCE_OF_TRUTH);
     }
@@ -1925,7 +1953,7 @@ public final class PhFlags implements Flags {
     @Override
     public int getBlockedTopicsSourceOfTruth() {
         return DeviceConfig.getInt(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
                 /* defaultValue */ DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH);
     }
@@ -1933,7 +1961,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getMaxResponseBasedRegistrationPayloadSizeBytes() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES,
                 /* defaultValue */ MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
     }
@@ -1949,7 +1977,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_UI_DIALOGS_FEATURE_ENABLED),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
     }
@@ -1957,7 +1985,7 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isEeaDeviceFeatureEnabled() {
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 KEY_IS_EEA_DEVICE_FEATURE_ENABLED,
                 IS_EEA_DEVICE_FEATURE_ENABLED);
     }
@@ -1965,8 +1993,16 @@ public final class PhFlags implements Flags {
     @Override
     public boolean isEeaDevice() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+    }
+
+    @Override
+    public boolean isBackCompatActivityFeatureEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
     }
 
     @Override
@@ -1974,7 +2010,7 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         String uiEeaCountries =
                 DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
+                        NAMESPACE_ADSERVICES, KEY_UI_EEA_COUNTRIES, UI_EEA_COUNTRIES);
         return uiEeaCountries;
     }
 
@@ -1984,7 +2020,7 @@ public final class PhFlags implements Flags {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_GA_UX_FEATURE_ENABLED),
                 /* defaultValue */ DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_GA_UX_FEATURE_ENABLED,
                         /* defaultValue */ GA_UX_FEATURE_ENABLED));
     }
@@ -1992,7 +2028,7 @@ public final class PhFlags implements Flags {
     @Override
     public long getAdSelectionExpirationWindowS() {
         return DeviceConfig.getLong(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 /* defaultValue */ FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
     }
@@ -2209,6 +2245,11 @@ public final class PhFlags implements Flags {
                         + getMeasurementRollbackDeletionKillSwitch());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT
+                        + " = "
+                        + getMeasurementDebugJoinKeyHashLimit());
+        writer.println(
+                "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
                         + " = "
                         + getWebContextClientAppAllowList());
@@ -2401,6 +2442,11 @@ public final class PhFlags implements Flags {
                         + getFledgeAdSelectionFilteringEnabled());
         writer.println(
                 "\t"
+                        + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
+                        + " = "
+                        + getFledgeAdSelectionContextualAdsEnabled());
+        writer.println(
+                "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
                         + " = "
                         + getFledgeAdSelectionBiddingLogicJsVersion());
@@ -2488,6 +2534,11 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t" + KEY_IS_EEA_DEVICE_FEATURE_ENABLED + " = " + isEeaDeviceFeatureEnabled());
         writer.println("\t" + KEY_IS_EEA_DEVICE + " = " + isEeaDevice());
+        writer.println(
+                "\t"
+                        + KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED
+                        + " = "
+                        + isBackCompatActivityFeatureEnabled());
         writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
@@ -2537,8 +2588,7 @@ public final class PhFlags implements Flags {
     @Override
     public ImmutableList<String> getEnrollmentBlocklist() {
         String blocklistFlag =
-                DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES, KEY_ENROLLMENT_BLOCKLIST_IDS, "");
+                DeviceConfig.getString(NAMESPACE_ADSERVICES, KEY_ENROLLMENT_BLOCKLIST_IDS, "");
         if (TextUtils.isEmpty(blocklistFlag)) {
             return ImmutableList.of();
         }
@@ -2550,7 +2600,7 @@ public final class PhFlags implements Flags {
     public boolean getCompatLoggingKillSwitch() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
                 /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
     }
@@ -2559,7 +2609,7 @@ public final class PhFlags implements Flags {
     public boolean getEnableBackCompat() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_BACK_COMPAT,
                 /* defaultValue */ ENABLE_BACK_COMPAT);
     }
@@ -2568,7 +2618,7 @@ public final class PhFlags implements Flags {
     public boolean getEnableAppsearchConsentData() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
+                NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
                 /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
@@ -2582,7 +2632,7 @@ public final class PhFlags implements Flags {
 
         String globalBlockedTopicIds =
                 DeviceConfig.getString(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        NAMESPACE_ADSERVICES,
                         KEY_GLOBAL_BLOCKED_TOPIC_IDS,
                         defaultGlobalBlockedTopicIds);
         if (TextUtils.isEmpty(globalBlockedTopicIds)) {
@@ -2603,5 +2653,13 @@ public final class PhFlags implements Flags {
             }
         }
         return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
+    }
+
+    @Override
+    public long getMeasurementDebugJoinKeyHashLimit() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
+                /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
     }
 }

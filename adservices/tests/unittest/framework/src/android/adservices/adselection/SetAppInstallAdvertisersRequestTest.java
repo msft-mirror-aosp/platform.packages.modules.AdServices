@@ -28,9 +28,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-// TODO(b/266837113) Move to cts tests once app install is unhidden
+// TODO(b/273329939): Delete once CTS tests are unignored
 @SmallTest
-public class TempSetAppInstallAdvertisersRequestTest {
+public class SetAppInstallAdvertisersRequestTest {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(
                     Arrays.asList(

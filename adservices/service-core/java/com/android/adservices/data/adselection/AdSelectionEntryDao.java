@@ -27,10 +27,12 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.FledgeRoomConverters;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Data Access Object interface for access to the local AdSelection data storage.
@@ -39,6 +41,7 @@ import java.util.List;
  */
 @Dao
 public abstract class AdSelectionEntryDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
@@ -261,6 +264,36 @@ public abstract class AdSelectionEntryDao {
             @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
+     * Gets the ad counter keys, serialized as a JSON array, associated with a given ad selection.
+     *
+     * <p>This method is not intended to be used on its own. Please use {@link
+     * #getAdCounterKeysForAdSelection(long, String)} to obtain a deserialized {@link Set} of keys.
+     *
+     * @return the serialized {@link Set} of ad counter keys associated with the ad which was
+     *     selected, or {@code null} if no match is found
+     */
+    @Query(
+            "SELECT ad_counter_keys FROM ad_selection "
+                    + "WHERE ad_selection_id = :adSelectionId "
+                    + "AND caller_package_name = :callerPackageName")
+    @Nullable
+    protected abstract String getSerializedAdCounterKeysForAdSelection(
+            long adSelectionId, @NonNull String callerPackageName);
+
+    /**
+     * Gets the ad counter keys associated with a given ad selection.
+     *
+     * @return the {@link Set} of ad counter keys associated with the ad which was selected, or
+     *     {@code null} if no match is found
+     */
+    @Transaction
+    public Set<String> getAdCounterKeysForAdSelection(
+            long adSelectionId, @NonNull String callerPackageName) {
+        return FledgeRoomConverters.deserializeStringSet(
+                getSerializedAdCounterKeysForAdSelection(adSelectionId, callerPackageName));
+    }
+
+    /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
      * creation_timestamp < expirationTime, the ad selection entry will be removed from the
      * ad_selection table.
@@ -448,7 +481,7 @@ public abstract class AdSelectionEntryDao {
         long currentNumRegisteredInteractions = getTotalNumRegisteredAdInteractions();
 
         if (currentNumRegisteredInteractions >= maxTotalNumRegisteredInteractions) {
-            LogUtil.v("Registered Ad Interaction max table size reached! Skipping entire list.");
+            sLogger.v("Registered Ad Interaction max table size reached! Skipping entire list.");
             return;
         }
 
@@ -458,7 +491,7 @@ public abstract class AdSelectionEntryDao {
 
         if (currentNumRegisteredInteractionsPerDestination
                 >= maxPerDestinationNumRegisteredInteractions) {
-            LogUtil.v(
+            sLogger.v(
                     "Maximum number of Registered Ad Interactions for this adSelectionId and"
                             + " reportingDestination reached! Skipping entire list.");
             return;

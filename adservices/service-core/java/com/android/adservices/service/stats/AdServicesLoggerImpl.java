@@ -119,4 +119,9 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
     public void logEpochComputationClassifierStats(EpochComputationClassifierStats stats) {
         mStatsdAdServicesLogger.logEpochComputationClassifierStats(stats);
     }
+
+    @Override
+    public void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats) {
+        mStatsdAdServicesLogger.logMeasurementDebugKeysMatch(stats);
+    }
 }

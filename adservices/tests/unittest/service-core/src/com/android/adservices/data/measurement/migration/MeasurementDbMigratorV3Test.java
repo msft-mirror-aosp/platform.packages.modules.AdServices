@@ -43,9 +43,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
-
 @RunWith(MockitoJUnitRunner.class)
-public class MeasurementDbMigratorV3Test extends AbstractMeasurementDbMigratorTestBase {
+public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDeprecated {
     private static final String FILTERS_V2_1 = "{\"id1\":[\"val11\",\"val12\"]}";
     private static final String FILTERS_V2_2 = "{\"id2\":[\"val21\",\"val22\",\"val23\"]}";
     private static final String FILTERS_V3_1;

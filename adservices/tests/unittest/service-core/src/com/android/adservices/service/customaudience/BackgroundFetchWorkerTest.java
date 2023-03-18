@@ -39,11 +39,14 @@ import android.content.pm.PackageManager;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -74,15 +77,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BackgroundFetchWorkerTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    private final Flags mFlags =
-            new Flags() {
-                @Override
-                public int getFledgeBackgroundFetchThreadPoolSize() {
-                    return 4;
-                }
-            };
+    private Flags mFlags;
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
@@ -92,21 +90,41 @@ public class BackgroundFetchWorkerTest {
     @Mock private Clock mClock;
 
     private CustomAudienceDao mCustomAudienceDaoSpy;
+    private AppInstallDao mAppInstallDaoSpy;
     private BackgroundFetchRunner mBackgroundFetchRunnerSpy;
     private BackgroundFetchWorker mBackgroundFetchWorker;
 
     @Before
     public void setup() {
+        mFlags =
+                new Flags() {
+                    @Override
+                    public int getFledgeBackgroundFetchThreadPoolSize() {
+                        return 4;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionFilteringEnabled() {
+                        return true;
+                    }
+                };
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                                .addTypeConverter(new DBCustomAudience.Converters(true))
                                 .build()
                                 .customAudienceDao());
+        mAppInstallDaoSpy =
+                Mockito.spy(
+                        Room.inMemoryDatabaseBuilder(CONTEXT, SharedStorageDatabase.class)
+                                .build()
+                                .appInstallDao());
 
         mBackgroundFetchRunnerSpy =
                 Mockito.spy(
                         new BackgroundFetchRunner(
                                 mCustomAudienceDaoSpy,
+                                mAppInstallDaoSpy,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
                                 mFlags));
@@ -164,7 +182,12 @@ public class BackgroundFetchWorkerTest {
         class BackgroundFetchRunnerWithSleep extends BackgroundFetchRunner {
             BackgroundFetchRunnerWithSleep(
                     @NonNull CustomAudienceDao customAudienceDao, @NonNull Flags flags) {
-                super(customAudienceDao, mPackageManagerMock, mEnrollmentDaoMock, flags);
+                super(
+                        customAudienceDao,
+                        mAppInstallDaoSpy,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        flags);
             }
 
             @Override
@@ -238,6 +261,44 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
+    }
+
+    @Test
+    public void testRunBackgroundFetchNothingToUpdateNoFilters()
+            throws ExecutionException, InterruptedException {
+        mFlags =
+                new Flags() {
+                    @Override
+                    public int getFledgeBackgroundFetchThreadPoolSize() {
+                        return 4;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionFilteringEnabled() {
+                        return false;
+                    }
+                };
+        mBackgroundFetchWorker =
+                new BackgroundFetchWorker(
+                        mCustomAudienceDaoSpy, mFlags, mBackgroundFetchRunnerSpy, mClock);
+        assertTrue(
+                mCustomAudienceDaoSpy
+                        .getActiveEligibleCustomAudienceBackgroundFetchData(
+                                CommonFixture.FIXED_NOW, 1)
+                        .isEmpty());
+
+        when(mClock.instant()).thenReturn(CommonFixture.FIXED_NOW);
+        mBackgroundFetchWorker.runBackgroundFetch().get();
+
+        verify(mBackgroundFetchRunnerSpy).deleteExpiredCustomAudiences(any());
+        verify(mCustomAudienceDaoSpy).deleteAllExpiredCustomAudienceData(any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
+        verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy, times(0)).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, never()).updateCustomAudience(any(), any());
     }
@@ -266,6 +327,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).updateCustomAudience(any(), any());
     }
@@ -300,6 +362,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
@@ -341,7 +404,7 @@ public class BackgroundFetchWorkerTest {
                     try {
                         mBackgroundFetchWorker.runBackgroundFetch().get();
                     } catch (Exception exception) {
-                        LogUtil.e(
+                        sLogger.e(
                                 exception, "Exception encountered while running background fetch");
                     } finally {
                         bgfWorkStoppedLatch.countDown();
@@ -360,6 +423,7 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedOwnerCustomAudiences();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy).deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
@@ -502,7 +566,7 @@ public class BackgroundFetchWorkerTest {
                     try {
                         mBackgroundFetchWorker.runBackgroundFetch().get();
                     } catch (Exception exception) {
-                        LogUtil.e(
+                        sLogger.e(
                                 exception, "Exception encountered while running background fetch");
                     } finally {
                         bgfWorkStoppedLatch.countDown();
@@ -522,6 +586,7 @@ public class BackgroundFetchWorkerTest {
         verify(mCustomAudienceDaoSpy, times(2))
                 .deleteAllDisallowedOwnerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(2)).deleteDisallowedBuyerCustomAudiences();
+        verify(mBackgroundFetchRunnerSpy, times(2)).deleteDisallowedPackageAppInstallEntries();
         verify(mCustomAudienceDaoSpy, times(2))
                 .deleteAllDisallowedBuyerCustomAudienceData(any(), any());
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))

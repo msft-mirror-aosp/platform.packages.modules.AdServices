@@ -121,6 +121,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 trigger.getAdtechKeyMapping());
+        values.put(MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, trigger.getDebugJoinKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.TriggerContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -318,6 +319,7 @@ class MeasurementDao implements IMeasurementDao {
                 source.getSharedAggregationKeys());
         values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
+        values.put(MeasurementTables.SourceContract.DEBUG_JOIN_KEY, source.getDebugJoinKey());
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.SourceContract.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -794,16 +796,8 @@ class MeasurementDao implements IMeasurementDao {
         return DatabaseUtils.queryNumEntries(
                 mSQLTransaction.getDatabase(),
                 MeasurementTables.SourceContract.TABLE,
-                getPublisherWhereStatement(publisherUri, publisherType));
-    }
-
-    @Override
-    public long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException {
-        return DatabaseUtils.queryNumEntries(
-                mSQLTransaction.getDatabase(),
-                MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.REGISTRANT + " = ? ",
-                new String[]{registrant.toString()});
+                MeasurementTables.SourceContract.PUBLISHER + " = ?",
+                new String[] { publisherUri.toString() });
     }
 
     @Override
@@ -1875,8 +1869,7 @@ class MeasurementDao implements IMeasurementDao {
             return Optional.of(
                     Pair.create(
                             MeasurementTables.SourceContract.APP_DESTINATION,
-                            BaseUriExtractor.getBaseUri(
-                                    trigger.getAttributionDestination()).toString()));
+                            trigger.getAttributionDestination().toString()));
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());

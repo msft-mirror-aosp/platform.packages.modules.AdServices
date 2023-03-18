@@ -36,6 +36,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
@@ -358,7 +359,8 @@ public class AsyncRegistrationQueueRunner {
 
         try {
             numOfSourcesPerPublisher =
-                    dao.getNumSourcesPerPublisher(publisher.get(), publisherType);
+                    dao.getNumSourcesPerPublisher(
+                            BaseUriExtractor.getBaseUri(topOrigin), publisherType);
         } catch (DatastoreException e) {
             LogUtil.d("insertSources: getNumSourcesPerPublisher failed", topOrigin);
             return false;
@@ -373,6 +375,8 @@ public class AsyncRegistrationQueueRunner {
             LogUtil.d(
                     "insertSources: Max limit of %s sources for publisher - %s reached.",
                     SystemHealthParams.getMaxSourcesPerPublisher(), publisher);
+            debugReportApi.scheduleSourceStorageLimitDebugReport(
+                    source, numOfSourcesPerPublisher.toString(), dao);
             return false;
         }
         if (source.getAppDestinations() != null) {
@@ -392,10 +396,8 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: App destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
-                    if (source.isDebugReporting()) {
                         debugReportApi.scheduleSourceDestinationLimitDebugReport(
                                 source, optionalAppDestinationCount.toString(), dao);
-                    }
                     return false;
                 }
             } else {
@@ -459,6 +461,8 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner:  Web destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
+                    debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                            source, optionalDestinationCountWeb.toString(), dao);
                     return false;
                 }
             } else {
@@ -602,7 +606,7 @@ public class AsyncRegistrationQueueRunner {
     @VisibleForTesting
     void insertSourceFromTransaction(Source source, IMeasurementDao dao) throws DatastoreException {
         List<EventReport> eventReports = generateFakeEventReports(source);
-        if (!eventReports.isEmpty() && source.isDebugReporting()) {
+        if (!eventReports.isEmpty()) {
             mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
         }
         dao.insertSource(source);

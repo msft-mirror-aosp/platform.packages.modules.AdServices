@@ -223,6 +223,24 @@ public final class PrivacyParams {
         return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
     }
 
+    private static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
+
+    public static int getMaxFlexibleEventReports() {
+        return MAX_FLEXIBLE_EVENT_REPORTS;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
+
+    public static int getMaxFlexibleEventTriggerDataCardinality() {
+        return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
+    }
+
+    public static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
+
+    public static int getMaxFlexibleEventReportingWindows() {
+        return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
+    }
+
     private PrivacyParams() {
     }
 }

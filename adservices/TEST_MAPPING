@@ -124,7 +124,13 @@
       "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "AdServicesApkUITests"
+      "name": "AdServicesApkUITests",
+      "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
     },
     {
       "name": "AdServicesApkUITestsAppConsent"
@@ -151,7 +157,13 @@
             ]
     },
     {
-      "name": "CtsRootAdServicesUiTest"
+      "name": "CtsRootAdServicesUiTest",
+      "options": [
+                    {
+                      // Exclude tests that are marked flaky
+                      "exclude-annotation": "androidx.test.filters.FlakyTest"
+                    }
+                  ]
     },
     {
       "name": "CtsAdServicesHostTests"
