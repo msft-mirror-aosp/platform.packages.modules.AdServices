@@ -15,3 +15,35 @@
 package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
+
+android_test {
+    name: "AdServicesScenarioTests",
+    static_libs: [
+        "androidx.test.runner",
+        "androidx.test.rules",
+        "collector-device-lib-platform",
+        "common-platform-scenarios",
+        "common-platform-scenario-tests",
+        "guava",
+        "health-testing-utils",
+        "microbenchmark-device-lib",
+        "platform-test-options",
+        "platform-test-rules",
+        "adservices-test-scenarios",
+        "ub-uiautomator",
+        "handheld-app-helpers",
+        "framework-adservices-lib",
+        "adservices-device-collectors-lib",
+        "hamcrest-library",
+    ],
+    // Certificate and platform api is needed for collector-device-lib-platform.
+    certificate: "platform",
+    platform_apis: true,
+    srcs: ["src/**/*.java"],
+    data: [":perfetto_artifacts"],
+    resource_dirs: [
+        "res",
+    ],
+    test_suites: ["device-tests"],
+    min_sdk_version: "24",
+}

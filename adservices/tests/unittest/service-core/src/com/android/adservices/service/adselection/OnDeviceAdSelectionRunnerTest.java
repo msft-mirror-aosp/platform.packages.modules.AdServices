@@ -2429,7 +2429,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getDecisionLogicUri())
                         .setContextualSignals("{}")
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS);
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys());
 
         doReturn(dbAdSelectionBuilder)
                 .when(mAdCounterKeyCopierMock)
@@ -2457,7 +2457,7 @@ public class OnDeviceAdSelectionRunnerTest {
                 mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
                         callback.mAdSelectionResponse.getAdSelectionId(), MY_APP_PACKAGE_NAME);
         assertThat(persistedKeys).isNotNull();
-        assertThat(persistedKeys).containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
+        assertThat(persistedKeys).containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 
     private void verifyErrorMessageIsCorrect(
