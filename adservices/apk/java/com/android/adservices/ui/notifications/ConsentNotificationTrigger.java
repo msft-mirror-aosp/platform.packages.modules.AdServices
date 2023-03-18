@@ -82,6 +82,12 @@ public class ConsentNotificationTrigger {
 
     private static void recordNotificationDisplayed(
             boolean gaUxFeatureEnabled, ConsentManager consentManager) {
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()
+                && consentManager.getUserManualInteractionWithConsent()
+                        != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
+            consentManager.recordUserManualInteractionWithConsent(
+                    ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
+        }
         if (gaUxFeatureEnabled) {
             consentManager.recordGaUxNotificationDisplayed();
         }
