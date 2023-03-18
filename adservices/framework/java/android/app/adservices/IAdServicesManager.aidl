@@ -72,6 +72,29 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
+     * Saves information to the storage that user explicitly interacted with consent.
+     *
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
+     */
+    void recordUserManualInteractionWithConsent(in int interactionId);
+
+    /**
+     * Returns information about the user's manual interaction with consent.
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
+     */
+    int getUserManualInteractionWithConsent();
+
+    /**
      * Record a blocked topic.
      */
     void recordBlockedTopic(in List<TopicParcel> blockedTopicParcels);

@@ -46,6 +46,7 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -120,6 +121,11 @@ public class ConsentNotificationFragment extends Fragment {
 
                         // opt-out confirmation activity
                         ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                            ConsentManager.getInstance(requireContext())
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
@@ -245,6 +251,11 @@ public class ConsentNotificationFragment extends Fragment {
                             LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
                     ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance(requireContext())
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                    }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);

@@ -1677,6 +1677,14 @@ public interface Flags {
         return UI_FEATURE_TYPE_LOGGING_ENABLED;
     }
 
+    /** Default is that the manual interaction feature is enabled. */
+    boolean RECORD_MANUAL_INTERACTION_ENABLED = true;
+
+    /** Returns if the manual interaction feature is enabled. */
+    default boolean getRecordManualInteractionEnabled() {
+        return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
     /**
      * The check activity feature is off by default. When enabled, we check whether all Rubidium
      * activities are enabled when we determine whether AdServices is enabled
