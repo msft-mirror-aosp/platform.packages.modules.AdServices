@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 
@@ -129,23 +130,41 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         + ", adservice status is "
                                         + mFlags.getAdServicesEnabled());
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
+
+                        ConsentManager consentManager = ConsentManager.getInstance(mContext);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
                                 LogUtil.d("Reconsent for ROW.");
+
+                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                    consentManager.setCurrentPrivacySandboxFeature(
+                                            PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                                }
+
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
-                                LogUtil.d("First consent.");
-                                // Otherwise we send to schedule when it is first consent.
+                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                    consentManager.setCurrentPrivacySandboxFeature(
+                                            PrivacySandboxFeatureType
+                                                    .PRIVACY_SANDBOX_FIRST_CONSENT);
+                                }
+
                                 ConsentNotificationJobService.schedule(
                                         mContext, adIdEnabled, false);
                             }
+
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
                                 PackageChangedReceiver.enableReceiver(mContext);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
-                        }
 
+                        } else {
+                            if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                consentManager.setCurrentPrivacySandboxFeature(
+                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
+                            }
+                        }
                     } catch (Exception e) {
                         LogUtil.e(
                                 "unable to save the adservices entry point status of "
@@ -175,6 +194,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         && consentManager.getConsent().isGiven()) {
                     // AdidEnabled status does not matter here as this is only for EU device, it
                     // will override by the EU in the scheduler
+                    if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                        consentManager.setCurrentPrivacySandboxFeature(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                    }
+
                     ConsentNotificationJobService.schedule(mContext, false, true);
                 }
             }
@@ -189,7 +213,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 || mFlags.getConsentNotificationDebugMode();
     }
 
-    /** Check ROW device and see if it fit reconset */
+    /** Check ROW device and see if it fit reconsent */
     public boolean reconsentIfNeededForROW() {
         ConsentManager consentManager = ConsentManager.getInstance(mContext);
         return mFlags.getGaUxFeatureEnabled()

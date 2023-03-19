@@ -147,6 +147,35 @@ public final class AdServicesManager {
     }
 
     /**
+     * Returns information whether user interacted with consent manually.
+     *
+     * @return
+     *     <ul>
+     *       <li>-1 when no manual interaction was recorded
+     *       <li>0 when no data about interaction (similar to null)
+     *       <li>1 when manual interaction was recorded
+     *     </ul>
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public int getUserManualInteractionWithConsent() {
+        try {
+            return mService.getUserManualInteractionWithConsent();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves information to the storage that user interacted with consent manually. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        try {
+            mService.recordUserManualInteractionWithConsent(interaction);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /**
      * Returns information whether Consent GA UX Notification was displayed or not.
      *
      * @return true if Consent GA UX Notification was displayed, otherwise false.
@@ -493,6 +522,26 @@ public final class AdServicesManager {
     public boolean getDefaultAdIdState() {
         try {
             return mService.getDefaultAdIdState();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Returns the current privacy sandbox feature. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public String getCurrentPrivacySandboxFeature() {
+        try {
+            return mService.getCurrentPrivacySandboxFeature();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Set the current privacy sandbox feature. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setCurrentPrivacySandboxFeature(String featureType) {
+        try {
+            mService.setCurrentPrivacySandboxFeature(featureType);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

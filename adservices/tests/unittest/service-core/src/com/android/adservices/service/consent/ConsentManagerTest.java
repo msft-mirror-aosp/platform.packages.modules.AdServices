@@ -19,11 +19,14 @@ package com.android.adservices.service.consent;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED;
 import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
+import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
 import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_CONSENT;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED;
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
 import static com.android.adservices.service.consent.ConsentConstants.TOPICS_CONSENT_PAGE_DISPLAYED;
+import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
+import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 import static com.android.adservices.service.consent.ConsentManager.resetSharedPreference;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
@@ -2700,6 +2703,83 @@ public class ConsentManagerTest {
         verify(spyConsentManager, times(2)).resetMeasurement();
     }
 
+    @Test
+    public void testManualInteractionWithConsentRecorded_PpApiOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.getUserManualInteractionWithConsent()).isEqualTo(UNKNOWN);
+
+        verify(mMockIAdServicesManager, never()).getUserManualInteractionWithConsent();
+
+        spyConsentManager.recordUserManualInteractionWithConsent(MANUAL_INTERACTIONS_RECORDED);
+
+        assertThat(spyConsentManager.getUserManualInteractionWithConsent())
+                .isEqualTo(MANUAL_INTERACTIONS_RECORDED);
+
+        verify(mMockIAdServicesManager, never()).getUserManualInteractionWithConsent();
+        verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+    }
+
+    @Test
+    public void testManualInteractionWithConsentRecorded_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.getUserManualInteractionWithConsent()).isEqualTo(UNKNOWN);
+
+        verify(mMockIAdServicesManager).getUserManualInteractionWithConsent();
+
+        doReturn(MANUAL_INTERACTIONS_RECORDED)
+                .when(mMockIAdServicesManager)
+                .getUserManualInteractionWithConsent();
+        spyConsentManager.recordUserManualInteractionWithConsent(MANUAL_INTERACTIONS_RECORDED);
+
+        assertThat(spyConsentManager.getUserManualInteractionWithConsent())
+                .isEqualTo(MANUAL_INTERACTIONS_RECORDED);
+
+        verify(mMockIAdServicesManager, times(2)).getUserManualInteractionWithConsent();
+        verify(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
+
+        // Verify the bit is not set in PPAPI
+        assertThat(mConsentDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isNull();
+    }
+
+    @Test
+    public void testManualInteractionWithConsentRecorded_PpApiAndSystemServer()
+            throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        @ConsentManager.UserManualInteraction
+        int userManualInteractionWithConsent =
+                spyConsentManager.getUserManualInteractionWithConsent();
+
+        assertThat(userManualInteractionWithConsent).isEqualTo(UNKNOWN);
+
+        verify(mMockIAdServicesManager).getUserManualInteractionWithConsent();
+
+        doReturn(MANUAL_INTERACTIONS_RECORDED)
+                .when(mMockIAdServicesManager)
+                .getUserManualInteractionWithConsent();
+        spyConsentManager.recordUserManualInteractionWithConsent(MANUAL_INTERACTIONS_RECORDED);
+
+        assertThat(spyConsentManager.getUserManualInteractionWithConsent())
+                .isEqualTo(MANUAL_INTERACTIONS_RECORDED);
+
+        verify(mMockIAdServicesManager, times(2)).getUserManualInteractionWithConsent();
+        verify(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
+
+        // Verify the bit is also set in PPAPI
+        assertThat(mConsentDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED)).isTrue();
+    }
+
     // Note this method needs to be invoked after other private variables are initialized.
     private ConsentManager getConsentManagerByConsentSourceOfTruth(int consentSourceOfTruth) {
         return new ConsentManager(
@@ -2737,6 +2817,8 @@ public class ConsentManagerTest {
         doReturn(isGiven).when(mMockIAdServicesManager).wasFledgeAndMsmtConsentPageDisplayed();
         doNothing().when(mMockIAdServicesManager).recordFledgeAndMsmtConsentPageDisplayed();
 
+        doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
+        doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
         return consentManager;
     }
 
@@ -2768,6 +2850,8 @@ public class ConsentManagerTest {
         doReturn(isGiven).when(mMockIAdServicesManager).wasFledgeAndMsmtConsentPageDisplayed();
         doNothing().when(mMockIAdServicesManager).recordFledgeAndMsmtConsentPageDisplayed();
 
+        doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
+        doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
         return consentManager;
     }
 
