@@ -23,12 +23,13 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -107,8 +108,8 @@ public class TopicsManagerTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
         // TODO(b/263297331): Handle rollback support for R and S.
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            overrideConsentSourceOfTruth(/* PPAPI_ONLY */ 1);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
         }
     }
 
@@ -116,7 +117,9 @@ public class TopicsManagerTest {
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
-        overrideConsentSourceOfTruth(null);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test

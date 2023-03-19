@@ -42,12 +42,8 @@ public class ReportInteractionRequestTest {
     @Test
     public void testBuildReportInteractionRequestSuccess() throws Exception {
         ReportInteractionRequest request =
-                new ReportInteractionRequest.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
-                        .setInteractionKey(INTERACTION_KEY)
-                        .setInteractionData(mInteractionData)
-                        .setReportingDestinations(DESTINATIONS)
-                        .build();
+                new ReportInteractionRequest(
+                        AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS);
 
         assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
         assertEquals(INTERACTION_KEY, request.getInteractionKey());
@@ -60,11 +56,8 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionRequest.Builder()
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
+                    new ReportInteractionRequest(
+                            0, INTERACTION_KEY, mInteractionData, DESTINATIONS);
                 });
     }
 
@@ -73,11 +66,8 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionRequest.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionData(mInteractionData)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
+                    new ReportInteractionRequest(
+                            AD_SELECTION_ID, null, mInteractionData, DESTINATIONS);
                 });
     }
 
@@ -86,11 +76,8 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionRequest.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
+                    new ReportInteractionRequest(
+                            AD_SELECTION_ID, INTERACTION_KEY, null, DESTINATIONS);
                 });
     }
 
@@ -99,11 +86,8 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionRequest.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
-                            .build();
+                    new ReportInteractionRequest(
+                            AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0);
                 });
     }
 }

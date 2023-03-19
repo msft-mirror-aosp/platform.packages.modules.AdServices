@@ -36,6 +36,7 @@ import com.android.adservices.service.measurement.registration.AsyncTriggerFetch
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
@@ -358,7 +359,8 @@ public class AsyncRegistrationQueueRunner {
 
         try {
             numOfSourcesPerPublisher =
-                    dao.getNumSourcesPerPublisher(publisher.get(), publisherType);
+                    dao.getNumSourcesPerPublisher(
+                            BaseUriExtractor.getBaseUri(topOrigin), publisherType);
         } catch (DatastoreException e) {
             LogUtil.d("insertSources: getNumSourcesPerPublisher failed", topOrigin);
             return false;

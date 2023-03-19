@@ -179,6 +179,11 @@ public class AsyncRegistrationQueueRunnerTest {
         public IMeasurementDao getMeasurementDao() {
             return mMeasurementDao;
         }
+
+        @Override
+        protected int getDataStoreVersion() {
+            return 0;
+        }
     }
 
     @After
