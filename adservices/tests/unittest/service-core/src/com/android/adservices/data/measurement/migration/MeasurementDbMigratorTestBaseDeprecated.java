@@ -36,7 +36,9 @@ import org.mockito.Mock;
 
 import java.io.File;
 
-public abstract class AbstractMeasurementDbMigratorTestBase {
+/** @deprecated Use {@link MeasurementDbMigratorTestBase} for migration to V7+ versions. */
+@Deprecated
+public abstract class MeasurementDbMigratorTestBaseDeprecated {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_MIGRATION = "adservices_migration.db";
 

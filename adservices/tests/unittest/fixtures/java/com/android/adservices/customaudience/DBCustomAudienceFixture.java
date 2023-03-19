@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DBCustomAudienceFixture {
+    public static final DBCustomAudience VALID_DB_CUSTOM_AUDIENCE_NO_FILTERS =
+            getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1).build();
 
     public static DBCustomAudience.Builder getValidBuilderByBuyer(AdTechIdentifier buyer) {
         return new DBCustomAudience.Builder()

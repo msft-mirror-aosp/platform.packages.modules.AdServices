@@ -179,6 +179,11 @@ public class AsyncRegistrationQueueRunnerTest {
         public IMeasurementDao getMeasurementDao() {
             return mMeasurementDao;
         }
+
+        @Override
+        protected int getDataStoreVersion() {
+            return 0;
+        }
     }
 
     @After
@@ -208,6 +213,7 @@ public class AsyncRegistrationQueueRunnerTest {
         when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
                 .thenReturn(mMockContentProviderClient);
         when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
     }
 
     @Test
@@ -1779,16 +1785,6 @@ public class AsyncRegistrationQueueRunnerTest {
     @Test
     public void testRegisterTrigger_atSystemHealthLimits_success() throws Exception {
         // Setup
-        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                spy(
-                        new AsyncRegistrationQueueRunner(
-                                mContentResolver,
-                                mAsyncSourceFetcher,
-                                mAsyncTriggerFetcher,
-                                mEnrollmentDao,
-                                new FakeDatastoreManager(),
-                                mDebugReportApi));
-
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION - 1L);
 

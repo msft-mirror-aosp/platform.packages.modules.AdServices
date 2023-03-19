@@ -27,7 +27,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +39,7 @@ import java.util.List;
  */
 @Dao
 public abstract class AdSelectionEntryDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
@@ -261,6 +262,21 @@ public abstract class AdSelectionEntryDao {
             @ReportInteractionRequest.ReportingDestination int destination);
 
     /**
+     * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
+     * with a given ad selection.
+     *
+     * @return a {@link DBAdSelectionHistogramInfo} containing the histogram info associated with
+     *     the ad selection, or {@code null} if no match is found
+     */
+    @Query(
+            "SELECT custom_audience_signals_buyer, ad_counter_keys FROM ad_selection "
+                    + "WHERE ad_selection_id = :adSelectionId "
+                    + "AND caller_package_name = :callerPackageName")
+    @Nullable
+    public abstract DBAdSelectionHistogramInfo getAdSelectionHistogramInfo(
+            long adSelectionId, @NonNull String callerPackageName);
+
+    /**
      * Clean up expired adSelection entries if it is older than the given timestamp. If
      * creation_timestamp < expirationTime, the ad selection entry will be removed from the
      * ad_selection table.
@@ -448,7 +464,7 @@ public abstract class AdSelectionEntryDao {
         long currentNumRegisteredInteractions = getTotalNumRegisteredAdInteractions();
 
         if (currentNumRegisteredInteractions >= maxTotalNumRegisteredInteractions) {
-            LogUtil.v("Registered Ad Interaction max table size reached! Skipping entire list.");
+            sLogger.v("Registered Ad Interaction max table size reached! Skipping entire list.");
             return;
         }
 
@@ -458,7 +474,7 @@ public abstract class AdSelectionEntryDao {
 
         if (currentNumRegisteredInteractionsPerDestination
                 >= maxPerDestinationNumRegisteredInteractions) {
-            LogUtil.v(
+            sLogger.v(
                     "Maximum number of Registered Ad Interactions for this adSelectionId and"
                             + " reportingDestination reached! Skipping entire list.");
             return;

@@ -29,6 +29,7 @@ import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.provider.DeviceConfig;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.MotionEvent.PointerCoords;
@@ -88,6 +89,7 @@ public abstract class E2ETest {
     static final Context sContext = ApplicationProvider.getApplicationContext();
     private final Collection<Action> mActionsList;
     final ReportObjects mExpectedOutput;
+    private final Map<String, String> mPhFlagsMap;
     // Extenders of the class populate in their own ways this container for actual output.
     final ReportObjects mActualOutput;
 
@@ -104,12 +106,15 @@ public abstract class E2ETest {
 
     private interface EventReportPayloadKeys {
         // Keys used to compare actual with expected output
-        List<String> STRINGS = ImmutableList.of(
-                "attribution_destination",
-                "scheduled_report_time",
-                "source_event_id",
-                "trigger_data",
-                "source_type");
+        List<String> STRINGS =
+                ImmutableList.of(
+                        "attribution_destination",
+                        "scheduled_report_time",
+                        "source_event_id",
+                        "trigger_data",
+                        "source_type",
+                        "source_debug_key",
+                        "trigger_debug_key");
         String DOUBLE = "randomized_trigger_rate";
     }
 
@@ -132,6 +137,7 @@ public abstract class E2ETest {
 
     public interface TestFormatJsonMapping {
         String API_CONFIG_KEY = "api_config";
+        String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
         String TEST_INPUT_KEY = "input";
         String TEST_OUTPUT_KEY = "output";
         String SOURCE_REGISTRATIONS_KEY = "sources";
@@ -154,6 +160,7 @@ public abstract class E2ETest {
         String REGISTRATION_URI_KEY = "attribution_src_url";
         String HAS_AD_ID_PERMISSION = "has_ad_id_permission";
         String DEBUG_KEY = "debug_key";
+        String DEBUG_PERMISSION_KEY = "debug_permission";
         String DEBUG_REPORTING_KEY = "debug_reporting";
         String INPUT_EVENT_KEY = "source_type";
         String SOURCE_VIEW_TYPE = "event";
@@ -314,6 +321,40 @@ public abstract class E2ETest {
         return getTestCasesFrom(inputStreams, testDirectoryList, preprocessor);
     }
 
+    public static boolean hasArDebugPermission(JSONObject obj) throws JSONException {
+        JSONObject urlToResponse =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0);
+        return urlToResponse.optBoolean(TestFormatJsonMapping.DEBUG_PERMISSION_KEY, false);
+    }
+
+    public static boolean hasAdIdPermission(JSONObject obj) throws JSONException {
+        JSONObject urlToResponse =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0);
+        return urlToResponse.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION, false);
+    }
+
+    public static boolean hasSourceDebugReportingPermission(JSONObject obj) throws JSONException {
+        JSONObject headersMapJson =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0)
+                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
+        JSONObject registerSource =
+                headersMapJson.getJSONObject("Attribution-Reporting-Register-Source");
+        return registerSource.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
+    }
+
+    public static boolean hasTriggerDebugReportingPermission(JSONObject obj) throws JSONException {
+        JSONObject headersMapJson =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY)
+                        .getJSONObject(0)
+                        .getJSONObject(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_RESPONSE_KEY);
+        JSONObject registerTrigger =
+                headersMapJson.getJSONObject("Attribution-Reporting-Register-Trigger");
+        return registerTrigger.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY, false);
+    }
+
     public static Map<String, List<Map<String, List<String>>>> getUriToResponseHeadersMap(
             JSONObject obj) throws JSONException {
         JSONArray uriToResArray = obj.getJSONArray(
@@ -400,15 +441,21 @@ public abstract class E2ETest {
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
     // unused by this constructor.
-    E2ETest(Collection<Action> actions, ReportObjects expectedOutput, String name) {
+    E2ETest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            String name,
+            Map<String, String> phFlagsMap) {
         mActionsList = actions;
         mExpectedOutput = expectedOutput;
         mActualOutput = new ReportObjects();
+        mPhFlagsMap = phFlagsMap;
     }
 
     @Test
-    public void runTest() throws IOException, JSONException {
+    public void runTest() throws IOException, JSONException, DeviceConfig.BadConfigException {
         clearDatabase();
+        setupDeviceConfigForPhFlags();
         for (Action action : mActionsList) {
             if (action instanceof RegisterSource) {
                 processAction((RegisterSource) action);
@@ -923,10 +970,25 @@ public abstract class E2ETest {
 
             ParamsProvider paramsProvider = new ParamsProvider(ApiConfigObj);
 
-            testCases.add(new Object[] {actions, expectedOutput, paramsProvider, name});
+            testCases.add(
+                    new Object[] {
+                        actions, expectedOutput, paramsProvider, name, extractPhFlags(testObj)
+                    });
         }
 
         return testCases;
+    }
+
+    private static Map<String, String> extractPhFlags(JSONObject testObj) {
+        Map<String, String> phFlagsMap = new HashMap<>();
+        if (testObj.isNull(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY)) {
+            return phFlagsMap;
+        }
+
+        JSONObject phFlagsObject =
+                testObj.optJSONObject(TestFormatJsonMapping.PH_FLAGS_OVERRIDE_KEY);
+        phFlagsObject.keySet().forEach((key) -> phFlagsMap.put(key, phFlagsObject.optString(key)));
+        return phFlagsMap;
     }
 
     private static List<Action> createSourceBasedActions(JSONObject input) throws JSONException {
@@ -1147,5 +1209,17 @@ public abstract class E2ETest {
         sortDebugReportObjects(OutputType.ACTUAL, mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
+    }
+
+    private void setupDeviceConfigForPhFlags() {
+        mPhFlagsMap
+                .keySet()
+                .forEach(
+                        key ->
+                                DeviceConfig.setProperty(
+                                        DeviceConfig.NAMESPACE_ADSERVICES,
+                                        key,
+                                        mPhFlagsMap.get(key),
+                                        false));
     }
 }

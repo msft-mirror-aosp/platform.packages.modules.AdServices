@@ -62,7 +62,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         assertEquals(AD_SELECTION_ID, dbAdSelection.getAdSelectionId());
@@ -74,11 +74,11 @@ public class DBAdSelectionTest {
         assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
         assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
         assertThat(dbAdSelection.getAdCounterKeys())
-                .containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullBiddingLogicUri() {
+    public void testFailsToBuildContextualAdWithNullBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,
@@ -86,7 +86,7 @@ public class DBAdSelectionTest {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
-                            .setBiddingLogicUri(BIDDING_LOGIC_URI)
+                            .setBiddingLogicUri(null)
                             .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
@@ -96,14 +96,14 @@ public class DBAdSelectionTest {
     }
 
     @Test
-    public void testFailsToBuildContextualAdWithNonNullCustomAudienceSignals() {
+    public void testFailsToBuildContextualAdWithNullCustomAudienceSignalsAndBiddingLogicUri() {
 
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
                     new DBAdSelection.Builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                            .setCustomAudienceSignals(null)
                             .setContextualSignals(CONTEXTUAL_SIGNALS)
                             .setWinningAdRenderUri(RENDER_URI)
                             .setWinningAdBid(BID)
@@ -239,7 +239,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         DBAdSelection obj2 =
@@ -252,7 +252,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         CommonFixture.assertHaveSameHashCode(obj1, obj2);
@@ -270,7 +270,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         DBAdSelection obj2 =
@@ -295,7 +295,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(10)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);

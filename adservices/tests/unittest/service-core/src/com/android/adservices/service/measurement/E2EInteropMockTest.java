@@ -20,7 +20,6 @@ import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
 import android.util.Log;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
@@ -53,7 +52,6 @@ public class E2EInteropMockTest extends E2EMockTest {
     private static final String LOG_TAG = "msmt_e2e_interop_mock_test";
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
-    private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
     private static String preprocessor(String json) {
         return json
@@ -68,9 +66,13 @@ public class E2EInteropMockTest extends E2EMockTest {
         return data(TEST_DIR_NAME, E2EInteropMockTest::preprocessor);
     }
 
-    public E2EInteropMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            ParamsProvider paramsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, paramsProvider, name);
+    public E2EInteropMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap) {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(

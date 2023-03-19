@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.adservices.cts.server;
+package android.adservices.server;
 
 /** HTTP method used for request. */
 public enum HttpMethod {

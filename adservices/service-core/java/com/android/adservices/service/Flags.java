@@ -36,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
 public interface Flags {
     /** Topics Epoch Job Period. */
@@ -652,6 +654,14 @@ public interface Flags {
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionFilteringEnabled() {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+    }
+
+    // Enable contextual Ads feature, based on Filtering feature enabled or not
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
@@ -1659,6 +1669,33 @@ public interface Flags {
         return IS_EEA_DEVICE;
     }
 
+    /** Default is that the ui feature type logging is enabled. */
+    boolean UI_FEATURE_TYPE_LOGGING_ENABLED = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isUiFeatureTypeLoggingEnabled() {
+        return UI_FEATURE_TYPE_LOGGING_ENABLED;
+    }
+
+    /** Default is that the manual interaction feature is enabled. */
+    boolean RECORD_MANUAL_INTERACTION_ENABLED = true;
+
+    /** Returns if the manual interaction feature is enabled. */
+    default boolean getRecordManualInteractionEnabled() {
+        return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
+    /**
+     * The check activity feature is off by default. When enabled, we check whether all Rubidium
+     * activities are enabled when we determine whether AdServices is enabled
+     */
+    boolean IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED = false;
+
+    /** Returns if the check activity feature has been enabled. */
+    default boolean isBackCompatActivityFeatureEnabled() {
+        return IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium
@@ -1769,6 +1806,13 @@ public interface Flags {
         return ImmutableList.of();
     }
 
+    long DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT = 100L;
+
+    /** Returns debug keys hash limit. */
+    default long getMeasurementDebugJoinKeyHashLimit() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
@@ -1783,5 +1827,19 @@ public interface Flags {
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
         return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /**
+     * Default allowlist of the enrollments for whom debug key insertion based on join key matching
+     * is allowed.
+     */
+    String DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST = "";
+
+    /**
+     * Allowlist of the enrollments for whom debug key insertion based on join key matching is
+     * allowed.
+     */
+    default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 }
