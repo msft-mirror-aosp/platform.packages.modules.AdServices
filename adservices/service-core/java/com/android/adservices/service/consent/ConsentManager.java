@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.consent;
 
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
@@ -40,6 +41,7 @@ import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
@@ -49,6 +51,8 @@ import com.android.internal.util.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -73,6 +77,14 @@ import java.util.stream.Collectors;
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentManager {
     private static volatile ConsentManager sConsentManager;
+
+    @IntDef(value = {NO_MANUAL_INTERACTIONS_RECORDED, UNKNOWN, MANUAL_INTERACTIONS_RECORDED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface UserManualInteraction {}
+
+    public static final int NO_MANUAL_INTERACTIONS_RECORDED = -1;
+    public static final int UNKNOWN = 0;
+    public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
     private final Context mContext;
     private final Flags mFlags;
@@ -1267,6 +1279,158 @@ public class ConsentManager {
         }
     }
 
+    /**
+     * Set the current privacy sandbox feature.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(currentFeatureType.name(), true);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setCurrentPrivacySandboxFeature(
+                                currentFeatureType.name());
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(currentFeatureType.name(), true);
+                        mAdServicesManager.setCurrentPrivacySandboxFeature(
+                                currentFeatureType.name());
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("Set current privacy sandbox feature failed.", e);
+            }
+        }
+    }
+
+    /** Saves information to the storage that user interacted with consent manually. */
+    public void recordUserManualInteractionWithConsent(@UserManualInteraction int interaction) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        storeUserManualInteractionToPpApi(interaction);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.recordUserManualInteractionWithConsent(interaction);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        storeUserManualInteractionToPpApi(interaction);
+                        mAdServicesManager.recordUserManualInteractionWithConsent(interaction);
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("Record manual interaction with consent failed", e);
+            }
+        }
+    }
+
+    /**
+     * Get the current privacy sandbox feature.
+     *
+     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
+     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
+     */
+    public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
+        synchronized (ConsentManager.class) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (mDatastore.get(featureType.name())) {
+                                return featureType;
+                            }
+                        }
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (mAdServicesManager
+                                    .getCurrentPrivacySandboxFeature()
+                                    .equals(featureType.name())) {
+                                return featureType;
+                            }
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get privacy sandbox feature failed.");
+            }
+            return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED;
+        }
+    }
+
+    private void storeUserManualInteractionToPpApi(@UserManualInteraction int interaction)
+            throws IOException {
+        switch (interaction) {
+            case NO_MANUAL_INTERACTIONS_RECORDED:
+                mDatastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                break;
+            case UNKNOWN:
+                mDatastore.remove(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                break;
+            case MANUAL_INTERACTIONS_RECORDED:
+                mDatastore.put(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        String.format("InteractionId < %d > can not be handled.", interaction));
+        }
+    }
+
+    /**
+     * Returns information whether user interacted with consent manually.
+     *
+     * @return true if the user interacted with the consent manually, otherwise false.
+     */
+    public @UserManualInteraction int getUserManualInteractionWithConsent() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        Boolean manualInteractionWithConsent =
+                                mDatastore.get(
+                                        ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        if (manualInteractionWithConsent == null) {
+                            return UNKNOWN;
+                        } else if (Boolean.TRUE.equals(manualInteractionWithConsent)) {
+                            return MANUAL_INTERACTIONS_RECORDED;
+                        } else {
+                            return NO_MANUAL_INTERACTIONS_RECORDED;
+                        }
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.getUserManualInteractionWithConsent();
+                    default:
+                        LogUtil.e(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        return UNKNOWN;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Record manual interaction with consent failed.");
+            }
+
+            return UNKNOWN;
+        }
+    }
+
     @VisibleForTesting
     static BooleanFileDatastore createAndInitializeDataStore(@NonNull Context context) {
         BooleanFileDatastore booleanFileDatastore =
@@ -1433,6 +1597,13 @@ public class ConsentManager {
         // not displayed.
         if (Boolean.TRUE.equals(datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))) {
             adServicesManager.recordNotificationDisplayed();
+        }
+
+        Boolean manualInteractionRecorded =
+                datastore.get(ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+        if (manualInteractionRecorded != null) {
+            adServicesManager.recordUserManualInteractionWithConsent(
+                    manualInteractionRecorded ? 1 : -1);
         }
 
         // Save migration has happened into shared preferences.

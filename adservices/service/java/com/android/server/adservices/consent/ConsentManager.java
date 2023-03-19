@@ -15,12 +15,14 @@
  */
 package com.android.server.adservices.consent;
 
+
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +67,10 @@ public final class ConsentManager {
     static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
 
     @VisibleForTesting static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
+    @VisibleForTesting
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
@@ -293,6 +299,50 @@ public final class ConsentManager {
         }
     }
 
+    /** Saves the information whether the user interated manually with the consent. */
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        synchronized (this) {
+            try {
+                switch (interaction) {
+                    case -1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                        break;
+                    case 0:
+                        mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        break;
+                    case 1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                        break;
+                    default:
+                        throw new IllegalArgumentException(
+                                String.format(
+                                        "InteractionId < %d > can not be handled.", interaction));
+                }
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record manual interaction with consent failed due to IOException thrown"
+                                + " by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns information whether user interacted with consent manually. */
+    public int getUserManualInteractionWithConsent() {
+        synchronized (this) {
+            Boolean userManualInteractionWithConsent =
+                    mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+            if (userManualInteractionWithConsent == null) {
+                return 0;
+            } else if (Boolean.TRUE.equals(userManualInteractionWithConsent)) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+    }
+
     /**
      * Returns the default consent state.
      *
@@ -350,6 +400,33 @@ public final class ConsentManager {
         synchronized (this) {
             Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
             return defaultAdIdState != null ? defaultAdIdState : false;
+        }
+    }
+
+    /** Set the current enabled privacy sandbox feature. */
+    public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
+        synchronized (this) {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                try {
+                    if (featureType.name().equals(currentFeatureType)) {
+                        mDatastore.put(featureType.name(), true);
+                    } else {
+                        mDatastore.put(featureType.name(), false);
+                    }
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature."
+                                    + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /** Returns whether a privacy sandbox feature is enabled. */
+    public boolean isPrivacySandboxFeatureEnabled(PrivacySandboxFeatureType featureType) {
+        synchronized (this) {
+            Boolean isFeatureEnabled = mDatastore.get(featureType.name());
+            return isFeatureEnabled != null ? isFeatureEnabled : false;
         }
     }
 
