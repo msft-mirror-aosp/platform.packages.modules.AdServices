@@ -143,6 +143,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testParcelWithFilters_success() {
         final AdData originalAdData =
                 new AdData.Builder()
@@ -163,6 +164,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsIdenticalFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -177,6 +179,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsDifferentFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -191,6 +194,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsNullFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -202,6 +206,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeIdenticalFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -216,6 +221,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeDifferentFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -230,6 +236,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testBuildValidAdDataWithUnsetFilters_success() {
         final AdData validAdData =
                 new AdData.Builder()
