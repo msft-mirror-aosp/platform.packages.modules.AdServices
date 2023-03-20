@@ -114,6 +114,17 @@
           "source_debug_key": "347982378"
         }
       }
+    },{
+      "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/debug/verbose",
+      "payload": {
+        "type": "source-success",
+        "body": {
+          "source_event_id": "1",
+          "attribution_destination": "https://2d1.test",
+          "source_site": "android-app://example.1s1.com",
+          "source_debug_key": "347982378"
+        }
+      }
     }]
   }
 }
