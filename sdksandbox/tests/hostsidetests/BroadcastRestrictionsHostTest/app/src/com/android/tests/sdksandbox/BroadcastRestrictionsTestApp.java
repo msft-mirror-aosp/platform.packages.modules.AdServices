@@ -150,7 +150,16 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        assertThrows(SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+        final SecurityException thrown =
+                assertThrows(
+                        SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+
+        assertThat(thrown).hasMessageThat().contains("android.intent.action.SEND");
+        assertThat(thrown).hasMessageThat().contains("android.intent.action.VIEW");
+        assertThat(thrown)
+                .hasMessageThat()
+                .contains(
+                        "SDK sandbox not allowed to register receiver with the given IntentFilter");
     }
 
     /**
@@ -219,7 +228,13 @@ public class BroadcastRestrictionsTestApp {
         IBinder binder = sandboxedSdk.getInterface();
         IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
 
-        assertThrows(SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+        final SecurityException thrown =
+                assertThrows(
+                        SecurityException.class, () -> broadcastSdkApi.registerBroadcastReceiver());
+
+        assertThat(thrown)
+                .hasMessageThat()
+                .contains("SDK sandbox process not allowed to call registerReceiver");
     }
 
     /**
