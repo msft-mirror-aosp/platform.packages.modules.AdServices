@@ -30,6 +30,7 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Ignore;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -47,6 +48,7 @@ public class AdFiltersTest {
                     .build();
 
     @Ignore
+    @Test
     public void testBuildNoSettersAppInstallOnly_success() {
         final AdFilters originalFilters = new AdFilters.Builder().build();
 
@@ -54,6 +56,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testBuildNullAdFiltersAppInstallOnly_success() {
         final AdFilters originalFilters =
                 new AdFilters.Builder()
@@ -64,12 +67,14 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testBuildValidAdFiltersAppInstallOnly_success() {
         assertThat(APP_INSTALL_ONLY_FILTER.getAppInstallFilters())
                 .isEqualTo(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
     @Ignore
+    @Test
     public void testParcelAdFiltersAppInstallOnly_success() {
         Parcel targetParcel = Parcel.obtain();
         APP_INSTALL_ONLY_FILTER.writeToParcel(targetParcel, 0);
@@ -81,6 +86,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
                 new AdFilters.Builder()
@@ -91,6 +97,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
                 new AdFilters.Builder()
@@ -106,6 +113,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
                 new AdFilters.Builder()
@@ -116,6 +124,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
                 new AdFilters.Builder()
@@ -131,6 +140,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testToString() {
         final AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
 
