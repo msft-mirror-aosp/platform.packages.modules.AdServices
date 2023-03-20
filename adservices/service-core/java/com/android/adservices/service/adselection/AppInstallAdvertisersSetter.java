@@ -210,6 +210,9 @@ public class AppInstallAdvertisersSetter {
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
         validateRequest(advertisers, callerPackageName);
 
+        sLogger.v(
+                "Writing %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         ArrayList<DBAppInstallPermissions> permissions = new ArrayList<>();
         for (AdTechIdentifier advertiser : advertisers) {
             permissions.add(
@@ -219,6 +222,9 @@ public class AppInstallAdvertisersSetter {
                             .build());
         }
         mAppInstallDao.setAdTechsForPackage(callerPackageName, permissions);
+        sLogger.v(
+                "Wrote %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         return null;
     }
 
