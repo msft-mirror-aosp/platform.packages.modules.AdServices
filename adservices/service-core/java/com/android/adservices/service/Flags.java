@@ -671,6 +671,13 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
