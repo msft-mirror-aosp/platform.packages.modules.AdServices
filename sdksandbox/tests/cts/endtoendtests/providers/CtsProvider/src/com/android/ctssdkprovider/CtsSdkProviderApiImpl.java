@@ -176,6 +176,24 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         return mContext.getOpPackageName();
     }
 
+    @Override
+    public void startActivityAfterUnregisterHandler(
+            com.android.ctssdkprovider.IActivityStarter iActivityStarter) throws RemoteException {
+        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        SdkSandboxActivityHandler activityHandler =
+                activity -> {
+                    try {
+                        iActivityStarter.activityStartedSuccessfully();
+                    } catch (RemoteException e) {
+                        throw new IllegalStateException(
+                                "Exception occurred while updating the client");
+                    }
+                };
+        IBinder token = controller.registerSdkSandboxActivityHandler(activityHandler);
+        controller.unregisterSdkSandboxActivityHandler(activityHandler);
+        iActivityStarter.startActivity(token);
+    }
+
     /* Sends an error if the expected resource/asset does not match the read value. */
     private String createErrorMessage(String expected, String actual) {
         return new String("Expected " + expected + ", actual " + actual);
