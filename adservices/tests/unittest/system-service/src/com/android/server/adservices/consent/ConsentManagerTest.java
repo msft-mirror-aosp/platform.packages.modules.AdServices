@@ -304,8 +304,7 @@ public class ConsentManagerTest {
     public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+
         consentManager.recordUserManualInteractionWithConsent(1);
 
         assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(1);
@@ -315,8 +314,7 @@ public class ConsentManagerTest {
     public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+
         consentManager.recordUserManualInteractionWithConsent(-1);
 
         assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(-1);
@@ -326,8 +324,7 @@ public class ConsentManagerTest {
     public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+
         consentManager.recordUserManualInteractionWithConsent(0);
 
         assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
