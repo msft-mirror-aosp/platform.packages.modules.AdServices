@@ -20,6 +20,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.ext.adservices.api">
 
+    <!-- Declare the broadcast as protected so only the system service can send it.  The AdServices
+    System Service will send this broadcast to the AdServices module where there is a package
+    change.-->
+    <protected-broadcast android:name="com.android.ext.adservices.PACKAGE_CHANGED" />
+
     <!-- Allows the system service to query app status-->
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"/>
 
