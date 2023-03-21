@@ -14,9 +14,9 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config for Cts Ad Services Connection E2E tests in ExtServices">
+<configuration description="Config for Cts Ad Services MDD E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesTopicsConnectionTests"/>
+    <option name="test-tag" value="CtsExtAdServicesMddTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -35,17 +35,17 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <!-- The test apps to be installed and uninstalled -->
-        <option name="test-file-name" value="CtsExtAdServicesTopicsConnectionTests.apk"/>
+        <option name="test-file-name" value="CtsExtAdServicesMddTests.apk"/>
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-        <option name="hidden-api-checks" value="false"/> <!-- Allow hidden API uses -->
-        <option name="package" value="com.android.adextservices.tests.cts.topics.connection"/>
+        <option name="package" value="com.android.adextservices.tests.cts.topics.mdd"/>
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable topics kill_switch to ignore the effect of actual PH values. -->
+        <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
+        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices topics_kill_switch false"/>
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command"
@@ -54,16 +54,11 @@
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command"
                 value="setprop debug.adservices.disable_topics_enrollment_check true"/>
-        <!-- Forces using bundled model files. -->
-        <option name="run-command"
-                value="device_config put adservices classifier_force_use_bundled_files true"/>
 
         <option name="teardown-command"
                 value="setprop debug.adservices.consent_manager_debug_mode false"/>
         <option name="teardown-command"
                 value="setprop debug.adservices.disable_topics_enrollment_check false"/>
-        <option name="teardown-command"
-                value="device_config put adservices classifier_force_use_bundled_files false"/>
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>

@@ -60,6 +60,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVIC
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -191,7 +192,6 @@ import static com.android.adservices.service.PhFlags.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
-import static com.android.adservices.service.PhFlags.KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -199,9 +199,11 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_EXP
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -3865,12 +3867,28 @@ public class PhFlagsTest {
         final boolean phOverridingValue = true;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED,
                 Boolean.toString(phOverridingValue),
                 /* makeDefault */ false);
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getAdSelectionOffDeviceEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAdSelectionPrebuiltUriEnabled() {
+        assertThat(FlagsFactory.getFlags().getFledgeAdSelectionPrebuiltUriEnabled())
+                .isEqualTo(FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED);
+
+        final boolean phOverridingValue = !FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAdSelectionPrebuiltUriEnabled()).isEqualTo(phOverridingValue);
     }
 
     @Test
