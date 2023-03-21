@@ -321,7 +321,7 @@
 
         <!-- Registration Queue job. -->
         <service android:name=
-                     "com.android.adservices.service.measurement.AsyncRegistrationQueueJobService"
+                     "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
