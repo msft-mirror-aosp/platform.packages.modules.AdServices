@@ -16,8 +16,11 @@
 
 package android.adservices.debuggablects;
 
+import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
@@ -52,6 +55,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.After;
@@ -269,6 +273,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
 
+        // Clear the buyer list with an empty call to setAppInstallAdvertisers
+        mAdSelectionClient.setAppInstallAdvertisers(
+                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
@@ -277,6 +285,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void tearDown() throws Exception {
         mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
+        // Clear the buyer list with an empty call to setAppInstallAdvertisers
+        mAdSelectionClient.setAppInstallAdvertisers(
+                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
     }
 
     @Test
@@ -1270,6 +1281,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
 
     @Ignore
+    @Test
     public void testFledgeAuctionAppFilteringFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
@@ -1277,7 +1289,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
                 new SetAppInstallAdvertisersRequest(new HashSet<>(Arrays.asList(BUYER_2)));
-        mAdSelectionClient.setAppInstallAdvertisers(request);
+        ListenableFuture<Void> appInstallFuture =
+                mAdSelectionClient.setAppInstallAdvertisers(request);
+        assertNull(appInstallFuture.get());
 
         // Run the auction with the ads that should be filtered
         String packageName = sContext.getPackageName();
@@ -1392,6 +1406,148 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Assert that the ad3 from buyer 1 is rendered, since had the highest unfiltered score
         Assert.assertEquals(
                 CommonFixture.getUri(BUYER_1, AD_URI_PREFIX + "/ad2"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Ignore
+    @Test
+    public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
+        /**
+         * In this test, we give bad input to setAppInstallAdvertisers and ensure that it gives an
+         * error, and does not filter based on the good input
+         */
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
+
+        // Allow BUYER_2 to filter on the test package
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest(
+                        new HashSet<>(Arrays.asList(BUYER_2, INVALID_EMPTY_BUYER)));
+        mAdSelectionClient.setAppInstallAdvertisers(request);
+        ListenableFuture<Void> appInstallFuture =
+                mAdSelectionClient.setAppInstallAdvertisers(request);
+        assertThrows(ExecutionException.class, appInstallFuture::get);
+
+        // Run the auction with the ads that should be filtered
+        String packageName = sContext.getPackageName();
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        List<AdData> adsForBuyer2 = new ArrayList<>();
+        // Create ads with the buyer name and bid number as the ad URI
+        // Add the bid value to the metadata and add filters to the adss
+        for (int i = 0; i < bidsForBuyer2.size(); i++) {
+            adsForBuyer2.add(
+                    new AdData.Builder()
+                            .setRenderUri(
+                                    CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad" + (i + 1)))
+                            .setMetadata("{\"result\":" + bidsForBuyer2.get(i) + "}")
+                            .setAdFilters(
+                                    new AdFilters.Builder()
+                                            .setAppInstallFilters(
+                                                    new AppInstallFilters.Builder()
+                                                            .setPackageNames(
+                                                                    new HashSet<>(
+                                                                            Arrays.asList(
+                                                                                    packageName)))
+                                                            .build())
+                                            .build())
+                            .build());
+        }
+
+        CustomAudience customAudience2 =
+                new CustomAudience.Builder()
+                        .setBuyer(BUYER_2)
+                        .setName(BUYER_2 + CustomAudienceFixture.VALID_NAME)
+                        .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                        .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                        .setDailyUpdateUri(
+                                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2))
+                        .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                        .setTrustedBiddingData(
+                                TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                        BUYER_2))
+                        .setBiddingLogicUri(
+                                CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAds(adsForBuyer2)
+                        .build();
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 1 is rendered, since had the highest unfiltered score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
