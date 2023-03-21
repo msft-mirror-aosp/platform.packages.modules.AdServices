@@ -61,6 +61,7 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -73,6 +74,7 @@ import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -162,6 +164,7 @@ public class AdSelectionFromOutcomesE2ETest {
 
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private File mMockDBAdSelectionFile;
+    @Mock private ConsentManager mConsentManagerMock;
 
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
@@ -175,12 +178,12 @@ public class AdSelectionFromOutcomesE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
+    private FrequencyCapDao mFrequencyCapDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
-    private AdFilteringFeatureFactory mAdFilteringFeatureFactory =
-            new AdFilteringFeatureFactory(mContext, mFlags);
+    private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -213,10 +216,12 @@ public class AdSelectionFromOutcomesE2ETest {
                         .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
-        mAppInstallDao =
-                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
-                        .build()
-                        .appInstallDao();
+        SharedStorageDatabase sharedDb =
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
+        mAppInstallDao = sharedDb.appInstallDao();
+        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        mAdFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -243,7 +248,8 @@ public class AdSelectionFromOutcomesE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
