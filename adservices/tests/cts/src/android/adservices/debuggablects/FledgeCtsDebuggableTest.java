@@ -50,6 +50,7 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
@@ -280,9 +281,13 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
         // Enable CTS to be run with versions of WebView < M105
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+
+        // Make sure the flags are picked up cold
+        AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
@@ -304,6 +309,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+
+        // Reset the filtering flag
+        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
     }
 
     @Test
@@ -1312,7 +1321,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testFledgeAuctionAppFilteringFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
@@ -1449,10 +1457,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void testFledgeAuctionAppFilteringFlow_overall_AppInstallFailure() throws Exception {
         /**
          * In this test, we give bad input to setAppInstallAdvertisers and ensure that it gives an
-         * error, and does not filter based on the good input
+         * error, and does not filter based on AdData filters.
          */
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-        PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
 
         // Allow BUYER_2 to filter on the test package
         SetAppInstallAdvertisersRequest request =
