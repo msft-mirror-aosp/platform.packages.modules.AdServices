@@ -28,6 +28,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
@@ -255,8 +260,7 @@ public class AdSelectionServiceImplTest {
                     new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
                     mAdServicesLoggerMock);
 
-    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
-
+    private Flags mFlags;
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
@@ -274,6 +278,7 @@ public class AdSelectionServiceImplTest {
 
     @Before
     public void setUp() {
+        mFlags = new AdSelectionServicesTestsFlags(false);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(JSScriptEngine.class)
@@ -366,8 +371,9 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Re init flags with registerAdBeaconDisabled
+        boolean enrollmentCheckDisabled = false;
         mFlags =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
                     @Override
                     public boolean getFledgeRegisterAdBeaconEnabled() {
                         return false;
@@ -1072,8 +1078,9 @@ public class AdSelectionServiceImplTest {
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // Re init flags with registerAdBeaconDisabled
+        boolean enrollmentCheckDisabled = false;
         mFlags =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
                     @Override
                     public boolean getFledgeRegisterAdBeaconEnabled() {
                         return false;
@@ -1868,8 +1875,9 @@ public class AdSelectionServiceImplTest {
         long maxRegisteredAdBeacons = 3;
 
         // Create new flag with overridden value so that only 3 entries can be registered
+        boolean enrollmentCheckDisabled = false;
         Flags flagsWithSmallerMaxEventUris =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
                     @Override
                     public long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
                         return maxRegisteredAdBeacons;
@@ -1955,8 +1963,9 @@ public class AdSelectionServiceImplTest {
         Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
 
         // Override flags to return a smaller max interaction key size
+        boolean enrollmentCheckDisabled = false;
         Flags flagsWithSmallerMaxInteractionKeySize =
-                new FlagsWithEnrollmentCheckEnabledSwitch(false) {
+                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
                     @Override
                     public long
                             getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
@@ -4703,7 +4712,8 @@ public class AdSelectionServiceImplTest {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Reset flags to perform enrollment check
-        mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(true);
+        boolean enrollmentCheckEnabled = true;
+        mFlags = new AdSelectionServicesTestsFlags(enrollmentCheckEnabled);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -7424,10 +7434,10 @@ public class AdSelectionServiceImplTest {
         }
     }
 
-    private static class FlagsWithEnrollmentCheckEnabledSwitch implements Flags {
+    private static class AdSelectionServicesTestsFlags implements Flags {
         private final boolean mEnrollmentCheckEnabled;
 
-        FlagsWithEnrollmentCheckEnabledSwitch(boolean enrollmentCheckEnabled) {
+        AdSelectionServicesTestsFlags(boolean enrollmentCheckEnabled) {
             mEnrollmentCheckEnabled = enrollmentCheckEnabled;
         }
 
@@ -7452,11 +7462,6 @@ public class AdSelectionServiceImplTest {
         }
 
         @Override
-        public long getReportImpressionOverallTimeoutMs() {
-            return 1000;
-        }
-
-        @Override
         public boolean getEnforceIsolateMaxHeapSize() {
             return false;
         }
@@ -7475,6 +7480,31 @@ public class AdSelectionServiceImplTest {
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
             return false;
+        }
+
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getReportImpressionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
         }
     }
 }
