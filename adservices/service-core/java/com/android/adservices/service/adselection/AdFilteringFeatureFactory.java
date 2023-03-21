@@ -16,16 +16,13 @@
 
 package com.android.adservices.service.adselection;
 
-import android.content.Context;
 
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.BinderFlagReader;
 
 import java.time.Clock;
-import java.util.Objects;
 
 /** Factory for implementations of the {@link AdFilterer} interface */
 public final class AdFilteringFeatureFactory {
@@ -33,19 +30,13 @@ public final class AdFilteringFeatureFactory {
     private final AppInstallDao mAppInstallDao;
     private final FrequencyCapDao mFrequencyCapDao;
 
-    public AdFilteringFeatureFactory(Context context, Flags flags) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(flags);
+    public AdFilteringFeatureFactory(
+            AppInstallDao appInstallDao, FrequencyCapDao frequencyCapDao, Flags flags) {
         mIsFledgeAdSelectionFilteringEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
 
-        if (mIsFledgeAdSelectionFilteringEnabled) {
-            mAppInstallDao = SharedStorageDatabase.getInstance(context).appInstallDao();
-            mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
-        } else {
-            mAppInstallDao = null;
-            mFrequencyCapDao = null;
-        }
+        mAppInstallDao = appInstallDao;
+        mFrequencyCapDao = frequencyCapDao;
     }
 
     /**
