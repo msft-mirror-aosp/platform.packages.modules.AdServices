@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
@@ -80,7 +83,7 @@ public class BackgroundFetchWorkerTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    private Flags mFlags;
+    private final Flags mFlags = new BackgroundFetchWorkerTestFlags(true);
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(8);
 
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
@@ -96,18 +99,6 @@ public class BackgroundFetchWorkerTest {
 
     @Before
     public void setup() {
-        mFlags =
-                new Flags() {
-                    @Override
-                    public int getFledgeBackgroundFetchThreadPoolSize() {
-                        return 4;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return true;
-                    }
-                };
         mCustomAudienceDaoSpy =
                 Mockito.spy(
                         Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
@@ -269,21 +260,13 @@ public class BackgroundFetchWorkerTest {
     @Test
     public void testRunBackgroundFetchNothingToUpdateNoFilters()
             throws ExecutionException, InterruptedException {
-        mFlags =
-                new Flags() {
-                    @Override
-                    public int getFledgeBackgroundFetchThreadPoolSize() {
-                        return 4;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionFilteringEnabled() {
-                        return false;
-                    }
-                };
+        Flags flagsFilteringDisabled = new BackgroundFetchWorkerTestFlags(false);
         mBackgroundFetchWorker =
                 new BackgroundFetchWorker(
-                        mCustomAudienceDaoSpy, mFlags, mBackgroundFetchRunnerSpy, mClock);
+                        mCustomAudienceDaoSpy,
+                        flagsFilteringDisabled,
+                        mBackgroundFetchRunnerSpy,
+                        mClock);
         assertTrue(
                 mCustomAudienceDaoSpy
                         .getActiveEligibleCustomAudienceBackgroundFetchData(
@@ -592,5 +575,33 @@ public class BackgroundFetchWorkerTest {
         verify(mBackgroundFetchRunnerSpy, times(numEligibleCustomAudiences))
                 .updateCustomAudience(any(), any());
         assertThat(completionCount.get()).isEqualTo(numEligibleCustomAudiences);
+    }
+
+    private static class BackgroundFetchWorkerTestFlags implements Flags {
+        private final boolean mFledgeAdSelectionFilteringEnabled;
+
+        BackgroundFetchWorkerTestFlags(boolean fledgeAdSelectionFilteringEnabled) {
+            mFledgeAdSelectionFilteringEnabled = fledgeAdSelectionFilteringEnabled;
+        }
+
+        @Override
+        public int getFledgeBackgroundFetchThreadPoolSize() {
+            return 4;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return mFledgeAdSelectionFilteringEnabled;
+        }
+
+        @Override
+        public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+        }
+
+        @Override
+        public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+        }
     }
 }
