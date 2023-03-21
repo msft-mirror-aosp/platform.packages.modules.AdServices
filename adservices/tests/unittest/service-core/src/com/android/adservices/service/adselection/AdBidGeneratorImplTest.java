@@ -651,13 +651,14 @@ public class AdBidGeneratorImplTest {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
         Mockito.when(
-                        mAdSelectionScriptEngine.generateBidsV3(
+                        mAdSelectionScriptEngine.generateBids(
                                 eq(BUYER_DECISION_LOGIC_JS),
-                                eq(mCustomAudienceWithAds),
+                                eq(ADS),
                                 eq(EMPTY_AD_SELECTION_SIGNALS),
                                 eq(EMPTY_BUYER_SIGNALS),
                                 argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
                                 eq(EMPTY_CONTEXTUAL_SIGNALS),
+                                eq(mCustomAudienceSignals),
                                 isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
@@ -705,13 +706,14 @@ public class AdBidGeneratorImplTest {
         // Then we can test the result by assertion,
         assertEquals(expectedAdBiddingOutcome, waitForFuture(() -> result));
         verify(mAdSelectionScriptEngine)
-                .generateBidsV3(
+                .generateBids(
                         eq(BUYER_DECISION_LOGIC_JS),
-                        eq(mCustomAudienceWithAds),
+                        eq(ADS),
                         eq(EMPTY_AD_SELECTION_SIGNALS),
                         eq(EMPTY_BUYER_SIGNALS),
                         argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
                         eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
                         isA(RunAdBiddingPerCAExecutionLogger.class));
         mMockWebServerRule.verifyMockServerRequests(
                 mServer, 0, Collections.emptyList(), mRequestMatcherExactMatch);
