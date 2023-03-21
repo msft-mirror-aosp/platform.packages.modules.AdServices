@@ -316,6 +316,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         adSelectionExecutionLogger,
                         adSelectionServiceFilter,
+                        mAdFilteringFeatureFactory.getAdFilterer(),
                         callerUid);
         runner.runAdSelection(inputParams, callback);
     }
