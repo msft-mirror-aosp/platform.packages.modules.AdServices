@@ -50,9 +50,12 @@ import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSScriptEngine;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -230,10 +233,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
+    private String mPreviousAppAllowList;
 
     @Before
     public void setup() throws InterruptedException {
-        assertForegroundActivityStarted();
+        if (SdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        } else {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
 
         mAdSelectionClient =
                 new AdSelectionClient.Builder()
@@ -283,6 +294,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+
         mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
@@ -293,6 +309,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testFledgeAuctionSelectionFlow_overall_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -378,6 +395,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testFledgeFlow_manuallyUpdateCustomAudience_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer = ImmutableList.of(1.1, 2.2);
         List<Double> updatedBidsForBuyer = ImmutableList.of(4.5, 6.7, 10.0);
@@ -453,6 +471,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_etldViolation_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -542,6 +561,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testReportImpression_etldViolation_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -643,6 +663,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_skipAdsMalformedBiddingLogic_success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -724,6 +745,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_malformedScoringLogic_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -796,6 +818,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_skipAdsFailedGettingBiddingLogic_success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -866,6 +889,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_errorGettingScoringLogic_failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -935,6 +959,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFlow_skipNonActivatedCA_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1020,6 +1045,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFlow_skipExpiredCA_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1111,6 +1137,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelectionFlow_skipCAsThatTimeoutDuringBidding_Success() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -1205,6 +1232,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     @Test
     public void testAdSelection_overallTimeout_Failure() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
