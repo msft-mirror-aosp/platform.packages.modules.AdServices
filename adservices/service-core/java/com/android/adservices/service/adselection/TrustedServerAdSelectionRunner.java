@@ -101,6 +101,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             int callerUid) {
         super(
                 context,
@@ -113,6 +114,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
+                adFilterer,
                 callerUid);
 
         CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper =
@@ -139,6 +141,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             int callerUid,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final JsFetcher jsFetcher,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
@@ -154,6 +157,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 callerUid,
                 adSelectionServiceFilter,
+                adFilterer,
                 adSelectionExecutionLogger);
 
         this.mJsFetcher = jsFetcher;
