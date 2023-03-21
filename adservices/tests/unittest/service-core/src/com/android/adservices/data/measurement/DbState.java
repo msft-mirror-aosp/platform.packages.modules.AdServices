@@ -44,6 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DbState {
     List<Source> mSourceList;
+    List<SourceDestination> mSourceDestinationList;
     List<Trigger> mTriggerList;
     List<EventReport> mEventReportList;
     List<Attribution> mAttrRateLimitList;
@@ -53,6 +54,7 @@ public class DbState {
 
     public DbState() {
         mSourceList = new ArrayList<>();
+        mSourceDestinationList = new ArrayList<>();
         mTriggerList = new ArrayList<>();
         mEventReportList = new ArrayList<>();
         mAttrRateLimitList = new ArrayList<>();
@@ -71,6 +73,16 @@ public class DbState {
                 JSONObject sJSON = sources.getJSONObject(i);
                 Source source = getSourceFrom(sJSON);
                 mSourceList.add(source);
+            }
+        }
+
+        // SourceDestinations
+        if (testInput.has("source_destinations")) {
+            JSONArray sourceDestinations = testInput.getJSONArray("source_destinations");
+            for (int i = 0; i < sourceDestinations.length(); i++) {
+                JSONObject sdJSON = sourceDestinations.getJSONObject(i);
+                SourceDestination sourceDestination = getSourceDestinationFrom(sdJSON);
+                mSourceDestinationList.add(sourceDestination);
             }
         }
 
@@ -145,6 +157,14 @@ public class DbState {
             mSourceList.add(SqliteObjectMapper.constructSourceFromCursor(sourceCursor));
         }
         sourceCursor.close();
+
+        // Read SourceDestination table
+        Cursor destCursor = readerDB.query(MeasurementTables.SourceDestination.TABLE,
+                null, null, null, null, null, null);
+        while (destCursor.moveToNext()) {
+            mSourceDestinationList.add(getSourceDestinationFrom(destCursor));
+        }
+        destCursor.close();
 
         // Read Trigger table
         Cursor triggerCursor = readerDB.query(MeasurementTables.TriggerContract.TABLE,
@@ -225,6 +245,11 @@ public class DbState {
                 Comparator.comparing(Source::getEventTime)
                         .thenComparing(Source::getPriority));
 
+        mSourceDestinationList.sort(
+                Comparator.comparing(SourceDestination::getSourceId)
+                        .thenComparing(SourceDestination::getDestinationType)
+                        .thenComparing(SourceDestination::getDestination));
+
         mTriggerList.sort(Comparator.comparing(Trigger::getTriggerTime));
 
         mEventReportList.sort(
@@ -257,8 +282,6 @@ public class DbState {
                                 sJSON.getString("sourceType").toUpperCase(Locale.ENGLISH)))
                 .setPublisher(Uri.parse(sJSON.getString("publisher")))
                 .setPublisherType(sJSON.optInt("publisherType"))
-                .setAppDestinations(parseIfNonNull(sJSON.optString("appDestination", null)))
-                .setWebDestinations(parseIfNonNull(sJSON.optString("webDestination", null)))
                 .setAggregateSource(sJSON.optString("aggregationKeys", null))
                 .setAggregateContributions(sJSON.optInt("aggregateContributions"))
                 .setEnrollmentId(sJSON.getString("enrollmentId"))
@@ -276,6 +299,14 @@ public class DbState {
                 .setAttributionMode(
                         sJSON.optInt("attribution_mode", Source.AttributionMode.TRUTHFULLY))
                 .setFilterData(sJSON.optString("filterData", null))
+                .build();
+    }
+
+    private SourceDestination getSourceDestinationFrom(JSONObject sdJSON) throws JSONException {
+        return new SourceDestination.Builder()
+                .setSourceId(sdJSON.getString("sourceId"))
+                .setDestination(sdJSON.getString("destination"))
+                .setDestinationType(sdJSON.getInt("destinationType"))
                 .build();
     }
 
@@ -384,6 +415,23 @@ public class DbState {
                         cursor.getString(
                                 cursor.getColumnIndex(
                                         MeasurementTables.AttributionContract.TRIGGER_ID)))
+                .build();
+    }
+
+    private SourceDestination getSourceDestinationFrom(Cursor cursor) {
+        return new SourceDestination.Builder()
+                .setSourceId(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.SOURCE_ID)))
+                .setDestination(
+                        cursor.getString(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.DESTINATION)))
+                .setDestinationType(
+                        cursor.getInt(
+                                cursor.getColumnIndex(
+                                        MeasurementTables.SourceDestination.DESTINATION_TYPE)))
                 .build();
     }
 
