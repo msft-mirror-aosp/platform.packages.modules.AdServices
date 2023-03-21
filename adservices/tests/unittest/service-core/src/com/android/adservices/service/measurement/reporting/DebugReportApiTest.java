@@ -59,6 +59,151 @@ public final class DebugReportApiTest {
     }
 
     @Test
+    public void testScheduleAppSourceSuccessDebugReport_success() throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setPublisherType(EventSurfaceType.APP)
+                                    .setAppDestinations(
+                                            SourceFixture.ValidSourceParams
+                                                    .ATTRIBUTION_DESTINATIONS)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, times(1)).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleWebSourceSuccessDebugReport_success() throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setPublisherType(EventSurfaceType.WEB)
+                                    .setWebDestinations(
+                                            SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                    .setArDebugPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, times(1)).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleSourceSuccessDebugReport_without_enrollmentId_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setAdIdPermission(true)
+                                    .setEnrollmentId("")
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleSourceSuccessDebugReport_adTechNotOptIn_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(false)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleAppSourceSuccessDebugReport_without_adidPermission_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setPublisherType(EventSurfaceType.APP)
+                                    .setAppDestinations(
+                                            SourceFixture.ValidSourceParams
+                                                    .ATTRIBUTION_DESTINATIONS)
+                                    .setAdIdPermission(false)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleWebSourceSuccessDebugReport_without_arDebugPermission_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setPublisherType(EventSurfaceType.WEB)
+                                    .setWebDestinations(
+                                            SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                    .setArDebugPermission(false)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
     public void testScheduleSourceDestinationLimitDebugReport_success() throws Exception {
         runWithMocks(
                 () -> {
