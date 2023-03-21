@@ -38,9 +38,10 @@ import java.util.UUID;
 public class DebugReportApi {
 
     private interface Type {
-        String SOURCE_NOISED = "source-noised";
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
+        String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
+        String SOURCE_SUCCESS = "source-success";
     }
 
     private interface Body {
@@ -61,6 +62,23 @@ public class DebugReportApi {
 
     public DebugReportApi(Context context) {
         mContext = context;
+    }
+
+    /** Schedules the Source Success Debug Report */
+    public void scheduleSourceSuccessDebugReport(Source source, IMeasurementDao dao) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS)) {
+            return;
+        }
+        if (getAdIdPermissionState(source) == PermissionState.DENIED
+                || getArDebugPermissionState(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_SUCCESS);
+            return;
+        }
+        scheduleReport(
+                Type.SOURCE_SUCCESS,
+                generateSourceDebugReportBody(source, null),
+                source.getEnrollmentId(),
+                dao);
     }
 
     /** Schedules the Source Destination limit Debug Report */

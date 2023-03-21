@@ -198,6 +198,7 @@ public class AsyncRegistrationQueueRunner {
                             if (isSourceAllowedToInsert(
                                     source, topOrigin, publisherType, dao, mDebugReportApi)) {
                                 insertSourceFromTransaction(source, dao);
+                                mDebugReportApi.scheduleSourceSuccessDebugReport(source, dao);
                             }
                             if (asyncRegistration.shouldProcessRedirects()) {
                                 LogUtil.d(
@@ -424,6 +425,7 @@ public class AsyncRegistrationQueueRunner {
             if (optionalAppEnrollmentsCount != null) {
                 if (optionalAppEnrollmentsCount >= PrivacyParams
                         .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+                    debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: "
                                     + "App enrollment count >= "
@@ -490,6 +492,7 @@ public class AsyncRegistrationQueueRunner {
             if (optionalWebEnrollmentsCount != null) {
                 if (optionalWebEnrollmentsCount >= PrivacyParams
                         .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource()) {
+                    debugReportApi.scheduleSourceSuccessDebugReport(source, dao);
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: "
                                     + " Web enrollment count >= "
