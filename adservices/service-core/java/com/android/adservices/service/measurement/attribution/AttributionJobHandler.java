@@ -48,6 +48,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatePayloadGe
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -219,7 +220,8 @@ class AttributionJobHandler {
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
             int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-            if (sourceDebugKey != null || triggerDebugKey != null) {
+            if (Debug.isAttributionDebugReportPermitted(source, trigger, sourceDebugKey,
+                      triggerDebugKey)) {
                 debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
             }
             AggregateReport aggregateReport =
