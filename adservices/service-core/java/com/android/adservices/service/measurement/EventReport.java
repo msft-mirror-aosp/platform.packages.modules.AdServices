@@ -23,6 +23,7 @@ import android.util.Pair;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import java.lang.annotation.Retention;
@@ -383,7 +384,8 @@ public class EventReport {
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (mBuilding.mSourceDebugKey != null || mBuilding.mTriggerDebugKey != null) {
+            if (Debug.isAttributionDebugReportPermitted(source, trigger,
+                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();
