@@ -29,11 +29,15 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -49,6 +53,17 @@ public class AppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
 
+    private static String sPreviousAppAllowList;
+
+    @BeforeClass
+    public static void setupClass() {
+        if (!SdkLevel.isAtLeastT()) {
+            sPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+        }
+    }
+
     @Before
     public void setup() {
         overrideAppSetIdKillSwitch(true);
@@ -59,6 +74,13 @@ public class AppSetIdManagerTest {
         overrideAppSetIdKillSwitch(false);
         // Cool-off rate limiter
         TimeUnit.SECONDS.sleep(1);
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(sPreviousAppAllowList);
+        }
     }
 
     // Override appsetid related kill switch to ignore the effect of actual PH values.
