@@ -22,6 +22,8 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.modules.utils.build.SdkLevel;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -41,13 +43,18 @@ public class ForegroundDebuggableCtsTest {
      * Sandbox checks
      */
     protected static void makeTestProcessForeground() throws TimeoutException {
-        SimpleActivity.startAndWait(sContext, Duration.ofSeconds(2));
-        sSimpleActivityStarted = true;
+        // PPAPI foreground checks are not done on S-, so no need for the SimpleActivity
+        if (SdkLevel.isAtLeastT()) {
+            SimpleActivity.startAndWait(sContext, Duration.ofSeconds(2));
+            sSimpleActivityStarted = true;
+        }
     }
 
     /** Terminates the SimpleActivity */
     protected static void shutdownForegroundActivity() {
-        SimpleActivity.stop(sContext);
+        if (SdkLevel.isAtLeastT()) {
+            SimpleActivity.stop(sContext);
+        }
     }
 
     @BeforeClass
