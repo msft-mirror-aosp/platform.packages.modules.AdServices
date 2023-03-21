@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLogger.SCRIPT_JAVASCRIPT;
@@ -78,7 +79,6 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
@@ -281,6 +281,7 @@ public class AdBidGeneratorImplTest {
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
 
+        mFlags = new AdBidGeneratorImplTestFlags();
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -315,8 +316,6 @@ public class AdBidGeneratorImplTest {
         mCustomAudienceBiddingInfo =
                 CustomAudienceBiddingInfo.create(
                         mDecisionLogicUri, BUYER_DECISION_LOGIC_JS, mCustomAudienceSignals);
-
-        mFlags = FlagsFactory.getFlagsForTest();
 
         mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
 
@@ -1751,6 +1750,13 @@ public class AdBidGeneratorImplTest {
                 return false;
             }
             return true;
+        }
+    }
+
+    private static class AdBidGeneratorImplTestFlags implements Flags {
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
         }
     }
 }
