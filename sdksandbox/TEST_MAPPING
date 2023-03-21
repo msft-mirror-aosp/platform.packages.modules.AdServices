@@ -13,6 +13,9 @@
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "SdkSandboxInprocessTests[com.google.android.adservices.apex]"
+    },
+    {
       "name": "SdkSandboxManagerServiceUnitTests[com.google.android.adservices.apex]"
     },
     {
@@ -79,6 +82,9 @@
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "SdkSandboxInprocessTests"
     },
     {
       "name": "CtsSdkSandboxWebkitTestCases",

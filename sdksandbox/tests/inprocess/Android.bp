@@ -17,7 +17,7 @@ package {
 }
 
 android_test {
-    name: "SdkSandboxInProcessPermissionsTest",
+    name: "SdkSandboxInprocessTests",
 
     target_sdk_version: "Tiramisu",
     min_sdk_version: "Tiramisu",
@@ -38,4 +38,7 @@ android_test {
         "truth-prebuilt",
     ],
     test_suites: ["general-tests"],
+    test_options: {
+        extra_test_configs: [ "AndroidTest_SdkInSandbox.xml" ]
+    },
 }
