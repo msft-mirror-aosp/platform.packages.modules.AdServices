@@ -23,7 +23,9 @@ import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
@@ -67,7 +69,9 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import java.time.Clock;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -127,6 +131,7 @@ public abstract class AdSelectionRunner {
     @NonNull protected final Flags mFlags;
     @NonNull protected final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @NonNull private final AdFilterer mAdFilterer;
     private final int mCallerUid;
 
     /**
@@ -151,6 +156,7 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -160,6 +166,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionServiceFilter);
+        Objects.requireNonNull(adFilterer);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -177,6 +184,7 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mAdFilterer = adFilterer;
         mCallerUid = callerUid;
     }
 
@@ -194,6 +202,7 @@ public abstract class AdSelectionRunner {
             @NonNull final Flags flags,
             int callerUid,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull AdFilterer adFilterer,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(customAudienceDao);
@@ -206,6 +215,7 @@ public abstract class AdSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(adSelectionExecutionLogger);
+        Objects.requireNonNull(adFilterer);
 
         Preconditions.checkArgument(
                 JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable(),
@@ -222,6 +232,7 @@ public abstract class AdSelectionRunner {
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
+        mAdFilterer = adFilterer;
         mCallerUid = callerUid;
     }
 
@@ -436,7 +447,11 @@ public abstract class AdSelectionRunner {
         AdSelectionConfig adSelectionConfigInput = adSelectionConfig;
         if (!mFlags.getFledgeAdSelectionContextualAdsEnabled()) {
             // Empty all contextual ads if the feature is disabled
+            sLogger.v("Contextual flow is disabled");
             adSelectionConfigInput = getAdSelectionConfigWithoutContextualAds(adSelectionConfig);
+        } else {
+            sLogger.v("Contextual flow is enabled, filtering contextual ads");
+            adSelectionConfigInput = getAdSelectionConfigFilterContextualAds(adSelectionConfig);
         }
 
         ListenableFuture<List<DBCustomAudience>> buyerCustomAudience =
@@ -570,17 +585,27 @@ public abstract class AdSelectionRunner {
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
+    private AdSelectionConfig getAdSelectionConfigFilterContextualAds(
+            AdSelectionConfig adSelectionConfig) {
+        Map<AdTechIdentifier, ContextualAds> filteredContextualAdsMap = new HashMap<>();
+        sLogger.v("Filtering contextual ads in Ad Selection Config");
+        for (Map.Entry<AdTechIdentifier, ContextualAds> entry :
+                adSelectionConfig.getBuyerContextualAds().entrySet()) {
+            filteredContextualAdsMap.put(
+                    entry.getKey(), mAdFilterer.filterContextualAds(entry.getValue()));
+        }
+        return adSelectionConfig
+                .cloneToBuilder()
+                .setBuyerContextualAds(filteredContextualAdsMap)
+                .build();
+    }
+
     private AdSelectionConfig getAdSelectionConfigWithoutContextualAds(
             AdSelectionConfig adSelectionConfig) {
-        return new AdSelectionConfig.Builder()
-                .setSeller(adSelectionConfig.getSeller())
+        sLogger.v("Emptying contextual ads in Ad Selection Config");
+        return adSelectionConfig
+                .cloneToBuilder()
                 .setBuyerContextualAds(Collections.EMPTY_MAP)
-                .setAdSelectionSignals(adSelectionConfig.getAdSelectionSignals())
-                .setCustomAudienceBuyers(adSelectionConfig.getCustomAudienceBuyers())
-                .setDecisionLogicUri(adSelectionConfig.getDecisionLogicUri())
-                .setPerBuyerSignals(adSelectionConfig.getPerBuyerSignals())
-                .setSellerSignals(adSelectionConfig.getSellerSignals())
-                .setTrustedScoringSignalsUri(adSelectionConfig.getTrustedScoringSignalsUri())
                 .build();
     }
 
