@@ -1094,7 +1094,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
@@ -1265,7 +1271,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -1328,7 +1340,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -1391,7 +1409,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -5042,24 +5066,19 @@ public class AdSelectionE2ETest {
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
         Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
 
-        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
-                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(
-                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1))
-                        .build();
-
-        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        // In order to meet ETLd+1 requirements creating Contextual ads with MockWebserver's host
+        AdTechIdentifier buyer2 =
+                AdTechIdentifier.fromString(
+                        mMockWebServerRule
+                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                .getHost());
         ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+                ContextualAdsFixture.generateContextualAds(
+                                buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(
                                         BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2))
                         .build();
-
-        buyerContextualAds.put(buyer1, contextualAds1);
         buyerContextualAds.put(buyer2, contextualAds2);
 
         return buyerContextualAds;
