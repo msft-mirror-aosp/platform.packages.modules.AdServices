@@ -124,6 +124,7 @@ public class TrustedServerAdSelectionRunnerTest {
                                     .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
                                     .setBidPrice(1))
                     .build();
+    private static final AdFilterer sAdFilterer = new AdFiltererNoOpImpl();
 
     private MockitoSession mStaticMockSession = null;
     private Context mContext = ApplicationProvider.getApplicationContext();
@@ -207,6 +208,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
@@ -264,6 +266,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -323,6 +326,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -387,6 +391,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         mFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -435,6 +440,7 @@ public class TrustedServerAdSelectionRunnerTest {
                         flags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         invokeRunAdSelection(
