@@ -29,6 +29,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -212,9 +213,9 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
         Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -228,6 +229,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
+        assertNotNull(result.getRegistrationId());
+        assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -2425,11 +2428,9 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
+        AsyncRegistration asyncRegistration = webSourceRegistrationRequest(request, true);
         Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        webSourceRegistrationRequest(request, true),
-                        asyncFetchStatus,
-                        asyncRedirect);
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -2438,6 +2439,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
         assertEquals(EVENT_ID_1, result.getEventId());
+        assertNotNull(result.getRegistrationId());
+        assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
         long expiry =
                 result.getEventTime()
                         + TimeUnit.SECONDS.toMillis(
@@ -3784,6 +3787,7 @@ public final class AsyncSourceFetcherTest {
                 System.currentTimeMillis(),
                 redirectType,
                 redirectCount,
+                UUID.randomUUID().toString(),
                 false);
     }
 
@@ -3837,6 +3841,7 @@ public final class AsyncSourceFetcherTest {
                     System.currentTimeMillis(),
                     AsyncRegistration.RedirectType.NONE,
                     0,
+                    UUID.randomUUID().toString(),
                     arDebugPermission);
         }
         return null;
@@ -3858,6 +3863,7 @@ public final class AsyncSourceFetcherTest {
             long mLastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             int redirectCount,
+            String registrationId,
             boolean debugKeyAllowed) {
         return new AsyncRegistration.Builder()
                 .setId(iD)
@@ -3880,6 +3886,7 @@ public final class AsyncSourceFetcherTest {
                 .setLastProcessingTime(mLastProcessingTime)
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
+                .setRegistrationId(registrationId)
                 .setDebugKeyAllowed(debugKeyAllowed)
                 .build();
     }
