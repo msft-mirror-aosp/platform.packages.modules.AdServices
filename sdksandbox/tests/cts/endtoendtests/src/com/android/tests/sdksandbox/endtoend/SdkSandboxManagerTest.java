@@ -619,6 +619,30 @@ public class SdkSandboxManagerTest {
                         });
     }
 
+    @Test
+    public void testStartSdkSandboxedActivityFailIfTheHandlerUnregistered() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        // Load SDK in sandbox
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        mRule.getScenario()
+                .onActivity(
+                        activity -> {
+                            ActivityStarter activityStarter = new ActivityStarter(activity);
+                            try {
+                                sdk.startActivityAfterUnregisterHandler(activityStarter);
+                                // Wait for the activity to be initiated and destroyed.
+                                Thread.sleep(1000);
+                                assertThat(activityStarter.isActivityStarted()).isFalse();
+                            } catch (Exception e) {
+                                fail(
+                                        "Exception is thrown while starting activity: "
+                                                + e.getMessage());
+                            }
+                        });
+    }
+
     // Helper method to load SDK_NAME_1
     private ICtsSdkProviderApi loadSdk() {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();

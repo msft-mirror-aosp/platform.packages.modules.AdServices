@@ -26,4 +26,5 @@ interface ICtsSdkProviderApi {
     void startActivity(IActivityStarter callback);
     String getPackageName();
     String getOpPackageName();
+    void startActivityAfterUnregisterHandler(IActivityStarter callback);
 }
