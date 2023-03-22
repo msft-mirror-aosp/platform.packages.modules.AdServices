@@ -180,7 +180,6 @@ public class AdSelectionFromOutcomesE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
-    private FrequencyCapDao mFrequencyCapDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionServiceImpl mAdSelectionService;
@@ -221,9 +220,9 @@ public class AdSelectionFromOutcomesE2ETest {
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
         mAppInstallDao = sharedDb.appInstallDao();
-        mFrequencyCapDao = sharedDb.frequencyCapDao();
+        FrequencyCapDao frequencyCapDao = sharedDb.frequencyCapDao();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDao, frequencyCapDao, mFlags);
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -239,6 +238,7 @@ public class AdSelectionFromOutcomesE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        frequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,

@@ -75,7 +75,6 @@ import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.adselection.SetAdCounterHistogramOverrideInput;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
-import android.adservices.adselection.UpdateAdCounterHistogramCallback;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -439,6 +438,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -544,6 +544,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -653,6 +654,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -768,6 +770,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -880,6 +883,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -998,6 +1002,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1164,6 +1169,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1300,6 +1306,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1454,6 +1461,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1605,6 +1613,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1745,6 +1754,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1889,6 +1899,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2048,6 +2059,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2185,6 +2197,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2284,6 +2297,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2382,6 +2396,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2486,6 +2501,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2585,6 +2601,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2679,6 +2696,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2772,6 +2790,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2866,6 +2885,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2980,6 +3000,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3117,6 +3138,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3204,6 +3226,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3255,6 +3278,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3301,6 +3325,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3352,6 +3377,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3415,6 +3441,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3474,6 +3501,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3537,6 +3565,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3601,6 +3630,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3706,6 +3736,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3813,6 +3844,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3916,6 +3948,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4016,6 +4049,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4058,6 +4092,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4115,6 +4150,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4172,6 +4208,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4220,6 +4257,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4271,6 +4309,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4316,6 +4355,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4365,6 +4405,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4456,6 +4497,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4561,6 +4603,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4670,6 +4713,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4784,6 +4828,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4881,6 +4926,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4978,6 +5024,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5102,6 +5149,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5208,6 +5256,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5316,6 +5365,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5371,6 +5421,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5426,6 +5477,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5475,6 +5527,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5530,6 +5583,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5597,6 +5651,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5658,6 +5713,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5723,6 +5779,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5787,6 +5844,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -5900,6 +5958,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6007,6 +6066,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6119,6 +6179,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6249,6 +6310,7 @@ public class AdSelectionServiceImplTest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -6368,63 +6430,6 @@ public class AdSelectionServiceImplTest {
                         eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
                         eq(STATUS_INVALID_ARGUMENT),
                         eq(0));
-    }
-
-    @Test
-    public void testUpdateAdCounterHistogramCallbackErrorReported() throws InterruptedException {
-        AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
-        UpdateAdCounterHistogramInput inputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(10)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
-                        .build();
-
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch resultLatch = new CountDownLatch(2);
-        UpdateAdCounterHistogramCallback callback =
-                new UpdateAdCounterHistogramTestErrorCallback(resultLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    resultLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
-
-        adSelectionService.updateAdCounterHistogram(inputParams, callback);
-        assertTrue(
-                "Timed out waiting for updateAdCounterHistogram call to complete",
-                resultLatch.await(5, TimeUnit.SECONDS));
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN),
-                        eq(STATUS_INTERNAL_ERROR),
-                        eq(0));
-    }
-
-    @Test
-    public void testUpdateAdCounterHistogramSuccess() throws InterruptedException {
-        UpdateAdCounterHistogramInput inputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(10)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
-                        .build();
-
-        UpdateAdCounterHistogramTestCallback callback =
-                callUpdateAdCounterHistogram(generateAdSelectionServiceImpl(), inputParams);
-        assertTrue("updateAdCounterHistogram() callback was unsuccessful", callback.mIsSuccess);
-
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN), eq(STATUS_SUCCESS), eq(0));
     }
 
     @Test
@@ -6871,6 +6876,7 @@ public class AdSelectionServiceImplTest {
                 mAdSelectionEntryDao,
                 mAppInstallDao,
                 mCustomAudienceDao,
+                mFrequencyCapDao,
                 mClient,
                 mDevContextFilter,
                 mLightweightExecutorService,
@@ -7135,13 +7141,16 @@ public class AdSelectionServiceImplTest {
         return callback;
     }
 
-    private UpdateAdCounterHistogramTestCallback callUpdateAdCounterHistogram(
-            AdSelectionServiceImpl adSelectionService, UpdateAdCounterHistogramInput inputParams)
-            throws InterruptedException {
+    private UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback
+            callUpdateAdCounterHistogram(
+                    AdSelectionServiceImpl adSelectionService,
+                    UpdateAdCounterHistogramInput inputParams)
+                    throws InterruptedException {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);
-        UpdateAdCounterHistogramTestCallback callback =
-                new UpdateAdCounterHistogramTestCallback(resultLatch);
+        UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback(
+                        resultLatch);
 
         // Wait for the logging call, which happens after the callback
         Answer<Void> countDownAnswer =
@@ -7295,43 +7304,6 @@ public class AdSelectionServiceImplTest {
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
-        }
-    }
-
-    public static class UpdateAdCounterHistogramTestCallback
-            extends UpdateAdCounterHistogramCallback.Stub {
-        protected final CountDownLatch mCountDownLatch;
-        boolean mIsSuccess = false;
-        FledgeErrorResponse mFledgeErrorResponse;
-
-        public UpdateAdCounterHistogramTestCallback(CountDownLatch countDownLatch) {
-            mCountDownLatch = countDownLatch;
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-        }
-
-        @Override
-        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
-            mFledgeErrorResponse = fledgeErrorResponse;
-            mCountDownLatch.countDown();
-        }
-    }
-
-    public static class UpdateAdCounterHistogramTestErrorCallback
-            extends UpdateAdCounterHistogramTestCallback {
-        public UpdateAdCounterHistogramTestErrorCallback(CountDownLatch countDownLatch) {
-            super(countDownLatch);
-        }
-
-        @Override
-        public void onSuccess() throws RemoteException {
-            mIsSuccess = true;
-            mCountDownLatch.countDown();
-            throw new RemoteException();
         }
     }
 
