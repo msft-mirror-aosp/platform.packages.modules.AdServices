@@ -339,6 +339,18 @@ public class UpdateAdCounterHistogramWorkerTest {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }
+
+        @Override
+        public String toString() {
+            return "UpdateAdCounterHistogramTestCallback{"
+                    + "mCountDownLatch="
+                    + mCountDownLatch
+                    + ", mIsSuccess="
+                    + mIsSuccess
+                    + ", mFledgeErrorResponse="
+                    + mFledgeErrorResponse
+                    + '}';
+        }
     }
 
     public static class UpdateAdCounterHistogramTestErrorCallback
@@ -367,6 +379,11 @@ public class UpdateAdCounterHistogramWorkerTest {
 
         public FlagsOverridingAdFiltering(boolean shouldEnableAdFilteringFeature) {
             mShouldEnableAdFilteringFeature = shouldEnableAdFilteringFeature;
+        }
+
+        @Override
+        public boolean getEnforceIsolateMaxHeapSize() {
+            return false;
         }
 
         @Override
