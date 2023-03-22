@@ -106,6 +106,9 @@ public class MeasurementDbMigratorV9Test extends MeasurementDbMigratorTestBase {
                 doesTableExistAndColumnCountMatch(db,
                       MeasurementTables.SourceDestination.TABLE, 3));
         assertSourceDestinationMigration(db);
+        // Assert foreign key relation is intact
+        db.delete(MeasurementTables.SourceContract.TABLE, null, null);
+        assertEmptySourceDestinationTable(db);
     }
 
     private Map<String, List<ContentValues>> createFakeDataV8() {
@@ -249,5 +252,13 @@ public class MeasurementDbMigratorV9Test extends MeasurementDbMigratorTestBase {
                 cursor.getString(
                         cursor.getColumnIndex(
                                 MeasurementTables.SourceDestination.DESTINATION)));
+    }
+
+    private void assertEmptySourceDestinationTable(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.SourceDestination.TABLE,
+                        null, null, null, null, null, null);
+        assertEquals(0, cursor.getCount());
     }
 }

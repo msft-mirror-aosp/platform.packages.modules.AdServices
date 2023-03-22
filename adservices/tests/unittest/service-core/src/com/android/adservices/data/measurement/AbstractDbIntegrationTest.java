@@ -20,6 +20,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class for parameterized tests that
@@ -193,7 +195,7 @@ public abstract class AbstractDbIntegrationTest {
         if (json.length() <= 10) {
             throw new IOException("json length less than 11 characters.");
         }
-        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
+        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/ ])", ".com"));
         JSONArray testArray = obj.getJSONArray("testCases");
 
         List<Object[]> testCases = new ArrayList<>();
@@ -398,7 +400,10 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                report.getAttributionDestinations().get(0).toString());
+                String.join(" ", report.getAttributionDestinations()
+                        .stream()
+                        .map(Uri::toString)
+                        .collect(Collectors.toList())));
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
                 report.getTriggerData().getValue());
