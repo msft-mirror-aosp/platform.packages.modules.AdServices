@@ -970,7 +970,7 @@ class MeasurementDao implements IMeasurementDao {
                             + "IN %2$s"
                         + "), distinct_enrollments as ("
                             + "SELECT DENSE_RANK() OVER ("
-                                + "PARTITION BY destination ORDER BY enrollment_id ASC"
+                                + "PARTITION BY destination ORDER BY enrollment_id"
                             + ") AS distinct_enrollment "
                             + "FROM joined"
                         + ") SELECT MAX(distinct_enrollment) FROM distinct_enrollments",
