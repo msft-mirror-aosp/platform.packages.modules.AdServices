@@ -30,6 +30,7 @@ android_test {
         "platform-test-options",
         "platform-test-rules",
         "adservices-test-scenarios",
+        "adservices-test-utility",
         "ub-uiautomator",
         "handheld-app-helpers",
         "framework-adservices-lib",
@@ -45,5 +46,5 @@ android_test {
         "res",
     ],
     test_suites: ["device-tests"],
-    min_sdk_version: "24",
+    min_sdk_version: "30",
 }
