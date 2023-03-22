@@ -60,6 +60,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -102,6 +103,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
+    @NonNull private final FrequencyCapDao mFrequencyCapDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ExecutorService mLightweightExecutor;
     @NonNull private final ExecutorService mBackgroundExecutor;
@@ -125,6 +127,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AppInstallDao appInstallDao,
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull FrequencyCapDao frequencyCapDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContextFilter devContextFilter,
             @NonNull ExecutorService lightweightExecutorService,
@@ -142,6 +145,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(frequencyCapDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContextFilter);
         Objects.requireNonNull(lightweightExecutorService);
@@ -155,6 +159,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
         mCustomAudienceDao = customAudienceDao;
+        mFrequencyCapDao = frequencyCapDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mDevContextFilter = devContextFilter;
         mLightweightExecutor = lightweightExecutorService;
@@ -181,6 +186,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                 SharedStorageDatabase.getInstance(context).appInstallDao(),
                 CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                SharedStorageDatabase.getInstance(context).frequencyCapDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.create(context, FlagsFactory.getFlags())),
@@ -503,15 +509,22 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             throw exception;
         }
 
-        // TODO(b/221876461): Implement service
-        int status = STATUS_SUCCESS;
-        try {
-            callback.onSuccess();
-        } catch (RemoteException exception) {
-            status = STATUS_INTERNAL_ERROR;
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(apiName, status, 0);
-        }
+        int callingUid = getCallingUid(apiName);
+
+        UpdateAdCounterHistogramWorker worker =
+                new UpdateAdCounterHistogramWorker(
+                        new AdCounterHistogramUpdaterImpl(mAdSelectionEntryDao, mFrequencyCapDao),
+                        mBackgroundExecutor,
+                        // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
+                        //  after aligning on Clock usage
+                        java.time.Clock.systemUTC(),
+                        mAdServicesLogger,
+                        mFlags,
+                        mAdSelectionServiceFilter,
+                        ConsentManager.getInstance(mContext),
+                        callingUid);
+
+        worker.updateAdCounterHistogram(inputParams, callback);
     }
 
     @Override
