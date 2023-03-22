@@ -80,10 +80,10 @@ public class PrebuiltLogicGenerator {
                     + "}";
 
     @VisibleForTesting
-    static final String AD_SELECTION_FROM_OUTCOMES_USE_CASE = "ad-selection-from-outcomes";
+    public static final String AD_SELECTION_FROM_OUTCOMES_USE_CASE = "ad-selection-from-outcomes";
 
     @VisibleForTesting
-    static final String AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION =
+    public static final String AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION =
             "waterfall-mediation-truncation";
 
     @VisibleForTesting
