@@ -75,7 +75,7 @@ public class DbHelperV1 extends DbHelper {
                     + " TEXT, "
                     + MeasurementTables.SourceContract.PUBLISHER_TYPE
                     + " INTEGER, "
-                    + MeasurementTables.SourceContract.APP_DESTINATION
+                    + MeasurementTablesDeprecated.SourceContract.APP_DESTINATION
                     + " TEXT, "
                     + MeasurementTables.SourceContract.ENROLLMENT_ID
                     + " TEXT, "
@@ -87,7 +87,7 @@ public class DbHelperV1 extends DbHelper {
                     + " INTEGER, "
                     + MeasurementTables.SourceContract.STATUS
                     + " INTEGER, "
-                    + MeasurementTablesDeprecated.Source.DEDUP_KEYS
+                    + MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS
                     + " TEXT, "
                     + MeasurementTables.SourceContract.SOURCE_TYPE
                     + " TEXT, "
@@ -107,7 +107,7 @@ public class DbHelperV1 extends DbHelper {
                     + " TEXT, "
                     + MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS
                     + " INTEGER, "
-                    + MeasurementTables.SourceContract.WEB_DESTINATION
+                    + MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION
                     + " TEXT, "
                     + MeasurementTables.SourceContract.DEBUG_KEY
                     + " INTEGER "
@@ -278,7 +278,7 @@ public class DbHelperV1 extends DbHelper {
                 + "ON "
                 + MeasurementTables.SourceContract.TABLE
                 + "( "
-                + MeasurementTables.SourceContract.APP_DESTINATION
+                + MeasurementTablesDeprecated.SourceContract.APP_DESTINATION
                 + ", "
                 + MeasurementTables.SourceContract.ENROLLMENT_ID
                 + ", "
@@ -303,9 +303,9 @@ public class DbHelperV1 extends DbHelper {
                 + "("
                 + MeasurementTables.SourceContract.PUBLISHER
                 + ", "
-                + MeasurementTables.SourceContract.APP_DESTINATION
+                + MeasurementTablesDeprecated.SourceContract.APP_DESTINATION
                 + ", "
-                + MeasurementTables.SourceContract.WEB_DESTINATION
+                + MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION
                 + ", "
                 + MeasurementTables.SourceContract.STATUS
                 + ", "

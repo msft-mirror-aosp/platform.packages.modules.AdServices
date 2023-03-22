@@ -202,7 +202,7 @@ public final class DbTestUtil {
             String indexListQuery =
                     "SELECT name FROM sqlite_master where type = 'index' AND tbl_name = '"
                             + tableName
-                            + "'";
+                            + "' ORDER BY name ASC";
             Cursor indexListCursorExpected = expectedDb.rawQuery(indexListQuery, null);
             Cursor indexListCursorActual = actualDb.rawQuery(indexListQuery, null);
             assertEquals(
