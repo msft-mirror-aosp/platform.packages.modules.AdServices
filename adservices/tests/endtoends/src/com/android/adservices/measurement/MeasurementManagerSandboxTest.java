@@ -45,6 +45,7 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -82,6 +83,7 @@ public class MeasurementManagerSandboxTest {
     @Before
     public void setUp() {
         // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         mMockCallbackExecutor = mock(Executor.class);
