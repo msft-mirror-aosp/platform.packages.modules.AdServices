@@ -25,6 +25,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
@@ -257,8 +258,6 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-// TODO(b/274723533): Uncomment after un-hiding the API
-/*
     @Test
     public void testPermissionNotRequested_reportInteraction() {
         long adSelectionId = 1;
@@ -285,7 +284,6 @@ public class PermissionsNoPermTest {
                         () -> mAdSelectionClient.reportInteraction(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
-*/
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {

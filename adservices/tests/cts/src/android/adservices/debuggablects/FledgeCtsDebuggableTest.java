@@ -222,18 +222,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
-    private static final String BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
-            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
-                    + "    trusted_bidding_signals, contextual_signals) {\n"
-                    + "    const ads = customAudience.ads;\n"
-                    + "    let result = null;\n"
-                    + "    for (const ad of ads) {\n"
-                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                    + "            result = ad;\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                    + "'render': result.render_uri };\n"
+    private static final String BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -270,18 +263,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
-    private static final String BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
-            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
-                    + "    trusted_bidding_signals, contextual_signals) {\n"
-                    + "    const ads = customAudience.ads;\n"
-                    + "    let result = null;\n"
-                    + "    for (const ad of ads) {\n"
-                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                    + "            result = ad;\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                    + "'render': result.render_uri };\n"
+    private static final String BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -789,11 +775,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
     */
 
-    @Ignore
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
             throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Enable registerAdBeacon feature
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
@@ -831,14 +817,14 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
