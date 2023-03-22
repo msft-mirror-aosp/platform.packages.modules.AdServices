@@ -18,6 +18,7 @@ package com.android.adservices.data.measurement;
 
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -60,6 +61,15 @@ public interface IMeasurementDao {
      * @return the requested Source
      */
     Source getSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link Source}'s destinations.
+     *
+     * @param sourceId ID of the requested Source
+     * @return a Pair of lists of app destination and web destination Uris
+     */
+    Pair<List<Uri>, List<Uri>> getSourceDestinations(@NonNull String sourceId)
+            throws DatastoreException;
 
     /**
      * Queries and returns the {@link Trigger}.
@@ -122,17 +132,18 @@ public interface IMeasurementDao {
      * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
     Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
-            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
-            throws DatastoreException;
+            @EventSurfaceType int publisherType, String enrollmentId,
+            List<Uri> excludedDestinations, @EventSurfaceType int destinationType,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
     Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
-            long windowStartTime, long windowEndTime) throws DatastoreException;
+            @EventSurfaceType int publisherType, List<Uri> destinations,
+            String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.

@@ -115,7 +115,6 @@ public abstract class E2ETest {
         // Keys used to compare actual with expected output
         List<String> STRINGS =
                 ImmutableList.of(
-                        "attribution_destination",
                         "scheduled_report_time",
                         "source_event_id",
                         "trigger_data",
@@ -123,6 +122,7 @@ public abstract class E2ETest {
                         "source_debug_key",
                         "trigger_debug_key");
         String DOUBLE = "randomized_trigger_rate";
+        String STRING_OR_ARRAY = "attribution_destination";
     }
 
     interface AggregateReportPayloadKeys {
@@ -599,6 +599,25 @@ public abstract class E2ETest {
         return true;
     }
 
+    private static boolean areEqualStringOrJSONArray(Object obj1, Object obj2)
+            throws JSONException {
+        if (obj1 instanceof String) {
+            return (obj2 instanceof String) && (obj1.equals(obj2));
+        } else {
+            JSONArray jsonArr1 = (JSONArray) obj1;
+            JSONArray jsonArr2 = (JSONArray) obj2;
+            if (jsonArr1.length() != jsonArr2.length()) {
+                return false;
+            }
+            for (int i = 0; i < jsonArr1.length(); i++) {
+                if (!jsonArr1.getString(i).equals(jsonArr2.getString(i))) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private boolean areEqualEventReportJsons(ReportType reportType, JSONObject obj1,
             JSONObject obj2) throws JSONException {
         JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
@@ -606,6 +625,10 @@ public abstract class E2ETest {
         if (normaliseDouble(payload1.getDouble(EventReportPayloadKeys.DOUBLE))
                 != normaliseDouble(payload2.getDouble(EventReportPayloadKeys.DOUBLE))) {
             log("Event payload double mismatch. Report type: " + reportType.name());
+            return false;
+        }
+        if (!areEqualStringOrJSONArray(payload1.get(EventReportPayloadKeys.STRING_OR_ARRAY),
+                payload2.get(EventReportPayloadKeys.STRING_OR_ARRAY))) {
             return false;
         }
         for (String key : EventReportPayloadKeys.STRINGS) {
@@ -862,6 +885,7 @@ public abstract class E2ETest {
         List<String> tableNames =
                 ImmutableList.of(
                         "msmt_source",
+                        "msmt_source_destination",
                         "msmt_trigger",
                         "msmt_attribution",
                         "msmt_event_report",

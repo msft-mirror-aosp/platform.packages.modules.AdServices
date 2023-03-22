@@ -522,11 +522,11 @@ public class MeasurementDbMigratorV6Test extends MeasurementDbMigratorTestBaseDe
             ContentValues sourceV6 = cursorRowToContentValues(cursor);
 
             for (String column : sourceV3.keySet()) {
-                if (column.equals(MeasurementTablesDeprecated.Source.DEDUP_KEYS)) {
+                if (column.equals(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS)) {
                     // The migration renamed the column from "dedup_keys" to
                     // "event_report_dedup_keys"
                     assertEquals(
-                            sourceV3.get(MeasurementTablesDeprecated.Source.DEDUP_KEYS),
+                            sourceV3.get(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS),
                             sourceV6.get(MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS));
                 } else {
                     assertEquals(sourceV3.get(column), sourceV6.get(column));
