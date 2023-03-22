@@ -311,11 +311,17 @@ public class AsyncRegistrationQueueRunnerTest {
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
         Assert.assertEquals(1, asyncReg1.getRedirectCount());
+        assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg1.getRegistrationId());
 
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
         Assert.assertEquals(1, asyncReg2.getRedirectCount());
+        assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg2.getRegistrationId());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -472,11 +478,17 @@ public class AsyncRegistrationQueueRunnerTest {
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
         Assert.assertEquals(1, asyncReg1.getRedirectCount());
+        Assert.assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg1.getRegistrationId());
 
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
         Assert.assertEquals(1, asyncReg2.getRedirectCount());
+        Assert.assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg2.getRegistrationId());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -2042,6 +2054,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 
@@ -2068,6 +2082,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 

@@ -547,7 +547,8 @@ public class AsyncRegistrationQueueRunner {
             long lastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             int redirectCount,
-            boolean debugKeyAllowed) {
+            boolean debugKeyAllowed,
+            String registrationId) {
         return new AsyncRegistration.Builder()
                 .setId(id)
                 .setEnrollmentId(enrollmentId)
@@ -570,6 +571,7 @@ public class AsyncRegistrationQueueRunner {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(debugKeyAllowed)
+                .setRegistrationId(registrationId)
                 .build();
     }
 
@@ -669,7 +671,8 @@ public class AsyncRegistrationQueueRunner {
                             System.currentTimeMillis(),
                             redirectsAndType.getRedirectType(),
                             asyncRegistration.getNextRedirectCount(),
-                            asyncRegistration.getDebugKeyAllowed()),
+                            asyncRegistration.getDebugKeyAllowed(),
+                            asyncRegistration.getRegistrationId()),
                     dao);
         }
     }
