@@ -261,8 +261,8 @@
           "trigger_data": "7",
           "source_debug_key": "111"
         },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "report_time": "1643235575000"
       },
       {
         "payload": {
@@ -274,8 +274,8 @@
           "trigger_data": "6",
           "source_debug_key": "111"
         },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "report_time": "1643235575000"
       },
       {
         "payload": {
@@ -287,8 +287,8 @@
           "trigger_data": "5",
           "source_debug_key": "111"
         },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411973000"
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "report_time": "1643235576000"
       }
     ],
     "debug_report_results": [{

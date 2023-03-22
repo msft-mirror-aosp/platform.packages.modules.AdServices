@@ -101,6 +101,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
+                adFilterer,
                 callerUid);
 
         Objects.requireNonNull(adServicesHttpsClient);
@@ -178,6 +179,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 callerUid,
                 adSelectionServiceFilter,
+                adFilterer,
                 adSelectionExecutionLogger);
 
         Objects.requireNonNull(adsScoreGenerator);

@@ -20,6 +20,7 @@ import static com.android.adservices.service.measurement.E2ETest.getAttributionS
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
 import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -42,6 +43,7 @@ public final class RegisterSource implements Action {
     public final String mPublisher;
     public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
+    public final boolean mArDebugPermission;
 
     public RegisterSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -72,6 +74,7 @@ public final class RegisterSource implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
+        mArDebugPermission = hasArDebugPermission(obj);
     }
 
     @Override
