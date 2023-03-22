@@ -422,6 +422,11 @@ class AttributionJobHandler {
             return false;
         }
 
+        Pair<List<Uri>, List<Uri>> destinations =
+                measurementDao.getSourceDestinations(source.getId());
+        source.setAppDestinations(destinations.first);
+        source.setWebDestinations(destinations.second);
+
         EventReport newEventReport =
                 new EventReport.Builder()
                         .populateFromSourceAndTrigger(source, trigger, eventTrigger)

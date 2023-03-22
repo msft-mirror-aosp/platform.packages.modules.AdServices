@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.content.Context;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -59,6 +60,8 @@ import java.util.List;
 public class EventReportingJobHandlerTest {
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
+    private static final List<Uri> ATTRIBUTION_DESTINATIONS = List.of(
+            Uri.parse("https://destination.test"));
 
     private static final EnrollmentData ENROLLMENT = new EnrollmentData.Builder()
             .setAttributionReportingUrl(List.of("https://ad-tech.test"))
@@ -113,6 +116,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
@@ -121,6 +125,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -152,6 +157,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
@@ -161,6 +167,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -190,6 +197,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .build();
@@ -197,6 +205,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -228,6 +237,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(SOURCE_DEBUG_KEY)
                         .build();
@@ -235,6 +245,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -266,6 +277,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setSourceDebugKey(null)
                         .setTriggerDebugKey(null)
@@ -274,6 +286,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -304,12 +317,14 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReportId")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .build();
         JSONObject eventReportPayload =
                 new EventReportPayload.Builder()
                         .setReportId(eventReport.getId())
                         .setSourceEventId(eventReport.getSourceEventId())
+                        .setAttributionDestination(eventReport.getAttributionDestinations())
                         .build()
                         .toJson();
 
@@ -355,6 +370,7 @@ public class EventReportingJobHandlerTest {
                 new EventReport.Builder()
                         .setId("eventReport1")
                         .setSourceEventId(new UnsignedLong(1234L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1000L)
                         .build();
@@ -362,12 +378,14 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport1.getId())
                         .setSourceEventId(eventReport1.getSourceEventId())
+                        .setAttributionDestination(eventReport1.getAttributionDestinations())
                         .build()
                         .toJson();
         EventReport eventReport2 =
                 new EventReport.Builder()
                         .setId("eventReport2")
                         .setSourceEventId(new UnsignedLong(12345L))
+                        .setAttributionDestinations(ATTRIBUTION_DESTINATIONS)
                         .setStatus(EventReport.Status.PENDING)
                         .setReportTime(1100L)
                         .build();
@@ -375,6 +393,7 @@ public class EventReportingJobHandlerTest {
                 new EventReportPayload.Builder()
                         .setReportId(eventReport2.getId())
                         .setSourceEventId(eventReport2.getSourceEventId())
+                        .setAttributionDestination(eventReport2.getAttributionDestinations())
                         .build()
                         .toJson();
 
