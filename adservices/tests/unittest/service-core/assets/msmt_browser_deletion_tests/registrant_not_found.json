@@ -7,7 +7,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "android-app://com.site1",
-        "appDestination": "android-app://com.site3",
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -21,7 +20,6 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site1",
-        "appDestination": "android-app://com.site3",
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -29,6 +27,18 @@
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant2"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S1",
+        "destination": "android-app://com.site3",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.site3",
+        "destinationType": 0
       }
     ],
     "triggers": [
@@ -123,7 +133,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "android-app://com.site1",
-        "appDestination": "android-app://com.site3",
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -137,7 +146,6 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "android-app://com.site1",
-        "appDestination": "android-app://com.site3",
         "enrollmentId": "enrollment-id",
         "eventTime": 8640000001,
         "expiryTime": 8640000030,
@@ -145,6 +153,18 @@
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant2"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S1",
+        "destination": "android-app://com.site3",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.site3",
+        "destinationType": 0
       }
     ],
     "triggers": [
