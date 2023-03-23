@@ -293,7 +293,7 @@ public class AsyncRegistrationQueueRunner {
             Uri publisher,
             @EventSurfaceType int publisherType,
             String enrollmentId,
-            Uri destination,
+            List<Uri> destinations,
             @EventSurfaceType int destinationType,
             long windowStartTime,
             long requestTime,
@@ -304,7 +304,7 @@ public class AsyncRegistrationQueueRunner {
                     publisher,
                     publisherType,
                     enrollmentId,
-                    destination,
+                    destinations,
                     destinationType,
                     windowStartTime,
                     requestTime);
@@ -320,7 +320,7 @@ public class AsyncRegistrationQueueRunner {
     private static Integer countDistinctEnrollmentsPerPublisher(
             Uri publisher,
             @EventSurfaceType int publisherType,
-            Uri destination,
+            List<Uri> destinations,
             String enrollmentId,
             long windowStartTime,
             long requestTime,
@@ -330,7 +330,7 @@ public class AsyncRegistrationQueueRunner {
             return dao.countDistinctEnrollmentsPerPublisherXDestinationInSource(
                     publisher,
                     publisherType,
-                    destination,
+                    destinations,
                     enrollmentId,
                     windowStartTime,
                     requestTime);
@@ -386,13 +386,13 @@ public class AsyncRegistrationQueueRunner {
                             publisher.get(),
                             publisherType,
                             source.getEnrollmentId(),
-                            source.getAppDestinations().get(0),
+                            source.getAppDestinations(),
                             EventSurfaceType.APP,
                             windowStartTime,
                             source.getEventTime(),
                             dao);
             if (optionalAppDestinationCount != null) {
-                if (optionalAppDestinationCount >= PrivacyParams
+                if (optionalAppDestinationCount + source.getAppDestinations().size() > PrivacyParams
                         .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: App destination count >= "
@@ -407,7 +407,7 @@ public class AsyncRegistrationQueueRunner {
                             + " dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource"
                             + " not present. %s ::: %s ::: %s ::: %s ::: %s",
                         source.getPublisher(),
-                        source.getAppDestinations().get(0),
+                        source.getAppDestinations(),
                         source.getEnrollmentId(),
                         windowStartTime,
                         source.getEventTime());
@@ -417,7 +417,7 @@ public class AsyncRegistrationQueueRunner {
                     countDistinctEnrollmentsPerPublisher(
                             publisher.get(),
                             publisherType,
-                            source.getAppDestinations().get(0),
+                            source.getAppDestinations(),
                             source.getEnrollmentId(),
                             windowStartTime,
                             source.getEventTime(),
@@ -439,7 +439,7 @@ public class AsyncRegistrationQueueRunner {
                                 + " not present"
                                 + ". %s ::: %s ::: %s ::: %s ::: $s",
                         source.getPublisher(),
-                        source.getAppDestinations().get(0),
+                        source.getAppDestinations(),
                         source.getEnrollmentId(),
                         windowStartTime,
                         source.getEventTime());
@@ -452,13 +452,13 @@ public class AsyncRegistrationQueueRunner {
                             publisher.get(),
                             publisherType,
                             source.getEnrollmentId(),
-                            source.getWebDestinations().get(0),
+                            source.getWebDestinations(),
                             EventSurfaceType.WEB,
                             windowStartTime,
                             source.getEventTime(),
                             dao);
             if (optionalDestinationCountWeb != null) {
-                if (optionalDestinationCountWeb >= PrivacyParams
+                if (optionalDestinationCountWeb + source.getWebDestinations().size() > PrivacyParams
                         .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner:  Web destination count >= "
@@ -473,7 +473,7 @@ public class AsyncRegistrationQueueRunner {
                             + " dao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource"
                             + " not present. %s ::: %s ::: %s ::: %s ::: %s",
                         source.getPublisher(),
-                        source.getAppDestinations().get(0),
+                        source.getWebDestinations(),
                         source.getEnrollmentId(),
                         windowStartTime,
                         source.getEventTime());
@@ -483,7 +483,7 @@ public class AsyncRegistrationQueueRunner {
                     countDistinctEnrollmentsPerPublisher(
                             publisher.get(),
                             publisherType,
-                            source.getWebDestinations().get(0),
+                            source.getWebDestinations(),
                             source.getEnrollmentId(),
                             windowStartTime,
                             source.getEventTime(),
@@ -506,7 +506,7 @@ public class AsyncRegistrationQueueRunner {
                                 + " not present"
                                 + ". %s ::: %s ::: %s ::: %s ::: $s",
                         source.getPublisher(),
-                        source.getAppDestinations().get(0),
+                        source.getWebDestinations(),
                         source.getEnrollmentId(),
                         windowStartTime,
                         source.getEventTime());
@@ -547,7 +547,8 @@ public class AsyncRegistrationQueueRunner {
             long lastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             int redirectCount,
-            boolean debugKeyAllowed) {
+            boolean debugKeyAllowed,
+            String registrationId) {
         return new AsyncRegistration.Builder()
                 .setId(id)
                 .setEnrollmentId(enrollmentId)
@@ -570,6 +571,7 @@ public class AsyncRegistrationQueueRunner {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(debugKeyAllowed)
+                .setRegistrationId(registrationId)
                 .build();
     }
 
@@ -624,13 +626,17 @@ public class AsyncRegistrationQueueRunner {
             // separately, so add a fake report entry for each type of destination if
             // non-null.
             if (!Objects.isNull(source.getAppDestinations())) {
-                dao.insertAttribution(
-                        createFakeAttributionRateLimit(source, source.getAppDestinations().get(0)));
+                for (Uri destination : source.getAppDestinations()) {
+                    dao.insertAttribution(
+                            createFakeAttributionRateLimit(source, destination));
+                }
             }
 
             if (!Objects.isNull(source.getWebDestinations())) {
-                dao.insertAttribution(
-                        createFakeAttributionRateLimit(source, source.getWebDestinations().get(0)));
+                for (Uri destination : source.getWebDestinations()) {
+                    dao.insertAttribution(
+                            createFakeAttributionRateLimit(source, destination));
+                }
             }
         }
     }
@@ -669,7 +675,8 @@ public class AsyncRegistrationQueueRunner {
                             System.currentTimeMillis(),
                             redirectsAndType.getRedirectType(),
                             asyncRegistration.getNextRedirectCount(),
-                            asyncRegistration.getDebugKeyAllowed()),
+                            asyncRegistration.getDebugKeyAllowed(),
+                            asyncRegistration.getRegistrationId()),
                     dao);
         }
     }

@@ -51,7 +51,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTablesDeprecated.Source.DEDUP_KEYS,
+                MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",

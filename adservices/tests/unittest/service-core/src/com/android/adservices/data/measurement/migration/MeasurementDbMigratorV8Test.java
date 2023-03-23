@@ -41,7 +41,7 @@ import java.util.UUID;
 @RunWith(MockitoJUnitRunner.class)
 public class MeasurementDbMigratorV8Test extends MeasurementDbMigratorTestBase {
     @Test
-    public void performMigration_v6ToV7WithData_maintainsDataIntegrity() {
+    public void performMigration_v7ToV8WithData_maintainsDataIntegrity() {
         // Setup
         MeasurementDbHelper dbHelper =
                 new MeasurementDbHelper(

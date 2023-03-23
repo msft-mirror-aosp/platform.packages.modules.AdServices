@@ -50,6 +50,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Set;
@@ -144,6 +145,7 @@ public class MainActivity extends Activity {
 
                                 @Override
                                 public void onError(LoadSdkException error) {
+                                    Log.e(TAG, "Failed: " + error);
                                     makeToast("Failed: " + error);
                                 }
                             };
@@ -203,30 +205,40 @@ public class MainActivity extends Activity {
                         return;
                     }
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Set size in MB");
+                    builder.setTitle("Set size in MB (1-100)");
                     final EditText input = new EditText(this);
                     input.setInputType(InputType.TYPE_CLASS_NUMBER);
                     builder.setView(input);
                     builder.setPositiveButton(
                             "Create",
                             (dialog, which) -> {
-                                int sizeInMb = -1;
-                                try {
-                                    sizeInMb = Integer.parseInt(input.getText().toString());
-                                } catch (Exception ignore) {
-                                }
+                                final int sizeInMb = Integer.parseInt(input.getText().toString());
                                 if (sizeInMb <= 0 || sizeInMb > 100) {
                                     makeToast("Please provide a value between 1 and 100");
                                     return;
                                 }
                                 IBinder binder = mSandboxedSdk.getInterface();
                                 ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                                try {
-                                    String response = sdkApi.createFile(sizeInMb);
-                                    makeToast(response);
-                                } catch (RemoteException e) {
-                                    throw new RuntimeException(e);
-                                }
+
+                                BackgroundThread.getExecutor()
+                                        .execute(
+                                                () -> {
+                                                    try {
+                                                        String response =
+                                                                sdkApi.createFile(sizeInMb);
+                                                        Log.i(TAG, response);
+                                                        makeToast(response);
+                                                    } catch (RemoteException e) {
+                                                        Log.e(
+                                                                TAG,
+                                                                "Failed to createFile: "
+                                                                        + e.getMessage(),
+                                                                e);
+                                                        makeToast(
+                                                                "Failed to createFile: "
+                                                                        + e.getMessage());
+                                                    }
+                                                });
                             });
                     builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
                     builder.show();
@@ -286,7 +298,9 @@ public class MainActivity extends Activity {
                     LinearLayout linearLayout = new LinearLayout(this);
                     linearLayout.setOrientation(1); // 1 is for vertical orientation
                     final EditText inputKey = new EditText(this);
+                    inputKey.setText("key");
                     final EditText inputValue = new EditText(this);
+                    inputValue.setText("value");
                     linearLayout.addView(inputKey);
                     linearLayout.addView(inputValue);
                     alert.setView(linearLayout);
@@ -294,42 +308,46 @@ public class MainActivity extends Activity {
                     alert.setPositiveButton(
                             "Sync",
                             (dialog, which) -> {
-                                sHandler.post(
-                                        () -> {
-                                            final SharedPreferences pref =
-                                                    PreferenceManager.getDefaultSharedPreferences(
-                                                            getApplicationContext());
-                                            String keyToSync = inputKey.getText().toString();
-                                            String valueToSync = inputValue.getText().toString();
-                                            pref.edit().putString(keyToSync, valueToSync).commit();
-                                            mSdkSandboxManager.addSyncedSharedPreferencesKeys(
-                                                    Set.of(keyToSync));
-                                            IBinder binder = mSandboxedSdk.getInterface();
-                                            ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                                            try {
-                                                // Allow some time for data to sync
-                                                Thread.sleep(1000);
-                                                String syncedKeysValue =
-                                                        sdkApi.getSyncedSharedPreferencesString(
-                                                                keyToSync);
-                                                if (syncedKeysValue.equals(valueToSync)) {
-                                                    makeToast(
-                                                            "Key was synced successfully\n"
-                                                                    + "Key is : "
-                                                                    + keyToSync
-                                                                    + " Value is : "
-                                                                    + syncedKeysValue);
-                                                } else {
-                                                    makeToast("Key was not synced");
-                                                }
-                                            } catch (Exception e) {
-                                                throw new RuntimeException(e);
-                                            }
-                                        });
+                                onSyncKeyPressed(inputKey, inputValue);
                             });
                     alert.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
                     alert.show();
                 });
+    }
+
+    private void onSyncKeyPressed(EditText inputKey, EditText inputValue) {
+        BackgroundThread.getHandler()
+                .post(
+                        () -> {
+                            final SharedPreferences pref =
+                                    PreferenceManager.getDefaultSharedPreferences(
+                                            getApplicationContext());
+                            String keyToSync = inputKey.getText().toString();
+                            String valueToSync = inputValue.getText().toString();
+                            pref.edit().putString(keyToSync, valueToSync).commit();
+                            mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(keyToSync));
+                            IBinder binder = mSandboxedSdk.getInterface();
+                            ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                            try {
+                                // Allow some time for data to sync
+                                Thread.sleep(1000);
+                                String syncedKeysValue =
+                                        sdkApi.getSyncedSharedPreferencesString(keyToSync);
+                                if (syncedKeysValue.equals(valueToSync)) {
+                                    makeToast(
+                                            "Key was synced successfully\n"
+                                                    + "Key is : "
+                                                    + keyToSync
+                                                    + " Value is : "
+                                                    + syncedKeysValue);
+                                } else {
+                                    makeToast("Key was not synced");
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Failed to sync keys: " + e.getMessage(), e);
+                                makeToast("Failed to sync keys: " + e.getMessage());
+                            }
+                        });
     }
 
     private void registerStartActivityButton() {

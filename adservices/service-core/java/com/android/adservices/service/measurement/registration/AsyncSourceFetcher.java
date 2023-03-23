@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
@@ -64,7 +65,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -246,30 +246,60 @@ public class AsyncSourceFetcher {
         }
 
         if (appUri != null) {
-            result.setAppDestinations(List.of(getBaseUri(appUri)));
+            List<Uri> appDestinations;
+            if (shouldOverrideDestinationAppSource && !isWebSource
+                    && appDestinationFromRequest != null) {
+                appDestinations = List.of(appDestinationFromRequest);
+            } else {
+                appDestinations = List.of(getBaseUri(appUri));
+            }
+            result.setAppDestinations(appDestinations);
         }
 
-        if (shouldValidateDestinationWebSource
-                && webDestinationFromRequest != null // Only validate when non-null in request
-                && !doUriFieldsMatch(
-                        json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with the supplied one!");
+        boolean shouldMatchAtLeastOneWebDestination = shouldValidateDestinationWebSource
+                && webDestinationFromRequest != null;
+        boolean matchedOneWebDestination = false;
+
+        if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
+            Set<Uri> destinationSet = new HashSet<>();
+            JSONArray jsonDestinations;
+            Object obj = json.get(SourceHeaderContract.WEB_DESTINATION);
+            if (obj instanceof String) {
+                jsonDestinations = new JSONArray();
+                jsonDestinations.put(json.getString(SourceHeaderContract.WEB_DESTINATION));
+            } else {
+                jsonDestinations = json.getJSONArray(SourceHeaderContract.WEB_DESTINATION);
+            }
+            if (jsonDestinations.length() > MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION) {
+                LogUtil.d("Source registration exceeded the number of allowed destinations.");
+                return false;
+            }
+            for (int i = 0; i < jsonDestinations.length(); i++) {
+                Uri destination = Uri.parse(jsonDestinations.getString(i));
+                if (webDestinationFromRequest != null
+                        && webDestinationFromRequest.equals(destination)) {
+                    matchedOneWebDestination = true;
+                }
+                Optional<Uri> topPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(destination);
+                if (!topPrivateDomainAndScheme.isPresent()) {
+                    LogUtil.d("Unable to extract top private domain and scheme from web "
+                            + "destination.");
+                    return false;
+                } else {
+                    destinationSet.add(topPrivateDomainAndScheme.get());
+                }
+            }
+            List<Uri> destinationList = new ArrayList<>();
+            destinationList.addAll(destinationSet);
+            result.setWebDestinations(destinationList);
+        }
+
+        if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
+            LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
-        if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
-            Uri webDestination = Uri.parse(json.getString(SourceHeaderContract.WEB_DESTINATION));
-            Optional<Uri> topPrivateDomainAndScheme = Web.topPrivateDomainAndScheme(webDestination);
-            if (!topPrivateDomainAndScheme.isPresent()) {
-                LogUtil.d("Unable to extract top private domain and scheme from web destination.");
-                return false;
-            } else {
-                result.setWebDestinations(List.of(topPrivateDomainAndScheme.get()));
-            }
-        }
-        if (shouldOverrideDestinationAppSource && !isWebSource
-                && appDestinationFromRequest != null) {
-            result.setAppDestinations(List.of(appDestinationFromRequest));
-        }
+
         return true;
     }
 
@@ -357,15 +387,6 @@ public class AsyncSourceFetcher {
         return isDestinationAvailable;
     }
 
-    private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
-            throws JSONException {
-        if (json.isNull(fieldName) && expectedValue == null) {
-            return true;
-        }
-        return !json.isNull(fieldName)
-                && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
-    }
-
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
@@ -385,7 +406,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getId(),
+                asyncRegistration.getRegistrationId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
