@@ -18,8 +18,10 @@ package android.adservices.test.scenario.adservices.utils;
 
 import android.Manifest;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.rules.TestRule;
@@ -51,8 +53,10 @@ public class SelectAdsFlagRule implements TestRule {
     }
 
     private static void disableBackoff() {
-        ShellUtils.runShellCommand(
-                "am service-restart-backoff disable " + CompatTestUtils.getAdServicesPackageName());
+        String packageName =
+                AdservicesTestHelper.getAdServicesPackageName(
+                        ApplicationProvider.getApplicationContext());
+        ShellUtils.runShellCommand("am service-restart-backoff disable " + packageName);
     }
 
     private static void extendAuctionTimeouts() {

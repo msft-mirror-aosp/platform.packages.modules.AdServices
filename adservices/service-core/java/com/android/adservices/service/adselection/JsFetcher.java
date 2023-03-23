@@ -30,12 +30,10 @@ import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import java.util.List;
 import java.util.Objects;
 
 /** Class to fetch JavaScript code both on and off device. */
@@ -174,15 +172,9 @@ public class JsFetcher {
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current Custom Audience. "
                                                 + "Skipping call to server.");
-                                final ImmutableMap<String, List<String>> versionHeader =
-                                        JsVersionHelper.constructVersionHeader(
-                                                JsVersionHelper
-                                                        .JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                                decisionLogicUri.getRequestProperties());
                                 return Futures.immediateFuture(
                                         AdServicesHttpClientResponse.builder()
                                                 .setResponseBody(jsOverride)
-                                                .setResponseHeaders(versionHeader)
                                                 .build());
                             }
                         },

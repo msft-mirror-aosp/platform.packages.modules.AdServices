@@ -21,6 +21,8 @@ import com.android.adservices.service.measurement.PrivacyParams;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Combinatorics utilities used for randomization.
@@ -192,55 +194,61 @@ public class Combinatorics {
      * Using dynamic programming to compute number of states. Assuming the parameter validation has
      * been checked to avoid overflow or out of memory error
      *
-     * @param parameter number of bucket increments (equivalent to number of triggers)
-     * @param dp storage for dynamic programming)
+     * @param totalCap total incremental cap
+     * @param perTypeNumWindowList reporting window per trigger data
+     * @param perTypeCapList cap per trigger data
      * @return number of states
      */
-    private static int getNumStatesDynamicProgrammingRecursive(
-            ReportParametersWrapper parameter, HashMap<ReportParametersWrapper, Integer> dp) {
-        if (!dp.containsKey(parameter)) {
-            if (parameter.getPerTypeNumWindowList().length == 0) dp.put(parameter, 1);
-            else if (parameter.getPerTypeNumWindowList()[parameter.getLengthOfWindowList() - 1]
-                    == 0) {
-                ReportParametersWrapper newPara =
-                        new ReportParametersWrapper(
-                                parameter.getTotalCap(),
-                                Arrays.copyOfRange(
-                                        parameter.getPerTypeNumWindowList(),
-                                        0,
-                                        parameter.getLengthOfWindowList() - 1),
-                                Arrays.copyOfRange(
-                                        parameter.getPerTypeCapList(),
-                                        0,
-                                        parameter.getLengthOfWindowList() - 1));
-                int result = getNumStatesDynamicProgrammingRecursive(newPara, dp);
-                dp.put(parameter, result);
+    private static int getNumStatesRecursive(int totalCap, int[] perTypeNumWindowList,
+            int[] perTypeCapList) {
+        int index = perTypeNumWindowList.length - 1;
+        return getNumStatesRecursive(
+            totalCap,
+            index,
+            perTypeNumWindowList[index],
+            perTypeCapList[index],
+            perTypeNumWindowList,
+            perTypeCapList,
+            new HashMap<>());
+    }
+
+    private static int getNumStatesRecursive(
+            int totalCap,
+            int index,
+            int winVal,
+            int capVal,
+            int[] perTypeNumWindowList,
+            int[] perTypeCapList,
+            Map<List<Integer>, Integer> dp) {
+        List<Integer> key = List.of(totalCap, index, winVal, capVal);
+        if (!dp.containsKey(key)) {
+            if (winVal == 0 && index == 0) {
+                dp.put(key, 1);
+            } else if (winVal == 0) {
+                dp.put(key, getNumStatesRecursive(
+                        totalCap,
+                        index - 1,
+                        perTypeNumWindowList[index - 1],
+                        perTypeCapList[index - 1],
+                        perTypeNumWindowList,
+                        perTypeCapList,
+                        dp));
             } else {
                 int result = 0;
-                for (int i = 0;
-                        i
-                                <= Math.min(
-                                        parameter
-                                                .getPerTypeCapList()[
-                                                parameter.getLengthOfWindowList() - 1],
-                                        parameter.getTotalCap());
-                        i++) {
-                    ReportParametersWrapper newPara =
-                            new ReportParametersWrapper(
-                                    parameter.getTotalCap(),
-                                    parameter.getPerTypeNumWindowList(),
-                                    parameter.getPerTypeCapList());
-                    newPara.modifyTotalCap(-i);
-                    newPara.modifyLastElementPerTypeCapListWrapper(-i);
-                    newPara.modifyLastElementPerTypeNumWindowList(-1);
-                    result =
-                            Math.addExact(
-                                    result, getNumStatesDynamicProgrammingRecursive(newPara, dp));
+                for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
+                    result = Math.addExact(result, getNumStatesRecursive(
+                            totalCap - i,
+                            index,
+                            winVal - 1,
+                            capVal - i,
+                            perTypeNumWindowList,
+                            perTypeCapList,
+                            dp));
                 }
-                dp.put(parameter, result);
+                dp.put(key, result);
             }
         }
-        return dp.get(parameter);
+        return dp.get(key);
     }
 
     /**
@@ -274,10 +282,7 @@ public class Combinatorics {
             return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
         }
 
-        HashMap<ReportParametersWrapper, Integer> dp = new HashMap<>();
-        ReportParametersWrapper para =
-                new ReportParametersWrapper(totalCap, perTypeNumWindowList, perTypeCapList);
-        return getNumStatesDynamicProgrammingRecursive(para, dp);
+        return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
     }
 
     private static boolean validateInputReportingPara(

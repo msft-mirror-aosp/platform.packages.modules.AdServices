@@ -18,12 +18,15 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.ContextualAds;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import java.util.List;
 
 /** Replacement for {@link AdFiltererImpl} if filtering is turned off. */
 public final class AdFiltererNoOpImpl implements AdFilterer {
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     /**
      * Identity function that returns its input.
@@ -33,6 +36,7 @@ public final class AdFiltererNoOpImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
+        logSkip();
         return cas;
     }
 
@@ -44,6 +48,11 @@ public final class AdFiltererNoOpImpl implements AdFilterer {
      */
     @Override
     public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        logSkip();
         return contextualAds;
+    }
+
+    private static void logSkip() {
+        sLogger.v("Ad filtering is disabled, skipping");
     }
 }

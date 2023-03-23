@@ -2187,7 +2187,7 @@ public class AdSelectionE2ETest {
                         .setBuyer(dBCustomAudienceForBuyer2.getBuyer())
                         .setName(dBCustomAudienceForBuyer2.getName())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
-                        .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS_V3)
+                        .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS)
                         .setTrustedBiddingData(
                                 new JSONObject(TRUSTED_BIDDING_SIGNALS_SERVER_DATA).toString())
                         .build();

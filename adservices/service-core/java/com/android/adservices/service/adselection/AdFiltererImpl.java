@@ -23,6 +23,7 @@ import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
@@ -37,6 +38,8 @@ import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Clock mClock;
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
@@ -66,10 +69,14 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
+        sLogger.v("Applying filters to %d CAs.", cas.size());
         List<DBCustomAudience> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
+        int totalAds = 0;
+        int remainingAds = 0;
         for (DBCustomAudience ca : cas) {
             List<DBAdData> filteredAds = new ArrayList<>();
+            totalAds += ca.getAds().size();
             for (DBAdData ad : ca.getAds()) {
                 if (doesAdPassFilters(
                         ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
@@ -78,8 +85,13 @@ public final class AdFiltererImpl implements AdFilterer {
             }
             if (!filteredAds.isEmpty()) {
                 toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
+                remainingAds += filteredAds.size();
             }
         }
+        sLogger.v(
+                "Filtering finished. %d CAs of the original %d remain. "
+                        + "%d Ads of the original %d remain.",
+                toReturn.size(), cas.size(), remainingAds, totalAds);
         return toReturn;
     }
 
@@ -92,6 +104,7 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        sLogger.v("Applying filters to %d contextual ads.", contextualAds.getAdsWithBid().size());
         List<AdWithBid> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
         for (AdWithBid ad : contextualAds.getAdsWithBid()) {
@@ -105,6 +118,9 @@ public final class AdFiltererImpl implements AdFilterer {
                 toReturn.add(ad);
             }
         }
+        sLogger.v(
+                "Filtering finished. %d contextual ads of the original %d remain.",
+                toReturn.size(), contextualAds.getAdsWithBid().size());
         return new ContextualAds.Builder()
                 .setAdsWithBid(toReturn)
                 .setDecisionLogicUri(contextualAds.getDecisionLogicUri())

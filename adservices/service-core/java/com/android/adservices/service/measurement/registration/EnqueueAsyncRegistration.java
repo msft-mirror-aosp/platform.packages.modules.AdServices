@@ -87,6 +87,7 @@ public class EnqueueAsyncRegistration {
                             AsyncRegistration.RedirectType.ANY,
                             false,
                             adIdPermission,
+                            UUID.randomUUID().toString(),
                             dao);
                 });
     }
@@ -135,6 +136,7 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                UUID.randomUUID().toString(),
                                 dao);
                     }
                 });
@@ -183,6 +185,7 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                UUID.randomUUID().toString(),
                                 dao);
                     }
                 });
@@ -205,6 +208,7 @@ public class EnqueueAsyncRegistration {
             @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
             boolean adIdPermission,
+            String registrationId,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
         AsyncRegistration asyncRegistration =
@@ -225,6 +229,7 @@ public class EnqueueAsyncRegistration {
                         .setRedirectType(redirectType)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .setAdIdPermission(adIdPermission)
+                        .setRegistrationId(registrationId)
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);
