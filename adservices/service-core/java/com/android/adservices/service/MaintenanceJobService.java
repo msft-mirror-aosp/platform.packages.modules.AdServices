@@ -34,6 +34,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -61,6 +62,13 @@ public final class MaintenanceJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("MaintenanceJobService.onStartJob");
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling MaintenanceJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()
                 && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {
