@@ -160,27 +160,6 @@ public class SdkFledge extends SandboxedSdkProvider {
             Log.e(TAG, errorMessage);
             throw new LoadSdkException(e, new Bundle());
         }
-        // TODO(b/274837158) Uncomment after API is un-hidden
-//        String decisionLogicJs =
-//                "function scoreAd(ad, bid, auction_config, seller_signals,"
-//                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-//                        + " custom_audience_signal) { \n"
-//                        + "  return {'status': 0, 'score': bid };\n"
-//                        + "}\n"
-//                        + "function reportResult(ad_selection_config, render_uri, bid,"
-//                        + " contextual_signals) { \n"
-//                        + "    registerAdBeacon('click', '"
-//                        + SELLER_CLICK_URI
-//                        + "');\n"
-//                        + "    registerAdBeacon('hover', '"
-//                        + SELLER_HOVER_URI
-//                        + "');\n"
-//                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-//                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-//                        + getUri(SELLER.toString(), SELLER_REPORTING_PATH).toString()
-//                        + "' } };\n"
-//                        + "}";
-
         String decisionLogicJs =
                 "function scoreAd(ad, bid, auction_config, seller_signals,"
                         + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -189,32 +168,17 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + "}\n"
                         + "function reportResult(ad_selection_config, render_uri, bid,"
                         + " contextual_signals) { \n"
+                        + "    registerAdBeacon('click', '"
+                        + SELLER_CLICK_URI
+                        + "');\n"
+                        + "    registerAdBeacon('hover', '"
+                        + SELLER_HOVER_URI
+                        + "');\n"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + getUri(SELLER.toString(), SELLER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
-
-
-        // TODO(b/274837158) Uncomment after API is un-hidden
-//        String biddingLogicJsBuyer1 =
-//                "function generateBid(ad, auction_signals, per_buyer_signals,"
-//                        + " trusted_bidding_signals, contextual_signals,"
-//                        + " custom_audience_signals) { \n"
-//                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-//                        + "}\n"
-//                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-//                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-//                        + "    registerAdBeacon('click', '"
-//                        + BUYER_1_CLICK_URI
-//                        + "');\n"
-//                        + "    registerAdBeacon('hover', '"
-//                        + BUYER_1_HOVER_URI
-//                        + "');\n"
-//                        + " return {'status': 0, 'results': {'reporting_uri': '"
-//                        + getUri(BUYER_1.toString(), BUYER_REPORTING_PATH).toString()
-//                        + "' } };\n"
-//                        + "}";
 
         String biddingLogicJsBuyer1 =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -224,30 +188,16 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + "    registerAdBeacon('click', '"
+                        + BUYER_1_CLICK_URI
+                        + "');\n"
+                        + "    registerAdBeacon('hover', '"
+                        + BUYER_1_HOVER_URI
+                        + "');\n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + getUri(BUYER_1.toString(), BUYER_REPORTING_PATH).toString()
                         + "' } };\n"
                         + "}";
-
-        // TODO(b/274837158) Uncomment after API is un-hidden
-//        String biddingLogicJsBuyer2 =
-//                "function generateBid(ad, auction_signals, per_buyer_signals,"
-//                        + " trusted_bidding_signals, contextual_signals,"
-//                        + " custom_audience_signals) { \n"
-//                        + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-//                        + "}\n"
-//                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-//                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-//                        + "    registerAdBeacon('click', '"
-//                        + BUYER_2_CLICK_URI
-//                        + "');\n"
-//                        + "    registerAdBeacon('hover', '"
-//                        + BUYER_2_HOVER_URI
-//                        + "');\n"
-//                        + " return {'status': 0, 'results': {'reporting_uri': '"
-//                        + getUri(BUYER_2.toString(), BUYER_REPORTING_PATH).toString()
-//                        + "' } };\n"
-//                        + "}";
 
         String biddingLogicJsBuyer2 =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -257,6 +207,12 @@ public class SdkFledge extends SandboxedSdkProvider {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                        + "    registerAdBeacon('click', '"
+                        + BUYER_2_CLICK_URI
+                        + "');\n"
+                        + "    registerAdBeacon('hover', '"
+                        + BUYER_2_HOVER_URI
+                        + "');\n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + getUri(BUYER_2.toString(), BUYER_REPORTING_PATH).toString()
                         + "' } };\n"
@@ -371,38 +327,35 @@ public class SdkFledge extends SandboxedSdkProvider {
             throw new LoadSdkException(e, new Bundle());
         }
 
-        // TODO(b/274837158) Uncomment after API is un-hidden
+        try {
+            ReportInteractionRequest reportInteractionClickRequest =
+                    new ReportInteractionRequest(
+                            adSelectionId,
+                            CLICK_INTERACTION,
+                            INTERACTION_DATA,
+                            BUYER_DESTINATION | SELLER_DESTINATION);
+            ReportInteractionRequest reportInteractionHoverRequest =
+                    new ReportInteractionRequest(
+                            adSelectionId,
+                            HOVER_INTERACTION,
+                            INTERACTION_DATA,
+                            BUYER_DESTINATION | SELLER_DESTINATION);
 
-        //        try {
-        //            ReportInteractionRequest reportInteractionClickRequest =
-        //                    new ReportInteractionRequest(
-        //                            adSelectionId,
-        //                            CLICK_INTERACTION,
-        //                            INTERACTION_DATA,
-        //                            BUYER_DESTINATION | SELLER_DESTINATION);
-        //
-        //            ReportInteractionRequest reportInteractionHoverRequest =
-        //                    new ReportInteractionRequest(
-        //                            adSelectionId,
-        //                            HOVER_INTERACTION,
-        //                            INTERACTION_DATA,
-        //                            BUYER_DESTINATION | SELLER_DESTINATION);
-        //
-        //            // Performing interaction reporting, and asserting that no exception is thrown
-        //            mAdSelectionClient
-        //                    .reportInteraction(reportInteractionClickRequest)
-        //                    .get(10, TimeUnit.SECONDS);
-        //            mAdSelectionClient
-        //                    .reportInteraction(reportInteractionHoverRequest)
-        //                    .get(10, TimeUnit.SECONDS);
-        //        } catch (Exception e) {
-        //            String errorMessage =
-        //                    String.format(
-        //                            "Error encountered during interaction reporting: message is
-        // %s", e.getMessage());
-        //            Log.e(TAG, errorMessage);
-        //            throw new LoadSdkException(e, new Bundle());
-        //        }
+            // Performing interaction reporting, and asserting that no exception is thrown
+            mAdSelectionClient
+                    .reportInteraction(reportInteractionClickRequest)
+                    .get(10, TimeUnit.SECONDS);
+            mAdSelectionClient
+                    .reportInteraction(reportInteractionHoverRequest)
+                    .get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            String errorMessage =
+                    String.format(
+                            "Error encountered during interaction reporting: message is %s",
+                            e.getMessage());
+            Log.e(TAG, errorMessage);
+            throw new LoadSdkException(e, new Bundle());
+        }
 
         try {
             UpdateAdCounterHistogramRequest updateHistogramRequest =

@@ -112,13 +112,9 @@ public class AdSelectionClient {
     /**
      * Invokes the {@code reportInteraction} method of {@link AdSelectionManager}, and returns a
      * Void future
-     *
-     * @hide
      */
     @NonNull
     public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
-        // TODO(b/274723533): Uncomment this after un-hiding
-/*
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mAdSelectionManager.reportInteraction(
@@ -137,8 +133,6 @@ public class AdSelectionClient {
                             });
                     return "reportInteraction";
                 });
-*/
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**

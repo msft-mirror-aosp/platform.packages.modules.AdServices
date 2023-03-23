@@ -54,8 +54,8 @@
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
-        <!-- Disable Register Ad Beacon Feature at setup -->
-        <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
+        <!-- Enable Register Ad Beacon Feature at setup -->
+        <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled true" />
 
         <!-- Disable Register Ad Beacon Feature at teardown -->
         <option name="teardown-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
