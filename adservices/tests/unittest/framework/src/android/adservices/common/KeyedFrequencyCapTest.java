@@ -177,10 +177,17 @@ public class KeyedFrequencyCapTest {
     }
 
     @Test
-    public void testBuildZeroCount_throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setMaxCount(0));
+    public void testBuildZeroCount_success() {
+        final KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder()
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setMaxCount(0)
+                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .build();
+
+        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(originalCap.getMaxCount()).isEqualTo(0);
+        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
     }
 
     @Test
