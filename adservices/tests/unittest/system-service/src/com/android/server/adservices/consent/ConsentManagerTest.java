@@ -285,28 +285,6 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testTopicsConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isFalse();
-        consentManager.recordTopicsConsentPageDisplayed();
-
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testFledgeAndMsmtConsentPageDisplayed() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the fledge consent page displayed is false.
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        consentManager.recordFledgeAndMsmtConsentPageDisplayed();
-
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
     public void testDeleteConsentDataStoreDir() throws IOException {
         int userIdentifier = 0;
         ConsentManager consentManager =
@@ -320,6 +298,36 @@ public class ConsentManagerTest {
         assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
 
         assertThat(Files.exists(packageDir)).isFalse();
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(-1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(-1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(0);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
     }
 
     @Test

@@ -17,6 +17,9 @@
 <configuration description="Config for Ad Services Settings App test cases">
     <option name="test-tag" value="AdServicesApkUITests" />
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
+    <!-- disable device config sync during test -->
+    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -36,11 +39,6 @@
     <target_preparer class="com.android.compatibility.common.tradefed.targetprep.FilePusher">
         <option name="push"
                 value="com.example.adservices.samples.ui.consenttestapp.apk->/data/local/tmp/cts/install/com.example.adservices.samples.ui.consenttestapp.apk" />
-    </target_preparer>
-
-    <!-- delete files requires root access -->
-    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer">
-        <option name="force-root" value="true" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

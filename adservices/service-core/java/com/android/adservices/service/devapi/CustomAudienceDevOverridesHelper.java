@@ -22,7 +22,7 @@ import android.annotation.NonNull;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
@@ -33,6 +33,7 @@ import java.util.Objects;
  * API.
  */
 public class CustomAudienceDevOverridesHelper {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String API_NOT_AUTHORIZED_MSG =
             "This API is not enabled for the given app because either dev options are disabled or"
                     + " the app is not debuggable.";
@@ -68,7 +69,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(name);
 
         if (!mDevContext.getDevOptionsEnabled()) {
-            LogUtil.v("Dev options disabled");
+            sLogger.v("Dev options disabled");
             return null;
         }
 
@@ -77,7 +78,7 @@ public class CustomAudienceDevOverridesHelper {
         String result =
                 mCustomAudienceDao.getBiddingLogicUriOverride(owner, buyer, name, appPackageName);
 
-        LogUtil.v(
+        sLogger.v(
                 "Override for app '%s' and key (%s,%s,%s): is %s",
                 appPackageName, owner, buyer, name, result);
 
@@ -133,7 +134,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(biddingLogicJS);
         Objects.requireNonNull(trustedBiddingSignals);
 
-        LogUtil.v("addOverride");
+        sLogger.v("addOverride");
 
         if (!mDevContext.getDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
@@ -142,7 +143,7 @@ public class CustomAudienceDevOverridesHelper {
         String appPackageName = mDevContext.getCallingAppPackageName();
 
         if (Objects.equals(owner, appPackageName)) {
-            LogUtil.v(
+            sLogger.v(
                     "Adding override for app '%s' and key (%s,%s,%s): " + "values (%s, %s)",
                     appPackageName,
                     owner,
@@ -161,7 +162,7 @@ public class CustomAudienceDevOverridesHelper {
                             .setAppPackageName(appPackageName)
                             .build());
         } else {
-            LogUtil.v(
+            sLogger.v(
                     "Owner %s is not the calling app package name %s, ignoring override",
                     owner, appPackageName);
         }

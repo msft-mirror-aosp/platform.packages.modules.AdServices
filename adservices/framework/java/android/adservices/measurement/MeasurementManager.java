@@ -16,6 +16,7 @@
 package android.adservices.measurement;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
+import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
 import android.adservices.AdServicesState;
 import android.adservices.adid.AdId;
@@ -37,6 +38,8 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.view.InputEvent;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -48,9 +51,9 @@ import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-/**
- * MeasurementManager.
- */
+/** MeasurementManager. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementManager {
     /** @hide */
     public static final String MEASUREMENT_SERVICE = "measurement_service";
@@ -101,6 +104,11 @@ public class MeasurementManager {
      * @hide
      */
     public MeasurementManager(Context context) {
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+        }
+
         // In case the MeasurementManager is initiated from inside a sdk_sandbox process the
         // fields will be immediately rewritten by the initialize method below.
         initialize(context);
@@ -239,7 +247,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -322,7 +332,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         registerWebSourceWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -421,7 +433,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         registerWebTriggerWrapper(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,
@@ -496,7 +510,9 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.e(error, "Failed to get Ad ID");
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
                         register(
                                 builder.setAdIdPermissionGranted(false).build(),
                                 service,

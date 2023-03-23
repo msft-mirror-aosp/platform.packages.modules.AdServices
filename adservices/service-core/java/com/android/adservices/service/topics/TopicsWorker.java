@@ -23,6 +23,9 @@ import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -48,6 +51,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
 public class TopicsWorker {
@@ -286,10 +291,6 @@ public class TopicsWorker {
         // Here we use Write lock to block Read during that computation time.
         mReadWriteLock.writeLock().lock();
         try {
-            // Clear data for TopicContributors Table only when feature flag is supported
-            if (!mEpochManager.supportsTopicContributorFeature()) {
-                tablesToExclude.add(TopicsTables.TopicContributorsContract.TABLE);
-            }
             mCacheManager.clearAllTopicsData(tablesToExclude);
 
             // If clearing all Topics data, clear preserved blocked topics in system server.

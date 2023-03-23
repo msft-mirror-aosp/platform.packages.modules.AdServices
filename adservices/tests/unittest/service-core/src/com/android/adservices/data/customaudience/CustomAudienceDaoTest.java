@@ -17,6 +17,7 @@
 package com.android.adservices.data.customaudience;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -33,7 +34,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -45,6 +45,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -69,7 +70,6 @@ import java.util.stream.Stream;
 public class CustomAudienceDaoTest {
     private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
 
-    @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
 
     private static final Uri DAILY_UPDATE_URI_1 = Uri.parse("https://www.example.com/d1");
@@ -506,11 +506,13 @@ public class CustomAudienceDaoTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(PackageManagerCompatUtils.class)
                         .initMocks(this)
                         .startMocking();
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
     }
@@ -1236,8 +1238,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_1 = new ApplicationInfo();
         installed_owner_1.packageName = CUSTOM_AUDIENCE_1.getOwner();
         doReturn(Arrays.asList(installed_owner_1))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1276,7 +1277,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowAllApps));
+                        CONTEXT.getPackageManager(), flagsThatAllowAllApps));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1322,8 +1323,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_2 = new ApplicationInfo();
         installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
         doReturn(Arrays.asList(installed_owner_1, installed_owner_2))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1362,7 +1362,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowOneApp));
+                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify only the uninstalled app data is deleted
         assertEquals(
@@ -1406,8 +1406,7 @@ public class CustomAudienceDaoTest {
         ApplicationInfo installed_owner_2 = new ApplicationInfo();
         installed_owner_2.packageName = CUSTOM_AUDIENCE_2.getOwner();
         doReturn(Arrays.asList(installed_owner_2))
-                .when(mPackageManagerMock)
-                .getInstalledApplications(any());
+                .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
 
         // Prepopulate with data
         mCustomAudienceDao.insertOrOverwriteCustomAudience(CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1);
@@ -1446,7 +1445,7 @@ public class CustomAudienceDaoTest {
         assertEquals(
                 expectedDisallowedOwnerStats,
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
-                        mPackageManagerMock, flagsThatAllowOneApp));
+                        CONTEXT.getPackageManager(), flagsThatAllowOneApp));
 
         // Verify both owners' app data are deleted
         assertNull(

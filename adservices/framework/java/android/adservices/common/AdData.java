@@ -163,9 +163,25 @@ public final class AdData implements Parcelable {
 
     @Override
     public String toString() {
-        // TODO(b/221876775): Add ad counter keys and ad filters when frequency cap/filter classes
-        //  are unhidden
-        return "AdData{" + "mRenderUri=" + mRenderUri + ", mMetadata='" + mMetadata + '\'' + '}';
+        return "AdData{"
+                + "mRenderUri="
+                + mRenderUri
+                + ", mMetadata='"
+                + mMetadata
+                + '\''
+                + generateAdCounterKeyString()
+                + generateAdFilterString()
+                + '}';
+    }
+
+    private String generateAdCounterKeyString() {
+        // TODO(b/221876775) Add ad counter keys String when unhidden
+        return "";
+    }
+
+    private String generateAdFilterString() {
+        // TODO(b/266837113) Add ad filters String when unhidden
+        return "";
     }
 
     /** Builder for {@link AdData} objects. */

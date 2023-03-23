@@ -15,11 +15,22 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_ADDITIONAL_INFO_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISMISSED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_DISPLAYED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_GOT_IT_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_MORE_BUTTON_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_OPT_IN_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_OPT_OUT_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SCROLLED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SCROLLED_TO_BOTTOM;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
 import static com.android.adservices.ui.notifications.ConsentNotificationConfirmationFragment.IS_CONSENT_GIVEN_ARGUMENT_KEY;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -31,19 +42,24 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /** Fragment for the topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationFragment extends Fragment {
     public static final String IS_EU_DEVICE_ARGUMENT_KEY = "isEUDevice";
     public static final String IS_INFO_VIEW_EXPANDED_KEY = "is_info_view_expanded";
+
     private boolean mIsEUDevice;
     private boolean mIsInfoViewExpanded = false;
+
     private @Nullable ScrollToBottomController mScrollToBottomController;
 
     @Override
@@ -54,15 +70,17 @@ public class ConsentNotificationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISPLAYED, getContext());
         mIsEUDevice =
                 requireActivity().getIntent().getBooleanExtra(IS_EU_DEVICE_ARGUMENT_KEY, true);
-        UiStatsLogger.logLandingPageDisplayed(getContext());
         setupListeners(savedInstanceState);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
+
+        ConsentNotificationActivity.handleAction(LANDING_PAGE_DISMISSED, getContext());
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
@@ -87,18 +105,34 @@ public class ConsentNotificationFragment extends Fragment {
         if (savedInstanceState != null) {
             setInfoViewState(savedInstanceState.getBoolean(IS_INFO_VIEW_EXPANDED_KEY, false));
         }
-        howItWorksExpander.setOnClickListener(view -> setInfoViewState(!mIsInfoViewExpanded));
+        howItWorksExpander.setOnClickListener(
+                view -> {
+                    setInfoViewState(!mIsInfoViewExpanded);
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
+                });
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
                 view -> {
                     if (mIsEUDevice) {
+                        ConsentNotificationActivity.handleAction(
+                                LANDING_PAGE_OPT_OUT_CLICKED, getContext());
+
                         // opt-out confirmation activity
                         ConsentManager.getInstance(requireContext()).disable(requireContext());
+                        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                            ConsentManager.getInstance(requireContext())
+                                    .recordUserManualInteractionWithConsent(
+                                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                        }
                         Bundle args = new Bundle();
                         args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
                         startConfirmationFragment(args);
                     } else {
+                        ConsentNotificationActivity.handleAction(
+                                LANDING_PAGE_SETTINGS_BUTTON_CLICKED, getContext());
+
                         // go to settings activity
                         Intent intent =
                                 new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
@@ -163,7 +197,6 @@ public class ConsentNotificationFragment extends Fragment {
         private final ScrollView mScrollContainer;
         private final Button mLeftControlButton;
         private final Button mRightControlButton;
-
         private boolean mHasScrolledToBottom;
 
         ScrollToBottomController(
@@ -214,15 +247,29 @@ public class ConsentNotificationFragment extends Fragment {
             if (mHasScrolledToBottom) {
                 if (mIsEUDevice) {
                     // opt-in confirmation activity
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_OPT_IN_CLICKED, getContext());
+
                     ConsentManager.getInstance(requireContext()).enable(requireContext());
+                    if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+                        ConsentManager.getInstance(requireContext())
+                                .recordUserManualInteractionWithConsent(
+                                        ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+                    }
                     Bundle args = new Bundle();
                     args.putBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, true);
                     startConfirmationFragment(args);
                 } else {
+                    ConsentNotificationActivity.handleAction(
+                            LANDING_PAGE_GOT_IT_CLICKED, getContext());
+
                     // acknowledge and dismiss
                     requireActivity().finish();
                 }
             } else {
+                ConsentNotificationActivity.handleAction(
+                        LANDING_PAGE_MORE_BUTTON_CLICKED, getContext());
+
                 mScrollContainer.smoothScrollTo(
                         0,
                         mScrollContainer.getScrollY()
@@ -233,11 +280,14 @@ public class ConsentNotificationFragment extends Fragment {
         @Override
         public void onScrollChange(
                 View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+            ConsentNotificationActivity.handleAction(LANDING_PAGE_SCROLLED, getContext());
             updateButtonsIfHasScrolledToBottom();
         }
 
         void updateButtonsIfHasScrolledToBottom() {
             if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
+                ConsentNotificationActivity.handleAction(
+                        LANDING_PAGE_SCROLLED_TO_BOTTOM, getContext());
                 mHasScrolledToBottom = true;
                 updateControlButtons();
             }

@@ -52,12 +52,12 @@ public abstract class DBRegisteredAdInteraction {
     public abstract String getInteractionKey();
 
     /**
-     * @return the destination of this registered interaction during reporting (buyer or seller,
-     *     etc.)
+     * @return the reporting destination of this registered interaction during reporting (buyer or
+     *     seller, etc.)
      */
     @CopyAnnotations
     @ColumnInfo(name = "destination")
-    @ReportInteractionRequest.Destination
+    @ReportInteractionRequest.ReportingDestination
     public abstract int getDestination();
 
     /** @return Uri to be used during interaction reporting */
@@ -71,7 +71,7 @@ public abstract class DBRegisteredAdInteraction {
     public static DBRegisteredAdInteraction create(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.Destination int destination,
+            @ReportInteractionRequest.ReportingDestination int destination,
             Uri interactionReportingUri) {
         return builder()
                 .setAdSelectionId(adSelectionId)
@@ -99,10 +99,10 @@ public abstract class DBRegisteredAdInteraction {
         public abstract DBRegisteredAdInteraction.Builder setInteractionKey(
                 @NonNull String interactionKey);
 
-        /** Sets the destination for the {@link DBRegisteredAdInteraction} entry. */
+        /** Sets the reporting destination for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull
         public abstract DBRegisteredAdInteraction.Builder setDestination(
-                @ReportInteractionRequest.Destination int destination);
+                @ReportInteractionRequest.ReportingDestination int destination);
 
         /** Sets the interactionReportingUri for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull

@@ -16,12 +16,18 @@
 
 package android.adservices.test.scenario.adservices;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import android.Manifest;
 import android.adservices.clients.measurement.MeasurementClient;
+import android.adservices.measurement.DeletionRequest;
+import android.adservices.measurement.WebSourceParams;
+import android.adservices.measurement.WebSourceRegistrationRequest;
+import android.adservices.measurement.WebTriggerParams;
+import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRule;
 import android.content.Context;
 import android.net.Uri;
-import android.os.SystemClock;
 import android.platform.test.scenario.annotation.Scenario;
 import android.provider.DeviceConfig;
 import android.support.test.uiautomator.UiDevice;
@@ -29,12 +35,11 @@ import android.support.test.uiautomator.UiDevice;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
+import com.google.mockwebserver.RecordedRequest;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,11 +47,15 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /** Crystal Ball tests for Measurement API. */
 @Scenario
@@ -56,6 +65,36 @@ public class MeasurementRegisterCalls {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static MeasurementClient sMeasurementClient;
     private static UiDevice sDevice;
+
+    private static final String SERVER_BASE_URI = replaceTestDomain("https://rb-measurement.test");
+    private static final String WEB_ORIGIN = replaceTestDomain("https://rb-example-origin.test");
+    private static final String WEB_DESTINATION =
+            replaceTestDomain("https://rb-example-destination.test");
+
+    private static final String PACKAGE_NAME = "android.platform.test.scenario";
+
+    private static final int DEFAULT_PORT = 38383;
+    private static final int KEYS_PORT = 38384;
+
+    private static final long TIMEOUT_IN_MS = 5_000;
+
+    private static final int EVENT_REPORTING_JOB_ID = 3;
+    private static final int ATTRIBUTION_REPORTING_JOB_ID = 5;
+    private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    private static final int AGGREGATE_REPORTING_JOB_ID = 7;
+
+    private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
+            SERVER_BASE_URI + ":" + KEYS_PORT + "/keys";
+    private static final String REGISTRATION_RESPONSE_SOURCE_HEADER =
+            "Attribution-Reporting-Register-Source";
+    private static final String REGISTRATION_RESPONSE_TRIGGER_HEADER =
+            "Attribution-Reporting-Register-Trigger";
+    private static final String SOURCE_PATH = "/source";
+    private static final String TRIGGER_PATH = "/trigger";
+    private static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            "/.well-known/attribution-reporting/report-aggregate-attribution";
+    public static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
+            "/.well-known/attribution-reporting/report-event-attribution";
 
     @BeforeClass
     public static void setupDevicePropertiesAndInitializeClient() throws Exception {
@@ -78,13 +117,63 @@ public class MeasurementRegisterCalls {
                 "ppapi_app_allow_list",
                 "*",
                 /* makeDefault */ false);
+
+        // Override the flag to allow current package to call delete API.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "web_context_client_allow_list",
+                "*",
+                /* makeDefault */ false);
+
+        // Override global kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "global_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Override measurement kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Disable enrollment checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "disable_measurement_enrollment_check",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Disable foreground checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_source",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_trigger",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Set aggregate key URL.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregate_encryption_key_coordinator_url",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
+                /* makeDefault */ false);
+
+        getUiDevice().executeShellCommand("settings put global auto_time false");
     }
 
     @AfterClass
     public static void resetDeviceProperties() throws Exception {
         // Reset consent
         getUiDevice()
-                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode false");
+                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
 
         // Reset allowed packages.
         DeviceConfig.setProperty(
@@ -92,87 +181,71 @@ public class MeasurementRegisterCalls {
                 "ppapi_app_allow_list",
                 "null",
                 /* makeDefault */ false);
+
+        // Reset debug API permission.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "web_context_client_allow_list",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset global kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "global_kill_switch",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset measurement kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_kill_switch",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset enrollment checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "disable_measurement_enrollment_check",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset foreground checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_source",
+                "null",
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_trigger",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset aggregate key URL.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregate_encryption_key_coordinator_url",
+                "null",
+                /* makeDefault */ false);
+
+        getUiDevice().executeShellCommand("settings put global auto_time true");
     }
 
     @Test
     public void testRegisterSourceAndTriggerAndRunAttributionAndReporting() throws Exception {
-        // Create source registration response.
-        MockResponse sourceResponse = new MockResponse();
-        final JSONObject headerRegisterSource =
-                buildJson(
-                        Map.of(
-                                "source_event_id", 1,
-                                "destination", "android-app://android.platform.test.scenario",
-                                "priority", 1));
-        sourceResponse.addHeader("Attribution-Reporting-Register-Source", headerRegisterSource);
-        sourceResponse.setResponseCode(200);
-
-        // Create trigger registration response.
-        MockResponse triggerResponse = new MockResponse();
-        final JSONObject eventTriggerData =
-                buildJson(
-                        Map.of(
-                                "trigger_data", "1",
-                                "priority", "101"));
-        final JSONArray eventTriggerDataList = buildJsonArray(List.of(eventTriggerData));
-        final JSONObject headerRegisterTrigger =
-                buildJson(Map.of("event_trigger_data", eventTriggerDataList));
-        triggerResponse.addHeader("Attribution-Reporting-Register-Trigger", headerRegisterTrigger);
-        triggerResponse.setResponseCode(200);
-
-        // Create report response.
-        MockResponse reportResponse = new MockResponse();
-        reportResponse.setResponseCode(200);
-
-        // Start mock web server.
-        List<MockResponse> responses = List.of(sourceResponse, triggerResponse, reportResponse);
-        MockWebServer mockWebServer =
-                MockWebServerRule.forHttps(
-                                sContext, "adservices_test_server.p12", "adservices_test")
-                        .startMockWebServer(responses);
-
-        URL url = mockWebServer.getUrl("/mockServer");
-
-        // Set the initial time to register the source and trigger.
-        getUiDevice().executeShellCommand("date -s 2022-08-01");
-
-        sMeasurementClient.registerSource(Uri.parse(url.toString()), null).get();
-        sMeasurementClient.registerTrigger(Uri.parse(url.toString())).get();
-        runAttributionJob();
-
-        // Advance the time so that generated report is within the reporting window.
-        getUiDevice().executeShellCommand("date -s 2022-09-01");
-        runReportingJob();
-    }
-
-    private void runAttributionJob() throws InterruptedException, IOException {
-        getUiDevice()
-                .executeShellCommand("cmd jobscheduler run -f com.google.android.adservices.api 5");
-        // Wait for attribution to complete.
-        SystemClock.sleep(2000);
-    }
-
-    private void runReportingJob() throws InterruptedException, IOException {
-        getUiDevice()
-                .executeShellCommand("cmd jobscheduler run -f com.google.android.adservices.api 3");
-        // Wait for reporting to complete.
-        SystemClock.sleep(2000);
-    }
-
-    private static JSONObject buildJson(Map<String, Object> fields) throws JSONException {
-        JSONObject json = new JSONObject();
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            json.put(entry.getKey(), entry.getValue());
-        }
-        return json;
-    }
-
-    private static JSONArray buildJsonArray(List<JSONObject> list) throws JSONException {
-        JSONArray json = new JSONArray();
-        for (int i = 0; i < list.size(); i++) {
-            json.put(i, list.get(i));
-        }
-        return json;
+        getUiDevice().executeShellCommand("date -s 2023-01-01");
+        executeDeleteRegistrations();
+        executeRegisterSource();
+        executeRegisterTrigger();
+        executeRegisterWebSource();
+        executeRegisterWebTrigger();
+        executeAttribution();
+        getUiDevice().executeShellCommand("date -s 2023-01-03");
+        executeAggregateReporting();
+        getUiDevice().executeShellCommand("date -s 2023-01-22");
+        executeEventReporting();
     }
 
     private static UiDevice getUiDevice() {
@@ -180,5 +253,383 @@ public class MeasurementRegisterCalls {
             sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         }
         return sDevice;
+    }
+
+    private static String replaceTestDomain(String value) {
+        return value.replaceAll("test", "com");
+    }
+
+    private MockWebServerRule createForHttps(int port) {
+        MockWebServerRule mockWebServerRule =
+                MockWebServerRule.forHttps(
+                        sContext, "adservices_measurement_test_server.p12", "adservices");
+        try {
+            mockWebServerRule.reserveServerListeningPort(port);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return mockWebServerRule;
+    }
+
+    private MockWebServer startServer(int port, MockResponse... mockResponses) {
+        try {
+            final MockWebServerRule serverRule = createForHttps(port);
+            return serverRule.startMockWebServer(List.of(mockResponses));
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void shutdownServer(MockWebServer mockWebServer) {
+        try {
+            if (mockWebServer != null) mockWebServer.shutdown();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private void sleep() {
+        try {
+            TimeUnit.MILLISECONDS.sleep(2_000);
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private MockResponse createRegisterSourceResponse() {
+        final MockResponse mockRegisterSourceResponse = new MockResponse();
+        final String payload =
+                "{"
+                        + "\"destination\": \"android-app://"
+                        + PACKAGE_NAME
+                        + "\","
+                        + "\"priority\": \"10\","
+                        + "\"expiry\": \"1728000\","
+                        + "\"source_event_id\": \"11111111111\","
+                        + "\"aggregation_keys\": "
+                        + "              {"
+                        + "                \"campaignCounts\": \"0x159\","
+                        + "                \"geoValue\": \"0x5\""
+                        + "              }"
+                        + "}";
+
+        mockRegisterSourceResponse.setHeader(REGISTRATION_RESPONSE_SOURCE_HEADER, payload);
+        mockRegisterSourceResponse.setResponseCode(200);
+        return mockRegisterSourceResponse;
+    }
+
+    private MockResponse createRegisterTriggerResponse() {
+        final MockResponse mockRegisterTriggerResponse = new MockResponse();
+        final String payload =
+                "{\"event_trigger_data\":"
+                        + "[{"
+                        + "  \"trigger_data\": \"1\","
+                        + "  \"priority\": \"1\","
+                        + "  \"deduplication_key\": \"111\""
+                        + "}],"
+                        + "\"aggregatable_trigger_data\": ["
+                        + "              {"
+                        + "                \"key_piece\": \"0x200\","
+                        + "                \"source_keys\": ["
+                        + "                  \"campaignCounts\","
+                        + "                  \"geoValue\""
+                        + "                ]"
+                        + "              }"
+                        + "            ],"
+                        + "            \"aggregatable_values\": {"
+                        + "              \"campaignCounts\": 32768,"
+                        + "              \"geoValue\": 1664"
+                        + "            }"
+                        + "}";
+
+        mockRegisterTriggerResponse.setHeader(REGISTRATION_RESPONSE_TRIGGER_HEADER, payload);
+        mockRegisterTriggerResponse.setResponseCode(200);
+        return mockRegisterTriggerResponse;
+    }
+
+    private MockResponse createRegisterWebSourceResponse() {
+        final MockResponse mockRegisterWebSourceResponse = new MockResponse();
+        final String payload =
+                "{"
+                        + "\"web_destination\": \""
+                        + WEB_DESTINATION
+                        + "\","
+                        + "\"priority\": \"10\","
+                        + "\"expiry\": \"1728000\","
+                        + "\"source_event_id\": \"99999999999\","
+                        + "\"aggregation_keys\": "
+                        + "              {"
+                        + "                \"campaignCounts\": \"0x159\","
+                        + "                \"geoValue\": \"0x5\""
+                        + "              }"
+                        + "}";
+
+        mockRegisterWebSourceResponse.setHeader(REGISTRATION_RESPONSE_SOURCE_HEADER, payload);
+        mockRegisterWebSourceResponse.setResponseCode(200);
+        return mockRegisterWebSourceResponse;
+    }
+
+    private MockResponse createRegisterWebTriggerResponse() {
+        final MockResponse mockRegisterWebTriggerResponse = new MockResponse();
+        final String payload =
+                "{\"event_trigger_data\":"
+                        + "[{"
+                        + "  \"trigger_data\": \"9\","
+                        + "  \"priority\": \"9\","
+                        + "  \"deduplication_key\": \"999\""
+                        + "}],"
+                        + "\"aggregatable_trigger_data\": ["
+                        + "              {"
+                        + "                \"key_piece\": \"0x200\","
+                        + "                \"source_keys\": ["
+                        + "                  \"campaignCounts\","
+                        + "                  \"geoValue\""
+                        + "                ]"
+                        + "              }"
+                        + "            ],"
+                        + "            \"aggregatable_values\": {"
+                        + "              \"campaignCounts\": 32768,"
+                        + "              \"geoValue\": 1664"
+                        + "            }"
+                        + "}]}";
+
+        mockRegisterWebTriggerResponse.setHeader(REGISTRATION_RESPONSE_TRIGGER_HEADER, payload);
+        mockRegisterWebTriggerResponse.setResponseCode(200);
+        return mockRegisterWebTriggerResponse;
+    }
+
+    private MockResponse createEventReportUploadResponse() {
+        MockResponse reportResponse = new MockResponse();
+        reportResponse.setResponseCode(200);
+        return reportResponse;
+    }
+
+    private MockResponse createAggregateReportUploadResponse() {
+        MockResponse reportResponse = new MockResponse();
+        reportResponse.setResponseCode(200);
+        return reportResponse;
+    }
+
+    private MockResponse createGetAggregationKeyResponse() {
+        MockResponse mockGetAggregationKeyResponse = new MockResponse();
+        final String body =
+                "{\"keys\":[{"
+                        + "\"id\":\"0fa73e34-c6f3-4839-a4ed-d1681f185a76\","
+                        + "\"key\":\"bcy3EsCsm/7rhO1VSl9W+h4MM0dv20xjcFbbLPE16Vg\\u003d\"}]}";
+
+        mockGetAggregationKeyResponse.setBody(body);
+        mockGetAggregationKeyResponse.setHeader("age", "14774");
+        mockGetAggregationKeyResponse.setHeader("cache-control", "max-age=72795");
+        mockGetAggregationKeyResponse.setResponseCode(200);
+
+        return mockGetAggregationKeyResponse;
+    }
+
+    private void executeAsyncRegistrationJob() {
+        executeJob(ASYNC_REGISTRATION_QUEUE_JOB_ID);
+    }
+
+    private void executeJob(int jobId) {
+        final String cmd = "cmd jobscheduler run -f com.google.android.adservices.api " + jobId;
+        try {
+            getUiDevice().executeShellCommand(cmd);
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    String.format("Error while executing job %d", jobId), e);
+        }
+    }
+
+    private void executeAttributionJob() {
+        executeJob(ATTRIBUTION_REPORTING_JOB_ID);
+    }
+
+    private void executeEventReportingJob() {
+        executeJob(EVENT_REPORTING_JOB_ID);
+    }
+
+    private void executeAggregateReportingJob() {
+        executeJob(AGGREGATE_REPORTING_JOB_ID);
+    }
+
+    private void executeRegisterSource() {
+        final MockResponse mockResponse = createRegisterSourceResponse();
+        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+
+        try {
+            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
+
+            ListenableFuture<Void> future =
+                    sMeasurementClient.registerSource(Uri.parse(path), null);
+            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+
+            sleep();
+            executeAsyncRegistrationJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(SOURCE_PATH);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("Error while registering source", e);
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeRegisterTrigger() {
+        final MockResponse mockResponse = createRegisterTriggerResponse();
+        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+
+        try {
+            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
+
+            ListenableFuture<Void> future = sMeasurementClient.registerTrigger(Uri.parse(path));
+            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+
+            sleep();
+            executeAsyncRegistrationJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(TRIGGER_PATH);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("Error while registering trigger", e);
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeRegisterWebSource() {
+        final MockResponse mockResponse = createRegisterWebSourceResponse();
+        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+
+        try {
+            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + SOURCE_PATH;
+            final WebSourceParams params = new WebSourceParams.Builder(Uri.parse(path)).build();
+            final WebSourceRegistrationRequest request =
+                    new WebSourceRegistrationRequest.Builder(
+                                    Collections.singletonList(params), Uri.parse(WEB_ORIGIN))
+                            .setWebDestination(Uri.parse(WEB_DESTINATION))
+                            .build();
+
+            ListenableFuture<Void> future = sMeasurementClient.registerWebSource(request);
+            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+
+            sleep();
+            executeAsyncRegistrationJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(SOURCE_PATH);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("Error while registering web source", e);
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeRegisterWebTrigger() {
+        final MockResponse mockResponse = createRegisterWebTriggerResponse();
+        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse);
+
+        try {
+            final String path = SERVER_BASE_URI + ":" + mockWebServer.getPort() + TRIGGER_PATH;
+            final WebTriggerParams params = new WebTriggerParams.Builder(Uri.parse(path)).build();
+            final WebTriggerRegistrationRequest request =
+                    new WebTriggerRegistrationRequest.Builder(
+                                    Collections.singletonList(params), Uri.parse(WEB_DESTINATION))
+                            .build();
+
+            ListenableFuture<Void> future = sMeasurementClient.registerWebTrigger(request);
+            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+
+            sleep();
+            executeAsyncRegistrationJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(TRIGGER_PATH);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(1);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("Error while registering web trigger", e);
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeAttribution() {
+        final MockResponse mockResponse = createGetAggregationKeyResponse();
+        final MockWebServer mockWebServer = startServer(KEYS_PORT, mockResponse);
+
+        try {
+            sleep();
+            executeAttributionJob();
+            sleep();
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeEventReporting() {
+        final MockResponse mockResponse = createEventReportUploadResponse();
+        final MockWebServer mockWebServer = startServer(DEFAULT_PORT, mockResponse, mockResponse);
+        try {
+            sleep();
+            executeEventReportingJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(mockWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(EVENT_ATTRIBUTION_REPORT_URI_PATH);
+            assertThat(mockWebServer.getRequestCount()).isEqualTo(2);
+        } finally {
+            shutdownServer(mockWebServer);
+        }
+    }
+
+    private void executeAggregateReporting() {
+        final MockResponse aggregateReportMockResponse = createAggregateReportUploadResponse();
+        final MockWebServer aggregateReportWebServer =
+                startServer(DEFAULT_PORT, aggregateReportMockResponse, aggregateReportMockResponse);
+
+        final MockResponse keysMockResponse = createGetAggregationKeyResponse();
+        final MockWebServer keysReportWebServer =
+                startServer(KEYS_PORT, keysMockResponse, keysMockResponse);
+
+        try {
+            sleep();
+            executeAggregateReportingJob();
+            sleep();
+
+            RecordedRequest recordedRequest = takeRequestTimeoutWrapper(aggregateReportWebServer);
+            assertThat(recordedRequest.getPath()).isEqualTo(AGGREGATE_ATTRIBUTION_REPORT_URI_PATH);
+            assertThat(aggregateReportWebServer.getRequestCount()).isEqualTo(2);
+        } finally {
+            shutdownServer(aggregateReportWebServer);
+            shutdownServer(keysReportWebServer);
+        }
+    }
+
+    private void executeDeleteRegistrations() {
+        try {
+            DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+            ListenableFuture<Void> future = sMeasurementClient.deleteRegistrations(deletionRequest);
+            future.get(TIMEOUT_IN_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            throw new IllegalStateException("Error while deleting registrations", e);
+        }
+    }
+
+    private RecordedRequest takeRequestTimeoutWrapper(MockWebServer mockWebServer) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        Future<RecordedRequest> future = executor.submit(mockWebServer::takeRequest);
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException | InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Error while running mockWebServer.takeRequest()", e);
+        } finally {
+            future.cancel(true);
+        }
     }
 }

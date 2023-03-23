@@ -17,6 +17,8 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
@@ -28,7 +30,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -42,6 +44,8 @@ import org.json.JSONObject;
 import java.util.List;
 
 public class CustomAudienceUpdatableDataFixture {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     public static String getEmptyJsonResponseString() throws JSONException {
         return toJsonResponseString(null, null, null);
     }
@@ -249,13 +253,18 @@ public class CustomAudienceUpdatableDataFixture {
                 try {
                     adJson.put(METADATA_KEY, new JSONObject(ad.getMetadata()));
                 } catch (JSONException exception) {
-                    LogUtil.v(
+                    sLogger.v(
                             "Trying to add invalid JSON to test object (%s); inserting as String"
                                     + " instead",
                             exception.getMessage());
                     adJson.put(METADATA_KEY, ad.getMetadata());
                 }
-
+                if (!ad.getAdCounterKeys().isEmpty()) {
+                    adJson.put(AD_COUNTERS_KEY, new JSONArray(ad.getAdCounterKeys()));
+                }
+                if (ad.getAdFilters() != null) {
+                    adJson.put(AD_FILTERS_KEY, ad.getAdFilters().toJson());
+                }
                 adsJson.put(adJson);
             }
 

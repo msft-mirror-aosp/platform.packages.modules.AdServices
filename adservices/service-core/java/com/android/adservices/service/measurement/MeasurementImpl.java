@@ -39,7 +39,10 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.view.InputEvent;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -73,6 +76,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
@@ -301,11 +306,15 @@ public final class MeasurementImpl {
         LogUtil.d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction((dao) -> {
-                dao.deleteAppRecords(appUri);
-                dao.undoInstallAttribution(appUri);
-            });
-            markDeletionInSystemService();
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> {
+                                dao.undoInstallAttribution(appUri);
+                                return dao.deleteAppRecords(appUri);
+                            });
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete package records received invalid parameters");
         } finally {
@@ -337,9 +346,12 @@ public final class MeasurementImpl {
         List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction(
-                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
-            markDeletionInSystemService();
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -489,7 +501,7 @@ public final class MeasurementImpl {
      * AdServices module version. This information is used for deleting data after it has been
      * restored by a module rollback.
      */
-    public void markDeletionInSystemService() {
+    private void markDeletionInSystemService() {
         if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
             LogUtil.e("Rollback deletion is disabled. Not storing status in system server.");
             return;

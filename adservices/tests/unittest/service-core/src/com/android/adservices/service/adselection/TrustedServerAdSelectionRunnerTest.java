@@ -50,7 +50,8 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
@@ -67,6 +68,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -122,6 +124,7 @@ public class TrustedServerAdSelectionRunnerTest {
                                     .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
                                     .setBidPrice(1))
                     .build();
+    private static final AdFilterer sAdFilterer = new AdFiltererNoOpImpl();
 
     private MockitoSession mStaticMockSession = null;
     private Context mContext = ApplicationProvider.getApplicationContext();
@@ -147,10 +150,15 @@ public class TrustedServerAdSelectionRunnerTest {
             Mockito.mock(SellerFrontEndFutureStub.class, "mStubWithCompression");
     @Mock private AdSelectionExecutionLogger mAdSelectionExecutionLogger;
 
-    @Mock FledgeServiceFilter mFledgeServiceFilter;
+    @Mock AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setUp() {
+        // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
+        // availability depends on an external component (the system webview) being higher than a
+        // certain minimum version. Marking that as an assumption that the test is making.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -199,7 +207,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         AdSelectionOrchestrationResult adSelectionOrchestrationResult =
@@ -256,7 +265,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -315,7 +325,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -379,7 +390,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         mFlags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
 
@@ -427,7 +439,8 @@ public class TrustedServerAdSelectionRunnerTest {
                         mAdServicesLoggerSpy,
                         flags,
                         CALLER_UID,
-                        mFledgeServiceFilter,
+                        mAdSelectionServiceFilter,
+                        sAdFilterer,
                         mJsFetcher,
                         mAdSelectionExecutionLogger);
         invokeRunAdSelection(

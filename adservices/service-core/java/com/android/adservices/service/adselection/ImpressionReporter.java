@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
@@ -32,34 +32,33 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
-import android.os.LimitExceededException;
+import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AdServicesHttpsClient;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.util.Preconditions;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
@@ -69,16 +68,20 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 
 /** Encapsulates the Impression Reporting logic */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ImpressionReporter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID =
             "Unable to find ad selection with given ID";
     public static final String CALLER_PACKAGE_NAME_MISMATCH =
@@ -96,7 +99,8 @@ public class ImpressionReporter {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
 
     public ImpressionReporter(
@@ -109,7 +113,7 @@ public class ImpressionReporter {
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
@@ -120,101 +124,60 @@ public class ImpressionReporter {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
 
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
+        boolean isRegisterAdBeaconEnabled =
+                BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
+
+        ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
+                registerAdBeaconScriptEngineHelper;
+        if (isRegisterAdBeaconEnabled) {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperEnabled();
+            long maxInteractionReportingUrisSize =
+                    BinderFlagReader.readFlag(
+                            () ->
+                                    flags
+                                            .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled(
+                            maxInteractionReportingUrisSize);
+        } else {
+            mRegisterAdBeaconSupportHelper = new RegisterAdBeaconSupportHelperDisabled();
+            registerAdBeaconScriptEngineHelper =
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();
+        }
         mJsEngine =
                 new ReportImpressionScriptEngine(
                         context,
                         () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes());
+                        () -> flags.getIsolateMaxHeapSizeBytes(),
+                        registerAdBeaconScriptEngineHelper);
+
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
-    }
-
-    @VisibleForTesting
-    public ImpressionReporter(
-            @NonNull Context context,
-            @NonNull ExecutorService lightweightExecutor,
-            @NonNull ExecutorService backgroundExecutor,
-            @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
-            @NonNull AdSelectionEntryDao adSelectionEntryDao,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient,
-            @NonNull ConsentManager consentManager,
-            @NonNull DevContext devContext,
-            @NonNull AdServicesLogger adServicesLogger,
-            @NonNull AppImportanceFilter appImportanceFilter,
-            @NonNull final Flags flags,
-            @NonNull final Supplier<Throttler> throttlerSupplier,
-            int callerUid,
-            @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            @NonNull final FledgeAllowListsFilter fledgeAllowListsFilter) {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(lightweightExecutor);
-        Objects.requireNonNull(backgroundExecutor);
-        Objects.requireNonNull(scheduledExecutor);
-        Objects.requireNonNull(adSelectionEntryDao);
-        Objects.requireNonNull(adServicesHttpsClient);
-        Objects.requireNonNull(consentManager);
-        Objects.requireNonNull(devContext);
-        Objects.requireNonNull(adServicesLogger);
-        Objects.requireNonNull(appImportanceFilter);
-        Objects.requireNonNull(flags);
-        Objects.requireNonNull(throttlerSupplier);
-        Objects.requireNonNull(fledgeAuthorizationFilter);
-        Objects.requireNonNull(fledgeAllowListsFilter);
-
-        mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutor);
-        mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
-        mScheduledExecutor = scheduledExecutor;
-        mAdSelectionEntryDao = adSelectionEntryDao;
-        mAdServicesHttpsClient = adServicesHttpsClient;
-        mJsEngine =
-                new ReportImpressionScriptEngine(
-                        context,
-                        () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes());
-        mAdSelectionDevOverridesHelper =
-                new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
-        mAdServicesLogger = adServicesLogger;
-        mFlags = flags;
-        mFledgeServiceFilter =
-                new FledgeServiceFilter(
-                        context,
-                        consentManager,
-                        flags,
-                        appImportanceFilter,
-                        fledgeAuthorizationFilter,
-                        fledgeAllowListsFilter,
-                        throttlerSupplier);
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
     private void invokeFailure(
-            @NonNull ReportImpressionCallback callback, int statusCode, String errorMessage) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
+            @NonNull ReportImpressionCallback callback, int resultCode, String errorMessage) {
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
-                            .setStatusCode(statusCode)
+                            .setStatusCode(resultCode)
                             .setErrorMessage(errorMessage)
                             .build());
-            resultCode = statusCode;
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send failed result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+            sLogger.e(e, "Unable to send failed result to the callback");
             throw e.rethrowFromSystemServer();
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 
@@ -223,14 +186,8 @@ public class ImpressionReporter {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send successful result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+            sLogger.e(e, "Unable to send successful result to the callback");
             throw e.rethrowFromSystemServer();
-        } finally {
-            // TODO(b/233681870): Investigate implementation of actual failures in
-            //  logs/metrics
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
         }
     }
 
@@ -248,51 +205,28 @@ public class ImpressionReporter {
     public void reportImpression(
             @NonNull ReportImpressionInput requestParams,
             @NonNull ReportImpressionCallback callback) {
-        LogUtil.v("Executing reportImpression API");
-        // Getting PH flags in a non binder thread
-        FluentFuture<Long> timeoutFuture =
-                FluentFuture.from(
-                        mLightweightExecutorService.submit(
-                                mFlags::getReportImpressionOverallTimeoutMs));
-
-        timeoutFuture.addCallback(
-                new FutureCallback<Long>() {
-                    @Override
-                    public void onSuccess(Long timeout) {
-                        invokeReporting(requestParams, callback);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Report Impression failed!");
-                        notifyFailureToCaller(callback, t);
-                    }
-                },
-                mLightweightExecutorService);
-    }
-
-    private void invokeReporting(
-            @NonNull ReportImpressionInput requestParams,
-            @NonNull ReportImpressionCallback callback) {
+        sLogger.v("Executing reportImpression API");
         long adSelectionId = requestParams.getAdSelectionId();
+        long timeoutMs = BinderFlagReader.readFlag(mFlags::getReportImpressionOverallTimeoutMs);
         AdSelectionConfig adSelectionConfig = requestParams.getAdSelectionConfig();
         ListenableFuture<Void> filterAndValidateRequestFuture =
                 Futures.submit(
                         () -> {
                             try {
                                 Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                LogUtil.v("Starting filtering and validation.");
-                                mFledgeServiceFilter.filterRequest(
+                                sLogger.v("Starting filtering and validation.");
+                                mAdSelectionServiceFilter.filterRequest(
                                         adSelectionConfig.getSeller(),
                                         requestParams.getCallerPackageName(),
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
+                                        true,
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
                                 validateAdSelectionConfig(adSelectionConfig);
                             } finally {
-                                LogUtil.v("Completed filtering and validation.");
+                                sLogger.v("Completed filtering and validation.");
                                 Trace.endSection();
                             }
                         },
@@ -314,28 +248,30 @@ public class ImpressionReporter {
                                         reportingUrisAndContext.second),
                         mLightweightExecutorService)
                 .withTimeout(
-                        mFlags.getReportImpressionOverallTimeoutMs(),
+                        timeoutMs,
                         TimeUnit.MILLISECONDS,
                         // TODO(b/237103033): Comply with thread usage policy for AdServices;
                         //  use a global scheduled executor
                         mScheduledExecutor)
-                .transformAsync(
-                        reportingUrisAndContext ->
-                                doReport(
-                                        reportingUrisAndContext.first,
-                                        reportingUrisAndContext.second),
-                        mLightweightExecutorService)
                 .addCallback(
-                        new FutureCallback<List<Void>>() {
+                        new FutureCallback<Pair<ReportingUris, ReportingContext>>() {
                             @Override
-                            public void onSuccess(List<Void> result) {
-                                LogUtil.d("Report impression succeeded!");
+                            public void onSuccess(Pair<ReportingUris, ReportingContext> result) {
+                                sLogger.d("Computed reporting uris successfully!");
+                                performReporting(result.first, result.second);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "Report Impression invocation failed!");
-                                if (t instanceof ConsentManager.RevokedConsentException) {
+                                sLogger.e(t, "Report Impression invocation failed!");
+                                if (t instanceof FilterException
+                                        && t.getCause()
+                                                instanceof ConsentManager.RevokedConsentException) {
+                                    // Skip logging if a FilterException occurs.
+                                    // AdSelectionServiceFilter ensures the failing assertion is
+                                    // logged internally.
+
+                                    // Fail Silently by notifying success to caller
                                     invokeSuccess(
                                             callback,
                                             AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
@@ -345,6 +281,37 @@ public class ImpressionReporter {
                             }
                         },
                         mLightweightExecutorService);
+    }
+
+    private void performReporting(ReportingUris reportingUris, ReportingContext ctx) {
+        FluentFuture<List<Void>> reportingFuture = FluentFuture.from(doReport(reportingUris, ctx));
+        reportingFuture.addCallback(
+                new FutureCallback<List<Void>>() {
+                    @Override
+                    public void onSuccess(List<Void> result) {
+                        sLogger.d("Reporting finished successfully!");
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_SUCCESS,
+                                0);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                        sLogger.e(t, "Report Impression failure encountered during reporting!");
+                        if (t instanceof IOException) {
+                            mAdServicesLogger.logFledgeApiCallStats(
+                                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                    AdServicesStatusUtils.STATUS_IO_ERROR,
+                                    0);
+                        }
+                        mAdServicesLogger.logFledgeApiCallStats(
+                                AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                0);
+                    }
+                },
+                mLightweightExecutorService);
     }
 
     private Pair<ReportingUris, ReportingContext> notifySuccessToCaller(
@@ -357,28 +324,33 @@ public class ImpressionReporter {
 
     private void notifyFailureToCaller(
             @NonNull ReportImpressionCallback callback, @NonNull Throwable t) {
-        if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
-        } else if (t instanceof WrongCallingApplicationStateException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
-        } else if (t instanceof LimitExceededException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
+        int resultCode;
+
+        boolean isFilterException = t instanceof FilterException;
+
+        if (isFilterException) {
+            resultCode = FilterException.getResultCode(t);
+        } else if (t instanceof IllegalArgumentException) {
+            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
+
+        // Skip logging if a FilterException occurs.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        // Note: Failure is logged before the callback to ensure deterministic testing.
+        if (!isFilterException) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION, resultCode, 0);
+        }
+
+        invokeFailure(callback, resultCode, t.getMessage());
     }
 
     @NonNull
     private ListenableFuture<List<Void>> doReport(
             ReportingUris reportingUris, ReportingContext ctx) {
-        LogUtil.v("Reporting URIs");
+        sLogger.v("Reporting URIs");
 
         ListenableFuture<Void> sellerFuture;
 
@@ -395,7 +367,7 @@ public class ImpressionReporter {
             sellerFuture =
                     mAdServicesHttpsClient.getAndReadNothing(reportingUris.sellerReportingUri);
         } catch (IllegalArgumentException e) {
-            LogUtil.v("Seller reporting URI validation failed!");
+            sLogger.v("Seller reporting URI validation failed!");
             sellerFuture = Futures.immediateFuture(null);
         }
 
@@ -418,7 +390,7 @@ public class ImpressionReporter {
                 buyerFuture =
                         mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);
             } catch (IllegalArgumentException e) {
-                LogUtil.v("Buyer reporting URI validation failed!");
+                sLogger.v("Buyer reporting URI validation failed!");
                 buyerFuture = Futures.immediateFuture(null);
             }
         } else {
@@ -447,7 +419,7 @@ public class ImpressionReporter {
                         mLightweightExecutorService)
                 .transformAsync(
                         sellerResultAndCtx ->
-                                commitSellerRegisteredEvents(
+                                mRegisterAdBeaconSupportHelper.commitSellerRegisteredEvents(
                                         sellerResultAndCtx.first, sellerResultAndCtx.second),
                         mLightweightExecutorService)
                 .transformAsync(
@@ -457,7 +429,7 @@ public class ImpressionReporter {
                         mLightweightExecutorService)
                 .transformAsync(
                         reportingResultsAndCtx ->
-                                commitBuyerRegisteredEvents(
+                                mRegisterAdBeaconSupportHelper.commitBuyerRegisteredEvents(
                                         reportingResultsAndCtx.first,
                                         reportingResultsAndCtx.second),
                         mLightweightExecutorService);
@@ -465,7 +437,7 @@ public class ImpressionReporter {
 
     private FluentFuture<DBAdSelectionEntry> fetchAdSelectionEntry(
             long adSelectionId, String callerPackageName) {
-        LogUtil.v(
+        sLogger.v(
                 "Fetching ad selection entry ID %d for caller \"%s\"",
                 adSelectionId, callerPackageName);
         return FluentFuture.from(
@@ -485,7 +457,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<String, ReportingContext>> fetchSellerDecisionLogic(
             ReportingContext ctx) {
-        LogUtil.v("Fetching Seller decision logic");
+        sLogger.v("Fetching Seller decision logic");
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
@@ -497,10 +469,15 @@ public class ImpressionReporter {
                 .transformAsync(
                         jsOverride -> {
                             if (jsOverride == null) {
-                                return mAdServicesHttpsClient.fetchPayload(
-                                        ctx.mAdSelectionConfig.getDecisionLogicUri());
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(
+                                                        ctx.mAdSelectionConfig
+                                                                .getDecisionLogicUri()))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
                             } else {
-                                LogUtil.i(
+                                sLogger.i(
                                         "Developer options enabled and an override JS is provided "
                                                 + "for the current ad selection config. "
                                                 + "Skipping call to server.");
@@ -515,7 +492,7 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
             invokeSellerScript(String decisionLogicJs, ReportingContext ctx) {
-        LogUtil.v("Invoking seller script");
+        sLogger.v("Invoking seller script");
         try {
             return FluentFuture.from(
                             mJsEngine.reportResult(
@@ -536,7 +513,7 @@ public class ImpressionReporter {
     private FluentFuture<Pair<ReportingResults, ReportingContext>> invokeBuyerScript(
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
-        LogUtil.v("Invoking buyer script");
+        sLogger.v("Invoking buyer script");
         final boolean isContextual =
                 Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
                         && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
@@ -549,13 +526,16 @@ public class ImpressionReporter {
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
         try {
+            // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    ctx.mAdSelectionConfig
-                                            .getPerBuyerSignals()
-                                            .get(customAudienceSignals.getBuyer()),
+                                    Optional.ofNullable(
+                                                    ctx.mAdSelectionConfig
+                                                            .getPerBuyerSignals()
+                                                            .get(customAudienceSignals.getBuyer()))
+                                            .orElse(AdSelectionSignals.EMPTY),
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
@@ -572,117 +552,6 @@ public class ImpressionReporter {
         }
     }
 
-    private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
-            commitSellerRegisteredEvents(
-                    ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
-                    ReportingContext ctx) {
-        // Validate seller uri before reporting
-        AdTechUriValidator sellerValidator =
-                new AdTechUriValidator(
-                        ValidatorUtil.AD_TECH_ROLE_SELLER,
-                        ctx.mAdSelectionConfig.getSeller().toString(),
-                        this.getClass().getSimpleName(),
-                        EVENT_URI_FIELD_NAME);
-
-        return FluentFuture.from(
-                mBackgroundExecutorService.submit(
-                        () -> {
-                            commitRegisteredAdEventsToDatabase(
-                                    sellerReportingResult.getInteractionReportingUris(),
-                                    sellerValidator,
-                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_DESTINATION_SELLER);
-                            return Pair.create(sellerReportingResult, ctx);
-                        }));
-    }
-
-    private FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
-            ReportingResults reportingResults, ReportingContext ctx) {
-        if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
-            return FluentFuture.from(
-                    Futures.immediateFuture(
-                            Pair.create(
-                                    new ReportingUris(
-                                            null,
-                                            reportingResults.mSellerReportingResult
-                                                    .getReportingUri()),
-                                    ctx)));
-        }
-
-        CustomAudienceSignals customAudienceSignals =
-                Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
-
-        AdTechUriValidator buyerValidator =
-                new AdTechUriValidator(
-                        ValidatorUtil.AD_TECH_ROLE_BUYER,
-                        customAudienceSignals.getBuyer().toString(),
-                        this.getClass().getSimpleName(),
-                        REPORTING_URI_FIELD_NAME);
-
-        return FluentFuture.from(
-                mBackgroundExecutorService.submit(
-                        () -> {
-                            commitRegisteredAdEventsToDatabase(
-                                    reportingResults.mBuyerReportingResult
-                                            .getInteractionReportingUris(),
-                                    buyerValidator,
-                                    ctx.mDBAdSelectionEntry.getAdSelectionId(),
-                                    FLAG_DESTINATION_BUYER);
-                            return Pair.create(
-                                    new ReportingUris(
-                                            reportingResults.mBuyerReportingResult
-                                                    .getReportingUri(),
-                                            reportingResults.mSellerReportingResult
-                                                    .getReportingUri()),
-                                    ctx);
-                        }));
-    }
-
-    /**
-     * Iterates through each {@link InteractionUriRegistrationInfo}, validates each {@link
-     * InteractionUriRegistrationInfo#getInteractionReportingUri()}, and commits it to the {@code
-     * registered_ad_interactions} table if it's valid. Note: For system health purposes, we will
-     * only commit a maximum of {@code mMaxRegisteredAdEventsPerAdTech} entries to the database.
-     */
-    private void commitRegisteredAdEventsToDatabase(
-            @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
-            @NonNull AdTechUriValidator validator,
-            long adSelectionId,
-            @ReportInteractionRequest.Destination int destination) {
-        long numSellerEventUriEntries = 0;
-        long maxRegisteredAdEventsPerAdTech = mFlags.getReportImpressionMaxEventUriEntriesCount();
-
-        List<DBRegisteredAdInteraction> adEventsToRegister = new ArrayList<>();
-
-        for (InteractionUriRegistrationInfo uriRegistrationInfo : interactionUriRegistrationInfos) {
-            if (numSellerEventUriEntries >= maxRegisteredAdEventsPerAdTech) {
-                LogUtil.v(
-                        "Registered maximum number of registeredAEvents for this ad-tech! The rest"
-                                + " in this list will be skipped.");
-                break;
-            }
-            Uri uriToValidate = uriRegistrationInfo.getInteractionReportingUri();
-            try {
-                validator.validate(uriToValidate);
-                DBRegisteredAdInteraction dbRegisteredAdInteraction =
-                        DBRegisteredAdInteraction.builder()
-                                .setAdSelectionId(adSelectionId)
-                                .setInteractionKey(uriRegistrationInfo.getInteractionKey())
-                                .setInteractionReportingUri(uriToValidate)
-                                .setDestination(destination)
-                                .build();
-                adEventsToRegister.add(dbRegisteredAdInteraction);
-                numSellerEventUriEntries++;
-            } catch (IllegalArgumentException e) {
-                LogUtil.v(
-                        String.format(
-                                "Uri %s failed validation! Skipping persistence of this event URI"
-                                        + " pair.",
-                                uriToValidate));
-            }
-        }
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(adEventsToRegister);
-    }
 
     /**
      * Validates the {@code adSelectionConfig} from the request.
@@ -727,6 +596,189 @@ public class ImpressionReporter {
 
             mBuyerReportingResult = buyerReportingResult;
             mSellerReportingResult = sellerReportingResult;
+        }
+    }
+
+    private interface RegisterAdBeaconSupportHelper {
+        FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx);
+
+        FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx);
+    }
+
+    private class RegisterAdBeaconSupportHelperEnabled implements RegisterAdBeaconSupportHelper {
+
+        @Override
+        public FluentFuture<
+                        Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx) {
+            // Validate seller uri before reporting
+            AdTechUriValidator sellerValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_SELLER,
+                            ctx.mAdSelectionConfig.getSeller().toString(),
+                            this.getClass().getSimpleName(),
+                            EVENT_URI_FIELD_NAME);
+
+            return FluentFuture.from(
+                    mBackgroundExecutorService.submit(
+                            () -> {
+                                commitRegisteredAdInteractionsToDatabase(
+                                        sellerReportingResult.getInteractionReportingUris(),
+                                        sellerValidator,
+                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        FLAG_REPORTING_DESTINATION_SELLER);
+                                return Pair.create(sellerReportingResult, ctx);
+                            }));
+        }
+
+        @Override
+        public FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx) {
+            if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
+                return FluentFuture.from(
+                        Futures.immediateFuture(
+                                Pair.create(
+                                        new ReportingUris(
+                                                null,
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx)));
+            }
+
+            CustomAudienceSignals customAudienceSignals =
+                    Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+            AdTechUriValidator buyerValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            customAudienceSignals.getBuyer().toString(),
+                            this.getClass().getSimpleName(),
+                            REPORTING_URI_FIELD_NAME);
+
+            return FluentFuture.from(
+                    mBackgroundExecutorService.submit(
+                            () -> {
+                                commitRegisteredAdInteractionsToDatabase(
+                                        reportingResults.mBuyerReportingResult
+                                                .getInteractionReportingUris(),
+                                        buyerValidator,
+                                        ctx.mDBAdSelectionEntry.getAdSelectionId(),
+                                        FLAG_REPORTING_DESTINATION_BUYER);
+                                return Pair.create(
+                                        new ReportingUris(
+                                                reportingResults.mBuyerReportingResult
+                                                        .getReportingUri(),
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx);
+                            }));
+        }
+
+        /**
+         * Iterates through each {@link InteractionUriRegistrationInfo}, validates each {@link
+         * InteractionUriRegistrationInfo#getInteractionReportingUri()}, and commits it to the
+         * {@code registered_ad_interactions} table if it's valid.
+         *
+         * <p>Note: For system health purposes, we will enforce these limitations: 1. We only commit
+         * up to a maximum of {@link
+         * ImpressionReporter#mFlags#getReportImpressionMaxRegisteredAdBeaconsTotalCount()} entries
+         * to the database. 2. We will not commit an entry to the database if {@link
+         * InteractionUriRegistrationInfo#getInteractionKey()} is larger than {@link
+         * ImpressionReporter#mFlags#getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySize()}
+         */
+        private void commitRegisteredAdInteractionsToDatabase(
+                @NonNull List<InteractionUriRegistrationInfo> interactionUriRegistrationInfos,
+                @NonNull AdTechUriValidator validator,
+                long adSelectionId,
+                @ReportInteractionRequest.ReportingDestination int reportingDestination) {
+
+            long maxTableSize = mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
+            long maxInteractionKeySize =
+                    mFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB();
+            long maxNumRowsPerDestination =
+                    mFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+
+            List<DBRegisteredAdInteraction> adInteractionsToRegister = new ArrayList<>();
+
+            for (InteractionUriRegistrationInfo uriRegistrationInfo :
+                    interactionUriRegistrationInfos) {
+                if (uriRegistrationInfo.getInteractionKey().getBytes().length
+                        > maxInteractionKeySize) {
+                    sLogger.v(
+                            "InteractionKey size exceeds the maximum allowed! Skipping this entry");
+                    continue;
+                }
+
+                Uri uriToValidate = uriRegistrationInfo.getInteractionReportingUri();
+                try {
+                    validator.validate(uriToValidate);
+                    DBRegisteredAdInteraction dbRegisteredAdInteraction =
+                            DBRegisteredAdInteraction.builder()
+                                    .setAdSelectionId(adSelectionId)
+                                    .setInteractionKey(uriRegistrationInfo.getInteractionKey())
+                                    .setInteractionReportingUri(uriToValidate)
+                                    .setDestination(reportingDestination)
+                                    .build();
+                    adInteractionsToRegister.add(dbRegisteredAdInteraction);
+                } catch (IllegalArgumentException e) {
+                    sLogger.v(
+                            "Uri %s failed validation! Skipping persistence of this interaction URI"
+                                    + " pair.",
+                            uriToValidate);
+                }
+            }
+            mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                    adSelectionId,
+                    adInteractionsToRegister,
+                    maxTableSize,
+                    maxNumRowsPerDestination,
+                    reportingDestination);
+        }
+    }
+
+    private class RegisterAdBeaconSupportHelperDisabled implements RegisterAdBeaconSupportHelper {
+
+        @Override
+        public FluentFuture<
+                        Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
+                commitSellerRegisteredEvents(
+                        ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
+                        ReportingContext ctx) {
+            // Return immediately since registerAdBeacon is disabled
+            return FluentFuture.from(
+                    Futures.immediateFuture(Pair.create(sellerReportingResult, ctx)));
+        }
+
+        @Override
+        public FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
+                ReportingResults reportingResults, ReportingContext ctx) {
+            if (Objects.isNull(reportingResults.mBuyerReportingResult)) {
+                return FluentFuture.from(
+                        Futures.immediateFuture(
+                                Pair.create(
+                                        new ReportingUris(
+                                                null,
+                                                reportingResults.mSellerReportingResult
+                                                        .getReportingUri()),
+                                        ctx)));
+            }
+
+            // Return immediately since registerAdBeacon is disabled
+            return FluentFuture.from(
+                    Futures.immediateFuture(
+                            Pair.create(
+                                    new ReportingUris(
+                                            reportingResults.mBuyerReportingResult
+                                                    .getReportingUri(),
+                                            reportingResults.mSellerReportingResult
+                                                    .getReportingUri()),
+                                    ctx)));
         }
     }
 }

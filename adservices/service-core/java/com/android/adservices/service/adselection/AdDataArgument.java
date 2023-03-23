@@ -23,7 +23,9 @@ import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import android.adservices.common.AdData;
 import android.net.Uri;
 
+import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.js.JSScriptArgument;
+import com.android.adservices.service.js.JSScriptRecordArgument;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
@@ -69,6 +71,20 @@ public class AdDataArgument {
      *     AdData} is not valid JSON.
      */
     public static JSScriptArgument asScriptArgument(String name, AdData adData)
+            throws JSONException {
+        return recordArg(
+                name,
+                stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
+                jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
+    }
+
+    /**
+     * Returns a record arg represents a {@link DBAdData}.
+     *
+     * @throws JSONException If the content of {@link AdData#getMetadata()} of the wrapped {@code
+     *     AdData} is not valid JSON.
+     */
+    public static JSScriptRecordArgument asRecordArgument(String name, DBAdData adData)
             throws JSONException {
         return recordArg(
                 name,

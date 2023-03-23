@@ -46,8 +46,9 @@ import com.android.adservices.service.measurement.aggregation.AggregateDeduplica
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
-import com.android.adservices.service.measurement.util.DebugKey;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
@@ -213,12 +214,14 @@ class AttributionJobHandler {
                                             * (AGGREGATE_MAX_REPORT_DELAY
                                                     - AGGREGATE_MIN_REPORT_DELAY))
                                     + AGGREGATE_MIN_REPORT_DELAY);
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                    new DebugKeyAccessor().getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
             int debugReportStatus = AggregateReport.DebugReportStatus.NONE;
-            if (sourceDebugKey != null || triggerDebugKey != null) {
+            if (Debug.isAttributionDebugReportPermitted(source, trigger, sourceDebugKey,
+                      triggerDebugKey)) {
                 debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
             }
             AggregateReport aggregateReport =
@@ -418,6 +421,11 @@ class AttributionJobHandler {
                 && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
             return false;
         }
+
+        Pair<List<Uri>, List<Uri>> destinations =
+                measurementDao.getSourceDestinations(source.getId());
+        source.setAppDestinations(destinations.first);
+        source.setWebDestinations(destinations.second);
 
         EventReport newEventReport =
                 new EventReport.Builder()

@@ -15,9 +15,9 @@
  */
 package com.android.adservices.tests.ui.libs;
 
+import static android.Manifest.permission.POST_NOTIFICATIONS;
+
 import static com.android.adservices.tests.ui.libs.UiConstants.LAUNCH_TIMEOUT_MS;
-import static com.android.adservices.tests.ui.libs.UiConstants.NOTIFICATION_LIST_TIMEOUT_MS;
-import static com.android.adservices.tests.ui.libs.UiConstants.SIM_REGION;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_NAME;
 import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
 
@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 
+import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -33,30 +34,8 @@ import androidx.test.uiautomator.UiSelector;
 import com.android.adservices.api.R;
 import com.android.compatibility.common.util.ShellUtils;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class UiUtils {
-
-    public static Map<String, String> getInitialParams(boolean getSimRegion) {
-        Map<String, String> initialParams = new HashMap<String, String>();
-
-        if (getSimRegion) {
-            String simRegion = ShellUtils.runShellCommand("getprop gsm.sim.operator.iso-country");
-            initialParams.put(SIM_REGION, simRegion);
-        }
-
-        return initialParams;
-    }
-
-    public static void resetInitialParams(Map<String, String> initialParams) {
-        for (String initialParam : initialParams.keySet()) {
-            if (initialParam.equals(SIM_REGION)) {
-                ShellUtils.runShellCommand(
-                        "setprop gsm.sim.operator.iso-country " + initialParams.get(initialParam));
-            }
-        }
-    }
 
     public static void setAsNonWorkingHours() {
         // set the notification interval start time to 9:00 AM
@@ -74,10 +53,6 @@ public class UiUtils {
         // set the notification interval end time to 12:00 AM
         ShellUtils.runShellCommand(
                 "device_config put adservices consent_notification_interval_end_ms 86400000");
-
-        ShellUtils.runShellCommand(
-                "device_config put adservices"
-                        + " consent_notification_minimal_delay_before_interval_ends 0");
     }
 
     public static void enableConsentDebugMode() {
@@ -99,28 +74,36 @@ public class UiUtils {
     }
 
     public static void setAsEuDevice() {
-        ShellUtils.runShellCommand("setprop gsm.sim.operator.iso-country DE");
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices is_eea_device true");
     }
 
     public static void setAsRowDevice() {
-        ShellUtils.runShellCommand("setprop gsm.sim.operator.iso-country ROW");
+        ShellUtils.runShellCommand(
+                "device_config put adservices is_eea_device_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
     }
 
-    public static void enableGaUxFeature() {
+    public static void enableGa() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
     }
 
-    public static void disableGaUxFeature() {
+    public static void enableBeta() {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
     }
 
     public static void restartAdservices() {
         ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
     }
 
     public static void clearSavedStatus() {
         ShellUtils.runShellCommand(
                 "rm /data/user/0/com.google.android.adservices.api/files/"
+                        + "ConsentManagerStorageIdentifier.xml");
+        ShellUtils.runShellCommand(
+                "rm /data/user/0/com.android.adservices.api/files/"
                         + "ConsentManagerStorageIdentifier.xml");
         ShellUtils.runShellCommand(
                 "rm /data/system/adservices/0/consent/ConsentManagerStorageIdentifier.xml");
@@ -130,41 +113,14 @@ public class UiUtils {
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
     }
 
-    public static void verifyNotification(
-            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest)
-            throws Exception {
-        device.openNotification();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
-        UiObject scroller =
-                device.findObject(
-                        new UiSelector()
-                                .packageName(SYSTEM_UI_NAME)
-                                .resourceId(SYSTEM_UI_RESOURCE_ID));
-        assertThat(scroller.exists()).isTrue();
-
-        int notificationTitle =
-                isEuTest
-                        ? R.string.notificationUI_notification_title_eu
-                        : R.string.notificationUI_notification_title;
-
-        UiSelector notificationCardSelector =
-                new UiSelector().text(getResourceString(context, notificationTitle));
-        Thread.sleep(NOTIFICATION_LIST_TIMEOUT_MS);
-        UiObject notificationCard = scroller.getChild(notificationCardSelector);
-        if (!isDisplayed) {
-            assertThat(notificationCard.exists()).isFalse();
-            device.pressHome();
-            return;
-        } else {
-            assertThat(notificationCard.exists()).isTrue();
-        }
-
-        notificationCard.click();
-        Thread.sleep(LAUNCH_TIMEOUT_MS);
+    public static void enableNotificationPermission() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .grantRuntimePermission("com.android.adservices.api", POST_NOTIFICATIONS);
     }
 
-    public static void verifyGaUxNotification(
-            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest)
+    public static void verifyNotification(
+            Context context, UiDevice device, boolean isDisplayed, boolean isEuTest, boolean isGa)
             throws Exception {
         device.openNotification();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
@@ -177,23 +133,36 @@ public class UiUtils {
 
         int notificationTitle =
                 isEuTest
-                        ? R.string.notificationUI_notification_ga_title_eu
-                        : R.string.notificationUI_notification_ga_title;
+                        ? isGa
+                                ? R.string.notificationUI_notification_ga_title_eu
+                                : R.string.notificationUI_notification_title_eu
+                        : isGa
+                                ? R.string.notificationUI_notification_ga_title
+                                : R.string.notificationUI_notification_title;
+
+        int notificationHeader =
+                isEuTest
+                        ? isGa
+                                ? R.string.notificationUI_header_ga_title_eu
+                                : R.string.notificationUI_header_title_eu
+                        : isGa
+                                ? R.string.notificationUI_header_ga_title
+                                : R.string.notificationUI_header_title;
 
         UiSelector notificationCardSelector =
                 new UiSelector().text(getResourceString(context, notificationTitle));
-        Thread.sleep(NOTIFICATION_LIST_TIMEOUT_MS);
+
         UiObject notificationCard = scroller.getChild(notificationCardSelector);
         if (!isDisplayed) {
             assertThat(notificationCard.exists()).isFalse();
-            device.pressHome();
             return;
-        } else {
-            assertThat(notificationCard.exists()).isTrue();
         }
 
+        assertThat(notificationCard.exists()).isTrue();
         notificationCard.click();
         Thread.sleep(LAUNCH_TIMEOUT_MS);
+        UiObject title = getUiElement(device, context, notificationHeader);
+        assertThat(title.exists()).isTrue();
     }
 
     public static void consentConfirmationScreen(

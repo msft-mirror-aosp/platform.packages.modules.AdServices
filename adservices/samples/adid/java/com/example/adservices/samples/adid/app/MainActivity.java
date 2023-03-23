@@ -17,6 +17,7 @@ package com.example.adservices.samples.adid.app;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
 import android.view.View;
@@ -35,9 +36,6 @@ import java.util.concurrent.Executors;
  * screen. If there is an error, it displays the error.
  */
 public class MainActivity extends AppCompatActivity {
-
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String TAG = "AdIdSampleApp";
     private Button mAdIdButton;
     private TextView mAdIdTextView;
     private AdIdManager mAdIdManager;
@@ -49,7 +47,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mAdIdTextView = findViewById(R.id.adIdTextView);
         mAdIdButton = findViewById(R.id.adIdButton);
-        mAdIdManager = getSystemService(AdIdManager.class);
+        mAdIdManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? this.getSystemService(AdIdManager.class)
+                        : AdIdManager.get(this);
         registerAdIdButton();
     }
 

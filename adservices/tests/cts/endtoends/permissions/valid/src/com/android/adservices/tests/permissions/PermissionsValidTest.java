@@ -22,8 +22,6 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -37,6 +35,14 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.js.JSScriptEngine;
+import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -51,6 +57,35 @@ public class PermissionsValidTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String PERMISSION_NOT_REQUESTED =
             "Caller is not authorized to call this API. Permission was not requested.";
+
+    private String mPreviousAppAllowList;
+
+    @Before
+    public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            overridePpapiAppAllowList();
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
+
+    private void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    private void overridePpapiAppAllowList() {
+        mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    }
 
     @Test
     public void testValidPermissions_topics() throws Exception {
@@ -106,25 +141,8 @@ public class PermissionsValidTest {
     }
 
     @Test
-    public void testValidPermissions_selectAds_adSelectionFromOutcomesConfig() {
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        // We only need to get past the permissions check for this test to be valid
-        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
-    }
-
-    @Test
     public void testValidPermissions_reportImpression() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         long adSelectionId = 1;

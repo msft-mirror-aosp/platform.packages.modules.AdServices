@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -80,6 +81,7 @@ public class SourceTest {
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -116,6 +118,7 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -152,6 +155,7 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
                         .build());
     }
 
@@ -300,6 +304,9 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
     }
 
     @Test
@@ -349,27 +356,6 @@ public class SourceTest {
 
     @Test
     public void testSourceBuilder_validateArgumentAttributionDestination() {
-        assertInvalidSourceArguments(
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
-                SourceFixture.ValidSourceParams.PUBLISHER,
-                null,
-                null,
-                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                SourceFixture.ValidSourceParams.REGISTRANT,
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
-                SourceFixture.ValidSourceParams.EXPIRY_TIME,
-                SourceFixture.ValidSourceParams.PRIORITY,
-                SourceFixture.ValidSourceParams.SOURCE_TYPE,
-                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
-                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
-                SourceFixture.ValidSourceParams.DEBUG_KEY,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
-                SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
-                SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
-
         // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -748,7 +734,8 @@ public class SourceTest {
 
     @Test
     public void testAggregatableAttributionSource() throws Exception {
-        final Map<String, BigInteger> aggregatableSource = Map.of("2", new BigInteger("71"));
+        final TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("2", new BigInteger("71"));
         final Map<String, List<String>> filterMap = Map.of("x", List.of("1"));
         final AggregatableAttributionSource attributionSource =
                 new AggregatableAttributionSource.Builder()

@@ -40,8 +40,10 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -85,10 +87,18 @@ public class MeasurementManagerCtsTest {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
+    private String mPreviousAppAllowList;
+
     @Before
     public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // To grant access to all pp api app
         allowAllPackageNamesAccessMeasurementApis();
@@ -107,6 +117,10 @@ public class MeasurementManagerCtsTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
