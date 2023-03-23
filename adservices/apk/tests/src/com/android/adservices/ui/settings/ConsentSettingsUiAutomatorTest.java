@@ -35,6 +35,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -65,6 +66,8 @@ public class ConsentSettingsUiAutomatorTest {
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
@@ -72,10 +75,14 @@ public class ConsentSettingsUiAutomatorTest {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test
     public void consentSystemServerOnlyTest() throws UiObjectNotFoundException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
@@ -90,6 +97,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerAndPpApiTest() throws UiObjectNotFoundException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
@@ -97,6 +105,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerOnlyDialogsOnTest() throws UiObjectNotFoundException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         consentTest(true);
@@ -111,6 +120,7 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerAndPpApiDialogsOnTest() throws UiObjectNotFoundException {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         consentTest(true);
