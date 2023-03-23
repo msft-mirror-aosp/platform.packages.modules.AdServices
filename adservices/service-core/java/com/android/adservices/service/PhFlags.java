@@ -2495,6 +2495,8 @@ public final class PhFlags implements Flags {
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
+                "\t" + KEY_EU_NOTIF_FLOW_CHANGE_ENABLED + " = " + getEuNotifFlowChangeEnabled());
+        writer.println(
                 "\t"
                         + KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
                         + " = "
@@ -2615,5 +2617,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
+    }
+
+    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
+
+    @Override
+    public boolean getEuNotifFlowChangeEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
+                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
     }
 }
