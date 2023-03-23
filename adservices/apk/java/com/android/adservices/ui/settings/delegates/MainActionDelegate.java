@@ -28,6 +28,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
@@ -70,8 +71,13 @@ public class MainActionDelegate {
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showOptOutDialog(
-                                            mAdServicesSettingsMainActivity, mMainViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showOptOutDialogFragment(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    } else {
+                                        DialogManager.showOptOutDialog(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    }
                                 } else {
                                     mMainViewModel.setConsent(false);
                                 }

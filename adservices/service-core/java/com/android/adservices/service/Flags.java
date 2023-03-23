@@ -1809,6 +1809,13 @@ public interface Flags {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /** UI Dialog Fragment feature enabled. */
+    boolean UI_DIALOG_FRAGMENT = false;
+    /** Returns if the UI Dialog Fragment is enabled. */
+    default boolean getUiDialogFragmentEnabled() {
+        return UI_DIALOG_FRAGMENT;
+    }
+
     /** The EEA device region feature is off by default. */
     boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
 
