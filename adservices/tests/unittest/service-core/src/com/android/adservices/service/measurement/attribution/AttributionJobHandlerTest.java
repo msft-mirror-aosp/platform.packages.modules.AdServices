@@ -363,8 +363,7 @@ public class AttributionJobHandlerTest {
         when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
         mHandler.performPendingAttributions();
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
-        verify(mMeasurementDao)
-                .updateSourceStatus(eq(List.of(source1.getId())), eq(Source.Status.IGNORED));
+        verify(mMeasurementDao, never()).updateSourceStatus(any(), anyInt());
         assertEquals(1, matchingSourceList.size());
         verify(mMeasurementDao)
                 .updateTriggerStatus(

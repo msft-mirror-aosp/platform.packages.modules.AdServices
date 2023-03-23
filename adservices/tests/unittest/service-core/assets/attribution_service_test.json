@@ -13,6 +13,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -58,6 +59,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -482,6 +484,7 @@
             "eventTime": 1643235573000,
             "expiryTime": 1643408373000,
             "eventReportWindow": 1643408373000,
+            "aggregatableReportWindow": 1643408373000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -527,6 +530,7 @@
             "eventTime": 1643235573000,
             "expiryTime": 1643408373000,
             "eventReportWindow": 1643408373000,
+            "aggregatableReportWindow": 1643408373000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -575,6 +579,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -620,6 +625,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -669,6 +675,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -683,6 +690,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -734,6 +742,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -748,6 +757,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -828,6 +838,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -841,6 +852,7 @@
             "eventTime": 8640000002,
             "expiryTime": 8726400002,
             "eventReportWindow": 8726400002,
+            "aggregatableReportWindow": 8726400002,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -891,6 +903,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -904,6 +917,7 @@
             "eventTime": 8640000002,
             "expiryTime": 8726400002,
             "eventReportWindow": 8726400002,
+            "aggregatableReportWindow": 8726400002,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -985,6 +999,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -998,6 +1013,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1050,6 +1066,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -1063,6 +1080,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1148,6 +1166,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1161,6 +1180,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1214,6 +1234,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1227,6 +1248,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 1,
             "installCooldownWindow": 432000000,
@@ -1312,6 +1334,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1325,6 +1348,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1378,6 +1402,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 1,
             "registrant": "android-app://com.example.abc"
@@ -1391,6 +1416,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1476,6 +1502,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1489,6 +1516,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 0,
             "installCooldownWindow": 432000000,
@@ -1541,6 +1569,7 @@
             "eventTime": 8640000001,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1554,6 +1583,7 @@
             "eventTime": 8640000000,
             "expiryTime": 10368000000,
             "eventReportWindow": 10368000000,
+            "aggregatableReportWindow": 10368000000,
             "priority": 50,
             "status": 1,
             "installCooldownWindow": 432000000,
@@ -1640,6 +1670,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1686,6 +1717,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1762,6 +1794,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1807,6 +1840,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -1883,6 +1917,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -1941,6 +1976,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -2028,6 +2064,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -2086,6 +2123,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -2186,6 +2224,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -2246,6 +2285,7 @@
           "eventTime": 8640000001,
           "expiryTime": 8726400001,
           "eventReportWindow": 8726400001,
+          "aggregatableReportWindow": 8726400001,
           "priority": 100,
           "status": 0,
           "registrant": "android-app://com.example.abc"
@@ -2348,6 +2388,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2444,6 +2485,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2640,6 +2682,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2737,6 +2780,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -2919,7 +2963,7 @@
       }
     },
     {
-      "name": "Should matches but no report generated - AttributionMode = Never",
+      "name": "Should match but no report generated - AttributionMode = Never",
       "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Never. Hence, no reports generated",
       "input": {
         "sources": [
@@ -2932,6 +2976,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2946,6 +2991,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -2997,8 +3043,9 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
-            "status": 1,
+            "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1
           },
@@ -3011,6 +3058,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3053,7 +3101,7 @@
       }
     },
     {
-      "name": "Should matches but no report generated - AttributionMode = Falsely",
+      "name": "Should match but no report generated - AttributionMode = Falsely",
       "description": "2 sources, 1 trigger. Ignore 1st source, match with 2nd source but it has attribution mode = Falsely. Hence, no report generation",
       "input": {
         "sources": [
@@ -3066,6 +3114,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3080,6 +3129,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3131,8 +3181,9 @@
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 100,
-            "status": 1,
+            "status": 0,
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1
           },
@@ -3145,6 +3196,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3201,6 +3253,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3252,6 +3305,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3323,7 +3377,7 @@
     },
     {
       "name": "Trigger top level filter-set doesn't match with source filter - no report generated",
-      "description": "1 source, 1 trigger. Ignore trigger, hence no event report generated",
+      "description": "1 source, 1 trigger. Ignore trigger, hence no event or aggregate reports generated",
       "input": {
         "sources": [
           {
@@ -3336,8 +3390,12 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
             "filterData": {
@@ -3365,6 +3423,15 @@
                 "priority": 101
               }
             ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz",
             "filters": [{
@@ -3374,6 +3441,7 @@
           }
         ],
         "event_reports": [],
+        "aggregate_reports": [],
         "attributions": []
       },
       "output": {
@@ -3388,8 +3456,12 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
+            "aggregationKeys": {
+              "campaignCounts": "0x159"
+            },
             "registrant": "android-app://com.example.abc",
             "attribution_mode": 1,
             "filterData": {
@@ -3417,6 +3489,15 @@
                 "priority": 101
               }
             ],
+            "aggregatableTriggerData": [
+              {
+                "key_piece": "0x400",
+                "source_keys": ["campaignCounts"]
+              }
+            ],
+            "aggregatableValues": {
+              "campaignCounts": 32678
+            },
             "triggerTime": 8640000002,
             "registrant": "android-app://com.example.xyz",
             "filters": [{
@@ -3426,6 +3507,7 @@
           }
         ],
         "event_reports": [],
+        "aggregate_reports": [],
         "attributions": []
       }
     },
@@ -3444,6 +3526,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3496,6 +3579,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3551,6 +3635,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3616,6 +3701,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3714,6 +3800,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3778,6 +3865,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8640000030,
             "eventReportWindow": 8640000030,
+            "aggregatableReportWindow": 8640000030,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3875,6 +3963,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -3936,6 +4025,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4030,6 +4120,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4090,6 +4181,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4183,6 +4275,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4239,6 +4332,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4329,6 +4423,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4394,6 +4489,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4491,6 +4587,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4559,6 +4656,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4660,6 +4758,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -4727,6 +4826,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 101,
             "status": 0,
             "registrant": "android-app://com.example.abc",
@@ -5321,6 +5421,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -5334,6 +5435,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -5417,6 +5519,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -5430,6 +5533,7 @@
             "eventTime": 8640000001,
             "expiryTime": 8726400001,
             "eventReportWindow": 8726400001,
+            "aggregatableReportWindow": 8726400001,
             "priority": 200,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -5545,6 +5649,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -5582,6 +5687,7 @@
             "eventTime": 8640000000,
             "expiryTime": 8726400000,
             "eventReportWindow": 8726400000,
+            "aggregatableReportWindow": 8726400000,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
