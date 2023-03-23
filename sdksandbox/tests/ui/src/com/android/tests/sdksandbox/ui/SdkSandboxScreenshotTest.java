@@ -52,6 +52,7 @@ public class SdkSandboxScreenshotTest {
     private static final int HEIGHT_PX = 500;
 
     private static final String IMG_IDENTIFIER = "colors";
+    private static final String SDK_NAME = "com.android.sdksandbox.uiprovider";
     private IUiProviderApi mUiProvider;
     private UiAutomation mUiAutomation;
 
@@ -59,7 +60,8 @@ public class SdkSandboxScreenshotTest {
     public SdkSandboxUiTestRule mUiTestRule =
             new SdkSandboxUiTestRule(
                     InstrumentationRegistry.getInstrumentation().getContext(),
-                    UiTestActivity.class);
+                    UiTestActivity.class,
+                    SDK_NAME);
 
     @Before
     public void setUp() {
