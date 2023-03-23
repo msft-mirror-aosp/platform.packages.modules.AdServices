@@ -234,11 +234,6 @@ public class JsFetcherTest {
         String js = buyerDecisionLogic.getResponseBody();
         loggerLatch.await();
         assertEquals(BIDDING_LOGIC_OVERRIDE, js);
-        assertEquals(
-                BUYER_BIDDING_LOGIC_JS_VERSION,
-                JsVersionHelper.getVersionFromHeader(
-                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                        buyerDecisionLogic.getResponseHeaders()));
         mMockWebServerRule.verifyMockServerRequests(
                 mServer, 0, Collections.emptyList(), REQUEST_MATCHER_EXACT_MATCH);
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGetBuyerDecisionLogic();

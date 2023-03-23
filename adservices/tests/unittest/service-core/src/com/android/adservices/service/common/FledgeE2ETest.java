@@ -364,21 +364,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
                         + "}";
@@ -540,21 +532,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -740,21 +724,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -941,21 +917,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1141,21 +1109,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1301,6 +1261,7 @@ public class FledgeE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1363,21 +1324,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -1516,6 +1469,7 @@ public class FledgeE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1575,21 +1529,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1768,21 +1714,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                    + "    registerAdBeacon('click', '"
                         + clickUriBuyer
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
@@ -1948,21 +1886,13 @@ public class FledgeE2ETest {
                         + "' } };\n"
                         + "}";
         String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                        + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
                         + BUYER_REPORTING_PATH
                         + "' } };\n"
                         + "}";
@@ -3588,6 +3518,7 @@ public class FledgeE2ETest {
                         mAdSelectionEntryDao,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
