@@ -35,10 +35,14 @@ import java.util.Objects;
 
 /** Utility class for compatibility of PackageManager APIs with Android S and earlier. */
 public final class PackageManagerCompatUtils {
+
     private PackageManagerCompatUtils() {
         // Prevent instantiation
     }
 
+    // This list is the same as the list declared in the Manifest, where the activities are
+    // disabled so that there are no dups on T+ devices.
+    // TODO(b/263904312): Remove after max_sdk_version is implemented.
     // TODO(b/272737642) scan activities instead of hardcode
     private static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
             ImmutableList.copyOf(
@@ -171,5 +175,25 @@ public final class PackageManagerCompatUtils {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Update state of activities for user consent and control
+     *
+     * @param context the application context
+     * @param adServicesPackageName the package name of AdServices
+     * @param adServicesActivitiesEnabled the state of AdServices activities
+     */
+    public static void updateAdExtServicesActivities(
+            Context context, String adServicesPackageName, boolean adServicesActivitiesEnabled) {
+        PackageManager packageManager = context.getPackageManager();
+        for (String activity : CONSENT_ACTIVITIES_CLASSES) {
+            packageManager.setComponentEnabledSetting(
+                    new ComponentName(adServicesPackageName, activity),
+                    adServicesActivitiesEnabled
+                            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
+        }
     }
 }
