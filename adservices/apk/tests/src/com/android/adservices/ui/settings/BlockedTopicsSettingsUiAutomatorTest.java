@@ -104,6 +104,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Override needful PH Flags.
         overridePrerequisiteFlags();
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
@@ -117,6 +119,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Reset PH Flags to default values.
         resetFlagsToDefault();
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test
