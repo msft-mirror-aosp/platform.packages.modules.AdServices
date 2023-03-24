@@ -188,7 +188,7 @@ public class AdSelectionE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
 
-    private static final String READ_BID_FROM_AD_METADATA_JS =
+    public static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
@@ -209,7 +209,7 @@ public class AdSelectionE2ETest {
                     + "'render': result.render_uri };\n"
                     + "}";
 
-    private static final String USE_BID_AS_SCORE_JS =
+    public static final String USE_BID_AS_SCORE_JS =
             "function scoreAd(ad, bid, auction_config, seller_signals, "
                     + "trusted_scoring_signals, contextual_signal, user_signal, "
                     + "custom_audience_signal) { \n"
@@ -5176,6 +5176,20 @@ public class AdSelectionE2ETest {
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
+        }
+
+        @Override
+        public String toString() {
+            return "AdSelectionTestCallback{"
+                    + "mCountDownLatch="
+                    + mCountDownLatch
+                    + ", mIsSuccess="
+                    + mIsSuccess
+                    + ", mAdSelectionResponse="
+                    + mAdSelectionResponse
+                    + ", mFledgeErrorResponse="
+                    + mFledgeErrorResponse
+                    + '}';
         }
     }
 
