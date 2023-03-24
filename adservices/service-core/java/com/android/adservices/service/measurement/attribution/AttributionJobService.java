@@ -33,6 +33,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -71,7 +72,8 @@ public class AttributionJobService extends JobService {
                     boolean success =
                             new AttributionJobHandler(
                                             DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()))
+                                                    getApplicationContext()),
+                                            new DebugReportApi(getApplicationContext()))
                                     .performPendingAttributions();
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue

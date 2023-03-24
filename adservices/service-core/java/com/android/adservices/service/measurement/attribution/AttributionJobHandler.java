@@ -47,6 +47,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateHistogram
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
@@ -75,6 +76,7 @@ class AttributionJobHandler {
 
     private static final String API_VERSION = "0.1";
     private final DatastoreManager mDatastoreManager;
+    private final DebugReportApi mDebugReportApi;
 
     private final Flags mFlags;
 
@@ -83,14 +85,17 @@ class AttributionJobHandler {
         ATTRIBUTED
     }
 
-    AttributionJobHandler(DatastoreManager datastoreManager) {
+    AttributionJobHandler(DatastoreManager datastoreManager, DebugReportApi debugReportApi) {
         mDatastoreManager = datastoreManager;
         mFlags = FlagsFactory.getFlags();
+        mDebugReportApi = debugReportApi;
     }
 
-    AttributionJobHandler(DatastoreManager datastoreManager, Flags flags) {
+    AttributionJobHandler(
+            DatastoreManager datastoreManager, Flags flags, DebugReportApi debugReportApi) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
+        mDebugReportApi = debugReportApi;
     }
 
     /**
@@ -149,6 +154,8 @@ class AttributionJobHandler {
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     if (!doTopLevelFiltersMatch(source, trigger)) {
+                        mDebugReportApi.scheduleTriggerNoMatchingFilterDebugReport(
+                                source, trigger, measurementDao);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -166,7 +173,9 @@ class AttributionJobHandler {
 
                     if (eventTriggeringStatus == TriggeringStatus.ATTRIBUTED
                             || aggregateTriggeringStatus == TriggeringStatus.ATTRIBUTED) {
-                        ignoreCompetingSources(measurementDao, remainingMatchingSources,
+                        ignoreCompetingSources(
+                                measurementDao,
+                                remainingMatchingSources,
                                 trigger.getEnrollmentId());
                         attributeTriggerAndInsertAttribution(trigger, source, measurementDao);
                     } else {
