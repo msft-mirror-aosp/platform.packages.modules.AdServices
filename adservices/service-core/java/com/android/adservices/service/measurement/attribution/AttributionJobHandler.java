@@ -209,11 +209,22 @@ class AttributionJobHandler {
         }
 
         try {
-            Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
+            Optional<AggregateDeduplicationKey> aggregateDeduplicationKeyOptional =
                     maybeGetAggregateDeduplicationKey(source, trigger);
-            if (aggregateDeduplicationKey.isPresent()
+            if (aggregateDeduplicationKeyOptional.isPresent()
                     && source.getAggregateReportDedupKeys()
-                            .contains(aggregateDeduplicationKey.get().getDeduplicationKey())) {
+                            .contains(
+                                    aggregateDeduplicationKeyOptional
+                                            .get()
+                                            .getDeduplicationKey())) {
+                return TriggeringStatus.DROPPED;
+            }
+            if (aggregateDeduplicationKeyOptional.isPresent()
+                    && source.getAggregateReportDedupKeys()
+                            .contains(
+                                    aggregateDeduplicationKeyOptional
+                                            .get()
+                                            .getDeduplicationKey())) {
                 return TriggeringStatus.DROPPED;
             }
             Optional<List<AggregateHistogramContribution>> contributions =
@@ -269,10 +280,16 @@ class AttributionJobHandler {
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
                             .setTriggerId(trigger.getId())
+                            .setDedupKey(
+                                    aggregateDeduplicationKeyOptional.isPresent()
+                                            ? aggregateDeduplicationKeyOptional
+                                                    .get()
+                                                    .getDeduplicationKey()
+                                            : null)
                             .build();
 
             finalizeAggregateReportCreation(
-                    source, aggregateDeduplicationKey, aggregateReport, measurementDao);
+                    source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
             // TODO (b/230618328): read from DB and upload unencrypted aggregate report.
             return TriggeringStatus.ATTRIBUTED;
         } catch (JSONException e) {
@@ -518,13 +535,13 @@ class AttributionJobHandler {
 
     private static void finalizeAggregateReportCreation(
             Source source,
-            Optional<AggregateDeduplicationKey> aggregateDeduplicationKey,
+            Optional<AggregateDeduplicationKey> aggregateDeduplicationKeyOptional,
             AggregateReport aggregateReport,
             IMeasurementDao measurementDao)
             throws DatastoreException {
-        if (aggregateDeduplicationKey.isPresent()) {
+        if (aggregateDeduplicationKeyOptional.isPresent()) {
             source.getAggregateReportDedupKeys()
-                    .add(aggregateDeduplicationKey.get().getDeduplicationKey());
+                    .add(aggregateDeduplicationKeyOptional.get().getDeduplicationKey());
         }
 
         if (source.getParentId() == null) {
