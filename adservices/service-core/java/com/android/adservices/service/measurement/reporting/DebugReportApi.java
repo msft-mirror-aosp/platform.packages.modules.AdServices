@@ -45,6 +45,7 @@ public class DebugReportApi {
         String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
+        String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
     }
 
@@ -142,6 +143,23 @@ public class DebugReportApi {
         scheduleReport(
                 Type.SOURCE_STORAGE_LIMIT,
                 generateSourceDebugReportBody(source, limit),
+                source.getEnrollmentId(),
+                dao);
+    }
+
+    /** Schedules the Source Unknown Error Debug Report */
+    public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR)) {
+            return;
+        }
+        if (getAdIdPermissionFromSource(source) == PermissionState.DENIED
+                || getArDebugPermissionFromSource(source) == PermissionState.DENIED) {
+            LogUtil.d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR);
+            return;
+        }
+        scheduleReport(
+                Type.SOURCE_UNKNOWN_ERROR,
+                generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
                 dao);
     }
