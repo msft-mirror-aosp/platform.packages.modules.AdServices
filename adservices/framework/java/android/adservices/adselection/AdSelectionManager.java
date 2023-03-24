@@ -528,10 +528,7 @@ public class AdSelectionManager {
      * <p>In all other failure cases, the {@code outcomeReceiver} will return an empty {@link
      * Object}. Note that to protect user privacy, internal errors will not be sent back via an
      * exception.
-     *
-     * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramRequest updateAdCounterHistogramRequest,

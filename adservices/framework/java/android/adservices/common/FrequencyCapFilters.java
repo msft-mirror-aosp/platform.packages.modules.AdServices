@@ -43,10 +43,7 @@ import java.util.concurrent.Executor;
  * <p>Frequency caps filters combine an event type with a set of {@link KeyedFrequencyCap} objects
  * to define a set of ad filters. If any of these frequency caps are exceeded for a given ad, the ad
  * will be removed from the group of ads submitted to a buyer adtech's bidding function.
- *
- * @hide
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public final class FrequencyCapFilters implements Parcelable {
     /**
      * Event types which are used to update ad counter histograms, which inform frequency cap
