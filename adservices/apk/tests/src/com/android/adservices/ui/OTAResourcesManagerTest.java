@@ -28,7 +28,6 @@ import android.content.Context;
 import android.content.res.loader.ResourcesProvider;
 import android.os.ParcelFileDescriptor;
 
-import androidx.test.espresso.core.internal.deps.guava.util.concurrent.Futures;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -39,6 +38,7 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
