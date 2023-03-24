@@ -521,7 +521,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mFlags,
                         mAdSelectionServiceFilter,
-                        ConsentManager.getInstance(mContext),
+                        mConsentManager,
                         callingUid);
 
         worker.updateAdCounterHistogram(inputParams, callback);
