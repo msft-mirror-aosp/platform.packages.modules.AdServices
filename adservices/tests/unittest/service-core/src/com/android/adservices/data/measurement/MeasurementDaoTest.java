@@ -51,6 +51,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
+import com.android.adservices.service.measurement.AsyncRegistrationFixture.ValidAsyncRegistrationParams;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -3785,6 +3786,9 @@ public class MeasurementDaoTest {
                             asyncRegistration.getDebugKeyAllowed());
                     values.put(
                             AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
+                    values.put(
+                            AsyncRegistrationContract.REGISTRATION_ID,
+                            asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -3865,6 +3869,9 @@ public class MeasurementDaoTest {
                             asyncRegistration.getDebugKeyAllowed());
                     values.put(
                             AsyncRegistrationContract.TYPE, asyncRegistration.getType().toString());
+                    values.put(
+                            AsyncRegistrationContract.REGISTRATION_ID,
+                            asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -3916,6 +3923,7 @@ public class MeasurementDaoTest {
                 .setTopOrigin(Uri.parse("android-app://installed-registrant"))
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                .setRegistrationId(UUID.randomUUID().toString())
                 .build();
     }
 
@@ -3928,6 +3936,7 @@ public class MeasurementDaoTest {
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                 .setRequestTime(Long.MAX_VALUE)
+                .setRegistrationId(UUID.randomUUID().toString())
                 .build();
     }
 
@@ -3939,6 +3948,7 @@ public class MeasurementDaoTest {
                 .setTopOrigin(Uri.parse("android-app://not-installed-registrant"))
                 .setAdIdPermission(false)
                 .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                .setRegistrationId(UUID.randomUUID().toString())
                 .build();
     }
 
@@ -3957,6 +3967,7 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
+                        .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
         asyncRegistrationList.add(
@@ -3968,6 +3979,7 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
+                        .setRegistrationId(UUID.randomUUID().toString())
                         .build());
 
         asyncRegistrationList.forEach(
@@ -3991,6 +4003,9 @@ public class MeasurementDaoTest {
                     values.put(
                             AsyncRegistrationContract.REQUEST_TIME,
                             asyncRegistration.getRequestTime());
+                    values.put(
+                            AsyncRegistrationContract.REGISTRATION_ID,
+                            asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 
@@ -4764,6 +4779,7 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(1)
+                        .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
 
         AsyncRegistration ar2 =
@@ -4774,6 +4790,7 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
+                        .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
 
         AsyncRegistration ar3 =
@@ -4784,6 +4801,7 @@ public class MeasurementDaoTest {
                         .setAdIdPermission(false)
                         .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                         .setRequestTime(Long.MAX_VALUE)
+                        .setRegistrationId(ValidAsyncRegistrationParams.REGISTRATION_ID)
                         .build();
 
         List<AsyncRegistration> asyncRegistrationList = List.of(ar1, ar2, ar3);
@@ -4800,6 +4818,9 @@ public class MeasurementDaoTest {
                     values.put(
                             AsyncRegistrationContract.TOP_ORIGIN,
                             asyncRegistration.getTopOrigin().toString());
+                    values.put(
+                            AsyncRegistrationContract.REGISTRATION_ID,
+                            asyncRegistration.getRegistrationId());
                     db.insert(AsyncRegistrationContract.TABLE, /* nullColumnHack */ null, values);
                 });
 

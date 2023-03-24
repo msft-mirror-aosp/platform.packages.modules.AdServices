@@ -185,7 +185,7 @@ public class AsyncRegistration {
     }
 
     /** Returns the registration id. */
-    @Nullable
+    @NonNull
     public String getRegistrationId() {
         return mRegistrationId;
     }
@@ -334,13 +334,14 @@ public class AsyncRegistration {
         }
 
         /** See {@link AsyncRegistration#getRegistrationId()} */
-        public Builder setRegistrationId(@Nullable String registrationId) {
+        public Builder setRegistrationId(@NonNull String registrationId) {
             mRegistrationId = registrationId;
             return this;
         }
 
         /** Build the {@link AsyncRegistration}. */
         public AsyncRegistration build() {
+            Objects.requireNonNull(mRegistrationId);
             return new AsyncRegistration(this);
         }
     }
