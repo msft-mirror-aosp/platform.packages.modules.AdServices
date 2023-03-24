@@ -142,7 +142,11 @@ public class AdDataFixture {
                 AdServicesParcelableUtil::writeIntegerSetToParcel);
         AdServicesParcelableUtil.writeNullableToParcel(
                 sourceParcel,
-                FrequencyCapFiltersFixture.getFrequencyCapFiltersWithExcessiveNumFilters(),
+                new AdFilters.Builder()
+                        .setFrequencyCapFilters(
+                                FrequencyCapFiltersFixture
+                                        .getFrequencyCapFiltersWithExcessiveNumFilters())
+                        .build(),
                 (targetParcel, sourceFilters) -> sourceFilters.writeToParcel(targetParcel, 0));
         sourceParcel.setDataPosition(0);
 
