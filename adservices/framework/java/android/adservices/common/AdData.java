@@ -124,10 +124,7 @@ public final class AdData implements Parcelable {
      *
      * <p>Note that these keys can be overwritten along with the ads and other bidding data for a
      * custom audience during the custom audience's daily update.
-     *
-     * @hide
      */
-    // TODO(b/221876775): Unhide for frequency cap API review
     @NonNull
     public Set<Integer> getAdCounterKeys() {
         return mAdCounterKeys;
@@ -138,10 +135,7 @@ public final class AdData implements Parcelable {
      *
      * <p>The filters, if met or exceeded, exclude the associated ad from participating in ad
      * selection. They are optional and if {@code null} specify that no filters apply to this ad.
-     *
-     * @hide
      */
-    // TODO(b/221876775): Unhide for app install/frequency cap API review
     @Nullable
     public AdFilters getAdFilters() {
         return mAdFilters;
@@ -234,10 +228,7 @@ public final class AdData implements Parcelable {
          * Sets the set of keys used in counting events.
          *
          * <p>See {@link #getAdCounterKeys()} for more information.
-         *
-         * @hide
          */
-        // TODO(b/221876775): Unhide for frequency cap API review
         @NonNull
         public AdData.Builder setAdCounterKeys(@NonNull Set<Integer> adCounterKeys) {
             Objects.requireNonNull(adCounterKeys);
@@ -251,10 +242,7 @@ public final class AdData implements Parcelable {
          * Sets all {@link AdFilters} associated with the ad.
          *
          * <p>See {@link #getAdFilters()} for more information.
-         *
-         * @hide
          */
-        // TODO(b/221876775): Unhide for app install/frequency cap API review
         @NonNull
         public AdData.Builder setAdFilters(@Nullable AdFilters adFilters) {
             mAdFilters = adFilters;

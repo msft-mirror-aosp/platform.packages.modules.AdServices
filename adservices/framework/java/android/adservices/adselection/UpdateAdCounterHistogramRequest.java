@@ -34,11 +34,9 @@ import java.util.concurrent.Executor;
  * Request object wrapping the required arguments needed to update an ad counter histogram.
  *
  * <p>The ad counter histograms, which are historical logs of events which are associated with an ad
- * counter key and an ad event type, are used to inform frequency cap filtering in FLEDGE.
- *
- * @hide
+ * counter key and an ad event type, are used to inform frequency cap filtering when using the
+ * Protected Audience APIs.
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public class UpdateAdCounterHistogramRequest {
     /** @hide */
     public static final String UNSET_AD_EVENT_TYPE_MESSAGE = "Ad event type must be set";
@@ -67,11 +65,11 @@ public class UpdateAdCounterHistogramRequest {
      *
      * <p>For more information about the ad selection ID, see {@link AdSelectionOutcome}.
      *
-     * <p>The ad must have been selected from FLEDGE ad selection in the last 24 hours, and the ad
-     * selection call must have been initiated from the same app as the current calling app. Event
-     * histograms for all ad counter keys associated with the ad specified by the ad selection ID
-     * will be updated for the ad event type from {@link #getAdEventType()}, to be used in FLEDGE
-     * frequency cap filtering.
+     * <p>The ad must have been selected from Protected Audience ad selection in the last 24 hours,
+     * and the ad selection call must have been initiated from the same app as the current calling
+     * app. Event histograms for all ad counter keys associated with the ad specified by the ad
+     * selection ID will be updated for the ad event type from {@link #getAdEventType()}, to be used
+     * in Protected Audience frequency cap filtering.
      */
     public long getAdSelectionId() {
         return mAdSelectionId;
@@ -156,7 +154,7 @@ public class UpdateAdCounterHistogramRequest {
         }
 
         /**
-         * Gets the ad selection ID with which the rendered ad's events are associated.
+         * Sets the ad selection ID with which the rendered ad's events are associated.
          *
          * <p>See {@link #getAdSelectionId()} for more information.
          */
