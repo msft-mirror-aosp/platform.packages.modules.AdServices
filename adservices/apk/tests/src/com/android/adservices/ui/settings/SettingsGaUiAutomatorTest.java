@@ -64,6 +64,8 @@ public class SettingsGaUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
@@ -71,6 +73,8 @@ public class SettingsGaUiAutomatorTest {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test

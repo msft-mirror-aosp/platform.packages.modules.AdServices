@@ -29,6 +29,7 @@ import com.android.adservices.service.measurement.util.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -190,7 +191,7 @@ public class Source {
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         int destinationMultiplier =
-                (mAppDestinations != null && mWebDestinations != null)
+                hasAppDestinations() && hasWebDestinations()
                         ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
                         : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
 
@@ -280,14 +281,14 @@ public class Source {
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability() {
         // Both destinations are set and install attribution is supported
-        if (mWebDestinations != null && isInstallDetectionEnabled()) {
+        if (hasWebDestinations() && isInstallDetectionEnabled()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
         }
 
         // Both destinations are set but install attribution isn't supported
-        if (mAppDestinations != null && mWebDestinations != null) {
+        if (hasAppDestinations() && hasWebDestinations()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
@@ -307,7 +308,7 @@ public class Source {
     }
 
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestinations != null;
+        return mInstallCooldownWindow > 0 && hasAppDestinations();
     }
 
     @Override
@@ -318,8 +319,8 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
-                && Objects.equals(mAppDestinations, source.mAppDestinations)
-                && Objects.equals(mWebDestinations, source.mWebDestinations)
+                && areEqualNullableDestinations(mAppDestinations, source.mAppDestinations)
+                && areEqualNullableDestinations(mWebDestinations, source.mWebDestinations)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
@@ -705,6 +706,16 @@ public class Source {
         return mDebugJoinKey;
     }
 
+    /** See {@link Source#getAppDestinations()} */
+    public void setAppDestinations(@Nullable List<Uri> appDestinations) {
+        mAppDestinations = appDestinations;
+    }
+
+    /** See {@link Source#getWebDestinations()} */
+    public void setWebDestinations(@Nullable List<Uri> webDestinations) {
+        mWebDestinations = webDestinations;
+    }
+
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
@@ -773,7 +784,7 @@ public class Source {
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
         return mSourceType == SourceType.EVENT
-                && mWebDestinations != null
+                && hasWebDestinations()
                 && isInstallDetectionEnabled();
     }
 
@@ -787,14 +798,36 @@ public class Source {
      * @return app or web destination {@link Uri}
      */
     private List<Uri> resolveFakeReportDestinations(int destinationIdentifier) {
-        if (mAppDestinations != null && mWebDestinations != null) {
+        if (hasAppDestinations() && hasWebDestinations()) {
             // It could be a direct destinationIdentifier == 0 check, but
             return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
                     ? mAppDestinations
                     : mWebDestinations;
         }
 
-        return mAppDestinations != null ? mAppDestinations : mWebDestinations;
+        return hasAppDestinations()
+                ? mAppDestinations
+                : mWebDestinations;
+    }
+
+    private boolean hasAppDestinations() {
+        return mAppDestinations != null && mAppDestinations.size() > 0;
+    }
+
+    private boolean hasWebDestinations() {
+        return mWebDestinations != null && mWebDestinations.size() > 0;
+    }
+
+    private static boolean areEqualNullableDestinations(List<Uri> destinations,
+            List<Uri> otherDestinations) {
+        if (destinations == null && otherDestinations == null) {
+            return true;
+        } else if (destinations == null || otherDestinations == null) {
+            return false;
+        } else {
+            return ImmutableMultiset.copyOf(destinations).equals(
+                    ImmutableMultiset.copyOf(otherDestinations));
+        }
     }
 
     /**
@@ -1110,9 +1143,9 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType);
 
-            if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
-                throw new IllegalArgumentException("At least one destination is required");
-            }
+            //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
+            //    throw new IllegalArgumentException("At least one destination is required");
+            //}
 
             return mBuilding;
         }
