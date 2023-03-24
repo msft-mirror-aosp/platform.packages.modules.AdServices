@@ -69,9 +69,9 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        sLogger.v("Applying filters to %d CAs.", cas.size());
         List<DBCustomAudience> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
+        sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
         int totalAds = 0;
         int remainingAds = 0;
         for (DBCustomAudience ca : cas) {
@@ -104,9 +104,11 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public ContextualAds filterContextualAds(ContextualAds contextualAds) {
-        sLogger.v("Applying filters to %d contextual ads.", contextualAds.getAdsWithBid().size());
         List<AdWithBid> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
+        sLogger.v(
+                "Applying filters to %d contextual ads with current time %s.",
+                contextualAds.getAdsWithBid().size(), currentTime);
         for (AdWithBid ad : contextualAds.getAdsWithBid()) {
             DBAdData dbAdData =
                     new DBAdData(
