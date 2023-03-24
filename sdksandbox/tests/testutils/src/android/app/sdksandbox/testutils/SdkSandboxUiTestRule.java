@@ -70,7 +70,6 @@ import platform.test.screenshot.matchers.BitmapMatcher;
 public class SdkSandboxUiTestRule implements TestRule {
 
     private static final String ASSETS_DIR = "assets";
-    private static final String SDK_NAME = "com.android.sdksandbox.uiprovider";
     // TODO(b/268204038): Support different emulation configurations.
     private static final int EMULATION_WIDTH = 1080;
     private static final int EMULATION_HEIGHT = 2340;
@@ -80,7 +79,7 @@ public class SdkSandboxUiTestRule implements TestRule {
     private final LoadSdkInSandboxRule mLoadSdkInSandboxRule;
     private final RuleChain mDelegateRule;
 
-    public SdkSandboxUiTestRule(Context context, Class activityClass) {
+    public SdkSandboxUiTestRule(Context context, Class activityClass, String sdkName) {
         GoldenImagePathManager pathManager =
                 new GoldenImagePathManager(
                         context,
@@ -88,7 +87,7 @@ public class SdkSandboxUiTestRule implements TestRule {
                         GoldenImagePathManagerKt.getDeviceOutputDirectory(context),
                         new PathConfig());
         mScreenshotTestRule = new ScreenshotTestRule(pathManager);
-        mLoadSdkInSandboxRule = new LoadSdkInSandboxRule(context, activityClass);
+        mLoadSdkInSandboxRule = new LoadSdkInSandboxRule(context, activityClass, sdkName);
         DeviceEmulationRule deviceEmulationRule =
                 new DeviceEmulationRule(
                         new DeviceEmulationSpec(
@@ -155,13 +154,15 @@ public class SdkSandboxUiTestRule implements TestRule {
 
     private static class LoadSdkInSandboxRule extends ExternalResource {
         final Class mActivityClass;
+        final SdkSandboxManager mSdkSandboxManager;
+        final String mSdkName;
         ActivityScenario mActivityScenario;
-        SdkSandboxManager mSdkSandboxManager;
         SandboxedSdk mSandboxedSdk;
 
-        LoadSdkInSandboxRule(Context context, Class activityClass) {
+        LoadSdkInSandboxRule(Context context, Class activityClass, String sdkName) {
             mActivityClass = activityClass;
             mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+            mSdkName = sdkName;
         }
 
         @Override
@@ -171,7 +172,7 @@ public class SdkSandboxUiTestRule implements TestRule {
             mActivityScenario.onActivity(
                     activity -> {
                         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-                        mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
+                        mSdkSandboxManager.loadSdk(mSdkName, new Bundle(), Runnable::run, callback);
                         callback.assertLoadSdkIsSuccessful();
                         mSandboxedSdk = callback.getSandboxedSdk();
                     });
@@ -181,7 +182,7 @@ public class SdkSandboxUiTestRule implements TestRule {
         protected void after() {
             mActivityScenario.onActivity(
                     activity -> {
-                        mSdkSandboxManager.unloadSdk(SDK_NAME);
+                        mSdkSandboxManager.unloadSdk(mSdkName);
                     });
             mActivityScenario.close();
         }
@@ -206,7 +207,7 @@ public class SdkSandboxUiTestRule implements TestRule {
                         FakeRequestSurfacePackageCallback rspCallback =
                                 new FakeRequestSurfacePackageCallback();
                         mSdkSandboxManager.requestSurfacePackage(
-                                SDK_NAME,
+                                mSdkName,
                                 createRequestSurfacePackageBundle(
                                         view, activity.getDisplayId(), width, height),
                                 Runnable::run,

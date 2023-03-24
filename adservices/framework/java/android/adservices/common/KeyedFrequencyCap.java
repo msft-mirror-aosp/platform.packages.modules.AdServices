@@ -236,7 +236,7 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public Builder setMaxCount(int maxCount) {
-            Preconditions.checkArgument(maxCount > 0, "Max count must be positive and non-zero");
+            Preconditions.checkArgument(maxCount >= 0, "Max count must be non-negative");
             mMaxCount = maxCount;
             return this;
         }
@@ -266,7 +266,7 @@ public final class KeyedFrequencyCap implements Parcelable {
         @NonNull
         public KeyedFrequencyCap build() throws NullPointerException, IllegalArgumentException {
             Objects.requireNonNull(mAdCounterKey, "Event key must be set");
-            Preconditions.checkArgument(mMaxCount > 0, "Max count must be positive and non-zero");
+            Preconditions.checkArgument(mMaxCount >= 0, "Max count must be non-negative");
             Objects.requireNonNull(mInterval, "Interval must not be null");
 
             return new KeyedFrequencyCap(this);

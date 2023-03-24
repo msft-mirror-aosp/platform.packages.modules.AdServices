@@ -26,6 +26,8 @@ import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
+import com.google.common.collect.ImmutableMultiset;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -89,6 +91,8 @@ public class EventReport {
                 && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestinations, eventReport.mAttributionDestinations)
+                && ImmutableMultiset.copyOf(mAttributionDestinations).equals(
+                        ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)

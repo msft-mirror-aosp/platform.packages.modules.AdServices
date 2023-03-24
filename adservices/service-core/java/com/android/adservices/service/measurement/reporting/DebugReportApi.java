@@ -91,11 +91,7 @@ public class DebugReportApi {
             boolean isAppSource = source.getPublisherType() == EventSurfaceType.APP;
             JSONObject body = new JSONObject();
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(
-                    Body.ATTRIBUTION_DESTINATION,
-                    isAppSource
-                            ? source.getAppDestinations().get(0).toString()
-                            : source.getWebDestinations().get(0).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
             body.put(
                     Body.SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
@@ -227,11 +223,7 @@ public class DebugReportApi {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(
-                    Body.ATTRIBUTION_DESTINATION,
-                    source.getPublisherType() == EventSurfaceType.APP
-                            ? source.getAppDestinations().get(0).toString()
-                            : source.getWebDestinations().get(0).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
             body.put(
                     Body.SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
@@ -241,5 +233,11 @@ public class DebugReportApi {
             LogUtil.e(e, "Json error in source debug report");
         }
         return body;
+    }
+
+    private static Object serializeSourceDestinations(Source source) throws JSONException {
+        return source.getPublisherType() == EventSurfaceType.APP
+                ? ReportUtil.serializeAttributionDestinations(source.getAppDestinations())
+                : ReportUtil.serializeAttributionDestinations(source.getWebDestinations());
     }
 }

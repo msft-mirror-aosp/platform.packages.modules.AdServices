@@ -356,27 +356,6 @@ public class SourceTest {
 
     @Test
     public void testSourceBuilder_validateArgumentAttributionDestination() {
-        assertInvalidSourceArguments(
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
-                SourceFixture.ValidSourceParams.PUBLISHER,
-                null,
-                null,
-                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                SourceFixture.ValidSourceParams.REGISTRANT,
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
-                SourceFixture.ValidSourceParams.EXPIRY_TIME,
-                SourceFixture.ValidSourceParams.PRIORITY,
-                SourceFixture.ValidSourceParams.SOURCE_TYPE,
-                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
-                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
-                SourceFixture.ValidSourceParams.DEBUG_KEY,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
-                SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
-                SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
-
         // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
