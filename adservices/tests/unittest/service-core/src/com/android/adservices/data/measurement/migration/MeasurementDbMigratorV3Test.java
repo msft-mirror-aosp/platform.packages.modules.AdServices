@@ -384,7 +384,7 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     private static ContentValues getAsyncRegistrationEntry() {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AsyncRegistrationContract.ID, "id");
-        values.put(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID, "enrollment_id");
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID, "enrollment_id");
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
                 WebUtil.validUri("https://foo.test/bar?ad=134").toString());
@@ -403,10 +403,10 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
                 WebUtil.validUri("https://example.test").toString());
-        values.put(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT, 0);
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT, 0);
         values.put(MeasurementTables.AsyncRegistrationContract.REQUEST_TIME, 0L);
         values.put(MeasurementTables.AsyncRegistrationContract.RETRY_COUNT, 0L);
-        values.put(MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME, 0L);
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME, 0L);
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE,
                 AsyncRegistration.RegistrationType.APP_SOURCE.ordinal());
@@ -434,8 +434,9 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getString(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID)))
-                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID));
+                                        MeasurementTablesDeprecated.AsyncRegistration
+                                                .ENROLLMENT_ID)))
+                .isEqualTo(values.get(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID));
         assertThat(
                         cursor.getString(
                                 cursor.getColumnIndex(
@@ -476,9 +477,10 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getInt(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract
+                                        MeasurementTablesDeprecated.AsyncRegistration
                                                 .REDIRECT_COUNT)))
-                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT));
+                .isEqualTo(
+                        values.get(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT));
         assertThat(
                         cursor.getLong(
                                 cursor.getColumnIndex(
@@ -492,11 +494,12 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getLong(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract
+                                        MeasurementTablesDeprecated.AsyncRegistration
                                                 .LAST_PROCESSING_TIME)))
                 .isEqualTo(
                         values.get(
-                                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME));
+                                MeasurementTablesDeprecated.AsyncRegistration
+                                        .LAST_PROCESSING_TIME));
         assertThat(
                         cursor.getInt(
                                 cursor.getColumnIndex(

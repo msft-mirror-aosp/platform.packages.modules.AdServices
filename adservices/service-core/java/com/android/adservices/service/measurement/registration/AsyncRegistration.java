@@ -16,19 +16,14 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.Validation;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 
 /** POJO for AsyncRegistration. */
@@ -42,51 +37,36 @@ public class AsyncRegistration {
     }
 
     private final String mId;
-    private final String mEnrollmentId;
     private final Uri mOsDestination;
     private final Uri mWebDestination;
     private final Uri mRegistrationUri;
     private final Uri mVerifiedDestination;
     private final Uri mTopOrigin;
-    @RedirectType private int mRedirectType;
-    private final int mRedirectCount;
     private final Uri mRegistrant;
     private final Source.SourceType mSourceType;
     private long mRequestTime;
     private long mRetryCount;
-    private long mLastProcessingTime;
     private final RegistrationType mType;
     private final boolean mDebugKeyAllowed;
     private final boolean mAdIdPermission;
     @Nullable private String mRegistrationId;
 
-    @IntDef(value = {
-            RedirectType.NONE,
-            RedirectType.ANY,
-            RedirectType.DAISY_CHAIN,
-    })
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface RedirectType {
-        int NONE = 0;
-        int ANY = 1;
-        int DAISY_CHAIN = 2;
+    public enum RedirectType {
+        LOCATION,
+        LIST
     }
 
     public AsyncRegistration(@NonNull AsyncRegistration.Builder builder) {
         mId = builder.mId;
-        mEnrollmentId = builder.mEnrollmentId;
         mOsDestination = builder.mOsDestination;
         mWebDestination = builder.mWebDestination;
         mRegistrationUri = builder.mRegistrationUri;
         mVerifiedDestination = builder.mVerifiedDestination;
         mTopOrigin = builder.mTopOrigin;
-        mRedirectType = builder.mRedirectType;
-        mRedirectCount = builder.mRedirectCount;
         mRegistrant = builder.mRegistrant;
         mSourceType = builder.mSourceType;
         mRequestTime = builder.mRequestTime;
         mRetryCount = builder.mRetryCount;
-        mLastProcessingTime = builder.mLastProcessingTime;
         mType = builder.mType;
         mDebugKeyAllowed = builder.mDebugKeyAllowed;
         mAdIdPermission = builder.mAdIdPermission;
@@ -98,15 +78,11 @@ public class AsyncRegistration {
         if (this == o) return true;
         if (!(o instanceof AsyncRegistration)) return false;
         AsyncRegistration that = (AsyncRegistration) o;
-        return mRedirectType == that.mRedirectType
-                && mRedirectCount == that.mRedirectCount
-                && mRequestTime == that.mRequestTime
+        return mRequestTime == that.mRequestTime
                 && mRetryCount == that.mRetryCount
-                && mLastProcessingTime == that.mLastProcessingTime
                 && mDebugKeyAllowed == that.mDebugKeyAllowed
                 && mAdIdPermission == that.mAdIdPermission
                 && Objects.equals(mId, that.mId)
-                && Objects.equals(mEnrollmentId, that.mEnrollmentId)
                 && Objects.equals(mOsDestination, that.mOsDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri)
@@ -122,19 +98,15 @@ public class AsyncRegistration {
     public int hashCode() {
         return Objects.hash(
                 mId,
-                mEnrollmentId,
                 mOsDestination,
                 mWebDestination,
                 mRegistrationUri,
                 mVerifiedDestination,
                 mTopOrigin,
-                mRedirectType,
-                mRedirectCount,
                 mRegistrant,
                 mSourceType,
                 mRequestTime,
                 mRetryCount,
-                mLastProcessingTime,
                 mType,
                 mDebugKeyAllowed,
                 mAdIdPermission,
@@ -182,25 +154,6 @@ public class AsyncRegistration {
         return mRegistrant;
     }
 
-    /** Derived from the Ad tech domain. */
-    @NonNull
-    public String getEnrollmentId() {
-        return mEnrollmentId;
-    }
-
-    /** Determines the type of redirects of a {@link Source} or {@link Trigger}, as well as the
-     * states, None and Completed. */
-    @RedirectType
-    public int getRedirectType() {
-        return mRedirectType;
-    }
-
-    /** Determines the count of remaining redirects to observe when fetching a {@link Source} or
-     * {@link Trigger}, provided the {@link RedirectType} is not None or Compeleted */
-    public int getRedirectCount() {
-        return mRedirectCount;
-    }
-
     /** Determines whether the input event was a click or view. */
     public Source.SourceType getSourceType() {
         return mSourceType;
@@ -214,11 +167,6 @@ public class AsyncRegistration {
     /** Retry attempt counter. */
     public long getRetryCount() {
         return mRetryCount;
-    }
-
-    /** Processing time in ms. */
-    public long getLastProcessingTime() {
-        return mLastProcessingTime;
     }
 
     /** Indicates how the record will be processed . */
@@ -249,43 +197,37 @@ public class AsyncRegistration {
 
     /** Indicates whether the registration runner should process redirects for this registration. */
     public boolean shouldProcessRedirects() {
-        if (mRedirectType == RedirectType.NONE) {
-            return false;
-        }
-        return mRedirectType == RedirectType.ANY
-                || mRedirectCount
-                        < FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
+        return isAppRequest();
     }
 
-    /** Gets the next expected redirect count for this registration. */
-    public int getNextRedirectCount() {
-        if (mRedirectType == AsyncRegistration.RedirectType.NONE) {
-            return 0;
-        // Redirect type is being set for the first time for this registration-sequence.
-        } else if (mRedirectType == AsyncRegistration.RedirectType.ANY) {
-            return 1;
-        // This registration-sequence already has an assigned redirect type.
-        } else {
-            return mRedirectCount + 1;
-        }
+    public boolean isWebRequest() {
+        return mType == RegistrationType.WEB_SOURCE || mType == RegistrationType.WEB_TRIGGER;
+    }
+
+    public boolean isAppRequest() {
+        return !isWebRequest();
+    }
+
+    public boolean isSourceRequest() {
+        return mType == RegistrationType.APP_SOURCE || mType == RegistrationType.WEB_SOURCE;
+    }
+
+    public boolean isTriggerRequest() {
+        return !isSourceRequest();
     }
 
     /** Builder for {@link AsyncRegistration}. */
     public static class Builder {
         private String mId;
-        private String mEnrollmentId;
         private Uri mOsDestination;
         private Uri mWebDestination;
         private Uri mRegistrationUri;
         private Uri mVerifiedDestination;
         private Uri mTopOrigin;
-        private @RedirectType int mRedirectType = RedirectType.ANY;
-        private int mRedirectCount = 0;
         private Uri mRegistrant;
         private Source.SourceType mSourceType;
         private long mRequestTime;
         private long mRetryCount = 0;
-        private long mLastProcessingTime;
         private AsyncRegistration.RegistrationType mType;
         private boolean mDebugKeyAllowed;
         private boolean mAdIdPermission;
@@ -296,14 +238,6 @@ public class AsyncRegistration {
         public Builder setId(@NonNull String id) {
             Validation.validateNonNull(id);
             mId = id;
-            return this;
-        }
-
-        /** See {@link AsyncRegistration#getEnrollmentId()}. */
-        @NonNull
-        public Builder setEnrollmentId(@NonNull String enrollmentId) {
-            Validation.validateNonNull(enrollmentId);
-            mEnrollmentId = enrollmentId;
             return this;
         }
 
@@ -343,20 +277,6 @@ public class AsyncRegistration {
             return this;
         }
 
-        /** See {@link AsyncRegistration#getRedirectType()}. */
-        @NonNull
-        public Builder setRedirectType(@RedirectType int redirectType) {
-            mRedirectType = redirectType;
-            return this;
-        }
-
-        /** See {@link AsyncRegistration#getRedirectCount()}. */
-        @NonNull
-        public Builder setRedirectCount(int redirectCount) {
-            mRedirectCount = redirectCount;
-            return this;
-        }
-
         /** See {@link AsyncRegistration#getRegistrant()}. */
         @NonNull
         public Builder setRegistrant(@NonNull Uri registrant) {
@@ -389,20 +309,13 @@ public class AsyncRegistration {
             return this;
         }
 
-        /** See {@link AsyncRegistration#getLastProcessingTime()}. */
-        @NonNull
-        public Builder setLastProcessingTime(long lastProcessingTime) {
-            mLastProcessingTime = lastProcessingTime;
-            return this;
-        }
-
         /**
          * See {@link AsyncRegistration#getType()}. Valid inputs are ordinals of {@link
          * AsyncRegistration.RegistrationType} enum values.
          */
         @NonNull
-        public Builder setType(int type) {
-            mType = RegistrationType.values()[type];
+        public Builder setType(RegistrationType type) {
+            mType = type;
             return this;
         }
 
