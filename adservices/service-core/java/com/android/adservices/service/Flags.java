@@ -785,6 +785,7 @@ public interface Flags {
                 SYSTEM_SERVER_ONLY,
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
+                APPSEARCH_ONLY,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -795,6 +796,8 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
+    /** Write consent data to AppSearch only. */
+    int APPSEARCH_ONLY = 3;
 
     /* Consent source of truth intended to be used by default. */
     @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;

@@ -83,6 +83,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
+import com.android.adservices.service.appsearch.AppSearchConsentService;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
@@ -148,6 +149,7 @@ public class ConsentManagerTest {
     @Mock private Flags mMockFlags;
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
+    @Mock private AppSearchConsentService mAppSearchConsentService;
     private MockitoSession mStaticMockSession = null;
 
     @Before
@@ -305,9 +307,30 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void testConsentIsGivenAfterEnabling_AppSearchOnly() throws Exception {
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        spyConsentManager.enable(mContextSpy);
+
+        assertThat(spyConsentManager.getConsent().isGiven()).isTrue();
+
+        verifyConsentMigration(
+                spyConsentManager,
+                /* isGiven */ isGiven,
+                /* hasWrittenToPpApi */ false,
+                /* hasWrittenToSystemServer */ false,
+                /* hasReadFromSystemServer */ false);
+        verify(mAppSearchConsentService, atLeastOnce()).getConsent(CONSENT_KEY);
+        verifyDataCleanup(spyConsentManager);
+    }
+
+    @Test
     public void testConsentIsGivenAfterEnabling_notSupportedFlag() throws RemoteException {
         boolean isGiven = true;
-        int invalidConsentSourceOfTruth = 3;
+        int invalidConsentSourceOfTruth = 4;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
@@ -377,9 +400,31 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void testConsentIsRevokedAfterDisabling_AppSearchOnly()
+            throws RemoteException, IOException {
+        boolean isGiven = false;
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        spyConsentManager.disable(mContextSpy);
+
+        assertThat(spyConsentManager.getConsent().isGiven()).isFalse();
+
+        verifyConsentMigration(
+                spyConsentManager,
+                /* isGiven */ isGiven,
+                /* hasWrittenToPpApi */ false,
+                /* hasWrittenToSystemServer */ false,
+                /* hasReadFromSystemServer */ false);
+        verify(mAppSearchConsentService, atLeastOnce()).getConsent(CONSENT_KEY);
+        verifyDataCleanup(spyConsentManager);
+    }
+
+    @Test
     public void testConsentIsRevokedAfterDisabling_notSupportedFlag() throws RemoteException {
         boolean isGiven = true;
-        int invalidConsentSourceOfTruth = 3;
+        int invalidConsentSourceOfTruth = 4;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
@@ -1644,8 +1689,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testSetConsentForApp_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException, InterruptedException {
+    public void testSetConsentForApp_ppApiOnly() throws Exception {
         mConsentManager.enable(mContextSpy);
         assertTrue(mConsentManager.getConsent().isGiven());
 
@@ -1670,9 +1714,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testSetConsentForApp_systemServerOnly()
-            throws IOException, PackageManager.NameNotFoundException, RemoteException,
-                    InterruptedException {
+    public void testSetConsentForApp_systemServerOnly() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
@@ -1701,9 +1743,7 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testSetConsentForApp_ppApiAndSystemServer()
-            throws IOException, PackageManager.NameNotFoundException, RemoteException,
-                    InterruptedException {
+    public void testSetConsentForApp_ppApiAndSystemServer() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
@@ -2222,7 +2262,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testNotificationDisplayedRecorded_notSupportedFlag() throws RemoteException {
-        int invalidConsentSourceOfTruth = 3;
+        int invalidConsentSourceOfTruth = 4;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, invalidConsentSourceOfTruth);
@@ -2435,6 +2475,7 @@ public class ConsentManagerTest {
                         mAppInstallDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
+                        mAppSearchConsentService,
                         mMockFlags,
                         Flags.PPAPI_ONLY);
         doNothing().when(mBlockedTopicsManager).blockTopic(any());
@@ -2538,6 +2579,25 @@ public class ConsentManagerTest {
         verify(spyConsentManager)
                 .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
         verify(spyConsentManager).resetTopicsAndBlockedTopics();
+    }
+
+    @Test
+    public void testConsentPerApiIsGivenAfterEnabling_AppSearchOnly()
+            throws RemoteException, IOException {
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        boolean isGiven = true;
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        AdServicesApiType apiType = AdServicesApiType.TOPICS;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
+
+        spyConsentManager.enable(mContextSpy, AdServicesApiType.TOPICS);
+        verify(spyConsentManager)
+                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));
+        verify(mAppSearchConsentService).setConsent(eq(apiType.toPpApiDatastoreKey()), eq(isGiven));
+        when(mAppSearchConsentService.getConsent(AdServicesApiType.CONSENT_TOPICS))
+                .thenReturn(true);
+        assertThat(spyConsentManager.getConsent(AdServicesApiType.TOPICS).isGiven()).isTrue();
     }
 
     @Test
@@ -2715,6 +2775,7 @@ public class ConsentManagerTest {
                 mAppInstallDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,
+                mAppSearchConsentService,
                 mMockFlags,
                 consentSourceOfTruth);
     }
@@ -2738,6 +2799,7 @@ public class ConsentManagerTest {
         doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
         doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
+        doReturn(isGiven).when(mAppSearchConsentService).getConsent(CONSENT_KEY);
         return consentManager;
     }
 
@@ -2766,6 +2828,7 @@ public class ConsentManagerTest {
         doNothing().when(mMockIAdServicesManager).recordGaUxNotificationDisplayed();
         doReturn(UNKNOWN).when(mMockIAdServicesManager).getUserManualInteractionWithConsent();
         doNothing().when(mMockIAdServicesManager).recordUserManualInteractionWithConsent(anyInt());
+        doReturn(isGiven).when(mAppSearchConsentService).getConsent(any());
         return consentManager;
     }
 
