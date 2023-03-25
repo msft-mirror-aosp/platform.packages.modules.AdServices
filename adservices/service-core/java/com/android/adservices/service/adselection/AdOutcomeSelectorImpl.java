@@ -23,6 +23,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
@@ -31,7 +32,6 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
@@ -68,6 +68,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final Flags mFlags;
+    @NonNull private final JsFetcher mJsFetcher;
 
     public AdOutcomeSelectorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -92,6 +93,11 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mAdSelectionDevOverridesHelper = adSelectionDevOverridesHelper;
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
         mFlags = flags;
+        mJsFetcher =
+                new JsFetcher(
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mAdServicesHttpsClient);
     }
 
     /**
@@ -109,8 +115,15 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(config);
 
+        AdServicesHttpClientRequest outcomeSelectorLogicUriHttpRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(config.getSelectionLogicUri())
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
+
         FluentFuture<String> selectionLogicJsFuture =
-                FluentFuture.from(getAdOutcomeSelectorLogic(config));
+                mJsFetcher.getOutcomeSelectionLogic(
+                        outcomeSelectorLogicUriHttpRequest, mAdSelectionDevOverridesHelper, config);
 
         FluentFuture<Long> selectedOutcomeFuture =
                 selectionLogicJsFuture.transformAsync(
@@ -160,8 +173,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         throw new IllegalStateException(OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
     }
 
-    private ListenableFuture<String> getAdOutcomeSelectorLogic(
-            AdSelectionFromOutcomesConfig config) {
+    private FluentFuture<String> getAdOutcomeSelectorLogic(AdSelectionFromOutcomesConfig config) {
         FluentFuture<String> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
