@@ -399,7 +399,7 @@ public class Source {
                 destinationType == EventSurfaceType.APP && mIsInstallAttributed;
         List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
         for (Long window: reportingWindows) {
-            if (triggerTime < window) {
+            if (triggerTime <= window) {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
