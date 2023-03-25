@@ -21,6 +21,7 @@ import android.os.Process;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorUtil;
@@ -80,8 +81,17 @@ public class CommonFixture {
     }
 
     private static String processName() {
-        return SdkLevel.isAtLeastT()
-                ? Process.myProcessName()
-                : ApplicationProvider.getApplicationContext().getPackageName();
+        if (SdkLevel.isAtLeastT()) {
+            return Process.myProcessName();
+        } else {
+            try {
+                return ApplicationProvider.getApplicationContext().getPackageName();
+            } catch (IllegalStateException e) {
+                // TODO(b/275062019): Remove this try/catch once instrumentation context can be
+                // passed in AppConsentSettingsUiAutomatorTest
+                LogUtil.e(e, "Failed to get package name from Instrumentation context");
+                return "android.adservices.tests";
+            }
+        }
     }
 }
