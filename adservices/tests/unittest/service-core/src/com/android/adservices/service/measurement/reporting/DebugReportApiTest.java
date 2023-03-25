@@ -610,6 +610,55 @@ public final class DebugReportApiTest {
     }
 
     @Test
+    public void testScheduleTriggerNoMatchingSourceDebugReport_triggerNotOpIn_dontSchedule()
+            throws Exception {
+        runWithMocks(
+                () -> {
+                    Source source =
+                            SourceFixture.getValidSourceBuilder()
+                                    .setEventId(SOURCE_EVENT_ID)
+                                    .setIsDebugReporting(true)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    Trigger trigger =
+                            TriggerFixture.getValidTriggerBuilder()
+                                    .setIsDebugReporting(false)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                            trigger, mMeasurementDao);
+                    verify(mMeasurementDao, never()).insertDebugReport(any());
+                });
+    }
+
+    @Test
+    public void testScheduleTriggerNoMatchingSourceDebugReport_success() throws Exception {
+        runWithMocks(
+                () -> {
+                    Trigger trigger =
+                            TriggerFixture.getValidTriggerBuilder()
+                                    .setIsDebugReporting(true)
+                                    .setAdIdPermission(true)
+                                    .build();
+                    ExtendedMockito.doNothing()
+                            .when(
+                                    () ->
+                                            DebugReportingJobService.scheduleIfNeeded(
+                                                    any(), anyBoolean(), anyBoolean()));
+
+                    mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                            trigger, mMeasurementDao);
+                    verify(mMeasurementDao, times(1)).insertDebugReport(any());
+                });
+    }
+
+    @Test
     public void testScheduleTriggerNoMatchingFilterDataDebugReport_sourceNotOpIn_dontSchedule()
             throws Exception {
         runWithMocks(
