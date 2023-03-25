@@ -153,6 +153,7 @@ import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_ONLY;
 import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
+import static com.android.adservices.service.Flags.RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.Flags.SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -299,6 +300,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ROLLBACK_DE
 import static com.android.adservices.service.PhFlags.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.PhFlags.KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST;
+import static com.android.adservices.service.PhFlags.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
@@ -4243,6 +4245,23 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getEuNotifFlowChangeEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetRecordManualInteractionEnabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getRecordManualInteractionEnabled())
+                .isEqualTo(RECORD_MANUAL_INTERACTION_ENABLED);
+
+        boolean phOverridingValue = !RECORD_MANUAL_INTERACTION_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_RECORD_MANUAL_INTERACTION_ENABLED,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ true);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getRecordManualInteractionEnabled()).isEqualTo(phOverridingValue);
     }
     // CHECKSTYLE:ON IndentationCheck
 }
