@@ -17,19 +17,25 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
 
+import java.util.Map;
 import java.util.Objects;
 
 /** This class runs the validation of the {@link AdSelectionConfig} subfields. */
@@ -68,6 +74,10 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     @VisibleForTesting
     static final String URI_IS_NOT_HTTPS = "The AdSelection %s URI is not secured by https";
 
+    @VisibleForTesting
+    static final String CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME =
+            "Contextual ads decision logic uri";
+
     private static final String HTTPS_SCHEME = "https";
 
     @Override
@@ -85,6 +95,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
                 validateTrustedSignalsUri(
                         adSelectionConfig.getSeller(),
                         adSelectionConfig.getTrustedScoringSignalsUri()));
+        violations.addAll(validateContextualAds(adSelectionConfig.getBuyerContextualAds()));
     }
 
     /**
@@ -157,5 +168,32 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
 
     private boolean isStringNullOrEmpty(@Nullable String str) {
         return Objects.isNull(str) || str.isEmpty();
+    }
+
+    private ImmutableList<String> validateContextualAds(
+            Map<AdTechIdentifier, ContextualAds> contextualAdsMap) {
+        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
+
+        for (Map.Entry<AdTechIdentifier, ContextualAds> entry : contextualAdsMap.entrySet()) {
+
+            // Validate that the buyer decision logic for Contextual Ads satisfies buyer ETLd+1
+            AdTechUriValidator buyerUriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString(),
+                            ContextualAds.class.getName(),
+                            CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME);
+            buyerUriValidator.addValidation(entry.getValue().getDecisionLogicUri(), violations);
+
+            // Validate that the ad render uri for Contextual Ads satisfies buyer ETLd+1
+            AdDataValidator adDataValidator =
+                    new AdDataValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString());
+            for (AdWithBid ad : entry.getValue().getAdsWithBid()) {
+                adDataValidator.addValidation(ad.getAdData(), violations);
+            }
+        }
+        return violations.build();
     }
 }
