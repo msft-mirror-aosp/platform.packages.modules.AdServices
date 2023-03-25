@@ -23,11 +23,13 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
 import android.net.Uri;
@@ -298,8 +300,6 @@ public class PermissionsAppOptOutTest {
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-    // TODO(b/221876775): Unhide for frequency cap mainline promotion
-    /*
     @Test
     public void testNoEnrollment_updateAdCounterHistogram() {
         long adSelectionId = 1;
@@ -344,5 +344,4 @@ public class PermissionsAppOptOutTest {
 
         mAdSelectionClient.updateAdCounterHistogram(request).get();
     }
-    */
 }

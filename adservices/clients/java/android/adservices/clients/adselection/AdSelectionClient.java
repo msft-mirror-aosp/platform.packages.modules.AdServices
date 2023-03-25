@@ -152,8 +152,6 @@ public class AdSelectionClient {
     @NonNull
     public ListenableFuture<Void> updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramRequest request) {
-        // TODO(b/221876775): Uncomment this when un-hiding frequency cap classes
-        /*
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mAdSelectionManager.updateAdCounterHistogram(
@@ -172,8 +170,6 @@ public class AdSelectionClient {
                             });
                     return "updateAdCounterHistogram";
                 });
-        */
-        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /**
