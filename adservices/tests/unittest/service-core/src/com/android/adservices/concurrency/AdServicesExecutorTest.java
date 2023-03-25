@@ -18,24 +18,28 @@ package com.android.adservices.concurrency;
 
 import static org.junit.Assert.assertTrue;
 
+import android.os.Build;
+
 import com.android.compatibility.common.util.ShellUtils;
 
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.Test;
 
 public class AdServicesExecutorTest {
 
-    // TODO(b/265113689) Unsupress the test cases post removing the `su` utility
     // Command to kill the adservices process
     public static final String KILL_ADSERVICES_CMD =
             "su 0 killall -9 com.google.android.adservices.api";
 
     @Before
     public void setup() {
+        // TODO(b/265113689) Unsuppress the test for user builds post removing the `su` utility
+        Assume.assumeTrue(Build.isDebuggable());
         ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
     }
 
-    @Ignore
+    @Test
     public void testCreateLightWeightThreadSuccess() throws Exception {
         String threadName =
                 AdServicesExecutors.getLightWeightExecutor()
@@ -45,7 +49,7 @@ public class AdServicesExecutorTest {
         assertTrue(threadName.matches("lightweight-\\d{1,19}$"));
     }
 
-    @Ignore
+    @Test
     public void testCreateBackgroundThreadSuccess() throws Exception {
         String threadName =
                 AdServicesExecutors.getBackgroundExecutor()
@@ -54,7 +58,7 @@ public class AdServicesExecutorTest {
         assertTrue(threadName.matches("background-\\d{1,19}$"));
     }
 
-    @Ignore
+    @Test
     public void testCreateScheduledThreadSuccess() throws Exception {
         String threadName =
                 AdServicesExecutors.getScheduler()
@@ -63,7 +67,7 @@ public class AdServicesExecutorTest {
         assertTrue(threadName.matches("scheduled-\\d{1,19}$"));
     }
 
-    @Ignore
+    @Test
     public void testCreateBlockingThreadSuccess() throws Exception {
         String threadName =
                 AdServicesExecutors.getBlockingExecutor()

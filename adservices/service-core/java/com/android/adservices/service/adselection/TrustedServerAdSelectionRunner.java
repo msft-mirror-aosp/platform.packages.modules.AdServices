@@ -23,6 +23,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Process;
 import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
@@ -38,6 +39,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontendService.BuyerInput;
 import com.android.adservices.service.proto.SellerFrontendService.SelectWinningAdRequest;
@@ -85,7 +87,7 @@ import io.grpc.okhttp.OkHttpChannelBuilder;
 public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String GZIP = new Codec.Gzip().getMessageEncoding(); // "gzip"
-
+    @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final JsFetcher mJsFetcher;
 
     public TrustedServerAdSelectionRunner(
@@ -101,6 +103,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             int callerUid) {
         super(
                 context,
@@ -113,15 +116,15 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 adSelectionExecutionLogger,
                 adSelectionServiceFilter,
+                adFilterer,
                 callerUid);
 
-        CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper =
+        mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
         mJsFetcher =
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         adServicesHttpsClient);
     }
 
@@ -139,6 +142,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
             @NonNull final Flags flags,
             int callerUid,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdFilterer adFilterer,
             @NonNull final JsFetcher jsFetcher,
             @NonNull final AdSelectionExecutionLogger adSelectionExecutionLogger) {
         super(
@@ -154,9 +158,13 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 flags,
                 callerUid,
                 adSelectionServiceFilter,
+                adFilterer,
                 adSelectionExecutionLogger);
 
         this.mJsFetcher = jsFetcher;
+        DevContext devContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        this.mCustomAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
     }
 
     /** Prepares request and calls Seller Front-end Service to orchestrate ad selection. */
@@ -334,7 +342,7 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                         .setContextualSignals("{}")
                         .setCallerPackageName(callerPackageName);
 
-        return new Pair(builder, customAudience);
+        return new Pair<>(builder, customAudience);
     }
 
     private ListenableFuture<Pair<DBAdSelection.Builder, FluentFuture<String>>> fetchBuyerLogicJs(
@@ -343,12 +351,13 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 () -> {
                     DBCustomAudience customAudience = dbAdSelectionAndCAPair.second;
                     FluentFuture<String> buyerDecisionLogic =
-                            mJsFetcher.getBuyerDecisionLogic(
+                            mJsFetcher.getBiddingLogic(
                                     customAudience.getBiddingLogicUri(),
+                                    mCustomAudienceDevOverridesHelper,
                                     customAudience.getOwner(),
                                     customAudience.getBuyer(),
                                     customAudience.getName());
-                    return new Pair(dbAdSelectionAndCAPair.first, buyerDecisionLogic);
+                    return new Pair<>(dbAdSelectionAndCAPair.first, buyerDecisionLogic);
                 });
     }
 

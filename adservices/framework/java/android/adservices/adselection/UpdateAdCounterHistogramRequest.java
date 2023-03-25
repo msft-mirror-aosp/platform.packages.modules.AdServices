@@ -133,7 +133,7 @@ public class UpdateAdCounterHistogramRequest {
     }
 
     /** Builder for {@link UpdateAdCounterHistogramRequest} objects. */
-    public static class Builder {
+    public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @FrequencyCapFilters.AdEventType private int mAdEventType = AD_EVENT_TYPE_INVALID;
         @Nullable private AdTechIdentifier mCallerAdTech;
