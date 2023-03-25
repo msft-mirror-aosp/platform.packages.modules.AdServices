@@ -25,6 +25,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -32,6 +33,7 @@ import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceCl
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
@@ -359,8 +361,6 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-    // TODO(b/221876775): Unhide for frequency cap mainline promotion
-    /*
     @Test
     public void testPermissionNotRequested_updateAdCounterHistogram() {
         long adSelectionId = 1;
@@ -384,5 +384,4 @@ public class PermissionsNoPermTest {
 
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
-    */
 }

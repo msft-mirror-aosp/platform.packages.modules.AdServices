@@ -361,7 +361,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        // TODO(b/221876775): Enable the ad filtering feature flag when unhidden
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
 
         // Enable CTS to be run with versions of WebView < M105
@@ -2045,7 +2044,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
-    @Ignore("TODO(b/221876775): Unhide for frequency cap mainline promotion")
     @Test
     public void testFrequencyCapFiltering_NonWinEvent_FiltersAds() throws Exception {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);

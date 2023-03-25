@@ -23,10 +23,12 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.topics.GetTopicsResponse;
 import android.content.Context;
@@ -208,8 +210,6 @@ public class PermissionsValidTest {
     }
     */
 
-    // TODO(b/221876775): Unhide for frequency cap mainline promotion
-    /*
     @Test
     public void testValidPermissions_updateAdCounterHistogram() {
         long adSelectionId = 1;
@@ -234,7 +234,6 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-    */
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()

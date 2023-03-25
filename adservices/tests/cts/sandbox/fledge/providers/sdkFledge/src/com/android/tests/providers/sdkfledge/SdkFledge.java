@@ -21,6 +21,7 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -28,6 +29,7 @@ import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceCl
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -402,8 +404,6 @@ public class SdkFledge extends SandboxedSdkProvider {
         //            throw new LoadSdkException(e, new Bundle());
         //        }
 
-        // TODO(b/221876775): Unhide for frequency cap mainline promotion
-        /*
         try {
             UpdateAdCounterHistogramRequest updateHistogramRequest =
                     new UpdateAdCounterHistogramRequest.Builder()
@@ -422,7 +422,6 @@ public class SdkFledge extends SandboxedSdkProvider {
             Log.e(TAG, errorMessage);
             throw new LoadSdkException(exception, new Bundle());
         }
-        */
 
         // If we got this far, that means the test succeeded
         return new SandboxedSdk(new Binder());

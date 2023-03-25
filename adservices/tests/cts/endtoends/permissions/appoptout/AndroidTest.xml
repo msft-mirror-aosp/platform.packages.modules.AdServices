@@ -45,9 +45,9 @@
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
 
-        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <!-- Temporarily enable the ad filtering feature -->
         <option name="run-command"
-                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+                value="device_config put adservices fledge_ad_selection_filtering_enabled true" />
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 

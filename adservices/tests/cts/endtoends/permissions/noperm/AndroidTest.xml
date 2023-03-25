@@ -45,9 +45,9 @@
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
 
-        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <!-- Temporarily enable the ad filtering feature -->
         <option name="run-command"
-                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+                value="device_config put adservices fledge_ad_selection_filtering_enabled true" />
         <option name="teardown-command"
                 value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
