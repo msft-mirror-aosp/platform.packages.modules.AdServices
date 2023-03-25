@@ -363,12 +363,14 @@ public class AsyncRegistrationQueueRunner {
                     dao.getNumSourcesPerPublisher(
                             BaseUriExtractor.getBaseUri(topOrigin), publisherType);
         } catch (DatastoreException e) {
+            debugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
             LogUtil.d("insertSources: getNumSourcesPerPublisher failed", topOrigin);
             return false;
         }
 
         if (numOfSourcesPerPublisher == null) {
             LogUtil.d("insertSources: getNumSourcesPerPublisher failed", publisher.get());
+            debugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
             return false;
         }
 
@@ -614,7 +616,14 @@ public class AsyncRegistrationQueueRunner {
         if (!eventReports.isEmpty()) {
             mDebugReportApi.scheduleSourceNoisedDebugReport(source, dao);
         }
-        dao.insertSource(source);
+        try {
+            dao.insertSource(source);
+        } catch (DatastoreException e) {
+            mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
+            LogUtil.e(e, "Insert debug source-unknown-error report to database error");
+            throw new DatastoreException(
+                    "Insert debug source-unknown-error report to database error");
+        }
         for (EventReport report : eventReports) {
             dao.insertEventReport(report);
         }
