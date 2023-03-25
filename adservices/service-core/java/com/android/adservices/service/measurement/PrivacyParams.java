@@ -193,6 +193,11 @@ public final class PrivacyParams {
     public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
 
     /**
+     * Max distinct web destinations in a source registration.
+     */
+    public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
+
+    /**
      * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
      */
     private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =

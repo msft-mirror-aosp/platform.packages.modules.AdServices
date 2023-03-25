@@ -127,7 +127,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 new JsFetcher(
                         backgroundExecutorService,
                         lightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         adServicesHttpsClient);
     }
 
@@ -203,6 +202,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogic =
                 mJsFetcher.getBuyerDecisionLogicWithLogger(
                         biddingLogicUriHttpRequest,
+                        mCustomAudienceDevOverridesHelper,
                         customAudience.getOwner(),
                         customAudience.getBuyer(),
                         customAudience.getName(),

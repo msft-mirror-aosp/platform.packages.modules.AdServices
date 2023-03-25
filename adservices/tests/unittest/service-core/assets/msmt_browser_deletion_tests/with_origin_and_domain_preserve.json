@@ -8,7 +8,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate1.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -22,7 +21,6 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate1.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
@@ -36,7 +34,6 @@
         "eventId": 3,
         "sourceType": "navigation",
         "publisher": "https://siteNotMatch.site3.test",
-        "appDestination": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -50,7 +47,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate2.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -64,7 +60,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://abc.deletesite1.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -78,7 +73,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://abc.deletesite2.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -92,7 +86,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://somedeletesite2.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -100,6 +93,43 @@
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S1",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S3",
+        "destination": "https://site2.test",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S4",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S5",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S6",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S7",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
       }
     ],
     "triggers": [
@@ -414,7 +444,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate1.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -428,7 +457,6 @@
         "eventId": 2,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate1.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733605,
         "expiryTime": 1648665733615,
@@ -442,7 +470,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://deleteCandidate2.site.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -456,7 +483,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://abc.deletesite1.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -470,7 +496,6 @@
         "eventId": 1,
         "sourceType": "navigation",
         "publisher": "https://abc.deletesite2.test",
-        "appDestination": "android-app://com.app2",
         "enrollmentId": "enrollment-id",
         "eventTime": 1648665733601,
         "expiryTime": 1648665733611,
@@ -478,6 +503,33 @@
         "priority": 100,
         "status": 0,
         "registrant": "android-app://com.registrant.deleteCandidate"
+      }
+    ],
+    "source_destinations": [
+      {
+        "sourceId": "S1",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S2",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S4",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S5",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
+      },
+      {
+        "sourceId": "S6",
+        "destination": "android-app://com.app2",
+        "destinationType": 0
       }
     ],
     "triggers": [
