@@ -163,8 +163,8 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-// TODO(b/274723533): Uncomment after un-hiding the API
-/*
+    // TODO(b/274723533): Uncomment after un-hiding the API
+    /*
     @Test
     public void testValidPermissions_reportInteraction() {
         long adSelectionId = 1;
@@ -192,7 +192,35 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-*/
+    */
+
+    // TODO(b/221876775): Unhide for frequency cap mainline promotion
+    /*
+    @Test
+    public void testValidPermissions_updateAdCounterHistogram() {
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        UpdateAdCounterHistogramRequest request =
+                new UpdateAdCounterHistogramRequest.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                        .build();
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
+
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+    */
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()
