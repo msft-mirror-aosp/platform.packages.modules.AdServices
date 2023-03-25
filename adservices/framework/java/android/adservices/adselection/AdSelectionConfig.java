@@ -221,7 +221,6 @@ public final class AdSelectionConfig implements Parcelable {
     /**
      * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
      *     pre-downloaded from the contextual path and injected into Ad Selection.
-     * @hide
      */
     @NonNull
     public Map<AdTechIdentifier, ContextualAds> getBuyerContextualAds() {
@@ -345,7 +344,6 @@ public final class AdSelectionConfig implements Parcelable {
          *
          * <p>See {@link #getBuyerContextualAds()} ()} for more details.
          *
-         * @hide
          */
         @NonNull
         public AdSelectionConfig.Builder setBuyerContextualAds(
