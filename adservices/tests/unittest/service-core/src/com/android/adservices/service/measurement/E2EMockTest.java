@@ -252,6 +252,9 @@ public abstract class E2EMockTest extends E2ETest {
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        if (triggerRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     @Override
@@ -271,6 +274,9 @@ public abstract class E2EMockTest extends E2ETest {
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        if (triggerRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     // Triggers debug reports to be sent
