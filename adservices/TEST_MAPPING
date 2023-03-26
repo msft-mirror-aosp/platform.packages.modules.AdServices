@@ -48,6 +48,9 @@
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
     },
     {
+      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]"
+    },
+    {
       "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
     },
     {
