@@ -151,28 +151,13 @@ public class E2EInteropMockTest extends E2EMockTest {
             boolean arDebugPermission, RegistrationRequest request,
             Map<String, List<String>> headers) {
         String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
-        // The Source parser compares the destination from the web request to the one provided in
-        // the headers in order to allow either a web or app destination (otherwise, only an app
-        // destination would be allowed). Since the test runner interprets the test JSON as an app
-        // request, not web, we need to get the destination from the JSON, not from the request
-        // object.
-        List<String> field = headers.get("Attribution-Reporting-Register-Source");
-        JSONObject json;
-        Uri webDestination;
-        try {
-            json = new JSONObject(field.get(0));
-            webDestination = Uri.parse(json.getString("web_destination"));
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Failed to parse source header. %s", e);
-            return null;
-        }
         List<Source> sourceWrapper = new ArrayList<>();
         mAsyncSourceFetcher.parseSource(
                 UUID.randomUUID().toString(),
                 Uri.parse(publisher),
                 enrollmentId,
                 /* appDestination */ null,
-                webDestination,
+                /* webDestination */ null,
                 getRegistrant(request.getAppPackageName()),
                 timestamp,
                 getSourceType(request),

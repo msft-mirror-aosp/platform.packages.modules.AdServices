@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -35,9 +36,13 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -56,6 +61,8 @@ public class AppConsentSettingsUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+    private static final String ADEXTSERVICES_PACKAGE_NAME =
+            "com.google.android.ext.adservices.api";
 
     @Before
     public void setup() throws UiObjectNotFoundException {
@@ -67,6 +74,12 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Start from the home screen
         sDevice.pressHome();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    CONTEXT, ADEXTSERVICES_PACKAGE_NAME, true);
+        }
     }
 
     @After
@@ -75,6 +88,12 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    CONTEXT, ADEXTSERVICES_PACKAGE_NAME, false);
+        }
     }
 
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
@@ -89,6 +108,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, false);
     }
 
@@ -102,6 +123,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, false);
     }
 
@@ -109,6 +132,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, true);
     }
 
@@ -123,6 +148,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, true);
     }
 
