@@ -47,6 +47,7 @@ public class DebugReportApi {
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
+        String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
     }
 
     private interface Body {
@@ -161,6 +162,20 @@ public class DebugReportApi {
                 Type.SOURCE_UNKNOWN_ERROR,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                dao);
+    }
+
+    /** Schedules Trigger No Matching Source Debug Report */
+    public void scheduleTriggerNoMatchingSourceDebugReport(Trigger trigger, IMeasurementDao dao) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), Type.TRIGGER_NO_MATCHING_SOURCE)) {
+            return;
+        }
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+        scheduleReport(
+                Type.TRIGGER_NO_MATCHING_SOURCE,
+                generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
+                trigger.getEnrollmentId(),
                 dao);
     }
 
@@ -283,7 +298,7 @@ public class DebugReportApi {
 
     /*Generates trigger debug report body */
     private JSONObject generateTriggerDebugReportBody(
-            @NonNull Source source,
+            @Nullable Source source,
             @NonNull Trigger trigger,
             @Nullable String limit,
             @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair,

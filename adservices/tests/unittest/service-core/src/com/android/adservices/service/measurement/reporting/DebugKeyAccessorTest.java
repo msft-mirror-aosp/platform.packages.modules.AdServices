@@ -592,6 +592,54 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
+    public void getDebugKeysForVerbose_noSourceTriggerAdIdPermission_triggerDebugKeyPresent() {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_noSourceTriggerNoAdIdPermission_triggerDebugKeyAbsent() {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_noSourceTriggerArdebugPermission_triggerDebugKeyPresent() {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB, false, true, ValidTriggerParams.REGISTRANT, null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_noSourceTriggerNoArdebugPermission_triggerDebugKeyAbsent() {
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB, false, false, ValidTriggerParams.REGISTRANT, null);
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
+    }
+
+    @Test
     public void getDebugKeysForVerbose_appToAppWithAdIdPermission_debugKeysPresent() {
         Trigger trigger =
                 createTrigger(
