@@ -45,6 +45,10 @@
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesEndToEndTests.
+      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]"
+    },
+    {
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
     },
     {
