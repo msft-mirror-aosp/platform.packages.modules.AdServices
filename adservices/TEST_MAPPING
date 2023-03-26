@@ -33,7 +33,11 @@
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
+      // Install com.google.android.extservices.apex and run CtsExtAdServicesDeviceTestCases.
+      "name": "CtsExtAdServicesDeviceTestCases[com.google.android.extservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
