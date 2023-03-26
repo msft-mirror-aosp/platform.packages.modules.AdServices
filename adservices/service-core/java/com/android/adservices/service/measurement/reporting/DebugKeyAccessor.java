@@ -140,7 +140,18 @@ public class DebugKeyAccessor {
 
     /** Returns DebugKey according to the permissions set */
     public Pair<UnsignedLong, UnsignedLong> getDebugKeysForVerboseTriggerDebugReport(
-            Source source, Trigger trigger) {
+            @NonNull Source source, Trigger trigger) {
+        if (source == null) {
+            if (trigger.getDestinationType() == EventSurfaceType.WEB
+                    && trigger.hasArDebugPermission()) {
+                return new Pair<>(null, trigger.getDebugKey());
+            } else if (trigger.getDestinationType() == EventSurfaceType.APP
+                    && trigger.hasAdIdPermission()) {
+                return new Pair<>(null, trigger.getDebugKey());
+            } else {
+                return new Pair<>(null, null);
+            }
+        }
         Set<String> allowedEnrollmentsString =
                 new HashSet<>(
                         AllowLists.splitAllowList(
