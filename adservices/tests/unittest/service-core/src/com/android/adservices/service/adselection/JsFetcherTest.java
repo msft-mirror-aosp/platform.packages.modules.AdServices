@@ -106,8 +106,6 @@ public class JsFetcherTest {
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mWebClient;
-
-    private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private Dispatcher mDefaultDispatcher;
     private MockWebServer mServer;
     private MockitoSession mStaticMockSession = null;
@@ -156,7 +154,6 @@ public class JsFetcherTest {
                     }
                 };
         mServer = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
-        mRequestMatcherExactMatch = String::equals;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
     }
