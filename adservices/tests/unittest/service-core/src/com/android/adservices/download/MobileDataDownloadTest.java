@@ -29,7 +29,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
-import android.net.wifi.WifiManager;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -45,7 +44,6 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
-import com.android.compatibility.common.util.PollingCheck;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
@@ -85,7 +83,8 @@ public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
-    private static final int WIFI_CONNECTION_TIMEOUT_MS = 20_000;
+    private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
+    private static boolean sNeedWifiConnectionWait = true;
 
     // Two files are from cts_test_1 folder.
     // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
@@ -134,13 +133,20 @@ public class MobileDataDownloadTest {
     private FileDownloader mFileDownloader;
     private DbHelper mDbHelper;
     private MobileDataDownload mMdd;
-    private WifiManager mWifiManager;
 
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
 
     @Before
     public void setup() throws Exception {
+        // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
+        // the whole test suite run.
+        // Checking wifi connection using WifiManager isn't working on low-performance devices.
+        if (sNeedWifiConnectionWait) {
+            Thread.sleep(WAIT_FOR_WIFI_CONNECTION_MS);
+            sNeedWifiConnectionWait = false;
+        }
+
         MockitoAnnotations.initMocks(this);
 
         // Start a mockitoSession to mock static method.
@@ -171,17 +177,6 @@ public class MobileDataDownloadTest {
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         overridingMddLoggingLevel("VERBOSE");
-
-        mWifiManager = mContext.getSystemService(WifiManager.class);
-        // Check if WIFI is enabled before running any tests. This is needed because some test
-        // devices have delay on WIFI connection when setting up. Test will throw
-        // "AssertionFailedError: Wifi not enabled" after 5 second timeout.
-        if (!mWifiManager.isWifiEnabled()) {
-            PollingCheck.check(
-                    "Wifi not enabled",
-                    WIFI_CONNECTION_TIMEOUT_MS,
-                    () -> mWifiManager.isWifiEnabled());
-        }
     }
 
     @After

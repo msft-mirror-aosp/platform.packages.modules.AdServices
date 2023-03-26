@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.OUTCOME_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
@@ -96,6 +97,7 @@ public class AdOutcomeSelectorImplTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
 
+        mFlags = new AdOutcomeSelectorImplTestFlags();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
@@ -128,13 +130,6 @@ public class AdOutcomeSelectorImplTest {
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-        mFlags =
-                new Flags() {
-                    @Override
-                    public long getAdSelectionSelectingOutcomeTimeoutMs() {
-                        return 300;
-                    }
-                };
 
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
@@ -277,6 +272,17 @@ public class AdOutcomeSelectorImplTest {
                     }
                 };
 
+        AdOutcomeSelector adOutcomeSelector =
+                new AdOutcomeSelectorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        new AdSelectionDevOverridesHelper(
+                                DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
+                        flagsWithSmallerLimits);
+
         List<AdSelectionIdWithBidAndRenderUri> adverts =
                 Collections.singletonList(
                         AdSelectionIdWithBidAndRenderUri.builder()
@@ -307,7 +313,7 @@ public class AdOutcomeSelectorImplTest {
                         () ->
                                 waitForFuture(
                                         () ->
-                                                mAdOutcomeSelector.runAdOutcomeSelector(
+                                                adOutcomeSelector.runAdOutcomeSelector(
                                                         adverts, config)));
         Assert.assertTrue(exception.getCause() instanceof UncheckedTimeoutException);
         Assert.assertEquals(exception.getCause().getMessage(), OUTCOME_SELECTION_TIMED_OUT);
@@ -387,5 +393,12 @@ public class AdOutcomeSelectorImplTest {
         futureResult.addListener(resultLatch::countDown, mLightweightExecutorService);
         resultLatch.await();
         return futureResult.get();
+    }
+
+    private static class AdOutcomeSelectorImplTestFlags implements Flags {
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
     }
 }

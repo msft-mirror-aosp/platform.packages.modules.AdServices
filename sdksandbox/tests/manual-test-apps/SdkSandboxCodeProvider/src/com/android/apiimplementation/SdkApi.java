@@ -22,6 +22,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.RemoteException;
 
+import com.android.modules.utils.build.SdkLevel;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,8 +39,20 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public String createFile(int sizeInMb) throws RemoteException {
+        Path path;
+        if (SdkLevel.isAtLeastU()) {
+            // U device should be have customized sdk context that allows all storage APIs on
+            // context to utlize per-sdk storage
+            path = Paths.get(mContext.getFilesDir().getPath(), "file.txt");
+            // Verify per-sdk storage is being used
+            if (!path.startsWith(mContext.getDataDir().getPath())) {
+                throw new IllegalStateException("Customized Sdk Context is not being used");
+            }
+        } else {
+            path = Paths.get(mContext.getDataDir().getPath(), "file.txt");
+        }
+
         try {
-            final Path path = Paths.get(mContext.getDataDir().getPath(), "file.txt");
             Files.deleteIfExists(path);
             Files.createFile(path);
             final byte[] buffer = new byte[sizeInMb * 1024 * 1024];

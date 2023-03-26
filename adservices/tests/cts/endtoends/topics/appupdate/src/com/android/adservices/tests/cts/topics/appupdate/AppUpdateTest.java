@@ -143,7 +143,6 @@ public class AppUpdateTest {
 
     private int mExpectedTopicResponseBroadCastIndex = 0;
     private BroadcastReceiver mTopicsResponseReceiver;
-    private String mPreviousAppAllowList;
 
     @Before
     public void setup() throws InterruptedException {

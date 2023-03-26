@@ -24,6 +24,8 @@ import static org.mockito.Mockito.spy;
 import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
@@ -57,7 +59,10 @@ class TestObjectProvider {
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
             DatastoreManager datastoreManager, Flags flags) {
-        return new AttributionJobHandlerWrapper(datastoreManager, flags);
+        return new AttributionJobHandlerWrapper(
+                datastoreManager,
+                flags,
+                new DebugReportApi(ApplicationProvider.getApplicationContext()));
     }
 
     static MeasurementImpl getMeasurementImpl(

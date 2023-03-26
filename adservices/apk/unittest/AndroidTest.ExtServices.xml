@@ -17,6 +17,16 @@
 <configuration description="Config for Ad Services apk unit test cases in ExtServices">
     <option name="test-tag" value="AdExtServicesApkUnitTests" />
 
+    <!-- Prevent test from running on Android T+ -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
+        <option name="max-sdk-level" value="32"/>
+    </object>
+
+    <!-- Prevent tests from running on Android R- -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="check-min-sdk" value="true"/>

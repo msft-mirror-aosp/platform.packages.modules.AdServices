@@ -96,14 +96,12 @@ public class ReportInteractionRequest {
     /**
      * Returns the bitfield of reporting destinations to report to (buyer, seller, or both).
      *
-     * <p>To create this bitfield, place an {@code |} bitwise operator between each {@link
-     * ReportingDestination} to be reported to. For example to only report to buyer, set the
-     * reportingDestinations field to {@link ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER}
-     * To only report to seller, set the reportingDestinations field to {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER} To report to both buyers and sellers,
-     * set the reportingDestinations field to {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER} | {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER}
+     * <p>To create this bitfield, place an {@code |} bitwise operator between each {@code
+     * reportingDestination} to be reported to. For example to only report to buyer, set the
+     * reportingDestinations field to {@link #FLAG_REPORTING_DESTINATION_BUYER} To only report to
+     * seller, set the reportingDestinations field to {@link #FLAG_REPORTING_DESTINATION_SELLER} To
+     * report to both buyers and sellers, set the reportingDestinations field to {@link
+     * #FLAG_REPORTING_DESTINATION_BUYER} | {@link #FLAG_REPORTING_DESTINATION_SELLER}
      */
     @ReportingDestination
     public int getReportingDestinations() {

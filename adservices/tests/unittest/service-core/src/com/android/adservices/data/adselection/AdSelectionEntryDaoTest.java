@@ -43,7 +43,6 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 public class AdSelectionEntryDaoTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
@@ -1176,43 +1175,50 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testGetAdCounterKeysForMissingAdSelection() {
+    public void testGetMissingAdSelectionHistogramInfo() {
         assertThat(
-                        mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+                        mAdSelectionEntryDao.getAdSelectionHistogramInfo(
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
                 .isNull();
     }
 
     @Test
-    public void testGetNullAdCounterKeysForAdSelection() {
+    public void testGetAdSelectionHistogramInfoWithNullAdCounterKeys() {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
         assertThat(
                         mAdSelectionEntryDao.doesAdSelectionIdExist(
                                 DB_AD_SELECTION_1.getAdSelectionId()))
                 .isTrue();
 
-        assertThat(
-                        mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
-                                DB_AD_SELECTION_1.getAdSelectionId(),
-                                DB_AD_SELECTION_1.getCallerPackageName()))
-                .isNull();
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_1.getCallerPackageName());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer())
+                .isEqualTo(DB_AD_SELECTION_1.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo.getAdCounterKeys()).isNull();
     }
 
     @Test
-    public void testGetAdCounterKeysForAdSelection() {
+    public void testGetAdSelectionHistogramInfo() {
         mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS);
         assertThat(
                         mAdSelectionEntryDao.doesAdSelectionIdExist(
                                 DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId()))
                 .isTrue();
 
-        Set<String> adCounterKeys =
-                mAdSelectionEntryDao.getAdCounterKeysForAdSelection(
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName());
-        assertThat(adCounterKeys).isNotNull();
-        assertThat(adCounterKeys)
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer())
+                .isEqualTo(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
+        assertThat(histogramInfo.getAdCounterKeys())
                 .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
     }
 
