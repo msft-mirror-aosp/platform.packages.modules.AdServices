@@ -133,7 +133,118 @@ public class DebugKeyAccessor {
             default:
                 break;
         }
+        logDebugKeysMatch(
+                joinKeyHash, trigger, attributionType, doDebugJoinKeysMatch, mAdServicesLogger);
+        return new Pair<>(sourceDebugKey, triggerDebugKey);
+    }
 
+    /** Returns DebugKey according to the permissions set */
+    public Pair<UnsignedLong, UnsignedLong> getDebugKeysForVerboseTriggerDebugReport(
+            @NonNull Source source, Trigger trigger) {
+        if (source == null) {
+            if (trigger.getDestinationType() == EventSurfaceType.WEB
+                    && trigger.hasArDebugPermission()) {
+                return new Pair<>(null, trigger.getDebugKey());
+            } else if (trigger.getDestinationType() == EventSurfaceType.APP
+                    && trigger.hasAdIdPermission()) {
+                return new Pair<>(null, trigger.getDebugKey());
+            } else {
+                return new Pair<>(null, null);
+            }
+        }
+        Set<String> allowedEnrollmentsString =
+                new HashSet<>(
+                        AllowLists.splitAllowList(
+                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        UnsignedLong sourceDebugKey = null;
+        UnsignedLong triggerDebugKey = null;
+        Long joinKeyHash = null;
+        @AttributionType int attributionType = getAttributionType(source, trigger);
+        boolean doDebugJoinKeysMatch = false;
+        switch (attributionType) {
+            case AttributionType.SOURCE_APP_TRIGGER_APP:
+                // Gated on Trigger Adid permission.
+                if (!trigger.hasAdIdPermission()) {
+                    break;
+                }
+                triggerDebugKey = trigger.getDebugKey();
+                if (source.hasAdIdPermission()) {
+                    sourceDebugKey = source.getDebugKey();
+                }
+                break;
+            case AttributionType.SOURCE_WEB_TRIGGER_WEB:
+                // Gated on Trigger ar_debug permission.
+                if (!trigger.hasArDebugPermission()) {
+                    break;
+                }
+                triggerDebugKey = trigger.getDebugKey();
+                if (trigger.getRegistrant().equals(source.getRegistrant())) {
+                    if (source.hasArDebugPermission()) {
+                        sourceDebugKey = source.getDebugKey();
+                    }
+                } else {
+                    // Send source_debug_key when condition meets.
+                    if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
+                        // Attempted to match, so assigning a non-null value to emit metric
+                        joinKeyHash = 0L;
+                        if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
+                            sourceDebugKey = source.getDebugKey();
+                            joinKeyHash = (long) source.getDebugJoinKey().hashCode();
+                            doDebugJoinKeysMatch = true;
+                        }
+                    }
+                }
+                break;
+            case AttributionType.SOURCE_APP_TRIGGER_WEB:
+                // Gated on Trigger ar_debug permission.
+                if (!trigger.hasArDebugPermission()) {
+                    break;
+                }
+                triggerDebugKey = trigger.getDebugKey();
+                // Send source_debug_key when condition meets.
+                if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
+                    // Attempted to match, so assigning a non-null value to emit metric
+                    joinKeyHash = 0L;
+                    if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
+                        sourceDebugKey = source.getDebugKey();
+                        joinKeyHash = (long) source.getDebugJoinKey().hashCode();
+                        doDebugJoinKeysMatch = true;
+                    }
+                }
+                break;
+            case AttributionType.SOURCE_WEB_TRIGGER_APP:
+                // Gated on Trigger Adid permission.
+                if (!trigger.hasAdIdPermission()) {
+                    break;
+                }
+                triggerDebugKey = trigger.getDebugKey();
+                // Send source_debug_key when condition meets.
+                if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
+                    // Attempted to match, so assigning a non-null value to emit metric
+                    joinKeyHash = 0L;
+                    if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
+                        sourceDebugKey = source.getDebugKey();
+                        joinKeyHash = (long) source.getDebugJoinKey().hashCode();
+                        doDebugJoinKeysMatch = true;
+                    }
+                }
+                break;
+            case AttributionType.UNKNOWN:
+                // fall-through
+            default:
+                break;
+        }
+        logDebugKeysMatch(
+                joinKeyHash, trigger, attributionType, doDebugJoinKeysMatch, mAdServicesLogger);
+        return new Pair<>(sourceDebugKey, triggerDebugKey);
+    }
+
+    private void logDebugKeysMatch(
+            Long joinKeyHash,
+            Trigger trigger,
+            int attributionType,
+            boolean doDebugJoinKeysMatch,
+            AdServicesLogger mAdServicesLogger) {
         long debugKeyHashLimit = mFlags.getMeasurementDebugJoinKeyHashLimit();
         // The provided hash limit is valid and the join key was attempted to be matched.
         if (debugKeyHashLimit > 0 && joinKeyHash != null) {
@@ -148,9 +259,7 @@ public class DebugKeyAccessor {
                             .build();
             mAdServicesLogger.logMeasurementDebugKeysMatch(stats);
         }
-        return new Pair<>(sourceDebugKey, triggerDebugKey);
     }
-
     private static boolean canMatchJoinKeys(
             Source source, Trigger trigger, Set<String> allowedEnrollmentsString) {
         return allowedEnrollmentsString.contains(trigger.getEnrollmentId())

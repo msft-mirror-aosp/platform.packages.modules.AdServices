@@ -26,6 +26,14 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
@@ -91,6 +99,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -179,7 +188,7 @@ public class AdSelectionE2ETest {
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
 
-    private static final String READ_BID_FROM_AD_METADATA_JS =
+    public static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
@@ -200,7 +209,7 @@ public class AdSelectionE2ETest {
                     + "'render': result.render_uri };\n"
                     + "}";
 
-    private static final String USE_BID_AS_SCORE_JS =
+    public static final String USE_BID_AS_SCORE_JS =
             "function scoreAd(ad, bid, auction_config, seller_signals, "
                     + "trusted_scoring_signals, contextual_signal, user_signal, "
                     + "custom_audience_signal) { \n"
@@ -472,6 +481,7 @@ public class AdSelectionE2ETest {
 
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     @Mock private File mMockDBAdSelectionFile;
+    @Mock private ConsentManager mConsentManagerMock;
 
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
@@ -485,14 +495,14 @@ public class AdSelectionE2ETest {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private CustomAudienceDao mCustomAudienceDao;
     private AppInstallDao mAppInstallDao;
+    private FrequencyCapDao mFrequencyCapDao;
     @Spy private AdSelectionEntryDao mAdSelectionEntryDaoSpy;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private AdSelectionConfig mAdSelectionConfig;
     private AdSelectionServiceImpl mAdSelectionService;
     private Dispatcher mDispatcher;
     private AdTechIdentifier mSeller;
-    private final AdFilteringFeatureFactory mAdFilteringFeatureFactory =
-            new AdFilteringFeatureFactory(ApplicationProvider.getApplicationContext(), mFlags);
+    private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
@@ -511,6 +521,13 @@ public class AdSelectionE2ETest {
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
                         .build()
                         .appInstallDao();
+        mFrequencyCapDao =
+                Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class)
+                        .build()
+                        .frequencyCapDao();
+
+        mAdFilteringFeatureFactory =
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mFlags);
 
         // Test applications don't have the required permissions to read config P/H flags, and
         // injecting mocked flags everywhere is annoying and non-trivial for static methods
@@ -545,6 +562,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -556,7 +574,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -720,6 +739,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -731,7 +751,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1075,7 +1096,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdBiddingProcessReportedStats(isA(RunAdBiddingProcessReportedStats.class));
@@ -1165,6 +1192,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1176,7 +1204,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1245,7 +1274,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -1308,7 +1343,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -1371,7 +1412,13 @@ public class AdSelectionE2ETest {
 
         // The contextual Ad with maximum bid should have won
         assertEquals(
-                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500).toString(),
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
                 resultsCallback.mAdSelectionResponse.getRenderUri().toString());
         verify(mAdServicesLoggerMock)
                 .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
@@ -1747,6 +1794,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1758,7 +1806,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1852,6 +1901,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         httpClientWithNoCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1863,7 +1913,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -1959,6 +2010,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -1970,7 +2022,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -2069,6 +2122,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         httpClientWithCaching,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2080,7 +2134,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -2163,7 +2218,7 @@ public class AdSelectionE2ETest {
                         .setBuyer(dBCustomAudienceForBuyer2.getBuyer())
                         .setName(dBCustomAudienceForBuyer2.getName())
                         .setAppPackageName(MY_APP_PACKAGE_NAME)
-                        .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS_V3)
+                        .setBiddingLogicJS(READ_BID_FROM_AD_METADATA_JS)
                         .setTrustedBiddingData(
                                 new JSONObject(TRUSTED_BIDDING_SIGNALS_SERVER_DATA).toString())
                         .build();
@@ -2182,6 +2237,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -2193,7 +2249,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -3309,6 +3366,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3320,7 +3378,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -3543,6 +3602,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3554,7 +3614,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3610,6 +3671,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3621,7 +3683,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3788,6 +3851,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3799,7 +3863,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3855,6 +3920,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3866,7 +3932,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3965,6 +4032,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -3976,7 +4044,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFlags.getAdSelectionScoringTimeoutMs());
@@ -4606,6 +4675,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4617,7 +4687,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -4726,6 +4797,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4737,7 +4809,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -4847,6 +4920,7 @@ public class AdSelectionE2ETest {
                         mAdSelectionEntryDaoSpy,
                         mAppInstallDao,
                         mCustomAudienceDao,
+                        mFrequencyCapDao,
                         mAdServicesHttpsClient,
                         mDevContextFilter,
                         mLightweightExecutorService,
@@ -4858,7 +4932,8 @@ public class AdSelectionE2ETest {
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
-                        mAdFilteringFeatureFactory);
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -5008,24 +5083,19 @@ public class AdSelectionE2ETest {
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
         Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
 
-        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
-        ContextualAds contextualAds1 =
-                ContextualAdsFixture.generateContextualAds(
-                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(
-                                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1))
-                        .build();
-
-        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        // In order to meet ETLd+1 requirements creating Contextual ads with MockWebserver's host
+        AdTechIdentifier buyer2 =
+                AdTechIdentifier.fromString(
+                        mMockWebServerRule
+                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                .getHost());
         ContextualAds contextualAds2 =
-                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+                ContextualAdsFixture.generateContextualAds(
+                                buyer2, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
                         .setDecisionLogicUri(
                                 mMockWebServerRule.uriForPath(
                                         BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2))
                         .build();
-
-        buyerContextualAds.put(buyer1, contextualAds1);
         buyerContextualAds.put(buyer2, contextualAds2);
 
         return buyerContextualAds;
@@ -5107,6 +5177,20 @@ public class AdSelectionE2ETest {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
         }
+
+        @Override
+        public String toString() {
+            return "AdSelectionTestCallback{"
+                    + "mCountDownLatch="
+                    + mCountDownLatch
+                    + ", mIsSuccess="
+                    + mIsSuccess
+                    + ", mAdSelectionResponse="
+                    + mAdSelectionResponse
+                    + ", mFledgeErrorResponse="
+                    + mFledgeErrorResponse
+                    + '}';
+        }
     }
 
     private static class AdSelectionE2ETestFlags implements Flags {
@@ -5143,6 +5227,46 @@ public class AdSelectionE2ETest {
         @Override
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
+        }
+
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getReportImpressionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
+            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+        }
+
+        @Override
+        public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
+            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
         }
 
         @Override

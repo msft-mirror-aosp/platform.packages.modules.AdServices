@@ -48,6 +48,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
@@ -92,6 +93,7 @@ public class MddJobServiceTest {
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MddFlags.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .startMocking();
 
         // Mock JobScheduler invocation in EpochJobService
@@ -118,6 +120,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOff() throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
@@ -143,6 +152,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOn() {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is on.
@@ -236,6 +252,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -261,6 +284,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeeded_ScheduledWithDifferentParameters()
             throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -288,6 +318,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -320,6 +357,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask()
             throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -340,6 +384,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask()
             throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -360,6 +411,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
             throws InterruptedException {
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -396,5 +454,35 @@ public class MddJobServiceTest {
         // the READ_DEVICE_CONFIG exception.
         // We wait here so that the scheduled job can finish.
         Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+    }
+
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                                new ComponentName(CONTEXT, MddJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
     }
 }

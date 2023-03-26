@@ -145,6 +145,23 @@ public final class AdSelectionConfig implements Parcelable {
                 mTrustedScoringSignalsUri);
     }
 
+    /**
+     * @return a new builder instance created from this object's cloned data
+     * @hide
+     */
+    @NonNull
+    public AdSelectionConfig.Builder cloneToBuilder() {
+        return new AdSelectionConfig.Builder()
+                .setSeller(this.getSeller())
+                .setBuyerContextualAds(this.getBuyerContextualAds())
+                .setAdSelectionSignals(this.getAdSelectionSignals())
+                .setCustomAudienceBuyers(this.getCustomAudienceBuyers())
+                .setDecisionLogicUri(this.getDecisionLogicUri())
+                .setPerBuyerSignals(this.getPerBuyerSignals())
+                .setSellerSignals(this.getSellerSignals())
+                .setTrustedScoringSignalsUri(this.getTrustedScoringSignalsUri());
+    }
+
     /** @return a AdTechIdentifier of the seller, for example "www.example-ssp.com" */
     @NonNull
     public AdTechIdentifier getSeller() {

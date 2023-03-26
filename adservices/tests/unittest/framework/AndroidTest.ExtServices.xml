@@ -15,7 +15,17 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Framework unit test cases in ExtServices">
-    <option name="test-tag" value="AdExtServicesFrameworkUnitTests" />
+    <option name="test-tag" value="AdExtServicesFrameworkUnitTests"/>
+
+    <!-- Prevent test from running on Android T+ -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
+        <option name="max-sdk-level" value="32"/>
+    </object>
+
+    <!-- Prevent tests from running on Android R- -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
@@ -23,7 +33,7 @@
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
-        <option name="hidden-api-checks" value="false" />
+        <option name="hidden-api-checks" value="false"/>
         <option name="package" value="android.adservices.tests"/>
     </test>
 

@@ -171,6 +171,36 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    @Nullable
+    public Pair<List<Uri>, List<Uri>> getSourceDestinations(@NonNull String sourceId)
+            throws DatastoreException {
+        try (Cursor cursor = mSQLTransaction.getDatabase().query(
+                MeasurementTables.SourceDestination.TABLE,
+                new String[] {
+                        MeasurementTables.SourceDestination.DESTINATION,
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE
+                },
+                MeasurementTables.SourceDestination.SOURCE_ID + " = ? ",
+                new String[]{ sourceId },
+                /*groupBy=*/null, /*having=*/null, /*orderBy=*/null, /*limit=*/null)) {
+            List<Uri> appDestinations = new ArrayList<>();
+            List<Uri> webDestinations = new ArrayList<>();
+            while (cursor.moveToNext()) {
+                int destinationType = cursor.getInt(cursor.getColumnIndex(
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE));
+                if (destinationType == EventSurfaceType.APP) {
+                    appDestinations.add(Uri.parse(cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.SourceDestination.DESTINATION))));
+                } else {
+                    webDestinations.add(Uri.parse(cursor.getString(cursor.getColumnIndex(
+                            MeasurementTables.SourceDestination.DESTINATION))));
+                }
+            }
+            return Pair.create(appDestinations, webDestinations);
+        }
+    }
+
+    @Override
     public Trigger getTrigger(@NonNull String triggerId) throws DatastoreException {
         try (Cursor cursor = mSQLTransaction.getDatabase().query(
                 MeasurementTables.TriggerContract.TABLE,
@@ -279,15 +309,13 @@ class MeasurementDao implements IMeasurementDao {
             return;
         }
 
+        String sourceId = UUID.randomUUID().toString();
+
         ContentValues values = new ContentValues();
-        values.put(MeasurementTables.SourceContract.ID, UUID.randomUUID().toString());
+        values.put(MeasurementTables.SourceContract.ID, sourceId);
         values.put(MeasurementTables.SourceContract.EVENT_ID, source.getEventId().getValue());
         values.put(MeasurementTables.SourceContract.PUBLISHER, source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, source.getPublisherType());
-        values.put(MeasurementTables.SourceContract.APP_DESTINATION,
-                getNullableUriString(source.getAppDestinations()));
-        values.put(MeasurementTables.SourceContract.WEB_DESTINATION,
-                getNullableUriString(source.getWebDestinations()));
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.EVENT_TIME, source.getEventTime());
         values.put(MeasurementTables.SourceContract.EXPIRY_TIME, source.getExpiryTime());
@@ -328,48 +356,85 @@ class MeasurementDao implements IMeasurementDao {
         if (rowId == -1) {
             throw new DatastoreException("Source insertion failed.");
         }
+
+        // Insert source destinations
+        if (source.getAppDestinations() != null) {
+            for (Uri appDestination : source.getAppDestinations()) {
+                ContentValues destinationValues = new ContentValues();
+                destinationValues.put(MeasurementTables.SourceDestination.SOURCE_ID, sourceId);
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.APP);
+                destinationValues.put(MeasurementTables.SourceDestination.DESTINATION,
+                        appDestination.toString());
+                long destinationRowId = mSQLTransaction.getDatabase()
+                        .insert(MeasurementTables.SourceDestination.TABLE,
+                                /*nullColumnHack=*/null, destinationValues);
+                LogUtil.d("MeasurementDao: insertSource: insert sourceDestination: rowId="
+                        + destinationRowId);
+                if (destinationRowId == -1) {
+                    throw new DatastoreException(
+                            "Source insertion failed on inserting app destination.");
+                }
+            }
+        }
+
+        if (source.getWebDestinations() != null) {
+            for (Uri webDestination : source.getWebDestinations()) {
+                ContentValues destinationValues = new ContentValues();
+                destinationValues.put(MeasurementTables.SourceDestination.SOURCE_ID, sourceId);
+                destinationValues.put(
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE, EventSurfaceType.WEB);
+                destinationValues.put(MeasurementTables.SourceDestination.DESTINATION,
+                        webDestination.toString());
+                long destinationRowId = mSQLTransaction.getDatabase()
+                        .insert(MeasurementTables.SourceDestination.TABLE,
+                                /*nullColumnHack=*/null, destinationValues);
+                LogUtil.d("MeasurementDao: insertSource: insert sourceDestination: rowId="
+                        + destinationRowId);
+                if (destinationRowId == -1) {
+                    throw new DatastoreException(
+                            "Source insertion failed on inserting web destination.");
+                }
+            }
+        }
     }
 
     @Override
     public List<Source> getMatchingActiveSources(@NonNull Trigger trigger)
             throws DatastoreException {
         List<Source> sources = new ArrayList<>();
-        Optional<Pair<String, String>> destinationColumnAndValue =
-                getDestinationColumnAndValue(trigger);
-        if (!destinationColumnAndValue.isPresent()) {
-            LogUtil.d("getMatchingActiveSources: unable to obtain destination column and value: %s",
+        Optional<String> destinationValue = getDestinationValue(trigger);
+        if (!destinationValue.isPresent()) {
+            LogUtil.d("getMatchingActiveSources: unable to obtain destination value: %s",
                     trigger.getAttributionDestination().toString());
             return sources;
         }
-        String sourceDestinationColumn = destinationColumnAndValue.get().first;
-        String triggerDestinationValue = destinationColumnAndValue.get().second;
+        String triggerDestinationValue = destinationValue.get();
+        String sourceWhereStatement =
+                String.format("%1$s.%2$s = ? "
+                        + "AND %1$s.%3$s <= ? "
+                        + "AND %1$s.%4$s > ? "
+                        + "AND %1$s.%5$s = ?",
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME,
+                        MeasurementTables.SourceContract.STATUS);
+
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
-                        .query(
-                                MeasurementTables.SourceContract.TABLE,
-                                /*columns=*/ null,
-                                sourceDestinationColumn
-                                        + " = ? AND "
-                                        + MeasurementTables.SourceContract.ENROLLMENT_ID
-                                        + " = ? AND "
-                                        + MeasurementTables.SourceContract.EVENT_TIME
-                                        + " <= ? AND "
-                                        + MeasurementTables.SourceContract.EXPIRY_TIME
-                                        + " > ? AND "
-                                        + MeasurementTables.SourceContract.STATUS
-                                        + " = ?",
+                        .rawQuery(
+                                selectSourcesByDestination(
+                                        triggerDestinationValue,
+                                        trigger.getDestinationType(),
+                                        sourceWhereStatement),
                                 new String[] {
-                                    triggerDestinationValue,
                                     trigger.getEnrollmentId(),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(Source.Status.ACTIVE)
-                                },
-                                /*groupBy=*/ null,
-                                /*having=*/ null,
-                                /*orderBy=*/ null,
-                                /*limit=*/ null)) {
+                                })) {
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
@@ -641,7 +706,10 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.EventReportContract.SOURCE_EVENT_ID,
                 eventReport.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                eventReport.getAttributionDestinations().get(0).toString());
+                String.join(" ", eventReport.getAttributionDestinations()
+                        .stream()
+                        .map(Uri::toString)
+                        .collect(Collectors.toList())));
         values.put(MeasurementTables.EventReportContract.TRIGGER_TIME,
                 eventReport.getTriggerTime());
         values.put(
@@ -839,68 +907,85 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
-            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
-            throws DatastoreException {
-        String destinationColumn = destinationType == EventSurfaceType.APP
-                ? MeasurementTables.SourceContract.APP_DESTINATION
-                : MeasurementTables.SourceContract.WEB_DESTINATION;
+            @EventSurfaceType int publisherType, String enrollmentId,
+            List<Uri> excludedDestinations, @EventSurfaceType int destinationType,
+            long windowStartTime, long windowEndTime) throws DatastoreException {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
-                                + "WHERE %3$s AND %4$s = ? AND %5$s = ? AND %1$s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?"
-                                + "AND %7$s > ?",
-                        destinationColumn,
+                        "WITH source_ids AS ("
+                                + "SELECT %1$s FROM %2$s "
+                                    + "WHERE %3$s AND %4$s = ? AND %5$s = ? "
+                                    + "AND %6$s > ? AND %6$s <= ? AND %7$s > ?"
+                                + ") "
+                                + "SELECT COUNT(DISTINCT %8$s) FROM %9$s "
+                                + "WHERE %10$s IN source_ids AND %11$s = ? "
+                                + "AND %8$s NOT IN " + getUriValueList(excludedDestinations),
+                        MeasurementTables.SourceContract.ID,
                         MeasurementTables.SourceContract.TABLE,
                         getPublisherWhereStatement(publisher, publisherType),
                         MeasurementTables.SourceContract.ENROLLMENT_ID,
                         MeasurementTables.SourceContract.STATUS,
                         MeasurementTables.SourceContract.EVENT_TIME,
-                        MeasurementTables.SourceContract.EXPIRY_TIME);
+                        MeasurementTables.SourceContract.EXPIRY_TIME,
+                        MeasurementTables.SourceDestination.DESTINATION,
+                        MeasurementTables.SourceDestination.TABLE,
+                        MeasurementTables.SourceDestination.SOURCE_ID,
+                        MeasurementTables.SourceDestination.DESTINATION_TYPE);
         return (int) DatabaseUtils.longForQuery(
                 mSQLTransaction.getDatabase(),
                 query,
                 new String[] {
                         enrollmentId,
                         String.valueOf(Source.Status.ACTIVE),
-                        excludedDestination.toString(),
                         String.valueOf(windowStartTime),
                         String.valueOf(windowEndTime),
-                        String.valueOf(windowEndTime) });
+                        String.valueOf(windowEndTime),
+                        String.valueOf(destinationType)
+                });
     }
 
     @Override
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, String excludedEnrollmentId,
-            long windowStartTime, long windowEndTime) throws DatastoreException {
-        String query =
-                String.format(
-                        Locale.ENGLISH,
-                        "SELECT COUNT(DISTINCT %1$s) FROM %2$s "
-                                + "WHERE %3$s AND (%4$s = ? OR %5$s = ?) AND %1s != ? "
-                                + "AND %6$s > ? AND %6$s <= ?"
-                                + "AND %7$s > ?",
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
-                        MeasurementTables.SourceContract.TABLE,
-                        getPublisherWhereStatement(publisher, publisherType),
-                        MeasurementTables.SourceContract.APP_DESTINATION,
-                        MeasurementTables.SourceContract.WEB_DESTINATION,
-                        MeasurementTables.SourceContract.EVENT_TIME,
-                        MeasurementTables.SourceContract.EXPIRY_TIME);
-        return (int)
-                DatabaseUtils.longForQuery(
-                        mSQLTransaction.getDatabase(),
-                        query,
-                        new String[] {
-                            destination.toString(),
-                            destination.toString(),
-                            excludedEnrollmentId,
-                            String.valueOf(windowStartTime),
-                            String.valueOf(windowEndTime),
-                            String.valueOf(windowEndTime)
-                        });
+            @EventSurfaceType int publisherType, List<Uri> destinations,
+            String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException {
+        // Each destination can be paired with the given publisher. Return the maximum count of
+        // distinct enrollments among the pairs of destination-and-publisher.
+        String query = String.format(
+                Locale.ENGLISH,
+                "WITH joined as ("
+                        + "SELECT source." + MeasurementTables.SourceContract.ENROLLMENT_ID + ", "
+                        + "source_dest." + MeasurementTables.SourceDestination.DESTINATION + " "
+                        + "FROM " + MeasurementTables.SourceContract.TABLE + " source "
+                        + "INNER JOIN " + MeasurementTables.SourceDestination.TABLE + " source_dest"
+                        + " ON (source." + MeasurementTables.SourceContract.ID + " = "
+                            + "source_dest." + MeasurementTables.SourceDestination.SOURCE_ID + ") "
+                        + "WHERE %1$s "
+                        + "AND source." + MeasurementTables.SourceContract.ENROLLMENT_ID + " != ? "
+                        + "AND source." + MeasurementTables.SourceContract.EVENT_TIME + " > ? "
+                        + "AND source." + MeasurementTables.SourceContract.EVENT_TIME + " <= ? "
+                        + "AND source." + MeasurementTables.SourceContract.EXPIRY_TIME + " > ? "
+                        + "AND source_dest." + MeasurementTables.SourceDestination.DESTINATION + " "
+                            + "IN %2$s"
+                        + "), distinct_enrollments as ("
+                            + "SELECT DENSE_RANK() OVER ("
+                                + "PARTITION BY destination ORDER BY enrollment_id"
+                            + ") AS distinct_enrollment "
+                            + "FROM joined"
+                        + ") SELECT MAX(distinct_enrollment) FROM distinct_enrollments",
+                getPublisherWhereStatement(publisher, publisherType),
+                getUriValueList(destinations));
+
+        return (int) DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                query,
+                new String[] {
+                    excludedEnrollmentId,
+                    String.valueOf(windowStartTime),
+                    String.valueOf(windowEndTime),
+                    String.valueOf(windowEndTime)
+                });
     }
 
     @Override
@@ -916,18 +1001,17 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.TABLE,
                         String.format(
                                 Locale.ENGLISH,
-                                "%1$s IN (SELECT e.%1$s FROM %2$s e INNER JOIN %3$s s ON (e.%4$s ="
-                                        + " s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s) WHERE"
-                                        + " s.%10$s = ?)",
+                                "%1$s IN ("
+                                        + "SELECT e.%1$s FROM %2$s e"
+                                        + " INNER JOIN %3$s s"
+                                        + " ON e.%4$s = s.%5$s"
+                                        + " WHERE s.%6$s = ?"
+                                        + ")",
                                 MeasurementTables.EventReportContract.ID,
                                 MeasurementTables.EventReportContract.TABLE,
                                 MeasurementTables.SourceContract.TABLE,
                                 MeasurementTables.EventReportContract.SOURCE_ID,
                                 MeasurementTables.SourceContract.ID,
-                                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                                MeasurementTables.SourceContract.APP_DESTINATION,
-                                MeasurementTables.EventReportContract.ENROLLMENT_ID,
-                                MeasurementTables.SourceContract.ENROLLMENT_ID,
                                 MeasurementTables.SourceContract.REGISTRANT),
                         new String[] {uriStr});
 
@@ -957,9 +1041,14 @@ class MeasurementDao implements IMeasurementDao {
                                 + "("
                                 + MeasurementTables.SourceContract.STATUS
                                 + " = ? AND "
-                                + MeasurementTables.SourceContract.APP_DESTINATION
-                                + " = ? )",
-                        new String[] {uriStr, String.valueOf(Source.Status.IGNORED), uriStr});
+                                + MeasurementTables.SourceContract.ID
+                                + " IN ("
+                                + selectSourceIdsByDestination(uriStr, EventSurfaceType.APP)
+                                + ") )",
+                        new String[] {
+                            uriStr,
+                            String.valueOf(Source.Status.IGNORED)
+                        });
         // Trigger table
         numDeletions +=
                 db.delete(
@@ -976,6 +1065,13 @@ class MeasurementDao implements IMeasurementDao {
                                 + " = ?",
                         new String[] {uriStr, uriStr});
 
+        // Async Registration table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
+                        new String[] {uriStr});
+
         return numDeletions != 0;
     }
 
@@ -983,7 +1079,7 @@ class MeasurementDao implements IMeasurementDao {
     public boolean deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException {
         int numDeletions = 0;
         SQLiteDatabase db = mSQLTransaction.getDatabase();
-        String inQuery = constructDeleteQueryAppsNotPresent(uriList);
+        String valueList = getUriValueList(uriList);
 
         // For all Source records not in the given list
         // as REGISTRANT, obtains EventReport records whose SOURCE_ID
@@ -993,20 +1089,18 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.TABLE,
                         String.format(
                                 Locale.ENGLISH,
-                                "%1$s IN (SELECT e.%1$s FROM %2$s e INNER JOIN %3$s s ON (e.%4$s ="
-                                        + " s.%5$s AND e.%6$s = s.%7$s AND e.%8$s = s.%9$s) WHERE"
-                                        + " s.%10$s NOT IN "
-                                        + inQuery
+                                "%1$s IN ("
+                                        + "SELECT e.%1$s FROM %2$s e"
+                                        + " INNER JOIN %3$s s"
+                                        + " ON e.%4$s = s.%5$s"
+                                        + " WHERE s.%6$s NOT IN "
+                                        + valueList
                                         + ")",
                                 MeasurementTables.EventReportContract.ID,
                                 MeasurementTables.EventReportContract.TABLE,
                                 MeasurementTables.SourceContract.TABLE,
                                 MeasurementTables.EventReportContract.SOURCE_ID,
                                 MeasurementTables.SourceContract.ID,
-                                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                                MeasurementTables.SourceContract.APP_DESTINATION,
-                                MeasurementTables.EventReportContract.ENROLLMENT_ID,
-                                MeasurementTables.SourceContract.ENROLLMENT_ID,
                                 MeasurementTables.SourceContract.REGISTRANT),
                         /* whereArgs */ null);
 
@@ -1016,7 +1110,7 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.EventReportContract.TABLE,
                         MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
                                 + " NOT IN "
-                                + inQuery,
+                                + valueList,
                         /* whereArgs */ null);
 
         // AggregateReport table
@@ -1025,11 +1119,11 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AggregateReport.TABLE,
                         MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION
                                 + " NOT IN "
-                                + inQuery.toString()
+                                + valueList.toString()
                                 + " OR "
                                 + MeasurementTables.AggregateReport.PUBLISHER
                                 + " NOT IN "
-                                + inQuery.toString(),
+                                + valueList.toString(),
                         /* whereArgs */ null);
 
         // Source table
@@ -1039,21 +1133,23 @@ class MeasurementDao implements IMeasurementDao {
                         "(("
                                 + MeasurementTables.SourceContract.REGISTRANT
                                 + " NOT IN "
-                                + inQuery
+                                + valueList
                                 + ") OR ("
                                 + MeasurementTables.SourceContract.STATUS
                                 + " = ? AND "
-                                + MeasurementTables.SourceContract.APP_DESTINATION
-                                + " NOT IN "
-                                + inQuery
-                                + "))",
+                                // Delete source records that are associated with any
+                                // non-installed destination apps.
+                                + MeasurementTables.SourceContract.ID
+                                + " IN ("
+                                + selectSourceIdsWithNonInstalledAppDestinations(valueList)
+                                + ")))",
                         new String[] {String.valueOf(Source.Status.IGNORED)});
 
         // Trigger table
         numDeletions +=
                 db.delete(
                         MeasurementTables.TriggerContract.TABLE,
-                        MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + inQuery,
+                        MeasurementTables.TriggerContract.REGISTRANT + " NOT IN " + valueList,
                         /* whereArgs */ null);
 
         // Attribution table
@@ -1062,11 +1158,20 @@ class MeasurementDao implements IMeasurementDao {
                         MeasurementTables.AttributionContract.TABLE,
                         MeasurementTables.AttributionContract.SOURCE_SITE
                                 + " NOT IN "
-                                + inQuery.toString()
+                                + valueList.toString()
                                 + " OR "
                                 + MeasurementTables.AttributionContract.DESTINATION_SITE
                                 + " NOT IN "
-                                + inQuery.toString(),
+                                + valueList.toString(),
+                        /* whereArgs */ null);
+
+        // Async Registration table
+        numDeletions +=
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                                + " NOT IN "
+                                + valueList.toString(),
                         /* whereArgs */ null);
 
         return numDeletions != 0;
@@ -1098,16 +1203,15 @@ class MeasurementDao implements IMeasurementDao {
                 SqliteObjectMapper::constructEventReportFromCursor);
     }
 
-    private String constructDeleteQueryAppsNotPresent(List<Uri> uriList) {
+    private String getUriValueList(List<Uri> uriList) {
         // Construct query, as list of all packages present on the device
-        StringBuilder inQuery = new StringBuilder();
-        inQuery.append("(");
-        inQuery.append(
+        StringBuilder valueList = new StringBuilder("(");
+        valueList.append(
                 uriList.stream()
                         .map((uri) -> DatabaseUtils.sqlEscapeString(uri.toString()))
                         .collect(Collectors.joining(", ")));
-        inQuery.append(")");
-        return inQuery.toString();
+        valueList.append(")");
+        return valueList.toString();
     }
 
     @Override
@@ -1150,9 +1254,15 @@ class MeasurementDao implements IMeasurementDao {
                     String.valueOf(AggregateReport.Status.DELIVERED), earliestValidInsertionStr
                 });
         // Attribution table
-        db.delete(MeasurementTables.AttributionContract.TABLE,
+        db.delete(
+                MeasurementTables.AttributionContract.TABLE,
                 MeasurementTables.AttributionContract.TRIGGER_TIME + " < ?",
-                new String[]{earliestValidInsertionStr});
+                new String[] {earliestValidInsertionStr});
+        // Async Registration table
+        db.delete(
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ?",
+                new String[] {earliestValidInsertionStr});
     }
 
     @Override
@@ -1418,21 +1528,23 @@ class MeasurementDao implements IMeasurementDao {
     public void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException {
         SQLiteDatabase db = mSQLTransaction.getDatabase();
 
+        String sourceIdSubQuery =
+                selectSourceIdsByDestination(uri.toString(), EventSurfaceType.APP);
+
         String whereString =
                 String.format(
                         Locale.ENGLISH,
                         mergeConditions(
                                 " AND ",
-                                MeasurementTables.SourceContract.APP_DESTINATION + " = %1$s",
-                                MeasurementTables.SourceContract.EVENT_TIME + " <= %2$d",
-                                MeasurementTables.SourceContract.EXPIRY_TIME + " > %2$d",
+                                MeasurementTables.SourceContract.ID + " IN source_ids",
+                                MeasurementTables.SourceContract.EVENT_TIME + " <= %1$d",
+                                MeasurementTables.SourceContract.EXPIRY_TIME + " > %1$d",
                                 MeasurementTables.SourceContract.EVENT_TIME
                                         + " + "
                                         + MeasurementTables.SourceContract
                                                 .INSTALL_ATTRIBUTION_WINDOW
-                                        + " >= %2$d",
-                                MeasurementTables.SourceContract.STATUS + " = %3$d"),
-                        DatabaseUtils.sqlEscapeString(uri.toString()),
+                                        + " >= %1$d",
+                                MeasurementTables.SourceContract.STATUS + " = %2$d"),
                         eventTimestamp,
                         Source.Status.ACTIVE);
 
@@ -1440,9 +1552,8 @@ class MeasurementDao implements IMeasurementDao {
         String filterQuery =
                 String.format(
                         Locale.ENGLISH,
-                        " ( SELECT * from %1$s WHERE %2$s )",
-                        MeasurementTables.SourceContract.TABLE,
-                        whereString);
+                        " ( WITH source_ids AS (%1$s) SELECT * from %2$s WHERE %3$s )",
+                        sourceIdSubQuery, MeasurementTables.SourceContract.TABLE, whereString);
 
         // The inner query picks the top record based on priority and recency order after applying
         // the filter. But first_value generates one value per partition but applies to all the rows
@@ -1479,8 +1590,12 @@ class MeasurementDao implements IMeasurementDao {
         db.update(
                 MeasurementTables.SourceContract.TABLE,
                 values,
-                MeasurementTables.SourceContract.APP_DESTINATION + " = ?",
-                new String[] {uri.toString()});
+                MeasurementTables.SourceContract.ID + " IN ("
+                        + selectSourceIdsByDestination(
+                                uri.toString(),
+                                EventSurfaceType.APP)
+                        + ")",
+                new String[] {});
     }
 
     @Override
@@ -1571,6 +1686,11 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUnsignedLong(aggregateReport.getTriggerDebugKey()));
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
         values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
+        values.put(
+                MeasurementTables.AggregateReport.DEDUP_KEY,
+                aggregateReport.getDedupKey() != null
+                        ? aggregateReport.getDedupKey().getValue()
+                        : null);
         long rowId = mSQLTransaction.getDatabase()
                 .insert(MeasurementTables.AggregateReport.TABLE,
                         /*nullColumnHack=*/null, values);
@@ -1716,7 +1836,6 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.ID);
     }
-
     private void deleteRecordsColumnBased(
             List<String> columnValues, String tableName, String columnName)
             throws DatastoreException {
@@ -1743,17 +1862,14 @@ class MeasurementDao implements IMeasurementDao {
             @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
             throws DatastoreException {
         List<Source> sources = new ArrayList<>();
-        Optional<Pair<String, String>> destinationColumnAndValue =
-                getDestinationColumnAndValue(trigger);
-        if (!destinationColumnAndValue.isPresent()) {
+        Optional<String> destinationValue = getDestinationValue(trigger);
+        if (!destinationValue.isPresent()) {
             LogUtil.d(
-                    "getTriggerMatchingSourcesForXna: "
-                            + "unable to obtain destination column and value: %s",
+                    "getTriggerMatchingSourcesForXna: unable to obtain destination value: %s",
                     trigger.getAttributionDestination().toString());
             return sources;
         }
-        String sourceDestinationColumn = destinationColumnAndValue.get().first;
-        String triggerDestinationValue = destinationColumnAndValue.get().second;
+        String triggerDestinationValue = destinationValue.get();
         String delimitedXnaEnrollmentIds =
                 xnaEnrollmentIds.stream()
                         .map(DatabaseUtils::sqlEscapeString)
@@ -1815,30 +1931,28 @@ class MeasurementDao implements IMeasurementDao {
         //       - triggerEnrollmentId NOT IN (enrollmentIds of the sources registered under this
         // registration ID)
         //       - sharedAggregationKeys NOT NULL
+        String sourceWhereStatement =
+                mergeConditions(
+                        " AND ",
+                        MeasurementTables.SourceContract.EXPIRY_TIME + " > ?",
+                        mergeConditions(
+                                " OR ",
+                                eligibleTriggerNetworkRegisteredSourcesWhereClause,
+                                eligibleXnaEnrollmentRegisteredSourcesWhereClause),
+                        MeasurementTables.SourceContract.EVENT_TIME + " <= ? ");
+
         try (Cursor cursor =
                 mSQLTransaction
                         .getDatabase()
-                        .query(
-                                MeasurementTables.SourceContract.TABLE,
-                                /*columns=*/ null,
-                                mergeConditions(
-                                        " AND ",
-                                        sourceDestinationColumn + " = ?",
-                                        MeasurementTables.SourceContract.EXPIRY_TIME + " > ?",
-                                        mergeConditions(
-                                                " OR ",
-                                                eligibleTriggerNetworkRegisteredSourcesWhereClause,
-                                                eligibleXnaEnrollmentRegisteredSourcesWhereClause),
-                                        MeasurementTables.SourceContract.EVENT_TIME + " <= ? "),
+                        .rawQuery(
+                                selectSourcesByDestination(
+                                        triggerDestinationValue,
+                                        trigger.getDestinationType(),
+                                        sourceWhereStatement),
                                 new String[] {
-                                    triggerDestinationValue,
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(trigger.getTriggerTime())
-                                },
-                                /*groupBy=*/ null,
-                                /*having=*/ null,
-                                /*orderBy=*/ null,
-                                /*limit=*/ null)) {
+                                })) {
             while (cursor.moveToNext()) {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
@@ -1864,22 +1978,16 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
-    private static Optional<Pair<String, String>> getDestinationColumnAndValue(Trigger trigger) {
+    private static Optional<String> getDestinationValue(Trigger trigger) {
         if (trigger.getDestinationType() == EventSurfaceType.APP) {
-            return Optional.of(
-                    Pair.create(
-                            MeasurementTables.SourceContract.APP_DESTINATION,
-                            trigger.getAttributionDestination().toString()));
+            return Optional.of(trigger.getAttributionDestination().toString());
         } else {
             Optional<Uri> topPrivateDomainAndScheme =
                     Web.topPrivateDomainAndScheme(trigger.getAttributionDestination());
-            return topPrivateDomainAndScheme.map(
-                    uri ->
-                            Pair.create(
-                                    MeasurementTables.SourceContract.WEB_DESTINATION,
-                                    uri.toString()));
+            return topPrivateDomainAndScheme.map(Uri::toString);
         }
     }
+
 
     private static Optional<Uri> extractBaseUri(Uri uri, @EventSurfaceType int eventSurfaceType) {
         return eventSurfaceType == EventSurfaceType.APP
@@ -2050,6 +2158,21 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri)
+            throws DatastoreException {
+        SQLiteDatabase db = mSQLTransaction.getDatabase();
+        int rows =
+                db.delete(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        MeasurementTables.AsyncRegistrationContract.REGISTRANT + " = ? ",
+                        new String[] {uri});
+        LogUtil.d(
+                "MeasurementDao: deleteAsyncRegistrationsProvidedRegistrant: rows"
+                        + " affected="
+                        + rows);
+    }
+
+    @Override
     public AsyncRegistration fetchNextQueuedAsyncRegistration(
             short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException {
         StringBuilder notIn = new StringBuilder();
@@ -2216,5 +2339,51 @@ class MeasurementDao implements IMeasurementDao {
             }
         }
         return reports;
+    }
+
+    /**
+     * Given a destination and destination type, return a SELECT statement for matching source IDs.
+     */
+    private static String selectSourceIdsByDestination(String destination,
+            @EventSurfaceType int destinationType) {
+        return String.format(Locale.ENGLISH,
+                "SELECT " + MeasurementTables.SourceDestination.SOURCE_ID + " "
+                + "FROM " + MeasurementTables.SourceDestination.TABLE + " "
+                + "WHERE " + MeasurementTables.SourceDestination.DESTINATION
+                    + " = " + DatabaseUtils.sqlEscapeString(destination) + " "
+                    + "AND " + MeasurementTables.SourceDestination.DESTINATION_TYPE
+                    + " = " + destinationType);
+    }
+
+    /**
+     * Given a parenthesised list of destinations, select source IDs where any of their app
+     * destinations are not installed.
+     */
+    private static String selectSourceIdsWithNonInstalledAppDestinations(String installedApps) {
+        return String.format(Locale.ENGLISH,
+                "SELECT DISTINCT " + MeasurementTables.SourceDestination.SOURCE_ID + " "
+                + "FROM " + MeasurementTables.SourceDestination.TABLE + " "
+                + "WHERE " + MeasurementTables.SourceDestination.DESTINATION + " "
+                    + "NOT IN " + installedApps + " "
+                    + "AND " + MeasurementTables.SourceDestination.DESTINATION_TYPE
+                    + " = " + EventSurfaceType.APP);
+    }
+
+    /**
+     * Given a trigger destination and type, and constraints on the source, return all matching
+     * sources.
+     */
+    private static String selectSourcesByDestination(String triggerDestinationValue,
+            @EventSurfaceType int destinationType, String sourceWhereStatement) {
+        return String.format(Locale.ENGLISH,
+            "SELECT * FROM " + MeasurementTables.SourceContract.TABLE
+                    + " WHERE " + MeasurementTables.SourceContract.ID + " IN ("
+                        + "SELECT " + MeasurementTables.SourceDestination.SOURCE_ID
+                        + " FROM " + MeasurementTables.SourceDestination.TABLE
+                        + " WHERE " + MeasurementTables.SourceDestination.DESTINATION
+                        + " = '" + triggerDestinationValue + "' "
+                        + "AND " + MeasurementTables.SourceDestination.DESTINATION_TYPE
+                        + " = " + destinationType + ") "
+                    + "AND (" + sourceWhereStatement + ")");
     }
 }

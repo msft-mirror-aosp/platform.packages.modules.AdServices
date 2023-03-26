@@ -25,6 +25,7 @@ java_library {
         "adservices-clients",
         "mockwebserver",
         "platform-test-annotations",
+        "adservices-test-utility",
     ],
     libs: [
         "framework-adservices-lib",

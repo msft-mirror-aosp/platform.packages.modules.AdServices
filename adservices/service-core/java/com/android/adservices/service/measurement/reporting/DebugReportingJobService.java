@@ -33,6 +33,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -56,6 +57,13 @@ public final class DebugReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling DebugReportingJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);

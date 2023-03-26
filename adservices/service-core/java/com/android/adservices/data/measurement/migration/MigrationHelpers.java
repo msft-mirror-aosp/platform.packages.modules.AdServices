@@ -19,6 +19,8 @@ package com.android.adservices.data.measurement.migration;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import androidx.annotation.Nullable;
+
 import com.android.adservices.LogUtil;
 
 import java.util.ArrayList;
@@ -33,35 +35,54 @@ public final class MigrationHelpers {
      */
     static void copyAndUpdateTable(
             SQLiteDatabase db, String tableName, String backupTableName, String createTableQuery) {
+        copyAndUpdateTable(
+                db, tableName, backupTableName, createTableQuery, null);
+    }
+
+    /**
+     * Creates a table using {@code createTableQuery} and fills {@code columns} with values from
+     * {@code tableName} using {@code backupTableName} as a temporary storage.
+     */
+    static void copyAndUpdateTable(SQLiteDatabase db, String tableName, String backupTableName,
+            String createTableQuery, @Nullable List<String> columns) {
         if (!isTablePresent(db, tableName)) {
             return;
         }
         String renameTableQuery =
                 String.format("ALTER TABLE %1$s RENAME TO %2$s", tableName, backupTableName);
+        db.execSQL("PRAGMA foreign_keys=OFF");
         db.execSQL(renameTableQuery);
         db.execSQL(createTableQuery);
-        List<String> backupTableColumnNames = getTableColumnNames(db, backupTableName);
-        List<String> newTableColumnNames = getTableColumnNames(db, backupTableName);
 
-        if (!newTableColumnNames.containsAll(backupTableColumnNames)) {
-            // Not all the columns in the old table are present in the new table.  Proceeding with
-            // an empty table.
-            LogUtil.e(
-                    "Error during measurement migration (copyAndUpdateTable()).  The new "
-                            + "table does not have all of the columns from the old table.");
-            return;
+        String columnsStr;
+
+        if (columns == null) {
+            List<String> backupTableColumnNames = getTableColumnNames(db, backupTableName);
+            List<String> newTableColumnNames = getTableColumnNames(db, backupTableName);
+
+            if (!newTableColumnNames.containsAll(backupTableColumnNames)) {
+                // Not all the columns in the old table are present in the new table.  Proceeding
+                // with an empty table.
+                LogUtil.e(
+                        "Error during measurement migration (copyAndUpdateTable()).  The new "
+                                + "table does not have all of the columns from the old table.");
+                return;
+            }
+
+            columnsStr = String.join(",", backupTableColumnNames);
+        } else {
+            columnsStr = String.join(",", columns);
         }
-
-        String columns = String.join(",", backupTableColumnNames);
 
         String insertValuesFromBackupQuery =
                 String.format(
                         "INSERT INTO %1$s (%2$s) SELECT %2$s FROM %3$s",
-                        tableName, columns, backupTableName);
+                        tableName, columnsStr, backupTableName);
 
         db.execSQL(insertValuesFromBackupQuery);
         String dropBackupTable = String.format("DROP TABLE %1$s", backupTableName);
         db.execSQL(dropBackupTable);
+        db.execSQL("PRAGMA foreign_keys=ON");
     }
 
     /** Add INTEGER columns {@code columnNames} to {@code tableName} in the {@code db}. */

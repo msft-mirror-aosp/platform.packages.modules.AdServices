@@ -23,6 +23,9 @@ android_app {
     srcs: [
        "java/**/*.java",
     ],
+    libs: [
+        "android.ext.adservices",
+    ],
     static_libs: [
         "adservices-clients",
         "androidx.appcompat_appcompat",

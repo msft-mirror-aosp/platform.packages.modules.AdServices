@@ -27,8 +27,16 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_ERROR_PATTERN;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
+import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_VALID_BIDS_OR_CONTEXTUAL_ADS_FOR_SCORING;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_WINNING_AD_FOUND;
@@ -77,6 +85,8 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
@@ -156,7 +166,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -183,6 +195,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
     private static final AdTechIdentifier SELLER_VALID =
             AdTechIdentifier.fromString("developer.android.com");
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
     private static final Uri DECISION_LOGIC_URI =
             Uri.parse("https://developer.android.com/test/decisions_logic_uris");
     private static final Uri TRUSTED_SIGNALS_URI =
@@ -214,25 +227,11 @@ public class OnDeviceAdSelectionRunnerTest {
     ArgumentCaptor<RunAdBiddingProcessReportedStats>
             mRunAdBiddingProcessReportedStatsArgumentCaptor;
 
+    @Captor ArgumentCaptor<AdSelectionConfig> mAdSelectionConfigArgumentCaptor;
+
     @Mock private PerBuyerBiddingRunner mPerBuyerBiddingRunner;
 
-    private final Flags mFlags =
-            new Flags() {
-                @Override
-                public long getAdSelectionOverallTimeoutMs() {
-                    return 300;
-                }
-
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return true;
-                }
-
-                @Override
-                public boolean getFledgeAdSelectionFilteringEnabled() {
-                    return true;
-                }
-            };
+    private Flags mFlags = new OnDeviceAdSelectionRunnerTestFlags();
     @Spy private Context mContext = ApplicationProvider.getApplicationContext();
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
@@ -1740,10 +1739,10 @@ public class OnDeviceAdSelectionRunnerTest {
         doReturn(mFlags).when(FlagsFactory::getFlags);
 
         Flags flagsWithSmallerLimits =
-                new Flags() {
+                new OnDeviceAdSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionOverallTimeoutMs() {
-                        return 100;
+                        return 1000;
                     }
 
                     @Override
@@ -2327,33 +2326,45 @@ public class OnDeviceAdSelectionRunnerTest {
     }
 
     @Test
-    public void testCreateAdSelectionResult_Contextual()
-            throws ExecutionException, InterruptedException, TimeoutException, AdServicesException {
-        mAdScoringOutcomeForBuyer1 =
-                AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_1, 1.0)
-                        .setDecisionLogicUri(DECISION_LOGIC_URI)
-                        .setDecisionLogicJsDownloaded(false)
+    public void testCreateAdSelectionResult_Contextual_Enabled() throws AdServicesException {
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder
+                        .build()
+                        .cloneToBuilder()
+                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        .setBuyerContextualAds(createContextualAds())
                         .build();
 
-        when(mMockHttpClient.fetchPayload(
-                        AdServicesHttpClientRequest.builder()
-                                .setUri(DECISION_LOGIC_URI)
-                                .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
-                                .build()))
-                .thenReturn(
-                        Futures.immediateFuture(
-                                AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(BUYER_DECISION_LOGIC_JS)
-                                        .build()));
-        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-        verifyAndSetupCommonSuccessScenario(adSelectionConfig);
+        final Flags flags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionOverallTimeoutMs() {
+                        return 300;
+                    }
 
-        OnDeviceAdSelectionRunner adSelectionRunner =
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+                        return true;
+                    }
+                };
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoBiddingOutcomes();
+        mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
                         mContext,
                         mCustomAudienceDao,
                         mAdSelectionEntryDao,
-                        mMockHttpClient,
+                        mAdServicesHttpsClient,
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -2361,7 +2372,7 @@ public class OnDeviceAdSelectionRunnerTest {
                         mMockAdSelectionIdGenerator,
                         mClock,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         CALLER_UID,
                         mAdSelectionServiceFilter,
                         mAdSelectionExecutionLogger,
@@ -2369,18 +2380,167 @@ public class OnDeviceAdSelectionRunnerTest {
                         mAdFilterer,
                         mAdCounterKeyCopier);
 
-        AdSelectionRunner.AdSelectionOrchestrationResult result =
-                adSelectionRunner
-                        .createAdSelectionResult(mAdScoringOutcomeForBuyer1)
-                        .get(500, TimeUnit.MILLISECONDS);
+        invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
 
-        assertEquals(BUYER_DECISION_LOGIC_JS, result.mBuyerDecisionLogicJs);
-        verify(mMockHttpClient)
-                .fetchPayload(
-                        AdServicesHttpClientRequest.builder()
-                                .setUri(DECISION_LOGIC_URI)
-                                .setUseCache(true)
+        verify(mMockAdsScoreGenerator)
+                .runAdScoring(
+                        eq(Collections.EMPTY_LIST), mAdSelectionConfigArgumentCaptor.capture());
+        assertEquals(
+                "The contextual ads should have reached scoring as is",
+                createContextualAds(),
+                mAdSelectionConfigArgumentCaptor.getValue().getBuyerContextualAds());
+    }
+
+    @Test
+    public void testCreateAdSelectionResult_Contextual_DisabledAndSkipped()
+            throws ExecutionException, InterruptedException, TimeoutException, AdServicesException {
+        when(mClock.instant()).thenReturn(Clock.systemUTC().instant());
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder
+                        .build()
+                        .cloneToBuilder()
+                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        // Despite populating Contextual Ads, they will be removed
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+        final Flags flags =
+                new Flags() {
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+                        return false;
+                    }
+                };
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs();
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerMock,
+                        flags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilter,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunner,
+                        mAdFilterer,
+                        mAdCounterKeyCopier);
+
+        AdSelectionTestCallback result =
+                invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+
+        assertFalse(result.mIsSuccess);
+        assertEquals(
+                "Contextual Ads should have been flushed and Ad Selection resulted in error",
+                result.mFledgeErrorResponse.getErrorMessage(),
+                String.format(
+                        AD_SELECTION_ERROR_PATTERN,
+                        ERROR_AD_SELECTION_FAILURE,
+                        ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE));
+    }
+
+    @Test
+    public void testCreateAdSelectionResult_Contextual_AppInstallFiltered()
+            throws AdServicesException {
+        Map<AdTechIdentifier, ContextualAds> contextualAdsMap = createContextualAds();
+
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder
+                        .build()
+                        .cloneToBuilder()
+                        .setCustomAudienceBuyers(Collections.EMPTY_LIST)
+                        .setBuyerContextualAds(contextualAdsMap)
+                        .build();
+
+        final Flags flags =
+                new Flags() {
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionFilteringEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
+                        return true;
+                    }
+                };
+
+        mockAdSelectionExecutionLoggerSpyWithFailedAdSelectionByNoCAs();
+        mAdSelectionRunner =
+                new OnDeviceAdSelectionRunner(
+                        mContext,
+                        mCustomAudienceDao,
+                        mAdSelectionEntryDao,
+                        mAdServicesHttpsClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mMockAdsScoreGenerator,
+                        mMockAdSelectionIdGenerator,
+                        mClock,
+                        mAdServicesLoggerMock,
+                        flags,
+                        CALLER_UID,
+                        mAdSelectionServiceFilter,
+                        mAdSelectionExecutionLogger,
+                        mPerBuyerBiddingRunner,
+                        mMockAdFilterer,
+                        mAdCounterKeyCopier);
+
+        when(mMockAdFilterer.filterContextualAds(contextualAdsMap.get(CommonFixture.VALID_BUYER_1)))
+                .thenReturn(contextualAdsMap.get(CommonFixture.VALID_BUYER_1));
+        when(mMockAdFilterer.filterContextualAds(contextualAdsMap.get(CommonFixture.VALID_BUYER_2)))
+                .thenReturn(
+                        new ContextualAds.Builder()
+                                .setBuyer(CommonFixture.VALID_BUYER_2)
+                                .setDecisionLogicUri(
+                                        contextualAdsMap
+                                                .get(CommonFixture.VALID_BUYER_2)
+                                                .getDecisionLogicUri())
+                                .setAdsWithBid(Collections.EMPTY_LIST)
                                 .build());
+        invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
+        verify(mMockAdsScoreGenerator)
+                .runAdScoring(
+                        eq(Collections.EMPTY_LIST), mAdSelectionConfigArgumentCaptor.capture());
+        assertEquals(
+                "The contextual ads should have remained same for Buyer 1",
+                contextualAdsMap.get(CommonFixture.VALID_BUYER_1).getAdsWithBid(),
+                mAdSelectionConfigArgumentCaptor
+                        .getValue()
+                        .getBuyerContextualAds()
+                        .get(CommonFixture.VALID_BUYER_1)
+                        .getAdsWithBid());
+        assertEquals(
+                "The contextual ads should have been filtered for Buyer 2",
+                Collections.EMPTY_LIST,
+                mAdSelectionConfigArgumentCaptor
+                        .getValue()
+                        .getBuyerContextualAds()
+                        .get(CommonFixture.VALID_BUYER_2)
+                        .getAdsWithBid());
     }
 
     @Test
@@ -2805,5 +2965,71 @@ public class OnDeviceAdSelectionRunnerTest {
 
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID));
+    }
+
+    private static class OnDeviceAdSelectionRunnerTestFlags implements Flags {
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return true;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionFilteringEnabled() {
+            return true;
+        }
+
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getReportImpressionOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+        }
+    }
+
+    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+
+        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        ContextualAds contextualAds1 =
+                ContextualAdsFixture.generateContextualAds(
+                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
+                        .setDecisionLogicUri(
+                                CommonFixture.getUri(BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .build();
+
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        ContextualAds contextualAds2 =
+                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+                        .setDecisionLogicUri(
+                                CommonFixture.getUri(BUYER_2, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .build();
+
+        buyerContextualAds.put(buyer1, contextualAds1);
+        buyerContextualAds.put(buyer2, contextualAds2);
+
+        return buyerContextualAds;
     }
 }
