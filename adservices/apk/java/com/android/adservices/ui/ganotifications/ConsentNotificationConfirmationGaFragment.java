@@ -30,11 +30,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnScrollChangeListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
@@ -50,11 +53,13 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Beta.
  */
 // TODO(b/269798827): Enable for R.
+// TODO(b/274955086): add logging for more button and scrolling
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationConfirmationGaFragment extends Fragment {
     public static final String IS_FlEDGE_MEASUREMENT_INFO_VIEW_EXPANDED_KEY =
             "is_fledge_measurement_info_view_expanded";
     private boolean mIsInfoViewExpanded = false;
+    private @Nullable ScrollToBottomController mScrollToBottomController;
 
     private boolean mTopicsOptIn;
 
@@ -83,7 +88,9 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
-
+        if (mScrollToBottomController != null) {
+            mScrollToBottomController.saveInstanceState(savedInstanceState);
+        }
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
     }
 
@@ -143,6 +150,16 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                     // acknowledge and dismiss
                     requireActivity().finish();
                 });
+
+        ScrollView scrollView =
+                requireView().findViewById(R.id.consent_notification_fledge_measurement_view);
+
+        mScrollToBottomController =
+                new ScrollToBottomController(
+                        scrollView, leftControlButton, rightControlButton, savedInstanceState);
+        mScrollToBottomController.bind();
+        // check whether it can scroll vertically and update buttons after layout can be measured
+        scrollView.post(() -> mScrollToBottomController.updateButtonsIfHasScrolledToBottom());
     }
 
     private void setInfoViewState(boolean expanded) {
@@ -159,6 +176,88 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
             mIsInfoViewExpanded = false;
             text.setVisibility(View.GONE);
             expander.setCompoundDrawablesRelativeWithIntrinsicBounds(0, 0, R.drawable.ic_expand, 0);
+        }
+    }
+
+    /**
+     * Allows the positive, acceptance button to scroll the view.
+     *
+     * <p>When the positive button first appears it will show the text "More". When the user taps
+     * the button, the view will scroll to the bottom. Once the view has scrolled to the bottom, the
+     * button text will be replaced with the acceptance text. Once the text has changed, the button
+     * will trigger the positive action no matter where the view is scrolled.
+     */
+    private class ScrollToBottomController implements OnScrollChangeListener {
+        private static final String STATE_HAS_SCROLLED_TO_BOTTOM = "has_scrolled_to_bottom";
+        private static final int SCROLL_DIRECTION_DOWN = 1;
+        private static final double SCROLL_MULTIPLIER = 0.8;
+
+        private final ScrollView mScrollContainer;
+        private final Button mLeftControlButton;
+        private final Button mRightControlButton;
+
+        private boolean mHasScrolledToBottom;
+
+        ScrollToBottomController(
+                ScrollView scrollContainer,
+                Button leftControlButton,
+                Button rightControlButton,
+                @Nullable Bundle savedInstanceState) {
+            this.mScrollContainer = scrollContainer;
+            this.mLeftControlButton = leftControlButton;
+            this.mRightControlButton = rightControlButton;
+            mHasScrolledToBottom =
+                    savedInstanceState != null
+                            && savedInstanceState.containsKey(STATE_HAS_SCROLLED_TO_BOTTOM)
+                            && savedInstanceState.getBoolean(STATE_HAS_SCROLLED_TO_BOTTOM);
+        }
+
+        public void bind() {
+            mScrollContainer.setOnScrollChangeListener(this);
+            mRightControlButton.setOnClickListener(this::onMoreOrAcceptClicked);
+            updateControlButtons();
+        }
+
+        public void saveInstanceState(Bundle bundle) {
+            if (mHasScrolledToBottom) {
+                bundle.putBoolean(STATE_HAS_SCROLLED_TO_BOTTOM, true);
+            }
+        }
+
+        private void updateControlButtons() {
+            if (mHasScrolledToBottom) {
+                mLeftControlButton.setVisibility(View.VISIBLE);
+                mRightControlButton.setText(
+                        R.string.notificationUI_confirmation_right_control_button_text);
+            } else {
+                mLeftControlButton.setVisibility(View.INVISIBLE);
+                mRightControlButton.setText(R.string.notificationUI_more_button_text);
+            }
+        }
+
+        private void onMoreOrAcceptClicked(View view) {
+            if (mHasScrolledToBottom) {
+                // acknowledge and dismiss
+                requireActivity().finish();
+            } else {
+                mScrollContainer.smoothScrollTo(
+                        0,
+                        mScrollContainer.getScrollY()
+                                + (int) (mScrollContainer.getHeight() * SCROLL_MULTIPLIER));
+            }
+        }
+
+        @Override
+        public void onScrollChange(
+                View view, int scrollX, int scrollY, int oldScrollX, int oldScrollY) {
+            updateButtonsIfHasScrolledToBottom();
+        }
+
+        void updateButtonsIfHasScrolledToBottom() {
+            if (!mScrollContainer.canScrollVertically(SCROLL_DIRECTION_DOWN)) {
+                mHasScrolledToBottom = true;
+                updateControlButtons();
+            }
         }
     }
 }
