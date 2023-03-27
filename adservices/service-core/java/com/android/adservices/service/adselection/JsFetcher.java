@@ -50,6 +50,10 @@ public class JsFetcher {
     @VisibleForTesting
     static final String MISSING_SCORING_LOGIC = "Error fetching scoring decision logic";
 
+    @VisibleForTesting
+    static final String MISSING_OUTCOME_SELECTION_LOGIC =
+            "Error fetching outcome selection decision logic";
+
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -248,7 +252,7 @@ public class JsFetcher {
                             sLogger.e(
                                     e,
                                     "Exception encountered when fetching outcome selection logic");
-                            throw new IllegalStateException(MISSING_SCORING_LOGIC);
+                            throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
                         },
                         mLightweightExecutorService);
     }

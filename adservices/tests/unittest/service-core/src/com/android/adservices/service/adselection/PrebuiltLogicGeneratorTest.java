@@ -29,6 +29,7 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.UNRECOGNIZED_PREBUILT_PARAMS;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
@@ -59,11 +60,27 @@ public class PrebuiltLogicGeneratorTest {
                                 paramValue));
 
         String result = mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(prebuiltUri);
-
         assertEquals(
                 AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS.replaceAll(
                         String.format(NAMED_PARAM_TEMPLATE, paramKey), paramValue),
                 result);
+    }
+
+    @Test
+    public void testPrebuiltLogicRunnerNotPrebuiltSchemaReturnFalseSuccess() {
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                "not-ad-selection-schema",
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+
+        assertFalse(mPrebuiltLogicGenerator.isPrebuiltUri(prebuiltUri));
     }
 
     @Test
@@ -81,7 +98,6 @@ public class PrebuiltLogicGeneratorTest {
                                 paramValue));
 
         String result = mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(prebuiltUri);
-
         assertEquals(
                 AD_SELECTION_HIGHEST_BID_WINS_JS.replaceAll(
                         String.format(NAMED_PARAM_TEMPLATE, paramKey), paramValue),
