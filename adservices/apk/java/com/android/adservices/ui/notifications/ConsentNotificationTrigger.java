@@ -97,10 +97,17 @@ public class ConsentNotificationTrigger {
     @NonNull
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
-        Notification notification =
-                gaUxFeatureEnabled
-                        ? getGaConsentNotification(context, isEuDevice)
-                        : getConsentNotification(context, isEuDevice);
+        Notification notification;
+        if (gaUxFeatureEnabled) {
+            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+                notification = getGaV2ConsentNotification(context, isEuDevice);
+            } else {
+                notification = getGaConsentNotification(context, isEuDevice);
+            }
+        } else {
+            notification = getConsentNotification(context, isEuDevice);
+        }
+
         // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
         if (gaUxFeatureEnabled && isEuDevice) {
             notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
@@ -147,6 +154,40 @@ public class ConsentNotificationTrigger {
                 consentManager.disable(context);
             }
         }
+    }
+
+    private static Notification getGaV2ConsentNotification(
+            @NonNull Context context, boolean isEuDevice) {
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle()
+                        .bigText(
+                                isEuDevice
+                                        ? context.getString(
+                                        R.string.notificationUI_notification_ga_content_eu_v2)
+                                        : context.getString(
+                                        R.string.notificationUI_notification_ga_content_v2));
+        NotificationCompat.Builder notification =
+                new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_info_icon)
+                        .setContentTitle(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                                : R.string.notificationUI_notification_ga_title_v2))
+                        .setContentText(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_content_eu_v2
+                                                : R.string.notificationUI_notification_ga_content_v2))
+                        .setStyle(textStyle)
+                        .setPriority(NOTIFICATION_PRIORITY)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
+        return notification.build();
     }
 
     /**
