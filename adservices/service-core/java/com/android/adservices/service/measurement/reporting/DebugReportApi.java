@@ -40,12 +40,15 @@ import java.util.UUID;
 /** Class used to send debug reports to Ad-Tech {@link DebugReport} */
 public class DebugReportApi {
 
-    private interface Type {
+    /** Define different verbose debug report types. */
+    public interface Type {
         String SOURCE_DESTINATION_LIMIT = "source-destination-limit";
         String SOURCE_NOISED = "source-noised";
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
+        String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
+                "trigger-event-no-matching-configurations";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
         String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
     }
@@ -179,18 +182,20 @@ public class DebugReportApi {
                 dao);
     }
 
-    /** Schedules Trigger No Matching Filter Data Debug Report */
-    public void scheduleTriggerNoMatchingFilterDebugReport(
-            Source source, Trigger trigger, IMeasurementDao dao) {
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.TRIGGER_NO_MATCHING_FILTER_DATA)
-                || isAdTechNotOptIn(
-                        trigger.isDebugReporting(), Type.TRIGGER_NO_MATCHING_FILTER_DATA)) {
+    /**
+     * Schedules Trigger Debug Reports (except trigger-no-matching-source) without limit, pass in
+     * Type for different types.
+     */
+    public void scheduleTriggerNoLimitDebugReport(
+            Source source, Trigger trigger, IMeasurementDao dao, String type) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), type)
+                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
-                Type.TRIGGER_NO_MATCHING_FILTER_DATA,
+                type,
                 generateTriggerDebugReportBody(source, trigger, null, debugKeyPair, false),
                 source.getEnrollmentId(),
                 dao);
