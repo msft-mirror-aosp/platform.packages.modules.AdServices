@@ -235,11 +235,9 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testVerifyTrustedScoringSignalsUriIsNotHTTPS() {
-
+        Uri trustedScoringSignal = Uri.parse("http://google.com");
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .setTrustedScoringSignalsUri(Uri.parse("http://google.com"))
-                        .build();
+                mAdSelectionConfigBuilder.setTrustedScoringSignalsUri(trustedScoringSignal).build();
         AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
         IllegalArgumentException thrown =
                 assertThrows(
@@ -249,7 +247,10 @@ public class AdSelectionConfigValidatorTest {
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
-                        String.format(URI_IS_NOT_HTTPS, TRUSTED_SCORING_SIGNALS_URI_TYPE)));
+                        String.format(
+                                URI_IS_NOT_HTTPS,
+                                TRUSTED_SCORING_SIGNALS_URI_TYPE,
+                                trustedScoringSignal)));
     }
 
     @Test

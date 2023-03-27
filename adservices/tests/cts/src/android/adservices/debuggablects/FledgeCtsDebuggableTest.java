@@ -18,6 +18,10 @@ package android.adservices.debuggablects;
 
 import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNull;
@@ -466,6 +470,115 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         ReportImpressionRequest reportImpressionRequest =
                 new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_scoringPrebuilt_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        String paramKey = "reportingUrl";
+        String paramValue = "https://www.test.com/reporting/seller";
+        AdSelectionConfig config =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "%s://%s/%s/?%s=%s",
+                                                AD_SELECTION_PREBUILT_SCHEMA,
+                                                AD_SELECTION_USE_CASE,
+                                                AD_SELECTION_HIGHEST_BID_WINS,
+                                                paramKey,
+                                                paramValue)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .build();
+
+        // Adding AdSelection override for the sake of the trusted signals, no result to do
+        // assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        config, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), config);
 
         // Performing reporting, and asserting that no exception is thrown
         mAdSelectionClient
