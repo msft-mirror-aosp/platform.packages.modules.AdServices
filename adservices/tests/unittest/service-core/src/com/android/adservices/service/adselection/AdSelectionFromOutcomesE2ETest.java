@@ -166,7 +166,7 @@ public class AdSelectionFromOutcomesE2ETest {
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest(), mFlags),
                     mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;

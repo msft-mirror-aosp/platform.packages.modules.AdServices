@@ -244,14 +244,8 @@ public class AdSelectionServiceImplTest {
     @Mock public DevContextFilter mDevContextFilter;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
 
-    @Spy
-    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            new FledgeAuthorizationFilter(
-                    CONTEXT.getPackageManager(),
-                    new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
-                    mAdServicesLoggerMock);
-
-    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);
+    private Flags mFlags = new FlagsWithEnrollmentCheckEnabledSwitch(false);;
+    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy;
 
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
@@ -278,6 +272,13 @@ public class AdSelectionServiceImplTest {
                         .mockStatic(ConsentManager.class)
                         .mockStatic(AppImportanceFilter.class)
                         .startMocking();
+        mFledgeAuthorizationFilterSpy =
+                ExtendedMockito.spy(
+                        new FledgeAuthorizationFilter(
+                                CONTEXT.getPackageManager(),
+                                new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest(), mFlags),
+                                mAdServicesLoggerMock));
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true))
