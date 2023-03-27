@@ -5,6 +5,10 @@
       "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
@@ -17,6 +21,10 @@
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreUnitTests.
+      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
     },
@@ -25,7 +33,11 @@
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
+      // Install com.google.android.extservices.apex and run CtsExtAdServicesDeviceTestCases.
+      "name": "CtsExtAdServicesDeviceTestCases[com.google.android.extservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
@@ -33,7 +45,14 @@
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesEndToEndTests.
+      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]"
+    },
+    {
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]"
     },
     {
       "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
@@ -79,6 +98,10 @@
     {
       // Install com.google.android.adservices.apex and run CtsAppSetIdEndToEndTest.
       "name": "CtsAppSetIdEndToEndTest[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.adservices.apex and run CtsAdServicesHostTests.
+      "name": "CtsAdServicesHostTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
@@ -89,10 +112,19 @@
       "name": "AdServicesServiceCoreUnitTests"
     },
     {
+      "name": "AdExtServicesServiceCoreUnitTests"
+    },
+    {
       "name": "AdServicesJsEngineUnitTests"
     },
     {
-      "name": "AdServicesEndToEndTests"
+      "name": "AdServicesEndToEndTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "CtsAdServicesTopicsAppUpdateTests"
@@ -110,7 +142,16 @@
       "name": "CtsAdServicesDebuggableDeviceTestCases"
     },
     {
-      "name": "AdServicesApkUITests"
+      "name": "AdServicesApkUITests",
+      "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
+    },
+    {
+      "name": "AdServicesApkUITestsAppConsent"
     },
     {
       "name": "CtsAdServicesEndToEndTests"
@@ -125,10 +166,30 @@
       "name": "CtsAdIdEndToEndTest"
     },
     {
-      "name": "CtsAppSetIdEndToEndTest"
+      "name": "CtsAppSetIdEndToEndTest",
+      "options": [
+              {
+                // Exclude tests that are marked flaky
+                "exclude-annotation": "androidx.test.filters.FlakyTest"
+              }
+            ]
     },
     {
-      "name": "CtsRootAdServicesUiTest"
+      "name": "CtsRootAdServicesUiTest",
+      "options": [
+                    {
+                      // Exclude tests that are marked flaky
+                      "exclude-annotation": "androidx.test.filters.FlakyTest"
+                    }
+                  ]
+    },
+    {
+      "name": "CtsAdServicesHostTests"
+    }
+  ],
+  "postsubmit": [
+    {
+      "name": "AdServicesMddIntegrationTests"
     }
   ]
 }

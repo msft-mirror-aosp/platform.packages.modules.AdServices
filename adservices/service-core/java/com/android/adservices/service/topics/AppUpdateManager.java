@@ -22,7 +22,10 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -31,6 +34,7 @@ import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -52,6 +56,8 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
     private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
@@ -75,7 +81,10 @@ public class AppUpdateManager {
                         TopicsTables.UsageHistoryContract.APP),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.APP)
+                        TopicsTables.AppUsageHistoryContract.APP),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.APP)
             };
 
     private final DbHelper mDbHelper;
@@ -143,9 +152,7 @@ public class AppUpdateManager {
         db.beginTransaction();
 
         try {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, packageName);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, packageName);
 
             deleteAppDataFromTableByApps(List.of(packageName));
 
@@ -399,12 +406,6 @@ public class AppUpdateManager {
     void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
         List<Pair<String, String>> tableToEraseData =
                 Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
-        if (supportsTopicContributorFeature()) {
-            tableToEraseData.add(
-                    Pair.create(
-                            TopicsTables.TopicContributorsContract.TABLE,
-                            TopicsTables.TopicContributorsContract.APP));
-        }
 
         mTopicsDao.deleteFromTableByColumn(
                 /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
@@ -447,10 +448,7 @@ public class AppUpdateManager {
 
             // Regular Topics are placed at the beginning of top topic list.
             List<Topic> regularTopics = topTopics.subList(0, numberOfTopTopics);
-            // If enabled, filter out topics without contributors.
-            if (supportsTopicContributorFeature()) {
-                regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
-            }
+            regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
             List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
 
             if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
@@ -573,16 +571,6 @@ public class AppUpdateManager {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
-     * table is supported and the feature flag is on.
-     */
-    @VisibleForTesting
-    boolean supportsTopicContributorFeature() {
-        return mFlags.getEnableTopicContributorsCheck()
-                && mDbHelper.supportsTopicContributorsTable();
-    }
-
     // An app will be regarded as an unhandled uninstalled app if it has an entry in any epoch of
     // either usage table or returned topics table, but the app doesn't show up in package manager.
     //
@@ -641,9 +629,8 @@ public class AppUpdateManager {
     Set<String> getCurrentInstalledApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
     }
 
@@ -672,9 +659,7 @@ public class AppUpdateManager {
     private void handleUninstalledAppsInReconciliation(
             @NonNull Set<String> newlyUninstalledApps, long currentEpochId) {
         for (String app : newlyUninstalledApps) {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, app);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, app);
 
             deleteAppDataFromTableByApps(List.of(app));
         }

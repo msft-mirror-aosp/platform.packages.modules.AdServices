@@ -85,4 +85,7 @@ public interface AdServicesLogger {
      * com.android.adservices.service.stats.EpochComputationClassifierStats} object.
      */
     void logEpochComputationClassifierStats(EpochComputationClassifierStats stats);
+
+    /** Logs measurement debug keys stats. */
+    void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats);
 }

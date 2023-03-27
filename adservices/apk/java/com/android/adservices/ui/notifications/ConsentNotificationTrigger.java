@@ -24,8 +24,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
@@ -37,6 +39,8 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
     // Random integer for NotificationCompat purposes
     private static final int NOTIFICATION_ID = 67920;
@@ -52,18 +56,18 @@ public class ConsentNotificationTrigger {
         UiStatsLogger.logRequestedNotification(context);
 
         boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
-        // Set OTA resources if it exists.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
-        }
+
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-
         ConsentManager consentManager = ConsentManager.getInstance(context);
-
         if (!notificationManager.areNotificationsEnabled()) {
             recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled(context);
             return;
+        }
+
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
 
         setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
@@ -72,11 +76,18 @@ public class ConsentNotificationTrigger {
         Notification notification = getNotification(context, isEuDevice, gaUxFeatureEnabled);
         notificationManager.notify(NOTIFICATION_ID, notification);
 
+        UiStatsLogger.logNotificationDisplayed(context);
         recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
     }
 
     private static void recordNotificationDisplayed(
             boolean gaUxFeatureEnabled, ConsentManager consentManager) {
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()
+                && consentManager.getUserManualInteractionWithConsent()
+                        != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
+            consentManager.recordUserManualInteractionWithConsent(
+                    ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
+        }
         if (gaUxFeatureEnabled) {
             consentManager.recordGaUxNotificationDisplayed();
         }
@@ -111,10 +122,18 @@ public class ConsentNotificationTrigger {
             // ROW: all APIs are by default enabled
             // TODO(b/260266623): change consent state to UNDEFINED
             if (isEuDevice) {
+                consentManager.recordTopicsDefaultConsent(false);
+                consentManager.recordFledgeDefaultConsent(false);
+                consentManager.recordMeasurementDefaultConsent(false);
+
                 consentManager.disable(context, AdServicesApiType.TOPICS);
                 consentManager.disable(context, AdServicesApiType.FLEDGE);
                 consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
             } else {
+                consentManager.recordTopicsDefaultConsent(true);
+                consentManager.recordFledgeDefaultConsent(true);
+                consentManager.recordMeasurementDefaultConsent(true);
+
                 consentManager.enable(context, AdServicesApiType.TOPICS);
                 consentManager.enable(context, AdServicesApiType.FLEDGE);
                 consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
@@ -167,15 +186,7 @@ public class ConsentNotificationTrigger {
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
-        // EU needs a "View Details" CTA
-        return isEuDevice
-                ? notification
-                        .addAction(
-                                R.string.notificationUI_notification_ga_cta_eu,
-                                context.getString(R.string.notificationUI_notification_ga_cta_eu),
-                                pendingIntent)
-                        .build()
-                : notification.build();
+        return notification.build();
     }
 
     /**
@@ -215,15 +226,6 @@ public class ConsentNotificationTrigger {
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .addAction(
-                        isEuDevice
-                                ? R.string.notificationUI_notification_cta_eu
-                                : R.string.notificationUI_notification_cta,
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_cta_eu
-                                        : R.string.notificationUI_notification_cta),
-                        pendingIntent)
                 .build();
     }
 

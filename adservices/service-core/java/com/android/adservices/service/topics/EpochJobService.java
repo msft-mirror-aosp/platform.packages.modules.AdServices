@@ -27,25 +27,33 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-/**
- * Epoch computation job. This will be run approximately once per epoch to
- * compute Topics.
- */
+/** Epoch computation job. This will be run approximately once per epoch to compute Topics. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("EpochJobService.onStartJob");
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d("Disabling EpochJobService job because it's running in ExtServices on T+");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             LogUtil.e("Topics API is disabled, skipping and cancelling EpochJobService");

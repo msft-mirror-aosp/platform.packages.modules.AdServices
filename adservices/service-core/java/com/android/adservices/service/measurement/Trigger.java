@@ -24,7 +24,6 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
@@ -69,6 +68,7 @@ public class Trigger {
     private boolean mArDebugPermission;
     @Nullable private String mAttributionConfig;
     @Nullable private String mAdtechKeyMapping;
+    @Nullable private String mDebugJoinKey;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -112,7 +112,8 @@ public class Trigger {
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
                 && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
-                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys);
+                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
+                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey);
     }
 
     @Override
@@ -135,7 +136,8 @@ public class Trigger {
                 mArDebugPermission,
                 mAttributionConfig,
                 mAdtechKeyMapping,
-                mAggregateDeduplicationKeys);
+                mAggregateDeduplicationKeys,
+                mDebugJoinKey);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -307,6 +309,15 @@ public class Trigger {
     }
 
     /**
+     * Returns join key that should be matched with source's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
+    }
+
+    /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
@@ -465,7 +476,7 @@ public class Trigger {
     @Nullable
     public Uri getAttributionDestinationBaseUri() {
         if (mDestinationType == EventSurfaceType.APP) {
-            return BaseUriExtractor.getBaseUri(mAttributionDestination);
+            return mAttributionDestination;
         } else {
             Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
@@ -617,6 +628,13 @@ public class Trigger {
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
             mBuilding.mAggregatableAttributionTrigger =
                     Optional.ofNullable(aggregatableAttributionTrigger);
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
             return this;
         }
 

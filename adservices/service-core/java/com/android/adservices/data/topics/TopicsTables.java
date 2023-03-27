@@ -58,7 +58,6 @@ public final class TopicsTables {
      * computation, the ML Classifier will generate topics for each app that uses the Topics API in
      * the epoch.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface AppClassificationTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "app_classification_topics";
         String ID = "_id";
@@ -93,7 +92,6 @@ public final class TopicsTables {
      * This table has callers and which topics they can learn. Caller can be either (1) app in case
      * the app called the Topics API directly. (2) sdk in case the sdk called the Topics API.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface CallerCanLearnTopicsContract {
         String TABLE = TOPICS_TABLE_PREFIX + "caller_can_learn_topic";
         String ID = "_id";
@@ -214,7 +212,6 @@ public final class TopicsTables {
      * Table to store the app/sdk usage history. Whenever an app or sdk calls the Topics API, one
      * entry will be generated with the timestamp.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface UsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "usage_history";
         String EPOCH_ID = "epoch_id";
@@ -240,7 +237,6 @@ public final class TopicsTables {
      * Table to store history for app only Whenever an app calls the Topics API, one entry will be
      * generated.
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
     public interface AppUsageHistoryContract {
         String TABLE = TOPICS_TABLE_PREFIX + "app_usage_history";
         String ID = "_id";

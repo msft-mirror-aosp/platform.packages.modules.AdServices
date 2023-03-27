@@ -45,6 +45,7 @@ public final class AdSelectionConfig implements Parcelable {
     @NonNull private final AdSelectionSignals mAdSelectionSignals;
     @NonNull private final AdSelectionSignals mSellerSignals;
     @NonNull private final Map<AdTechIdentifier, AdSelectionSignals> mPerBuyerSignals;
+    @NonNull private final Map<AdTechIdentifier, ContextualAds> mBuyerContextualAds;
     @NonNull private final Uri mTrustedScoringSignalsUri;
 
     @NonNull
@@ -69,6 +70,7 @@ public final class AdSelectionConfig implements Parcelable {
             @NonNull AdSelectionSignals adSelectionSignals,
             @NonNull AdSelectionSignals sellerSignals,
             @NonNull Map<AdTechIdentifier, AdSelectionSignals> perBuyerSignals,
+            @NonNull Map<AdTechIdentifier, ContextualAds> perBuyerContextualAds,
             @NonNull Uri trustedScoringSignalsUri) {
         this.mSeller = seller;
         this.mDecisionLogicUri = decisionLogicUri;
@@ -76,6 +78,7 @@ public final class AdSelectionConfig implements Parcelable {
         this.mAdSelectionSignals = adSelectionSignals;
         this.mSellerSignals = sellerSignals;
         this.mPerBuyerSignals = perBuyerSignals;
+        this.mBuyerContextualAds = perBuyerContextualAds;
         this.mTrustedScoringSignalsUri = trustedScoringSignalsUri;
     }
 
@@ -89,6 +92,9 @@ public final class AdSelectionConfig implements Parcelable {
         mPerBuyerSignals =
                 AdServicesParcelableUtil.readMapFromParcel(
                         in, AdTechIdentifier::fromString, AdSelectionSignals.class);
+        mBuyerContextualAds =
+                AdServicesParcelableUtil.readMapFromParcel(
+                        in, AdTechIdentifier::fromString, ContextualAds.class);
         mTrustedScoringSignalsUri = Uri.CREATOR.createFromParcel(in);
     }
 
@@ -107,6 +113,7 @@ public final class AdSelectionConfig implements Parcelable {
         mAdSelectionSignals.writeToParcel(dest, flags);
         mSellerSignals.writeToParcel(dest, flags);
         AdServicesParcelableUtil.writeMapToParcel(dest, mPerBuyerSignals);
+        AdServicesParcelableUtil.writeMapToParcel(dest, mBuyerContextualAds);
         mTrustedScoringSignalsUri.writeToParcel(dest, flags);
     }
 
@@ -121,6 +128,7 @@ public final class AdSelectionConfig implements Parcelable {
                 && Objects.equals(mAdSelectionSignals, that.mAdSelectionSignals)
                 && Objects.equals(mSellerSignals, that.mSellerSignals)
                 && Objects.equals(mPerBuyerSignals, that.mPerBuyerSignals)
+                && Objects.equals(mBuyerContextualAds, that.mBuyerContextualAds)
                 && Objects.equals(mTrustedScoringSignalsUri, that.mTrustedScoringSignalsUri);
     }
 
@@ -133,7 +141,25 @@ public final class AdSelectionConfig implements Parcelable {
                 mAdSelectionSignals,
                 mSellerSignals,
                 mPerBuyerSignals,
+                mBuyerContextualAds,
                 mTrustedScoringSignalsUri);
+    }
+
+    /**
+     * @return a new builder instance created from this object's cloned data
+     * @hide
+     */
+    @NonNull
+    public AdSelectionConfig.Builder cloneToBuilder() {
+        return new AdSelectionConfig.Builder()
+                .setSeller(this.getSeller())
+                .setBuyerContextualAds(this.getBuyerContextualAds())
+                .setAdSelectionSignals(this.getAdSelectionSignals())
+                .setCustomAudienceBuyers(this.getCustomAudienceBuyers())
+                .setDecisionLogicUri(this.getDecisionLogicUri())
+                .setPerBuyerSignals(this.getPerBuyerSignals())
+                .setSellerSignals(this.getSellerSignals())
+                .setTrustedScoringSignalsUri(this.getTrustedScoringSignalsUri());
     }
 
     /** @return a AdTechIdentifier of the seller, for example "www.example-ssp.com" */
@@ -193,6 +219,16 @@ public final class AdSelectionConfig implements Parcelable {
     }
 
     /**
+     * @return a Map of buyers and corresponding Contextual Ads, these ads are expected to be
+     *     pre-downloaded from the contextual path and injected into Ad Selection.
+     * @hide
+     */
+    @NonNull
+    public Map<AdTechIdentifier, ContextualAds> getBuyerContextualAds() {
+        return mBuyerContextualAds;
+    }
+
+    /**
      * @return URI endpoint of sell-side trusted signal from which creative specific realtime
      *     information can be fetched from.
      */
@@ -209,6 +245,7 @@ public final class AdSelectionConfig implements Parcelable {
         private AdSelectionSignals mAdSelectionSignals = AdSelectionSignals.EMPTY;
         private AdSelectionSignals mSellerSignals = AdSelectionSignals.EMPTY;
         private Map<AdTechIdentifier, AdSelectionSignals> mPerBuyerSignals = Collections.emptyMap();
+        private Map<AdTechIdentifier, ContextualAds> mBuyerContextualAds = Collections.emptyMap();
         private Uri mTrustedScoringSignalsUri;
 
         public Builder() {}
@@ -302,6 +339,24 @@ public final class AdSelectionConfig implements Parcelable {
         }
 
         /**
+         * Sets the contextual Ads corresponding to each buyer during ad selection.
+         *
+         * <p>If not set, defaults to an empty map.
+         *
+         * <p>See {@link #getBuyerContextualAds()} ()} for more details.
+         *
+         * @hide
+         */
+        @NonNull
+        public AdSelectionConfig.Builder setBuyerContextualAds(
+                @NonNull Map<AdTechIdentifier, ContextualAds> buyerContextualAds) {
+            Objects.requireNonNull(buyerContextualAds);
+
+            this.mBuyerContextualAds = buyerContextualAds;
+            return this;
+        }
+
+        /**
          * Sets the URI endpoint of sell-side trusted signal from which creative specific realtime
          * information can be fetched from.
          *
@@ -329,6 +384,7 @@ public final class AdSelectionConfig implements Parcelable {
             Objects.requireNonNull(mAdSelectionSignals);
             Objects.requireNonNull(mSellerSignals);
             Objects.requireNonNull(mPerBuyerSignals);
+            Objects.requireNonNull(mBuyerContextualAds);
             Objects.requireNonNull(mTrustedScoringSignalsUri);
             return new AdSelectionConfig(
                     mSeller,
@@ -337,6 +393,7 @@ public final class AdSelectionConfig implements Parcelable {
                     mAdSelectionSignals,
                     mSellerSignals,
                     mPerBuyerSignals,
+                    mBuyerContextualAds,
                     mTrustedScoringSignalsUri);
         }
     }

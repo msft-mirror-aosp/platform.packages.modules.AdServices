@@ -31,7 +31,11 @@ public class SystemHealthParams {
     public static final long MAX_TRIGGER_REGISTERS_PER_DESTINATION = 1024L;
 
     /** Max number of sources per publisher. */
-    public static final long MAX_SOURCES_PER_PUBLISHER = 1024L;
+    private static final int MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    public static int getMaxSourcesPerPublisher() {
+        return MAX_SOURCES_PER_PUBLISHER;
+    }
 
     /** Max number of redirects per registration. */
     public static final int MAX_REDIRECTS_PER_REGISTRATION = 5;
@@ -45,10 +49,18 @@ public class SystemHealthParams {
     public static final int MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of aggregate reports in storage per destination */
-    public static final long MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+    private static final int MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    public static int getMaxAggregateReportsPerDestination() {
+        return MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
 
     /** Max number of event reports in storage per destination */
-    public static final long MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+    private static final int MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    public static int getMaxEventReportsPerDestination() {
+        return MAX_EVENT_REPORTS_PER_DESTINATION;
+    }
 
     /**
      * Maximum event report upload retry window.

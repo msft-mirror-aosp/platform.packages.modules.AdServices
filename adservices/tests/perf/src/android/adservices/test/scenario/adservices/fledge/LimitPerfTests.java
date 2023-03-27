@@ -26,10 +26,8 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
 
-import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -47,18 +45,6 @@ public class LimitPerfTests extends AbstractPerfTest {
 
     private static final String URL_PREFIX = "https://";
     private static final String BUYER = "localhost";
-
-    private static final String WIPE_DB_COMMAND =
-            "su 0 sqlite3 "
-                    + "/data/data/com.google.android.adservices.api/databases/customaudience.db "
-                    + "\"DELETE FROM custom_audience;\" "
-                    + "\"DELETE FROM custom_audience_background_fetch_data;\""
-                    + " \"DELETE FROM custom_audience_overrides;\" \".exit\";";
-
-    @Before
-    public void wipeDB() {
-        ShellUtils.runShellCommand(WIPE_DB_COMMAND);
-    }
 
     @Test
     public void test_joinBigCustomAudience() throws Exception {
@@ -93,12 +79,6 @@ public class LimitPerfTests extends AbstractPerfTest {
         nAuctionsMBigCas(100, 100);
     }
 
-    // Only including one test of size 1000 so that the overall time to run the tests isn't too long
-    @Test
-    public void test_1000Auctions1000BigCas() throws Exception {
-        // Will take 30+ minutes to run
-        nAuctionsMBigCas(1000, 1000);
-    }
 
     private void auctionNBigCas(int n) throws Exception {
         nAuctionsMBigCas(1, n);
@@ -110,7 +90,6 @@ public class LimitPerfTests extends AbstractPerfTest {
         joinAll(caList);
 
         for (int i = 0; i < n; i++) {
-            addDelayToAvoidThrottle();
             AdSelectionOutcome outcome =
                     mAdSelectionClient
                             .selectAds(createAdSelectionConfig())
@@ -123,7 +102,6 @@ public class LimitPerfTests extends AbstractPerfTest {
                     new ReportImpressionRequest(
                             outcome.getAdSelectionId(), createAdSelectionConfig());
             // Performing reporting, and asserting that no exception is thrown
-            addDelayToAvoidThrottle();
             mAdSelectionClient
                     .reportImpression(reportImpressionRequest)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -140,7 +118,6 @@ public class LimitPerfTests extends AbstractPerfTest {
 
     private void joinAll(List<CustomAudience> caList) throws Exception {
         for (CustomAudience ca : caList) {
-            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .joinCustomAudience(ca)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -149,7 +126,6 @@ public class LimitPerfTests extends AbstractPerfTest {
 
     private void leaveAll(List<CustomAudience> caList) throws Exception {
         for (CustomAudience ca : caList) {
-            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

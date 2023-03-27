@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.adselection.ReportInteractionInput;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -54,7 +54,8 @@ public class FledgeMaintenanceTasksWorkerTests {
     private static final long AD_SELECTION_ID_2 = 23456L;
 
     private static final String CLICK_EVENT = "click";
-    private static final int SELLER_DESTINATION = ReportInteractionInput.DESTINATION_SELLER;
+    private static final int SELLER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
 
     private static final DBAdSelection DB_AD_SELECTION =
@@ -155,8 +156,12 @@ public class FledgeMaintenanceTasksWorkerTests {
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid registered ad event
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                ImmutableList.of(DB_REGISTERED_INTERACTION));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -202,8 +207,19 @@ public class FledgeMaintenanceTasksWorkerTests {
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid and expired registered ad events
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                ImmutableList.of(DB_REGISTERED_INTERACTION, EXPIRED_DB_REGISTERED_INTERACTION));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
+        // Add valid and expired registered ad events
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_2,
+                ImmutableList.of(EXPIRED_DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(

@@ -42,6 +42,7 @@ import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -85,6 +86,7 @@ public class AdServicesCommonServiceImplTest {
                         .spyStatic(ConsentNotificationJobService.class)
                         .spyStatic(ConsentManager.class)
                         .spyStatic(BackgroundJobsManager.class)
+                        .mockStatic(PackageManagerCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
@@ -111,6 +113,7 @@ public class AdServicesCommonServiceImplTest {
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
 
         // Set device to EU
+        doReturn(Flags.UI_EEA_COUNTRIES).when(mFlags).getUiEeaCountries();
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mContext).getPackageManager();
@@ -140,6 +143,37 @@ public class AdServicesCommonServiceImplTest {
 
         // Set the flag to false
         doReturn(false).when(mFlags).getAdServicesEnabled();
+
+        // Calling again, expect to false
+        capturedResponseParcel = getStatusResult();
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        IsAdServicesEnabledResult getStatusResult2 = capturedResponseParcel[0];
+        assertThat(getStatusResult2.getAdServicesEnabled()).isFalse();
+    }
+
+    @Test
+    public void getAdserviceStatusWithCheckActivityTest() throws InterruptedException {
+        doReturn(true).when(mFlags).isBackCompatActivityFeatureEnabled();
+
+        doReturn(false).when(mFlags).getGaUxFeatureEnabled();
+        mCommonService = new AdServicesCommonServiceImpl(mContext, mFlags);
+        ExtendedMockito.doReturn(true)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
+        // Calling get adservice status, set the activity to enabled, expect to return true
+        IsAdServicesEnabledResult[] capturedResponseParcel = getStatusResult();
+        assertThat(
+                        mGetCommonCallbackLatch.await(
+                                BINDER_CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS))
+                .isTrue();
+        IsAdServicesEnabledResult getStatusResult1 = capturedResponseParcel[0];
+        assertThat(getStatusResult1.getAdServicesEnabled()).isTrue();
+
+        // Set the activity to disabled
+        ExtendedMockito.doReturn(false)
+                .when(() -> PackageManagerCompatUtils.isAdServicesActivityEnabled(any()));
 
         // Calling again, expect to false
         capturedResponseParcel = getStatusResult();

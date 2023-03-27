@@ -38,14 +38,17 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,10 +67,18 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
     private boolean mIsDebugMode;
+    private String mPreviousAppAllowList;
 
     @Before
-    public void setup() {
-        assertForegroundActivityStarted();
+    public void setup() throws InterruptedException {
+        if (SdkLevel.isAtLeastT()) {
+            assertForegroundActivityStarted();
+        } else {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
 
         mClient =
                 new AdvertisingCustomAudienceClient.Builder()
@@ -86,6 +97,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+    }
+
+    @After
+    public void tearDown() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
@@ -240,7 +262,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 mClient.joinCustomAudience(customAudience1).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience2).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience3).get();
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
@@ -274,7 +306,17 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                             ExecutionException.class,
                             () -> {
                                 mClient.joinCustomAudience(customAudience1).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience2).get();
+
+                                // TODO(b/266725238): Remove/modify once the API rate limit has been
+                                //  adjusted for FLEDGE
+                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
                                 mClient.joinCustomAudience(customAudience3).get();
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);

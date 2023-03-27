@@ -23,6 +23,10 @@ import java.util.UUID;
 public class AsyncRegistrationFixture {
     private AsyncRegistrationFixture() {}
 
+    public static AsyncRegistration.Builder getValidAsyncRegistrationBuilder() {
+        return new AsyncRegistration.Builder();
+    }
+
     public static AsyncRegistration getValidAsyncRegistration() {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())

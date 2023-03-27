@@ -91,4 +91,32 @@ public class BlockedTopicsManagerTest {
         mBlockedTopicsManager.removeBlockedTopic(topicParcel);
         assertThat(mBlockedTopicsManager.retrieveAllBlockedTopics()).isEmpty();
     }
+
+    @Test
+    public void testClearAllBlockedTopics() {
+        final int topicId1 = 1;
+        final int topicId2 = 2;
+
+        TopicParcel topicParcel1 =
+                new TopicParcel.Builder()
+                        .setTopicId(topicId1)
+                        .setTaxonomyVersion(TAXONOMY_VERSION)
+                        .setModelVersion(MODEL_VERSION)
+                        .build();
+        TopicParcel topicParcel2 =
+                new TopicParcel.Builder()
+                        .setTopicId(topicId2)
+                        .setTaxonomyVersion(TAXONOMY_VERSION)
+                        .setModelVersion(MODEL_VERSION)
+                        .build();
+        List<TopicParcel> topicParcelList = List.of(topicParcel1, topicParcel2);
+        mBlockedTopicsManager.recordBlockedTopic(topicParcelList);
+
+        //  Verify the topic is recorded.
+        assertThat(mBlockedTopicsManager.retrieveAllBlockedTopics()).isEqualTo(topicParcelList);
+
+        // Verify the topic is  removed
+        mBlockedTopicsManager.clearAllBlockedTopics();
+        assertThat(mBlockedTopicsManager.retrieveAllBlockedTopics()).isEmpty();
+    }
 }

@@ -21,10 +21,12 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.net.Uri;
+import android.os.Build;
 import android.util.ArrayMap;
 import android.util.JsonReader;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -65,6 +67,8 @@ import java.util.concurrent.ExecutionException;
  *
  * <p>ModelManager will select the right model to serve Classifier.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
     public static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     public static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
@@ -292,7 +296,7 @@ public class ModelManager {
     @NonNull
     public ImmutableList<Integer> retrieveLabels() {
         ImmutableList.Builder<Integer> labels = new ImmutableList.Builder();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_LABEL_FILE_ID);
         } else {
@@ -303,7 +307,7 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read labels file");
             }
         }
-        return getLabelsList(labels, inputStream);
+        return inputStream == null ? labels.build() : getLabelsList(labels, inputStream);
     }
 
     @NonNull
@@ -342,7 +346,7 @@ public class ModelManager {
 
         // The immutable set of the topics from labels file
         ImmutableList<Integer> validTopics = retrieveLabels();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_TOP_APPS_FILE_ID);
         } else {
@@ -353,7 +357,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read top apps file");
             }
         }
-        return getAppsTopicMap(appTopicsMap, validTopics, inputStream);
+        return inputStream == null
+                ? appTopicsMap
+                : getAppsTopicMap(appTopicsMap, validTopics, inputStream);
     }
 
     @NonNull
@@ -428,7 +434,7 @@ public class ModelManager {
         // classifierAssetsMetadata = ImmutableMap<AssetName, ImmutableMap<MetadataName, Value>>
         ImmutableMap.Builder<String, ImmutableMap<String, String>> classifierAssetsMetadata =
                 new ImmutableMap.Builder<>();
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         if (useDownloadedFiles()) {
             inputStream = readDownloadedFile(DOWNLOADED_CLASSIFIER_ASSETS_METADATA_ID);
         } else {
@@ -439,7 +445,9 @@ public class ModelManager {
                 LogUtil.e(e, "Failed to read bundled metadata file");
             }
         }
-        return getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
+        return inputStream == null
+                ? classifierAssetsMetadata.build()
+                : getAssetsMetadataMap(classifierAssetsMetadata, inputStream);
     }
 
     @NonNull
@@ -532,7 +540,7 @@ public class ModelManager {
     // ClientFile.file_id.
     @NonNull
     private InputStream readDownloadedFile(String fileId) {
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null;
         ClientFile downloadedFile = mDownloadedFiles.get(fileId);
         if (downloadedFile == null) {
             LogUtil.e("Failed to find downloaded %s file", fileId);

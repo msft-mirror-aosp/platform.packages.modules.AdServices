@@ -19,9 +19,13 @@ package android.adservices.common;
 import android.net.Uri;
 import android.os.Process;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Truth;
 
@@ -34,7 +38,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CommonFixture {
-    public static final String TEST_PACKAGE_NAME = Process.myProcessName();
+    public static final String TEST_PACKAGE_NAME = processName();
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final String TEST_PACKAGE_NAME_2 = "android.adservices.tests2";
     public static final Set<String> PACKAGE_SET =
@@ -45,12 +49,16 @@ public class CommonFixture {
     public static final Instant FIXED_NOW = Instant.now();
     public static final Instant FIXED_NOW_TRUNCATED_TO_MILLI =
             FIXED_NOW.truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant FIXED_EARLIER_ONE_DAY = FIXED_NOW.minus(1, ChronoUnit.DAYS);
     public static final Clock FIXED_CLOCK_TRUNCATED_TO_MILLI =
             Clock.fixed(FIXED_NOW.truncatedTo(ChronoUnit.MILLIS), ZoneOffset.UTC);
     public static final AdTechIdentifier NOT_ENROLLED_BUYER =
             AdTechIdentifier.fromString("notenrolled.com");
     public static final AdTechIdentifier VALID_BUYER_1 = AdTechIdentifier.fromString("test.com");
     public static final AdTechIdentifier VALID_BUYER_2 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier INVALID_EMPTY_BUYER = AdTechIdentifier.fromString("");
+    public static final Set<AdTechIdentifier> BUYER_SET =
+            new HashSet<>(Arrays.asList(VALID_BUYER_1, VALID_BUYER_2));
 
     public static Uri getUri(String authority, String path) {
         return Uri.parse(ValidatorUtil.HTTPS_SCHEME + "://" + authority + path);
@@ -70,5 +78,20 @@ public class CommonFixture {
     public static <T> void assertDifferentHashCode(T... objs) {
         Set<T> helperSet = new HashSet<>(Arrays.asList(objs));
         Truth.assertThat(helperSet).hasSize(objs.length);
+    }
+
+    private static String processName() {
+        if (SdkLevel.isAtLeastT()) {
+            return Process.myProcessName();
+        } else {
+            try {
+                return ApplicationProvider.getApplicationContext().getPackageName();
+            } catch (IllegalStateException e) {
+                // TODO(b/275062019): Remove this try/catch once instrumentation context can be
+                // passed in AppConsentSettingsUiAutomatorTest
+                LogUtil.e(e, "Failed to get package name from Instrumentation context");
+                return "android.adservices.tests";
+            }
+        }
     }
 }

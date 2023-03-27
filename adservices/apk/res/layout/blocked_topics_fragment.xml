@@ -52,6 +52,17 @@
                     android:text="@string/settingsUI_topics_view_no_blocked_topics_text"
                     android:textAppearance="@style/TextAppearance.Body2.Bold" />
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/no_blocked_topics_ga_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="86dp"
+                android:visibility="gone"
+                android:gravity="center"
+                android:text="@string/settingsUI_no_blocked_topics_ga_text"
+                android:textAppearance="@style/TextAppearance.Body2.Bold" />
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/blocked_topics_list"
                 android:layout_width="match_parent"

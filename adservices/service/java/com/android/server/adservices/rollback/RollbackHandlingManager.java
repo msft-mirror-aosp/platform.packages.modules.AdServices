@@ -20,8 +20,8 @@ import android.annotation.NonNull;
 import android.app.adservices.AdServicesManager;
 import android.util.ArrayMap;
 
-import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
 
 import java.io.IOException;
@@ -111,6 +111,13 @@ public final class RollbackHandlingManager {
         synchronized (this) {
             return datastore.get(DELETION_OCCURRED_KEY, /* defaultValue */ false);
         }
+    }
+
+    /** Returns the previous version number saved in the datastore file. */
+    public int getPreviousStoredVersion(@AdServicesManager.DeletionApiType int deletionType)
+            throws IOException {
+        BooleanFileDatastore datastore = getOrCreateBooleanFileDatastore(deletionType);
+        return datastore.getPreviousStoredVersion();
     }
 
     /**

@@ -25,6 +25,9 @@ public class UIStats {
     private int mCode;
     private int mRegion;
     private int mAction;
+    private int mDefaultConsent;
+    private int mDefaultAdIdState;
+    private int mPrivacySandboxFeatureType;
 
     public UIStats() {}
 
@@ -36,12 +39,21 @@ public class UIStats {
         UIStats uiStats = (UIStats) obj;
         return mCode == uiStats.getCode()
                 && mRegion == uiStats.getRegion()
-                && mAction == uiStats.getAction();
+                && mAction == uiStats.getAction()
+                && mDefaultConsent == uiStats.getDefaultConsent()
+                && mDefaultAdIdState == uiStats.getDefaultAdIdState()
+                && mPrivacySandboxFeatureType == uiStats.getPrivacySandboxFeatureType();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mRegion, mAction);
+        return Objects.hash(
+                mCode,
+                mRegion,
+                mAction,
+                mDefaultConsent,
+                mDefaultAdIdState,
+                mPrivacySandboxFeatureType);
     }
 
     @NonNull
@@ -59,6 +71,37 @@ public class UIStats {
         return mAction;
     }
 
+    @NonNull
+    public int getDefaultConsent() {
+        return mDefaultConsent;
+    }
+
+    @NonNull
+    public int getDefaultAdIdState() {
+        return mDefaultAdIdState;
+    }
+
+    @NonNull
+    public int getPrivacySandboxFeatureType() {
+        return mPrivacySandboxFeatureType;
+    }
+
+    public void setRegion(int region) {
+        mRegion = region;
+    }
+
+    public void setAction(int action) {
+        mAction = action;
+    }
+
+    public void setDefaultConsent(int defaultConsent) {
+        mDefaultConsent = defaultConsent;
+    }
+
+    public void setDefaultAdIdState(int defaultAdIdState) {
+        mDefaultAdIdState = defaultAdIdState;
+    }
+
     @Override
     public String toString() {
         return "UIStats{"
@@ -68,6 +111,12 @@ public class UIStats {
                 + mRegion
                 + ", mAction="
                 + mAction
+                + ", mDefaultConsent="
+                + mDefaultConsent
+                + ", mDefaultAdIdState="
+                + mDefaultAdIdState
+                + ", mPrivacySandboxFeatureType"
+                + mPrivacySandboxFeatureType
                 + '}';
     }
 
@@ -97,6 +146,24 @@ public class UIStats {
             return this;
         }
 
+        /** See {@link UIStats#getAction()} . */
+        public @NonNull UIStats.Builder setDefaultConsent(int defaultConsent) {
+            mBuilding.mDefaultConsent = defaultConsent;
+            return this;
+        }
+
+        /** See {@link UIStats#getAction()} . */
+        public @NonNull UIStats.Builder setDefaultAdIdState(int defaultAdIdState) {
+            mBuilding.mDefaultAdIdState = defaultAdIdState;
+            return this;
+        }
+
+        /** See {@link UIStats#getAction()} . */
+        public @NonNull UIStats.Builder setPrivacySandboxFeatureType(
+                int privacySandboxFeatureType) {
+            mBuilding.mPrivacySandboxFeatureType = privacySandboxFeatureType;
+            return this;
+        }
         /** Build the {@link UIStats}. */
         public @NonNull UIStats build() {
             return mBuilding;

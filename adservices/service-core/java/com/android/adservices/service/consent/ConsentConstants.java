@@ -21,42 +21,42 @@ import com.android.internal.annotations.VisibleForTesting;
 /** ConsentManager related Constants. */
 public class ConsentConstants {
 
-    @VisibleForTesting
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
-    @VisibleForTesting
     static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
 
-    @VisibleForTesting
-    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
+    static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
+
+    static final String TOPICS_DEFAULT_CONSENT = "TOPICS_DEFAULT_CONSENT";
+
+    static final String FLEDGE_DEFAULT_CONSENT = "FLEDGE_DEFAULT_CONSENT";
+
+    static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
+
+    static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
 
     @VisibleForTesting
-    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
-            "FLEDGE-AND-MSMT-CONSENT-PAGE-DISPLAYED";
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
-    @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
-
-    @VisibleForTesting static final String CONSENT_KEY = "CONSENT";
+    static final String CONSENT_KEY = "CONSENT";
 
     // Internal datastore version
-    @VisibleForTesting static final int STORAGE_VERSION = 1;
+    static final int STORAGE_VERSION = 1;
 
     // Internal datastore filename. The name should be unique to avoid multiple threads or processes
     // to update the same file.
-    @VisibleForTesting
     static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     // The name of shared preferences file to store status of one-time migrations.
     // Once a migration has happened, it marks corresponding shared preferences to prevent it
     // happens again.
-    @VisibleForTesting static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
+    static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
 
     // Shared preferences to mark whether PPAPI consent has been migrated to system server
-    @VisibleForTesting
     static final String SHARED_PREFS_KEY_HAS_MIGRATED = "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
 
     // Shared preferences to mark whether PPAPI consent has been cleared.
-    @VisibleForTesting
     static final String SHARED_PREFS_KEY_PPAPI_HAS_CLEARED = "CONSENT_HAS_CLEARED_IN_PPAPI";
 
     static final String ERROR_MESSAGE_WHILE_GET_CONTENT =
@@ -64,6 +64,9 @@ public class ConsentConstants {
 
     static final String ERROR_MESSAGE_WHILE_SET_CONTENT = "setConsent method failed.";
 
-    public static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
+    static final String ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH =
             "Invalid type of consent source of truth.";
+
+    public static final String ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
+            "Invalid type of blocked topics source of truth.";
 }

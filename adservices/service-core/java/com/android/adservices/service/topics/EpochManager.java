@@ -19,11 +19,12 @@ package com.android.adservices.service.topics;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.text.TextUtils;
-import android.util.Dumpable;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
@@ -50,7 +51,9 @@ import java.util.Random;
 import java.util.Set;
 
 /** A class to manage Epoch computation. */
-public class EpochManager implements Dumpable {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class EpochManager {
     // The tables to do garbage collection for old epochs
     // and its corresponding epoch_id column name.
     // Pair<Table Name, Column Name>
@@ -70,7 +73,10 @@ public class EpochManager implements Dumpable {
                         TopicsTables.UsageHistoryContract.EPOCH_ID),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.EPOCH_ID)
+                        TopicsTables.AppUsageHistoryContract.EPOCH_ID),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.EPOCH_ID)
             };
 
     /**
@@ -223,12 +229,10 @@ public class EpochManager implements Dumpable {
             // contributor to a topic if the app has called Topics API in this epoch and is
             // classified to the topic.
             // Do this only when feature is enabled.
-            if (supportsTopicContributorFeature()) {
-                Map<Integer, Set<String>> topTopicsToContributorsMap =
-                        computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
-                // Then save Topic Contributors into DB
-                mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
-            }
+            Map<Integer, Set<String>> topTopicsToContributorsMap =
+                    computeTopTopicsToContributorsMap(appClassificationTopicsMap, topTopics);
+            // Then save Topic Contributors into DB
+            mTopicsDao.persistTopicContributors(currentEpochId, topTopicsToContributorsMap);
 
             // Step 6: Assign topics to apps and SDK from the global top topics.
             // Currently, hard-code the taxonomyVersion and the modelVersion.
@@ -464,14 +468,6 @@ public class EpochManager implements Dumpable {
                     tableColumnPair.first, tableColumnPair.second, epochToDeleteFrom);
         }
 
-        // Handle TopicContributors Table if feature flag is ON
-        if (supportsTopicContributorFeature()) {
-            mTopicsDao.deleteDataOfOldEpochs(
-                    TopicsTables.TopicContributorsContract.TABLE,
-                    TopicsTables.TopicContributorsContract.EPOCH_ID,
-                    epochToDeleteFrom);
-        }
-
         // In app installation, we need to assign topics to newly installed app-sdk caller. In order
         // to check topic learnability of the sdk, CallerCanLearnTopicsContract needs to persist
         // numberOfLookBackEpochs more epochs. For example, assume current epoch is T. In app
@@ -518,16 +514,6 @@ public class EpochManager implements Dumpable {
         return topicToContributorMap;
     }
 
-    /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
-     * table is supported and the feature flag is on.
-     */
-    public boolean supportsTopicContributorFeature() {
-        return mFlags.getEnableTopicContributorsCheck()
-                && mTopicsDao.supportsTopicContributorsTable();
-    }
-
-    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== EpochManager Dump ====");
         long epochId = getCurrentEpochId();

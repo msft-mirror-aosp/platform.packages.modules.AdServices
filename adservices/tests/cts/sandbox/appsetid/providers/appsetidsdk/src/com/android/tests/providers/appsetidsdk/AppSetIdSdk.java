@@ -39,7 +39,7 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
         try {
-            AppSetIdManager appSetIdManager = getContext().getSystemService(AppSetIdManager.class);
+            AppSetIdManager appSetIdManager = AppSetIdManager.get(getContext());
 
             CompletableFuture<AppSetId> future = new CompletableFuture<>();
             OutcomeReceiver<AppSetId, Exception> callback =

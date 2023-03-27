@@ -196,7 +196,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(5)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(6)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -228,7 +228,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(15)
                                 .setPaddedRandomTopicsCount(10)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(1)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -352,7 +352,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(0)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(2)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -523,7 +523,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(5)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(1)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -572,7 +572,7 @@ public class CommonClassifierHelperTest {
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(
                                 sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
-                .isEqualTo(1388);
+                .isEqualTo(1467);
         // Verify test model build_id.
         assertThat(
                         CommonClassifierHelper.getBundledModelBuildId(

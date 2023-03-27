@@ -18,8 +18,10 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
-import android.util.Dumpable;
+import android.os.Build;
 import android.util.Pair;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.topics.Topic;
@@ -54,8 +56,10 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This class is thread safe.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
-public class CacheManager implements Dumpable {
+public class CacheManager {
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
     private static final Object SINGLETON_LOCK = new Object();
@@ -75,6 +79,9 @@ public class CacheManager implements Dumpable {
     private HashSet<Topic> mCachedBlockedTopics = new HashSet<>();
     // HashSet<TopicId>
     private HashSet<Integer> mCachedBlockedTopicIds = new HashSet<>();
+
+    // Set containing Global Blocked Topic Ids
+    private HashSet<Integer> mCachedGlobalBlockedTopicIds;
     private final AdServicesLogger mLogger;
 
     @VisibleForTesting
@@ -82,11 +89,13 @@ public class CacheManager implements Dumpable {
             TopicsDao topicsDao,
             Flags flags,
             AdServicesLogger logger,
-            BlockedTopicsManager blockedTopicsManager) {
+            BlockedTopicsManager blockedTopicsManager,
+            GlobalBlockedTopicsManager globalBlockedTopicsManager) {
         mTopicsDao = topicsDao;
         mFlags = flags;
         mLogger = logger;
         mBlockedTopicsManager = blockedTopicsManager;
+        mCachedGlobalBlockedTopicIds = globalBlockedTopicsManager.getGlobalBlockedTopicIds();
     }
 
     /** Returns an instance of the CacheManager given a context. */
@@ -99,7 +108,8 @@ public class CacheManager implements Dumpable {
                                 TopicsDao.getInstance(context),
                                 FlagsFactory.getFlags(),
                                 AdServicesLoggerImpl.getInstance(),
-                                BlockedTopicsManager.getInstance(context));
+                                BlockedTopicsManager.getInstance(context),
+                                GlobalBlockedTopicsManager.getInstance());
             }
             return sSingleton;
         }
@@ -176,7 +186,7 @@ public class CacheManager implements Dumpable {
                             duplicateTopicCount++;
                             continue;
                         }
-                        if (mCachedBlockedTopicIds.contains(topic.getTopic())) {
+                        if (isTopicIdBlocked(topic.getTopic())) {
                             blockedTopicCount++;
                             continue;
                         }
@@ -278,10 +288,7 @@ public class CacheManager implements Dumpable {
                 if (mCachedTopics.containsKey(epochId - numEpoch)) {
                     topics.addAll(
                             mCachedTopics.get(epochId - numEpoch).values().stream()
-                                    .filter(
-                                            topic ->
-                                                    !mCachedBlockedTopicIds.contains(
-                                                            topic.getTopic()))
+                                    .filter(topic -> !isTopicIdBlocked(topic.getTopic()))
                                     .collect(Collectors.toList()));
                 }
             }
@@ -289,6 +296,12 @@ public class CacheManager implements Dumpable {
             mReadWriteLock.readLock().unlock();
         }
         return ImmutableList.copyOf(topics);
+    }
+
+    /** Returns true if topic id is a global blocked topic or user blocked topic. */
+    private boolean isTopicIdBlocked(int topicId) {
+        return mCachedBlockedTopicIds.contains(topicId)
+                || mCachedGlobalBlockedTopicIds.contains(topicId);
     }
 
     /**
@@ -320,7 +333,6 @@ public class CacheManager implements Dumpable {
         }
     }
 
-    @Override
     public void dump(@NonNull PrintWriter writer, String[] args) {
         boolean isVerbose =
                 args != null
@@ -328,6 +340,7 @@ public class CacheManager implements Dumpable {
                         && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
         writer.println("==== CacheManager Dump ====");
         writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
+        writer.println(String.format("mCachedBlockedTopics size: %d", mCachedBlockedTopics.size()));
         if (isVerbose) {
             for (Long epochId : mCachedTopics.keySet()) {
                 writer.println(String.format("Epoch Id: %d \n", epochId));

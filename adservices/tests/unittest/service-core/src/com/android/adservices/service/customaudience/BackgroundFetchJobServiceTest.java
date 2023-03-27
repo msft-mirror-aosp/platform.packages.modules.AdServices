@@ -22,12 +22,14 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doCallRealMethod;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
+
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
+import static com.google.common.util.concurrent.Futures.immediateFuture;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -45,10 +47,13 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
+import com.google.common.util.concurrent.FluentFuture;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -57,6 +62,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.Spy;
+import org.mockito.quality.Strictness;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -65,25 +71,22 @@ import java.util.concurrent.TimeoutException;
 public class BackgroundFetchJobServiceTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
-
-    @Spy
-    private final BackgroundFetchJobService mBgFJobServiceSpy = new BackgroundFetchJobService();
-
-    @Mock private BackgroundFetchWorker mBgFWorkerMock;
-    @Mock private JobParameters mJobParametersMock;
-    @Mock private ConsentManager mConsentManagerMock;
-    @Mock private PackageManager mPackageManagerMock;
-
     // Set a minimum delay of 1 hour so scheduled jobs don't run immediately
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
 
-    private MockitoSession mStaticMockSession = null;
+    @Spy
+    private final BackgroundFetchJobService mBgFJobServiceSpy = new BackgroundFetchJobService();
 
     private final Flags mFlagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
     private final Flags mFlagsWithEnabledBgFGaUxEnabled = new FlagsWithEnabledBgFGaUxEnabled();
     private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOn = new FlagsWithKillSwitchOn();
     private final Flags mFlagsWithCustomAudienceServiceKillSwitchOff = new FlagsWithKillSwitchOff();
+    @Mock private BackgroundFetchWorker mBgFWorkerMock;
+    @Mock private JobParameters mJobParametersMock;
+    @Mock private ConsentManager mConsentManagerMock;
+    @Mock private PackageManager mPackageManagerMock;
+    private MockitoSession mStaticMockSession = null;
 
     @Before
     public void setup() {
@@ -96,8 +99,17 @@ public class BackgroundFetchJobServiceTest {
                         .mockStatic(ConsentManager.class)
                         .spyStatic(BackgroundFetchJobService.class)
                         .spyStatic(BackgroundFetchWorker.class)
+                        .mockStatic(ServiceCompatUtils.class)
+                        .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
 
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
@@ -131,7 +143,7 @@ public class BackgroundFetchJobServiceTest {
         assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -158,7 +170,7 @@ public class BackgroundFetchJobServiceTest {
         assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -187,7 +199,7 @@ public class BackgroundFetchJobServiceTest {
         assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -212,7 +224,7 @@ public class BackgroundFetchJobServiceTest {
         assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
 
         assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-        verify(mBgFWorkerMock, never()).runBackgroundFetch(any());
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -224,7 +236,9 @@ public class BackgroundFetchJobServiceTest {
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
+        doReturn(FluentFuture.from(immediateFuture(null)))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doAnswer(
@@ -239,7 +253,7 @@ public class BackgroundFetchJobServiceTest {
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -253,7 +267,9 @@ public class BackgroundFetchJobServiceTest {
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doNothing().when(mBgFWorkerMock).runBackgroundFetch(any());
+        doReturn(FluentFuture.from(immediateFuture(null)))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
         doAnswer(
                         unusedInvocation -> {
                             jobFinishedCountDown.countDown();
@@ -266,21 +282,22 @@ public class BackgroundFetchJobServiceTest {
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
-    public void testOnStartJobUpdateTimeoutHandled()
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public void testOnStartJobUpdateTimeoutHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doThrow(TimeoutException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
         doAnswer(
                         unusedInvocation -> {
                             jobFinishedCountDown.countDown();
@@ -293,21 +310,24 @@ public class BackgroundFetchJobServiceTest {
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
-    public void testOnStartJobUpdateInterruptedHandled()
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public void testOnStartJobUpdateInterruptedHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doThrow(InterruptedException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doReturn(
+                        FluentFuture.from(
+                                immediateFailedFuture(new InterruptedException("testing timeout"))))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
         doAnswer(
                         unusedInvocation -> {
                             jobFinishedCountDown.countDown();
@@ -320,21 +340,25 @@ public class BackgroundFetchJobServiceTest {
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
-    public void testOnStartJobUpdateExecutionExceptionHandled()
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public void testOnStartJobUpdateExecutionExceptionHandled() throws InterruptedException {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
         doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance(any()));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(mBgFWorkerMock).when(() -> BackgroundFetchWorker.getInstance(any()));
-        doThrow(ExecutionException.class).when(mBgFWorkerMock).runBackgroundFetch(any());
+        doReturn(
+                        FluentFuture.from(
+                                immediateFailedFuture(
+                                        new ExecutionException("testing timeout", null))))
+                .when(mBgFWorkerMock)
+                .runBackgroundFetch();
         doAnswer(
                         unusedInvocation -> {
                             jobFinishedCountDown.countDown();
@@ -347,7 +371,7 @@ public class BackgroundFetchJobServiceTest {
         jobFinishedCountDown.await();
 
         verify(() -> BackgroundFetchWorker.getInstance(mBgFJobServiceSpy));
-        verify(mBgFWorkerMock).runBackgroundFetch(any());
+        verify(mBgFWorkerMock).runBackgroundFetch();
         verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
@@ -360,7 +384,6 @@ public class BackgroundFetchJobServiceTest {
         assertTrue(mBgFJobServiceSpy.onStopJob(mJobParametersMock));
 
         verify(mBgFWorkerMock).stopWork();
-        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
@@ -434,6 +457,36 @@ public class BackgroundFetchJobServiceTest {
         BackgroundFetchJobService.schedule(CONTEXT, mFlagsWithDisabledBgF);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobShouldDisableJobTrue()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+        verifyNoMoreInteractions(staticMockMarker(FlagsFactory.class));
     }
 
     private static class FlagsWithEnabledBgFGaUxDisabled implements Flags {

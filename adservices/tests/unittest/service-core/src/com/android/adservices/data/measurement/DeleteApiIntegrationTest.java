@@ -94,7 +94,7 @@ public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
         Integer finalDeletionMode = deletionMode;
 
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         MeasurementDataDeleter measurementDataDeleter =
                 new MeasurementDataDeleter(datastoreManager);
         measurementDataDeleter.delete(
