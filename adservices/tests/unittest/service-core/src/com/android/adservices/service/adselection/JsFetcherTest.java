@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -34,6 +35,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -48,6 +50,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -88,6 +92,7 @@ public class JsFetcherTest {
                     .setName(NAME)
                     .setAppPackageName(APP_PACKAGE_NAME)
                     .setBiddingLogicJS(BIDDING_LOGIC_OVERRIDE)
+                    .setBiddingLogicJsVersion(BUYER_BIDDING_LOGIC_JS_VERSION)
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA)
                     .build();
     private DevContext mDevContext =
@@ -140,8 +145,9 @@ public class JsFetcherTest {
         mFetchJsRequest =
                 JsVersionHelper.getRequestWithVersionHeader(
                         mFetchJsUri,
-                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                        BUYER_BIDDING_LOGIC_JS_VERSION,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                BUYER_BIDDING_LOGIC_JS_VERSION),
                         false);
         mDefaultDispatcher =
                 new Dispatcher() {
@@ -221,7 +227,7 @@ public class JsFetcherTest {
                         })
                 .when(mRunAdBiddingPerCAExecutionLoggerMock)
                 .endGetBuyerDecisionLogic(any());
-        FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogicFuture =
+        FluentFuture<DecisionLogic> buyerDecisionLogicFuture =
                 jsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
                         mCustomAudienceDevOverridesHelper,
@@ -229,9 +235,8 @@ public class JsFetcherTest {
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME,
                         mRunAdBiddingPerCAExecutionLoggerMock);
-        AdServicesHttpClientResponse buyerDecisionLogic =
-                waitForFuture(() -> buyerDecisionLogicFuture);
-        String js = buyerDecisionLogic.getResponseBody();
+        DecisionLogic buyerDecisionLogic = waitForFuture(() -> buyerDecisionLogicFuture);
+        String js = buyerDecisionLogic.getPayload();
         loggerLatch.await();
         assertEquals(BIDDING_LOGIC_OVERRIDE, js);
         mMockWebServerRule.verifyMockServerRequests(
@@ -289,7 +294,7 @@ public class JsFetcherTest {
                         })
                 .when(mRunAdBiddingPerCAExecutionLoggerMock)
                 .endGetBuyerDecisionLogic(any());
-        FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogicFuture =
+        FluentFuture<DecisionLogic> buyerDecisionLogicFuture =
                 jsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
                         mCustomAudienceDevOverridesHelper,
@@ -297,7 +302,7 @@ public class JsFetcherTest {
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME,
                         mRunAdBiddingPerCAExecutionLoggerMock);
-        String buyerDecisionLogic = waitForFuture(() -> buyerDecisionLogicFuture).getResponseBody();
+        String buyerDecisionLogic = waitForFuture(() -> buyerDecisionLogicFuture).getPayload();
         loggerLatch.await();
         assertEquals(buyerDecisionLogic, BIDDING_LOGIC);
         mMockWebServerRule.verifyMockServerRequests(
@@ -308,6 +313,32 @@ public class JsFetcherTest {
         verify(mRunAdBiddingPerCAExecutionLoggerMock).startGetBuyerDecisionLogic();
         verify(mRunAdBiddingPerCAExecutionLoggerMock)
                 .endGetBuyerDecisionLogic(eq(buyerDecisionLogic));
+    }
+
+    @Test
+    public void testGerVersionHeader() {
+        JsFetcher jsFetcher =
+                new JsFetcher(mBackgroundExecutorService, mLightweightExecutorService, mWebClient);
+        int payloadType = JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS;
+        long version = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
+        ImmutableMap<Integer, Long> versionMap =
+                jsFetcher.getVersionMap(
+                        JsVersionHelper.getRequestWithVersionHeader(
+                                mFetchJsUri, ImmutableMap.of(payloadType, version), false),
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseHeaders(
+                                        ImmutableMap.of(
+                                                JsVersionHelper.getVersionHeaderName(payloadType),
+                                                ImmutableList.of(Long.toString(version)),
+                                                "Nonsense_HEADER",
+                                                ImmutableList.of("Nonsense_key")))
+                                .setResponseBody("Some js")
+                                .build());
+
+        assertEquals(1, versionMap.size());
+        assertTrue(
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
+                        == versionMap.get(JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS));
     }
 
     private <T> T waitForFuture(JsFetcherTest.ThrowingSupplier<ListenableFuture<T>> function)
