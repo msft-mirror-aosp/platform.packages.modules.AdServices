@@ -148,7 +148,7 @@ public abstract class E2EMockTest extends E2ETest {
                 spy(
                         new AsyncTriggerFetcher(
                                 mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
-        mDebugReportApi = new DebugReportApi(sContext);
+        mDebugReportApi = new DebugReportApi(sContext, mFlags);
 
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
     }

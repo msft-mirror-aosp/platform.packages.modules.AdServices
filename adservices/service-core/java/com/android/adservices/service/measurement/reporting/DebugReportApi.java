@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -74,13 +75,18 @@ public class DebugReportApi {
     }
 
     private final Context mContext;
+    private final Flags mFlags;
 
-    public DebugReportApi(Context context) {
+    public DebugReportApi(Context context, Flags flags) {
         mContext = context;
+        mFlags = flags;
     }
 
     /** Schedules the Source Success Debug Report */
     public void scheduleSourceSuccessDebugReport(Source source, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS)) {
             return;
         }
@@ -99,6 +105,9 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit Debug Report */
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
@@ -123,6 +132,9 @@ public class DebugReportApi {
 
     /** Schedules the Source Noised Debug Report */
     public void scheduleSourceNoisedDebugReport(Source source, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED)) {
             return;
         }
@@ -141,6 +153,9 @@ public class DebugReportApi {
     /** Schedules Source Storage Limit Debug Report */
     public void scheduleSourceStorageLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_STORAGE_LIMIT)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT)) {
             return;
         }
@@ -158,6 +173,9 @@ public class DebugReportApi {
 
     /** Schedules the Source Unknown Error Debug Report */
     public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR)) {
             return;
         }
@@ -175,6 +193,9 @@ public class DebugReportApi {
 
     /** Schedules Trigger No Matching Source Debug Report */
     public void scheduleTriggerNoMatchingSourceDebugReport(Trigger trigger, IMeasurementDao dao) {
+        if (isTriggerDebugFlagDisabled(Type.TRIGGER_NO_MATCHING_SOURCE)) {
+            return;
+        }
         if (isAdTechNotOptIn(trigger.isDebugReporting(), Type.TRIGGER_NO_MATCHING_SOURCE)) {
             return;
         }
@@ -193,6 +214,9 @@ public class DebugReportApi {
      */
     public void scheduleTriggerNoLimitDebugReport(
             Source source, Trigger trigger, IMeasurementDao dao, String type) {
+        if (isTriggerDebugFlagDisabled(type)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), type)
                 || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
@@ -212,6 +236,9 @@ public class DebugReportApi {
      */
     public void scheduleTriggerDebugReportWithAllFields(
             Source source, Trigger trigger, IMeasurementDao dao, String type) {
+        if (isTriggerDebugFlagDisabled(type)) {
+            return;
+        }
         if (isAdTechNotOptIn(source.isDebugReporting(), type)
                 || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
@@ -383,5 +410,25 @@ public class DebugReportApi {
             LogUtil.e(e, "Json error while generating trigger debug report body with all fields.");
         }
         return body;
+    }
+
+    /** Checks flags for source debug reports. */
+    private boolean isSourceDebugFlagDisabled(String type) {
+        if (!mFlags.getMeasurementEnableDebugReport()
+                || !mFlags.getMeasurementEnableSourceDebugReport()) {
+            LogUtil.d("Source flag is disabled for %s debug report", type);
+            return true;
+        }
+        return false;
+    }
+
+    /** Checks flags for trigger debug reports. */
+    private boolean isTriggerDebugFlagDisabled(String type) {
+        if (!mFlags.getMeasurementEnableDebugReport()
+                || !mFlags.getMeasurementEnableTriggerDebugReport()) {
+            LogUtil.d("Trigger flag is disabled for %s debug report", type);
+            return true;
+        }
+        return false;
     }
 }

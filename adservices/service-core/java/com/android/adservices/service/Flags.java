@@ -298,6 +298,27 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
+
+    /** Returns whether verbose debug report generation is enabled. */
+    default boolean getMeasurementEnableDebugReport() {
+        return MEASUREMENT_ENABLE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT = true;
+
+    /** Returns whether source debug report generation is enabled. */
+    default boolean getMeasurementEnableSourceDebugReport() {
+        return MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT = true;
+
+    /** Returns whether trigger debug report generation is enabled. */
+    default boolean getMeasurementEnableTriggerDebugReport() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
