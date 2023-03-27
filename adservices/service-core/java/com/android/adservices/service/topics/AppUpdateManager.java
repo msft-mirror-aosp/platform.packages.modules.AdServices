@@ -27,7 +27,7 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
@@ -59,6 +59,7 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
 
@@ -142,7 +143,7 @@ public class AppUpdateManager {
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e(
+            sLogger.e(
                     "Database is not available, Stop processing app uninstallation for %s!",
                     packageName);
             return;
@@ -160,7 +161,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.d("End of processing app uninstallation for %s", packageName);
+            sLogger.d("End of processing app uninstallation for %s", packageName);
         }
     }
 
@@ -177,7 +178,7 @@ public class AppUpdateManager {
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e(
+            sLogger.e(
                     "Database is not available, Stop processing app installation for %s",
                     packageName);
             return;
@@ -193,7 +194,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.d("End of processing app installation for %s", packageName);
+            sLogger.d("End of processing app installation for %s", packageName);
         }
     }
 
@@ -220,13 +221,13 @@ public class AppUpdateManager {
             return;
         }
 
-        LogUtil.v(
+        sLogger.v(
                 "Detect below unhandled mismatched applications: %s",
                 unhandledUninstalledApps.toString());
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e("Database is not available, Stop reconciling app uninstallation in Topics!");
+            sLogger.e("Database is not available, Stop reconciling app uninstallation in Topics!");
             return;
         }
 
@@ -240,7 +241,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.v("App uninstallation reconciliation in Topics is finished!");
+            sLogger.v("App uninstallation reconciliation in Topics is finished!");
         }
     }
 
@@ -268,13 +269,13 @@ public class AppUpdateManager {
             return;
         }
 
-        LogUtil.v(
+        sLogger.v(
                 "Detect below unhandled installed applications: %s",
                 unhandledInstalledApps.toString());
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e("Database is not available, Stop reconciling app installation in Topics!");
+            sLogger.e("Database is not available, Stop reconciling app installation in Topics!");
             return;
         }
 
@@ -288,7 +289,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.v("App installation reconciliation in Topics is finished!");
+            sLogger.v("App installation reconciliation in Topics is finished!");
         }
     }
 
@@ -410,7 +411,7 @@ public class AppUpdateManager {
         mTopicsDao.deleteFromTableByColumn(
                 /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
 
-        LogUtil.v("Have deleted data for application " + apps);
+        sLogger.v("Have deleted data for application " + apps);
     }
 
     /**
@@ -440,7 +441,7 @@ public class AppUpdateManager {
             List<Topic> topTopics = mTopicsDao.retrieveTopTopics(epochId);
 
             if (topTopics.isEmpty()) {
-                LogUtil.v(
+                sLogger.v(
                         "Empty top topic list in Epoch %d, do not assign topic to App %s.",
                         epochId, app);
                 continue;
@@ -451,22 +452,22 @@ public class AppUpdateManager {
             regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
             List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
 
-            if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
-                LogUtil.v(
+            Topic assignedTopic =
+                    selectAssignedTopicFromTopTopics(
+                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
+
+            if (assignedTopic == null) {
+                sLogger.v(
                         "No topic is available to assign in Epoch %d, do not assign topic to App"
                                 + " %s.",
                         epochId, app);
                 continue;
             }
 
-            Topic assignedTopic =
-                    selectAssignedTopicFromTopTopics(
-                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
-
             // Persist this topic to database as returned topic in this epoch
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, assignedTopic));
 
-            LogUtil.v(
+            sLogger.v(
                     "Topic %s has been assigned to newly installed App %s in Epoch %d",
                     assignedTopic.getTopic(), app, epochId);
         }
@@ -525,7 +526,7 @@ public class AppUpdateManager {
                             .collect(Collectors.toList());
 
             if (!topTopicsToDelete.isEmpty()) {
-                LogUtil.v(
+                sLogger.v(
                         "Topics %s will not have contributors at epoch %d. Delete them in"
                                 + " epoch %d",
                         topTopicsToDelete, epochId, epochId);
