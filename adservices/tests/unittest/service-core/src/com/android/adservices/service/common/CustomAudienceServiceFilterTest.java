@@ -83,7 +83,7 @@ public class CustomAudienceServiceFilterTest {
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest(), TEST_FLAGS),
                     mAdServicesLoggerMock);
 
     @Mock private Throttler mMockThrottler;

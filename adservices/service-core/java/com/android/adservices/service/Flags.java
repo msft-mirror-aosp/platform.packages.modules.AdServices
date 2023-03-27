@@ -1483,7 +1483,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
-
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1530,6 +1530,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
