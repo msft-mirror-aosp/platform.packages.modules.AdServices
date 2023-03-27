@@ -34,7 +34,9 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
+import android.os.SystemProperties;
 import android.test.suitebuilder.annotation.SmallTest;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -83,6 +85,11 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final int DEFAULT_REQUEST_PER_SECOND = 5;
+    private static final String FLAG_REGISTER_SOURCE =
+            "measurement_register_source_request_permits_per_second";
+    private static final String FLAG_REGISTER_WEB_SOURCE =
+            "measurement_register_web_source_request_permits_per_second";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
@@ -90,7 +97,7 @@ public class MeasurementManagerCtsTest {
     private String mPreviousAppAllowList;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
@@ -113,10 +120,12 @@ public class MeasurementManagerCtsTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        // Cool-off rate limiter in case it was initialized by another test
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
@@ -125,8 +134,6 @@ public class MeasurementManagerCtsTest {
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
         overrideMeasurementKillSwitches(false);
-        // Cool-off rate limiter
-        TimeUnit.SECONDS.sleep(1);
     }
 
     @Test
@@ -144,18 +151,24 @@ public class MeasurementManagerCtsTest {
         final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         registerSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        assertTrue(registerSourceAndVerifyRateLimitReached(manager));
+        // If the test takes less than 1 second, this test is reliable due to the rate limiter
+        // limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerSourceAndVerifyRateLimitReached(manager);
+        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
 
         overrideDisableMeasurementEnrollmentCheck("0");
     }
@@ -198,18 +211,24 @@ public class MeasurementManagerCtsTest {
         final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         registerWebSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        assertTrue(registerWebSourceAndVerifyRateLimitReached(manager));
+        // If the test takes less than 1 second, this test is reliable due to the rate limiter
+        // limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerWebSourceAndVerifyRateLimitReached(manager);
+        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
 
         overrideDisableMeasurementEnrollmentCheck("0");
     }
@@ -462,5 +481,22 @@ public class MeasurementManagerCtsTest {
                 countDownLatch.countDown();
             }
         };
+    }
+
+    private int getRequestPerSecond(String flagName) {
+        try {
+            String permitString = SystemProperties.get("debug.adservices." + flagName);
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+
+            permitString = ShellUtils.runShellCommand("device_config get adservices " + flagName);
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+            return DEFAULT_REQUEST_PER_SECOND;
+        } catch (Exception e) {
+            return DEFAULT_REQUEST_PER_SECOND;
+        }
     }
 }
