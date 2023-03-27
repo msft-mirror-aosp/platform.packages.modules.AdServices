@@ -33,21 +33,27 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -64,6 +70,23 @@ public final class FetcherUtilTest {
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+
+    private MockitoSession mStaticMockSession;
+
+    @Before
+    public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+    }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
 
     @Test
     public void testIsSuccess() {
