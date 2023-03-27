@@ -30,8 +30,10 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -52,6 +54,13 @@ public class AttributionJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling AttributionJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobAttributionKillSwitch()) {
             LogUtil.e("AttributionJobService is disabled");
             return skipAndCancelBackgroundJob(params);
@@ -63,7 +72,8 @@ public class AttributionJobService extends JobService {
                     boolean success =
                             new AttributionJobHandler(
                                             DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()))
+                                                    getApplicationContext()),
+                                            new DebugReportApi(getApplicationContext()))
                                     .performPendingAttributions();
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue

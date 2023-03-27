@@ -40,7 +40,7 @@ public class CompatAdServicesTestUtils {
         disableMeasurementRollbackDelete();
     }
 
-    /** Reset system-server related flags to their default values after CB tests. */
+    /** Reset system-server related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
@@ -65,5 +65,17 @@ public class CompatAdServicesTestUtils {
     private static void enableMeasurementRollbackDelete() {
         ShellUtils.runShellCommand(
                 "device_config put adservices measurement_rollback_deletion_kill_switch false");
+    }
+
+    public static void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    public static String getAndOverridePpapiAppAllowList(String packageName) {
+        String mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + packageName);
+        return mPreviousAppAllowList;
     }
 }

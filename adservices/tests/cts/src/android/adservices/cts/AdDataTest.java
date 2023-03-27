@@ -23,8 +23,7 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
-import android.adservices.common.AdFilters;
-import android.adservices.common.AppInstallFiltersFixture;
+import android.adservices.common.AdFiltersFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
@@ -95,17 +94,41 @@ public final class AdDataTest {
 
     @Test
     public void testAdDataToString() {
-        AdData obj =
+        AdData.Builder builder =
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
-                        .setMetadata(AdDataFixture.VALID_METADATA)
-                        .build();
+                        .setMetadata(AdDataFixture.VALID_METADATA);
+        if (AdDataFixture.FCAP_ENABLED) {
+            builder.setAdCounterKeys(AdDataFixture.getAdCounterKeys());
+        }
+        if (AdDataFixture.FCAP_ENABLED && AdDataFixture.APP_INSTALL_ENABLED) {
+            builder.setAdFilters(AdFiltersFixture.getValidUnhiddenFilters());
+        }
+        AdData obj = builder.build();
+        String expected =
+                "AdData{mRenderUri="
+                        + VALID_RENDER_URI
+                        + ", mMetadata='"
+                        + AdDataFixture.VALID_METADATA
+                        + "'"
+                        + generateAdCounterKeyString()
+                        + generateAdFilterString()
+                        + "}";
+        assertEquals(expected, obj.toString());
+    }
 
-        assertEquals(
-                String.format(
-                        "AdData{mRenderUri=%s, mMetadata='%s'}",
-                        VALID_RENDER_URI, AdDataFixture.VALID_METADATA),
-                obj.toString());
+    private String generateAdCounterKeyString() {
+        if (AdDataFixture.FCAP_ENABLED) {
+            return ", mAdCounterKeys=" + AdDataFixture.getAdCounterKeys();
+        }
+        return "";
+    }
+
+    private String generateAdFilterString() {
+        if (AdDataFixture.FCAP_ENABLED || AdDataFixture.APP_INSTALL_ENABLED) {
+            return ", mAdFilters=" + AdFiltersFixture.getValidUnhiddenFilters();
+        }
+        return "";
     }
 
     @Test
@@ -120,12 +143,13 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testParcelWithFilters_success() {
         final AdData originalAdData =
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
         Parcel targetParcel = Parcel.obtain();
@@ -135,28 +159,31 @@ public final class AdDataTest {
 
         assertThat(adDataFromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(adDataFromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(adDataFromParcel.getAdFilters()).isEqualTo(getValidAppInstallOnlyFilters());
+        assertThat(adDataFromParcel.getAdFilters())
+                .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
     }
 
     @Ignore
+    @Test
     public void testEqualsIdenticalFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
         final AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
         assertThat(originalAdData.equals(identicalAdData)).isTrue();
     }
 
     @Ignore
+    @Test
     public void testEqualsDifferentFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
         final AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -167,10 +194,11 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsNullFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
         final AdData nullAdData = null;
 
@@ -178,24 +206,26 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeIdenticalFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
         final AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
         assertThat(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
     }
 
     @Ignore
+    @Test
     public void testHashCodeDifferentFilters_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
         final AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -206,6 +236,7 @@ public final class AdDataTest {
     }
 
     @Ignore
+    @Test
     public void testBuildValidAdDataWithUnsetFilters_success() {
         final AdData validAdData =
                 new AdData.Builder()
@@ -216,11 +247,5 @@ public final class AdDataTest {
         assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
         assertThat(validAdData.getAdFilters()).isNull();
-    }
-
-    private AdFilters getValidAppInstallOnlyFilters() {
-        return new AdFilters.Builder()
-                .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
-                .build();
     }
 }

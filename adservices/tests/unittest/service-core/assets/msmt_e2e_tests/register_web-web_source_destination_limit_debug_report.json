@@ -1,5 +1,5 @@
 {
-  "description": "Two destinations with max_destinations_per_source_site_reporting_origin set 1 and ar_debug enabled. Expected source-destination-limit debug report",
+  "description": "W2W: given two destinations with max_destinations_per_source_site_reporting_origin set 1 and ar_debug enabled. Can generate both event and aggregate reports. Expected source-destination-limit additional debug report",
   "api_config": {
     "max_destinations_per_source_site_reporting_origin": "1"
   },
@@ -103,14 +103,25 @@
     }],
     "aggregatable_results": [],
     "debug_report_results": [{
-      "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/debug/verbose",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
       "payload": {
         "type": "source-destination-limit",
         "body": {
           "source_event_id": "1",
           "attribution_destination": "https://2d2.test",
-          "source_site": "android-app://example.1s1.com",
+          "source_site": "android-app://example.1s1.test",
           "limit": "1",
+          "source_debug_key": "347982378"
+        }
+      }
+    },{
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
+      "payload": {
+        "type": "source-success",
+        "body": {
+          "source_event_id": "1",
+          "attribution_destination": "https://2d1.test",
+          "source_site": "android-app://example.1s1.test",
           "source_debug_key": "347982378"
         }
       }

@@ -195,8 +195,10 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
             "fledge_ad_selection_bidding_logic_js_version";
     // Whether to call trusted servers for off device ad selection.
-    static final String KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED =
+    static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED =
             "fledge_ad_selection_off_device_enabled";
+    static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
+            "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
     // selection.
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED =
@@ -347,9 +349,13 @@ public final class PhFlags implements Flags {
             "max_response_based_registration_size_bytes";
 
     // UI keys
+    static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED = "ui_feature_type_logging_enabled";
+
     static final String KEY_IS_EEA_DEVICE_FEATURE_ENABLED = "is_eea_device_feature_enabled";
 
     static final String KEY_IS_EEA_DEVICE = "is_eea_device";
+
+    static final String KEY_RECORD_MANUAL_INTERACTION_ENABLED = "record_manual_interaction_enabled";
 
     static final String KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED =
             "is_check_activity_feature_enabled";
@@ -1672,6 +1678,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isUiFeatureTypeLoggingEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
+                /* defaultValue */ UI_FEATURE_TYPE_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getAdServicesEnabled() {
         // if the global kill switch is enabled, feature should be disabled.
         if (getGlobalKillSwitch()) {
@@ -1703,8 +1717,16 @@ public final class PhFlags implements Flags {
     public boolean getAdSelectionOffDeviceEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
-                KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED,
+                KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED,
                 FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
+                FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED);
     }
 
     @Override
@@ -1994,6 +2016,15 @@ public final class PhFlags implements Flags {
     public boolean isEeaDevice() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(NAMESPACE_ADSERVICES, KEY_IS_EEA_DEVICE, IS_EEA_DEVICE);
+    }
+
+    @Override
+    public boolean getRecordManualInteractionEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                KEY_RECORD_MANUAL_INTERACTION_ENABLED,
+                RECORD_MANUAL_INTERACTION_ENABLED);
     }
 
     @Override
@@ -2502,7 +2533,7 @@ public final class PhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
@@ -2529,6 +2560,13 @@ public final class PhFlags implements Flags {
                         + getFledgeReportInteractionRequestPermitsPerSecond());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
+        writer.println(
+                "\t" + KEY_EU_NOTIF_FLOW_CHANGE_ENABLED + " = " + getEuNotifFlowChangeEnabled());
+        writer.println(
+                "\t"
+                        + KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
+                        + " = "
+                        + isUiFeatureTypeLoggingEnabled());
         writer.println(
                 "\t" + KEY_UI_DIALOGS_FEATURE_ENABLED + " = " + getUIDialogsFeatureEnabled());
         writer.println(
@@ -2661,5 +2699,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
+    }
+
+    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
+
+    @Override
+    public boolean getEuNotifFlowChangeEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
+                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
     }
 }

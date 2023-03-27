@@ -16,11 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
@@ -35,6 +38,8 @@ import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Clock mClock;
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final FrequencyCapDao mFrequencyCapDao;
@@ -66,8 +71,12 @@ public final class AdFiltererImpl implements AdFilterer {
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
         List<DBCustomAudience> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
+        sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
+        int totalAds = 0;
+        int remainingAds = 0;
         for (DBCustomAudience ca : cas) {
             List<DBAdData> filteredAds = new ArrayList<>();
+            totalAds += ca.getAds().size();
             for (DBAdData ad : ca.getAds()) {
                 if (doesAdPassFilters(
                         ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
@@ -76,32 +85,49 @@ public final class AdFiltererImpl implements AdFilterer {
             }
             if (!filteredAds.isEmpty()) {
                 toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
+                remainingAds += filteredAds.size();
             }
         }
+        sLogger.v(
+                "Filtering finished. %d CAs of the original %d remain. "
+                        + "%d Ads of the original %d remain.",
+                toReturn.size(), cas.size(), remainingAds, totalAds);
         return toReturn;
     }
 
     /**
-     * Takes a list of ads, and returns a new list with the ads that should not be in the auction
-     * removed.
+     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
+     * auction
      *
-     * <p>Note that DBAdData objects are shallow copied to the new list.
-     *
-     * @param ads The list of ads to filter.
-     * @param buyer The buyer adtech who is trying to display the ad.
-     * @return A list of ads identical to the ads input, but with any ads that should be filtered
-     *     removed.
+     * @param contextualAds An object containing contextual ads corresponding to a buyer
+     * @return A list of object identical to the input, but without any ads that should be filtered
      */
     @Override
-    public List<DBAdData> filterContextualAds(List<DBAdData> ads, AdTechIdentifier buyer) {
-        List<DBAdData> toReturn = new ArrayList<>();
+    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        List<AdWithBid> toReturn = new ArrayList<>();
         Instant currentTime = mClock.instant();
-        for (DBAdData ad : ads) {
-            if (doesAdPassFilters(ad, buyer, null, null, currentTime)) {
+        sLogger.v(
+                "Applying filters to %d contextual ads with current time %s.",
+                contextualAds.getAdsWithBid().size(), currentTime);
+        for (AdWithBid ad : contextualAds.getAdsWithBid()) {
+            DBAdData dbAdData =
+                    new DBAdData(
+                            ad.getAdData().getRenderUri(),
+                            ad.getAdData().getMetadata(),
+                            ad.getAdData().getAdCounterKeys(),
+                            ad.getAdData().getAdFilters());
+            if (doesAdPassFilters(dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
                 toReturn.add(ad);
             }
         }
-        return toReturn;
+        sLogger.v(
+                "Filtering finished. %d contextual ads of the original %d remain.",
+                toReturn.size(), contextualAds.getAdsWithBid().size());
+        return new ContextualAds.Builder()
+                .setAdsWithBid(toReturn)
+                .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
+                .setBuyer(contextualAds.getBuyer())
+                .build();
     }
 
     private boolean doesAdPassFilters(

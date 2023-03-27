@@ -18,6 +18,7 @@ package com.android.adservices.data.measurement;
 
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -62,6 +63,15 @@ public interface IMeasurementDao {
     Source getSource(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s destinations.
+     *
+     * @param sourceId ID of the requested Source
+     * @return a Pair of lists of app destination and web destination Uris
+     */
+    Pair<List<Uri>, List<Uri>> getSourceDestinations(@NonNull String sourceId)
+            throws DatastoreException;
+
+    /**
      * Queries and returns the {@link Trigger}.
      *
      * @param triggerId Id of the request Trigger
@@ -101,11 +111,6 @@ public interface IMeasurementDao {
     long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
             throws DatastoreException;
 
-    /**
-     * Gets the number of triggers a registrant has registered.
-     */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
     /** Gets the number of triggers associated to a destination. */
     long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
             throws DatastoreException;
@@ -127,17 +132,18 @@ public interface IMeasurementDao {
      * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
     Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
-            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
-            throws DatastoreException;
+            @EventSurfaceType int publisherType, String enrollmentId,
+            List<Uri> excludedDestinations, @EventSurfaceType int destinationType,
+            long windowStartTime, long windowEndTime) throws DatastoreException;
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
     Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
-            long windowStartTime, long windowEndTime) throws DatastoreException;
+            @EventSurfaceType int publisherType, List<Uri> destinations,
+            String excludedEnrollmentId, long windowStartTime, long windowEndTime)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
@@ -384,6 +390,15 @@ public interface IMeasurementDao {
      * @throws DatastoreException database transaction issues
      */
     void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
+
+    /**
+     * Delete records from Async Registration table whose registrant or app destination match with
+     * provided app URI.
+     *
+     * @param uri AsyncRegistrations registrant or OS Destination to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri) throws DatastoreException;
 
     /**
      * Delete records from source table that match provided trigger IDs.

@@ -671,6 +671,13 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
@@ -1669,6 +1676,22 @@ public interface Flags {
         return IS_EEA_DEVICE;
     }
 
+    /** Default is that the ui feature type logging is enabled. */
+    boolean UI_FEATURE_TYPE_LOGGING_ENABLED = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isUiFeatureTypeLoggingEnabled() {
+        return UI_FEATURE_TYPE_LOGGING_ENABLED;
+    }
+
+    /** Default is that the manual interaction feature is enabled. */
+    boolean RECORD_MANUAL_INTERACTION_ENABLED = true;
+
+    /** Returns if the manual interaction feature is enabled. */
+    default boolean getRecordManualInteractionEnabled() {
+        return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
     /**
      * The check activity feature is off by default. When enabled, we check whether all Rubidium
      * activities are enabled when we determine whether AdServices is enabled
@@ -1825,5 +1848,13 @@ public interface Flags {
      */
     default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled.. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+
+    /** Determines whether EU notification flow change is enabled.. */
+    default boolean getEuNotifFlowChangeEnabled() {
+        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 }

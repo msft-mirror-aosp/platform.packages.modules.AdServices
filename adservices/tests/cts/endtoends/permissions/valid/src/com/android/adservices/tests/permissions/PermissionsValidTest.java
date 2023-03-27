@@ -163,6 +163,36 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
+// TODO(b/274723533): Uncomment after un-hiding the API
+/*
+    @Test
+    public void testValidPermissions_reportInteraction() {
+        long adSelectionId = 1;
+        String interactionKey = "click";
+        String interactionData = "{\"key\":\"value\"}";
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ReportInteractionRequest request =
+                new ReportInteractionRequest(
+                        adSelectionId,
+                        interactionKey,
+                        interactionData,
+                        ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                | ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER);
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportInteraction(request).get());
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+*/
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()

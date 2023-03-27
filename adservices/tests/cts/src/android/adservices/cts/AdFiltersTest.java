@@ -18,17 +18,19 @@ package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertNull;
-
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
+import android.adservices.common.AdFiltersFixture;
 import android.adservices.common.AppInstallFilters;
 import android.adservices.common.AppInstallFiltersFixture;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.FrequencyCapFiltersFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
 import org.junit.Ignore;
+import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -46,46 +48,45 @@ public class AdFiltersTest {
                     .build();
 
     @Ignore
-    public void testBuildNoSetters_success() {
+    @Test
+    public void testBuildNoSettersAppInstallOnly_success() {
         final AdFilters originalFilters = new AdFilters.Builder().build();
 
-        assertThat(originalFilters.getFrequencyCapFilters()).isNull();
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
 
     @Ignore
+    @Test
     public void testBuildNullAdFiltersAppInstallOnly_success() {
         final AdFilters originalFilters =
                 new AdFilters.Builder()
-                        .setFrequencyCapFilters(null)
                         .setAppInstallFilters(null)
                         .build();
 
-        assertThat(originalFilters.getFrequencyCapFilters()).isNull();
         assertThat(originalFilters.getAppInstallFilters()).isNull();
     }
 
     @Ignore
+    @Test
     public void testBuildValidAdFiltersAppInstallOnly_success() {
-        assertNull(APP_INSTALL_ONLY_FILTER.getFrequencyCapFilters());
         assertThat(APP_INSTALL_ONLY_FILTER.getAppInstallFilters())
                 .isEqualTo(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
     }
 
     @Ignore
+    @Test
     public void testParcelAdFiltersAppInstallOnly_success() {
         Parcel targetParcel = Parcel.obtain();
         APP_INSTALL_ONLY_FILTER.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
         final AdFilters filtersFromParcel = AdFilters.CREATOR.createFromParcel(targetParcel);
 
-        assertThat(filtersFromParcel.getFrequencyCapFilters())
-                .isEqualTo(APP_INSTALL_ONLY_FILTER.getFrequencyCapFilters());
         assertThat(filtersFromParcel.getAppInstallFilters())
                 .isEqualTo(APP_INSTALL_ONLY_FILTER.getAppInstallFilters());
     }
 
     @Ignore
+    @Test
     public void testEqualsIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
                 new AdFilters.Builder()
@@ -96,6 +97,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
                 new AdFilters.Builder()
@@ -111,6 +113,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeIdenticalAppInstallOnly_success() {
         final AdFilters identicalFilters =
                 new AdFilters.Builder()
@@ -121,6 +124,7 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeDifferentAppInstallOnly_success() {
         final AdFilters differentFilters =
                 new AdFilters.Builder()
@@ -136,8 +140,31 @@ public class AdFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testToString() {
-        final String expectedString = String.format("AdFilters{}");
-        assertThat(APP_INSTALL_ONLY_FILTER.toString()).isEqualTo(expectedString);
+        final AdFilters originalFilters = AdFiltersFixture.getValidUnhiddenFilters();
+
+        final String expectedString =
+                String.format("AdFilters{" + getFrequencyCapString() + getAppInstallString() + "}");
+        assertThat(originalFilters.toString()).isEqualTo(expectedString);
+    }
+
+    private String getFrequencyCapString() {
+        if (AdDataFixture.FCAP_ENABLED) {
+            return "mFrequencyCapFilters=" + FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS;
+        } else {
+            return "";
+        }
+    }
+
+    private String getAppInstallString() {
+        String toReturn = "";
+        if (AdDataFixture.APP_INSTALL_ENABLED) {
+            if (AdDataFixture.FCAP_ENABLED) {
+                toReturn += ", ";
+            }
+            toReturn += "mAppInstallFilters=" + AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS;
+        }
+        return toReturn;
     }
 }

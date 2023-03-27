@@ -31,6 +31,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -298,6 +299,101 @@ public class ConsentManagerTest {
         assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
 
         assertThat(Files.exists(packageDir)).isFalse();
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(-1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(-1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(0);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+    }
+
+    @Test
+    public void testSetCurrentPrivacySandboxFeature() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
     }
 
     @Test

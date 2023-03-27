@@ -104,6 +104,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Override needful PH Flags.
         overridePrerequisiteFlags();
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
@@ -117,6 +119,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Reset PH Flags to default values.
         resetFlagsToDefault();
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test
@@ -204,6 +208,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);

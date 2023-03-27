@@ -42,6 +42,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -53,7 +54,6 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.data.measurement.SqliteObjectMapperAccessor;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -178,6 +178,11 @@ public class AsyncRegistrationQueueRunnerTest {
         @Override
         public IMeasurementDao getMeasurementDao() {
             return mMeasurementDao;
+        }
+
+        @Override
+        protected int getDataStoreVersion() {
+            return 0;
         }
     }
 
@@ -306,11 +311,17 @@ public class AsyncRegistrationQueueRunnerTest {
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
         Assert.assertEquals(1, asyncReg1.getRedirectCount());
+        assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg1.getRegistrationId());
 
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
         Assert.assertEquals(1, asyncReg2.getRedirectCount());
+        assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg2.getRegistrationId());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -467,11 +478,17 @@ public class AsyncRegistrationQueueRunnerTest {
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
         Assert.assertEquals(1, asyncReg1.getRedirectCount());
+        Assert.assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg1.getRegistrationId());
 
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
         Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
         Assert.assertEquals(1, asyncReg2.getRedirectCount());
+        Assert.assertEquals(
+                AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
+                asyncReg2.getRegistrationId());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -1883,6 +1900,9 @@ public class AsyncRegistrationQueueRunnerTest {
         // Assertion
         verify(datastoreManager, times(3)).runInTransaction(consumerArgCaptor.capture());
         consumerArgCaptor.getValue().accept(mMeasurementDao);
+
+        String sourceId1;
+        String sourceId2;
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
                         .getReadableDatabase()
@@ -1895,16 +1915,38 @@ public class AsyncRegistrationQueueRunnerTest {
                                 null,
                                 null)) {
             Assert.assertTrue(cursor.moveToNext());
-            Source source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
-            assertEquals(new UnsignedLong(987654321L), source.getEventId());
-            assertEquals(DEFAULT_WEB_DESTINATION, source.getWebDestinations().get(0));
-            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestinations().get(0));
+            sourceId1 = cursor.getString(cursor.getColumnIndex(
+                    MeasurementTables.SourceContract.ID));
             Assert.assertTrue(cursor.moveToNext());
-            source = SqliteObjectMapperAccessor.constructSourceFromCursor(cursor);
-            assertEquals(new UnsignedLong(123456789L), source.getEventId());
-            assertEquals(ALT_WEB_DESTINATION, source.getWebDestinations().get(0));
-            assertEquals(DEFAULT_OS_DESTINATION, source.getAppDestinations().get(0));
+            sourceId2 = cursor.getString(cursor.getColumnIndex(
+                    MeasurementTables.SourceContract.ID));
         }
+
+        // Assert insertion to source and source destination table
+
+        Source source1 = datastoreManager.runInTransactionWithResult(
+                measurementDao -> measurementDao.getSource(sourceId1)).get();
+
+        assertEquals(new UnsignedLong(987654321L), source1.getEventId());
+
+        Pair<List<Uri>, List<Uri>> destinations1 = datastoreManager.runInTransactionWithResult(
+                measurementDao -> measurementDao.getSourceDestinations(source1.getId())).get();
+        assertEquals(1, destinations1.first.size());
+        assertEquals(DEFAULT_OS_DESTINATION, destinations1.first.get(0));
+        assertEquals(1, destinations1.second.size());
+        assertEquals(DEFAULT_WEB_DESTINATION, destinations1.second.get(0));
+
+        Source source2 = datastoreManager.runInTransactionWithResult(
+                measurementDao -> measurementDao.getSource(sourceId2)).get();
+
+        assertEquals(new UnsignedLong(123456789L), source2.getEventId());
+
+        Pair<List<Uri>, List<Uri>> destinations2 = datastoreManager.runInTransactionWithResult(
+                measurementDao -> measurementDao.getSourceDestinations(source2.getId())).get();
+        assertEquals(1, destinations2.first.size());
+        assertEquals(DEFAULT_OS_DESTINATION, destinations2.first.get(0));
+        assertEquals(1, destinations2.second.size());
+        assertEquals(ALT_WEB_DESTINATION, destinations2.second.get(0));
     }
 
     @Test
@@ -2037,6 +2079,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 
@@ -2063,6 +2107,8 @@ public class AsyncRegistrationQueueRunnerTest {
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 

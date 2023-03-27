@@ -83,6 +83,8 @@ public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
+    private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
+    private static boolean sNeedWifiConnectionWait = true;
 
     // Two files are from cts_test_1 folder.
     // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
@@ -136,7 +138,15 @@ public class MobileDataDownloadTest {
     @Mock ConsentManager mConsentManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
+        // the whole test suite run.
+        // Checking wifi connection using WifiManager isn't working on low-performance devices.
+        if (sNeedWifiConnectionWait) {
+            Thread.sleep(WAIT_FOR_WIFI_CONNECTION_MS);
+            sNeedWifiConnectionWait = false;
+        }
+
         MockitoAnnotations.initMocks(this);
 
         // Start a mockitoSession to mock static method.

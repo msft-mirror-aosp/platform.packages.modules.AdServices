@@ -28,12 +28,14 @@ import android.os.Parcel;
 import androidx.test.filters.SmallTest;
 
 import org.junit.Ignore;
+import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
 @SmallTest
 public class AppInstallFiltersTest {
 
     @Ignore
+    @Test
     public void testBuildValidAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -43,6 +45,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testParcelAppInstallFilters_success() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -58,6 +61,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsIdentical_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -68,6 +72,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsDifferent_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -77,6 +82,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testEqualsNull_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -86,6 +92,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeIdentical_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -96,6 +103,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testHashCodeDifferent_success() {
         final AppInstallFilters originalFilters =
                 AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
@@ -105,6 +113,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testToString() {
         final AppInstallFilters originalFilters =
                 new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
@@ -115,6 +124,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testBuildNullPackageNames_throws() {
         assertThrows(
                 NullPointerException.class,
@@ -122,6 +132,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testBuildNoSetters_success() {
         final AppInstallFilters originalFilters = new AppInstallFilters.Builder().build();
 
@@ -129,6 +140,7 @@ public class AppInstallFiltersTest {
     }
 
     @Ignore
+    @Test
     public void testCreatorNewArray_success() {
         AppInstallFilters[] filtersArray = AppInstallFilters.CREATOR.newArray(2);
 
