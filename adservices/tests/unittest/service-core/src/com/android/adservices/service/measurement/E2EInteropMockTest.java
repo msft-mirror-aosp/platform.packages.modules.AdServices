@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
-import android.util.Log;
 
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -27,7 +26,6 @@ import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.util.Enrollment;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -46,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop
- * Friday February 17, 2023
+ * Saturday March 24, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
