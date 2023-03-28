@@ -17,13 +17,12 @@
 package android.adservices.clients.adselection;
 
 import android.adservices.adselection.AdSelectionManager;
-import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
-import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.TestAdSelectionManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -43,7 +42,11 @@ public class TestAdSelectionClient {
     private TestAdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mTestAdSelectionManager = AdSelectionManager.get(context).getTestAdSelectionManager();
+        mTestAdSelectionManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(AdSelectionManager.class)
+                                .getTestAdSelectionManager()
+                        : AdSelectionManager.get(context).getTestAdSelectionManager();
     }
 
     /**
@@ -123,100 +126,6 @@ public class TestAdSelectionClient {
         return CallbackToFutureAdapter.getFuture(
                 completer -> {
                     mTestAdSelectionManager.resetAllAdSelectionConfigRemoteOverrides(
-                            mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
-
-                                @Override
-                                public void onResult(Object ignoredResult) {
-                                    completer.set(null);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "resetAllAdSelectionConfigRemoteOverrides";
-                });
-    }
-
-    /**
-     * Invokes the {@code overrideAdSelectionFromOutcomesConfigRemoteInfo} method of {@link
-     * AdSelectionManager}, and returns a Void future
-     *
-     * <p>This method is only available when Developer mode is enabled and the app is debuggable.
-     *
-     * @hide
-     */
-    @NonNull
-    public ListenableFuture<Void> overrideAdSelectionFromOutcomesConfigRemoteInfo(
-            @NonNull AddAdSelectionFromOutcomesOverrideRequest request) {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mTestAdSelectionManager.overrideAdSelectionFromOutcomesConfigRemoteInfo(
-                            request,
-                            mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
-
-                                @Override
-                                public void onResult(Object ignoredResult) {
-                                    completer.set(null);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "overrideAdSelectionConfigRemoteInfo";
-                });
-    }
-
-    /**
-     * Invokes the {@code removeAdSelectionConfigRemoteInfoOverride} method of {@link
-     * AdSelectionManager}, and returns a Void future
-     *
-     * <p>This method is only available when Developer mode is enabled and the app is debuggable.
-     *
-     * @hide
-     */
-    @NonNull
-    public ListenableFuture<Void> removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
-            @NonNull RemoveAdSelectionFromOutcomesOverrideRequest request) {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mTestAdSelectionManager.removeAdSelectionFromOutcomesConfigRemoteInfoOverride(
-                            request,
-                            mExecutor,
-                            new OutcomeReceiver<Object, Exception>() {
-
-                                @Override
-                                public void onResult(Object ignoredResult) {
-                                    completer.set(null);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "removeAdSelectionConfigRemoteInfoOverride";
-                });
-    }
-
-    /**
-     * Invokes the {@code removeAdSelectionConfigRemoteInfoOverride} method of {@link
-     * AdSelectionManager}, and returns a Void future
-     *
-     * <p>This method is only available when Developer mode is enabled and the app is debuggable.
-     *
-     * @hide
-     */
-    @NonNull
-    public ListenableFuture<Void> resetAllAdSelectionFromOutcomesConfigRemoteOverrides() {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mTestAdSelectionManager.resetAllAdSelectionFromOutcomesConfigRemoteOverrides(
                             mExecutor,
                             new OutcomeReceiver<Object, Exception>() {
 

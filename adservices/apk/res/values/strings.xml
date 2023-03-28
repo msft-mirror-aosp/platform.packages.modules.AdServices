@@ -144,7 +144,7 @@
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_body_text">The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_left_control_button_text">Manage privacy settings</string>
+    <string name="notificationUI_left_control_button_text">@string/notificationUI_confirmation_left_control_button_text</string>
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text">Got it</string>
 
@@ -167,14 +167,14 @@
     <!-- ROW GA notification strings *****************************-->
 
     <!-- ROW small notification title in the notification center *****************************-->
-    <!-- ROW small notification title in the notification center *****************************-->
     <string name="notificationUI_notification_ga_title">New ad privacy features</string>
     <!-- ROW small notification content in the notification center *****************************-->
     <string name="notificationUI_notification_ga_content">Ad topics and new controls give you more choice over the ads you see</string>
 
     <!-- ROW Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
     <!-- Text for the title of the ROW notification landing page about ad topics. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_header_ga_title" translatable="false">@string/notificationUI_header_ga_title_eu</string>
+    <string name="notificationUI_header_ga_title">New ads privacy features now available</string>
+    <!-- Text for the subtitle of the ROW notification landing page about ad topics. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container1_ga_introduction" translatable="false">@string/notificationUI_container1_body_ga_text_eu</string>
     <!-- Text for explanation of apps and topics ad of the ROW notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_ga_introduction">Android notes topics of interest based on apps you’ve used recently. Also, apps you use can determine what you like. Later, apps can ask for this information to show you personalized ads. You can choose which topics and apps are used to show you ads.</string>
@@ -199,7 +199,7 @@
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_row_body6">Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data, such as the time of day an ad was shown to you.</string>
     <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_row_body7">@string/notificationUI_learn_more_from_privacy_policy</string>
+    <string name="notificationUI_how_it_works_row_body7" translatable="false">@string/notificationUI_learn_more_from_privacy_policy</string>
 
     <!-- EU GA notification strings *****************************-->
 
@@ -213,7 +213,7 @@
 
     <!-- EU Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
     <!-- Text for the title of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_header_ga_title_eu">Enhanced ad privacy on Android</string>
+    <string name="notificationUI_header_ga_title_eu">Try new ads privacy features</string>
     <!-- Text for the subtitle of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container1_body_ga_text_eu">Android is launching new privacy features that give you more choice over the ads you see.</string>
     <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
@@ -227,7 +227,7 @@
     <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_learn_more_from_privacy_policy">Learn more about how Android protects your data in our Privacy Policy.</string>
     <!-- Text for the button to join ad topics in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_right_control_button_ga_text_eu">Yes, I\'m in</string>
+    <string name="notificationUI_right_control_button_ga_text_eu">Try it out</string>
     <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_topics_expanded_text3">&#8226;&#160;&#160;What data is used</string>
     <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
@@ -245,9 +245,9 @@
 
     <!--  EU GA Notification Activity Page 2 UI strings ******************************************************-->
     <!-- Text for title of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_fledge_measurement_title">Other features that make ads more private</string>
+    <string name="notificationUI_fledge_measurement_title">Other ads privacy features now available</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_fledge_measurement_introduction_text1">Android is launching new ways to limit what apps can learn about you when they show you personalized ads.</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1">Android also offers new ways to limit what apps can learn about you when they show you personalized ads.</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_fledge_measurement_introduction_text2">&#8226;&#160;&#160;App-suggested ads help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions, in privacy settings.</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
@@ -275,6 +275,122 @@
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9">Apps you use can ask Android for information that helps them measure the performance of their ads. Android protects your privacy by limiting the information apps can share with one another.</string>
 
+    <!--*****************************************************************************************-->
+    <!-- GA V2 Notification Flow Strings ********************************************************-->
+    <!--*****************************************************************************************-->
+
+    <!-- GA V2 EU Notification Card *************************************************************-->
+    <!-- Text for the title of the small EU notification in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_ga_title_eu_v2">New ads privacy features now available</string>
+    <!-- Text for the content of the small EU notification in notification center. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_notification_ga_content_eu_v2">Get more choice over the ads you see while protecting your identity</string>
+
+    <!--  EU GA Notification Activity Page 1 (Fledge + measurement) UI strings ******************-->
+    <!-- Text for title of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_title_v2">New ads privacy features now available</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" translatable="false">@string/notificationUI_fledge_measurement_introduction_text1</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2">&#8226;&#160;&#160;With app-suggested ads, new privacy features help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions in privacy settings.</string>
+    <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2">&#8226;&#160;&#160;With ad measurement, limited types of data are shared between apps to understand the performance of their ads, such as the time of day an ad was shown to you.</string>
+    <!-- Text for the button in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_fledge_measurement_control_ga_text_eu_v2" translatable="false">@string/notificationUI_fledge_measurement_control_ga_text_eu</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text0_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text0</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text1</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" translatable="false">Your activity in an app on this device can be used to suggest ads.</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text3</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text4_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text4</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text5_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text5</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text6</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text7</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text8_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text8</string>
+    <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text9</string>
+
+    <!-- EU GA Notification Activity Page 2 (Topics) UI strings *********************************-->
+    <!-- Text for the title of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_header_ga_title_eu_v2">Turn on another ads privacy feature</string>
+    <!-- Text for the subtitle of the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container1_body_ga_text_eu_v2">Android also offers a new privacy feature that gives you more choice over the ads you see.</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container2_body_ga_text_eu_v2">Ad topics help apps show you relevant ads while protecting your identity and information about your app usage. Android can note topics of interest based on apps you’ve used recently. Later, an app you use can ask Android for relevant topics to show you more relevant ads.</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container3_body_ga_text_eu_v2">You can see ad topics in your privacy settings and block the ones you don’t want shared with apps. Android also auto-deletes ad topics regularly.</string>
+    <!-- Text for explanation changing the consent in privacy settings. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_change_any_time_in_privacy_settings_eu_v2" translatable="false">@string/notificationUI_change_any_time_in_privacy_settings_eu</string>
+    <!-- Text for expander button in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container1_control_ga_text_eu_v2" translatable="false">@string/notificationUI_container1_control_ga_text_eu</string>
+    <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_learn_more_from_privacy_policy_v2" translatable="false">@string/notificationUI_learn_more_from_privacy_policy</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text3_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text3</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text4_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text4</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text5_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text5</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text6_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text6</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text7_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text7</string>
+    <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_topics_expanded_text8_v2" translatable="false">@string/notificationUI_how_it_works_topics_expanded_text8</string>
+    <!-- Text for explanation about making changes in privacy settings in the EU/Row notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_you_can_change_in_privacy_settings_v2" translatable="false">@string/notificationUI_you_can_change_in_privacy_settings</string>
+    <!-- Text for button to decline joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_left_control_button_text_eu_v2" translatable="false">@string/notificationUI_left_control_button_text_eu</string>
+    <!-- Text for button to accept joining the Privacy Sandbox. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_right_control_button_ga_text_eu_v2">Turn it on</string>
+
+    <!-- ROW small notification title in the notification center *****************************-->
+    <string name="notificationUI_notification_ga_title_v2">New ads privacy features now available</string>
+    <!-- ROW small notification content in the notification center *****************************-->
+    <string name="notificationUI_notification_ga_content_v2">Now, there’s more choice over the ads you see while protecting your identity</string>
+
+    <!-- ROW Detailed Ga Notification Activity Landing Page UI strings ******************************************************-->
+    <!-- Text for the title of the ROW notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_header_ga_title_v2">New ads privacy features now available</string>
+    <!-- Text for the subtitle of the ROW notification landing page about ad topics. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container1_ga_introduction_v2">Android now offers new privacy features that give you more choice over the ads you see.</string>
+    <!-- Text for explanation of apps and topics ad of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container2_ga_introduction_v2" translatable="false">@string/notificationUI_container2_ga_introduction</string>
+    <!-- Text for explanation of ad measurement of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_container3_ga_introduction_v2" translatable="false">@string/notificationUI_container3_ga_introduction</string>
+    <!-- Text for button of expanding more information about ads the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_ga_container1_control_text_v2" translatable="false">@string/notificationUI_ga_container1_control_text</string>
+    <!-- Text for subtitle in the expander info about ads the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_subtitle1_v2" translatable="false">@string/notificationUI_how_it_works_row_subtitle1</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body1_v2" translatable="false">@string/notificationUI_how_it_works_row_body1</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body2_v2" translatable="false">@string/notificationUI_how_it_works_row_body2</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body3_v2" translatable="false">@string/notificationUI_how_it_works_row_body3</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body4_v2" translatable="false">@string/notificationUI_how_it_works_row_body4</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body5_v2" translatable="false">@string/notificationUI_how_it_works_row_body5</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_subtitle2_v2" translatable="false">@string/notificationUI_how_it_works_subtitle2</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body6_v2" translatable="false">@string/notificationUI_how_it_works_row_body6</string>
+    <!-- Text for information explaining ads in the expander of the ROW notification landing page. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_how_it_works_row_body7_v2" translatable="false">@string/notificationUI_how_it_works_row_body7</string>
+    <!-- Text for button that scrolls the page down to view more text. [CHAR LIMIT=NONE] -->
+    <string name="notificationUI_next_button_text">Next</string>
+
+    <!--*****************************************************************************************-->
+    <!-- Settings *******************************************************************************-->
+    <!--*****************************************************************************************-->
 
     <!-- Settings App UI main view strings ******************************************************-->
     <!-- Title text of the main view. [CHAR LIMIT=NONE] -->
@@ -451,7 +567,7 @@
     <!-- Text for the button to open the apps view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_apps_ga_title">App-suggested ads</string>
     <!-- Text for the button to open the measurement view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_measurement_ga_title">@string/settingsUI_main_view_info_text8</string>
+    <string name="settingsUI_measurement_ga_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
     <!-- Text for the explanation of ad topics. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_main_view_ad_topics_info">Android notes topics of interest based on the apps you’ve used recently and how frequently you use them.</string>
     <!-- Text for the explanation of app-suggested ads. [CHAR LIMIT=NONE] -->

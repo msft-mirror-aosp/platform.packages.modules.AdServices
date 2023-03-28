@@ -22,16 +22,15 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,7 +51,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -72,9 +70,8 @@ public class TopicsEpochComputationOnDeviceClassifier {
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
-    // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
-    private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
-    private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
+    private static final String ADSERVICES_PACKAGE_NAME =
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     private static final DateTimeFormatter LOG_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
@@ -195,6 +192,12 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Remove classifier threshold by setting it to 0.
         overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     private void overridingAfterTest() {
@@ -209,6 +212,10 @@ public class TopicsEpochComputationOnDeviceClassifier {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     // Override the flag to disable Topics enrollment check.
@@ -358,38 +365,5 @@ public class TopicsEpochComputationOnDeviceClassifier {
     // Override topics_kill_switch to ignore the effect of actual PH values.
     private void disableTopicsKillSwitch() {
         ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
-    }
-
-    // Used to get the package name. Copied over from com.android.adservices.AndroidServiceBinder
-    private static String getAdServicesPackageName() {
-        final Intent intent = new Intent(TOPICS_SERVICE_NAME);
-        final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
-                        .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
-
-        if (resolveInfos == null || resolveInfos.isEmpty()) {
-            Log.e(
-                    TAG,
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + TOPICS_SERVICE_NAME);
-            return null;
-        }
-
-        if (resolveInfos.size() > 1) {
-            Log.e(
-                    TAG,
-                    String.format(
-                            "Found multiple services (%1$s) for the same intent action (%2$s)",
-                            TOPICS_SERVICE_NAME, resolveInfos));
-            return null;
-        }
-
-        final ServiceInfo serviceInfo = resolveInfos.get(0).serviceInfo;
-        if (serviceInfo == null) {
-            Log.e(TAG, "Failed to find serviceInfo for adServices service");
-            return null;
-        }
-
-        return serviceInfo.packageName;
     }
 }

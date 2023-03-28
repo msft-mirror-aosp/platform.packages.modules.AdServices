@@ -16,18 +16,18 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
-
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Objects;
 
 /** POJO for AsyncRegistration. */
 public class AsyncRegistration {
@@ -89,6 +89,54 @@ public class AsyncRegistration {
         mDebugKeyAllowed = builder.mDebugKeyAllowed;
         mAdIdPermission = builder.mAdIdPermission;
         mRegistrationId = builder.mRegistrationId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AsyncRegistration)) return false;
+        AsyncRegistration that = (AsyncRegistration) o;
+        return mRedirectType == that.mRedirectType
+                && mRedirectCount == that.mRedirectCount
+                && mRequestTime == that.mRequestTime
+                && mRetryCount == that.mRetryCount
+                && mLastProcessingTime == that.mLastProcessingTime
+                && mDebugKeyAllowed == that.mDebugKeyAllowed
+                && mAdIdPermission == that.mAdIdPermission
+                && Objects.equals(mId, that.mId)
+                && Objects.equals(mEnrollmentId, that.mEnrollmentId)
+                && Objects.equals(mOsDestination, that.mOsDestination)
+                && Objects.equals(mWebDestination, that.mWebDestination)
+                && Objects.equals(mRegistrationUri, that.mRegistrationUri)
+                && Objects.equals(mVerifiedDestination, that.mVerifiedDestination)
+                && Objects.equals(mTopOrigin, that.mTopOrigin)
+                && Objects.equals(mRegistrant, that.mRegistrant)
+                && mSourceType == that.mSourceType
+                && mType == that.mType
+                && Objects.equals(mRegistrationId, that.mRegistrationId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                mId,
+                mEnrollmentId,
+                mOsDestination,
+                mWebDestination,
+                mRegistrationUri,
+                mVerifiedDestination,
+                mTopOrigin,
+                mRedirectType,
+                mRedirectCount,
+                mRegistrant,
+                mSourceType,
+                mRequestTime,
+                mRetryCount,
+                mLastProcessingTime,
+                mType,
+                mDebugKeyAllowed,
+                mAdIdPermission,
+                mRegistrationId);
     }
 
     /** Unique identifier for the {@link AsyncRegistration}. */
@@ -202,7 +250,9 @@ public class AsyncRegistration {
         if (mRedirectType == RedirectType.NONE) {
             return false;
         }
-        return mRedirectType == RedirectType.ANY || mRedirectCount < MAX_REDIRECTS_PER_REGISTRATION;
+        return mRedirectType == RedirectType.ANY
+                || mRedirectCount
+                        < FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
     }
 
     /** Gets the next expected redirect count for this registration. */

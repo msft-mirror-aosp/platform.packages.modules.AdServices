@@ -80,31 +80,69 @@ public class HistogramEventTest {
     }
 
     @Test
-    public void testBuildUnsetCustomAudienceOwner_throws() {
+    public void testBuildUnsetCustomAudienceOwnerWithWinType_throws() {
         assertThrows(
-                IllegalStateException.class,
+                NullPointerException.class,
                 () ->
                         HistogramEvent.builder()
                                 .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                                 .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                                 .build());
     }
 
     @Test
-    public void testBuildUnsetCustomAudienceName_throws() {
+    public void testBuildUnsetCustomAudienceOwnerWithNonWinType_success() {
+        HistogramEvent event =
+                HistogramEvent.builder()
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+
+        assertThat(event.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(event.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(event.getCustomAudienceOwner()).isNull();
+        assertThat(event.getCustomAudienceName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(event.getAdEventType()).isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_VIEW);
+        assertThat(event.getTimestamp()).isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
+    }
+
+    @Test
+    public void testBuildUnsetCustomAudienceNameWithWinType_throws() {
         assertThrows(
-                IllegalStateException.class,
+                NullPointerException.class,
                 () ->
                         HistogramEvent.builder()
                                 .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                                 .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                                 .build());
+    }
+
+    @Test
+    public void testBuildUnsetCustomAudienceNameWithNonWinType_success() {
+        HistogramEvent event =
+                HistogramEvent.builder()
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+
+        assertThat(event.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(event.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(event.getCustomAudienceOwner()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(event.getCustomAudienceName()).isNull();
+        assertThat(event.getAdEventType()).isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        assertThat(event.getTimestamp()).isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 
     @Test
@@ -147,17 +185,43 @@ public class HistogramEventTest {
     }
 
     @Test
-    public void testSetNullCustomAudienceOwner_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> HistogramEvent.builder().setCustomAudienceOwner(null));
+    public void testSetNullCustomAudienceOwnerNonWinType_success() {
+        HistogramEvent event =
+                HistogramEvent.builder()
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(null)
+                        .setCustomAudienceName(CustomAudienceFixture.VALID_NAME)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+
+        assertThat(event.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(event.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(event.getCustomAudienceOwner()).isNull();
+        assertThat(event.getCustomAudienceName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        assertThat(event.getAdEventType()).isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        assertThat(event.getTimestamp()).isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 
     @Test
-    public void testSetNullCustomAudienceName_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> HistogramEvent.builder().setCustomAudienceName(null));
+    public void testSetNullCustomAudienceNameNonWinType_success() {
+        HistogramEvent event =
+                HistogramEvent.builder()
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                        .setBuyer(CommonFixture.VALID_BUYER_1)
+                        .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCustomAudienceName(null)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                        .build();
+
+        assertThat(event.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(event.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(event.getCustomAudienceOwner()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(event.getCustomAudienceName()).isNull();
+        assertThat(event.getAdEventType()).isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        assertThat(event.getTimestamp()).isEqualTo(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
     }
 
     @Test

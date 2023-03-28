@@ -101,11 +101,15 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
+        boolean enforceForegroundStatus = getEnforceForeground();
+        setEnforceForeground(false);
 
         callTopicsAPI(TARGET_PACKAGE, device);
 
         // Fetch a list of happened log events and their data
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
+
+        setEnforceForeground(enforceForegroundStatus);
 
         // Topics API Name is different in aosp and non-aosp devices. Attempt again with the other
         // package Name if it fails at the first time;
@@ -178,5 +182,21 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     // Disable topics_kill_switch to ignore the effect of actual PH values.
     private void disableTopicsAPIKillSwitch() throws DeviceNotAvailableException {
         getDevice().executeShellCommand("device_config put adservices topics_kill_switch false");
+    }
+
+    // Set enforce foreground execution.
+    private void setEnforceForeground(boolean enableForegound) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices topics_enforce_foreground_status "
+                                + enableForegound);
+    }
+
+    private boolean getEnforceForeground() throws DeviceNotAvailableException {
+        String enforceForegroundStatus =
+                getDevice()
+                        .executeShellCommand(
+                                "device_config get adservices topics_enforce_foreground_status");
+        return enforceForegroundStatus.equals("true\n");
     }
 }

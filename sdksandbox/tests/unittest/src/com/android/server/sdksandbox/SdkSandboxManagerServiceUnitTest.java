@@ -27,6 +27,7 @@ import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_AP
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_SANDBOX_TO_APP;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_API_CALLED__STAGE__SYSTEM_SERVER_TO_SANDBOX;
 
+import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.IComputeSdkStorageCallback;
 import com.android.server.SystemService.TargetUser;
 
@@ -1844,6 +1845,16 @@ public class SdkSandboxManagerServiceUnitTest {
         callback = new SdkSandboxManagerService.SdkSandboxDisabledCallback();
         callback.onResult(true);
         assertThat(callback.getIsDisabled()).isTrue();
+    }
+
+    @Test
+    public void testVisibilityPatchChecked() {
+        mService.clearSdkSandboxState();
+        // We should only check for the visibility patch on T devices.
+        boolean visibilityPatchCheckExpected = !SdkLevel.isAtLeastU();
+        mService.isSdkSandboxDisabled(mSdkSandboxService);
+        assertThat(mSdkSandboxService.wasVisibilityPatchChecked())
+                .isEqualTo(visibilityPatchCheckExpected);
     }
 
     @Test

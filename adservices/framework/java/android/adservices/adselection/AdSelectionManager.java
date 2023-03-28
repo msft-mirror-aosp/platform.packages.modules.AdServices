@@ -16,7 +16,6 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_CUSTOM_AUDIENCE;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -35,8 +34,10 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.os.TransactionTooLargeException;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
@@ -44,10 +45,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeoutException;
 
 /**
- * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well
- * as report impressions.
+ * AdSelection Manager provides APIs for app and ad-SDKs to run ad selection processes as well as
+ * report impressions.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -189,11 +193,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -238,6 +242,8 @@ public class AdSelectionManager {
      *
      * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
      * or permission is not requested.
+     *
+     * @hide
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void selectAds(
@@ -287,11 +293,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -334,11 +340,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -405,11 +411,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -441,7 +447,7 @@ public class AdSelectionManager {
      *
      * @hide
      */
-    @RequiresPermission(ACCESS_ADSERVICES_APP_INSTALL)
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersRequest request,
             @NonNull Executor executor,
@@ -473,11 +479,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -547,11 +553,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service");
+            sLogger.e(e, "Unable to find the AdSelection service");
             outcomeReceiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }

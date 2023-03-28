@@ -16,12 +16,15 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -35,6 +38,8 @@ import com.google.common.annotations.VisibleForTesting;
  * responsible for serving Measurement to the Measurement view, and interacting with the {@link
  * ConsentManager} that persists and changes the Measurement data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementViewModel extends AndroidViewModel {
 
     private final MutableLiveData<MeasurementViewModelUiEvent> mEventTrigger =
@@ -85,6 +90,11 @@ public class MeasurementViewModel extends AndroidViewModel {
             mConsentManager.disable(getApplication(), AdServicesApiType.MEASUREMENTS);
         }
         mMeasurementConsent.postValue(getMeasurementConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
 
     /** Reset all information related to Measurement */

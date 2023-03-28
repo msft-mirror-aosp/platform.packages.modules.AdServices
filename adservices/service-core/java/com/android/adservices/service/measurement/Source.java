@@ -29,6 +29,7 @@ import com.android.adservices.service.measurement.util.Validation;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultiset;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,6 +98,7 @@ public class Source {
     @Nullable private String mSharedAggregationKeys;
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
+    @Nullable private String mDebugJoinKey;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -189,7 +191,7 @@ public class Source {
 
     ImpressionNoiseParams getImpressionNoiseParams() {
         int destinationMultiplier =
-                (mAppDestinations != null && mWebDestinations != null)
+                hasAppDestinations() && hasWebDestinations()
                         ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
                         : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
 
@@ -279,14 +281,14 @@ public class Source {
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability() {
         // Both destinations are set and install attribution is supported
-        if (mWebDestinations != null && isInstallDetectionEnabled()) {
+        if (hasWebDestinations() && isInstallDetectionEnabled()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
         }
 
         // Both destinations are set but install attribution isn't supported
-        if (mAppDestinations != null && mWebDestinations != null) {
+        if (hasAppDestinations() && hasWebDestinations()) {
             return mSourceType == SourceType.EVENT
                     ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
@@ -306,7 +308,7 @@ public class Source {
     }
 
     private boolean isInstallDetectionEnabled() {
-        return mInstallCooldownWindow > 0 && mAppDestinations != null;
+        return mInstallCooldownWindow > 0 && hasAppDestinations();
     }
 
     @Override
@@ -317,8 +319,8 @@ public class Source {
         Source source = (Source) obj;
         return Objects.equals(mPublisher, source.mPublisher)
                 && mPublisherType == source.mPublisherType
-                && Objects.equals(mAppDestinations, source.mAppDestinations)
-                && Objects.equals(mWebDestinations, source.mWebDestinations)
+                && areEqualNullableDestinations(mAppDestinations, source.mAppDestinations)
+                && areEqualNullableDestinations(mWebDestinations, source.mWebDestinations)
                 && Objects.equals(mEnrollmentId, source.mEnrollmentId)
                 && mPriority == source.mPriority
                 && mStatus == source.mStatus
@@ -344,7 +346,8 @@ public class Source {
                 && Objects.equals(mRegistrationId, source.mRegistrationId)
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
                 && Objects.equals(mParentId, source.mParentId)
-                && Objects.equals(mInstallTime, source.mInstallTime);
+                && Objects.equals(mInstallTime, source.mInstallTime)
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey);
     }
 
     @Override
@@ -375,7 +378,8 @@ public class Source {
                 mArDebugPermission,
                 mRegistrationId,
                 mSharedAggregationKeys,
-                mInstallTime);
+                mInstallTime,
+                mDebugJoinKey);
     }
 
     /**
@@ -693,6 +697,25 @@ public class Source {
         return mInstallTime;
     }
 
+    /**
+     * Returns join key that should be matched with trigger's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
+    }
+
+    /** See {@link Source#getAppDestinations()} */
+    public void setAppDestinations(@Nullable List<Uri> appDestinations) {
+        mAppDestinations = appDestinations;
+    }
+
+    /** See {@link Source#getWebDestinations()} */
+    public void setWebDestinations(@Nullable List<Uri> webDestinations) {
+        mWebDestinations = webDestinations;
+    }
+
     /** Set app install attribution to the {@link Source}. */
     public void setInstallAttributed(boolean isInstallAttributed) {
         mIsInstallAttributed = isInstallAttributed;
@@ -761,7 +784,7 @@ public class Source {
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled() {
         return mSourceType == SourceType.EVENT
-                && mWebDestinations != null
+                && hasWebDestinations()
                 && isInstallDetectionEnabled();
     }
 
@@ -775,14 +798,36 @@ public class Source {
      * @return app or web destination {@link Uri}
      */
     private List<Uri> resolveFakeReportDestinations(int destinationIdentifier) {
-        if (mAppDestinations != null && mWebDestinations != null) {
+        if (hasAppDestinations() && hasWebDestinations()) {
             // It could be a direct destinationIdentifier == 0 check, but
             return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
                     ? mAppDestinations
                     : mWebDestinations;
         }
 
-        return mAppDestinations != null ? mAppDestinations : mWebDestinations;
+        return hasAppDestinations()
+                ? mAppDestinations
+                : mWebDestinations;
+    }
+
+    private boolean hasAppDestinations() {
+        return mAppDestinations != null && mAppDestinations.size() > 0;
+    }
+
+    private boolean hasWebDestinations() {
+        return mWebDestinations != null && mWebDestinations.size() > 0;
+    }
+
+    private static boolean areEqualNullableDestinations(List<Uri> destinations,
+            List<Uri> otherDestinations) {
+        if (destinations == null && otherDestinations == null) {
+            return true;
+        } else if (destinations == null || otherDestinations == null) {
+            return false;
+        } else {
+            return ImmutableMultiset.copyOf(destinations).equals(
+                    ImmutableMultiset.copyOf(otherDestinations));
+        }
     }
 
     /**
@@ -833,6 +878,7 @@ public class Source {
             builder.setIsDebugReporting(copyFrom.mIsDebugReporting);
             builder.setPriority(copyFrom.mPriority);
             builder.setStatus(copyFrom.mStatus);
+            builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
             return builder;
         }
 
@@ -976,7 +1022,7 @@ public class Source {
         /** See {@link Source#getAggregateReportDedupKeys()}. */
         @NonNull
         public Builder setAggregateReportDedupKeys(
-                @Nullable List<UnsignedLong> mAggregateReportDedupKeys) {
+                @NonNull List<UnsignedLong> mAggregateReportDedupKeys) {
             mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
@@ -1031,6 +1077,7 @@ public class Source {
         }
 
         /** See {@link Source#getAggregateSource()} */
+        @NonNull
         public Builder setAggregateSource(@Nullable String aggregateSource) {
             mBuilding.mAggregateSource = aggregateSource;
             return this;
@@ -1044,24 +1091,28 @@ public class Source {
         }
 
         /** See {@link Source#getRegistrationId()} */
+        @NonNull
         public Builder setRegistrationId(@Nullable String registrationId) {
             mBuilding.mRegistrationId = registrationId;
             return this;
         }
 
         /** See {@link Source#getSharedAggregationKeys()} */
+        @NonNull
         public Builder setSharedAggregationKeys(@Nullable String sharedAggregationKeys) {
             mBuilding.mSharedAggregationKeys = sharedAggregationKeys;
             return this;
         }
 
         /** See {@link Source#getInstallTime()} */
+        @NonNull
         public Builder setInstallTime(@Nullable Long installTime) {
             mBuilding.mInstallTime = installTime;
             return this;
         }
 
         /** See {@link Source#getParentId()} */
+        @NonNull
         public Builder setParentId(@Nullable String parentId) {
             mBuilding.mParentId = parentId;
             return this;
@@ -1076,19 +1127,27 @@ public class Source {
             return this;
         }
 
-        /**
-         * Build the {@link Source}.
-         */
+        /** See {@link Source#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
+            return this;
+        }
+
+        /** Build the {@link Source}. */
+        @NonNull
         public Source build() {
             Validation.validateNonNull(
                     mBuilding.mPublisher,
                     mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
-                    mBuilding.mSourceType);
+                    mBuilding.mSourceType,
+                    mBuilding.mAggregateReportDedupKeys,
+                    mBuilding.mEventReportDedupKeys);
 
-            if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
-                throw new IllegalArgumentException("At least one destination is required");
-            }
+            //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
+            //    throw new IllegalArgumentException("At least one destination is required");
+            //}
 
             return mBuilding;
         }

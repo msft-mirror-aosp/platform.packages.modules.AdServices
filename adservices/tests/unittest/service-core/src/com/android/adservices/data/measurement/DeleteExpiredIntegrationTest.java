@@ -47,7 +47,7 @@ public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
     }
 
     public void runActionToTest() {
-        new SQLDatastoreManager(DbTestUtil.getDbHelperForTest())
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
                 .runInTransaction(
                         dao -> dao.deleteExpiredRecords(Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS));
     }

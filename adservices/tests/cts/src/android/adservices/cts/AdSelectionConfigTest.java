@@ -70,6 +70,8 @@ public class AdSelectionConfigTest {
         assertEquals(config.getAdSelectionSignals(), fromParcel.getAdSelectionSignals());
         assertEquals(config.getSellerSignals(), fromParcel.getSellerSignals());
         assertEquals(config.getPerBuyerSignals(), fromParcel.getPerBuyerSignals());
+        assertEquals(
+                config.getTrustedScoringSignalsUri(), fromParcel.getTrustedScoringSignalsUri());
     }
 
     @Test
@@ -108,6 +110,37 @@ public class AdSelectionConfigTest {
                                     AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
                             .build();
                 });
+    }
+
+    @Test
+    public void testBuildValidAdSelectionConfigCloneSuccess() {
+        AdSelectionConfig config =
+                new AdSelectionConfig.Builder()
+                        .setSeller(AdSelectionConfigFixture.SELLER)
+                        .setDecisionLogicUri(AdSelectionConfigFixture.DECISION_LOGIC_URI)
+                        .setCustomAudienceBuyers(AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS)
+                        .setAdSelectionSignals(AdSelectionConfigFixture.AD_SELECTION_SIGNALS)
+                        .setSellerSignals(AdSelectionConfigFixture.SELLER_SIGNALS)
+                        .setPerBuyerSignals(AdSelectionConfigFixture.PER_BUYER_SIGNALS)
+                        .setTrustedScoringSignalsUri(
+                                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI)
+                        .build();
+
+        AdSelectionConfig cloneConfig = config.cloneToBuilder().build();
+
+        assertEquals(AdSelectionConfigFixture.SELLER, cloneConfig.getSeller());
+        assertEquals(
+                AdSelectionConfigFixture.DECISION_LOGIC_URI, cloneConfig.getDecisionLogicUri());
+        assertEquals(
+                AdSelectionConfigFixture.CUSTOM_AUDIENCE_BUYERS,
+                cloneConfig.getCustomAudienceBuyers());
+        assertEquals(
+                AdSelectionConfigFixture.AD_SELECTION_SIGNALS, cloneConfig.getAdSelectionSignals());
+        assertEquals(AdSelectionConfigFixture.SELLER_SIGNALS, cloneConfig.getSellerSignals());
+        assertEquals(AdSelectionConfigFixture.PER_BUYER_SIGNALS, cloneConfig.getPerBuyerSignals());
+        assertEquals(
+                AdSelectionConfigFixture.TRUSTED_SCORING_SIGNALS_URI,
+                cloneConfig.getTrustedScoringSignalsUri());
     }
 
     @Test

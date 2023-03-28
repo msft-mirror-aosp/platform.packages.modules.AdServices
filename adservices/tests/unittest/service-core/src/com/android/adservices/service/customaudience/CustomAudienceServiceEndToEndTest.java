@@ -91,16 +91,17 @@ public class CustomAudienceServiceEndToEndTest {
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build();
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+                    .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
-            CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+            CustomAudienceFixture.getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                     .build();
 
@@ -153,6 +154,7 @@ public class CustomAudienceServiceEndToEndTest {
 
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
 
@@ -429,6 +431,51 @@ public class CustomAudienceServiceEndToEndTest {
     @Test
     public void testLeaveCustomAudience_leaveJoinedCustomAudience() {
         doReturn(CommonFixture.FLAGS_FOR_TEST).when(FlagsFactory::getFlags);
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
+        assertTrue(callback.isSuccess());
+        assertEquals(
+                DB_CUSTOM_AUDIENCE_PK1_1,
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        CustomAudienceFixture.VALID_NAME));
+
+        callback = new ResultCapturingCallback();
+        mService.leaveCustomAudience(
+                CustomAudienceFixture.VALID_OWNER,
+                CommonFixture.VALID_BUYER_1,
+                CustomAudienceFixture.VALID_NAME,
+                callback);
+        assertTrue(callback.isSuccess());
+        assertNull(
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        CustomAudienceFixture.VALID_OWNER,
+                        CommonFixture.VALID_BUYER_1,
+                        CustomAudienceFixture.VALID_NAME));
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)));
+    }
+
+    @Test
+    public void testLeaveCustomAudience_leaveJoinedCustomAudienceFilersDisabled() {
+        doReturn(
+                        // CHECKSTYLE:OFF IndentationCheck
+                        new Flags() {
+                            @Override
+                            public boolean getFledgeAdSelectionFilteringEnabled() {
+                                return false;
+                            }
+                        })
+                .when(FlagsFactory::getFlags);
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());

@@ -18,17 +18,18 @@ package com.android.adservices.service.measurement.registration;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 import static android.view.MotionEvent.obtain;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -60,6 +61,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.AsyncFetchStatus;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
@@ -68,6 +70,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableMultiset;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
@@ -133,6 +138,7 @@ public final class AsyncSourceFetcherTest {
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri WEB_DESTINATION_WITH_SUBDOMAIN =
             WebUtil.validUri("https://subdomain.web-destination.test");
+    private static final Uri WEB_DESTINATION_2 = WebUtil.validUri("https://web-destination2.test");
     private static final WebSourceParams SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
     private static final WebSourceParams SOURCE_REGISTRATION_2 =
@@ -141,6 +147,8 @@ public final class AsyncSourceFetcherTest {
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final String SHARED_AGGREGATION_KEYS =
             "[\"GoogleCampaignCounts\",\"GoogleGeo\"]";
+
+    private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
 
     AsyncSourceFetcher mFetcher;
 
@@ -165,6 +173,8 @@ public final class AsyncSourceFetcherTest {
         // registration URIs and not yet enforcing uniqueness of enrollment.
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
+                .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
     }
 
     @After
@@ -207,9 +217,9 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
         Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -223,6 +233,8 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
+        assertNotNull(result.getRegistrationId());
+        assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
@@ -274,6 +286,158 @@ public final class AsyncSourceFetcherTest {
                 AsyncFetchStatus.ResponseStatus.INVALID_ENROLLMENT, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
         verify(mFetcher, never()).openUrl(any());
+    }
+
+    @Test
+    public void fetchSource_multipleWebDestinations_success() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"" + WEB_DESTINATION_2 + "\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
+        assertTrue(ImmutableMultiset.of(WEB_DESTINATION, WEB_DESTINATION_2).equals(
+                ImmutableMultiset.copyOf(result.getWebDestinations())));
+        assertEquals(123, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
+        assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_duplicateWebDestinationsInList_removesDuplicates() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"" + WEB_DESTINATION_2 + "\","
+                                                    + "\"" + WEB_DESTINATION + "\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
+        assertTrue(ImmutableMultiset.of(WEB_DESTINATION, WEB_DESTINATION_2).equals(
+                ImmutableMultiset.copyOf(result.getWebDestinations())));
+        assertEquals(123, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
+        assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_invalidWebDestinationInList_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"https://not-a-real-domain.test\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_tooManyWebDestinationInList_fails() throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        StringBuilder destinationsBuilder = new StringBuilder("[");
+        destinationsBuilder.append(
+                IntStream.range(0, MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 1)
+                        .mapToObj(i -> "\"" + WebUtil.validUri(
+                                "https://web-destination" + i + ".test").toString() + "\"")
+                        .collect(Collectors.joining(",")));
+        destinationsBuilder.append("]");
+        String destinations = destinationsBuilder.toString();
+        // Assert destinations is a valid by JSON array by throwing if not (otherwise, we could be
+        // testing a different failure).
+        new JSONArray(destinations);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": " + destinations + ","
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -1821,13 +1985,14 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                appSourceRegistrationRequest(
-                        request,
-                        AsyncRegistration.RedirectType.DAISY_CHAIN,
-                        MAX_REDIRECTS_PER_REGISTRATION),
-                asyncFetchStatus,
-                asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(
+                                request,
+                                AsyncRegistration.RedirectType.DAISY_CHAIN,
+                                FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects()),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -2420,6 +2585,52 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
+        AsyncRegistration asyncRegistration = webSourceRegistrationRequest(request, true);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        assertNotNull(result.getRegistrationId());
+        assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_multipleWebDestinations_success() throws Exception {
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"" + WEB_DESTINATION_2 + "\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
         Optional<Source> fetch =
                 mFetcher.fetchSource(
                         webSourceRegistrationRequest(request, true),
@@ -2429,17 +2640,135 @@ public final class AsyncSourceFetcherTest {
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
-        assertEquals(0, asyncRedirect.getRedirects().size());
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
-        assertEquals(EVENT_ID_1, result.getEventId());
-        long expiry =
-                result.getEventTime()
-                        + TimeUnit.SECONDS.toMillis(
-                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
-        assertEquals(expiry, result.getExpiryTime());
-        assertEquals(expiry, result.getEventReportWindow());
-        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
+        assertTrue(ImmutableMultiset.of(WEB_DESTINATION, WEB_DESTINATION_2).equals(
+                ImmutableMultiset.copyOf(result.getWebDestinations())));
+        assertEquals(123, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
+        assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_duplicateWebDestinationsInList_removesDuplicates() throws Exception {
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"" + WEB_DESTINATION_2 + "\","
+                                                    + "\"" + WEB_DESTINATION + "\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals("android-app://com.myapps", result.getAppDestinations().get(0).toString());
+        assertTrue(ImmutableMultiset.of(WEB_DESTINATION, WEB_DESTINATION_2).equals(
+                ImmutableMultiset.copyOf(result.getWebDestinations())));
+        assertEquals(123, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
+        assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_invalidWebDestinationInList_fails() throws Exception {
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": ["
+                                                    + "\"" + WEB_DESTINATION + "\","
+                                                    + "\"https://not-a-real-domain.test\"],"
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_tooManyWebDestinationInList_fails() throws Exception {
+        StringBuilder destinationsBuilder = new StringBuilder("[");
+        destinationsBuilder.append(
+                IntStream.range(0, MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION + 1)
+                        .mapToObj(i -> "\"" + WebUtil.validUri(
+                                "https://web-destination" + i + ".test").toString() + "\"")
+                        .collect(Collectors.joining(",")));
+        destinationsBuilder.append("]");
+        String destinations = destinationsBuilder.toString();
+        // Assert destinations is a valid by JSON array by throwing if not (otherwise, we could be
+        // testing a different failure).
+        new JSONArray(destinations);
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\"destination\": \"android-app://com.myapps\","
+                                                + "\"web_destination\": " + destinations + ","
+                                                + "\"priority\": \"123\","
+                                                + "\"expiry\": \"432000\","
+                                                + "\"source_event_id\": \"987654321\""
+                                                + "}")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
+        assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2846,8 +3175,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -2893,8 +3225,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, false), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, false),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertTrue(fetch.isPresent());
         Source result = fetch.get();
@@ -2943,8 +3278,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -2986,8 +3324,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3043,8 +3384,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3089,7 +3433,9 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"destination\":"
                                                 + " android-app://wrong.os-destination,\n"
                                                 + "  \"web_destination\": "
-                                                + "\"" + WEB_DESTINATION + "\""
+                                                + "\""
+                                                + WEB_DESTINATION
+                                                + "\""
                                                 + ",\n"
                                                 + "  \"filter_data\": "
                                                 + filterData
@@ -3097,13 +3443,126 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void fetchWebSources_withDebugJoinKey_getsParsed() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_join_key\": \""
+                                                + DEBUG_JOIN_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSources_withDebugJoinKeyEnrollmentNotAllowListed_joinKeyDropped()
+            throws IOException {
+        // Setup
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_join_key\": \""
+                                                + DEBUG_JOIN_KEY
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertNull(result.getDebugJoinKey());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
@@ -3130,10 +3589,13 @@ public final class AsyncSourceFetcherTest {
                                                 + "  \"expiry\": \"456789\",\n"
                                                 + "  \"source_event_id\": \"987654321\",\n"
                                                 + "  \"destination\":  "
-                                                + "\"" + OS_DESTINATION + "\""
+                                                + "\""
+                                                + OS_DESTINATION
+                                                + "\""
                                                 + ",\n"
                                                 + "  \"web_destination\": "
-                                                + "\"" + WebUtil.validUrl(
+                                                + "\""
+                                                + WebUtil.validUrl(
                                                         "https://wrong-web-destination.test")
                                                 + "\",\n"
                                                 + "  \"filter_data\": "
@@ -3142,8 +3604,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3183,8 +3648,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
@@ -3235,8 +3703,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
 
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
@@ -3248,8 +3719,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
-                result.getExpiryTime());
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3285,8 +3755,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3297,8 +3770,7 @@ public final class AsyncSourceFetcherTest {
         assertNull(result.getFilterDataString());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
-                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
-                result.getExpiryTime());
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3327,8 +3799,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3363,8 +3838,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());
@@ -3411,8 +3889,11 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch = mFetcher.fetchSource(
-                webSourceRegistrationRequest(request, true), asyncFetchStatus, asyncRedirect);
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.PARSING_ERROR, asyncFetchStatus.getStatus());
         assertFalse(fetch.isPresent());
@@ -3457,6 +3938,114 @@ public final class AsyncSourceFetcherTest {
                                                 115)
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
+    }
+
+    @Test
+    public void fetchSource_withDebugJoinKey_getsParsed() throws Exception {
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\","
+                                                + "\"debug_join_key\": "
+                                                + DEBUG_JOIN_KEY
+                                                + "}\n")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY_ROUNDED),
+                result.getExpiryTime());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+    }
+
+    @Test
+    public void fetchSource_withDebugJoinKeyEnrollmentNotAllowListed_joinKeyDropped()
+            throws Exception {
+        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "  \"priority\": \""
+                                                + DEFAULT_PRIORITY
+                                                + "\",\n"
+                                                + "  \"expiry\": \""
+                                                + DEFAULT_EXPIRY
+                                                + "\",\n"
+                                                + "  \"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\","
+                                                + "\"debug_join_key\": "
+                                                + DEBUG_JOIN_KEY
+                                                + "}\n")));
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_PRIORITY, result.getPriority());
+        assertEquals(
+                result.getEventTime() + TimeUnit.SECONDS.toMillis(DEFAULT_EXPIRY_ROUNDED),
+                result.getExpiryTime());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertNull(result.getDebugJoinKey());
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
@@ -3519,17 +4108,19 @@ public final class AsyncSourceFetcherTest {
                 System.currentTimeMillis(),
                 redirectType,
                 redirectCount,
+                UUID.randomUUID().toString(),
                 false);
     }
 
     private static AsyncRegistration webSourceRegistrationRequest(
             WebSourceRegistrationRequest webSourceRegistrationRequest, boolean arDebugPermission) {
         return webSourceRegistrationRequest(
-            webSourceRegistrationRequest, arDebugPermission, Source.SourceType.NAVIGATION);
+                webSourceRegistrationRequest, arDebugPermission, Source.SourceType.NAVIGATION);
     }
 
     private static AsyncRegistration webSourceRegistrationRequest(
-            WebSourceRegistrationRequest webSourceRegistrationRequest, boolean arDebugPermission,
+            WebSourceRegistrationRequest webSourceRegistrationRequest,
+            boolean arDebugPermission,
             Source.SourceType sourceType) {
         if (webSourceRegistrationRequest.getSourceParams().size() > 0) {
             WebSourceParams webSourceParams = webSourceRegistrationRequest.getSourceParams().get(0);
@@ -3571,6 +4162,7 @@ public final class AsyncSourceFetcherTest {
                     System.currentTimeMillis(),
                     AsyncRegistration.RedirectType.NONE,
                     0,
+                    UUID.randomUUID().toString(),
                     arDebugPermission);
         }
         return null;
@@ -3592,6 +4184,7 @@ public final class AsyncSourceFetcherTest {
             long mLastProcessingTime,
             @AsyncRegistration.RedirectType int redirectType,
             int redirectCount,
+            String registrationId,
             boolean debugKeyAllowed) {
         return new AsyncRegistration.Builder()
                 .setId(iD)
@@ -3614,6 +4207,7 @@ public final class AsyncSourceFetcherTest {
                 .setLastProcessingTime(mLastProcessingTime)
                 .setRedirectType(redirectType)
                 .setRedirectCount(redirectCount)
+                .setRegistrationId(registrationId)
                 .setDebugKeyAllowed(debugKeyAllowed)
                 .build();
     }
