@@ -126,6 +126,14 @@ public class ConsentSettingsUiAutomatorTest {
         consentTest(true);
     }
 
+    @Test
+    public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+        consentTest(true);
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
+    }
+
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
         // launch app
         Context context = ApplicationProvider.getApplicationContext();
