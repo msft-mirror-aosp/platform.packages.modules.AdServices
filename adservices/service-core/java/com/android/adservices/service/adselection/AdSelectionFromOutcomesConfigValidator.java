@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.service.common.Validator;
@@ -40,6 +41,7 @@ import java.util.stream.Collectors;
 /** Runs validations on {@link AdSelectionFromOutcomesInput} object */
 public class AdSelectionFromOutcomesConfigValidator
         implements Validator<AdSelectionFromOutcomesConfig> {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
     static final String INPUT_PARAM_CANNOT_BE_NULL = "AdSelectionFromOutcomesInput cannot be null";
@@ -62,7 +64,7 @@ public class AdSelectionFromOutcomesConfigValidator
     static final String URI_IS_NOT_HTTPS = "The SelectionLogicUri is not secured by https";
 
     @VisibleForTesting
-    static final String AD_SELECTION_IDS_DONT_EXIST = "Ad Selection Ids don't exist: %s";
+    static final String AD_SELECTION_IDS_DONT_EXIST = "Ad Selection Ids don't exist: '%s'";
 
     @VisibleForTesting
     static final String URI_SHOULD_HAVE_PRESENT_HOST =
@@ -79,6 +81,7 @@ public class AdSelectionFromOutcomesConfigValidator
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final String mCallerPackageName;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     public AdSelectionFromOutcomesConfigValidator(
             @NonNull AdSelectionEntryDao adSelectionEntryDao, @NonNull String callerPackageName) {
@@ -87,6 +90,7 @@ public class AdSelectionFromOutcomesConfigValidator
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCallerPackageName = callerPackageName;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
     }
 
     /** Validates the object and populate the violations. */
@@ -94,11 +98,19 @@ public class AdSelectionFromOutcomesConfigValidator
     public void addValidation(
             @NonNull AdSelectionFromOutcomesConfig config,
             @NonNull ImmutableCollection.Builder<String> violations) {
+        // TODO(b/275211917): Refactor to address the duplicate code between this class and
+        // AdSelectionConfigValidator
         Objects.requireNonNull(config, INPUT_PARAM_CANNOT_BE_NULL);
 
         violations.addAll(validateAdSelectionIds(config.getAdSelectionIds()));
-        violations.addAll(
-                validateSelectionLogicUri(config.getSeller(), config.getSelectionLogicUri()));
+        if (!mPrebuiltLogicGenerator.isPrebuiltUri(config.getSelectionLogicUri())) {
+            violations.addAll(
+                    validateSelectionLogicUri(config.getSeller(), config.getSelectionLogicUri()));
+        } else {
+            sLogger.v(
+                    "AdSelectionFromOutcomesConfig validation is skipped because prebuilt uri is"
+                            + " detected!");
+        }
     }
 
     private ImmutableList<String> validateAdSelectionIds(@NonNull List<Long> adSelectionIds) {
