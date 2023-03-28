@@ -76,10 +76,8 @@ public class UpdateAdCounterHistogramRequest {
     }
 
     /**
-     * Gets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
-     * identifies which histogram should be updated.
-     *
-     * <p>See {@link FrequencyCapFilters.AdEventType} for more information.
+     * Gets the ad event type which, along with an ad's counter keys, identifies which histogram
+     * should be updated.
      */
     @FrequencyCapFilters.AdEventType
     public int getAdEventType() {
@@ -152,8 +150,8 @@ public class UpdateAdCounterHistogramRequest {
         }
 
         /**
-         * Sets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
-         * identifies which histogram should be updated.
+         * Sets the ad event type which, along with an ad's counter keys, identifies which histogram
+         * should be updated.
          *
          * <p>See {@link #getAdEventType()} for more information.
          */
