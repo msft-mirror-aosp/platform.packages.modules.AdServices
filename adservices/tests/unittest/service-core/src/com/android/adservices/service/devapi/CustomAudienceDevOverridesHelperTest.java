@@ -16,17 +16,18 @@
 
 package com.android.adservices.service.devapi;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
+
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
-
-import static com.google.common.truth.Truth.assertThat;
-
-import android.adservices.common.AdSelectionSignals;
-import android.adservices.common.AdTechIdentifier;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +46,7 @@ public class CustomAudienceDevOverridesHelperTest {
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
                                 CustomAudienceDatabase.class)
+                        .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
     }

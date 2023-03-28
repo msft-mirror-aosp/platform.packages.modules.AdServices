@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_INSTALL_ATTRIBUTION_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_POST_INSTALL_EXCLUSIVITY_WINDOW;
 import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
@@ -37,6 +38,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
@@ -60,10 +62,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,7 +107,8 @@ public class AsyncSourceFetcher {
             boolean shouldValidateDestinationWebSource,
             boolean shouldOverrideDestinationAppSource,
             Source.Builder result,
-            boolean isWebSource)
+            boolean isWebSource,
+            @NonNull String enrollmentId)
             throws JSONException {
         final boolean hasRequiredParams =
                 hasRequiredParams(json, shouldValidateDestinationWebSource);
@@ -225,6 +229,15 @@ public class AsyncSourceFetcher {
             }
         }
 
+        Set<String> allowedEnrollmentsString =
+                new HashSet<>(
+                        AllowLists.splitAllowList(
+                                mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        if (allowedEnrollmentsString.contains(enrollmentId)
+                && !json.isNull(SourceHeaderContract.DEBUG_JOIN_KEY)) {
+            result.setDebugJoinKey(json.optString(SourceHeaderContract.DEBUG_JOIN_KEY));
+        }
+
         if (shouldValidateDestinationWebSource
                 && appDestinationFromRequest != null // Only validate when non-null in request
                 && !appDestinationFromRequest.equals(appUri)) {
@@ -233,30 +246,60 @@ public class AsyncSourceFetcher {
         }
 
         if (appUri != null) {
-            result.setAppDestinations(List.of(getBaseUri(appUri)));
+            List<Uri> appDestinations;
+            if (shouldOverrideDestinationAppSource && !isWebSource
+                    && appDestinationFromRequest != null) {
+                appDestinations = List.of(appDestinationFromRequest);
+            } else {
+                appDestinations = List.of(getBaseUri(appUri));
+            }
+            result.setAppDestinations(appDestinations);
         }
 
-        if (shouldValidateDestinationWebSource
-                && webDestinationFromRequest != null // Only validate when non-null in request
-                && !doUriFieldsMatch(
-                        json, SourceHeaderContract.WEB_DESTINATION, webDestinationFromRequest)) {
-            LogUtil.d("Expected web_destination to match with the supplied one!");
+        boolean shouldMatchAtLeastOneWebDestination = shouldValidateDestinationWebSource
+                && webDestinationFromRequest != null;
+        boolean matchedOneWebDestination = false;
+
+        if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
+            Set<Uri> destinationSet = new HashSet<>();
+            JSONArray jsonDestinations;
+            Object obj = json.get(SourceHeaderContract.WEB_DESTINATION);
+            if (obj instanceof String) {
+                jsonDestinations = new JSONArray();
+                jsonDestinations.put(json.getString(SourceHeaderContract.WEB_DESTINATION));
+            } else {
+                jsonDestinations = json.getJSONArray(SourceHeaderContract.WEB_DESTINATION);
+            }
+            if (jsonDestinations.length() > MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION) {
+                LogUtil.d("Source registration exceeded the number of allowed destinations.");
+                return false;
+            }
+            for (int i = 0; i < jsonDestinations.length(); i++) {
+                Uri destination = Uri.parse(jsonDestinations.getString(i));
+                if (webDestinationFromRequest != null
+                        && webDestinationFromRequest.equals(destination)) {
+                    matchedOneWebDestination = true;
+                }
+                Optional<Uri> topPrivateDomainAndScheme =
+                        Web.topPrivateDomainAndScheme(destination);
+                if (!topPrivateDomainAndScheme.isPresent()) {
+                    LogUtil.d("Unable to extract top private domain and scheme from web "
+                            + "destination.");
+                    return false;
+                } else {
+                    destinationSet.add(topPrivateDomainAndScheme.get());
+                }
+            }
+            List<Uri> destinationList = new ArrayList<>();
+            destinationList.addAll(destinationSet);
+            result.setWebDestinations(destinationList);
+        }
+
+        if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
+            LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
         }
-        if (!json.isNull(SourceHeaderContract.WEB_DESTINATION)) {
-            Uri webDestination = Uri.parse(json.getString(SourceHeaderContract.WEB_DESTINATION));
-            Optional<Uri> topPrivateDomainAndScheme = Web.topPrivateDomainAndScheme(webDestination);
-            if (!topPrivateDomainAndScheme.isPresent()) {
-                LogUtil.d("Unable to extract top private domain and scheme from web destination.");
-                return false;
-            } else {
-                result.setWebDestinations(List.of(topPrivateDomainAndScheme.get()));
-            }
-        }
-        if (shouldOverrideDestinationAppSource && !isWebSource
-                && appDestinationFromRequest != null) {
-            result.setAppDestinations(List.of(appDestinationFromRequest));
-        }
+
         return true;
     }
 
@@ -280,7 +323,7 @@ public class AsyncSourceFetcher {
             boolean arDebugPermission) {
         Source.Builder result = new Source.Builder();
         result.setRegistrationId(registrationId);
-        result.setPublisher(publisher);
+        result.setPublisher(getBaseUri(publisher));
         result.setEnrollmentId(enrollmentId);
         result.setRegistrant(registrant);
         result.setSourceType(sourceType);
@@ -309,7 +352,8 @@ public class AsyncSourceFetcher {
                             shouldValidateDestinationWebSource,
                             shouldOverrideDestinationAppSource,
                             result,
-                            isWebSource);
+                            isWebSource,
+                            enrollmentId);
             if (!isValid) {
                 return false;
             }
@@ -343,15 +387,6 @@ public class AsyncSourceFetcher {
         return isDestinationAvailable;
     }
 
-    private static boolean doUriFieldsMatch(JSONObject json, String fieldName, Uri expectedValue)
-            throws JSONException {
-        if (json.isNull(fieldName) && expectedValue == null) {
-            return true;
-        }
-        return !json.isNull(fieldName)
-                && Objects.equals(expectedValue, Uri.parse(json.getString(fieldName)));
-    }
-
     /** Provided a testing hook. */
     @NonNull
     @VisibleForTesting
@@ -371,7 +406,7 @@ public class AsyncSourceFetcher {
             AsyncRedirect asyncRedirect) {
         List<Source> out = new ArrayList<>();
         fetchSource(
-                asyncRegistration.getId(),
+                asyncRegistration.getRegistrationId(),
                 asyncRegistration.getTopOrigin(),
                 asyncRegistration.getRegistrationUri(),
                 asyncRegistration.getOsDestination(),
@@ -541,5 +576,6 @@ public class AsyncSourceFetcher {
         String AGGREGATION_KEYS = "aggregation_keys";
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String DEBUG_REPORTING = "debug_reporting";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 }

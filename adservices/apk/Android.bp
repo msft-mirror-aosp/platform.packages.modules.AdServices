@@ -31,7 +31,7 @@ android_app_certificate {
 android_app {
     name: "AdExtServicesApk",
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     // This is not enforced by PackageManager but we keep this
     // here since this APK is used for S- only.
     // TODO(b/263904312): Support for max_sdk_version.
@@ -41,7 +41,10 @@ android_app {
     srcs: [
         "java/**/*.java",
     ],
-    libs: ["framework-adextservices"],
+    libs: ["android.ext.adservices"],
+    optional_uses_libs: ["android.ext.adservices"],
+    manifest: "AdExtServicesManifest.xml",
+    package_name: "com.android.ext.adservices.api",
     static_libs: [
         "adservices-service-core",
         "androidx-constraintlayout_constraintlayout",
@@ -57,6 +60,10 @@ android_app {
         "SettingsLibCollapsingToolbarBaseActivity",
         "SettingsLibMainSwitchPreference",
     ],
+    // TODO(b/269145496): Remove dex_preopt: false.
+    dex_preopt: {
+        enabled: false,
+    },
     jarjar_rules: "jarjar_rules.txt",
     resource_dirs: ["res"],
     aaptflags: [

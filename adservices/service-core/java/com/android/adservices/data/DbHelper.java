@@ -19,6 +19,7 @@ package com.android.adservices.data;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -33,24 +34,23 @@ import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV6
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.data.topics.migration.ITopicsDbMigrator;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
-import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helper to manage the PP API database. Designed as a singleton to make sure that all PP API usages
  * get the same reference.
  */
 public class DbHelper extends SQLiteOpenHelper {
-    // Version 7: Add TopicContributors Table for Topics API, guarded by feature flag.
-    public static final int DATABASE_VERSION_V7 = 7;
-
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-    public static final int CURRENT_DATABASE_VERSION = 6;
+    public static final int DATABASE_VERSION = 7;
 
     private static final String DATABASE_NAME = "adservices.db";
 
@@ -78,7 +78,7 @@ public class DbHelper extends SQLiteOpenHelper {
     public static DbHelper getInstance(@NonNull Context ctx) {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
-                sSingleton = new DbHelper(ctx, DATABASE_NAME, getDatabaseVersionToCreate());
+                sSingleton = new DbHelper(ctx, DATABASE_NAME, DATABASE_VERSION);
             }
             return sSingleton;
         }
@@ -88,12 +88,6 @@ public class DbHelper extends SQLiteOpenHelper {
     public void onCreate(@NonNull SQLiteDatabase db) {
         LogUtil.d("DbHelper.onCreate with version %d. Name: %s", mDbVersion, mDbFile.getName());
         for (String sql : TopicsTables.CREATE_STATEMENTS) {
-            db.execSQL(sql);
-        }
-        for (String sql : MeasurementTables.CREATE_STATEMENTS) {
-            db.execSQL(sql);
-        }
-        for (String sql : MeasurementTables.CREATE_INDEXES) {
             db.execSQL(sql);
         }
         for (String sql : EnrollmentTables.CREATE_STATEMENTS) {
@@ -135,8 +129,10 @@ public class DbHelper extends SQLiteOpenHelper {
         LogUtil.d(
                 "DbHelper.onUpgrade. Attempting to upgrade version from %d to %d.",
                 oldVersion, newVersion);
-        getOrderedDbMigrators()
-                .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+        if (hasV1MeasurementTables(db)) {
+            getOrderedDbMigrators()
+                    .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
+        }
         try {
             topicsGetOrderedDbMigrators()
                     .forEach(dbMigrator -> dbMigrator.performMigration(db, oldVersion, newVersion));
@@ -147,6 +143,26 @@ public class DbHelper extends SQLiteOpenHelper {
         }
     }
 
+    /** Check if V1 measurement tables exist. */
+    @VisibleForTesting
+    public boolean hasV1MeasurementTables(SQLiteDatabase db) {
+        List<String> selectionArgList = new ArrayList<>(Arrays.asList(MeasurementTables.V1_TABLES));
+        selectionArgList.add("table"); // Schema type to match
+        String[] selectionArgs = new String[selectionArgList.size()];
+        selectionArgList.toArray(selectionArgs);
+        return DatabaseUtils.queryNumEntries(
+                        db,
+                        "sqlite_master",
+                        "name IN ("
+                                + Stream.generate(() -> "?")
+                                        .limit(MeasurementTables.V1_TABLES.length)
+                                        .collect(Collectors.joining(","))
+                                + ")"
+                                + " AND type = ?",
+                        selectionArgs)
+                == MeasurementTables.V1_TABLES.length;
+    }
+
     @Override
     public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         LogUtil.d("Downgrade database version from %d to %d.", oldVersion, newVersion);
@@ -155,14 +171,6 @@ public class DbHelper extends SQLiteOpenHelper {
 
     public long getDbFileSize() {
         return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
-    }
-
-    /**
-     * Check whether TopContributors Table is supported in current database. TopContributors is
-     * introduced in Version 6.
-     */
-    public boolean supportsTopicContributorsTable() {
-        return mDbVersion >= DATABASE_VERSION_V7;
     }
 
     /** Get Migrators in order for Measurement. */
@@ -178,15 +186,5 @@ public class DbHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     public List<ITopicsDbMigrator> topicsGetOrderedDbMigrators() {
         return ImmutableList.of(new TopicDbMigratorV7());
-    }
-
-    // Get the database version to create. It may be different as CURRENT_DATABASE_VERSION,
-    // depending
-    // on Flags status.
-    @VisibleForTesting
-    static int getDatabaseVersionToCreate() {
-        return FlagsFactory.getFlags().getEnableTopicMigration()
-                ? DATABASE_VERSION_V7
-                : CURRENT_DATABASE_VERSION;
     }
 }

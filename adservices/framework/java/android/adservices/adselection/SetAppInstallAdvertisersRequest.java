@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Represent input parameters to the setAppInstallAdvertiser API.
+ * Represents input parameters to the setAppInstallAdvertiser API.
  *
  * @hide
  */

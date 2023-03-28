@@ -135,7 +135,7 @@
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ไม่มีความสนใจที่คุณบล็อกไว้"</string>
     <string name="settingsUI_no_blocked_topics_ga_text" msgid="377459829879121256">"ไม่มีหัวข้อที่บล็อก"</string>
     <string name="settingsUI_view_blocked_topics_title" msgid="3705333677440361392">"ดูหัวข้อที่บล็อก"</string>
-    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"ระบบจะรีเซ็ตความสนใจ"</string>
+    <string name="settingsUI_topics_are_reset" msgid="7539323750312329931">"รีเซ็ตความสนใจแล้ว"</string>
     <string name="settingsUI_topics_are_reset_ga" msgid="5250296990870048195">"รีเซ็ตหัวข้อแล้ว"</string>
     <string name="settingsUI_apps_view_subtitle" msgid="8193343057416677400">"แอปสามารถคาดการณ์ความสนใจของคุณและบันทึกสิ่งเหล่านี้ไว้กับ Android ชั่วคราวได้ จากนั้น แอปอื่นๆ ก็จะแสดงโฆษณาตามความสนใจเหล่านี้ต่อคุณได้\n\nหากบล็อกแอป แอปดังกล่าวก็จะไม่คาดการณ์ความสนใจอีก ระบบจะไม่เพิ่มความสนใจลงในรายการของแอปอีก เว้นแต่คุณจะเลิกบล็อก ระบบจะลบข้อมูลความสนใจที่แอปคาดการณ์แล้ว แต่คุณอาจยังเห็นโฆษณาที่เกี่ยวข้องอยู่บ้าง"</string>
     <string name="settingsUI_blocked_apps_title" msgid="1260257485713408637">"แอปที่คุณบล็อก"</string>

@@ -21,7 +21,7 @@ import android.net.Uri;
 public class CustomAudienceBiddingInfoFixture {
 
     public static final Uri VALID_BIDDING_LOGIC_URI =
-            new Uri.Builder().path("valid-buyer.example.com/bidding/logic/here/").build();
+            new Uri.Builder().path("https://valid-buyer.example.com/bidding/logic/here/").build();
 
     public static final String BUYER_DECISION_LOGIC_JS =
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"

@@ -107,6 +107,16 @@ public final class AdSelectionResponse implements Parcelable {
         mRenderUri.writeToParcel(dest, flags);
     }
 
+    @Override
+    public String toString() {
+        return "AdSelectionResponse{"
+                + "mAdSelectionId="
+                + mAdSelectionId
+                + ", mRenderUri="
+                + mRenderUri
+                + '}';
+    }
+
     /**
      * Builder for {@link AdSelectionResponse} objects.
      *

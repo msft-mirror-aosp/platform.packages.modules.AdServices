@@ -22,17 +22,23 @@ import android.platform.test.microbenchmark.Microbenchmark.NoMetricBefore;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
 
+import androidx.test.core.app.ApplicationProvider;
+
+import com.android.adservices.common.AdservicesTestHelper;
+
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 
 @RunWith(Microbenchmark.class)
 public class GetTopicsApiCallMicrobenchmark extends GetTopicsApiCall {
-    private static final String ADSERVICES_PROCESS = "com.google.android.adservices.api";
-
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(ADSERVICES_PROCESS)).around(new DropCachesRule());
+            RuleChain.outerRule(
+                            new KillAppsRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(
+                                            ApplicationProvider.getApplicationContext())))
+                    .around(new DropCachesRule());
 
     @NoMetricBefore
     public void setup() {

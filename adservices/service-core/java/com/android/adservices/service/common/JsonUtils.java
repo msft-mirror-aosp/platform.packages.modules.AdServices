@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import android.annotation.NonNull;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -36,13 +37,50 @@ public class JsonUtils {
     @NonNull
     public static String getStringFromJson(@NonNull JSONObject jsonObject, @NonNull String key)
             throws JSONException {
+        return getStringFromJson(jsonObject, key, String.format(VALUE_NOT_A_STRING, key));
+    }
+
+    /**
+     * Gets a string value from a {@code JSONArray} with index {@code index} without forcing the
+     * value of {@link JSONObject#getString(String)} into a String. The caller can provide a custom
+     * error message that will be set in the JSONException if a failure occurs.
+     *
+     * @throws JSONException if {@code key} is not in {@code JSONObject} or value of {@code
+     *     JSONObject.getString(key)} is not a String
+     */
+    @NonNull
+    public static String getStringFromJsonArrayAtIndex(
+            @NonNull JSONArray jsonArray, int index, @NonNull String errorMsg)
+            throws JSONException {
+        Objects.requireNonNull(jsonArray);
+        Objects.requireNonNull(errorMsg);
+
+        return assertObjectIsString(jsonArray.get(index), errorMsg);
+    }
+
+    /**
+     * Gets a string value from a {@code JSONObject} with key {@code key} without forcing the value
+     * of {@link JSONObject#getString(String)} into a String. The caller can provide a custom error
+     * message that will be set in the JSONException if a failure occurs.
+     *
+     * @throws JSONException if {@code key} is not in {@code JSONObject} or value of {@code
+     *     JSONObject.getString(key)} is not a String
+     */
+    @NonNull
+    public static String getStringFromJson(
+            @NonNull JSONObject jsonObject, @NonNull String key, @NonNull String errorMsg)
+            throws JSONException {
         Objects.requireNonNull(jsonObject);
         Objects.requireNonNull(key);
+        Objects.requireNonNull(errorMsg);
 
-        Object obj = jsonObject.get(key);
-        if (!(obj instanceof String)) {
-            throw new JSONException(String.format(VALUE_NOT_A_STRING, key));
+        return assertObjectIsString(jsonObject.get(key), errorMsg);
+    }
+
+    private static String assertObjectIsString(Object o, String errorMsg) throws JSONException {
+        if (!(o instanceof String)) {
+            throw new JSONException(errorMsg);
         }
-        return Objects.requireNonNull((String) obj);
+        return (String) o;
     }
 }

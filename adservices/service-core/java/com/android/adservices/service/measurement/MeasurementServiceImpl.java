@@ -46,7 +46,10 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.os.Binder;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -83,6 +86,8 @@ import java.util.function.Supplier;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();

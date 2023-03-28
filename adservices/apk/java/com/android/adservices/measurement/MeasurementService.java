@@ -19,7 +19,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
@@ -44,6 +47,8 @@ import com.android.adservices.service.stats.Clock;
 import java.util.Objects;
 
 /** Measurement Service */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementService extends Service {
 
     /** The binder service. This field must only be accessed on the main thread. */
@@ -76,7 +81,7 @@ public class MeasurementService extends Service {
         }
 
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, flags);
             schedulePeriodicJobsIfNeeded();
         }
     }

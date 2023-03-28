@@ -91,4 +91,19 @@ public final class CustomAudienceFixture {
                 .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
                 .setAds(AdDataFixture.getValidAdsByBuyer(buyer));
     }
+
+    // TODO(b/266837113) Merge with getValidBuilderForBuyer once filters are unhidden
+    public static CustomAudience.Builder getValidBuilderForBuyerFilters(AdTechIdentifier buyer) {
+        return new CustomAudience.Builder()
+                .setBuyer(buyer)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setDailyUpdateUri(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer))
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(buyer))
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(AdDataFixture.getValidFilterAdsByBuyer(buyer));
+    }
 }

@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public final class TriggerFixture {
     private TriggerFixture() { }
@@ -47,6 +48,7 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
                 .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
