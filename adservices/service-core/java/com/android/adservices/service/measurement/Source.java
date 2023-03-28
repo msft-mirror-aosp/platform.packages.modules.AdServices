@@ -407,7 +407,7 @@ public class Source {
     }
 
     @VisibleForTesting
-    void setAttributionMode(@AttributionMode int attributionMode) {
+    public void setAttributionMode(@AttributionMode int attributionMode) {
         mAttributionMode = attributionMode;
     }
 
