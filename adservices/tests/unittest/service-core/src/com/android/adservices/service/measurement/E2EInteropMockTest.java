@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop
- * Friday February 17, 2023
+ * Saturday March 24, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
