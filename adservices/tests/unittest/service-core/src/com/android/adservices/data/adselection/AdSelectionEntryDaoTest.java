@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdDataFixture;
+import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.net.Uri;
 
@@ -197,6 +198,25 @@ public class AdSelectionEntryDaoTest {
                     .setDecisionLogicJS(DECISION_LOGIC_JS_4)
                     .setTrustedScoringSignals(TRUSTED_SCORING_SIGNALS_4)
                     .build();
+
+    private static final DBBuyerDecisionOverride DB_BUYER_DECISION_OVERRIDE_1 =
+            DBBuyerDecisionOverride.builder()
+                    .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_1)
+                    .setAppPackageName(CALLER_PACKAGE_NAME_1)
+                    .setBuyer(CommonFixture.VALID_BUYER_1)
+                    .setDecisionLogic(BUYER_DECISION_LOGIC_JS_1)
+                    .build();
+
+    private static final DBBuyerDecisionOverride DB_BUYER_DECISION_OVERRIDE_2 =
+            DBBuyerDecisionOverride.builder()
+                    .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_1)
+                    .setAppPackageName(CALLER_PACKAGE_NAME_1)
+                    .setBuyer(CommonFixture.VALID_BUYER_2)
+                    .setDecisionLogic(BUYER_DECISION_LOGIC_JS_2)
+                    .build();
+
+    private static final ImmutableList<DBBuyerDecisionOverride> DB_BUYER_DECISION_OVERRIDES =
+            ImmutableList.of(DB_BUYER_DECISION_OVERRIDE_1, DB_BUYER_DECISION_OVERRIDE_2);
 
     // Event registering constants
     private static final int BUYER_DESTINATION =
@@ -1220,6 +1240,54 @@ public class AdSelectionEntryDaoTest {
         assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
         assertThat(histogramInfo.getAdCounterKeys())
                 .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
+    }
+
+    @Test
+    public void testPersistBuyerDecisionLogicOverrides() {
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+
+        List<DBBuyerDecisionOverride> overrides =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+
+        assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
+    }
+
+    @Test
+    public void testRemoveBuyerDecisionLogicOverrides() {
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+
+        List<DBBuyerDecisionOverride> overrides =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+
+        assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
+
+        mAdSelectionEntryDao.removeBuyerDecisionLogicOverrideByIdAndPackageName(
+                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testRemoveAllBuyerDecisionLogicOverrides() {
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+
+        List<DBBuyerDecisionOverride> overrides =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+
+        assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
+
+        mAdSelectionEntryDao.removeAllBuyerDecisionOverrides(CALLER_PACKAGE_NAME_1);
+
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
     }
 
     /**
