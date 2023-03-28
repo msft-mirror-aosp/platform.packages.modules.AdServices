@@ -179,11 +179,11 @@ public class JsFetcherTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         mWebClient);
 
         FluentFuture<String> buyerDecisionLogicFuture =
-                jsFetcher.getBuyerDecisionLogic(mFetchJsUri, OWNER, BUYER, NAME);
+                jsFetcher.getBiddingLogic(
+                        mFetchJsUri, mCustomAudienceDevOverridesHelper, OWNER, BUYER, NAME);
         String buyerDecisionLogic = waitForFuture(() -> buyerDecisionLogicFuture);
         assertEquals(BIDDING_LOGIC_OVERRIDE, buyerDecisionLogic);
         mMockWebServerRule.verifyMockServerRequests(
@@ -204,7 +204,6 @@ public class JsFetcherTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         mWebClient);
         // Logger calls come after the future result is returned
         CountDownLatch loggerLatch = new CountDownLatch(2);
@@ -225,6 +224,7 @@ public class JsFetcherTest {
         FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogicFuture =
                 jsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
+                        mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME,
@@ -247,12 +247,12 @@ public class JsFetcherTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         mWebClient);
 
         FluentFuture<String> buyerDecisionLogicFuture =
-                jsFetcher.getBuyerDecisionLogic(
+                jsFetcher.getBiddingLogic(
                         mFetchJsUri,
+                        mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME);
@@ -272,7 +272,6 @@ public class JsFetcherTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mCustomAudienceDevOverridesHelper,
                         mWebClient);
         // Logger calls come after the future result is returned
         CountDownLatch loggerLatch = new CountDownLatch(2);
@@ -293,6 +292,7 @@ public class JsFetcherTest {
         FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogicFuture =
                 jsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
+                        mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME,

@@ -305,6 +305,13 @@ public interface Flags {
         return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
     }
 
+    int MEASUREMENT_MAX_REGISTRATION_REDIRECTS = 20;
+
+    /** Returns the number of maximum registration redirects allowed. */
+    default int getMeasurementMaxRegistrationRedirects() {
+        return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -1848,5 +1855,13 @@ public interface Flags {
      */
     default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled.. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+
+    /** Determines whether EU notification flow change is enabled.. */
+    default boolean getEuNotifFlowChangeEnabled() {
+        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 }

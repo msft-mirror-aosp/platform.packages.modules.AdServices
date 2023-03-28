@@ -21,6 +21,7 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 
 import org.json.JSONException;
 import org.junit.Assert;
@@ -54,8 +55,9 @@ public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationT
     public void runActionToTest() {
         DatastoreManager datastoreManager =
                 new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
-        Assert.assertTrue("Attribution failed.",
-                (new AttributionJobHandler(datastoreManager))
+        Assert.assertTrue(
+                "Attribution failed.",
+                (new AttributionJobHandler(datastoreManager, new DebugReportApi(sContext)))
                         .performPendingAttributions());
     }
 }

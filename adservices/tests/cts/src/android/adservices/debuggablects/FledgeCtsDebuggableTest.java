@@ -18,6 +18,10 @@ package android.adservices.debuggablects;
 
 import static android.adservices.common.CommonFixture.INVALID_EMPTY_BUYER;
 
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertNull;
@@ -29,6 +33,7 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
@@ -104,8 +109,24 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
 
+    // Interaction reporting constants
+    private static final String CLICK_INTERACTION = "click";
+    private static final String HOVER_INTERACTION = "hover";
+
+    private static final String SELLER_CLICK_URI_PATH = "click/seller";
+    private static final String SELLER_HOVER_URI_PATH = "hover/seller";
+
+    private static final String BUYER_CLICK_URI_PATH = "click/buyer";
+    private static final String BUYER_HOVER_URI_PATH = "hover/buyer";
+
     private static final String SELLER_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.SELLER, SELLER_REPORTING_PATH);
+
+    private static final String SELLER_CLICK_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.SELLER, SELLER_CLICK_URI_PATH);
+
+    private static final String SELLER_HOVER_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.SELLER, SELLER_HOVER_URI_PATH);
 
     private static final String DEFAULT_DECISION_LOGIC_JS =
             "function scoreAd(ad, bid, auction_config, seller_signals,"
@@ -120,6 +141,27 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + SELLER_REPORTING_URI
                     + "' } };\n"
                     + "}";
+
+    private static final String DECISION_LOGIC_JS_REGISTER_AD_BEACON =
+            "function scoreAd(ad, bid, auction_config, seller_signals,"
+                    + " trusted_scoring_signals, contextual_signal, user_signal,"
+                    + " custom_audience_signal) { \n"
+                    + "  return {'status': 0, 'score': bid };\n"
+                    + "}\n"
+                    + "function reportResult(ad_selection_config, render_uri, bid,"
+                    + " contextual_signals) { \n"
+                    + "    registerAdBeacon('click', '"
+                    + SELLER_CLICK_URI
+                    + "');\n"
+                    + "    registerAdBeacon('hover', '"
+                    + SELLER_HOVER_URI
+                    + "');\n"
+                    + " return {'status': 0, 'results': {'signals_for_buyer':"
+                    + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                    + SELLER_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -157,6 +199,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final String BUYER_2_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.BUYER_2, BUYER_REPORTING_PATH);
 
+    private static final String BUYER_2_CLICK_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_2, BUYER_CLICK_URI_PATH);
+
+    private static final String BUYER_2_HOVER_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_2, BUYER_HOVER_URI_PATH);
+
     private static final String BUYER_2_BIDDING_LOGIC_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
@@ -170,8 +218,40 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "' } };\n"
                     + "}";
 
+    private static final String BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + "    registerAdBeacon('click', '"
+                    + BUYER_2_CLICK_URI
+                    + "');\n"
+                    + "    registerAdBeacon('hover', '"
+                    + BUYER_2_HOVER_URI
+                    + "');\n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_2_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
     private static final String BUYER_1_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_REPORTING_PATH);
+
+    private static final String BUYER_1_CLICK_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_CLICK_URI_PATH);
+
+    private static final String BUYER_1_HOVER_URI =
+            String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_HOVER_URI_PATH);
 
     private static final String BUYER_1_BIDDING_LOGIC_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
@@ -185,6 +265,39 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + BUYER_1_REPORTING_URI
                     + "' } };\n"
                     + "}";
+
+    private static final String BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + "    registerAdBeacon('click', '"
+                    + BUYER_1_CLICK_URI
+                    + "');\n"
+                    + "    registerAdBeacon('hover', '"
+                    + BUYER_1_HOVER_URI
+                    + "');\n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_1_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final int BUYER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+    private static final int SELLER_DESTINATION =
+            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+
+    private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
     private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
@@ -249,6 +362,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        // Disable registerAdBeacon by default
+        PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(false);
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
@@ -359,6 +474,234 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Performing reporting, and asserting that no exception is thrown
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_scoringPrebuilt_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        String paramKey = "reportingUrl";
+        String paramValue = "https://www.test.com/reporting/seller";
+        AdSelectionConfig config =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "%s://%s/%s/?%s=%s",
+                                                AD_SELECTION_PREBUILT_SCHEMA,
+                                                AD_SELECTION_USE_CASE,
+                                                AD_SELECTION_HIGHEST_BID_WINS,
+                                                paramKey,
+                                                paramValue)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .build();
+
+        // Adding AdSelection override for the sake of the trusted signals, no result to do
+        // assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        config, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(config)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), config);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Ignore
+    @Test
+    public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
+            throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+
+        // Enable registerAdBeacon feature
+        PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
+        AdservicesTestHelper.killAdservicesProcess(sContext);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG,
+                        DECISION_LOGIC_JS_REGISTER_AD_BEACON,
+                        TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        ReportInteractionRequest reportInteractionClickRequest =
+                new ReportInteractionRequest(
+                        outcome.getAdSelectionId(),
+                        CLICK_INTERACTION,
+                        INTERACTION_DATA,
+                        BUYER_DESTINATION | SELLER_DESTINATION);
+
+        ReportInteractionRequest reportInteractionHoverRequest =
+                new ReportInteractionRequest(
+                        outcome.getAdSelectionId(),
+                        HOVER_INTERACTION,
+                        INTERACTION_DATA,
+                        BUYER_DESTINATION | SELLER_DESTINATION);
+
+        // Performing interaction reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportInteraction(reportInteractionClickRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mAdSelectionClient
+                .reportInteraction(reportInteractionHoverRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 

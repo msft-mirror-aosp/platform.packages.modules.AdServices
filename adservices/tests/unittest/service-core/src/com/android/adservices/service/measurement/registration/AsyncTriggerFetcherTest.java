@@ -21,7 +21,6 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
@@ -376,8 +375,11 @@ public final class AsyncTriggerFetcherTest {
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request,
-                AsyncRegistration.RedirectType.DAISY_CHAIN, MAX_REDIRECTS_PER_REGISTRATION);
+        AsyncRegistration asyncRegistration =
+                appTriggerRegistrationRequest(
+                        request,
+                        AsyncRegistration.RedirectType.DAISY_CHAIN,
+                        FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects());
         // Execution
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
