@@ -39,8 +39,14 @@ import android.content.Context;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -57,6 +63,35 @@ public class PermissionsNoPermTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Permission was not requested.";
+
+    private String mPreviousAppAllowList;
+
+    @Before
+    public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            overridePpapiAppAllowList();
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
+
+    private void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    private void overridePpapiAppAllowList() {
+        mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    }
 
     @Test
     public void testNoPerm_topics() {
@@ -219,6 +254,36 @@ public class PermissionsNoPermTest {
                         () -> mAdSelectionClient.reportImpression(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
+
+// TODO(b/274723533): Uncomment after un-hiding the API
+/*
+    @Test
+    public void testPermissionNotRequested_reportInteraction() {
+        long adSelectionId = 1;
+        String interactionKey = "click";
+        String interactionData = "{\"key\":\"value\"}";
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ReportInteractionRequest request =
+                new ReportInteractionRequest(
+                        adSelectionId,
+                        interactionKey,
+                        interactionData,
+                        ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                | ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER);
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportInteraction(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+*/
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {

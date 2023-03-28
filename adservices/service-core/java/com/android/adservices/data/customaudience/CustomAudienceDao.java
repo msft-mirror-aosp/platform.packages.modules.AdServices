@@ -22,25 +22,28 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.room.ColumnInfo;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Transaction;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.CleanupUtils;
+import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AllowLists;
-import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.common.collect.ImmutableMap;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * DAO abstract class used to access Custom Audience persistent storage.
@@ -49,6 +52,7 @@ import java.util.stream.Collectors;
  */
 @Dao
 public abstract class CustomAudienceDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Add user to a new custom audience. As designed, will override existing one.
      *
@@ -241,17 +245,50 @@ public abstract class CustomAudienceDao {
     /**
      * Get custom audience JS override by its unique key.
      *
+     * <p>This method is not intended to be called on its own. Please use {@link
+     * #getBiddingLogicUriOverride(String, AdTechIdentifier, String, String)} instead.
+     *
      * @return custom audience override result if exists.
      */
     @Query(
-            "SELECT bidding_logic FROM custom_audience_overrides WHERE owner = :owner "
-                    + "AND buyer = :buyer AND name = :name AND app_package_name= :appPackageName")
+            "SELECT bidding_logic as bidding_logic_js, bidding_logic_version as"
+                    + " buyer_bidding_logic_version FROM custom_audience_overrides WHERE owner ="
+                    + " :owner AND buyer = :buyer AND name = :name AND app_package_name="
+                    + " :appPackageName")
     @Nullable
-    public abstract String getBiddingLogicUriOverride(
+    protected abstract BiddingLogicJsWithVersion getBiddingLogicUriOverrideInternal(
             @NonNull String owner,
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String appPackageName);
+
+    /**
+     * Get custom audience JS override by its unique key.
+     *
+     * @return custom audience override result if exists.
+     */
+    public DecisionLogic getBiddingLogicUriOverride(
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull String appPackageName) {
+        BiddingLogicJsWithVersion biddingLogicJsWithVersion =
+                getBiddingLogicUriOverrideInternal(owner, buyer, name, appPackageName);
+
+        if (Objects.isNull(biddingLogicJsWithVersion)) {
+            return null;
+        }
+
+        ImmutableMap.Builder<Integer, Long> versionMap = new ImmutableMap.Builder<>();
+        if (Objects.nonNull(biddingLogicJsWithVersion.getBuyerBiddingLogicVersion())) {
+            versionMap.put(
+                    JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                    biddingLogicJsWithVersion.getBuyerBiddingLogicVersion());
+        }
+
+        return DecisionLogic.create(
+                biddingLogicJsWithVersion.getBiddingLogicJs(), versionMap.build());
+    }
 
     /**
      * Get trusted bidding data override by its unique key.
@@ -373,20 +410,7 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(flags);
         List<String> ownersToRemove = getAllCustomAudienceOwners();
 
-        if (!ownersToRemove.isEmpty()) {
-            Set<String> allowedPackages =
-                    PackageManagerCompatUtils.getInstalledApplications(packageManager, 0).stream()
-                            .map(applicationInfo -> applicationInfo.packageName)
-                            .collect(Collectors.toSet());
-
-            String appAllowList = flags.getPpapiAppAllowList();
-            if (!AllowLists.doesAllowListAllowAll(appAllowList)) {
-                allowedPackages.retainAll(AllowLists.splitAllowList(appAllowList));
-            }
-
-            // Packages must be both installed and allowlisted, or else they should be removed
-            ownersToRemove.removeAll(allowedPackages);
-        }
+        CleanupUtils.removeAllowedPackages(ownersToRemove, packageManager, flags);
 
         long numDisallowedOwnersFound = ownersToRemove.size();
         long numRemovedCustomAudiences = 0;
@@ -445,7 +469,7 @@ public abstract class CustomAudienceDao {
         Objects.requireNonNull(flags);
 
         if (flags.getDisableFledgeEnrollmentCheck()) {
-            LogUtil.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
+            sLogger.d("FLEDGE enrollment check disabled; skipping enrolled buyer cleanup");
             return CustomAudienceStats.builder()
                     .setTotalCustomAudienceCount(0)
                     .setTotalBuyerCount(0)
@@ -609,4 +633,31 @@ public abstract class CustomAudienceDao {
                     + "AND :currentTime < ca.expiration_time")
     public abstract int getNumActiveEligibleCustomAudienceBackgroundFetchData(
             @NonNull Instant currentTime);
+
+    @VisibleForTesting
+    static class BiddingLogicJsWithVersion {
+        @ColumnInfo(name = "bidding_logic_js")
+        @NonNull
+        String mBiddingLogicJs;
+
+        @ColumnInfo(name = "buyer_bidding_logic_version")
+        @Nullable
+        Long mBuyerBiddingLogicVersion;
+
+        BiddingLogicJsWithVersion(
+                @NonNull String biddingLogicJs, @Nullable Long buyerBiddingLogicVersion) {
+            this.mBiddingLogicJs = biddingLogicJs;
+            this.mBuyerBiddingLogicVersion = buyerBiddingLogicVersion;
+        }
+
+        @NonNull
+        public String getBiddingLogicJs() {
+            return mBiddingLogicJs;
+        }
+
+        @Nullable
+        public Long getBuyerBiddingLogicVersion() {
+            return mBuyerBiddingLogicVersion;
+        }
+    }
 }

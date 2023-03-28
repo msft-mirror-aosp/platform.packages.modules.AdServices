@@ -25,6 +25,7 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 public class ContentValueFixtures {
 
@@ -97,6 +98,13 @@ public class ContentValueFixtures {
         public static final String REGISTRATION_ID = "registration_id";
         public static final String SHARED_AGGREGATION_KEY = "shared_aggregation_key";
         public static final long INSTALL_TIME = 8660000000L;
+        public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
+    }
+
+    public static class SourceDestinationValues {
+        // SOURCE_ID can be referenced from SourceValues.ID
+        public static final String DESTINATION = "https://destination.test";
+        public static final int DESTINATION_TYPE = 1;
     }
 
     public static class TriggerValues {
@@ -152,6 +160,7 @@ public class ContentValueFixtures {
         public static final String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
         public static final String AGGREGATABLE_DEDUPLICATION_KEYS =
                 "aggregatable_deduplication_keys";
+        public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
     }
 
     public static class AttributionValues {
@@ -213,6 +222,9 @@ public class ContentValueFixtures {
         public static final String SOURCE_ID = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
         public static final long DEBUG_REPORT_STATUS = 4;
+
+        // Added in V9
+        public static final UnsignedLong DEDUP_KEY = new UnsignedLong(12L);
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -327,6 +339,14 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateAsyncRegistrationContentValuesV7() {
+        return generateAsyncRegistrationContentValuesV6();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV8() {
+        return generateAsyncRegistrationContentValuesV7();
+    }
+
     public static ContentValues generateSourceContentValuesV1() {
         ContentValues source = new ContentValues();
 
@@ -334,13 +354,14 @@ public class ContentValueFixtures {
         source.put(MeasurementTables.SourceContract.EVENT_ID, SourceValues.EVENT_ID);
         source.put(MeasurementTables.SourceContract.PUBLISHER, SourceValues.PUBLISHER);
         source.put(MeasurementTables.SourceContract.PUBLISHER_TYPE, SourceValues.PUBLISHER_TYPE);
-        source.put(MeasurementTables.SourceContract.APP_DESTINATION, SourceValues.APP_DESTINATION);
+        source.put(MeasurementTablesDeprecated.SourceContract.APP_DESTINATION,
+                SourceValues.APP_DESTINATION);
         source.put(MeasurementTables.SourceContract.ENROLLMENT_ID, SourceValues.ENROLLMENT_ID);
         source.put(MeasurementTables.SourceContract.EVENT_TIME, SourceValues.EVENT_TIME);
         source.put(MeasurementTables.SourceContract.EXPIRY_TIME, SourceValues.EXPIRY_TIME);
         source.put(MeasurementTables.SourceContract.PRIORITY, SourceValues.PRIORITY);
         source.put(MeasurementTables.SourceContract.STATUS, SourceValues.STATUS);
-        source.put(MeasurementTablesDeprecated.Source.DEDUP_KEYS, SourceValues.DEDUP_KEYS);
+        source.put(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS, SourceValues.DEDUP_KEYS);
         source.put(MeasurementTables.SourceContract.SOURCE_TYPE, SourceValues.SOURCE_TYPE);
         source.put(MeasurementTables.SourceContract.REGISTRANT, SourceValues.REGISTRANT);
         source.put(
@@ -361,7 +382,8 @@ public class ContentValueFixtures {
         source.put(
                 MeasurementTables.SourceContract.AGGREGATE_CONTRIBUTIONS,
                 SourceValues.AGGREGATE_CONTRIBUTIONS);
-        source.put(MeasurementTables.SourceContract.WEB_DESTINATION, SourceValues.WEB_DESTINATION);
+        source.put(MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION,
+                SourceValues.WEB_DESTINATION);
         source.put(MeasurementTables.SourceContract.DEBUG_KEY, SourceValues.DEBUG_KEY);
 
         return source;
@@ -395,7 +417,7 @@ public class ContentValueFixtures {
         ContentValues values = generateSourceContentValuesV3();
 
         // Rename dedup key column
-        values.remove(MeasurementTablesDeprecated.Source.DEDUP_KEYS);
+        values.remove(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS);
         values.put(
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS,
                 SourceValues.EVENT_REPORT_DEDUP_KEY);
@@ -417,6 +439,35 @@ public class ContentValueFixtures {
         values.put(MeasurementTables.SourceContract.INSTALL_TIME, SourceValues.INSTALL_TIME);
 
         return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV7() {
+        return generateSourceContentValuesV6();
+    }
+
+    public static ContentValues generateSourceContentValuesV8() {
+        ContentValues values = generateSourceContentValuesV7();
+        values.put(MeasurementTables.SourceContract.DEBUG_JOIN_KEY, SourceValues.DEBUG_JOIN_KEY);
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV9() {
+        ContentValues values = generateSourceContentValuesV8();
+        values.remove(MeasurementTablesDeprecated.SourceContract.APP_DESTINATION);
+        values.remove(MeasurementTablesDeprecated.SourceContract.WEB_DESTINATION);
+        return values;
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV9() {
+        ContentValues sourceDestination = new ContentValues();
+
+        sourceDestination.put(MeasurementTables.SourceDestination.SOURCE_ID, SourceValues.ID);
+        sourceDestination.put(MeasurementTables.SourceDestination.DESTINATION,
+                SourceDestinationValues.DESTINATION);
+        sourceDestination.put(MeasurementTables.SourceDestination.DESTINATION_TYPE,
+                SourceDestinationValues.DESTINATION_TYPE);
+
+        return sourceDestination;
     }
 
     public static ContentValues generateTriggerContentValuesV1() {
@@ -490,6 +541,16 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateTriggerContentValuesV7() {
+        return generateTriggerContentValuesV6();
+    }
+
+    public static ContentValues generateTriggerContentValuesV8() {
+        ContentValues values = generateTriggerContentValuesV7();
+        values.put(MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, TriggerValues.DEBUG_JOIN_KEY);
+        return values;
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -535,6 +596,14 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV6() {
         return generateAttributionContentValuesV3();
+    }
+
+    public static ContentValues generateAttributionContentValuesV7() {
+        return generateAttributionContentValuesV6();
+    }
+
+    public static ContentValues generateAttributionContentValuesV8() {
+        return generateAttributionContentValuesV7();
     }
 
     public static ContentValues generateEventReportContentValuesV1() {
@@ -609,6 +678,14 @@ public class ContentValueFixtures {
         return generateEventReportContentValuesV3();
     }
 
+    public static ContentValues generateEventReportContentValuesV7() {
+        return generateEventReportContentValuesV6();
+    }
+
+    public static ContentValues generateEventReportContentValuesV8() {
+        return generateEventReportContentValuesV7();
+    }
+
     public static ContentValues generateAggregateReportContentValuesV1() {
         ContentValues aggregateReport = new ContentValues();
 
@@ -669,6 +746,29 @@ public class ContentValueFixtures {
         return generateAggregateReportContentValuesV3();
     }
 
+    public static ContentValues generateAggregateReportContentValuesV7() {
+        return generateAggregateReportContentValuesV6();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV8() {
+        return generateAggregateReportContentValuesV7();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV9() {
+        return generateAggregateReportContentValuesV8();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV10() {
+        ContentValues aggregateReport = generateAggregateReportContentValuesV9();
+
+        // Add columns.
+        aggregateReport.put(
+                MeasurementTables.AggregateReport.DEDUP_KEY,
+                AggregateReportValues.DEDUP_KEY.getValue());
+
+        return aggregateReport;
+    }
+
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {
         ContentValues aggregateEncryptionKey = new ContentValues();
 
@@ -701,6 +801,14 @@ public class ContentValueFixtures {
         return generateAggregateEncryptionKeyContentValuesV3();
     }
 
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV7() {
+        return generateAggregateEncryptionKeyContentValuesV6();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV8() {
+        return generateAggregateEncryptionKeyContentValuesV7();
+    }
+
     public static ContentValues generateDebugReportContentValuesV3() {
         ContentValues debugReport = new ContentValues();
 
@@ -718,6 +826,14 @@ public class ContentValueFixtures {
         return generateDebugReportContentValuesV3();
     }
 
+    public static ContentValues generateDebugReportContentValuesV7() {
+        return generateDebugReportContentValuesV6();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV8() {
+        return generateDebugReportContentValuesV7();
+    }
+
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
         ContentValues values = new ContentValues();
         values.put(
@@ -728,5 +844,13 @@ public class ContentValueFixtures {
                 XnaIgnoredSourcesValues.ENROLLMENT_ID);
 
         return values;
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV7() {
+        return generateXnaIgnoredSourcesContentValuesV6();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV8() {
+        return generateXnaIgnoredSourcesContentValuesV7();
     }
 }

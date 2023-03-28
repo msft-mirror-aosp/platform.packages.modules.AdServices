@@ -22,7 +22,7 @@ import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
  * ones that were already completed
  */
 public class PerBuyerBiddingRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdBidGenerator mAdBidGenerator;
     @NonNull private final TrustedBiddingDataFetcher mTrustedBiddingDataFetcher;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -86,14 +87,14 @@ public class PerBuyerBiddingRunner {
             final List<DBCustomAudience> customAudienceList,
             final long buyerTimeoutMs,
             final AdSelectionConfig adSelectionConfig) {
-        LogUtil.v(
+        sLogger.v(
                 "Running bid for #%d Custom Audiences for buyer: %s",
                 customAudienceList.size(), buyer);
 
         List<List<DBCustomAudience>> biddingWorkPartitions =
                 partitionList(customAudienceList, getMaxConcurrentBiddingCount());
 
-        LogUtil.v("Fetching trusted bidding data for buyer: %s", buyer);
+        sLogger.v("Fetching trusted bidding data for buyer: %s", buyer);
         FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap =
                 mTrustedBiddingDataFetcher.getTrustedBiddingDataForBuyer(customAudienceList);
 
@@ -125,7 +126,7 @@ public class PerBuyerBiddingRunner {
             AdSelectionConfig adSelectionConfig,
             FluentFuture<Map<Uri, JSONObject>> trustedBiddingDataMap) {
         ExecutionSequencer sequencer = ExecutionSequencer.create();
-        LogUtil.v("Bidding partition chunk size: %d", customAudienceSubList.size());
+        sLogger.v("Bidding partition chunk size: %d", customAudienceSubList.size());
         return customAudienceSubList.stream()
                 .map(
                         (customAudience) ->
@@ -146,7 +147,7 @@ public class PerBuyerBiddingRunner {
             @NonNull final DBCustomAudience customAudience,
             @NonNull final AdSelectionConfig adSelectionConfig,
             @NonNull final Map<Uri, JSONObject> trustedBiddingDataByBaseUri) {
-        LogUtil.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
+        sLogger.v(String.format("Invoking bidding for CA: %s", customAudience.getName()));
 
         // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
         AdSelectionSignals buyerSignal =
@@ -183,7 +184,7 @@ public class PerBuyerBiddingRunner {
                             incompleteTaskCount++;
                         }
                     }
-                    LogUtil.v(
+                    sLogger.v(
                             "Total tasks: #%d, cancelled incomplete tasks: #%d",
                             runningTasks.size(), incompleteTaskCount);
                 };

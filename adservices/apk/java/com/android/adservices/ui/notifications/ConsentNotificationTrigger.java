@@ -56,10 +56,6 @@ public class ConsentNotificationTrigger {
         UiStatsLogger.logRequestedNotification(context);
 
         boolean gaUxFeatureEnabled = FlagsFactory.getFlags().getGaUxFeatureEnabled();
-        // Set OTA resources if it exists.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
-            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
-        }
 
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance(context);
@@ -69,17 +65,29 @@ public class ConsentNotificationTrigger {
             return;
         }
 
+        // Set OTA resources if it exists.
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
+
         setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         createNotificationChannel(context);
         Notification notification = getNotification(context, isEuDevice, gaUxFeatureEnabled);
         notificationManager.notify(NOTIFICATION_ID, notification);
 
+        UiStatsLogger.logNotificationDisplayed(context);
         recordNotificationDisplayed(gaUxFeatureEnabled, consentManager);
     }
 
     private static void recordNotificationDisplayed(
             boolean gaUxFeatureEnabled, ConsentManager consentManager) {
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()
+                && consentManager.getUserManualInteractionWithConsent()
+                        != ConsentManager.MANUAL_INTERACTIONS_RECORDED) {
+            consentManager.recordUserManualInteractionWithConsent(
+                    ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED);
+        }
         if (gaUxFeatureEnabled) {
             consentManager.recordGaUxNotificationDisplayed();
         }
@@ -178,15 +186,7 @@ public class ConsentNotificationTrigger {
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
-        // EU needs a "View Details" CTA
-        return isEuDevice
-                ? notification
-                        .addAction(
-                                R.string.notificationUI_notification_ga_cta_eu,
-                                context.getString(R.string.notificationUI_notification_ga_cta_eu),
-                                pendingIntent)
-                        .build()
-                : notification.build();
+        return notification.build();
     }
 
     /**
@@ -226,15 +226,6 @@ public class ConsentNotificationTrigger {
                 .setPriority(NOTIFICATION_PRIORITY)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .addAction(
-                        isEuDevice
-                                ? R.string.notificationUI_notification_cta_eu
-                                : R.string.notificationUI_notification_cta,
-                        context.getString(
-                                isEuDevice
-                                        ? R.string.notificationUI_notification_cta_eu
-                                        : R.string.notificationUI_notification_cta),
-                        pendingIntent)
                 .build();
     }
 

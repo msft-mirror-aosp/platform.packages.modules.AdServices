@@ -83,18 +83,23 @@ public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
+    private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
+    private static boolean sNeedWifiConnectionWait = true;
 
+    // Two files are from cts_test_1 folder.
+    // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     private static final String FILE_GROUP_NAME_1 = "test-group-1";
-    private static final String FILE_GROUP_NAME_2 = "test-group-2";
-    private static final String FILE_ID_1 = "test-file-1";
-    private static final String FILE_ID_2 = "test-file-2";
-    private static final String FILE_CHECKSUM_1 = "c1ef7864c76a99ae738ddad33882ed65972c99cc";
-    private static final String FILE_URL_1 = "https://www.gstatic.com/suggest-dev/odws1_test_4.jar";
-    private static final int FILE_SIZE_1 = 85769;
+    private static final String FILE_ID_1 = "classifier_assets_metadata.json";
+    private static final String FILE_ID_2 = "stopwords.txt";
+    private static final String FILE_CHECKSUM_1 = "52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final String FILE_URL_1 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final int FILE_SIZE_1 = 1026;
 
-    private static final String FILE_CHECKSUM_2 = "a1cba9d87b1440f41ce9e7da38c43e1f6bd7d5df";
-    private static final String FILE_URL_2 = "https://www.gstatic.com/suggest-dev/odws1_empty.jar";
-    private static final int FILE_SIZE_2 = 554;
+    private static final String FILE_CHECKSUM_2 = "042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final String FILE_URL_2 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final int FILE_SIZE_2 = 1;
 
     // TODO(b/263521464): Use the production topics classifier manifest URL.
     private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
@@ -133,7 +138,15 @@ public class MobileDataDownloadTest {
     @Mock ConsentManager mConsentManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
+        // the whole test suite run.
+        // Checking wifi connection using WifiManager isn't working on low-performance devices.
+        if (sNeedWifiConnectionWait) {
+            Thread.sleep(WAIT_FOR_WIFI_CONNECTION_MS);
+            sNeedWifiConnectionWait = false;
+        }
+
         MockitoAnnotations.initMocks(this);
 
         // Start a mockitoSession to mock static method.
@@ -151,8 +164,6 @@ public class MobileDataDownloadTest {
         doReturn(/* Download max download threads */ 2)
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
-
-        doReturn(/* Default value */ false).when(mMockFlags).getEnableTopicMigration();
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =

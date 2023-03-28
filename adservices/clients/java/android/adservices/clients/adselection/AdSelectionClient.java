@@ -20,6 +20,8 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -104,6 +106,46 @@ public class AdSelectionClient {
                             });
                     return "reportImpression";
                 });
+    }
+
+    /**
+     * Invokes the {@code reportInteraction} method of {@link AdSelectionManager}, and returns a
+     * Void future
+     *
+     * @hide
+     */
+    @NonNull
+    public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
+        // TODO(b/274723533): Uncomment this after un-hiding
+//        return CallbackToFutureAdapter.getFuture(
+//                completer -> {
+//                    mAdSelectionManager.reportInteraction(
+//                            request,
+//                            mExecutor,
+//                            new OutcomeReceiver<Object, Exception>() {
+//                                @Override
+//                                public void onResult(@NonNull Object ignoredResult) {
+//                                    completer.set(null);
+//                                }
+//
+//                                @Override
+//                                public void onError(@NonNull Exception error) {
+//                                    completer.setException(error);
+//                                }
+//                            });
+//                    return "reportInteraction";
+//                });
+        return CallbackToFutureAdapter.getFuture(completer -> null);
+    }
+
+    /**
+     * Invokes the {@code setAppInstallAdvertiser} method of {@link AdSelectionManager}, and returns
+     * a Void future.
+     */
+    @NonNull
+    public ListenableFuture<Void> setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest setAppInstallAdvertisersRequest) {
+        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /** Builder class. */
