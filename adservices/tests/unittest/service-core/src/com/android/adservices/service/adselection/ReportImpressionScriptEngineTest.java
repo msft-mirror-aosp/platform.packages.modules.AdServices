@@ -135,7 +135,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AdDataArgumentUtil.asScriptArgument("ignored", AD_DATA));
         final ReportingScriptResult result =
                 callReportingEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'results': {'result':"
@@ -149,7 +149,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AdDataArgumentUtil.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -167,7 +167,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AdDataArgumentUtil.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(

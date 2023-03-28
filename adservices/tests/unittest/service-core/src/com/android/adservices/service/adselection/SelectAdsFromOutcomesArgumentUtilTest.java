@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.SelectAdsFromOutcomesArgument.BID_FIELD_NAME;
-import static com.android.adservices.service.adselection.SelectAdsFromOutcomesArgument.ID_FIELD_NAME;
+import static com.android.adservices.service.adselection.SelectAdsFromOutcomesArgumentUtil.BID_FIELD_NAME;
+import static com.android.adservices.service.adselection.SelectAdsFromOutcomesArgumentUtil.ID_FIELD_NAME;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -30,7 +30,7 @@ import com.android.adservices.service.js.JSScriptArgument;
 import org.junit.Test;
 
 @SmallTest
-public class SelectAdsFromOutcomesArgumentTest {
+public class SelectAdsFromOutcomesArgumentUtilTest {
     private static final String SCRIPT_ARGUMENT_NAME_IGNORED = "ignored";
     private static final long AD_SELECTION_ID = 123456789101112L;
     private static final double BID = 10.0;
@@ -45,7 +45,7 @@ public class SelectAdsFromOutcomesArgumentTest {
     @Test
     public void testConvertsToScriptArgument() {
         JSScriptArgument argument =
-                SelectAdsFromOutcomesArgument.asScriptArgument(
+                SelectAdsFromOutcomesArgumentUtil.asScriptArgument(
                         SCRIPT_ARGUMENT_NAME_IGNORED, ID_WITH_BID_AND_RENDER_URI);
         JSScriptArgument expected =
                 JSScriptArgument.recordArg(

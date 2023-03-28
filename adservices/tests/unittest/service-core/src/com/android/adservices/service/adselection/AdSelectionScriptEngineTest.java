@@ -746,7 +746,7 @@ public class AdSelectionScriptEngineTest {
             throws Exception {
         ImmutableList.Builder<JSScriptArgument> adDataArgs = new ImmutableList.Builder<>();
         for (AdData ad : adData) {
-            adDataArgs.add(AdDataArgument.asScriptArgument("ignored", ad));
+            adDataArgs.add(AdDataArgumentUtil.asScriptArgument("ignored", ad));
         }
         return waitForFuture(
                 () -> {

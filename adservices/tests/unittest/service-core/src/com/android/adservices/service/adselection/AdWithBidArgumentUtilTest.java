@@ -34,70 +34,72 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 @SmallTest
-public class AdWithBidArgumentTest {
+public class AdWithBidArgumentUtilTest {
 
     public static final int BID_VALUE = 10;
     public static final AdWithBid AD_WITH_BID =
-            new AdWithBid(AdDataArgumentTest.AD_DATA, BID_VALUE);
+            new AdWithBid(AdDataArgumentUtilTest.AD_DATA, BID_VALUE);
 
     private JSONObject aValidAdWithBidJson() throws JSONException {
         return new JSONObject()
-                .put(AdWithBidArgument.AD_FIELD_NAME, AdDataArgumentTest.aValidAdDataJson())
-                .put(AdWithBidArgument.BID_FIELD_NAME, BID_VALUE);
+                .put(AdWithBidArgumentUtil.AD_FIELD_NAME, AdDataArgumentUtilTest.aValidAdDataJson())
+                .put(AdWithBidArgumentUtil.BID_FIELD_NAME, BID_VALUE);
     }
 
     @Test
     public void testShouldReadValidJSON() throws Exception {
-        assertThat(AdWithBidArgument.parseJsonResponse(aValidAdWithBidJson()))
+        assertThat(AdWithBidArgumentUtil.parseJsonResponse(aValidAdWithBidJson()))
                 .isEqualTo(AD_WITH_BID);
     }
 
     @Test
     public void testShouldFailIfAdDataHasInvalidMetadata() throws Exception {
         final JSONObject adWithInvalidMetadata =
-                AdDataArgumentTest.aValidAdDataJson().put(AdDataArgument.METADATA_FIELD_NAME, 10);
+                AdDataArgumentUtilTest.aValidAdDataJson()
+                        .put(AdDataArgumentUtil.METADATA_FIELD_NAME, 10);
         JSONObject adWithBidWithInvalidMetadata =
                 new JSONObject()
-                        .put(AdWithBidArgument.AD_FIELD_NAME, adWithInvalidMetadata)
-                        .put(AdWithBidArgument.BID_FIELD_NAME, BID_VALUE);
+                        .put(AdWithBidArgumentUtil.AD_FIELD_NAME, adWithInvalidMetadata)
+                        .put(AdWithBidArgumentUtil.BID_FIELD_NAME, BID_VALUE);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdWithBidArgument.parseJsonResponse(adWithBidWithInvalidMetadata));
+                () -> AdWithBidArgumentUtil.parseJsonResponse(adWithBidWithInvalidMetadata));
     }
 
     @Test
     public void testShouldFailIfIsMissingBid() throws Exception {
         JSONObject adWithBidMissingBid = aValidAdWithBidJson();
-        adWithBidMissingBid.remove(AdWithBidArgument.BID_FIELD_NAME);
+        adWithBidMissingBid.remove(AdWithBidArgumentUtil.BID_FIELD_NAME);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdWithBidArgument.parseJsonResponse(adWithBidMissingBid));
+                () -> AdWithBidArgumentUtil.parseJsonResponse(adWithBidMissingBid));
     }
 
     @Test
     public void testShouldFailIfIsMissingAdData() throws Exception {
         JSONObject adWithBidMissingAdData = aValidAdWithBidJson();
-        adWithBidMissingAdData.remove(AdWithBidArgument.AD_FIELD_NAME);
+        adWithBidMissingAdData.remove(AdWithBidArgumentUtil.AD_FIELD_NAME);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdWithBidArgument.parseJsonResponse(adWithBidMissingAdData));
+                () -> AdWithBidArgumentUtil.parseJsonResponse(adWithBidMissingAdData));
     }
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
-        assertThat(AdWithBidArgument.asScriptArgument("name", AD_WITH_BID))
+        assertThat(AdWithBidArgumentUtil.asScriptArgument("name", AD_WITH_BID))
                 .isEqualTo(
                         recordArg(
                                 "name",
                                 recordArg(
-                                        AdWithBidArgument.AD_FIELD_NAME,
+                                        AdWithBidArgumentUtil.AD_FIELD_NAME,
                                         stringArg(
-                                                AdDataArgument.RENDER_URI_FIELD_NAME,
+                                                AdDataArgumentUtil.RENDER_URI_FIELD_NAME,
                                                 AD_WITH_BID.getAdData().getRenderUri().toString()),
                                         jsonArg(
-                                                AdDataArgument.METADATA_FIELD_NAME,
+                                                AdDataArgumentUtil.METADATA_FIELD_NAME,
                                                 AD_WITH_BID.getAdData().getMetadata())),
                                 numericArg(
-                                        AdWithBidArgument.BID_FIELD_NAME, AD_WITH_BID.getBid())));
+                                        AdWithBidArgumentUtil.BID_FIELD_NAME,
+                                        AD_WITH_BID.getBid())));
     }
 }

@@ -35,59 +35,59 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 @SmallTest
-public class AdDataArgumentTest {
+public class AdDataArgumentUtilTest {
     public static final AdData AD_DATA =
             AdDataFixture.getValidAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
 
     public static JSONObject aValidAdDataJson() throws JSONException {
         return new JSONObject()
-                .put(AdDataArgument.RENDER_URI_FIELD_NAME, AD_DATA.getRenderUri())
-                .put(AdDataArgument.METADATA_FIELD_NAME, new JSONObject(AD_DATA.getMetadata()));
+                .put(AdDataArgumentUtil.RENDER_URI_FIELD_NAME, AD_DATA.getRenderUri())
+                .put(AdDataArgumentUtil.METADATA_FIELD_NAME, new JSONObject(AD_DATA.getMetadata()));
     }
 
     @Test
     public void testShouldReadValidJSON() throws Exception {
-        assertThat(AdDataArgument.parseJsonResponse(aValidAdDataJson())).isEqualTo(AD_DATA);
+        assertThat(AdDataArgumentUtil.parseJsonResponse(aValidAdDataJson())).isEqualTo(AD_DATA);
     }
 
     @Test
     public void testShouldFailIfAdDataHasInvalidMetadata() throws JSONException {
         JSONObject adDataWithInvalidMetadata =
-                aValidAdDataJson().put(AdDataArgument.METADATA_FIELD_NAME, 10);
+                aValidAdDataJson().put(AdDataArgumentUtil.METADATA_FIELD_NAME, 10);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdWithBidArgument.parseJsonResponse(adDataWithInvalidMetadata));
+                () -> AdWithBidArgumentUtil.parseJsonResponse(adDataWithInvalidMetadata));
     }
 
     @Test
     public void testShouldFailIfAdDataIsMissingMetadata() throws JSONException {
         JSONObject adDataWithoutMetadata = aValidAdDataJson();
-        adDataWithoutMetadata.remove(AdDataArgument.METADATA_FIELD_NAME);
+        adDataWithoutMetadata.remove(AdDataArgumentUtil.METADATA_FIELD_NAME);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdDataArgument.parseJsonResponse(adDataWithoutMetadata));
+                () -> AdDataArgumentUtil.parseJsonResponse(adDataWithoutMetadata));
     }
 
     @Test
     public void testShouldFailIfAdDataIsMissingRenderUri() throws JSONException {
         JSONObject adDataWithoutRenderUri = aValidAdDataJson();
-        adDataWithoutRenderUri.remove(AdDataArgument.RENDER_URI_FIELD_NAME);
+        adDataWithoutRenderUri.remove(AdDataArgumentUtil.RENDER_URI_FIELD_NAME);
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AdDataArgument.parseJsonResponse(adDataWithoutRenderUri));
+                () -> AdDataArgumentUtil.parseJsonResponse(adDataWithoutRenderUri));
     }
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
-        assertThat(AdDataArgument.asScriptArgument("name", AD_DATA))
+        assertThat(AdDataArgumentUtil.asScriptArgument("name", AD_DATA))
                 .isEqualTo(
                         recordArg(
                                 "name",
                                 stringArg(
-                                        AdDataArgument.RENDER_URI_FIELD_NAME,
+                                        AdDataArgumentUtil.RENDER_URI_FIELD_NAME,
                                         AD_DATA.getRenderUri().toString()),
                                 jsonArg(
-                                        AdDataArgument.METADATA_FIELD_NAME,
+                                        AdDataArgumentUtil.METADATA_FIELD_NAME,
                                         AD_DATA.getMetadata())));
     }
 }

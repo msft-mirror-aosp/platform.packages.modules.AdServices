@@ -35,12 +35,12 @@ import org.json.JSONObject;
  * A utility class to support the conversion from {@link AdData} to {@link JSScriptArgument} and to
  * parse JS result string into {@link AdData}.
  */
-public class AdDataArgument {
+public class AdDataArgumentUtil {
     @VisibleForTesting static final String RENDER_URI_FIELD_NAME = "render_uri";
     @VisibleForTesting static final String METADATA_FIELD_NAME = "metadata";
 
     // No instance of this class is supposed to be created
-    private AdDataArgument() {}
+    private AdDataArgumentUtil() {}
 
     /**
      * @return An {@link AdData} instance built reading the content of the provided JSON object.

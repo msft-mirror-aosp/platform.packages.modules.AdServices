@@ -31,7 +31,7 @@ import org.json.JSONObject;
  * A wrapper class for {@link android.adservices.adselection.AdWithBid} to support the conversion to
  * JS Script parameter and the from a JS result string.
  */
-public final class AdWithBidArgument {
+public final class AdWithBidArgumentUtil {
     static final String AD_FIELD_NAME = "ad";
     static final String BID_FIELD_NAME = "bid";
 
@@ -43,7 +43,7 @@ public final class AdWithBidArgument {
             throws IllegalArgumentException {
         try {
             AdData adData =
-                    AdDataArgument.parseJsonResponse(jsonObject.getJSONObject(AD_FIELD_NAME));
+                    AdDataArgumentUtil.parseJsonResponse(jsonObject.getJSONObject(AD_FIELD_NAME));
             return new AdWithBid(adData, jsonObject.getDouble(BID_FIELD_NAME));
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid value for advert data", e);
@@ -59,7 +59,7 @@ public final class AdWithBidArgument {
             throws JSONException {
         return recordArg(
                 name,
-                AdDataArgument.asScriptArgument(AD_FIELD_NAME, adWithBid.getAdData()),
+                AdDataArgumentUtil.asScriptArgument(AD_FIELD_NAME, adWithBid.getAdData()),
                 numericArg(BID_FIELD_NAME, adWithBid.getBid()));
     }
 }
