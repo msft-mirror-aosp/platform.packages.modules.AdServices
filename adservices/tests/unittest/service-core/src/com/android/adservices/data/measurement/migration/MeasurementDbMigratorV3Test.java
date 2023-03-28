@@ -34,8 +34,8 @@ import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 
 import org.json.JSONException;
 import org.json.JSONObject;
