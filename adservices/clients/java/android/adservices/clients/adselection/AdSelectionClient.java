@@ -117,24 +117,26 @@ public class AdSelectionClient {
     @NonNull
     public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
         // TODO(b/274723533): Uncomment this after un-hiding
-//        return CallbackToFutureAdapter.getFuture(
-//                completer -> {
-//                    mAdSelectionManager.reportInteraction(
-//                            request,
-//                            mExecutor,
-//                            new OutcomeReceiver<Object, Exception>() {
-//                                @Override
-//                                public void onResult(@NonNull Object ignoredResult) {
-//                                    completer.set(null);
-//                                }
-//
-//                                @Override
-//                                public void onError(@NonNull Exception error) {
-//                                    completer.setException(error);
-//                                }
-//                            });
-//                    return "reportInteraction";
-//                });
+/*
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.reportInteraction(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "reportInteraction";
+                });
+*/
         return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
