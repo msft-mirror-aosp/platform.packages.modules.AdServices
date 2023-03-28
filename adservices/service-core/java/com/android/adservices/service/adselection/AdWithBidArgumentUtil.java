@@ -27,6 +27,8 @@ import com.android.adservices.service.js.JSScriptArgument;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * A wrapper class for {@link android.adservices.adselection.AdWithBid} to support the conversion to
  * JS Script parameter and the from a JS result string.
@@ -35,15 +37,21 @@ public final class AdWithBidArgumentUtil {
     static final String AD_FIELD_NAME = "ad";
     static final String BID_FIELD_NAME = "bid";
 
+    private final AdDataArgumentUtil mAdDataArgumentUtil;
+
+    public AdWithBidArgumentUtil(AdDataArgumentUtil adDataArgumentUtil) {
+        Objects.requireNonNull(adDataArgumentUtil);
+        mAdDataArgumentUtil = adDataArgumentUtil;
+    }
+
     /**
      * @return an instance of {@link AdWithBid} reading the advert and bid value from JSON.
      * @throws IllegalArgumentException if the JSON doesn't contain valid information.
      */
-    public static AdWithBid parseJsonResponse(JSONObject jsonObject)
-            throws IllegalArgumentException {
+    public AdWithBid parseJsonResponse(JSONObject jsonObject) throws IllegalArgumentException {
         try {
             AdData adData =
-                    AdDataArgumentUtil.parseJsonResponse(jsonObject.getJSONObject(AD_FIELD_NAME));
+                    mAdDataArgumentUtil.parseJsonResponse(jsonObject.getJSONObject(AD_FIELD_NAME));
             return new AdWithBid(adData, jsonObject.getDouble(BID_FIELD_NAME));
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid value for advert data", e);
@@ -55,11 +63,11 @@ public final class AdWithBidArgumentUtil {
      *     this advert.
      * @throws JSONException If the {@link AdData} in {@code adWithBid} is not valid JSON.
      */
-    public static JSScriptArgument asScriptArgument(String name, AdWithBid adWithBid)
+    public JSScriptArgument asScriptArgument(String name, AdWithBid adWithBid)
             throws JSONException {
         return recordArg(
                 name,
-                AdDataArgumentUtil.asScriptArgument(AD_FIELD_NAME, adWithBid.getAdData()),
+                mAdDataArgumentUtil.asScriptArgument(AD_FIELD_NAME, adWithBid.getAdData()),
                 numericArg(BID_FIELD_NAME, adWithBid.getBid()));
     }
 }

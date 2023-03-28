@@ -208,14 +208,19 @@ public class AdSelectionScriptEngine {
     private final Executor mExecutor = MoreExecutors.directExecutor();
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final AdWithBidArgumentUtil mAdWithBidArgumentUtil;
+    private final AdDataArgumentUtil mAdDataArgumentUtil;
 
     public AdSelectionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            AdCounterKeyCopier adCounterKeyCopier) {
         mJsEngine = JSScriptEngine.getInstance(context);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
+        mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
+        mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
     }
 
     /**
@@ -262,7 +267,7 @@ public class AdSelectionScriptEngine {
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
         for (AdData currAd : ads) {
             // Ads are going to be in an array their individual name is ignored.
-            adDataArguments.add(AdDataArgumentUtil.asScriptArgument("ignored", currAd));
+            adDataArguments.add(mAdDataArgumentUtil.asScriptArgument("ignored", currAd));
         }
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
 
@@ -390,7 +395,7 @@ public class AdSelectionScriptEngine {
         for (AdWithBid currAdWithBid : adsWithBid) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adWithBidArguments.add(
-                    AdWithBidArgumentUtil.asScriptArgument(
+                    mAdWithBidArgumentUtil.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, currAdWithBid));
         }
         // Start scoreAds script execution process.
@@ -460,7 +465,7 @@ public class AdSelectionScriptEngine {
                 ImmutableList.Builder<AdWithBid> result = ImmutableList.builder();
                 for (int i = 0; i < batchBidResult.results.length(); i++) {
                     result.add(
-                            AdWithBidArgumentUtil.parseJsonResponse(
+                            mAdWithBidArgumentUtil.parseJsonResponse(
                                     batchBidResult.results.optJSONObject(i)));
                 }
                 return result.build();
@@ -925,7 +930,7 @@ public class AdSelectionScriptEngine {
     JSScriptArgument translateCustomAudience(DBCustomAudience customAudience) throws JSONException {
         ImmutableList.Builder<JSScriptArgument> adsArg = ImmutableList.builder();
         for (DBAdData ad : customAudience.getAds()) {
-            adsArg.add(AdDataArgumentUtil.asRecordArgument("ignored", ad));
+            adsArg.add(mAdDataArgumentUtil.asRecordArgument("ignored", ad));
         }
         // TODO(b/273357664): Verify with product on the set of fields we want to include.
         return recordArg(

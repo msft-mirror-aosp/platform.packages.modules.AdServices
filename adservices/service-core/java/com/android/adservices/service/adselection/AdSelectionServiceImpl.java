@@ -377,6 +377,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mContext,
                                     mFlags,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                                     callingUid);
                     runner.runOutcomeSelection(inputParams, callback);
                 });

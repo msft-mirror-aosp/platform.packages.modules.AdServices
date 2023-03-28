@@ -31,6 +31,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Objects;
+
 /**
  * A utility class to support the conversion from {@link AdData} to {@link JSScriptArgument} and to
  * parse JS result string into {@link AdData}.
@@ -39,19 +41,26 @@ public class AdDataArgumentUtil {
     @VisibleForTesting static final String RENDER_URI_FIELD_NAME = "render_uri";
     @VisibleForTesting static final String METADATA_FIELD_NAME = "metadata";
 
-    // No instance of this class is supposed to be created
-    private AdDataArgumentUtil() {}
+    private final AdCounterKeyCopier mAdCounterKeyCopier;
+
+    public AdDataArgumentUtil(AdCounterKeyCopier adCounterKeyCopier) {
+        Objects.requireNonNull(adCounterKeyCopier);
+        mAdCounterKeyCopier = adCounterKeyCopier;
+    }
 
     /**
      * @return An {@link AdData} instance built reading the content of the provided JSON object.
      * @throws IllegalArgumentException If the provided JSON doesn't contain a `render_uri` and a
      *     `metadata` field with valid content.
      */
-    public static AdData parseJsonResponse(JSONObject jsonObject) throws IllegalArgumentException {
+    public AdData parseJsonResponse(JSONObject jsonObject) throws IllegalArgumentException {
         try {
-            return new AdData.Builder()
-                    .setRenderUri(Uri.parse(jsonObject.getString(RENDER_URI_FIELD_NAME)))
-                    .setMetadata(jsonObject.getJSONObject(METADATA_FIELD_NAME).toString())
+            AdData.Builder adDataBuilderWithoutAdCounterKeys =
+                    new AdData.Builder()
+                            .setRenderUri(Uri.parse(jsonObject.getString(RENDER_URI_FIELD_NAME)))
+                            .setMetadata(jsonObject.getJSONObject(METADATA_FIELD_NAME).toString());
+            return mAdCounterKeyCopier
+                    .copyAdCounterKeys(adDataBuilderWithoutAdCounterKeys, jsonObject)
                     .build();
         } catch (JSONException e) {
             throw new IllegalArgumentException(
@@ -70,12 +79,14 @@ public class AdDataArgumentUtil {
      * @throws JSONException If the content of {@link AdData#getMetadata()} of the wrapped {@code
      *     AdData} is not valid JSON.
      */
-    public static JSScriptArgument asScriptArgument(String name, AdData adData)
-            throws JSONException {
-        return recordArg(
-                name,
-                stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
-                jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
+    public JSScriptArgument asScriptArgument(String name, AdData adData) throws JSONException {
+        JSScriptRecordArgument recordArgWithoutAdCounterKeys =
+                recordArg(
+                        name,
+                        stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
+                        jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
+
+        return mAdCounterKeyCopier.copyAdCounterKeys(recordArgWithoutAdCounterKeys, adData);
     }
 
     /**
@@ -84,11 +95,14 @@ public class AdDataArgumentUtil {
      * @throws JSONException If the content of {@link AdData#getMetadata()} of the wrapped {@code
      *     AdData} is not valid JSON.
      */
-    public static JSScriptRecordArgument asRecordArgument(String name, DBAdData adData)
+    public JSScriptRecordArgument asRecordArgument(String name, DBAdData adData)
             throws JSONException {
-        return recordArg(
-                name,
-                stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
-                jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
+        JSScriptRecordArgument recordArgWithoutAdCounterKeys =
+                recordArg(
+                        name,
+                        stringArg(RENDER_URI_FIELD_NAME, adData.getRenderUri().toString()),
+                        jsonArg(METADATA_FIELD_NAME, adData.getMetadata()));
+
+        return mAdCounterKeyCopier.copyAdCounterKeys(recordArgWithoutAdCounterKeys, adData);
     }
 }
