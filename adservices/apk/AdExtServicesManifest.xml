@@ -34,6 +34,9 @@
     <!-- Used for reporting -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Used for scheduling connectivity jobs -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Allows an application to access AdServices Topics API. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"
         android:label="@string/permlab_accessAdServicesTopics"

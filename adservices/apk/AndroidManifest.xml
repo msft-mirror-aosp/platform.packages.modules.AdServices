@@ -37,6 +37,9 @@
     <!-- Used for reporting -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Used for scheduling connectivity jobs -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Used to verify if the calling application is running in foreground. -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
 
