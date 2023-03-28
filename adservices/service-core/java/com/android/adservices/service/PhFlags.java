@@ -2300,6 +2300,11 @@ public final class PhFlags implements Flags {
                         + KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
                         + " = "
                         + getMaxResponseBasedRegistrationPayloadSizeBytes());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS
+                        + " = "
+                        + getMeasurementMaxRegistrationRedirects());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
