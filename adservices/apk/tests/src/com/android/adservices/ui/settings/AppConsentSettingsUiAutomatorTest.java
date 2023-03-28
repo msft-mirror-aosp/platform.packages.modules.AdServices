@@ -37,7 +37,6 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -58,7 +57,8 @@ public class AppConsentSettingsUiAutomatorTest {
     private static final ComponentName COMPONENT =
             new ComponentName(TEST_APP_NAME, TEST_APP_ACTIVITY_NAME);
 
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_PACKAGE = "android.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
     private static final String ADEXTSERVICES_PACKAGE_NAME =
@@ -77,8 +77,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CompatAdServicesTestUtils.setFlags();
-            PackageManagerCompatUtils.updateAdExtServicesActivities(
-                    CONTEXT, ADEXTSERVICES_PACKAGE_NAME, true);
         }
     }
 
@@ -91,8 +89,6 @@ public class AppConsentSettingsUiAutomatorTest {
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
-            PackageManagerCompatUtils.updateAdExtServicesActivities(
-                    CONTEXT, ADEXTSERVICES_PACKAGE_NAME, false);
         }
     }
 
@@ -167,14 +163,19 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     private void launchSettingApp() {
+        String privacySandboxUi;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            privacySandboxUi = PRIVACY_SANDBOX_TEST_PACKAGE;
+        } else {
+            privacySandboxUi = PRIVACY_SANDBOX_PACKAGE;
+        }
         Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
+        Intent intent = new Intent(privacySandboxUi);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
 
         // Wait for the app to appear
-        sDevice.wait(
-                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        sDevice.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), LAUNCH_TIMEOUT);
     }
 
     private void appConsentTest(int consentSourceOfTruth, boolean dialogsOn)
