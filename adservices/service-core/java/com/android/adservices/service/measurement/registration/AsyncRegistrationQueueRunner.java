@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
@@ -31,16 +31,18 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
-import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
-import com.android.adservices.service.measurement.util.AsyncFetchStatus;
-import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
-
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -71,7 +73,7 @@ public class AsyncRegistrationQueueRunner {
     }
 
     @VisibleForTesting
-    AsyncRegistrationQueueRunner(
+    public AsyncRegistrationQueueRunner(
             ContentResolver contentResolver,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
@@ -343,8 +345,9 @@ public class AsyncRegistrationQueueRunner {
         }
     }
 
+    /** Visible only for testing. */
     @VisibleForTesting
-    static boolean isSourceAllowedToInsert(
+    public static boolean isSourceAllowedToInsert(
             Source source,
             Uri topOrigin,
             @EventSurfaceType int publisherType,
@@ -399,8 +402,8 @@ public class AsyncRegistrationQueueRunner {
                     LogUtil.d(
                             "AsyncRegistrationQueueRunner: App destination count >= "
                                 + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
-                        debugReportApi.scheduleSourceDestinationLimitDebugReport(
-                                source, optionalAppDestinationCount.toString(), dao);
+                    debugReportApi.scheduleSourceDestinationLimitDebugReport(
+                            source, optionalAppDestinationCount.toString(), dao);
                     return false;
                 }
             } else {
@@ -582,8 +585,9 @@ public class AsyncRegistrationQueueRunner {
         dao.insertAsyncRegistration(asyncRegistration);
     }
 
+    /** Visible for testing only */
     @VisibleForTesting
-    List<EventReport> generateFakeEventReports(Source source) {
+    public List<EventReport> generateFakeEventReports(Source source) {
         List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReports();
         return fakeReports.stream()
                 .map(
