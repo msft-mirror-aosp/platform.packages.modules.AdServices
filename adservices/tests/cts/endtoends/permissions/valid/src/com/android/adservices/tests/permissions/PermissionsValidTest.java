@@ -24,6 +24,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -49,6 +50,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -206,6 +208,21 @@ public class PermissionsValidTest {
                         () -> mAdSelectionClient.reportInteraction(request).get());
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+
+    @Test
+    public void testValidPermissions_setAppInstallAdvertisers()
+            throws ExecutionException, InterruptedException {
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET);
+
+        mAdSelectionClient.setAppInstallAdvertisers(request).get();
     }
 
     @Test

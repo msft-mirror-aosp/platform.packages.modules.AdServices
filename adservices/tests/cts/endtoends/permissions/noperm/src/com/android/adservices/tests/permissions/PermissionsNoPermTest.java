@@ -26,6 +26,7 @@ import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
@@ -53,6 +54,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -282,6 +284,24 @@ public class PermissionsNoPermTest {
                 assertThrows(
                         ExecutionException.class,
                         () -> mAdSelectionClient.reportInteraction(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testPermissionNotRequested_setAppInstallAdvertisers() {
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET);
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.setAppInstallAdvertisers(request).get());
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 

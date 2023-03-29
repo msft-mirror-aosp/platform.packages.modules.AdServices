@@ -75,7 +75,7 @@
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
-                value="setprop debug.adservices.sdk_request_permits_per_second 1000"/>
+                value="setprop debug.adservices.sdk_request_permits_per_second 100000" />
         <option name="teardown-command"
                 value="setprop debug.adservices.sdk_request_permits_per_second 1"/>
 

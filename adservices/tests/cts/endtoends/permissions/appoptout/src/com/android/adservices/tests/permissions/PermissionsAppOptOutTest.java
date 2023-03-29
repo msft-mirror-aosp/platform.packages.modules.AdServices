@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -47,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -326,5 +328,41 @@ public class PermissionsAppOptOutTest {
                         .build();
 
         mAdSelectionClient.updateAdCounterHistogram(request).get();
+    }
+
+    @Test
+    public void testNoEnrollment_fledgeSetAppInstallAdvertisers()
+            throws ExecutionException, InterruptedException {
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest(
+                        Collections.singleton(AdTechIdentifier.fromString("buyer.example.com")));
+        /* We don't check enrollment for setAppInstallAdvertisers so this should still pass
+         * Note that unenrolled adtechs are still unable to use filtering since they cannot
+         * enter ads into the auction.
+         */
+        adSelectionClient.setAppInstallAdvertisers(request).get();
+    }
+
+    @Test
+    public void testWithEnrollment_fledgeSetAppInstallAdvertisers()
+            throws ExecutionException, InterruptedException {
+        AdSelectionClient adSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        SetAppInstallAdvertisersRequest request =
+                new SetAppInstallAdvertisersRequest(
+                        Collections.singleton(AdTechIdentifier.fromString("test.com")));
+
+        // Ensure no exception is thrown
+        adSelectionClient.setAppInstallAdvertisers(request).get();
     }
 }

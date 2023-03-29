@@ -21,6 +21,7 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
@@ -53,6 +54,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executor;
@@ -323,6 +325,21 @@ public class SdkFledge extends SandboxedSdkProvider {
             String errorMessage =
                     String.format(
                             "Error encountered during reporting: message is %s", e.getMessage());
+            Log.e(TAG, errorMessage);
+            throw new LoadSdkException(e, new Bundle());
+        }
+
+        try {
+            SetAppInstallAdvertisersRequest setAppInstallAdvertisersRequest =
+                    new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET);
+            mAdSelectionClient
+                    .setAppInstallAdvertisers(setAppInstallAdvertisersRequest)
+                    .get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            String errorMessage =
+                    String.format(
+                            "Error encountered while setting app advertisers: message is %s",
+                            e.getMessage());
             Log.e(TAG, errorMessage);
             throw new LoadSdkException(e, new Bundle());
         }
