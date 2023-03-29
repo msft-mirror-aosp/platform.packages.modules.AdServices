@@ -42,8 +42,8 @@ import com.android.adservices.ui.OTAResourcesManager;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
-    // Random integer for NotificationCompat purposes
-    private static final int NOTIFICATION_ID = 67920;
+    /* Random integer for NotificationCompat purposes. */
+    public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
 
@@ -227,6 +227,11 @@ public class ConsentNotificationTrigger {
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
+
+        if (isEuDevice && !FlagsFactory.getFlags().getNotificationDismissedOnClick()) {
+            notification.setAutoCancel(false);
+        }
+
         return notification.build();
     }
 
