@@ -1876,10 +1876,10 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
-    /** Default Determines whether EU notification flow change is enabled.. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = false;
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
-    /** Determines whether EU notification flow change is enabled.. */
+    /** Determines whether EU notification flow change is enabled. */
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
