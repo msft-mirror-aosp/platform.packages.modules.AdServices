@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"យល់ហើយ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"អ្នកគឺជាផ្នែកនៃកំណែបេតា"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox គឺបើកសម្រាប់ឧបករណ៍របស់អ្នក ហើយកម្មវិធីអាចធ្វើតេស្តលើវិធីដែលកាន់តែមានលក្ខណៈឯកជនទាំងនេះ ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក។ អ្នកអាចបិទកំណែបេតាបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាពរបស់អ្នក។"</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"គ្រប់គ្រងការកំណត់ឯកជនភាព"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"យល់ហើយ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox របស់ Android ផ្តល់នូវមុខងារថ្មីៗដែលកម្មវិធីអាចប្រើដើម្បីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចូលចិត្ត។ បច្ចេកវិទ្យាទាំងនេះមិនប្រើលេខកូដសម្គាល់ឧបករណ៍ទេ។\n\nAndroid និងកម្មវិធីរបស់អ្នកអាចប៉ាន់ស្មានប្រភេទនៃការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចាប់អារម្មណ៍ និងរក្សាទុកចំណាប់អារម្មណ៍ទាំងនេះជាបណ្តោះអាសន្ននៅលើឧបករណ៍របស់អ្នក។ ដំណើរការនេះអនុញ្ញាតឱ្យកម្មវិធីបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលអ្នកប្រហែលជាចូលចិត្ត ដោយមិនតាមដានសកម្មភាពរបស់អ្នកនៅលើគេហទំព័រ និងកម្មវិធីពីអ្នកអភិវឌ្ឍន៍ផ្សេងទៀត។"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"ការកំណត់ការផ្សាយពាណិជ្ជកម្មឱ្យមានលក្ខណៈផ្ទាល់ខ្លួនតាមរយៈ Privacy Sandbox"</string>
@@ -71,6 +72,8 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"កម្មវិធីអាចប៉ាន់ស្មានចំណាប់អារម្មណ៍របស់អ្នក និងរក្សាទុកចំណាប់អារម្មណ៍ទាំងនេះជាបណ្តោះអាសន្នជាមួយ Android។ ឧទាហរណ៍ កម្មវិធីមួយដែលអ្នកប្រើដើម្បីទិញស្បែកជើងសម្រាប់រត់ប្រហែលជាប៉ាន់ស្មានចំណាប់អារម្មណ៍របស់អ្នកថា \"ការរត់ម៉ារ៉ាតុង\"។\n\nក្រោយមក ដោយផ្អែកលើចំណាប់អារម្មណ៍នេះ កម្មវិធីផ្សេងទៀតអាចបង្ហាញអ្នកនូវការផ្សាយពាណិជ្ជកម្មដែលទាក់ទងនឹងម៉ារ៉ាតុង។\n\nនៅក្នុងការកំណត់ឯកជនភាពរបស់អ្នក អ្នកអាចគ្រប់គ្រងបញ្ជីកម្មវិធីដែលបានរក្សាទុកចំណាប់អារម្មណ៍។"</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"មុខងារឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មថ្មីៗ"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្ម និងការគ្រប់គ្រងថ្មីៗផ្ដល់ជម្រើសដល់អ្នកកាន់តែច្រើនអំពីការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញ"</string>
+    <!-- no translation found for notificationUI_header_ga_title (3557937325021173836) -->
+    <skip />
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android កត់ចំណាំប្រធានបទដែលគួរឱ្យចាប់អារម្មណ៍ដោយផ្អែកលើកម្មវិធីដែលអ្នកបានប្រើថ្មីៗនេះ។ កម្មវិធីដែលអ្នកប្រើក៏អាចកំណត់អ្វីដែលអ្នកចូលចិត្ត​បានផងដែរ។ ក្រោយមក កម្មវិធីអាចស្នើសុំព័ត៌មាននេះ ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដែលមានលក្ខណៈផ្ទាល់ខ្លួនដល់អ្នក។ អ្នកអាចជ្រើសរើសប្រធានបទ និង​កម្មវិធីណាខ្លះដែលត្រូវបានប្រើប្រាស់ ដើម្បីបង្ហាញការផ្សាយពាណិជ្ជកម្មដល់អ្នក។"</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"ដើម្បីវាស់ស្ទង់លទ្ធផលប្រតិបត្តិការនៃការផ្សាយពាណិជ្ជកម្ម ប្រភេទទិន្នន័យមួយចំនួនតូចត្រូវបានចែករំលែករវាងកម្មវិធីនានា។"</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"ព័ត៌មានបន្ថែមអំពីការផ្សាយពាណិជ្ជកម្មលើ Android"</string>
@@ -82,19 +85,19 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android លុបប្រធានបទ និងទិន្នន័យដែលណែនាំដោយកម្មវិធីដោយស្វ័យប្រវត្តិជាប្រចាំ។ អ្នកក៏អាច​ទប់ស្កាត់ប្រធានបទ និងកម្មវិធីជាក់លាក់ដែលអ្នកមិនចង់ធ្វើការណែនាំបានផងដែរ។"</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"ការវាស់ស្ទង់​ថាការ​ផ្សាយ​ពាណិជ្ជកម្មធ្វើបាន​ល្អប៉ុនណា"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"កម្មវិធីដែលអ្នកប្រើអាចស្នើសុំព័ត៌មានពី Android ដើម្បីជួយកម្មវិធីទាំងនោះវាស់ស្ទង់លទ្ធផលប្រតិបត្តិការនៃការផ្សាយពាណិជ្ជកម្មរបស់កម្មវិធីទាំងនោះ។ Android អនុញ្ញាតឱ្យកម្មវិធីប្រមូលប្រភេទទិន្នន័យមួយចំនួនតូច ដូចជាពេលវេលាប្រចាំថ្ងៃដែលការផ្សាយពាណិជ្ជកម្មត្រូវបានបង្ហាញដល់អ្នកជាដើម។"</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"សាកល្បងប្រើមុខងារឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មថ្មី"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មផ្ដល់ជម្រើសបន្ថែមដល់អ្នកអំពីការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"មើល​ព័ត៌មាន​លម្អិត"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"ឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មដែលបានធ្វើឱ្យប្រសើរនៅលើ Android"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android កំពុងដាក់ចេញមុខងារឯកជនភាពថ្មីៗដែលផ្ដល់ជម្រើសដល់អ្នកកាន់តែច្រើនអំពីការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញ។"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មជួយឱ្យកម្មវិធីបង្ហាញការផ្សាយពាណិជ្ជកម្មដែលពាក់ព័ន្ធដល់អ្នក ព្រមទាំងការពារអត្តសញ្ញាណរបស់អ្នក និងព័ត៌មានអំពីការប្រើប្រាស់កម្មវិធីរបស់អ្នក។ Android អាចកត់ចំណាំប្រធានបទដែលគួរឱ្យចាប់អារម្មណ៍ផ្អែកលើកម្មវិធីដែលអ្នកបានប្រើថ្មីៗនេះ។ ក្រោយមក កម្មវិធីដែលអ្នកប្រើអាចស្នើសុំប្រធានបទដែលពាក់ព័ន្ធពី Android ដើម្បីកំណត់ការផ្សាយពាណិជ្ជកម្មដែលអ្នកមើលឃើញឱ្យមានលក្ខណៈផ្ទាល់ខ្លួន។"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"អ្នកអាចមើលឃើញប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មនៅក្នុងការ​កំណត់ឧបករណ៍របស់អ្នក និង​ទប់ស្កាត់ប្រធានបទដែលអ្នកមិនចង់ឱ្យចែករំលែកជាមួយកម្មវិធី។ Android ក៏លុបប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មដោយស្វ័យប្រវត្តិជាប្រចាំផងដែរ។"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"អ្នកអាចប្ដូរចិត្តរបស់អ្នកបានគ្រប់ពេលនៅក្នុងការកំណត់​ឯកជនភាព។"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"ច្រើន​ទៀត​អំពី​ប្រធានបទ​នៃការផ្សាយពាណិជ្ជកម្ម"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"ស្វែងយល់បន្ថែមអំពីរបៀបដែល Android ការពារទិន្នន័យរបស់អ្នកនៅក្នុងគោលការណ៍​ឯកជនភាពរបស់យើង។"</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"បាទ/ចាស ខ្ញុំយល់ព្រម"</string>
+    <!-- no translation found for notificationUI_right_control_button_ga_text_eu (7164165910760741822) -->
+    <skip />
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  ទិន្នន័យ​អ្វីត្រូវបាន​ប្រើប្រាស់"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មរបស់អ្នកគឺផ្អែកលើកម្មវិធីដែលអ្នកបានប្រើថ្មីៗនេះនៅលើឧបករណ៍នេះ និងកម្រិតញឹកញាប់ដែលអ្នកប្រើកម្មវិធីទាំងនោះ។"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  របៀប​ដែល​យើង​ប្រើប្រាស់​ទិន្នន័យ​នេះ"</string>
@@ -102,8 +105,10 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  របៀបដែលអ្នក​អាចគ្រប់គ្រង​ទិន្នន័យរបស់អ្នក"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android លុបប្រធានបទដោយស្វ័យប្រវត្តិជាប្រចាំ។ ប្រសិនបើអ្នកបន្តប្រើប្រាស់កម្មវិធី ប្រធានបទអាចនឹងបង្ហាញឡើងវិញនៅក្នុងបញ្ជី។ អ្នកក៏អាចទប់ស្កាត់ប្រធានបទដែលអ្នកមិនចង់ឱ្យ Android ចែករំលែកជាមួយកម្មវិធី និងបិទប្រធានបទនៃការផ្សាយពាណិជ្ជកម្មបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាព​ផងដែរ។"</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"អ្នកអាចធ្វើការផ្លាស់ប្ដូរនៅក្នុងការកំណត់ឯកជនភាព។"</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"មុខងារ​ផ្សេង​ទៀត​ដែល​ធ្វើ​ឱ្យ​ការផ្សាយពាណិជ្ជកម្ម​កាន់តែ​មាន​លក្ខណៈ​ឯកជន"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android កំពុង​ដាក់ចេញ​វិធី​ថ្មីៗក្នុងការរឹតបន្តឹងលើ​អ្វី​ដែលកម្មវិធី​អាច​ស្វែងយល់​អំពី​អ្នក នៅ​ពេល​កម្មវិធី​ទាំង​នោះ​បង្ហាញ​ការផ្សាយពាណិជ្ជកម្ម​ដែល​មានលក្ខណៈផ្ទាល់ខ្លួន​ដល់​អ្នក។"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_title (1721724915714192994) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1 (2217529852483952185) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  ការផ្សាយពាណិជ្ជកម្មដែលណែនាំដោយកម្មវិធីជួយការពារអត្តសញ្ញាណរបស់អ្នក និងព័ត៌មានអំពីការប្រើប្រាស់កម្មវិធីរបស់អ្នក ព្រមទាំងអាចឱ្យកម្មវិធីបង្ហាញការផ្សាយពាណិជ្ជកម្មដែលពាក់ព័ន្ធដល់អ្នក។ ផ្អែកលើសកម្មភាពរបស់អ្នក កម្មវិធីដែលអ្នកប្រើអាច​ណែនាំការផ្សាយពាណិជ្ជកម្មដែលពាក់ព័ន្ធនៅលើកម្មវិធីផ្សេងទៀតបាន។ អ្នកអាចមើលឃើញបញ្ជីកម្មវិធី និងទប់ស្កាត់កម្មវិធីទាំងនោះមិនឱ្យធ្វើការណែនាំបាននៅក្នុងការកំណត់​ឯកជនភាព។"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  តាមរយៈការវាស់ស្ទង់ការផ្សាយពាណិជ្ជកម្ម ប្រភេទទិន្នន័យមួយចំនួនតូចត្រូវបានចែករំលែករវាងកម្មវិធីនានា ដើម្បីវាស់ស្ទង់លទ្ធផលប្រតិបត្តិការនៃការផ្សាយពាណិជ្ជកម្មរបស់កម្មវិធីទាំងនោះ ដូចជាពេលវេលាប្រចាំថ្ងៃដែលការផ្សាយពាណិជ្ជកម្មត្រូវបានបង្ហាញដល់អ្នកជាដើម។"</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"ច្រើនទៀតអំពីការផ្សាយពាណិជ្ជកម្មដែលណែនាំដោយកម្មវិធី និងការវាស់ស្ទង់ការផ្សាយពាណិ្ជកម្ម"</string>
@@ -116,6 +121,36 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android លុបទិន្នន័យដែលបានណែនាំដោយកម្មវិធីដោយស្វ័យប្រវត្តិជាប្រចាំ។ កម្មវិធីដែលអ្នកប្រើប្រាស់ម្ដងទៀតអាចបង្ហាញឡើងវិញនៅក្នុងបញ្ជី។"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"អ្នកក៏អាចទប់ស្កាត់កម្មវិធីកុំឱ្យណែនាំការផ្សាយពាណិជ្ជកម្មសម្រាប់អ្នក កំណត់ទិន្នន័យណែនាំការផ្សាយពាណិជ្ជកម្មទាំងអស់ឡើងវិញ ឬបិទការផ្សាយពាណិជ្ជកម្មដែលណែនាំដោយកម្មវិធីបានគ្រប់ពេលនៅក្នុងការកំណត់ឯកជនភាព។"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"កម្មវិធីដែលអ្នកប្រើអាចស្នើសុំពី Android នូវព័ត៌មានដែលជួយកម្មវិធីទាំងនោះវាស់ស្ទង់លទ្ធផលប្រតិបត្តិការនៃការផ្សាយពាណិជ្ជកម្មរបស់កម្មវិធីទាំងនោះ។ Android ការពារឯកជនភាពរបស់អ្នក ដោយដាក់កំហិតលើព័ត៌មានដែលកម្មវិធីអាចចែករំលែកឱ្យគ្នាទៅវិញទៅមក។"</string>
+    <!-- no translation found for notificationUI_notification_ga_title_eu_v2 (9132669086237883391) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_content_eu_v2 (9205285241542339861) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_title_v2 (1097778529908285549) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text2_v2 (7324869061552803848) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text3_v2 (7061185974787039681) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_ga_title_eu_v2 (8442776546238998877) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_ga_text_eu_v2 (1119632112904754361) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_ga_text_eu_v2 (7264946073865844642) -->
+    <skip />
+    <!-- no translation found for notificationUI_container3_body_ga_text_eu_v2 (3204499878554843655) -->
+    <skip />
+    <!-- no translation found for notificationUI_right_control_button_ga_text_eu_v2 (7227289411885047121) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_title_v2 (7429979629916798545) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_content_v2 (4673081782304081905) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_ga_title_v2 (2079990149331373941) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_ga_introduction_v2 (3820258766801905248) -->
+    <skip />
+    <!-- no translation found for notificationUI_next_button_text (5564270455474313663) -->
+    <skip />
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"ចូលរួមក្នុងកំណែបេតានៃឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្មរបស់ Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +212,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ឯកជនភាពនៃការផ្សាយពាណិជ្ជកម្ម"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ប្រធានបទនៃការផ្សាយពាណិជ្ជកម្ម"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ការផ្សាយពាណិជ្ជកម្មដែលណែនាំដោយកម្មវិធី"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android កត់ចំណាំប្រធានបទដែលចាប់អារម្មណ៍ដោយផ្អែកលើកម្មវិធីដែលអ្នកបានប្រើប្រាស់ថ្មីៗ និងភាពញឹកញាប់ដែលអ្នកប្រើប្រាស់កម្មវិធីទាំងនោះ។"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"កម្មវិធីដែលអ្នកប្រើក៏អាចកំណត់អ្វីដែលអ្នកចូលចិត្ត ដោយផ្អែកលើរបៀបដែលអ្នកប្រើកម្មវិធីទាំងនោះផងដែរ។"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"កម្មវិធីដែលអ្នកប្រើអាចស្នើសុំព័ត៌មានពី Android ដើម្បីវាស់ស្ទង់ប្រតិបត្តិការនៃការផ្សាយពាណិជ្ជកម្មរបស់កម្មវិធីទាំងនោះបាន។ Android អនុញ្ញាតឱ្យកម្មវិធីអាចប្រមូលប្រភេទទិន្ន័យមានកំណត់។"</string>
