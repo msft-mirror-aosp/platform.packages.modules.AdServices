@@ -21,6 +21,10 @@
       "name": "AdServicesFrameworkUnitTests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices.apex and run AdExtServicesFrameworkUnitTests.
+      "name": "AdExtServicesFrameworkUnitTests[com.google.android.extservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
