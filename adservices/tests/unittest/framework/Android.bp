@@ -24,8 +24,8 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "androidx.test.core",
-        "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
+        "truth-prebuilt",
         "ub-uiautomator",
         "adservices-test-fixtures",
     ],
@@ -77,7 +77,6 @@ android_test {
         "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "AdExtServicesApk",
 }
 
