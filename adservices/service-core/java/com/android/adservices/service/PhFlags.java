@@ -2509,6 +2509,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
         writer.println(
                 "\t"
+                        + KEY_NOTIFICATION_DISMISSED_ON_CLICK
+                        + " = "
+                        + getNotificationDismissedOnClick());
+        writer.println(
+                "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
                         + " = "
                         + getUiOtaStringsFeatureEnabled());
@@ -2627,5 +2632,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
                 /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
+    }
+
+    static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK = "notification_dmsmissed_on_click";
+
+    @Override
+    public boolean getNotificationDismissedOnClick() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_NOTIFICATION_DISMISSED_ON_CLICK,
+                /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
     }
 }
