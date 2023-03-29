@@ -84,11 +84,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
         mIsEUDevice =
                 requireActivity().getIntent().getBooleanExtra(
                         IS_EU_DEVICE_ARGUMENT_KEY, true);
-        View rootView;
-        rootView = inflater.inflate(
-                R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
-
-        return rootView;
+        return inflater.inflate(R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -219,7 +215,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
-                // opt-in confirmation activity
+                // opt-in to topics
                 ConsentManager.getInstance(requireContext())
                         .enable(requireContext(), AdServicesApiType.TOPICS);
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
