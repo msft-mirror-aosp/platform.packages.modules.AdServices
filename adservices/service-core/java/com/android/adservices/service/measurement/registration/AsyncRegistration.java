@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
-
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
+package com.android.adservices.service.measurement.registration;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -24,6 +22,9 @@ import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.Validation;
 
 import java.lang.annotation.Retention;
@@ -251,7 +252,9 @@ public class AsyncRegistration {
         if (mRedirectType == RedirectType.NONE) {
             return false;
         }
-        return mRedirectType == RedirectType.ANY || mRedirectCount < MAX_REDIRECTS_PER_REGISTRATION;
+        return mRedirectType == RedirectType.ANY
+                || mRedirectCount
+                        < FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
     }
 
     /** Gets the next expected redirect count for this registration. */

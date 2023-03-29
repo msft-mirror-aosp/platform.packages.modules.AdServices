@@ -104,6 +104,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS = "measurement_data_expiry_window_ms";
 
+    static final String KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS =
+            "measurement_max_registration_redirects";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -739,6 +742,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
                 /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
+    }
+
+    @Override
+    public int getMeasurementMaxRegistrationRedirects() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
+                /* defaultValue */ MEASUREMENT_MAX_REGISTRATION_REDIRECTS);
     }
 
     @Override

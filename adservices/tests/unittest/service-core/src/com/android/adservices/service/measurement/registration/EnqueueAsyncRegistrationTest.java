@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement;
+package com.android.adservices.service.measurement.registration;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -41,7 +41,7 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
+import com.android.adservices.service.measurement.Source;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -390,6 +390,10 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -458,6 +462,10 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }
@@ -571,6 +579,10 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -641,6 +653,10 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }
@@ -723,6 +739,11 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_TRIGGER,
                         asyncRegistrationTwo.getType());
+
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -770,6 +791,10 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_TRIGGER,
                         asyncRegistrationTwo.getType());
+                Assert.assertNotNull(asyncRegistration.getRegistrationId());
+                Assert.assertEquals(
+                        asyncRegistration.getRegistrationId(),
+                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }
