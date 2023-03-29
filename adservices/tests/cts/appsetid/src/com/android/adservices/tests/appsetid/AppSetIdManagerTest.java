@@ -32,12 +32,14 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.compatibility.common.util.ConnectivityUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -99,6 +101,8 @@ public class AppSetIdManagerTest {
     @Test
     @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager() throws Exception {
+        boolean isConnected = ConnectivityUtils.isNetworkConnected(sContext);
+        Assume.assumeTrue("App set id is dependent on network capabilities", isConnected);
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
