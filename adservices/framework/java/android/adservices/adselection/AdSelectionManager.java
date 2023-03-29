@@ -489,7 +489,8 @@ public class AdSelectionManager {
     }
 
     /**
-     * Updates the counter histograms for an ad.
+     * Updates the counter histograms for an ad which was previously selected by a call to {@link
+     * #selectAds(AdSelectionConfig, Executor, OutcomeReceiver)}.
      *
      * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
      * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
