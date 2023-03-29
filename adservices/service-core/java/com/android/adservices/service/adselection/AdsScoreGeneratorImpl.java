@@ -72,9 +72,6 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
 
     @VisibleForTesting
-    static final String MISSING_SCORING_LOGIC = "Error fetching scoring decision logic";
-
-    @VisibleForTesting
     static final String SCORING_TIMED_OUT = "Scoring exceeded allowed time limit";
 
     @VisibleForTesting

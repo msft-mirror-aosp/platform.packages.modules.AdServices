@@ -30,10 +30,8 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.util.Enrollment;
-
 
 import java.util.Objects;
 import java.util.Optional;
@@ -107,6 +105,7 @@ public class EnqueueAsyncRegistration {
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(datastoreManager);
+        String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
                 (dao) -> {
                     for (WebSourceParams webSourceParams :
@@ -114,7 +113,7 @@ public class EnqueueAsyncRegistration {
                         Optional<String> enrollmentData =
                                 Enrollment.maybeGetEnrollmentId(
                                         webSourceParams.getRegistrationUri(), enrollmentDao);
-                        if (enrollmentData == null || enrollmentData.isEmpty()) {
+                        if (enrollmentData.isEmpty()) {
                             LogUtil.d("no enrollment data");
                             return;
                         }
@@ -136,7 +135,7 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
                                 adIdPermission,
-                                UUID.randomUUID().toString(),
+                                registrationId,
                                 dao);
                     }
                 });
@@ -156,6 +155,7 @@ public class EnqueueAsyncRegistration {
             @NonNull DatastoreManager datastoreManager) {
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(datastoreManager);
+        String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
                 (dao) -> {
                     for (WebTriggerParams webTriggerParams :
@@ -185,7 +185,7 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 adIdPermission,
-                                UUID.randomUUID().toString(),
+                                registrationId,
                                 dao);
                     }
                 });
