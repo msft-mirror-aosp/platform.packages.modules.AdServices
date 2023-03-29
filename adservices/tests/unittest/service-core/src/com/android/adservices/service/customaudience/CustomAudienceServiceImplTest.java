@@ -71,6 +71,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -950,6 +951,7 @@ public class CustomAudienceServiceImplTest {
                 CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 "",
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                 AdSelectionSignals.EMPTY,
                 mCustomAudienceOverrideCallback);
 
@@ -1008,6 +1010,7 @@ public class CustomAudienceServiceImplTest {
                 CommonFixture.VALID_BUYER_1,
                 CustomAudienceFixture.VALID_NAME,
                 "",
+                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                 AdSelectionSignals.EMPTY,
                 mCustomAudienceOverrideCallback);
 
@@ -1025,6 +1028,8 @@ public class CustomAudienceServiceImplTest {
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setName(CustomAudienceFixture.VALID_NAME)
                                 .setBiddingLogicJS("")
+                                .setBiddingLogicJsVersion(
+                                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
                                 .setTrustedBiddingData(AdSelectionSignals.EMPTY.toString())
                                 .setAppPackageName(CustomAudienceFixture.VALID_OWNER)
                                 .build());
@@ -1237,6 +1242,7 @@ public class CustomAudienceServiceImplTest {
                                 CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 "",
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                                 AdSelectionSignals.EMPTY,
                                 mCustomAudienceOverrideCallback));
     }
