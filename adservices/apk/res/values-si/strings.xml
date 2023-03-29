@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"තේරුණා"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"ඔබ බීටාවේ කොටසකි"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"ඔබේ උපාංගය සඳහා පෞද්ගලිකත්ව වැලිපෙට්ටිය ක්‍රියාත්මක අතර, යෙදුම් ඔබට වෙළඳ දැන්වීම් පෙන්වීමට, මෙම නව වඩා පෞද්ගලික ක්‍රම පරීක්ෂා කළ හැක. ඔබට ඕනෑම මොහොතක ඔබේ පෞද්ගලිකත්ව සැකසීම් වෙතින් බීටා ක්‍රියා විරහිත කළ හැක."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"පෞද්ගලිකත්ව සැකසීම් කළමනා කරන්න"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"තේරුණා"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android හි පෞද්ගලිකත්ව වැලිපෙට්ටිය යෙදුම් ඔබට ඔබ කැමති වීමට ඉඩ ඇති දැන්වීම් පෙන්වීමට භාවිත කළ හැකි නව විශේෂාංග සපයයි. මෙම තාක්ෂණ උපාංග හැඳුනුම්කාරක භාවිත කරන්නේ නැත.\n\n Android සහ ඔබේ උපාංගවලට ඔබ උනන්දුව දැක්වීමට ඉඩ ඇති වෙළෙඳ දැන්වීම් වර්ග අනුමාන කළ හැකි අතර එම ලැදිකම් ඔබේ උපාංගය මත තාවකාලිකව සුරැකිය හැක. මෙය වෙනත් සංවර්ධකයින්ගේ වෙබ් අඩවි හා යෙදුම් හරහා ඔබේ ක්‍රියාකාරකම් නිරීක්ෂණ කිරීමෙන් තොරව යෙදුම්වලට ඔබට ඔබ කැමති වීමට ඉඩ ඇති දැන්වීම් පෙන්වීමට ඉඩ ලබා දෙයි."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"පෞද්ගලිකත්ව වැලිපෙට්ටිය මගින් දැන්වීම් පුද්ගලායනය"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"යෙදුම් ඔබේ ලැදිකම් අනුමාන කර ඒවා තාවකාලිකව Android සමග සුරැකිය හැක. උදාහරණ ලෙස, ඔබ දිවීමේ දී පළඳින සපත්තු මිල දී ගැනීමට භාවිතා කරන යෙදුමක් ඔබේ ලැදිකම \"මැරතන් දිවීම\" ලෙස අනුමාන කළ හැක.\n\nපසුව, මෙම ලැදිකම්වලට අනුව වෙනත් යෙදුමක් මැරතන්වලට අදාළ දැන්වීමක් පෙන්විය හැක.\n\nඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ ඔබට සුරැකි ලැදිකම් ඇති යෙදුම් ලැයිස්තුව කළමනා කළ හැක."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"දැන්වීම් මාතෘකා සහ නව පාලනයන් ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙයි"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android ඔබ මෑතක දී භාවිතා කළ යෙදුම් මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කරයි. එසේම, ඔබ භාවිතා කරන යෙදුම්වලට ඔබ කැමති දේ තීරණය කළ හැක. පසුව, ඔබට පෞද්ගලීකරණය කළ දැන්වීම් පෙන්වීමට යෙදුම්වලට මෙම තොරතුරු විමසා සිටිය හැක. ඔබට දැන්වීම් පෙන්වීමට භාවිතා කරන මාතෘකා සහ යෙදුම් තෝරා ගත හැක."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"වෙළඳ දැන්වීමක කාර්ය සාධනය මැනීම සඳහා, යෙදුම් අතර සීමිත දත්ත වර්ග බෙදා ගනී."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android හි දැන්වීම් පිළිබඳව වැඩිදුර"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android ස්වයංව මාතෘකා සහ යෙදුම්-යෝජිත දත්ත නිතිපතා මකා දමයි. ඔබට යෝජනා කිරීමට අවශ්‍ය නොවන විශේෂිත මාතෘකා සහ යෙදුම් අවහිර කිරීමට ද හැක."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"දැන්වීමක් කෙතරම් හොඳින් ක්‍රියාත්මක වේ ද යන්න මැන බැලීම"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු කිරීමට Android වෙතින් තොරතුරු විමසා සිටිය හැක. ඔබට දැන්වීමක් පෙන්වූ දවසේ වේලාව වැනි සීමිත දත්ත වර්ග එකතු කිරීමට Android යෙදුම්වලට ඉඩ දෙයි."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"නව දැන්වීම් රහස්‍යතා විශේෂාංග උත්සාහ කරන්න"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"දැන්වීම් මාතෘකා ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙයි"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"විස්තර බලන්න"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android මත ඉහළ නංවන ලද දැන්වීම් පෞද්ගලිකත්වය"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙන නව පෞද්ගලිකත්ව විශේෂාංග දියත් කරයි."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"දැන්වීම් මාතෘකා ඔබේ අනන්‍යතාවය සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කරන අතරම ඔබට අදාළ දැන්වීම් පෙන්වීමට යෙදුම්වලට උදවු කරයි. Android හට ඔබ මෑතක දී භාවිතා කළ යෙදුම් මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කළ හැක. පසුව, ඔබ භාවිතා කරන යෙදුමකට ඔබ දකින දැන්වීම් පෞද්ගලීකරණය කිරීමට අදාළ මාතෘකා සඳහා Android විමසා සිටිය හැක."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"ඔබට ඔබේ උපාංග සැකසීම් තුළ දැන්වීම් මාතෘකා දැකීමට සහ ඔබට යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නොවන ඒවා අවහිර කිරීමට හැක. Android දැන්වීම් මාතෘකා නිතිපතා ස්වයංව ද මකා දමයි."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"ඔබට ඕනෑම වේලාවක පෞද්ගලිකත්ව සැකසීම් තුළ ඔබේ අදහස වෙනස් කළ හැක."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"දැන්වීම් මාතෘකා පිළිබඳව වැඩිදුර"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"අපගේ රහස්‍යතා ප්‍රතිපත්තිය තුළ Android ඔබේ දත්ත ආරක්ෂා කරන ආකාරය පිළිබඳව තව දැන ගන්න."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"ඔව්, මම කැමතියි"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"එය අත්හදා බලන්න"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  භාවිතා කරන දත්ත"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"ඔබේ දැන්වීම් මාතෘකා ඔබ මෙම උපාංගයේ මෑතක දී භාවිතා කළ යෙදුම් සහ ඔබ ඒවා කොපමණ නිතර භාවිත කරන ආකාරය මත පදනම් වේ."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  අප මෙම දත්ත භාවිතා කරන ආකාරය"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  ඔබට ඔබේ දත්ත කළමනාකරණය කළ හැකි ආකාරය"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android ස්වයංව මාතෘකා නිතිපතා මකා දමයි. ඔබ යෙදුම් දිගටම භාවිතා කරන විට, මාතෘකාවක් ලැයිස්තුවේ නැවත දිස් විය හැක. ඔබට Android යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නැති මාතෘකා අවහිර කිරීමටත්, පෞද්ගලිකත්ව සැකසීම් තුළ ඕනෑම වේලාවක දැන්වීම් මාතෘකා ක්‍රියා විරහිත කිරීමටත් හැක."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"ඔබට රහස්‍යතා සැකසීම් තුළ වෙනස්කම් සිදු කළ හැක."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"දැන්වීම් වඩාත් පෞද්ගලික කරන වෙනත් විශේෂාංග"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"ඒවා ඔබට පෞද්ගලීකරණය කළ දැන්වීම් පෙන්වන විට යෙදුම්වලට ඔබ ගැන ඉගෙන ගත හැකි දේ සීමා කිරීමට Android නව ක්‍රම දියත් කරයි."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"වෙනත් දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android ඔබට පෞද්ගලීකරණය කළ දැන්වීම් පෙන්වන විට යෙදුම්වලට ඔබ පිළිබඳව ඉගෙන ගත හැකි දේ සීමා කිරීමට නව ක්‍රම ද පිරිනමයි."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  යෙදුම්-යෝජිත දැන්වීම් ඔබට අදාළ දැන්වීම් පෙන්වීමට යෙදුම් සබල කරන අතරේ ඔබේ අනන්‍යතාවය සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කිරීමට උදවු කරයි. ඔබේ ක්‍රියාකාරකම් මත පදනම්ව, ඔබ භාවිතා කරන යෙදුමකට වෙනත් යෙදුම්වල අදාළ දැන්වීම් යෝජනා කළ හැක. ඔබට යෙදුම් ලැයිස්තුවක් දැකීමට සහ පෞද්ගලිකත්ව සැකසීම් තුළ ඒවා යෝජනා කිරීමෙන් අවහිර කළ හැක."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  දැන්වීම් මිනුම සමගින්, ඔබට දැන්වීමක් පෙන්වූ දවසේ වේලාව වැනි, ඔවුන්ගේ දැන්වීම්වල කාර්ය සාධනය මැනීමට යෙදුම් අතර සීමිත දත්ත වර්ග බෙදා ගනී."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"යෙදුම්-යෝජිත දැන්වීම් සහ දැන්වීම් මැනීම පිළිබඳ වැඩිදුර"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android යෙදුම්-යෝජිත දත්ත නිතිපතා ස්වයංව මකා දමයි. ඔබ නැවත භාවිතා කරන යෙදුමක් ලැයිස්තුවෙහි නැවත දිස් විය හැක."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"ඔබට ඔබ වෙනුවෙන් දැන්වීම් යෝජනා කිරීමෙන් යෙදුමක් අවහිර කිරීමට, සියලු දැන්වීම්-යෝජනා දත්ත යළි සැකසීමට, හෝ පෞද්ගලිකත්ව සැකසීම් තුළ ඕනෑම වේලාවක යෙදුම්-යෝජිත දැන්වීම් ක්‍රියා විරහිත කිරීමට ද හැක."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු වන තොරතුරු සඳහා Android වෙතින් විමසා සිටිය හැක. Android යෙදුම්වලට එකිනෙකා සමග බෙදා ගත හැකි තොරතුරු සීමා කිරීමෙන් ඔබේ පෞද්ගලිකත්වය ආරක්ෂා කරයි."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"ඔබේ අනන්‍යතාවය ආරක්ෂා කරන අතරේ ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා ගන්න"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  යෙදුම්-යෝජිත දැන්වීම් සමග, නව පෞද්ගලිකත්ව විශේෂාංග ඔබට අදාළ දැන්වීම් පෙන්වීමට යෙදුම් සබල කරන අතරම ඔබේ අනන්‍යතාව සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කිරීමට උදවු කරයි. ඔබේ ක්‍රියාකාරකම් මත පදනම්ව, ඔබ භාවිතා කරන යෙදුමකට වෙනත් යෙදුම්වල අදාළ දැන්වීම් යෝජනා කළ හැක. ඔබට යෙදුම් ලැයිස්තුවක් දැකීමට සහ පෞද්ගලිකත්ව සැකසීම් තුළ ඒවා යෝජනා කිරීමෙන් අවහිර කළ හැක."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  දැන්වීම් මිනුම සමගින්, ඔබට දැන්වීමක් පෙන්වූ දවසේ වේලාව වැනි, ඔවුන්ගේ දැන්වීම්වල කාර්ය සාධනය වටහා ගැනීමට යෙදුම් අතර සීමිත දත්ත වර්ග බෙදා ගනී."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"වෙනත් දැන්වීම් පෞද්ගලිකත්ව විශේෂාංගය ක්‍රියාත්මක කරන්න"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙන නව පෞද්ගලිකත්ව විශේෂාංගයක් ද Android විසින් පිරිනමයි."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"දැන්වීම් මාතෘකා ඔබේ අනන්‍යතාවය සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කරන අතරම ඔබට අදාළ දැන්වීම් පෙන්වීමට යෙදුම්වලට උදවු කරයි. Android හට ඔබ මෑතක දී භාවිතා කළ යෙදුම් මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කළ හැක. පසුව, ඔබ භාවිතා කරන යෙදුමකට ඔබට වඩාත් අදාළ දැන්වීම් පෙන්වීමට අදාළ මාතෘකා සඳහා Android වෙතින් විමසිය හැක."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"ඔබට ඔබේ පෞද්ගලිකත්ව සැකසීම් තුළ දැන්වීම් මාතෘකා දැකීමට සහ ඔබට යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නොවන ඒවා අවහිර කිරීමට හැක. Android දැන්වීම් මාතෘකා නිතිපතා ස්වයංව ද මකා දමයි."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"එය ක්‍රියාත්මක කරන්න"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"දැන්, ඔබේ අනන්‍යතාවය ආරක්ෂා කරන අතරේ ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් තිබේ"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග දැන් තිබේ"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android දැන් ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙන නව පෞද්ගලිකත්ව විශේෂාංග පිරිනමයි."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"මීළඟ"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"පෞද්ගලිකත්ව වැලිපෙට්ටිය"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android හි දැන්වීම් පෞද්ගලිකත්ව බීටාවට සහභාගී වන්න"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"පෞද්ගලිකත්ව වැලිපෙට්ටිය"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"දැන්වීම් පෞද්ගලිකත්වය"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"දැන්වීම් මාතෘකා"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"යෙදුම්-යෝජිත දැන්වීම්"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ඔබ මෑතක දී භාවිතා කළ යෙදුම් සහ ඔබ ඒවා කොපමණ නිතර භාවිතා කරන ආකාරය මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කරයි."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ඔබ භාවිතා කරන යෙදුම්වලට ඔබ ඒවා භාවිතා කරන ආකාරය මත පදනම්ව ඔබ කැමති දේ තීරණය කළ හැක."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු කිරීමට Android වෙතින් තොරතුරු විමසා සිටිය හැක. සීමිත දත්ත වර්ග එකතු කිරීමට Android යෙදුම්වලට ඉඩ දෙයි."</string>
