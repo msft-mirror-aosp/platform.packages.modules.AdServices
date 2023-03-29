@@ -61,6 +61,7 @@ import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -369,6 +370,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
 
+        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
+
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
@@ -389,6 +393,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
     }
 
     @Test
