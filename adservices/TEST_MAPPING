@@ -5,12 +5,16 @@
       "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.adservices.apex and run AdServicesApkUITests.
+      // Install com.google.android.adservices.apex and run AdServicesApkUITestsAppConsent.
       "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesApkUnitTests.
+      "name": "AdExtServicesApkUnitTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesFrameworkUnitTests.
@@ -70,10 +74,19 @@
       "name": "CtsAdServicesTopicsAppUpdateTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "CtsExtAdServicesTopicsAppUpdateTests[com.google.android.extservices.apex]"
+    },
+    {
       "name": "CtsAdServicesTopicsConnectionTests[com.google.android.adservices.apex]"
     },
     {
+      "name": "CtsExtAdServicesTopicsConnectionTests[com.google.android.extservices.apex]"
+    },
+    {
       "name": "CtsAdServicesMddTests[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsExtAdServicesMddTests[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run CtsSandboxedAdIdManagerTests.
