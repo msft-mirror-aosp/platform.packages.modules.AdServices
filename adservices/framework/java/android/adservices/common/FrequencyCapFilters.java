@@ -41,8 +41,8 @@ import java.util.concurrent.Executor;
  * A container for the ad filters that are based on frequency caps.
  *
  * <p>Frequency caps filters combine an event type with a set of {@link KeyedFrequencyCap} objects
- * to define a set of ad filters. If any of these frequency caps are met for a given ad, the ad will
- * be removed from the group of ads submitted to a buyer adtech's bidding function.
+ * to define a set of ad filters. If any of these frequency caps are exceeded for a given ad, the ad
+ * will be removed from the group of ads submitted to a buyer adtech's bidding function.
  *
  * @hide
  */
