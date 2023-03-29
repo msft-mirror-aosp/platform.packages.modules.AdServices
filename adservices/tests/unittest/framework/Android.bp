@@ -24,8 +24,8 @@ android_test {
     static_libs: [
         "androidx.test.runner",
         "androidx.test.core",
-        "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
+        "truth-prebuilt",
         "ub-uiautomator",
         "adservices-test-fixtures",
     ],
