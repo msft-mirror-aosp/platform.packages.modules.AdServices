@@ -230,6 +230,7 @@ package android.adservices.customaudience {
   public class AddCustomAudienceOverrideRequest {
     ctor public AddCustomAudienceOverrideRequest(@NonNull android.adservices.common.AdTechIdentifier, @NonNull String, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public String getBiddingLogicJs();
+    method public long getBiddingLogicJsVersion();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
     method @NonNull public String getName();
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedBiddingSignals();
@@ -239,6 +240,7 @@ package android.adservices.customaudience {
     ctor public AddCustomAudienceOverrideRequest.Builder();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest build();
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJs(@NonNull String);
+    method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(long);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setName(@NonNull String);
     method @NonNull public android.adservices.customaudience.AddCustomAudienceOverrideRequest.Builder setTrustedBiddingSignals(@NonNull android.adservices.common.AdSelectionSignals);

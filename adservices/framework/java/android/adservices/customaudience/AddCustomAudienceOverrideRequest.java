@@ -84,8 +84,6 @@ public class AddCustomAudienceOverrideRequest {
      * Returns the override bidding logic JavaScript version.
      *
      * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
-     *
-     * @hide
      */
     public long getBiddingLogicJsVersion() {
         return mBiddingLogicJsVersion;
@@ -149,8 +147,6 @@ public class AddCustomAudienceOverrideRequest {
          * Sets the bidding logic JavaScript version.
          *
          * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
-         *
-         * @hide
          */
         @NonNull
         public AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(
