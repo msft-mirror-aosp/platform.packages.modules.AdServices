@@ -89,6 +89,7 @@ public class NotificationActivityUiAutomatorTest {
                         .initMocks(this)
                         .startMocking();
 
+        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
