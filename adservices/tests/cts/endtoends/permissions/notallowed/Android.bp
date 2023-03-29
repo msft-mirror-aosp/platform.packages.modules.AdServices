@@ -39,6 +39,7 @@ android_test {
         "mts-adservices"
     ],
     manifest: "AndroidManifest.xml",
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 
