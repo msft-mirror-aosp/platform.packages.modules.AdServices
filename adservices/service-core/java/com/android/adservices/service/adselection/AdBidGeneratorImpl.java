@@ -31,12 +31,12 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
-import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -46,6 +46,7 @@ import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -195,11 +196,12 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         AdServicesHttpClientRequest biddingLogicUriHttpRequest =
                 JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
-                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                        versionRequested,
+                        ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                versionRequested),
                         mFlags.getFledgeHttpJsCachingEnabled());
 
-        FluentFuture<AdServicesHttpClientResponse> buyerDecisionLogic =
+        FluentFuture<DecisionLogic> buyerDecisionLogic =
                 mJsFetcher.getBuyerDecisionLogicWithLogger(
                         biddingLogicUriHttpRequest,
                         mCustomAudienceDevOverridesHelper,
@@ -366,7 +368,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull
     @VisibleForTesting
     FluentFuture<Pair<AdWithBid, String>> runBidding(
-            @NonNull AdServicesHttpClientResponse buyerDecisionLogicJs,
+            @NonNull DecisionLogic buyerDecisionLogicJs,
             long versionRequested,
             @NonNull DBCustomAudience customAudience,
             @NonNull AdSelectionSignals buyerSignals,
@@ -387,21 +389,22 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_BIDDING);
 
         FluentFuture<List<AdWithBid>> adsWithBids;
-        long jsVersion =
-                JsVersionHelper.getVersionFromHeader(
-                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                        buyerDecisionLogicJs.getResponseHeaders());
-        sLogger.v("Get buyer bidding logic version %d", jsVersion);
-        if (jsVersion > versionRequested) {
+        long buyerDecisionLogicJsVersion =
+                buyerDecisionLogicJs.getVersion(
+                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
+        sLogger.v("Got buyer bidding logic version %d", buyerDecisionLogicJsVersion);
+        if (buyerDecisionLogicJsVersion > versionRequested) {
             throw new IllegalStateException(
-                    String.format(TOO_HIGH_JS_VERSION, versionRequested, jsVersion));
+                    String.format(
+                            TOO_HIGH_JS_VERSION, versionRequested, buyerDecisionLogicJsVersion));
         }
-        if (JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3 == jsVersion) {
+        if (JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
+                == buyerDecisionLogicJsVersion) {
             adsWithBids =
                     trustedBiddingSignals.transformAsync(
                             biddingSignals ->
                                     mAdSelectionScriptEngine.generateBidsV3(
-                                            buyerDecisionLogicJs.getResponseBody(),
+                                            buyerDecisionLogicJs.getPayload(),
                                             customAudience,
                                             adSelectionSignals,
                                             buyerSignals,
@@ -427,7 +430,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                     trustedBiddingSignals.transformAsync(
                             biddingSignals ->
                                     mAdSelectionScriptEngine.generateBids(
-                                            buyerDecisionLogicJs.getResponseBody(),
+                                            buyerDecisionLogicJs.getPayload(),
                                             ads,
                                             adSelectionSignals,
                                             buyerSignals,
@@ -442,7 +445,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                         adWithBids -> {
                             return new Pair<>(
                                     getBestAdWithBidPerCA(adWithBids),
-                                    buyerDecisionLogicJs.getResponseBody());
+                                    buyerDecisionLogicJs.getPayload());
                         },
                         mLightweightExecutorService)
                 .transform(
