@@ -83,6 +83,7 @@ public class TestCustomAudienceManager {
                     request.getBuyer(),
                     request.getName(),
                     request.getBiddingLogicJs(),
+                    request.getBiddingLogicJsVersion(),
                     request.getTrustedBiddingSignals(),
                     new CustomAudienceOverrideCallback.Stub() {
                         @Override
