@@ -1657,6 +1657,14 @@ public interface Flags {
         return RECORD_MANUAL_INTERACTION_ENABLED;
     }
 
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium
