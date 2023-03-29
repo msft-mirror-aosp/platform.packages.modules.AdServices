@@ -327,6 +327,8 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.topics.fixture.SysPropForceDefaultValueFixture;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.StaticMockFixtureRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -334,6 +336,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -2032,6 +2036,78 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getGlobalKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchTrue_onTPlus_enableBackCompatFalse_isTrue() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(true, true, false, true);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchFalse_onTPlus_enableBackCompatFalse_isFalse() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(false, true, false, false);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchTrue_onTPlus_enableBackCompatTrue_isTrue() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(true, true, true, true);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchFalse_onTPlus_enableBackCompatTrue_isFalse() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(false, true, true, false);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchTrue_onSMinus_enableBackCompatFalse_isTrue() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(true, false, false, true);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchFalse_onSMinus_enableBackCompatFalse_isTrue() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(false, false, false, true);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchTrue_onSMinus_enableBackCompatTrue_isTrue() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(true, false, true, true);
+    }
+
+    @Test
+    public void testGetGlobalKillSwitch_killSwitchFalse_onSMinus_enableBackCompatTrue_isFalse() {
+        testGetGlobalKillSwitchWithSdkLevelBackCompat(false, false, true, false);
+    }
+
+    private void testGetGlobalKillSwitchWithSdkLevelBackCompat(
+            boolean globalKillSwitch,
+            boolean sdkAtleastT,
+            boolean enableBackCompat,
+            boolean expected) {
+        MockitoSession mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+        try {
+            ExtendedMockito.doReturn(sdkAtleastT).when(SdkLevel::isAtLeastT);
+            Flags phFlags = FlagsFactory.getFlags();
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    KEY_GLOBAL_KILL_SWITCH,
+                    Boolean.toString(globalKillSwitch),
+                    /* makeDefault */ true);
+
+            DeviceConfig.setProperty(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    KEY_ENABLE_BACK_COMPAT,
+                    Boolean.toString(enableBackCompat),
+                    /* makeDefault */ false);
+
+            assertThat(phFlags.getGlobalKillSwitch()).isEqualTo(expected);
+        } finally {
+            mMockitoSession.finishMocking();
+        }
     }
 
     @Test
@@ -4111,6 +4187,13 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_KILL_SWITCH,
                 Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // For S minus testing enabling backCompat
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_BACK_COMPAT,
+                Boolean.toString(true),
                 /* makeDefault */ false);
     }
 
