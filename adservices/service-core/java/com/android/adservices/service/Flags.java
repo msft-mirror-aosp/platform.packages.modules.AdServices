@@ -1883,4 +1883,11 @@ public interface Flags {
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
+
+    /** Returns whether to enable flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
 }
