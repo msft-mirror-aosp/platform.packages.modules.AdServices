@@ -17,7 +17,6 @@
 package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
@@ -30,6 +29,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
@@ -97,14 +98,12 @@ public class AsyncRegistrationQueueRunner {
         return sAsyncRegistrationQueueRunner;
     }
 
-    /**
-     * Service records in the AsyncRegistration Queue table.
-     *
-     * @param recordServiceLimit a long representing how many records will be serviced during this
-     *     run.
-     * @param retryLimit represents the amount of retries that will be allowed for each record.
-     */
-    public void runAsyncRegistrationQueueWorker(long recordServiceLimit, short retryLimit) {
+    /** Processes records in the AsyncRegistration Queue table. */
+    public void runAsyncRegistrationQueueWorker() {
+        Flags flags = FlagsFactory.getFlags();
+        int recordServiceLimit = flags.getMeasurementMaxRegistrationsPerJobInvocation();
+        int retryLimit = flags.getMeasurementMaxRetriesPerRegistrationRequest();
+
         Set<Uri> failedOrigins = new HashSet<>();
         for (int i = 0; i < recordServiceLimit; i++) {
             Optional<AsyncRegistration> optAsyncRegistration =
@@ -399,15 +398,13 @@ public class AsyncRegistrationQueueRunner {
             // non-null.
             if (!Objects.isNull(source.getAppDestinations())) {
                 for (Uri destination : source.getAppDestinations()) {
-                    dao.insertAttribution(
-                            createFakeAttributionRateLimit(source, destination));
+                    dao.insertAttribution(createFakeAttributionRateLimit(source, destination));
                 }
             }
 
             if (!Objects.isNull(source.getWebDestinations())) {
                 for (Uri destination : source.getWebDestinations()) {
-                    dao.insertAttribution(
-                            createFakeAttributionRateLimit(source, destination));
+                    dao.insertAttribution(createFakeAttributionRateLimit(source, destination));
                 }
             }
         }
@@ -416,6 +413,9 @@ public class AsyncRegistrationQueueRunner {
     private void handleSuccess(
             AsyncRegistration asyncRegistration, AsyncRedirect asyncRedirect, IMeasurementDao dao)
             throws DatastoreException {
+        // deleteAsyncRegistration will throw an exception & rollback the transaction if the record
+        // is already deleted. This can happen if both fallback & regular job are running at the
+        // same time or if deletion job deletes the records.
         dao.deleteAsyncRegistration(asyncRegistration.getId());
         if (asyncRedirect.getRedirects().isEmpty()) {
             return;
@@ -516,9 +516,9 @@ public class AsyncRegistrationQueueRunner {
 
     private void notifyTriggerContentProvider() {
         try (ContentProviderClient contentProviderClient =
-                mContentResolver.acquireContentProviderClient(TRIGGER_URI)) {
+                mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI)) {
             if (contentProviderClient != null) {
-                contentProviderClient.insert(TRIGGER_URI, null);
+                contentProviderClient.insert(TriggerContentProvider.TRIGGER_URI, null);
             }
         } catch (RemoteException e) {
             LogUtil.e(e, "Trigger Content Provider invocation failed.");
