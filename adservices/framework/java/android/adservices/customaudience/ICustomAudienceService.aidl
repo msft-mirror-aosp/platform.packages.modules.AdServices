@@ -47,8 +47,8 @@ interface ICustomAudienceService {
      * The call will fail silently if the CustomAudience has been created by a different app.
      */
     void overrideCustomAudienceRemoteInfo(in String ownerPackageName, in AdTechIdentifier buyer,
-            in String name, in String biddingLogicJS, in AdSelectionSignals trustedBiddingData,
-            in CustomAudienceOverrideCallback callback);
+            in String name, in String biddingLogicJS, in long biddingLogicJsVersion,
+            in AdSelectionSignals trustedBiddingData, in CustomAudienceOverrideCallback callback);
 
     /**
      * Deletes any override created by calling
