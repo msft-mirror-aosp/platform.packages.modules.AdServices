@@ -1861,7 +1861,7 @@ public interface Flags {
     }
 
     /** Default Determines whether EU notification flow change is enabled.. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = false;
 
     /** Determines whether EU notification flow change is enabled.. */
     default boolean getEuNotifFlowChangeEnabled() {
