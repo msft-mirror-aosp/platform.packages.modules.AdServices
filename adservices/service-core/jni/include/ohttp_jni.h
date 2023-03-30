@@ -79,6 +79,16 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
     JNIEnv *env, jclass, jlong senderHpkeCtxRef, jlong evpKemRef,
     jlong evpKdfRef, jlong evpAeadRef, jbyteArray publicKeyArray,
     jbyteArray infoArray, jbyteArray seedArray);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hpkeCtxSeal
+ * Signature: (J[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSeal(
+    JNIEnv* env, jclass, jlong senderHpkeCtxRef,
+    jbyteArray plaintextArray, jbyteArray aadArray);
 #ifdef __cplusplus
 }
 #endif
