@@ -34,7 +34,7 @@ import com.google.auto.value.AutoValue.CopyAnnotations;
 @CopyAnnotations
 @Entity(
         tableName = "registered_ad_interactions",
-        primaryKeys = {"ad_selection_id", "interaction_key", "reporting_destination"})
+        primaryKeys = {"ad_selection_id", "interaction_key", "destination"})
 public abstract class DBRegisteredAdInteraction {
 
     /**
@@ -56,9 +56,9 @@ public abstract class DBRegisteredAdInteraction {
      *     seller, etc.)
      */
     @CopyAnnotations
-    @ColumnInfo(name = "reporting_destination")
+    @ColumnInfo(name = "destination")
     @ReportInteractionRequest.ReportingDestination
-    public abstract int getReportingDestination();
+    public abstract int getDestination();
 
     /** @return Uri to be used during interaction reporting */
     @CopyAnnotations
@@ -71,12 +71,12 @@ public abstract class DBRegisteredAdInteraction {
     public static DBRegisteredAdInteraction create(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination,
+            @ReportInteractionRequest.ReportingDestination int destination,
             Uri interactionReportingUri) {
         return builder()
                 .setAdSelectionId(adSelectionId)
                 .setInteractionKey(interactionKey)
-                .setReportingDestination(reportingDestination)
+                .setDestination(destination)
                 .setInteractionReportingUri(interactionReportingUri)
                 .build();
     }
@@ -101,7 +101,7 @@ public abstract class DBRegisteredAdInteraction {
 
         /** Sets the reporting destination for the {@link DBRegisteredAdInteraction} entry. */
         @NonNull
-        public abstract DBRegisteredAdInteraction.Builder setReportingDestination(
+        public abstract DBRegisteredAdInteraction.Builder setDestination(
                 @ReportInteractionRequest.ReportingDestination int destination);
 
         /** Sets the interactionReportingUri for the {@link DBRegisteredAdInteraction} entry. */

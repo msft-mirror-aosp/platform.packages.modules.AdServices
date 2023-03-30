@@ -18,10 +18,16 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+
 import java.util.UUID;
 
 public class AsyncRegistrationFixture {
     private AsyncRegistrationFixture() {}
+
+    public static AsyncRegistration.Builder getValidAsyncRegistrationBuilder() {
+        return new AsyncRegistration.Builder();
+    }
 
     public static AsyncRegistration getValidAsyncRegistration() {
         return new AsyncRegistration.Builder()

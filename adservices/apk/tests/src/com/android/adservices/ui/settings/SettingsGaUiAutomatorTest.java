@@ -32,6 +32,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -43,6 +44,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsGaUiAutomatorTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
@@ -62,11 +64,17 @@ public class SettingsGaUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        if (!ApkTestUtil.isDeviceSupported()) return;
+
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test
@@ -82,17 +90,19 @@ public class SettingsGaUiAutomatorTest {
 
         // make sure all the GA elements are there
         scrollTo(R.string.settingsUI_topics_ga_title);
-        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        UiObject topicsButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
         scrollTo(R.string.settingsUI_apps_ga_title);
-        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
 
         scrollTo(R.string.settingsUI_measurement_view_title);
-        UiObject measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        UiObject measurementButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementButton.exists()).isTrue();
 
@@ -106,15 +116,16 @@ public class SettingsGaUiAutomatorTest {
         assertThat(mainSwitch.exists()).isTrue();
 
         // make sure all the GA elements are gone
-        topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isFalse();
 
-        appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isFalse();
 
-        measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        measurementButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
         measurementButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementButton.exists()).isFalse();
     }
@@ -131,15 +142,17 @@ public class SettingsGaUiAutomatorTest {
         assertThat(mainSwitch.exists()).isTrue();
 
         // make sure all the elements are there
-        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        UiObject topicsButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isFalse();
 
-        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isFalse();
 
-        UiObject measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        UiObject measurementButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
         measurementButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementButton.exists()).isFalse();
 
@@ -154,17 +167,18 @@ public class SettingsGaUiAutomatorTest {
 
         // make sure all the elements are there
         scrollTo(R.string.settingsUI_topics_ga_title);
-        topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        topicsButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
         scrollTo(R.string.settingsUI_apps_ga_title);
-        appButton = getElement(R.string.settingsUI_apps_ga_title);
+        appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
 
         scrollTo(R.string.settingsUI_measurement_view_title);
-        measurementButton = getElement(R.string.settingsUI_measurement_view_title);
+        measurementButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementButton.exists()).isTrue();
     }
@@ -181,18 +195,20 @@ public class SettingsGaUiAutomatorTest {
         assertThat(mainSwitch.exists()).isFalse();
 
         // make sure we are on the main settings page
-        UiObject appButton = getElement(R.string.settingsUI_apps_ga_title);
+        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
-        UiObject topicsButton = getElement(R.string.settingsUI_topics_ga_title);
+        UiObject topicsButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
         // click measurement page
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // verify have entered to measurement page
-        UiObject measurementSwitch = getElement(R.string.settingsUI_measurement_switch_title);
+        UiObject measurementSwitch =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_switch_title);
         // needed as the new page is displayed (this can take time to propagate to the UiAutomator)
         measurementSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementSwitch.exists()).isTrue();
@@ -210,33 +226,19 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // open measurement view
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
         UiObject resetButton =
-                sDevice.findObject(
-                        new UiSelector()
-                                .childSelector(
-                                        new UiSelector()
-                                                .text(
-                                                        getString(
-                                                                R.string
-                                                                        .settingsUI_measurement_view_reset_title))));
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
 
         // click reset again
-        scrollToAndClick(R.string.settingsUI_measurement_view_reset_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
         resetButton =
-                sDevice.findObject(
-                        new UiSelector()
-                                .childSelector(
-                                        new UiSelector()
-                                                .text(
-                                                        getString(
-                                                                R.string
-                                                                        .settingsUI_measurement_view_reset_title))));
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_reset_title);
         resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(resetButton.exists()).isTrue();
     }
@@ -247,7 +249,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 1) disable Topics API is enabled
-        scrollToAndClick(R.string.settingsUI_topics_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
 
         UiObject topicsToggle =
@@ -260,7 +262,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 2) enable Topics API
-        scrollToAndClick(R.string.settingsUI_topics_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
 
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -271,7 +273,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 3) check if Topics API is enabled
-        scrollToAndClick(R.string.settingsUI_topics_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
 
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -286,7 +288,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 1) disable Fledge API is enabled
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
 
         UiObject fledgeToggle =
@@ -299,7 +301,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 2) enable Fledge API
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
 
         fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -310,7 +312,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 3) check if Fledge API is enabled
-        scrollToAndClick(R.string.settingsUI_apps_ga_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
 
         fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -325,7 +327,7 @@ public class SettingsGaUiAutomatorTest {
 
         launchApp();
         // 1) disable Measurement API is enabled
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
 
         UiObject measurementToggle =
@@ -338,7 +340,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 2) enable Measurement API
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
 
         measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -349,7 +351,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressBack();
 
         // 3) check if Measurement API is enabled
-        scrollToAndClick(R.string.settingsUI_measurement_view_title);
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
 
         measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -395,7 +397,7 @@ public class SettingsGaUiAutomatorTest {
         subtitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         scrollView.scrollIntoView(subtitle);
         if (subtitle.getText().equals("Off")) {
-            scrollToAndClick(stringIdOfTitle);
+            ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
@@ -405,7 +407,7 @@ public class SettingsGaUiAutomatorTest {
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
             assertThat(subtitle.getText().equals("Off")).isFalse();
         } else {
-            scrollToAndClick(stringIdOfTitle);
+            ApkTestUtil.scrollToAndClick(sDevice, stringIdOfTitle);
             UiObject toggle =
                     sDevice.findObject(new UiSelector().className("android.widget.Switch"));
             toggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
@@ -417,30 +419,11 @@ public class SettingsGaUiAutomatorTest {
         }
     }
 
-    private UiObject getElementById(int resId) {
-        return sDevice.findObject(new UiSelector().resourceId(String.valueOf(resId)));
-    }
-
-    private UiObject getElement(int resId) {
-        return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private String getString(int resourceId) {
-        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
-    }
-
-    private void scrollToAndClick(int resId) throws UiObjectNotFoundException {
-        UiObject element = scrollTo(resId);
-        element.click();
-    }
-
     private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
                         new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        UiObject element =
-                sDevice.findObject(
-                        new UiSelector().childSelector(new UiSelector().text(getString(resId))));
+        UiObject element = ApkTestUtil.getPageElement(sDevice, resId);
         scrollView.scrollIntoView(element);
         return element;
     }

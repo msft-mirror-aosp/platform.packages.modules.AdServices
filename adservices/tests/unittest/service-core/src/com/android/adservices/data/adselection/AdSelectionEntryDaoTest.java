@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -23,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
 import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.common.AdDataFixture;
 import android.content.Context;
 import android.net.Uri;
 
@@ -52,6 +55,7 @@ public class AdSelectionEntryDaoTest {
 
     private static final Uri BIDDING_LOGIC_URI_1 = Uri.parse("http://www.domain.com/logic/1");
     private static final Uri BIDDING_LOGIC_URI_2 = Uri.parse("http://www.domain.com/logic/2");
+    private static final Uri BIDDING_LOGIC_URI_3 = Uri.parse("http://www.domain.com/logic/3");
 
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert/");
 
@@ -95,6 +99,19 @@ public class AdSelectionEntryDaoTest {
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
                     .build();
 
+    public static final DBAdSelection DB_AD_SELECTION_WITH_AD_COUNTER_KEYS =
+            new DBAdSelection.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                    .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setWinningAdRenderUri(RENDER_URI)
+                    .setWinningAdBid(BID)
+                    .setCreationTimestamp(ACTIVATION_TIME)
+                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .build();
+
     public static final DBAdSelection DB_AD_SELECTION_2 =
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
@@ -111,6 +128,7 @@ public class AdSelectionEntryDaoTest {
             new DBAdSelection.Builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setContextualSignals(CONTEXTUAL_SIGNALS)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_3)
                     .setWinningAdRenderUri(RENDER_URI)
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
@@ -188,6 +206,7 @@ public class AdSelectionEntryDaoTest {
 
     private static final String CLICK_EVENT = "click";
     private static final String HOVER_EVENT = "hover";
+    private static final String HOLD_EVENT = "hold";
 
     private static final String SELLER_BASE_URI = "https://www.seller.com/";
     private static final String BUYER_BASE_URI = "https://www.buyer.com/";
@@ -201,14 +220,21 @@ public class AdSelectionEntryDaoTest {
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_1 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
+                    .setInteractionReportingUri(SELLER_HOVER_URI)
+                    .build();
+    private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOLD_1 =
+            DBRegisteredAdInteraction.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_1)
+                    .setInteractionKey(HOLD_EVENT)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
     private static final DBRegisteredAdInteraction
@@ -216,35 +242,35 @@ public class AdSelectionEntryDaoTest {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID_1)
                             .setInteractionKey(CLICK_EVENT)
-                            .setReportingDestination(SELLER_DESTINATION)
+                            .setDestination(SELLER_DESTINATION)
                             .setInteractionReportingUri(Uri.parse(DIFFERENT_BASE_URI + CLICK_EVENT))
                             .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_CLICK_2 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_2 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_CLICK_3 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_CLICK_URI)
                     .build();
     private static final DBRegisteredAdInteraction DB_REGISTERED_INTERACTION_SELLER_HOVER_3 =
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_3)
                     .setInteractionKey(HOVER_EVENT)
-                    .setReportingDestination(SELLER_DESTINATION)
+                    .setDestination(SELLER_DESTINATION)
                     .setInteractionReportingUri(SELLER_HOVER_URI)
                     .build();
 
@@ -252,7 +278,7 @@ public class AdSelectionEntryDaoTest {
             DBRegisteredAdInteraction.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
                     .setInteractionKey(CLICK_EVENT)
-                    .setReportingDestination(BUYER_DESTINATION)
+                    .setDestination(BUYER_DESTINATION)
                     .setInteractionReportingUri(BUYER_CLICK_URI)
                     .build();
 
@@ -881,6 +907,319 @@ public class AdSelectionEntryDaoTest {
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
                         AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+    }
+
+    @Test
+    public void testGetNumRegisteredAdInteractions() {
+        // Nothing inserted yet, should return 0
+        assertEquals(0, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        // Insert 2 registered ad interactions
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertEquals(2, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        // Insert 4 more registered ad interactions
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_2,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_2,
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_3,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_3));
+
+        assertEquals(6, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
+
+        // Everything is cleared since no ad selection ids registered
+        assertEquals(0, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+    }
+
+    @Test
+    public void testSafelyInsertRegisteredAdInteractionsDoesNotInsertWhenTableIsFull() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        int maxTableSize = 2;
+        int maxSizePerDestination = 10;
+
+        assertEquals(maxTableSize, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_2,
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_2,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_2),
+                maxTableSize,
+                maxSizePerDestination,
+                SELLER_DESTINATION);
+
+        // Assert new interactions were not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, HOVER_EVENT, SELLER_DESTINATION));
+
+        // Assert old interactions are still registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertEquals(maxTableSize, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+    }
+
+    @Test
+    public void testSafelyInsertRegisteredAdInteractionsOnlyInsertsTillTableIsFull() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        int maxTableSize = 3;
+        int maxSizePerDestination = 10;
+
+        assertEquals(2, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_2,
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_2,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_2),
+                maxTableSize,
+                maxSizePerDestination,
+                SELLER_DESTINATION);
+
+        // Assert only first interaction is registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, CLICK_EVENT, SELLER_DESTINATION));
+
+        // Assume next interaction is not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_2, HOVER_EVENT, SELLER_DESTINATION));
+
+        // Assert old events are still registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertEquals(maxTableSize, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+    }
+
+    @Test
+    public void testSafelyInsertRegisteredAdInteractionsDoesNotInsertAtMaxNumPerDestination() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        int maxTableSize = 10;
+        int maxSizePerDestination = 2;
+
+        assertEquals(
+                maxSizePerDestination, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(DB_REGISTERED_INTERACTION_SELLER_HOLD_1),
+                maxTableSize,
+                maxSizePerDestination,
+                SELLER_DESTINATION);
+
+        // Assert new interaction was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOLD_EVENT, SELLER_DESTINATION));
+
+        // Assert old interactions are still registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertEquals(
+                maxSizePerDestination, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+    }
+
+    @Test
+    public void
+            testSafelyInsertRegisteredAdInteractionsOnlyInsertsTillMaxPerDestinationIsReached() {
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(DB_REGISTERED_INTERACTION_SELLER_CLICK_1));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        int maxTableSize = 10;
+        int maxSizePerDestination = 2;
+
+        assertEquals(1, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOLD_1),
+                maxTableSize,
+                maxSizePerDestination,
+                SELLER_DESTINATION);
+
+        // Assert only first 2 interactions are registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        // Assert next interaction was not registered
+        assertFalse(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOLD_EVENT, SELLER_DESTINATION));
+
+        // Assert old interactions are still registered
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, CLICK_EVENT, SELLER_DESTINATION));
+
+        assertTrue(
+                mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
+                        AD_SELECTION_ID_1, HOVER_EVENT, SELLER_DESTINATION));
+
+        assertEquals(
+                maxSizePerDestination, mAdSelectionEntryDao.getTotalNumRegisteredAdInteractions());
+    }
+
+    @Test
+    public void testGetNumRegisteredAdInteractionsPerAdSelectionAndDestination() {
+        assertEquals(
+                0,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_1, SELLER_DESTINATION));
+        assertEquals(
+                0,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_1, BUYER_DESTINATION));
+        assertEquals(
+                0,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_2, SELLER_DESTINATION));
+
+        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
+                ImmutableList.of(
+                        DB_REGISTERED_INTERACTION_SELLER_CLICK_1,
+                        DB_REGISTERED_INTERACTION_SELLER_HOVER_1));
+
+        assertEquals(
+                2,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_1, SELLER_DESTINATION));
+
+        // Expect still to return 0 since no buyer destinations are registered
+        assertEquals(
+                0,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_1, BUYER_DESTINATION));
+
+        // Expect still to return 0 since nothing with AD_SELECTION_2 was registered
+        assertEquals(
+                0,
+                mAdSelectionEntryDao.getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
+                        AD_SELECTION_ID_2, SELLER_DESTINATION));
+    }
+
+    @Test
+    public void testGetMissingAdSelectionHistogramInfo() {
+        assertThat(
+                        mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName()))
+                .isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfoWithNullAdCounterKeys() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_1.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        DB_AD_SELECTION_1.getAdSelectionId(),
+                        DB_AD_SELECTION_1.getCallerPackageName());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer())
+                .isEqualTo(DB_AD_SELECTION_1.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo.getAdCounterKeys()).isNull();
+    }
+
+    @Test
+    public void testGetAdSelectionHistogramInfo() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS);
+        assertThat(
+                        mAdSelectionEntryDao.doesAdSelectionIdExist(
+                                DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId()))
+                .isTrue();
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdSelectionId(),
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCallerPackageName());
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer())
+                .isEqualTo(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCustomAudienceSignals().getBuyer());
+        assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
+        assertThat(histogramInfo.getAdCounterKeys())
+                .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
     }
 
     /**
