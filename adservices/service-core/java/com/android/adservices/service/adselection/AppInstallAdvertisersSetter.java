@@ -26,21 +26,18 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.os.Build;
-import android.os.LimitExceededException;
 import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
-import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.common.FledgeServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -57,6 +54,7 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppInstallAdvertisersSetter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE = "app install adtech set";
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE = "adtech";
@@ -64,7 +62,7 @@ public class AppInstallAdvertisersSetter {
     @NonNull private final AppInstallDao mAppInstallDao;
     @NonNull private final ListeningExecutorService mExecutorService;
     @NonNull private final AdServicesLogger mAdServicesLogger;
-    @NonNull private final FledgeServiceFilter mFledgeServiceFilter;
+    @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
 
@@ -73,21 +71,21 @@ public class AppInstallAdvertisersSetter {
             @NonNull ExecutorService executor,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
-            @NonNull final FledgeServiceFilter fledgeServiceFilter,
+            @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final ConsentManager consentManager,
             int callerUid) {
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(executor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
-        Objects.requireNonNull(fledgeServiceFilter);
+        Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
 
         mAppInstallDao = appInstallDao;
         mExecutorService = MoreExecutors.listeningDecorator(executor);
         mAdServicesLogger = adServicesLogger;
         mCallerUid = callerUid;
-        mFledgeServiceFilter = fledgeServiceFilter;
+        mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
     }
 
@@ -103,7 +101,10 @@ public class AppInstallAdvertisersSetter {
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersInput input,
             @NonNull SetAppInstallAdvertisersCallback callback) {
-        LogUtil.v("Executing setAppInstallAdvertisers API");
+        sLogger.v("Executing setAppInstallAdvertisers API");
+
+        // Auto-generated variable name is too long for lint check
+        int shortApiName = AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 
         FluentFuture.from(
                         mExecutorService.submit(
@@ -115,17 +116,34 @@ public class AppInstallAdvertisersSetter {
                         new FutureCallback<Void>() {
                             @Override
                             public void onSuccess(Void result) {
-                                LogUtil.v("SetAppInstallAdvertisers succeeded!");
-                                invokeSuccess(callback, AdServicesStatusUtils.STATUS_SUCCESS);
+                                sLogger.v("SetAppInstallAdvertisers succeeded!");
+                                // Note: Success is logged before the callback to ensure
+                                // deterministic testing.
+                                mAdServicesLogger.logFledgeApiCallStats(
+                                        shortApiName, AdServicesStatusUtils.STATUS_SUCCESS, 0);
+                                invokeSuccess(callback);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "SetAppInstallAdvertisers invocation failed!");
-                                if (t instanceof ConsentManager.RevokedConsentException) {
-                                    invokeSuccess(
-                                            callback,
-                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED);
+                                sLogger.e(t, "SetAppInstallAdvertisers invocation failed!");
+                                if ((t instanceof FilterException
+                                        && t.getCause()
+                                                instanceof
+                                                ConsentManager.RevokedConsentException)) {
+                                    invokeSuccess(callback);
+                                } else if (t instanceof ConsentManager.RevokedConsentException) {
+                                    // TODO(b/271921887): Remove the duplicate check once
+                                    // app-specific consent check has been moved to a shared
+                                    // validation component.
+                                    // TODO(b/271921887): Remove the failure log once app-specific
+                                    //  consent check has been moved to a shared validation
+                                    // component.
+                                    mAdServicesLogger.logFledgeApiCallStats(
+                                            shortApiName,
+                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
+                                            0);
+                                    invokeSuccess(callback);
                                 } else {
                                     notifyFailureToCaller(callback, t);
                                 }
@@ -139,63 +157,62 @@ public class AppInstallAdvertisersSetter {
             @NonNull SetAppInstallAdvertisersCallback callback,
             int statusCode,
             String errorMessage) {
-        int resultCode = AdServicesStatusUtils.STATUS_UNSET;
         try {
             callback.onFailure(
                     new FledgeErrorResponse.Builder()
                             .setStatusCode(statusCode)
                             .setErrorMessage(errorMessage)
                             .build());
-            resultCode = statusCode;
         } catch (RemoteException e) {
             // TODO(b/269724912) Unit test this block
-            LogUtil.e(e, "Unable to send failed result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+            sLogger.e(e, "Unable to send failed result to the callback");
             throw e.rethrowFromSystemServer();
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, resultCode, 0);
         }
     }
 
     /** Invokes the onSuccess function from the callback and handles the exception. */
-    private void invokeSuccess(@NonNull SetAppInstallAdvertisersCallback callback, int resultCode) {
+    private void invokeSuccess(@NonNull SetAppInstallAdvertisersCallback callback) {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
             // TODO(b/269724912) Unit test this block
-            LogUtil.e(e, "Unable to send successful result to the callback");
-            resultCode = AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
+            sLogger.e(e, "Unable to send successful result to the callback");
             throw e.rethrowFromSystemServer();
-        } finally {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, resultCode, 0);
         }
     }
 
     private void notifyFailureToCaller(
             @NonNull SetAppInstallAdvertisersCallback callback, @NonNull Throwable t) {
-        if (t instanceof IllegalArgumentException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, t.getMessage());
-        } else if (t instanceof WrongCallingApplicationStateException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_BACKGROUND_CALLER, t.getMessage());
-        } else if (t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED, t.getMessage());
-        } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_UNAUTHORIZED, t.getMessage());
-        } else if (t instanceof LimitExceededException) {
-            invokeFailure(
-                    callback, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, t.getMessage());
+        int resultCode;
+
+        boolean isFilterException = t instanceof FilterException;
+
+        if (isFilterException) {
+            resultCode = FilterException.getResultCode(t);
+        } else if (t instanceof IllegalArgumentException) {
+            resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         } else {
-            invokeFailure(callback, AdServicesStatusUtils.STATUS_INTERNAL_ERROR, t.getMessage());
+            resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
+
+        // Skip logging if a FilterException occurs.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        // Note: Failure is logged before the callback to ensure deterministic testing.
+        if (!isFilterException) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS, resultCode, 0);
+        }
+
+        invokeFailure(callback, resultCode, t.getMessage());
     }
 
     private Void doSetAppInstallAdvertisers(
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
         validateRequest(advertisers, callerPackageName);
 
+        sLogger.v(
+                "Writing %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         ArrayList<DBAppInstallPermissions> permissions = new ArrayList<>();
         for (AdTechIdentifier advertiser : advertisers) {
             permissions.add(
@@ -205,12 +222,15 @@ public class AppInstallAdvertisersSetter {
                             .build());
         }
         mAppInstallDao.setAdTechsForPackage(callerPackageName, permissions);
+        sLogger.v(
+                "Wrote %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         return null;
     }
 
     private void validateRequest(Set<AdTechIdentifier> advertisers, String callerPackageName) {
-        LogUtil.v("Validating setAppInstallAdvertisers Request");
-        mFledgeServiceFilter.filterRequest(
+        sLogger.v("Validating setAppInstallAdvertisers Request");
+        mAdSelectionServiceFilter.filterRequest(
                 null,
                 callerPackageName,
                 true,

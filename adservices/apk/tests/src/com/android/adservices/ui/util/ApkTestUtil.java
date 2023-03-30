@@ -17,12 +17,25 @@
 package com.android.adservices.ui.util;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiScrollable;
+import androidx.test.uiautomator.UiSelector;
+
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 
 /** Util class for APK tests. */
 public class ApkTestUtil {
+
+    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
 
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
@@ -35,5 +48,69 @@ public class ApkTestUtil {
         return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    /** Returns the UiObject corresponding to a resource ID. */
+    public static UiObject getElement(UiDevice device, int resId) {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        if (!obj.exists()) {
+            obj = device.findObject(new UiSelector().text(getString(resId).toUpperCase()));
+        }
+        return obj;
+    }
+
+    /** Returns the string corresponding to a resource ID. */
+    public static String getString(int resourceId) {
+        return ApplicationProvider.getApplicationContext().getResources().getString(resourceId);
+    }
+
+    /** Returns the UiObject corresponding to a resource ID after scrolling. */
+    public static void scrollToAndClick(UiDevice device, int resId)
+            throws UiObjectNotFoundException {
+        UiObject obj = scrollTo(device, resId);
+        // objects may be partially hidden by the status bar and nav bars.
+        obj.clickTopLeft();
+    }
+
+    public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
+        scrollView.scrollIntoView(obj);
+        return obj;
+    }
+
+    /** Returns the string corresponding to a resource ID and index. */
+    public static UiObject getElement(UiDevice device, int resId, int index) {
+        UiObject obj = device.findObject(new UiSelector().text(getString(resId)).instance(index));
+        if (!obj.exists()) {
+            obj =
+                    device.findObject(
+                            new UiSelector().text(getString(resId).toUpperCase()).instance(index));
+        }
+        return obj;
+    }
+
+    /** Returns the UiObject corresponding to a resource ID. */
+    public static UiObject getPageElement(UiDevice device, int resId) {
+        return device.findObject(new UiSelector().text(getString(resId)));
+    }
+
+    public static void setCompatActivitiesAndFlags(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    context, ADEXTSERVICES_PACKAGE_NAME, true);
+        }
+    }
+
+    public static void resetCompatActivitiesAndFlags(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    context, ADEXTSERVICES_PACKAGE_NAME, false);
+        }
     }
 }

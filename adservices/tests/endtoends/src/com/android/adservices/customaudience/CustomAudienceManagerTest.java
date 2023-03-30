@@ -27,14 +27,17 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.concurrent.Executor;
@@ -42,6 +45,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceManagerTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final String TAG = "CustomAudienceManagerTest";
     private static final String SERVICE_APK_NAME = "com.android.adservices.api";
     private static final int MAX_RETRY = 50;
@@ -54,8 +58,16 @@ public class CustomAudienceManagerTest {
 
     private static final int DELAY_TO_AVOID_THROTTLE_MS = 1001;
 
+    private String mPreviousAppAllowList;
+
     @Before
     public void setUp() throws TimeoutException {
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            CONTEXT.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
@@ -63,6 +75,14 @@ public class CustomAudienceManagerTest {
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+    }
+
+    @After
+    public void tearDown() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     private void measureJoinCustomAudience(String label) throws Exception {
@@ -128,7 +148,8 @@ public class CustomAudienceManagerTest {
      * avoid fluctuation, which works okay for comparing multiple algorithms, but not a good way to
      * get the "actual" number.
      */
-    @Ignore("b/271338417")
+    // TODO(b/271338417): Remove @FlakyTest after stabilizing test
+    @FlakyTest(bugId = 271338417)
     @Test
     public void testCallCustomAudienceAPIAfterKillingService() throws Exception {
         // Kill the service process, if it's already running.
@@ -147,7 +168,7 @@ public class CustomAudienceManagerTest {
                 succeed = true;
                 break;
             } catch (Exception exception) {
-                LogUtil.e(exception, "Failure testing Custom Audience API");
+                sLogger.e(exception, "Failure testing Custom Audience API");
                 Thread.sleep(1000);
                 count++;
             }

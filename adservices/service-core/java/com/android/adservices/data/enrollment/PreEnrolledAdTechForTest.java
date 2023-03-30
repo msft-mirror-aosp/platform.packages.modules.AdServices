@@ -93,10 +93,10 @@ final class PreEnrolledAdTechForTest {
                     .setEnrollmentId("E5")
                     .setCompanyId("1003")
                     .setAttributionSourceRegistrationUrl(
-                            Arrays.asList("https://localhost:38383/mockServer"))
+                            Arrays.asList("https://rb-measurement.com/source"))
                     .setAttributionTriggerRegistrationUrl(
-                            Arrays.asList("https://localhost:38383/mockServer"))
-                    .setAttributionReportingUrl(Arrays.asList("https://localhost:38383/mockServer"))
+                            Arrays.asList("https://rb-measurement.com/trigger"))
+                    .setAttributionReportingUrl(Arrays.asList("https://rb-measurement.com:38383"))
                     .build();
 
     private static final EnrollmentData LOCAL_SERVER_FOR_MSMT_REMARKETING =

@@ -25,9 +25,20 @@ public class HistogramEventFixture {
     public static final HistogramEvent VALID_HISTOGRAM_EVENT =
             getValidHistogramEventBuilder().build();
 
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT =
+            getValidHistogramEventBuilder()
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                    .build();
+
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_NAME =
             getValidHistogramEventBuilder()
                     .setCustomAudienceName(CustomAudienceFixture.VALID_NAME + "Different")
+                    .build();
+
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_NAME =
+            getValidHistogramEventBuilder()
+                    .setCustomAudienceName(CustomAudienceFixture.VALID_NAME + "Different")
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                     .build();
 
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_OWNER =
@@ -35,16 +46,40 @@ public class HistogramEventFixture {
                     .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME_1)
                     .build();
 
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_OWNER =
+            getValidHistogramEventBuilder()
+                    .setCustomAudienceOwner(CommonFixture.TEST_PACKAGE_NAME_1)
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                    .build();
+
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_DIFFERENT_BUYER =
             getValidHistogramEventBuilder().setBuyer(CommonFixture.VALID_BUYER_2).build();
+
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_DIFFERENT_BUYER =
+            getValidHistogramEventBuilder()
+                    .setBuyer(CommonFixture.VALID_BUYER_2)
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                    .build();
 
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_EARLIER_TIME =
             getValidHistogramEventBuilder()
                     .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(1))
                     .build();
 
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_EARLIER_TIME =
+            getValidHistogramEventBuilder()
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
+                    .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.minusSeconds(1))
+                    .build();
+
     public static final HistogramEvent VALID_HISTOGRAM_EVENT_LATER_TIME =
             getValidHistogramEventBuilder()
+                    .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusSeconds(1))
+                    .build();
+
+    public static final HistogramEvent VALID_WIN_HISTOGRAM_EVENT_LATER_TIME =
+            getValidHistogramEventBuilder()
+                    .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN)
                     .setTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI.plusSeconds(1))
                     .build();
 

@@ -42,6 +42,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -50,7 +51,6 @@ import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.util.ApkTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -110,14 +110,14 @@ public class ConsentNotificationTriggerTest {
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
     }
 
     @After
     public void tearDown() throws IOException {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        Runtime.getRuntime()
-                .exec(new String[] {"am", "force-stop", "com.android.adservices.tests.ui"});
+        if (!ApkTestUtil.isDeviceSupported()) return;
 
+        AdservicesTestHelper.killAdservicesProcess(mContext);
         mStaticMockSession.finishMocking();
     }
 
@@ -136,10 +136,11 @@ public class ConsentNotificationTriggerTest {
 
         verify(() -> UiStatsLogger.logRequestedNotification(mContext));
 
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).disable(mContext);
         verify(mConsentManager).recordNotificationDisplayed();
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -187,8 +188,8 @@ public class ConsentNotificationTriggerTest {
 
         verify(() -> UiStatsLogger.logRequestedNotification(mContext));
 
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).recordTopicsDefaultConsent(false);
         verify(mConsentManager).recordFledgeDefaultConsent(false);
         verify(mConsentManager).recordMeasurementDefaultConsent(false);
@@ -197,6 +198,7 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).disable(mContext, AdServicesApiType.MEASUREMENTS);
         verify(mConsentManager).recordNotificationDisplayed();
         verify(mConsentManager).recordGaUxNotificationDisplayed();
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -233,10 +235,11 @@ public class ConsentNotificationTriggerTest {
 
         verify(() -> UiStatsLogger.logRequestedNotification(mContext));
 
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).enable(mContext);
         verify(mConsentManager).recordNotificationDisplayed();
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -290,13 +293,14 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager).enable(mContext, AdServicesApiType.FLEDGE);
         verify(mConsentManager).enable(mContext, AdServicesApiType.MEASUREMENTS);
 
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
+        verify(mConsentManager, times(2)).getDefaultConsent();
+        verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).recordTopicsDefaultConsent(true);
         verify(mConsentManager).recordFledgeDefaultConsent(true);
         verify(mConsentManager).recordMeasurementDefaultConsent(true);
         verify(mConsentManager).recordGaUxNotificationDisplayed();
         verify(mConsentManager).recordNotificationDisplayed();
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
 
         assertThat(mNotificationManager.getActiveNotifications()).hasLength(1);
@@ -328,6 +332,7 @@ public class ConsentNotificationTriggerTest {
         verify(mConsentManager, times(2)).getDefaultConsent();
         verify(mConsentManager, times(2)).getDefaultAdIdState();
         verify(mConsentManager).recordNotificationDisplayed();
+        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
         verifyNoMoreInteractions(mConsentManager);
     }
 

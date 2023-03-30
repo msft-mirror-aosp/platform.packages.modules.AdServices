@@ -31,7 +31,9 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -71,9 +73,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final int DEFAULT_PACKAGE_UID = -1;
+    private static boolean sFilteringEnabled;
 
     /** Enable the PackageChangedReceiver */
-    public static boolean enableReceiver(@NonNull Context context) {
+    public static boolean enableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        sFilteringEnabled = BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
         try {
             context.getPackageManager()
                     .setComponentEnabledSetting(
@@ -87,31 +91,61 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         return true;
     }
 
+    /**
+     * This receiver will be used for both T+ and S-. For T+, the AdServices System Service will
+     * listen to the system broadcasts and rebroadcast to this receiver. For S-, since we don't have
+     * AdServices in System Service, we have to listen to system broadcasts directly. Note: This is
+     * best effort since AdServices process is not a persistent process, so any processing that
+     * happens here should be verified in a background job. TODO(b/263904417): Register for
+     * PACKAGE_ADDED receiver for S-.
+     */
     @Override
     public void onReceive(Context context, Intent intent) {
         LogUtil.d("PackageChangedReceiver received a broadcast: " + intent.getAction());
+        Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
+        int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
         switch (intent.getAction()) {
+                // The broadcast is received from the system. On S- devices, we do this because
+                // there is no service running in the system server.
+            case Intent.ACTION_PACKAGE_FULLY_REMOVED:
+                handlePackageFullyRemoved(context, packageUri, packageUid);
+                break;
+            case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                handlePackageDataCleared(context, packageUri);
+                break;
+                // The broadcast is received from the system service. On T+ devices, we do this so
+                // that the PP API process is not woken up if the flag is disabled.
             case PACKAGE_CHANGED_BROADCAST:
-                Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
-                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, DEFAULT_PACKAGE_UID);
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
-                        measurementOnPackageFullyRemoved(context, packageUri);
-                        topicsOnPackageFullyRemoved(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
-                        consentOnPackageFullyRemoved(context, packageUri, packageUid);
+                        handlePackageFullyRemoved(context, packageUri, packageUid);
                         break;
                     case PACKAGE_ADDED:
-                        measurementOnPackageAdded(context, packageUri);
-                        topicsOnPackageAdded(context, packageUri);
+                        handlePackageAdded(context, packageUri);
                         break;
                     case PACKAGE_DATA_CLEARED:
-                        measurementOnPackageDataCleared(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+                        handlePackageDataCleared(context, packageUri);
                         break;
                 }
                 break;
         }
+    }
+
+    private void handlePackageFullyRemoved(Context context, Uri packageUri, int packageUid) {
+        measurementOnPackageFullyRemoved(context, packageUri);
+        topicsOnPackageFullyRemoved(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+        consentOnPackageFullyRemoved(context, packageUri, packageUid);
+    }
+
+    private void handlePackageAdded(Context context, Uri packageUri) {
+        measurementOnPackageAdded(context, packageUri);
+        topicsOnPackageAdded(context, packageUri);
+    }
+
+    private void handlePackageDataCleared(Context context, Uri packageUri) {
+        measurementOnPackageDataCleared(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
     }
 
     @VisibleForTesting
@@ -192,6 +226,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
+        if (sFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
+        }
     }
 
     /**
@@ -269,5 +311,17 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return CustomAudienceDatabase.getInstance(context);
+    }
+
+    /**
+     * Returns an instance of the {@link SharedStorageDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * SharedStorageDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return SharedStorageDatabase.getInstance(context);
     }
 }
