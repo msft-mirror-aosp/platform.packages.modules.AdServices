@@ -41,8 +41,10 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
@@ -68,51 +70,59 @@ import com.google.mobiledatadownload.DownloadConfigProto.DownloadConditions.Devi
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /** Unit tests for {@link MobileDataDownloadFactory} */
-@RunWith(Parameterized.class)
 @SmallTest
 public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
+    private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
+    private static boolean sNeedWifiConnectionWait = true;
 
+    // Two files are from cts_test_1 folder.
+    // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     private static final String FILE_GROUP_NAME_1 = "test-group-1";
-    private static final String FILE_GROUP_NAME_2 = "test-group-2";
-    private static final String FILE_ID_1 = "test-file-1";
-    private static final String FILE_ID_2 = "test-file-2";
-    private static final String FILE_CHECKSUM_1 = "c1ef7864c76a99ae738ddad33882ed65972c99cc";
-    private static final String FILE_URL_1 = "https://www.gstatic.com/suggest-dev/odws1_test_4.jar";
-    private static final int FILE_SIZE_1 = 85769;
+    private static final String FILE_ID_1 = "classifier_assets_metadata.json";
+    private static final String FILE_ID_2 = "stopwords.txt";
+    private static final String FILE_CHECKSUM_1 = "52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final String FILE_URL_1 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final int FILE_SIZE_1 = 1026;
 
-    private static final String FILE_CHECKSUM_2 = "a1cba9d87b1440f41ce9e7da38c43e1f6bd7d5df";
-    private static final String FILE_URL_2 = "https://www.gstatic.com/suggest-dev/odws1_empty.jar";
-    private static final int FILE_SIZE_2 = 554;
+    private static final String FILE_CHECKSUM_2 = "042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final String FILE_URL_2 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final int FILE_SIZE_2 = 1;
 
     // TODO(b/263521464): Use the production topics classifier manifest URL.
     private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1388/ad579473d45d783185b03445edf594a0a404a819";
-    private static final String MDD_ENROLLMENT_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
+    private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
             "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1658790241927.binaryproto";
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
-    private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
     private static final String OEM_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1304/acd369267b5d25e377bc78a258a4e5e749b91e72";
+    private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
+
+    private static final int PRODUCTION_ENROLLMENT_ENTRIES = 5;
+    private static final int PTB_ENROLLMENT_ENTRIES = 1;
+    private static final int OEM_ENROLLMENT_ENTRIES = 33;
+
+    private static final int PRODUCTION_FILEGROUP_VERSION = 1;
+    private static final int PTB_FILEGROUP_VERSION = 0;
+    private static final int OEM_FILEGROUP_VERSION = 0;
 
     public static final String TEST_TOPIC_FILE_GROUP_NAME = "topics-classifier-model";
     public static final String ENROLLMENT_FILE_GROUP_NAME = "adtech_enrollment_data";
@@ -124,30 +134,19 @@ public class MobileDataDownloadTest {
     private DbHelper mDbHelper;
     private MobileDataDownload mMdd;
 
-    @Parameterized.Parameter(0)
-    public String enrollmentUrl;
-
-    @Parameterized.Parameter(1)
-    public int numOfEntries;
-
-    @Parameterized.Parameter(2)
-    public int fileGroupVersion;
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(
-                new Object[][] {
-                    {MDD_ENROLLMENT_MANIFEST_FILE_URL, 5, 1},
-                    {PTB_ENROLLMENT_MANIFEST_FILE_URL, 1, 0},
-                    {OEM_ENROLLMENT_MANIFEST_FILE_URL, 33, 0}
-                });
-    }
-
     @Mock Flags mMockFlags;
     @Mock ConsentManager mConsentManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
+        // the whole test suite run.
+        // Checking wifi connection using WifiManager isn't working on low-performance devices.
+        if (sNeedWifiConnectionWait) {
+            Thread.sleep(WAIT_FOR_WIFI_CONNECTION_MS);
+            sNeedWifiConnectionWait = false;
+        }
+
         MockitoAnnotations.initMocks(this);
 
         // Start a mockitoSession to mock static method.
@@ -166,8 +165,6 @@ public class MobileDataDownloadTest {
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
 
-        doReturn(/* Default value */ false).when(mMockFlags).getEnableDatabaseSchemaVersion5();
-
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
@@ -178,6 +175,8 @@ public class MobileDataDownloadTest {
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
+
+        overridingMddLoggingLevel("VERBOSE");
     }
 
     @After
@@ -188,6 +187,8 @@ public class MobileDataDownloadTest {
         if (mMdd != null) {
             mMdd.clear().get();
         }
+
+        overridingMddLoggingLevel("INFO");
     }
 
     @Test
@@ -239,8 +240,8 @@ public class MobileDataDownloadTest {
     public void testTopicsManifestFileGroupPopulator_ManifestConfigOverrider_NoFileGroup()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
-        // The server side test model build_id = 1388, which equals to bundled model build_id =
-        // 1388. ManifestConfigOverrider will not add the DataFileGroup in the
+        // The server side test model build_id = 1467, which equals to bundled model build_id =
+        // 1467. ManifestConfigOverrider will not add the DataFileGroup in the
         // TopicsManifestFileGroupPopulator and will not download either.
         assertThat(
                         mMdd.getFileGroup(
@@ -266,7 +267,7 @@ public class MobileDataDownloadTest {
                                 CommonClassifierHelper.getBundledModelBuildId(
                                         mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
 
-        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+        createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -282,17 +283,17 @@ public class MobileDataDownloadTest {
                 .isEqualTo(/* Test filegroup version number */ 0);
         assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 922);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1467);
     }
 
     /**
-     * This method tests enrollment data, verifies files downloaded successfully and data saved into
-     * DB correctly.
+     * This method tests MDD production enrollment data, verifies files downloaded successfully and
+     * data saved into DB correctly.
      */
     @Test
-    public void testEnrollmentDataDownload()
+    public void testEnrollmentDataDownload_Production()
             throws ExecutionException, InterruptedException, TimeoutException {
-        createMddForEnrollment(enrollmentUrl);
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
 
         ClientFileGroup clientFileGroup =
                 mMdd.getFileGroup(
@@ -301,32 +302,193 @@ public class MobileDataDownloadTest {
                                         .build())
                         .get();
 
-        // Verify measurement file group
-        assertThat(clientFileGroup.getGroupName()).isEqualTo(ENROLLMENT_FILE_GROUP_NAME);
-        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
-        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
-        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
+        verifyMeasurementFileGroup(
+                clientFileGroup, PRODUCTION_FILEGROUP_VERSION, PRODUCTION_ENROLLMENT_ENTRIES);
+    }
 
-        ExtendedMockito.doReturn(mMdd)
-                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+    /**
+     * This method tests OEM enrollment data, verifies files downloaded successfully and data saved
+     * into DB correctly.
+     */
+    @Test
+    public void testEnrollmentDataDownload_OEM()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        createMddForEnrollment(OEM_ENROLLMENT_MANIFEST_FILE_URL);
 
-        EnrollmentDataDownloadManager enrollmentDataDownloadManager =
-                new EnrollmentDataDownloadManager(mContext, mMockFlags);
-        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper);
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
 
-        ExtendedMockito.doReturn(enrollmentDao)
-                .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+        verifyMeasurementFileGroup(clientFileGroup, OEM_FILEGROUP_VERSION, OEM_ENROLLMENT_ENTRIES);
+    }
 
-        assertThat(enrollmentDao.deleteAll()).isTrue();
-        // Verify no enrollment data after table cleared.
-        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
-        // Verify enrollment data file read from MDD and insert the data into the enrollment
-        // database.
-        assertThat(enrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
-                .isEqualTo(SUCCESS);
-        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(numOfEntries);
-        assertThat(enrollmentDao.deleteAll()).isTrue();
+    /**
+     * This method tests Prod Test Bed enrollment data, verifies files downloaded successfully and
+     * data saved into DB correctly.
+     */
+    @Test
+    public void testEnrollmentDataDownload_PTB()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        createMddForEnrollment(PTB_ENROLLMENT_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        verifyMeasurementFileGroup(clientFileGroup, PTB_FILEGROUP_VERSION, PTB_ENROLLMENT_ENTRIES);
+    }
+
+    /**
+     * This method tests enrollment data, verifies that the file group doesn't exist if the consent
+     * is revoked.
+     */
+    @Test
+    public void testEnrollmentDataDownloadFailOnConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    /**
+     * This method tests enrollment data, verifies that the file group exists if the consent is
+     * given.
+     */
+    @Test
+    public void testEnrollmentDataDownloadOnConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForEnrollment(PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(ENROLLMENT_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests topics data, verifies that the file group doesn't exist if the consent is
+     * revoked.
+     */
+    @Test
+    public void testMddTopicsFailsOnConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
+    }
+
+    /**
+     * This method tests topics data, verifies that the file group exists if the consent is given.
+     */
+    @Test
+    public void testMddTopicsOnConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        ExtendedMockito.doReturn(1L)
+                .when(
+                        () ->
+                                CommonClassifierHelper.getBundledModelBuildId(
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(TEST_TOPIC_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests OTA data, verifies that the file group exists if the consent is given to at
+     * least one of the APIs.
+     */
+    @Test
+    public void testOtaOnTopicsConsentGiven_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.GIVEN);
+
+        createMddForUiOTAString(UI_OTA_STRINGS_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNotNull();
+    }
+
+    /**
+     * This method tests OTA data, verifies that the file group doesn't exist if the consent is
+     * revoked for all the APIs.
+     */
+    @Test
+    public void testOtaFailsOnAggregatedConsentRevoked_gaUxEnabled()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+        when(mConsentManager.getConsent(AdServicesApiType.FLEDGE))
+                .thenReturn(AdServicesApiConsent.REVOKED);
+
+        createMddForTopics(TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
+
+        ClientFileGroup clientFileGroup =
+                mMdd.getFileGroup(
+                                GetFileGroupRequest.newBuilder()
+                                        .setGroupName(UI_OTA_STRINGS_FILE_GROUP_NAME)
+                                        .build())
+                        .get();
+
+        assertThat(clientFileGroup).isNull();
     }
 
     @Test
@@ -523,5 +685,39 @@ public class MobileDataDownloadTest {
                 mDbHelper.getReadableDatabase(),
                 EnrollmentTables.EnrollmentDataContract.TABLE,
                 null);
+    }
+
+    private void verifyMeasurementFileGroup(
+            ClientFileGroup clientFileGroup, int fileGroupVersion, int enrollmentEntries)
+            throws InterruptedException, ExecutionException {
+        assertThat(clientFileGroup.getGroupName()).isEqualTo(ENROLLMENT_FILE_GROUP_NAME);
+        assertThat(clientFileGroup.getOwnerPackage()).isEqualTo(mContext.getPackageName());
+        assertThat(clientFileGroup.getFileCount()).isEqualTo(1);
+        assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
+        assertThat(clientFileGroup.getVersionNumber()).isEqualTo(fileGroupVersion);
+
+        ExtendedMockito.doReturn(mMdd)
+                .when(() -> MobileDataDownloadFactory.getMdd(any(Context.class), any(Flags.class)));
+
+        EnrollmentDataDownloadManager enrollmentDataDownloadManager =
+                new EnrollmentDataDownloadManager(mContext, mMockFlags);
+        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper);
+
+        ExtendedMockito.doReturn(enrollmentDao)
+                .when(() -> EnrollmentDao.getInstance(any(Context.class)));
+
+        assertThat(enrollmentDao.deleteAll()).isTrue();
+        // Verify no enrollment data after table cleared.
+        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(0);
+        // Verify enrollment data file read from MDD and insert the data into the enrollment
+        // database.
+        assertThat(enrollmentDataDownloadManager.readAndInsertEnrolmentDataFromMdd().get())
+                .isEqualTo(SUCCESS);
+        assertThat(getNumEntriesInEnrollmentTable()).isEqualTo(enrollmentEntries);
+        assertThat(enrollmentDao.deleteAll()).isTrue();
+    }
+
+    private void overridingMddLoggingLevel(String loggingLevel) {
+        ShellUtils.runShellCommand("setprop log.tag.MDD %s", loggingLevel);
     }
 }

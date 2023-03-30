@@ -135,7 +135,7 @@ public class CommonClassifierHelper {
                     EpochComputationGetTopTopicsStats.builder()
                             .setTopTopicCount(0)
                             .setPaddedRandomTopicsCount(0)
-                            .setAppsConsideredCount(-1)
+                            .setAppsConsideredCount(appTopics.size())
                             .setSdksConsideredCount(-1)
                             .build());
             return new ArrayList<>();
@@ -159,7 +159,7 @@ public class CommonClassifierHelper {
                 EpochComputationGetTopTopicsStats.builder()
                         .setTopTopicCount(numberOfTopTopics)
                         .setPaddedRandomTopicsCount(numberOfRandomPaddingTopics)
-                        .setAppsConsideredCount(-1)
+                        .setAppsConsideredCount(appTopics.size())
                         .setSdksConsideredCount(-1)
                         .build());
 
@@ -222,7 +222,7 @@ public class CommonClassifierHelper {
      */
     public static long getBundledModelBuildId(
             @NonNull Context context, @NonNull String classifierAssetsMetadataPath) {
-        InputStream inputStream = InputStream.nullInputStream();
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
         try {
             inputStream = context.getAssets().open(classifierAssetsMetadataPath);
         } catch (IOException e) {

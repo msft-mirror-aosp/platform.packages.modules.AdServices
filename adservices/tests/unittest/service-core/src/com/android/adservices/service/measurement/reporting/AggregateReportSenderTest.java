@@ -50,7 +50,7 @@ public class AggregateReportSenderTest {
     private static final String REPORT_ID = "A1";
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
     private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
-            + "\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,"
+            + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
             + "\"value\":1664}]}";
 
     private AggregateReportBody createAggregateReportBodyExample1() {

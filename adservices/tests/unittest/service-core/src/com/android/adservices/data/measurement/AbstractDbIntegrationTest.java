@@ -20,6 +20,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Abstract class for parameterized tests that
@@ -79,14 +81,14 @@ public abstract class AbstractDbIntegrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
         seedTables(db, mInput);
     }
 
     @After
     public void after() {
-        SQLiteDatabase db = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
         mStaticMockSession.finishMocking();
@@ -105,10 +107,11 @@ public abstract class AbstractDbIntegrationTest {
     @Test
     public void runTest() throws DatastoreException, JSONException {
         runActionToTest();
-        SQLiteDatabase readerDb = DbTestUtil.getDbHelperForTest().getReadableDatabase();
+        SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);
         mOutput.sortAll();
         dbState.sortAll();
+
         Assert.assertTrue("Event report mismatch",
                 areEqual(mOutput.mEventReportList, dbState.mEventReportList));
         // Custom matching for AggregateReport due to non-deterministic reporting random number
@@ -130,6 +133,8 @@ public abstract class AbstractDbIntegrationTest {
                 areEqual(mOutput.mAttrRateLimitList, dbState.mAttrRateLimitList));
         Assert.assertTrue("Source mismatch",
                 areEqual(mOutput.mSourceList, dbState.mSourceList));
+        Assert.assertTrue("SourceDestination mismatch",
+                areEqual(mOutput.mSourceDestinationList, dbState.mSourceDestinationList));
         Assert.assertTrue("Trigger mismatch",
                 areEqual(mOutput.mTriggerList, dbState.mTriggerList));
     }
@@ -190,7 +195,7 @@ public abstract class AbstractDbIntegrationTest {
         if (json.length() <= 10) {
             throw new IOException("json length less than 11 characters.");
         }
-        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/])", ".com"));
+        JSONObject obj = new JSONObject(json.replaceAll("\\.test(?=[\"\\/ ])", ".com"));
         JSONArray testArray = obj.getJSONArray("testCases");
 
         List<Object[]> testCases = new ArrayList<>();
@@ -253,6 +258,7 @@ public abstract class AbstractDbIntegrationTest {
      */
     private static void emptyTables(SQLiteDatabase db) {
         db.delete(MeasurementTables.SourceContract.TABLE, null, null);
+        db.delete(MeasurementTables.SourceDestination.TABLE, null, null);
         db.delete(MeasurementTables.TriggerContract.TABLE, null, null);
         db.delete(MeasurementTables.EventReportContract.TABLE, null, null);
         db.delete(MeasurementTables.AttributionContract.TABLE, null, null);
@@ -266,6 +272,9 @@ public abstract class AbstractDbIntegrationTest {
     private static void seedTables(SQLiteDatabase db, DbState input) throws SQLiteException {
         for (Source source : input.mSourceList) {
             insertToDb(source, db);
+        }
+        for (SourceDestination sourceDest : input.mSourceDestinationList) {
+            insertToDb(sourceDest, db);
         }
         for (Trigger trigger : input.mTriggerList) {
             insertToDb(trigger, db);
@@ -298,12 +307,6 @@ public abstract class AbstractDbIntegrationTest {
                 source.getPublisher().toString());
         values.put(MeasurementTables.SourceContract.PUBLISHER_TYPE,
                 source.getPublisherType());
-        values.put(
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                source.getAppDestination() == null ? null : source.getAppDestination().toString());
-        values.put(
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                source.getWebDestination() == null ? null : source.getWebDestination().toString());
         values.put(MeasurementTables.SourceContract.AGGREGATE_SOURCE, source.getAggregateSource());
         values.put(MeasurementTables.SourceContract.ENROLLMENT_ID, source.getEnrollmentId());
         values.put(MeasurementTables.SourceContract.STATUS, source.getStatus());
@@ -336,6 +339,22 @@ public abstract class AbstractDbIntegrationTest {
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
+        }
+    }
+
+    /**
+     * Inserts a SourceDestination into the given database.
+     */
+    public static void insertToDb(SourceDestination sourceDest, SQLiteDatabase db)
+            throws SQLiteException {
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.SourceDestination.SOURCE_ID, sourceDest.getSourceId());
+        values.put(MeasurementTables.SourceDestination.DESTINATION, sourceDest.getDestination());
+        values.put(MeasurementTables.SourceDestination.DESTINATION_TYPE,
+                sourceDest.getDestinationType());
+        long row = db.insert(MeasurementTables.SourceDestination.TABLE, null, values);
+        if (row == -1) {
+            throw new SQLiteException("SourceDestination insertion failed");
         }
     }
 
@@ -381,7 +400,10 @@ public abstract class AbstractDbIntegrationTest {
                 report.getSourceEventId().getValue());
         values.put(MeasurementTables.EventReportContract.ENROLLMENT_ID, report.getEnrollmentId());
         values.put(MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                report.getAttributionDestination().toString());
+                String.join(" ", report.getAttributionDestinations()
+                        .stream()
+                        .map(Uri::toString)
+                        .collect(Collectors.toList())));
         values.put(MeasurementTables.EventReportContract.REPORT_TIME, report.getReportTime());
         values.put(MeasurementTables.EventReportContract.TRIGGER_DATA,
                 report.getTriggerData().getValue());

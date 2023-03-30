@@ -32,6 +32,7 @@ filegroup {
     path: "java",
     visibility: [
         "//packages/modules/AdServices/adservices/tests:__subpackages__",
+        "//package/modules/ExtServices/extservices:__subpackages__",
     ],
 }
 
@@ -49,7 +50,7 @@ filegroup {
 android_library {
     name: "adservices-service-core",
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "30",
     srcs: [
         ":adservices-service-core-sources",
         ":adservices-service-core-jni-sources",
@@ -57,6 +58,7 @@ android_library {
     ],
     manifest: "AndroidManifest.xml",
     plugins: [
+        "androidx.appsearch_appsearch-compiler-plugin",
         "androidx.room_room-compiler-plugin",
         "auto_value_plugin",
         "auto_annotation_plugin"
@@ -76,6 +78,8 @@ android_library {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
+        "androidx.appsearch_appsearch",
+        "androidx.appsearch_appsearch-platform-storage",
         "cbor-java",
         "guava",
         "mobile_data_downloader_lib",
@@ -86,13 +90,14 @@ android_library {
         "androidx.javascriptengine_javascriptengine",
         "adservices-proto-lite",
         "adservices-grpclib-lite",
+        "modules-utils-build",
     ],
-    apex_available: ["com.android.adservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
 }
 
 cc_library_shared {
     name: "libhpke_jni",
-    min_sdk_version: "33",
+    min_sdk_version: "30",
     sdk_version: "current",
     stl: "libc++_static",
     cflags: [
@@ -104,8 +109,11 @@ cc_library_shared {
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: [ "jni_headers"  ],
     shared_libs: ["libcrypto"],
-    apex_available: ["com.android.adservices"],
-    visibility: ["//packages/modules/AdServices:__subpackages__"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+    ],
 }
 
 // Schemas needs to be bundled via this android_library since service-core unit tests for schema
@@ -113,7 +121,7 @@ cc_library_shared {
 android_library {
     name: "adservices-service-core-schema",
     sdk_version: "module_current",
-    min_sdk_version: "Tiramisu",
+    min_sdk_version: "31",
     asset_dirs: [
         "schemas",
     ],

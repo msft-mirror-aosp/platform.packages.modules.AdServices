@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -50,10 +51,10 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.DEDUP_KEYS,
+                MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
-                "ALTER TABLE %1$s ADD %2$s INTEGER",
+                "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
                 MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS),
         String.format(
@@ -119,12 +120,19 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
             MeasurementTables.TriggerContract.EVENT_TRIGGERS,
             new JSONArray().toString());
 
+    private static final String[] ALTER_TRIGGER_STATEMENTS_V6 = {
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS)
+    };
+
     public MeasurementDbMigratorV6() {
         super(6);
     }
 
     @Override
-    protected void performMigration(SQLiteDatabase db) {
+    protected void performMigration(@NonNull SQLiteDatabase db) {
         // See if registration_id column is present in the msmt_async_registration table.
         // We use this as a proxy to determine if the db is already at v6.
         if (MigrationHelpers.isColumnPresent(
@@ -202,6 +210,9 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.TABLE,
                         MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)) {
             for (String sql : ALTER_STATEMENTS_XNA_TRIGGER) {
+                db.execSQL(sql);
+            }
+            for (String sql : ALTER_TRIGGER_STATEMENTS_V6) {
                 db.execSQL(sql);
             }
         }

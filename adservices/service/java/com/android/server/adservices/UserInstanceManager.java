@@ -24,6 +24,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.rollback.RollbackHandlingManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,11 +49,18 @@ public class UserInstanceManager {
     @GuardedBy("mLock")
     private final Map<Integer, AppConsentManager> mAppConsentManagerMapLocked = new ArrayMap<>();
 
+
     @GuardedBy("UserInstanceManager.class")
     private final Map<Integer, BlockedTopicsManager> mBlockedTopicsManagerMapLocked =
             new ArrayMap<>();
 
+    // We have 1 RollbackManager per user/user profile, to isolate each user's data.
+    @GuardedBy("mLock")
+    private final Map<Integer, RollbackHandlingManager> mRollbackHandlingManagerMapLocked =
+            new ArrayMap<>();
+
     private final String mAdServicesBaseDir;
+
     private final TopicsDao mTopicsDao;
 
     UserInstanceManager(@NonNull TopicsDao topicsDao, @NonNull String adServicesBaseDir) {
@@ -95,7 +103,22 @@ public class UserInstanceManager {
                 instance = new BlockedTopicsManager(mTopicsDao, userIdentifier);
                 mBlockedTopicsManagerMapLocked.put(userIdentifier, instance);
             }
+            return instance;
+        }
+    }
 
+    @NonNull
+    RollbackHandlingManager getOrCreateUserRollbackHandlingManagerInstance(
+            int userIdentifier, int packageVersion) throws IOException {
+        synchronized (mLock) {
+            RollbackHandlingManager instance =
+                    mRollbackHandlingManagerMapLocked.get(userIdentifier);
+            if (instance == null) {
+                instance =
+                        RollbackHandlingManager.createRollbackHandlingManager(
+                                mAdServicesBaseDir, userIdentifier, packageVersion);
+                mRollbackHandlingManagerMapLocked.put(userIdentifier, instance);
+            }
             return instance;
         }
     }
@@ -126,7 +149,7 @@ public class UserInstanceManager {
             }
 
             // Delete all data in the database that belongs to this user
-            mTopicsDao.deleteAllDataOfUser(userIdentifier);
+            mTopicsDao.clearAllBlockedTopicsOfUser(userIdentifier);
         }
     }
 
@@ -138,6 +161,10 @@ public class UserInstanceManager {
             }
             for (AppConsentManager appConsentManager : mAppConsentManagerMapLocked.values()) {
                 appConsentManager.tearDownForTesting();
+            }
+            for (RollbackHandlingManager rollbackHandlingManager :
+                    mRollbackHandlingManagerMapLocked.values()) {
+                rollbackHandlingManager.tearDownForTesting();
             }
         }
     }

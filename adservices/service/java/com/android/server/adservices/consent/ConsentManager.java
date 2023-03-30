@@ -15,12 +15,14 @@
  */
 package com.android.server.adservices.consent;
 
+
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,6 +56,21 @@ public final class ConsentManager {
     static final String STORAGE_XML_IDENTIFIER = "ConsentManagerStorageIdentifier.xml";
 
     private final BooleanFileDatastore mDatastore;
+
+    @VisibleForTesting static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String TOPICS_DEFAULT_CONSENT = "TOPICS_DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String FLEDGE_DEFAULT_CONSENT = "FLEDGE_DEFAULT_CONSENT";
+
+    @VisibleForTesting
+    static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
+
+    @VisibleForTesting static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
+    @VisibleForTesting
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
@@ -209,65 +226,210 @@ public final class ConsentManager {
         }
     }
 
-    /**
-     * Saves information to the storage that topics consent page was displayed for the first time to
-     * the user.
-     */
-    public void recordTopicsConsentPageDisplayed() throws IOException {
+    /** Saves the default consent of a user. */
+    public void recordDefaultConsent(boolean defaultConsent) throws IOException {
         synchronized (this) {
             try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
+                mDatastore.put(DEFAULT_CONSENT, defaultConsent);
             } catch (IOException e) {
                 LogUtil.e(
                         e,
-                        "Record topics consent page failed due to"
-                                + " IOException thrown by Datastore.");
+                        "Record default consent failed due to IOException thrown by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default topics consent of a user. */
+    public void recordTopicsDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(TOPICS_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record topics default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default FLEDGE consent of a user. */
+    public void recordFledgeDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(FLEDGE_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record fledge default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default measurement consent of a user. */
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record measurement default consent failed due to IOException thrown by"
+                                + " Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the default AdId state of a user. */
+    public void recordDefaultAdIdState(boolean defaultAdIdState) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(DEFAULT_AD_ID_STATE, defaultAdIdState);
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record default AdId failed due to IOException thrown by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Saves the information whether the user interated manually with the consent. */
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        synchronized (this) {
+            try {
+                switch (interaction) {
+                    case -1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                        break;
+                    case 0:
+                        mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        break;
+                    case 1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                        break;
+                    default:
+                        throw new IllegalArgumentException(
+                                String.format(
+                                        "InteractionId < %d > can not be handled.", interaction));
+                }
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record manual interaction with consent failed due to IOException thrown"
+                                + " by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns information whether user interacted with consent manually. */
+    public int getUserManualInteractionWithConsent() {
+        synchronized (this) {
+            Boolean userManualInteractionWithConsent =
+                    mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+            if (userManualInteractionWithConsent == null) {
+                return 0;
+            } else if (Boolean.TRUE.equals(userManualInteractionWithConsent)) {
+                return 1;
+            } else {
+                return -1;
             }
         }
     }
 
     /**
-     * Returns information whether topics consent page was displayed or not.
+     * Returns the default consent state.
      *
-     * @return true if topics consent page was displayed, otherwise false.
+     * @return true if default consent is given, otherwise false.
      */
-    public boolean wasTopicsConsentPageDisplayed() {
+    public boolean getDefaultConsent() {
         synchronized (this) {
-            Boolean displayed = mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
+            Boolean defaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return defaultConsent != null ? defaultConsent : false;
         }
     }
 
     /**
-     * Saves information to the storage that Fledge and Msmt consent was displayed for the first
-     * time to the user.
+     * Returns the topics default consent state.
+     *
+     * @return true if topics default consent is given, otherwise false.
      */
-    public void recordFledgeAndMsmtConsentPageDisplayed() throws IOException {
+    public boolean getTopicsDefaultConsent() {
         synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record fledge and Msmt consent page failed due to "
-                                + "IOException thrown by Datastore.");
+            Boolean topicsDefaultConsent = mDatastore.get(TOPICS_DEFAULT_CONSENT);
+            return topicsDefaultConsent != null ? topicsDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the FLEDGE default consent state.
+     *
+     * @return true if default consent is given, otherwise false.
+     */
+    public boolean getFledgeDefaultConsent() {
+        synchronized (this) {
+            Boolean fledgeDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return fledgeDefaultConsent != null ? fledgeDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the measurement default consent state.
+     *
+     * @return true if default consent is given, otherwise false.
+     */
+    public boolean getMeasurementDefaultConsent() {
+        synchronized (this) {
+            Boolean measurementDefaultConsent = mDatastore.get(DEFAULT_CONSENT);
+            return measurementDefaultConsent != null ? measurementDefaultConsent : false;
+        }
+    }
+
+    /**
+     * Returns the default AdId state when consent notification was sent.
+     *
+     * @return true if AdId is enabled by default, otherwise false.
+     */
+    public boolean getDefaultAdIdState() {
+        synchronized (this) {
+            Boolean defaultAdIdState = mDatastore.get(DEFAULT_AD_ID_STATE);
+            return defaultAdIdState != null ? defaultAdIdState : false;
+        }
+    }
+
+    /** Set the current enabled privacy sandbox feature. */
+    public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
+        synchronized (this) {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                try {
+                    if (featureType.name().equals(currentFeatureType)) {
+                        mDatastore.put(featureType.name(), true);
+                    } else {
+                        mDatastore.put(featureType.name(), false);
+                    }
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature."
+                                    + e.getMessage());
+                }
             }
         }
     }
 
-    /**
-     * Returns information whether fledge and msmt consent page was displayed or not.
-     *
-     * @return true if fledge and msmt consent page was displayed, otherwise false.
-     */
-    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+    /** Returns whether a privacy sandbox feature is enabled. */
+    public boolean isPrivacySandboxFeatureEnabled(PrivacySandboxFeatureType featureType) {
         synchronized (this) {
-            Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
+            Boolean isFeatureEnabled = mDatastore.get(featureType.name());
+            return isFeatureEnabled != null ? isFeatureEnabled : false;
         }
     }
+
     /**
      * Deletes the user directory which contains consent information present at
      * /data/system/adservices/user_id

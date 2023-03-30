@@ -19,7 +19,6 @@ package com.android.adservices.service.measurement;
 
 import android.net.Uri;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -59,9 +58,13 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
+    public E2EImpressionNoiseMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap) {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(

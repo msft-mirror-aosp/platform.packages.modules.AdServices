@@ -35,7 +35,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Migrates Measurement DB from user version 2 to 3. */
+/** Upgrades Measurement DB from user version 2 to 3. */
 public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String FILTERS = "filters";
@@ -162,7 +162,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     }
 
     @Override
-    protected void performMigration(SQLiteDatabase db) {
+    protected void performMigration(@NonNull SQLiteDatabase db) {
         // Add a check to see if source_event_id column is present in the msmt_event_report table.
         // We use this as a proxy to determine if the db is already at v3.
         if (MigrationHelpers.isColumnPresent(
@@ -237,7 +237,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AggregateReport.TABLE,
                 AGGREGATE_REPORT_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_LATEST);
+                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_V6);
     }
 
     private static void alterAttributionTable(SQLiteDatabase db) {
@@ -299,8 +299,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                         MeasurementTables.TriggerContract.ID,
                         MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                         MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
-                        MeasurementTables.TriggerContract.FILTERS,
-                        MeasurementTables.TriggerContract.NOT_FILTERS
+                        MeasurementTables.TriggerContract.FILTERS
                     },
                     null, null, null, null, null, null)) {
             while (cursor.moveToNext()) {
@@ -369,20 +368,15 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA));
         String filters = cursor.getString(cursor.getColumnIndex(
                 MeasurementTables.TriggerContract.FILTERS));
-        String notFilters = cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.NOT_FILTERS));
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.TriggerContract.EVENT_TRIGGERS,
                 updateEventTriggers(eventTriggers));
         values.put(MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
                 convertAggregateTriggerData(aggregateTriggerData));
         if (filters != null) {
-            values.put(MeasurementTables.TriggerContract.FILTERS,
-                    convertFilters(filters).toString());
-        }
-        if (notFilters != null) {
-            values.put(MeasurementTables.TriggerContract.NOT_FILTERS,
-                    convertFilters(notFilters).toString());
+            String convertedFilters = Optional.ofNullable(convertFilters(filters))
+                    .map(JSONArray::toString).orElse(null);
+            values.put(MeasurementTables.TriggerContract.FILTERS, convertedFilters);
         }
         long rowCount = db.update(
                 MeasurementTables.TriggerContract.TABLE,

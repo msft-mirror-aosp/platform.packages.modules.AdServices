@@ -36,8 +36,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
@@ -49,6 +47,7 @@ import android.webkit.WebView;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.BackgroundThread;
 
 import dalvik.system.PathClassLoader;
 
@@ -136,30 +135,32 @@ public class SdkSandboxServiceImpl extends Service {
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(TAG, "Sandbox initialized");
+        LogUtil.d(
+                TAG,
+                "Sandbox initialized. isCustomizedSdkContextEnabled: "
+                        + isCustomizedSdkContextEnabled);
     }
 
     /** Computes the storage of the shared and SDK storage for an app */
     public void computeSdkStorage(
             List<String> sharedPaths, List<String> sdkPaths, IComputeSdkStorageCallback callback) {
         // Start the handler thread.
-        HandlerThread handlerThread = new HandlerThread("SdkSandboxServiceImplHandler");
-        handlerThread.start();
-        Handler handler = new Handler(handlerThread.getLooper());
-        handler.post(
-                () -> {
-                    final int sharedStorageKb = FileUtil.getStorageInKbForPaths(sharedPaths);
-                    final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
+        BackgroundThread.getExecutor()
+                .execute(
+                        () -> {
+                            final int sharedStorageKb =
+                                    FileUtil.getStorageInKbForPaths(sharedPaths);
+                            final int sdkStorageKb = FileUtil.getStorageInKbForPaths(sdkPaths);
 
-                    try {
-                        callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
-                    } catch (RemoteException e) {
-                        LogUtil.d(
-                                TAG,
-                                "Error while calling computeSdkStorage in sandbox: "
-                                        + e.getMessage());
-                    }
-                });
+                            try {
+                                callback.onStorageInfoComputed(sharedStorageKb, sdkStorageKb);
+                            } catch (RemoteException e) {
+                                LogUtil.d(
+                                        TAG,
+                                        "Error while calling computeSdkStorage in sandbox: "
+                                                + e.getMessage());
+                            }
+                        });
     }
 
     /** Loads SDK. */

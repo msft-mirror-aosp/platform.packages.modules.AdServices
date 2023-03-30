@@ -88,18 +88,10 @@
                     android:layout_marginTop="12dp"
                     android:text="@string/notificationUI_container3_ga_introduction"
                     style="@style/MainStyle.Body1" />
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="16dp"
-                    android:background="@color/divider_color" />
-
                 <TextView
                     android:id="@+id/how_it_works_expander"
                     android:drawableEnd="@drawable/ic_expand"
-                    android:layout_marginTop="0dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/notificationUI_ga_container1_control_text"
                     style="@style/MainStyle.Body1" />
                 <LinearLayout
@@ -110,18 +102,18 @@
                     android:visibility="gone" >
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_subtitle1"
-                        style="@style/MainStyle.Body1BoldBullet" />
+                        style="@style/MainStyle.Body1Bold" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body1"
-                        style="@style/MainStyle.Body1" />
-                    <TextView
-                        android:text="@string/notificationUI_how_it_works_row_body1"
+                        android:layout_marginTop="0dp"
                         style="@style/MainStyle.Body1" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body2"
+                        android:layout_marginTop="18dp"
                         style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body3"
+                        android:layout_marginTop="18dp"
                         style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body4"
@@ -131,38 +123,29 @@
                         style="@style/MainStyle.Body1" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_subtitle2"
-                        style="@style/MainStyle.Body1BoldBullet" />
-
+                        style="@style/MainStyle.Body1Bold" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body6"
+                        android:layout_marginTop="0dp"
                         style="@style/MainStyle.Body1" />
                     <TextView
                         android:text="@string/notificationUI_how_it_works_row_body7"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
             </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/container3"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:orientation="vertical">
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="0dp"
-                    android:text="@string/notificationUI_you_can_change_in_privacy_settings"
-                    style="@style/MainStyle.Body1" />
-            </LinearLayout>
+                android:text="@string/notificationUI_you_can_change_in_privacy_settings"
+                style="@style/MainStyle.Body1" />
         </LinearLayout>
     </ScrollView>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/nav_buttons"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" >
@@ -173,19 +156,23 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/leftControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:background="@color/transparent_color"
-            android:textColor="@color/primary_text_color"
-            android:text="@string/notificationUI_left_control_button_text"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/rightControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:text="@string/notificationUI_right_control_button_text"
+        <LinearLayout
+            style="@style/NotificationButtonContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent">
+            <Button
+                android:id="@+id/leftControlButton"
+                style="@style/MainStyle.PrimaryButtonNegative"
+                android:text="@string/notificationUI_left_control_button_text"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"/>
+            <Button
+                android:id="@+id/rightControlButton"
+                style="@style/MainStyle.PrimaryButton"
+                android:text="@string/notificationUI_right_control_button_text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

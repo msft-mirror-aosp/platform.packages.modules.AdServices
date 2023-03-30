@@ -144,11 +144,11 @@
         </LinearLayout>
     </ScrollView>
 
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/nav_buttons"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" >
@@ -159,17 +159,23 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/leftControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:text="@string/notificationUI_left_control_button_text_eu"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/rightControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:text="@string/notificationUI_right_control_button_text_eu"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/NotificationButtonContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent">
+            <Button
+                android:id="@+id/leftControlButton"
+                style="@style/MainStyle.PrimaryButtonVariant"
+                android:text="@string/notificationUI_left_control_button_text_eu"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:id="@+id/rightControlButton"
+                style="@style/MainStyle.PrimaryButton"
+                android:text="@string/notificationUI_right_control_button_text_eu"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,9 +17,11 @@
 package com.android.adservices.data.measurement.migration;
 
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.data.DbTestUtil.getTableColumns;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import android.content.ContentValues;
@@ -35,7 +37,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTestBase {
+public class MeasurementDbMigratorV6Test extends MeasurementDbMigratorTestBaseDeprecated {
 
     private static final String[][] INSERTED_ASYNC_REGISTRATION = {
         // id, enrollment_id
@@ -102,7 +104,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 31));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 18));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 19));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.XnaIgnoredSourcesContract.TABLE, 2));
@@ -149,7 +151,7 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         assertTrue(
                 doesTableExistAndColumnCountMatch(db, MeasurementTables.SourceContract.TABLE, 31));
         assertTrue(
-                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 18));
+                doesTableExistAndColumnCountMatch(db, MeasurementTables.TriggerContract.TABLE, 19));
         assertTrue(
                 doesTableExistAndColumnCountMatch(
                         db, MeasurementTables.XnaIgnoredSourcesContract.TABLE, 2));
@@ -158,6 +160,107 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
         assertTriggerMigration(db);
 
         db.close();
+    }
+
+    @Test
+    public void performMigration_success_checkAllFields_V3toV6() {
+        // Setup
+        DbHelper dbHelper = getDbHelper(1);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        new MeasurementDbMigratorV2().performMigration(db, 1, 2);
+        new MeasurementDbMigratorV3().performMigration(db, 2, 3);
+
+        // Insert ContentValues with all fields for all tables in V3
+        // Async Registration
+        db.insert(
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateAsyncRegistrationContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.AsyncRegistrationContract.TABLE).size(),
+                ContentValueFixtures.generateAsyncRegistrationContentValuesV3().size());
+
+        // Source
+        db.insert(
+                MeasurementTables.SourceContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateSourceContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.SourceContract.TABLE).size(),
+                ContentValueFixtures.generateSourceContentValuesV3().size());
+
+        // Trigger
+        db.insert(
+                MeasurementTables.TriggerContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateTriggerContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.TriggerContract.TABLE).size(),
+                ContentValueFixtures.generateTriggerContentValuesV3().size());
+
+        // Attribution
+        assertEquals(
+                getTableColumns(db, MeasurementTables.AttributionContract.TABLE).size(),
+                ContentValueFixtures.generateAttributionContentValuesV3().size());
+        db.insert(
+                MeasurementTables.AttributionContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateAttributionContentValuesV3());
+
+        // Event Report
+        db.insert(
+                MeasurementTables.EventReportContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateEventReportContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.EventReportContract.TABLE).size(),
+                ContentValueFixtures.generateEventReportContentValuesV3().size());
+
+        // Aggregate Report
+        db.insert(
+                MeasurementTables.AggregateReport.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateAggregateReportContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.AggregateReport.TABLE).size(),
+                ContentValueFixtures.generateAggregateReportContentValuesV3().size());
+
+        // Aggregate Encryption Key
+        db.insert(
+                MeasurementTables.AggregateEncryptionKey.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateAggregateEncryptionKeyContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.AggregateEncryptionKey.TABLE).size(),
+                ContentValueFixtures.generateAggregateEncryptionKeyContentValuesV3().size());
+
+        // Debug Report
+        db.insert(
+                MeasurementTables.DebugReportContract.TABLE,
+                /* nullColumnHack */ null,
+                ContentValueFixtures.generateDebugReportContentValuesV3());
+        assertEquals(
+                getTableColumns(db, MeasurementTables.DebugReportContract.TABLE).size(),
+                ContentValueFixtures.generateDebugReportContentValuesV3().size());
+
+        // Execution
+        new MeasurementDbMigratorV6().performMigration(db, 3, 6);
+
+        // To mimic real onUpgrade behaviour. Without closing the db, changes don't reflect.
+        db.close();
+
+        // Verify
+        db = dbHelper.getReadableDatabase();
+
+        verifyAsyncRegistrationAllFieldsV3(db);
+        verifySourceAllFieldsV3(db);
+        verifyTriggerAllFieldsV3(db);
+        verifyAttributionAllFieldsV3(db);
+        verifyEventReportAllFieldsV3(db);
+        verifyAggregateReportAllFieldsV3(db);
+        verifyAggregateEncryptionKeyAllFieldsV3(db);
+        verifyDebugReportAllFieldsV3(db);
     }
 
     @Override
@@ -364,5 +467,285 @@ public class MeasurementDbMigratorV6Test extends AbstractMeasurementDbMigratorTe
                 cursor.getString(
                         cursor.getColumnIndex(
                                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING)));
+    }
+
+    private void verifyAsyncRegistrationAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AsyncRegistrationContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AsyncRegistrationContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues asyncRegistrationV3 =
+                    ContentValueFixtures.generateAsyncRegistrationContentValuesV3();
+            ContentValues asyncRegistrationV6 = cursorRowToContentValues(cursor);
+
+            for (String column : asyncRegistrationV3.keySet()) {
+                assertEquals(asyncRegistrationV3.get(column), asyncRegistrationV6.get(column));
+            }
+
+            // The migration added 1 new column ("registration_id") to the AsyncRegistration table.
+            // Assert that column was updated with a random UUID.
+            assertEquals(asyncRegistrationV3.size() + 1, asyncRegistrationV6.size());
+
+            assertTrue(
+                    asyncRegistrationV6.containsKey(
+                            MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID));
+            assertNotNull(
+                    asyncRegistrationV6.get(
+                            MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID));
+        }
+    }
+
+    private void verifySourceAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.SourceContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.SourceContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues sourceV3 = ContentValueFixtures.generateSourceContentValuesV3();
+            ContentValues sourceV6 = cursorRowToContentValues(cursor);
+
+            for (String column : sourceV3.keySet()) {
+                if (column.equals(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS)) {
+                    // The migration renamed the column from "dedup_keys" to
+                    // "event_report_dedup_keys"
+                    assertEquals(
+                            sourceV3.get(MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS),
+                            sourceV6.get(MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS));
+                } else {
+                    assertEquals(sourceV3.get(column), sourceV6.get(column));
+                }
+            }
+
+            // The migration added 6 new columns ("aggregate_report_dedup_keys",
+            // "event_report_window", "aggregate_report_window", "registration_id",
+            // "shared_aggregation_keys", and "install_time") to the Source table.
+            assertEquals(sourceV3.size() + 6, sourceV6.size());
+
+            // The "event_report_window" and "aggregate_report_window" are set with the value from
+            // the "expiry time" column.
+            assertTrue(sourceV6.containsKey(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW));
+            assertEquals(
+                    sourceV3.get(MeasurementTables.SourceContract.EXPIRY_TIME),
+                    sourceV6.get(MeasurementTables.SourceContract.EVENT_REPORT_WINDOW));
+
+            assertTrue(
+                    sourceV6.containsKey(
+                            MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW));
+            assertEquals(
+                    sourceV3.get(MeasurementTables.SourceContract.EXPIRY_TIME),
+                    sourceV6.get(MeasurementTables.SourceContract.AGGREGATABLE_REPORT_WINDOW));
+
+            // The "registration_id" column was updated with a random UUID.
+            assertTrue(sourceV6.containsKey(MeasurementTables.SourceContract.REGISTRATION_ID));
+            assertNotNull(sourceV6.get(MeasurementTables.SourceContract.REGISTRATION_ID));
+
+            // The "aggregate_report_dedup_keys", "shared_aggregation_keys", and "install_time"
+            // columns are not populated.
+            assertTrue(
+                    sourceV6.containsKey(
+                            MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS));
+            assertNull(sourceV6.get(MeasurementTables.SourceContract.AGGREGATE_REPORT_DEDUP_KEYS));
+
+            assertTrue(
+                    sourceV6.containsKey(MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS));
+            assertNull(sourceV6.get(MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS));
+
+            assertTrue(sourceV6.containsKey(MeasurementTables.SourceContract.INSTALL_TIME));
+            assertTrue(
+                    cursor.isNull(
+                            cursor.getColumnIndex(MeasurementTables.SourceContract.INSTALL_TIME)));
+        }
+    }
+
+    private void verifyTriggerAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.TriggerContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.TriggerContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues triggerV3 = ContentValueFixtures.generateTriggerContentValuesV3();
+            ContentValues triggerV6 = cursorRowToContentValues(cursor);
+
+            for (String column : triggerV3.keySet()) {
+                assertEquals(triggerV3.get(column), triggerV6.get(column));
+            }
+
+            // The migration added 3 new columns ("attribution_config", "x_network_key_mapping", and
+            // "aggregatable_deduplication_keys") to the Trigger table.  Assert the columns are not
+            // populated.
+            assertEquals(triggerV3.size() + 3, triggerV6.size());
+
+            assertTrue(triggerV6.containsKey(MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG));
+            assertNull(triggerV6.get(MeasurementTables.TriggerContract.ATTRIBUTION_CONFIG));
+
+            assertTrue(
+                    triggerV6.containsKey(MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING));
+            assertNull(triggerV6.get(MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING));
+
+            assertTrue(
+                    triggerV6.containsKey(
+                            MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+            assertNull(
+                    triggerV6.get(
+                            MeasurementTables.TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+        }
+    }
+
+    private void verifyAttributionAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AttributionContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AttributionContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues attributionV3 = ContentValueFixtures.generateAttributionContentValuesV3();
+            ContentValues attributionV6 = cursorRowToContentValues(cursor);
+
+            for (String column : attributionV3.keySet()) {
+                assertEquals(attributionV3.get(column), attributionV6.get(column));
+            }
+
+            // No new columns were added.
+            assertEquals(attributionV3.size(), attributionV6.size());
+        }
+    }
+
+    private void verifyEventReportAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.EventReportContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues eventReportV3 = ContentValueFixtures.generateEventReportContentValuesV3();
+            ContentValues eventReportV6 = cursorRowToContentValues(cursor);
+
+            for (String column : eventReportV3.keySet()) {
+                assertEquals(eventReportV3.get(column), eventReportV6.get(column));
+            }
+
+            // No new columns were added.
+            assertEquals(eventReportV3.size(), eventReportV3.size());
+        }
+    }
+
+    private void verifyAggregateReportAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AggregateReport.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AggregateReport.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues aggregateReportV3 =
+                    ContentValueFixtures.generateAggregateReportContentValuesV3();
+            ContentValues aggregateReportV6 = cursorRowToContentValues(cursor);
+
+            for (String column : aggregateReportV3.keySet()) {
+                assertEquals(aggregateReportV3.get(column), aggregateReportV6.get(column));
+            }
+
+            // No new columns were added.
+            assertEquals(aggregateReportV3.size(), aggregateReportV6.size());
+        }
+    }
+
+    private void verifyAggregateEncryptionKeyAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.AggregateEncryptionKey.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.AggregateEncryptionKey.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues aggregateEncryptionKeyV3 =
+                    ContentValueFixtures.generateAggregateEncryptionKeyContentValuesV2();
+            ContentValues aggregateEncryptionKeyV6 = cursorRowToContentValues(cursor);
+
+            for (String column : aggregateEncryptionKeyV3.keySet()) {
+                assertEquals(
+                        aggregateEncryptionKeyV3.get(column), aggregateEncryptionKeyV6.get(column));
+            }
+
+            // No new columns were added.
+            assertEquals(aggregateEncryptionKeyV3.size(), aggregateEncryptionKeyV6.size());
+        }
+    }
+
+    private void verifyDebugReportAllFieldsV3(SQLiteDatabase db) {
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.DebugReportContract.TABLE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        MeasurementTables.DebugReportContract.ID,
+                        null);
+
+        assertEquals(1, cursor.getCount());
+        while (cursor.moveToNext()) {
+            ContentValues debugReportV3 = ContentValueFixtures.generateDebugReportContentValuesV3();
+            ContentValues debugReportV6 = cursorRowToContentValues(cursor);
+
+            for (String column : debugReportV3.keySet()) {
+                assertEquals(debugReportV3.get(column), debugReportV6.get(column));
+            }
+
+            // No new columns were added.
+            assertEquals(debugReportV3.size(), debugReportV6.size());
+        }
     }
 }

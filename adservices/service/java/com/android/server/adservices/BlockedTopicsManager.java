@@ -85,6 +85,11 @@ public class BlockedTopicsManager {
         return topicParcelList;
     }
 
+    /** Clear all BlockedTopics */
+    public void clearAllBlockedTopics() {
+        mTopicsDao.clearAllBlockedTopicsOfUser(mUserIdentifier);
+    }
+
     private Topic convertTopicParcelToTopic(@NonNull TopicParcel topicParcel) {
         return new Topic(
                 topicParcel.getTaxonomyVersion(),

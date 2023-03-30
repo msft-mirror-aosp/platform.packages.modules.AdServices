@@ -48,7 +48,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
@@ -81,7 +81,6 @@ public class MddJobServiceTest {
     @Mock MobileDataDownloadFactory mMockMddFactory;
     @Mock Flags mMockFlags;
     @Mock MddFlags mMockMddFlags;
-    @Mock ConsentManager mConsentManager;
 
     @Before
     public void setup() {
@@ -91,10 +90,10 @@ public class MddJobServiceTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(MddJobService.class)
-                        .spyStatic(ConsentManager.class)
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(MddFlags.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .startMocking();
 
         // Mock JobScheduler invocation in EpochJobService
@@ -113,15 +112,6 @@ public class MddJobServiceTest {
         when(mMockJobParameters.getExtras()).thenReturn(bundle);
     }
 
-    // this cannot be added to the setup method, as there is onStopJob test which causes
-    // lenient warnings
-    private void setupConsentManagerMock() {
-        when(mConsentManager.wasGaUxNotificationDisplayed()).thenReturn(false);
-        // Mock static method ConsentManager.getInstance() to return test ConsentManager
-        ExtendedMockito.doReturn(mConsentManager)
-                .when(() -> ConsentManager.getInstance(any(Context.class)));
-    }
-
     @After
     public void teardown() {
         JOB_SCHEDULER.cancelAll();
@@ -130,7 +120,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOff() throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
@@ -156,7 +152,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOn() {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is on.
@@ -186,7 +188,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testSchedule_killswitchOff() throws InterruptedException {
-        setupConsentManagerMock();
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -205,7 +206,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testSchedule_killswitchOn() throws InterruptedException {
-        setupConsentManagerMock();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
@@ -231,7 +231,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_Success() throws InterruptedException {
-        setupConsentManagerMock();
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -253,7 +252,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -279,7 +284,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeeded_ScheduledWithDifferentParameters()
             throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -307,7 +318,13 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -340,7 +357,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask()
             throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -361,7 +384,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask()
             throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -382,7 +411,13 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
             throws InterruptedException {
-        setupConsentManagerMock();
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -404,7 +439,6 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddWifiChargingPeriodicTask()
             throws InterruptedException {
-        setupConsentManagerMock();
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -420,5 +454,35 @@ public class MddJobServiceTest {
         // the READ_DEVICE_CONFIG exception.
         // We wait here so that the scheduled job can finish.
         Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
+    }
+
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                                new ComponentName(CONTEXT, MddJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
     }
 }

@@ -24,12 +24,15 @@ import static org.mockito.Mockito.spy;
 import android.annotation.IntDef;
 import android.test.mock.MockContentResolver;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -57,7 +60,10 @@ class TestObjectProvider {
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
             DatastoreManager datastoreManager, Flags flags) {
-        return new AttributionJobHandlerWrapper(datastoreManager, flags);
+        return new AttributionJobHandlerWrapper(
+                datastoreManager,
+                flags,
+                new DebugReportApi(ApplicationProvider.getApplicationContext()));
     }
 
     static MeasurementImpl getMeasurementImpl(
@@ -116,7 +122,7 @@ class TestObjectProvider {
                                         .setSourceEventId(source.getEventId())
                                         .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
                                         .setTriggerData(new UnsignedLong(0L))
-                                        .setAttributionDestination(source.getAppDestination())
+                                        .setAttributionDestinations(source.getAppDestinations())
                                         .setEnrollmentId(source.getEnrollmentId())
                                         .setTriggerTime(0)
                                         .setTriggerPriority(0L)

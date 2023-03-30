@@ -25,8 +25,10 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -69,7 +71,7 @@ public class TopicsManagerMddTest {
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
     private static final String TEST_MDD_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1400/5c9d9c7bcae479d465f2a25e0267f86acf697b84";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1640/2eda2f0d34820761569a04349311984a295acfae";
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
@@ -79,15 +81,23 @@ public class TopicsManagerMddTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+
+    private String mDefaultMddManifestFileUrl;
 
     @Before
     public void setup() throws Exception {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
 
         // Kill AdServices process.
-        killAd();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -97,14 +107,21 @@ public class TopicsManagerMddTest {
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
 
+        // Store current default value before override.
+        mDefaultMddManifestFileUrl = getDefaultMddManifestFileUrl();
         // Override manifest URL for Mdd.
-        overrideMddManifestFileURL(TEST_MDD_MANIFEST_FILE_URL);
+        overrideMddManifestFileUrl(TEST_MDD_MANIFEST_FILE_URL);
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // Reset Mdd manifest file url to the default value.
+        overrideMddManifestFileUrl(mDefaultMddManifestFileUrl);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
@@ -130,7 +147,7 @@ public class TopicsManagerMddTest {
         triggerAndWaitForMddToFinishDownload();
 
         // Kill AdServices API to unbind TOPICS_SERVICE.
-        killAd();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // Wait for AdvertisingTopicsClient to unbind.
         Thread.sleep(TEST_UNBIND_WAIT_TIME);
@@ -176,14 +193,13 @@ public class TopicsManagerMddTest {
         assertThat(topic.getTaxonomyVersion()).isEqualTo(0L);
     }
 
-    // Force stop AdServices API.
-    public void killAd() {
-        // adb shell am force-stop com.google.android.adservices.api
-        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
+    private String getDefaultMddManifestFileUrl() {
+        return ShellUtils.runShellCommand(
+                "device_config get adservices mdd_topics_classifier_manifest_file_url");
     }
 
     // Override the flag to set manifest url for Mdd.
-    private void overrideMddManifestFileURL(String val) {
+    private void overrideMddManifestFileUrl(String val) {
         ShellUtils.runShellCommand(
                 "device_config put adservices mdd_topics_classifier_manifest_file_url " + val);
     }

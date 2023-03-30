@@ -16,9 +16,11 @@
 package com.android.adservices.ui.settings.viewmodels;
 
 import android.app.Application;
+import android.os.Build;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -41,6 +43,8 @@ import java.io.IOException;
  * model is responsible for serving apps to the apps view and blocked apps view, and interacting
  * with the {@link ConsentManager} that persists and changes the apps data in a storage.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppsViewModel extends AndroidViewModel {
 
     private final MutableLiveData<Pair<AppsViewModelUiEvent, App>> mEventTrigger =
@@ -193,6 +197,11 @@ public class AppsViewModel extends AndroidViewModel {
             mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
         }
         mAppsConsent.postValue(getAppsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
     /**
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since

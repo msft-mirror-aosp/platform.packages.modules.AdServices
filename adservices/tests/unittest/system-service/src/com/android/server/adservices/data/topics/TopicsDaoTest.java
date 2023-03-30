@@ -149,7 +149,7 @@ public class TopicsDaoTest {
     }
 
     @Test
-    public void testDeleteAllDataOfUser() {
+    public void testClearAllBlockedTopicsOfUser() {
         final int topicId1 = 1;
         final int topicId2 = 2;
         final int user0 = 0;
@@ -169,7 +169,7 @@ public class TopicsDaoTest {
         assertThat(blockedTopics1).hasSize(1);
         assertThat(blockedTopics1).containsExactly(topicToBlock1);
 
-        mTopicsDao.deleteAllDataOfUser(user0);
+        mTopicsDao.clearAllBlockedTopicsOfUser(user0);
 
         // User 0 should have no blocked topics and User 1 should still have 1 blocked topic
         assertThat(mTopicsDao.retrieveAllBlockedTopics(user0)).isEmpty();

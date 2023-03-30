@@ -183,11 +183,9 @@
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ඔබ භාවිතා කරන යෙදුම්වලට ඔබ ඒවා භාවිතා කරන ආකාරය මත පදනම්ව ඔබ කැමති දේ තීරණය කළ හැක."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ඔබ භාවිතා කරන යෙදුම්වලට ඒවායේ දැන්වීම්වල කාර්ය සාධනය මැනීමට උදවු කිරීමට Android වෙතින් තොරතුරු විමසා සිටිය හැක. සීමිත දත්ත වර්ග එකතු කිරීමට Android යෙදුම්වලට ඉඩ දෙයි."</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ක්‍රියාත්මකයි / මාතෘකා <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_topics_subtitle_plural (4809219115021801972) -->
-    <skip />
+    <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ක්‍රියාත්මකයි /# මාතෘකාවක්}one{ක්‍රියාත්මකයි / මාතෘකා #ක්}other{ක්‍රියාත්මකයි / මාතෘකා #ක්}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ක්‍රියාත්මකයි / යෙදුම් <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
-    <!-- no translation found for settingsUI_apps_subtitle_plural (3989880089023565457) -->
-    <skip />
+    <string name="settingsUI_apps_subtitle_plural" msgid="3989880089023565457">"{count,plural, =1{ක්‍රියාත්මකයි /# යෙදුමක්}one{ක්‍රියාත්මකයි / යෙදුම් #ක්}other{ක්‍රියාත්මකයි / යෙදුම් #ක්}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="7522464537194619022">"ක්‍රියාත්මකයි"</string>
     <string name="settingsUI_subtitle_consent_off" msgid="1604274030685784887">"ක්‍රියාවිරහිතයි"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="3672784134413586246">"උනන්දුවක් දක්වන මාතෘකා ඔබ මෑතක දී භාවිතා කළ යෙදුම් මත පදනම් වන අතර, ඔබට පෞද්ගලීකරණය කළ දැන්වීම් පෙන්වීමට යෙදුම් විසින් භාවිතා කරනු ලැබේ.\n\nඔබට යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නැති මාතෘකා අවහිර කළ හැක. Android මාතෘකා නිතිපතා ස්වයංව ද මකා දමයි."</string>
@@ -200,14 +198,10 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ඔබ අවහිර කළ යෙදුම්"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"යෙදුම්-යෝජිත දත්ත යළි සකසන්න"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ඔබ භාවිතා කරන යෙදුම් ඔබේ අත්දැකීම පෞද්ගලීකරණය කිරීමට ඔබ කැමති දේවල් මතක තබා ගැනීම සාමාන්‍ය දෙයකි. යෙදුම්වලට ඔබේ මාතෘකා පිළිබඳ තොරතුරු Android සමග ගබඩා කිරීම ද කළ හැක.\n\nඋදාහරණයක් ලෙස, ඔබ මැරතන් පුහුණුව පිළිබඳ යෙදුමක් භාවිතා කරන්නේ නම්, ඔබ ධාවන සපත්තුවලට කැමති බව යෙදුම තීරණය කරයි. පසුව, ඔබ වෙනත් යෙදුමක් භාවිතා කරන්නේ නම්, එම යෙදුමට පළමු යෙදුම මගින් යෝජනා කරන ලද ධාවන සපත්තු සඳහා දැන්වීමක් පෙන්විය හැක.\n\nAndroid ස්වයංව යෙදුම්-යෝජිත දත්ත නිතිපතා මකා දමයි. ඔබ නැවත භාවිතා කරන යෙදුමක් ලැයිස්තුවෙහි නැවත දිස් විය හැක. නැතහොත් ඔබට ඔබ වෙනුවෙන් දැන්වීම් යෝජනා කිරීමෙන් යෙදුමක් අවහිර කළ හැක.\n\nඔබේ යෙදුම් තුළ, ඔබ දකින දැන්වීමක් මෙම සැකසීම, දැන්වීම් මාතෘකා සැකසීම, ඔබේ වෙළඳ ප්‍රචාරණ ID සැකසීම්, සහ යෙදුම ඔබ පෞද්ගලීකරණය කළ දැන්වීම් භාවිතා කරන ආකාරය මත පදනම්ව පෞද්ගලීකරණ කළ හැක."</string>
-    <!-- no translation found for ic_consent_notification_ga_image_description (6146488914437778539) -->
-    <skip />
-    <!-- no translation found for ic_main_view_ga_image_description (1846571138870271761) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_apps_list_description (8171099879240285360) -->
-    <skip />
-    <!-- no translation found for ic_placeholder_icon_for_empty_topics_list_description (2112218456926009271) -->
-    <skip />
+    <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"සංගීතය, පුවත්, සහ ක්‍රීඩා වැනි උනන්දුවක් දක්වන මාතෘකා නියෝජනය කරන සංකේතවල වර්ණවත් රූප සටහන"</string>
+    <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"රවුමක ඇතුළත අගුලක වර්ණවත් රූප සටහන"</string>
+    <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"සමචතුරස්‍රයක් සාදන තිත් නවයක කුඩා කළු සහ සුදු රූප සටහන"</string>
+    <string name="ic_placeholder_icon_for_empty_topics_list_description" msgid="2112218456926009271">"හදවතක්, ත්‍රිකෝණයක්, සහ සමචතුරස්‍රයක් වැනි සරල හැඩතලවල කුඩා කළු සහ සුදු රූප සටහන"</string>
     <string name="topic10001" msgid="1636806320891333775">"කලා සහ විනෝදාස්වාදය"</string>
     <string name="topic10002" msgid="1226367977754287428">"රංගනය සහ රංග ශාලාව"</string>
     <string name="topic10003" msgid="6949890838957814881">"සජීවන සහ මංගා"</string>

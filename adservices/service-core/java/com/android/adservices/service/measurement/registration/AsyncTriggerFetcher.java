@@ -31,14 +31,12 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.XNetworkData;
-import com.android.adservices.service.measurement.util.AsyncFetchStatus;
-import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -56,10 +54,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Download and decode Trigger registration.
@@ -88,8 +88,7 @@ public class AsyncTriggerFetcher {
     }
 
     /**
-     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given
-     * list.
+     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given list.
      */
     @VisibleForTesting
     public boolean parseTrigger(
@@ -104,7 +103,7 @@ public class AsyncTriggerFetcher {
             boolean arDebugPermission) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
-        result.setAttributionDestination(topOrigin);
+        result.setAttributionDestination(getAttributionDestination(topOrigin, registrationType));
         result.setRegistrant(registrant);
         result.setAdIdPermission(adIdPermission);
         result.setArDebugPermission(arDebugPermission);
@@ -154,12 +153,15 @@ public class AsyncTriggerFetcher {
                         json.getString(TriggerHeaderContract.AGGREGATABLE_VALUES));
             }
             if (!json.isNull(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS)) {
-                if (!isValidAggregateDuplicationKey(
-                        json.getJSONArray(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS))) {
+                Optional<String> validAggregateDeduplicationKeysString =
+                        getValidAggregateDuplicationKeysString(
+                                json.getJSONArray(
+                                        TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+                if (!validAggregateDeduplicationKeysString.isPresent()) {
+                    LogUtil.d("parseTrigger: aggregate deduplication keys are invalid.");
                     return false;
                 }
-                result.setAggregateDeduplicationKeys(
-                        json.getString(TriggerHeaderContract.AGGREGATABLE_DEDUPLICATION_KEYS));
+                result.setAggregateDeduplicationKeys(validAggregateDeduplicationKeysString.get());
             }
             if (!json.isNull(TriggerHeaderContract.FILTERS)) {
                 JSONArray filters = Filter.maybeWrapFilters(json, TriggerHeaderContract.FILTERS);
@@ -206,6 +208,15 @@ public class AsyncTriggerFetcher {
                         extractValidAttributionConfigs(
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
                 result.setAttributionConfig(attributionConfigsString);
+            }
+
+            Set<String> allowedEnrollmentsString =
+                    new HashSet<>(
+                            AllowLists.splitAllowList(
+                                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+            if (allowedEnrollmentsString.contains(enrollmentId)
+                    && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+                result.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
             triggers.add(result.build());
             return true;
@@ -491,38 +502,44 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
-    private boolean isValidAggregateDuplicationKey(JSONArray aggregateDeduplicationKeys)
-            throws JSONException {
+    private Optional<String> getValidAggregateDuplicationKeysString(
+            JSONArray aggregateDeduplicationKeys) throws JSONException {
+        JSONArray validAggregateDeduplicationKeys = new JSONArray();
         if (aggregateDeduplicationKeys.length()
                 > MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION) {
             LogUtil.d(
                     "Aggregate deduplication keys have more keys than permitted. %s",
                     aggregateDeduplicationKeys.length());
-            return false;
+            return Optional.empty();
         }
         for (int i = 0; i < aggregateDeduplicationKeys.length(); i++) {
-            JSONObject aggregateDedupKey = aggregateDeduplicationKeys.getJSONObject(i);
-            String deduplicationKey = aggregateDedupKey.optString("deduplication_key");
+            JSONObject aggregateDedupKey = new JSONObject();
+            JSONObject deduplication_key = aggregateDeduplicationKeys.getJSONObject(i);
+            String deduplicationKey = deduplication_key.optString("deduplication_key");
             if (!FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
-                return false;
+                return Optional.empty();
             }
-            if (!aggregateDedupKey.isNull("filters")) {
-                JSONArray filters = Filter.maybeWrapFilters(aggregateDedupKey, "filters");
+            aggregateDedupKey.put("deduplication_key", deduplicationKey);
+            if (!deduplication_key.isNull("filters")) {
+                JSONArray filters = Filter.maybeWrapFilters(deduplication_key, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {
                     LogUtil.d("Aggregate deduplication key: " + i + " contains invalid filters.");
-                    return false;
+                    return Optional.empty();
                 }
+                aggregateDedupKey.put("filters", filters);
             }
-            if (!aggregateDedupKey.isNull("not_filters")) {
-                JSONArray notFilters = Filter.maybeWrapFilters(aggregateDedupKey, "not_filters");
+            if (!deduplication_key.isNull("not_filters")) {
+                JSONArray notFilters = Filter.maybeWrapFilters(deduplication_key, "not_filters");
                 if (!FetcherUtil.areValidAttributionFilters(notFilters)) {
                     LogUtil.d(
                             "Aggregate deduplication key: " + i + " contains invalid not filters.");
-                    return false;
+                    return Optional.empty();
                 }
+                aggregateDedupKey.put("not_filters", notFilters);
             }
+            validAggregateDeduplicationKeys.put(aggregateDedupKey);
         }
-        return true;
+        return Optional.of(validAggregateDeduplicationKeys.toString());
     }
 
     private String extractValidAttributionConfigs(JSONArray attributionConfigsArray)
@@ -549,6 +566,13 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
+    private static Uri getAttributionDestination(Uri destination,
+            AsyncRegistration.RegistrationType registrationType) {
+        return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
+                ? BaseUriExtractor.getBaseUri(destination)
+                : destination;
+    }
+
     private interface TriggerHeaderContract {
         String HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER =
                 "Attribution-Reporting-Register-Trigger";
@@ -562,5 +586,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 }

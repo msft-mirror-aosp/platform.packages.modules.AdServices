@@ -26,9 +26,11 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.PersistableBundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -50,6 +52,8 @@ import java.util.concurrent.ExecutionException;
  * Consent Notification job. This will be run every day during acceptable hours (provided by PH
  * flags) to trigger the Notification for Privacy Sandbox.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationJobService extends JobService {
 
     static final long MILLISECONDS_IN_THE_DAY = 86400000L;
@@ -162,8 +166,8 @@ public class ConsentNotificationJobService extends JobService {
                 + flags.getConsentNotificationIntervalEndMs();
     }
 
-    static boolean isEuDevice(Context context) {
-        return DeviceRegionProvider.isEuDevice(context);
+    static boolean isEuDevice(Context context, Flags flags) {
+        return DeviceRegionProvider.isEuDevice(context, flags);
     }
 
     private static long getMillisecondsInTheCurrentDay(Calendar calendar) {
@@ -191,8 +195,11 @@ public class ConsentNotificationJobService extends JobService {
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
         }
-        boolean isEuNotification =
-                !params.getExtras().getBoolean(ADID_ENABLE_STATUS, false) || isEuDevice(this);
+
+        boolean defaultAdIdState = params.getExtras().getBoolean(ADID_ENABLE_STATUS, false);
+        mConsentManager.recordDefaultAdIdState(defaultAdIdState);
+        boolean isEuNotification = !defaultAdIdState || isEuDevice(this, FlagsFactory.getFlags());
+        mConsentManager.recordDefaultConsent(!isEuNotification);
         boolean reConsentStatus = params.getExtras().getBoolean(RE_CONSENT_STATUS, false);
 
         AdServicesExecutors.getBackgroundExecutor()

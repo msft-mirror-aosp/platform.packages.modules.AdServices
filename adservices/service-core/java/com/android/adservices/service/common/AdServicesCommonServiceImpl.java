@@ -32,11 +32,16 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 
@@ -47,8 +52,9 @@ import java.util.concurrent.Executor;
  *
  * @hide
  */
-public class AdServicesCommonServiceImpl extends
-        IAdServicesCommonService.Stub {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final Context mContext;
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
@@ -74,9 +80,14 @@ public class AdServicesCommonServiceImpl extends
                             return;
                         }
                         reconsentIfNeededForEU();
+                        boolean isAdServicesEnabled = mFlags.getAdServicesEnabled();
+                        if (mFlags.isBackCompatActivityFeatureEnabled()) {
+                            isAdServicesEnabled &=
+                                    PackageManagerCompatUtils.isAdServicesActivityEnabled(mContext);
+                        }
                         callback.onResult(
                                 new IsAdServicesEnabledResult.Builder()
-                                        .setAdServicesEnabled(mFlags.getAdServicesEnabled())
+                                        .setAdServicesEnabled(isAdServicesEnabled)
                                         .build());
                     } catch (Exception e) {
                         try {
@@ -125,23 +136,41 @@ public class AdServicesCommonServiceImpl extends
                                         + ", adservice status is "
                                         + mFlags.getAdServicesEnabled());
                         LogUtil.d("entry point: " + adServicesEntryPointEnabled);
+
+                        ConsentManager consentManager = ConsentManager.getInstance(mContext);
                         if (mFlags.getAdServicesEnabled() && adServicesEntryPointEnabled) {
                             // Check if it is reconsent for ROW.
                             if (reconsentIfNeededForROW()) {
                                 LogUtil.d("Reconsent for ROW.");
+
+                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                    consentManager.setCurrentPrivacySandboxFeature(
+                                            PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                                }
+
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
-                                LogUtil.d("First consent.");
-                                // Otherwise we send to schedule when it is first consent.
+                                if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                    consentManager.setCurrentPrivacySandboxFeature(
+                                            PrivacySandboxFeatureType
+                                                    .PRIVACY_SANDBOX_FIRST_CONSENT);
+                                }
+
                                 ConsentNotificationJobService.schedule(
                                         mContext, adIdEnabled, false);
                             }
+
                             if (ConsentManager.getInstance(mContext).getConsent().isGiven()) {
-                                PackageChangedReceiver.enableReceiver(mContext);
+                                PackageChangedReceiver.enableReceiver(mContext, mFlags);
                                 BackgroundJobsManager.scheduleAllBackgroundJobs(mContext);
                             }
-                        }
 
+                        } else {
+                            if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                                consentManager.setCurrentPrivacySandboxFeature(
+                                        PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
+                            }
+                        }
                     } catch (Exception e) {
                         LogUtil.e(
                                 "unable to save the adservices entry point status of "
@@ -158,7 +187,7 @@ public class AdServicesCommonServiceImpl extends
         boolean adserviceEnabled = mFlags.getAdServicesEnabled();
         if (adserviceEnabled
                 && mFlags.getGaUxFeatureEnabled()
-                && DeviceRegionProvider.isEuDevice(mContext)) {
+                && DeviceRegionProvider.isEuDevice(mContext, mFlags)) {
             // Check if GA UX was notice before
             ConsentManager consentManager = ConsentManager.getInstance(mContext);
             if (!consentManager.wasGaUxNotificationDisplayed()) {
@@ -171,6 +200,11 @@ public class AdServicesCommonServiceImpl extends
                         && consentManager.getConsent().isGiven()) {
                     // AdidEnabled status does not matter here as this is only for EU device, it
                     // will override by the EU in the scheduler
+                    if (mFlags.isUiFeatureTypeLoggingEnabled()) {
+                        consentManager.setCurrentPrivacySandboxFeature(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                    }
+
                     ConsentNotificationJobService.schedule(mContext, false, true);
                 }
             }
@@ -185,11 +219,11 @@ public class AdServicesCommonServiceImpl extends
                 || mFlags.getConsentNotificationDebugMode();
     }
 
-    /** Check ROW device and see if it fit reconset */
+    /** Check ROW device and see if it fit reconsent */
     public boolean reconsentIfNeededForROW() {
         ConsentManager consentManager = ConsentManager.getInstance(mContext);
         return mFlags.getGaUxFeatureEnabled()
-                && !DeviceRegionProvider.isEuDevice(mContext)
+                && !DeviceRegionProvider.isEuDevice(mContext, mFlags)
                 && !consentManager.wasGaUxNotificationDisplayed()
                 && consentManager.wasNotificationDisplayed()
                 && consentManager.getConsent().isGiven();

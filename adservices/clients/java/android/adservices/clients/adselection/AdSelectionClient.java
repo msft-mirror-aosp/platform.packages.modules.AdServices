@@ -17,12 +17,14 @@
 package android.adservices.clients.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -46,7 +48,10 @@ public class AdSelectionClient {
     private AdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mAdSelectionManager = mContext.getSystemService(AdSelectionManager.class);
+        mAdSelectionManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(AdSelectionManager.class)
+                        : AdSelectionManager.get(context);
     }
 
     /**
@@ -77,33 +82,6 @@ public class AdSelectionClient {
     }
 
     /**
-     * Invokes the {@code selectAds} method of {@link AdSelectionManager}, and returns a future with
-     * {@link AdSelectionOutcome} if succeeds, or an {@link Exception} if fails.
-     */
-    @NonNull
-    public ListenableFuture<AdSelectionOutcome> selectAds(
-            @NonNull AdSelectionFromOutcomesConfig config) {
-        return CallbackToFutureAdapter.getFuture(
-                completer -> {
-                    mAdSelectionManager.selectAds(
-                            config,
-                            mExecutor,
-                            new OutcomeReceiver<AdSelectionOutcome, Exception>() {
-                                @Override
-                                public void onResult(@NonNull AdSelectionOutcome result) {
-                                    completer.set(result);
-                                }
-
-                                @Override
-                                public void onError(@NonNull Exception error) {
-                                    completer.setException(error);
-                                }
-                            });
-                    return "Ad Selection from outcomes";
-                });
-    }
-
-    /**
      * Invokes the {@code reportImpression} method of {@link AdSelectionManager}, and returns a Void
      * future
      */
@@ -128,6 +106,48 @@ public class AdSelectionClient {
                             });
                     return "reportImpression";
                 });
+    }
+
+    /**
+     * Invokes the {@code reportInteraction} method of {@link AdSelectionManager}, and returns a
+     * Void future
+     *
+     * @hide
+     */
+    @NonNull
+    public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
+        // TODO(b/274723533): Uncomment this after un-hiding
+/*
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.reportInteraction(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "reportInteraction";
+                });
+*/
+        return CallbackToFutureAdapter.getFuture(completer -> null);
+    }
+
+    /**
+     * Invokes the {@code setAppInstallAdvertiser} method of {@link AdSelectionManager}, and returns
+     * a Void future.
+     */
+    @NonNull
+    public ListenableFuture<Void> setAppInstallAdvertisers(
+            @NonNull SetAppInstallAdvertisersRequest setAppInstallAdvertisersRequest) {
+        return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
     /** Builder class. */

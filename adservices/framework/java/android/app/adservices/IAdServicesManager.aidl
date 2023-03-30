@@ -36,6 +36,16 @@ interface IAdServicesManager {
     void setConsent(in ConsentParcel consentParcel);
 
     /**
+     * Saves information to the storage that a deletion of measurement data occurred.
+     */
+     void recordAdServicesDeletionOccurred(in int deletionType);
+
+     /**
+      * Checks whether the module needs to handle data reconciliation after a rollback.
+      */
+     boolean needsToHandleRollbackReconciliation(in int deletionType);
+
+    /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
      */
@@ -62,10 +72,27 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
-     * Saves information to the storage that topics consent page was displayed for the
-     * first time to the user.
+     * Saves information to the storage that user explicitly interacted with consent.
+     *
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
      */
-    void recordTopicsConsentPageDisplayed();
+    void recordUserManualInteractionWithConsent(in int interactionId);
+
+    /**
+     * Returns information about the user's manual interaction with consent.
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
+     */
+    int getUserManualInteractionWithConsent();
 
     /**
      * Record a blocked topic.
@@ -83,24 +110,73 @@ interface IAdServicesManager {
     List<TopicParcel> retrieveAllBlockedTopics();
 
     /**
-     * Returns information whether topics consent page was displayed or not.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
+     * Clear all blocked topics.
      */
-    boolean wasTopicsConsentPageDisplayed();
+    void clearAllBlockedTopics();
 
     /**
-     * Saves information to the storage that fledge consent page was displayed for the
-     * first time to the user.
-     */
-    void recordFledgeAndMsmtConsentPageDisplayed();
+      * Saves the PP API default consent of a user.
+      */
+    void recordDefaultConsent(in boolean defaultConsent);
 
     /**
-     * Returns information whether fledge and measurement consent page was displayed or not.
-     *
-     * @return true if fledge and measurement consent page was displayed, otherwise false.
-     */
-    boolean wasFledgeAndMsmtConsentPageDisplayed();
+      * Saves the topics default consent of a user.
+      */
+    void recordTopicsDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the FLEDGE default consent of a user.
+      */
+    void recordFledgeDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the measurement default consent of a user.
+      */
+    void recordMeasurementDefaultConsent(in boolean defaultConsent);
+
+    /**
+      * Saves the default AdId state of a user.
+      */
+    void recordDefaultAdIdState(in boolean defaultAdIdState);
+
+    /**
+      * Returns the PP API default consent of a user.
+      *
+      * @return true if the PP API default consent is given, false otherwise.
+      */
+    boolean getDefaultConsent();
+
+    /**
+      * Returns the topics default consent of a user.
+      *
+      * @return true if the topics default consent is given, false otherwise.
+      */
+    boolean getTopicsDefaultConsent();
+
+    /**
+      * Returns the FLEDGE default consent of a user.
+      *
+      * @return true if the FLEDGE default consent is given, false otherwise.
+      */
+    boolean getFledgeDefaultConsent();
+
+     /**
+       * Returns the measurement default consent of a user.
+       *
+       * @return true if the measurement default consent is given, false otherwise.
+       */
+     boolean getMeasurementDefaultConsent();
+
+     /**
+       * Returns the default AdId state of a user.
+       *
+       * @return true if the default AdId state is enabled, false otherwise.
+       */
+     boolean getDefaultAdIdState();
+
+    String getCurrentPrivacySandboxFeature();
+
+    void setCurrentPrivacySandboxFeature(in String featureType);
 
     List<String> getKnownAppsWithConsent(in List<String> installedPackages);
 

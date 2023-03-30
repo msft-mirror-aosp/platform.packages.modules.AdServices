@@ -20,6 +20,7 @@ import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
+import android.app.adservices.AdServicesManager;
 import android.app.adservices.IAdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
 import android.app.adservices.topics.TopicParcel;
@@ -27,22 +28,30 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.VersionedPackage;
+import android.content.rollback.PackageRollbackInfo;
+import android.content.rollback.RollbackInfo;
+import android.content.rollback.RollbackManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
+import android.util.ArrayMap;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /** @hide */
@@ -55,6 +64,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             "Unauthorized caller. Permission to call AdServicesManager API is not granted in System"
                     + " Server.";
     private final Object mRegisterReceiverLock = new Object();
+    private final Object mRollbackCheckLock = new Object();
+    private final Object mSetPackageVersionLock = new Object();
 
     /**
      * Broadcast send from the system service to the AdServices module when a package has been
@@ -76,13 +87,17 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     private static final String PACKAGE_DATA_CLEARED = "package_data_cleared";
 
     private final Context mContext;
-    private final TopicsDao mTopicsDao;
 
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
     private BroadcastReceiver mSystemServiceUserActionReceiver;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
+
+    private int mAdServicesModuleVersion;
+    private String mAdServicesModuleName;
+    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
@@ -91,16 +106,16 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     return;
                 }
                 registerReceivers();
+                setAdServicesApexVersion();
+                setRollbackStatus();
             };
 
     private final UserInstanceManager mUserInstanceManager;
 
     @VisibleForTesting
-    AdServicesManagerService(
-            Context context, UserInstanceManager userInstanceManager, TopicsDao topicsDao) {
+    AdServicesManagerService(Context context, UserInstanceManager userInstanceManager) {
         mContext = context;
         mUserInstanceManager = userInstanceManager;
-        mTopicsDao = topicsDao;
 
         DeviceConfig.addOnPropertiesChangedListener(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -108,6 +123,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 mOnFlagsChangedListener);
 
         registerReceivers();
+        setAdServicesApexVersion();
+        setRollbackStatus();
     }
 
     /** @hide */
@@ -120,9 +137,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             TopicsDao topicsDao = TopicsDao.getInstance(context);
             mService =
                     new AdServicesManagerService(
-                            context,
-                            new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR),
-                            topicsDao);
+                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
         }
 
         /** @hide */
@@ -251,10 +266,22 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("removeBlockedTopic() for User Identifier %d", userIdentifier);
         return mUserInstanceManager
                 .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
                 .retrieveAllBlockedTopics();
+    }
+
+    /** Clear all Blocked Topics */
+    @Override
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void clearAllBlockedTopics() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("clearAllBlockedTopics() for User Identifier %d", userIdentifier);
+        mUserInstanceManager
+                .getOrCreateUserBlockedTopicsManagerInstance(userIdentifier)
+                .clearAllBlockedTopics();
     }
 
     @Override
@@ -292,6 +319,192 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordTopicsDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordTopicsDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record topics default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordFledgeDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordFledgeDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record fledge default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordMeasurementDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordMeasurementDefaultConsent(defaultConsent);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record measurement default consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("recordDefaultAdIdState() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordDefaultAdIdState(defaultAdIdState);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to record default AdId state: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "recordUserManualInteractionWithConsent() for User Identifier %d, interaction %d",
+                userIdentifier, interaction);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordUserManualInteractionWithConsent(interaction);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e, "Fail to record default manual interaction with consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getTopicsDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getTopicsDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getTopicsDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get topics default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getFledgeDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getFledgeDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getFledgeDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get FLEDGE default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getMeasurementDefaultConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getMeasurementDefaultConsent() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getMeasurementDefaultConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get measurement default consent.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean getDefaultAdIdState() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getDefaultAdIdState() for User Identifier %d", userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getDefaultAdIdState();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get default AdId state.");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public int getUserManualInteractionWithConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "wasUserManualInteractionWithConsentRecorded() for User Identifier %d",
+                userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getUserManualInteractionWithConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get manual interaction with consent recorded.");
+            return 0;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean wasGaUxNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
@@ -307,72 +520,58 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
-    @Override
+    /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordTopicsConsentPageDisplayed() {
+    public boolean getDefaultConsent() {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("recordTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordTopicsConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to Record Topics Consent Page Displayed.");
-        }
-    }
-
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public boolean wasTopicsConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("wasTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        LogUtil.v("getDefaultConsent() for User Identifier %d", userIdentifier);
         try {
             return mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .wasTopicsConsentPageDisplayed();
+                    .getDefaultConsent();
         } catch (IOException e) {
-            LogUtil.e(e, "Fail to get the wasTopicsConsentPageDisplayed.");
+            LogUtil.e(e, "Fail to get the default consent: " + e.getMessage());
             return false;
         }
     }
 
-    /** method to Record Fledge and Msmt consent page displayed or not */
-    @Override
+    /** Get the currently running privacy sandbox feature on device. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordFledgeAndMsmtConsentPageDisplayed() {
+    public String getCurrentPrivacySandboxFeature() {
         enforceAdServicesManagerPermission();
 
         final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v(
-                "recordFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
+        LogUtil.v("getCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
+        try {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                if (mUserInstanceManager
+                        .getOrCreateUserConsentManagerInstance(userIdentifier)
+                        .isPrivacySandboxFeatureEnabled(featureType)) {
+                    return featureType.name();
+                }
+            }
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the privacy sandbox feature state: " + e.getMessage());
+        }
+        return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name();
+    }
+
+    /** Set the currently running privacy sandbox feature on device. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setCurrentPrivacySandboxFeature(String featureType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
         try {
             mUserInstanceManager
                     .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordFledgeAndMsmtConsentPageDisplayed();
+                    .setCurrentPrivacySandboxFeature(featureType);
         } catch (IOException e) {
-            LogUtil.e(e, "Fail to Record Fledge and Msmt Consent Page Displayed.");
-        }
-    }
-
-    /** method to get Fledge and Msmt consent page displayed or not */
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("wasFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            return mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .wasFledgeAndMsmtConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to get the wasFledgeAndMsmtConsentPageDisplayed.");
-            return false;
+            LogUtil.e(e, "Fail to set current privacy sandbox feature: " + e.getMessage());
         }
     }
 
@@ -562,6 +761,105 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordAdServicesDeletionOccurred(
+            @AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v(
+                    "recordAdServicesDeletionOccurred() for user identifier %d, api type %d",
+                    userIdentifier, deletionType);
+            mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .recordAdServicesDataDeletion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to persist the deletion status.");
+        }
+    }
+
+    public boolean needsToHandleRollbackReconciliation(
+            @AdServicesManager.DeletionApiType int deletionType) {
+        // Check if there was at least one rollback of the AdServices module.
+        if (getAdServicesPackagesRolledBackFrom().isEmpty()) {
+            return false;
+        }
+
+        // Check if the deletion bit is set.
+        if (!hasAdServicesDeletionOccurred(deletionType)) {
+            return false;
+        }
+
+        // For each rollback, check if the rolled back from version matches the previously stored
+        // version and the rolled back to version matches the current version.
+        int previousStoredVersion = getPreviousStoredVersion(deletionType);
+        for (Integer rollbackId : getAdServicesPackagesRolledBackFrom().keySet()) {
+            if (getAdServicesPackagesRolledBackFrom().get(rollbackId).getLongVersionCode()
+                            == previousStoredVersion
+                    && getAdServicesPackagesRolledBackTo().get(rollbackId).getLongVersionCode()
+                            == getAdServicesApexVersion()) {
+                resetAdServicesDeletionOccurred(deletionType);
+                return true;
+            }
+        }
+
+        // None of the stored rollbacks match the versions.
+        return false;
+    }
+
+    @VisibleForTesting
+    boolean hasAdServicesDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v(
+                    "hasAdServicesDeletionOccurred() for user identifier %d, api type %d",
+                    userIdentifier, deletionType);
+            return mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .wasAdServicesDataDeleted(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to retrieve the deletion status.");
+            return false;
+        }
+    }
+
+    @VisibleForTesting
+    void resetAdServicesDeletionOccurred(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            LogUtil.v("resetMeasurementDeletionOccurred() for user identifier %d", userIdentifier);
+            mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .resetAdServicesDataDeletion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to remove the measurement deletion status.");
+        }
+    }
+
+    @VisibleForTesting
+    int getPreviousStoredVersion(@AdServicesManager.DeletionApiType int deletionType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserRollbackHandlingManagerInstance(
+                            userIdentifier, getAdServicesApexVersion())
+                    .getPreviousStoredVersion(deletionType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to get the previous version stored in the datastore file.");
+            return 0;
+        }
+    }
+
     @VisibleForTesting
     void registerReceivers() {
         // There could be race condition between registerReceivers call
@@ -599,6 +897,91 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             registerPackagedChangedBroadcastReceiversLocked();
             registerUserActionBroadcastReceiverLocked();
         }
+    }
+
+    @VisibleForTesting
+    /**
+     * Stores the AdServices module version locally. Users other than the main user do not have the
+     * permission to get the version through the PackageManager, so we have to get the version when
+     * the AdServices system service starts.
+     */
+    void setAdServicesApexVersion() {
+        synchronized (mSetPackageVersionLock) {
+            if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
+                return;
+            }
+
+            PackageManager packageManager = mContext.getPackageManager();
+
+            List<PackageInfo> installedPackages =
+                    packageManager.getInstalledPackages(
+                            PackageManager.PackageInfoFlags.of(PackageManager.MATCH_APEX));
+
+            installedPackages.forEach(
+                    packageInfo -> {
+                        if (packageInfo.packageName.contains("adservices") && packageInfo.isApex) {
+                            mAdServicesModuleName = packageInfo.packageName;
+                            mAdServicesModuleVersion = (int) packageInfo.getLongVersionCode();
+                        }
+                    });
+        }
+    }
+
+    @VisibleForTesting
+    int getAdServicesApexVersion() {
+        return mAdServicesModuleVersion;
+    }
+
+    @VisibleForTesting
+    /** Checks the RollbackManager to see the rollback status of the AdServices module. */
+    void setRollbackStatus() {
+        synchronized (mRollbackCheckLock) {
+            if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
+                LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
+                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                return;
+            }
+
+            RollbackManager rollbackManager = mContext.getSystemService(RollbackManager.class);
+            if (rollbackManager == null) {
+                LogUtil.d("Failed to get the RollbackManager service.");
+                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
+                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                return;
+            }
+            List<RollbackInfo> recentlyCommittedRollbacks =
+                    rollbackManager.getRecentlyCommittedRollbacks();
+
+            for (RollbackInfo rollbackInfo : recentlyCommittedRollbacks) {
+                for (PackageRollbackInfo packageRollbackInfo : rollbackInfo.getPackages()) {
+                    if (packageRollbackInfo.getPackageName().equals(mAdServicesModuleName)) {
+                        mAdServicesPackagesRolledBackFrom.put(
+                                rollbackInfo.getRollbackId(),
+                                packageRollbackInfo.getVersionRolledBackFrom());
+                        mAdServicesPackagesRolledBackTo.put(
+                                rollbackInfo.getRollbackId(),
+                                packageRollbackInfo.getVersionRolledBackTo());
+                        LogUtil.d(
+                                "Rollback of AdServices module occurred, "
+                                        + "from version %d to version %d",
+                                packageRollbackInfo.getVersionRolledBackFrom().getLongVersionCode(),
+                                packageRollbackInfo.getVersionRolledBackTo().getLongVersionCode());
+                    }
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    Map<Integer, VersionedPackage> getAdServicesPackagesRolledBackFrom() {
+        return mAdServicesPackagesRolledBackFrom;
+    }
+
+    @VisibleForTesting
+    Map<Integer, VersionedPackage> getAdServicesPackagesRolledBackTo() {
+        return mAdServicesPackagesRolledBackTo;
     }
 
     /**
