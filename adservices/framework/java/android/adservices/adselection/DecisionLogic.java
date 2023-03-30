@@ -24,8 +24,6 @@ import java.util.Objects;
 
 /**
  * Generic Decision logic that could be provided by the buyer or seller.
- *
- * @hide
  */
 public final class DecisionLogic implements Parcelable {
 

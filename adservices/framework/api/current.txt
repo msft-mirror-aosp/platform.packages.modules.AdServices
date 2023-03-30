@@ -83,10 +83,21 @@ package android.adservices.adselection {
   }
 
   public class AddAdSelectionOverrideRequest {
+    ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals, @NonNull android.adservices.adselection.BuyersDecisionLogic);
     ctor public AddAdSelectionOverrideRequest(@NonNull android.adservices.adselection.AdSelectionConfig, @NonNull String, @NonNull android.adservices.common.AdSelectionSignals);
     method @NonNull public android.adservices.adselection.AdSelectionConfig getAdSelectionConfig();
+    method @NonNull public android.adservices.adselection.BuyersDecisionLogic getBuyersDecisionLogic();
     method @NonNull public String getDecisionLogicJs();
     method @NonNull public android.adservices.common.AdSelectionSignals getTrustedScoringSignals();
+  }
+
+  public final class BuyersDecisionLogic implements android.os.Parcelable {
+    ctor public BuyersDecisionLogic(@NonNull java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.DecisionLogic>);
+    method public int describeContents();
+    method @NonNull public java.util.Map<android.adservices.common.AdTechIdentifier,android.adservices.adselection.DecisionLogic> getLogicMap();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.BuyersDecisionLogic> CREATOR;
+    field @NonNull public static final android.adservices.adselection.BuyersDecisionLogic EMPTY;
   }
 
   public final class ContextualAds implements android.os.Parcelable {
@@ -104,6 +115,14 @@ package android.adservices.adselection {
     method @NonNull public android.adservices.adselection.ContextualAds.Builder setAdsWithBid(@NonNull java.util.List<android.adservices.adselection.AdWithBid>);
     method @NonNull public android.adservices.adselection.ContextualAds.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
     method @NonNull public android.adservices.adselection.ContextualAds.Builder setDecisionLogicUri(@NonNull android.net.Uri);
+  }
+
+  public final class DecisionLogic implements android.os.Parcelable {
+    ctor public DecisionLogic(@NonNull String);
+    method public int describeContents();
+    method @NonNull public String getLogic();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.adselection.DecisionLogic> CREATOR;
   }
 
   public class RemoveAdSelectionOverrideRequest {
