@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Entesos"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Participes en la versió beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"S\'ha activat Privacy Sandbox per al teu dispositiu i les aplicacions poden provar aquestes noves maneres més privades de mostrar-te anuncis. Pots desactivar la versió beta en qualsevol moment a la configuració de privadesa."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Gestiona la config. de privadesa"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entesos"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nAndroid i les teves aplicacions poden estimar els tipus d\'anuncis que et poden interessar i desar aquests interessos temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis que et poden agradar sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalització d\'anuncis amb Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Les aplicacions poden estimar els teus interessos i desar-los temporalment a Android. Per exemple, una aplicació que utilitzis per comprar sabatilles de córrer pot estimar el teu interès en \"córrer maratons\".\n\nMés endavant, basant-se en aquest interès, una altra aplicació pot mostrar-te un anunci relacionat amb les maratons.\n\nA la configuració de privadesa, pots gestionar la llista de les aplicacions que han desat interessos."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Noves funcions de privadesa d\'anuncis"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Els temes d\'anuncis i els nous controls t\'ofereixen més opcions sobre els anuncis que veus"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Noves funcions de privadesa d\'anuncis disponibles"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android pren nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Les aplicacions que utilitzes també poden determinar què t\'agrada. Més tard, les aplicacions poden demanar aquesta informació per mostrar-te anuncis personalitzats. Pots triar quins temes i quines aplicacions vols que s\'utilitzin per mostrar-te anuncis."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Per mesurar el rendiment d\'un anunci, es comparteixen tipus de dades limitats entre aplicacions."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Més sobre els anuncis a Android"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android suprimeix automàticament els temes i les dades suggerits per aplicacions de manera regular. També pots bloquejar temes i aplicacions concrets que no vols que facin suggeriments."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Mesurar el rendiment d\'un anunci"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Les aplicacions que utilitzes poden demanar a Android informació que les ajuda a mesurar el rendiment dels seus anuncis. Android permet que les aplicacions recullin tipus de dades limitats, com ara l\'hora del dia en què se t\'ha mostrat un anunci."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prova noves funcions de privadesa d\'anuncis"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Els temes d\'anuncis t\'ofereixen més opcions sobre els anuncis que veus"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Mostra els detalls"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Privadesa d\'anuncis millorada a Android"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android llançarà noves funcions de privadesa que t\'oferiran més opcions sobre els anuncis que veus."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Els temes d\'anuncis ajuden les aplicacions a mostrar-te anuncis rellevants, alhora que es protegeix la teva identitat i informació sobre l\'ús d\'aplicacions. Android pot prendre nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Més tard, una aplicació que utilitzes pot demanar temes rellevants a Android per personalitzar els anuncis que veus."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Pots veure els temes d\'anuncis a la configuració del dispositiu i bloquejar els que no vols que es comparteixin amb les aplicacions. De manera regular, Android també suprimeix automàticament els temes d\'anuncis."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Pots canviar d\'idea en qualsevol moment a la configuració de privadesa."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Més informació sobre els temes d\'anuncis"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Per obtenir més informació sobre com Android protegeix les teves dades, consulta la nostra política de privadesa."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Sí, ho accepto"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Prova-ho"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Quines dades s\'utilitzen"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Els temes d\'anuncis es basen en les aplicacions que has utilitzat recentment en aquest dispositiu i amb quina freqüència les utilitzes."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Com utilitzem aquestes dades"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Com pots gestionar les teves dades"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android suprimeix automàticament els temes i de manera regular. A mesura que facis servir les aplicacions, pot ser que torni a aparèixer un tema a la llista. També pots bloquejar els temes que no vols que Android comparteixi amb les aplicacions i desactivar els temes d\'anuncis en qualsevol moment a la configuració de privadesa."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Pots fer canvis a la configuració de privadesa."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Altres funcions que fan que els anuncis siguin més privats"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android llançarà noves maneres de limitar la informació que les aplicacions poden obtenir sobre tu quan et mostrin anuncis personalitzats."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Altres funcions de privadesa d\'anuncis disponibles"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android també ofereix noves maneres de limitar la informació que les aplicacions poden obtenir sobre tu quan et mostrin anuncis personalitzats."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Els anuncis suggerits per aplicacions ajuden a protegir la teva identitat i informació sobre l\'ús de les aplicacions i, alhora, permeten que les aplicacions et mostrin anuncis rellevants. En funció de la teva activitat, una aplicació que utilitzes pot suggerir anuncis relacionats en altres aplicacions. A la configuració de privadesa, pots veure una llista de les aplicacions i bloquejar-les perquè no facin suggeriments."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Amb el mesurament d\'anuncis, els tipus de dades limitats es comparteixen entre les aplicacions per mesurar el rendiment dels seus anuncis, com ara l\'hora del dia en què se t\'ha mostrat un anunci."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Més informació sobre els anuncis suggerits per aplicacions i el mesurament d\'anuncis"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android suprimeix automàticament les dades suggerides per aplicacions de manera regular. És possible que una aplicació que tornis a utilitzar nou reaparegui a la llista."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"També pots impedir que una aplicació et suggereixi anuncis, restablir totes les dades de suggeriments d\'anuncis o desactivar els anuncis de suggeriments d\'aplicacions en qualsevol moment a la configuració de privadesa."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Les aplicacions que utilitzes poden demanar a Android informació que les ajuda a mesurar el rendiment dels seus anuncis. Android protegeix la teva privadesa limitant la informació que les aplicacions poden compartir entre elles."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Noves funcions de privadesa d\'anuncis disponibles"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Obtén més opcions sobre els anuncis que veus, alhora que es protegeix la teva identitat"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Noves funcions de privadesa d\'anuncis disponibles"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Amb els anuncis suggerits per aplicacions, les noves funcions de privadesa ajuden a protegir la teva identitat i informació sobre l\'ús de les aplicacions i, alhora, permeten que les aplicacions et mostrin anuncis rellevants. En funció de la teva activitat, una aplicació que utilitzes pot suggerir anuncis relacionats en altres aplicacions. A la configuració de privadesa, pots veure una llista de les aplicacions i bloquejar-les perquè no facin suggeriments."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Amb el mesurament d\'anuncis, els tipus de dades limitats es comparteixen entre les aplicacions per entendre el rendiment dels seus anuncis, com ara l\'hora del dia en què se t\'ha mostrat un anunci."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Activa una altra funció de privadesa d\'anuncis"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android també ofereix una nova funció de privadesa que et proporciona més opcions sobre els anuncis que veus."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Els temes d\'anuncis ajuden les aplicacions a mostrar-te anuncis rellevants, alhora que es protegeix la teva identitat i informació sobre l\'ús d\'aplicacions. Android pot prendre nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Més tard, una aplicació que utilitzes pot demanar temes rellevants a Android per mostrar-te anuncis més rellevants."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Pots veure els temes d\'anuncis a la configuració de privadesa i bloquejar els que no vols que es comparteixin amb les aplicacions. De manera regular, Android també suprimeix automàticament els temes d\'anuncis."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Activa"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Noves funcions de privadesa d\'anuncis disponibles"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Ara tens més opcions sobre els anuncis que veus, alhora que es protegeix la teva identitat"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Noves funcions de privadesa d\'anuncis disponibles"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Ara Android ofereix noves funcions de privadesa que et proporcionaran més opcions sobre els anuncis que veus."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Següent"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Participa en la versió beta de la privadesa d\'anuncis d\'Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privadesa d\'anuncis"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temes d\'anuncis"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anuncis suggerits per aplicacions"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android pren nota dels temes d\'interès segons les aplicacions que has utilitzat recentment i amb quina freqüència les utilitzes."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Les aplicacions que utilitzes també poden determinar què t\'agrada segons l\'ús que en fas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Les aplicacions que utilitzes poden demanar a Android informació que les ajuda a mesurar el rendiment dels seus anuncis. Android permet que les aplicacions recullin tipus de dades limitats."</string>
@@ -413,7 +427,7 @@
     <string name="topic10209" msgid="5204948738662951962">"Fons d\'inversió lliure"</string>
     <string name="topic10210" msgid="4607225697024266227">"Fons d\'inversió"</string>
     <string name="topic10211" msgid="7475381839877166080">"Accions i bons"</string>
-    <string name="topic10212" msgid="3988751035952286047">"Alimentació i begudes"</string>
+    <string name="topic10212" msgid="3988751035952286047">"Menjar i beguda"</string>
     <string name="topic10213" msgid="1358963098339995471">"Cuina i receptes"</string>
     <string name="topic10214" msgid="8463864389138867811">"Barbacoa i cuina a la brasa"</string>
     <string name="topic10215" msgid="3085467051491069648">"Cuina"</string>
@@ -508,7 +522,7 @@
     <string name="topic10304" msgid="8831682558788062486">"Feines"</string>
     <string name="topic10305" msgid="8415203095484493106">"Recursos i planificació de carreres"</string>
     <string name="topic10306" msgid="7426556527349374835">"Ofertes de feina"</string>
-    <string name="topic10307" msgid="1187762846826735256">"Llei i govern"</string>
+    <string name="topic10307" msgid="1187762846826735256">"Legislació i govern"</string>
     <string name="topic10308" msgid="3346756665358311386">"Crims i justícia"</string>
     <string name="topic10309" msgid="2041175328931014735">"Legal"</string>
     <string name="topic10310" msgid="7079570344976872062">"Serveis legals"</string>

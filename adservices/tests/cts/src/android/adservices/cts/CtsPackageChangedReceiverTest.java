@@ -19,8 +19,10 @@ package android.adservices.cts;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.runner.AndroidJUnit4;
+
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,7 +31,9 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class CtsPackageChangedReceiverTest {
     private static final String PACKAGE_CHANGED_BROADCAST =
-            "com.android.adservices.PACKAGE_CHANGED";
+            SdkLevel.isAtLeastT()
+                    ? "com.android.adservices.PACKAGE_CHANGED"
+                    : "com.android.ext.adservices.PACKAGE_CHANGED";
 
     /**
      * Verify that the com.android.adservices.service.common.PACKAGE_CHANGED broadcast is protected

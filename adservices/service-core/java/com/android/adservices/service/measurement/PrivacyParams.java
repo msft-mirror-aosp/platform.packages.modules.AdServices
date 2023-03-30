@@ -193,6 +193,11 @@ public final class PrivacyParams {
     public static final long AGGREGATE_MAX_REPORT_DELAY = TimeUnit.MINUTES.toMillis(60L);
 
     /**
+     * Max distinct web destinations in a source registration.
+     */
+    public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
+
+    /**
      * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
      */
     private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
@@ -222,6 +227,32 @@ public final class PrivacyParams {
     public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInSource() {
         return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_SOURCE;
     }
+
+    private static final int MAX_FLEXIBLE_EVENT_REPORTS = 20;
+
+    public static int getMaxFlexibleEventReports() {
+        return MAX_FLEXIBLE_EVENT_REPORTS;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY = 8;
+
+    public static int getMaxFlexibleEventTriggerDataCardinality() {
+        return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
+    }
+
+    private static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
+
+    public static int getMaxFlexibleEventReportingWindows() {
+        return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    private static final int PRIVACY_EPSILON = 14;
+
+    public static int getPrivacyEpsilon() {
+        return PRIVACY_EPSILON;
+    }
+
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
 
     private PrivacyParams() {
     }

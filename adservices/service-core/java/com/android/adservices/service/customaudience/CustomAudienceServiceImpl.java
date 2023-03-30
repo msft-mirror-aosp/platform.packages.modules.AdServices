@@ -36,10 +36,13 @@ import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
@@ -64,7 +67,10 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Implementation of the Custom Audience service. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -163,7 +169,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull CustomAudience customAudience,
             @NonNull String ownerPackageName,
             @NonNull ICustomAudienceCallback callback) {
-        LogUtil.v("Entering joinCustomAudience");
+        sLogger.v("Entering joinCustomAudience");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 
@@ -182,7 +188,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         }
 
         final int callerUid = getCallingUid(apiName);
-        LogUtil.v("Running service");
+        sLogger.v("Running service");
         mExecutorService.execute(
                 () -> doJoinCustomAudience(customAudience, ownerPackageName, callback, callerUid));
     }
@@ -197,7 +203,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         Objects.requireNonNull(ownerPackageName);
         Objects.requireNonNull(callback);
 
-        LogUtil.v("Entering doJoinCustomAudience");
+        sLogger.v("Entering doJoinCustomAudience");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
         int resultCode = AdServicesStatusUtils.STATUS_UNSET;
@@ -210,6 +216,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         customAudience.getBuyer(),
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        false,
                         callerUid,
                         apiName,
                         FLEDGE_API_JOIN_CUSTOM_AUDIENCE);
@@ -219,14 +226,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                         ownerPackageName)) {
-                    LogUtil.v("Joining custom audience");
+                    sLogger.v("Joining custom audience");
                     mCustomAudienceImpl.joinCustomAudience(customAudience, ownerPackageName);
                     BackgroundFetchJobService.scheduleIfNeeded(mContext, mFlags, false);
-                    // TODO(b/233681870): Investigate implementation of actual failures
-                    //  in logs/metrics
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
-                    LogUtil.v("Consent revoked");
+                    sLogger.v("Consent revoked");
                     resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                 }
             } catch (Exception exception) {
@@ -236,7 +241,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
             callback.onSuccess();
         } catch (Exception exception) {
-            LogUtil.e(exception, "Unable to send result to the callback");
+            sLogger.e(exception, "Unable to send result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
@@ -263,7 +268,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } else if (exception instanceof IllegalStateException) {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } else {
-            LogUtil.e(exception, "Unexpected error during operation");
+            sLogger.e(exception, "Unexpected error during operation");
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
         callback.onFailure(
@@ -330,6 +335,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         buyer,
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        false,
                         callerUid,
                         apiName,
                         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE);
@@ -338,8 +344,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
-                    // TODO(b/233681870): Investigate implementation of actual failures
-                    //  in logs/metrics
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
@@ -355,15 +359,13 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 return;
             } catch (Exception exception) {
                 // For all other exceptions, report success
-                LogUtil.e(exception, "Unexpected error leaving custom audience");
+                sLogger.e(exception, "Unexpected error leaving custom audience");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
 
             callback.onSuccess();
-            // TODO(b/233681870): Investigate implementation of actual failures in
-            //  logs/metrics
         } catch (Exception exception) {
-            LogUtil.e(exception, "Unable to send result to the callback");
+            sLogger.e(exception, "Unable to send result to the callback");
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         } finally {
             if (shouldLog) {
@@ -385,6 +387,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -427,7 +430,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         mAppImportanceFilter,
                         mFlags);
 
-        overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals, callback);
+        overrider.addOverride(
+                owner,
+                buyer,
+                name,
+                biddingLogicJS,
+                biddingLogicJsVersion,
+                trustedBiddingSignals,
+                callback);
     }
 
     /**

@@ -20,4 +20,5 @@ interface ICtsSdkProviderApi {
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
     void testStoragePaths();
+    String getOpPackageName();
 }

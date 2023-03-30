@@ -9,7 +9,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -17,6 +16,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S1",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [
@@ -58,6 +64,8 @@
       },
       "output": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [
           {
             "id": "T1",
@@ -91,7 +99,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -105,7 +112,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -113,6 +119,18 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S1",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
+          },
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -139,7 +157,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -147,6 +164,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -177,7 +201,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -185,6 +208,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [
@@ -246,7 +276,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -254,6 +283,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [
@@ -302,7 +338,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -310,6 +345,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [
@@ -378,7 +420,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -386,6 +427,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [
@@ -486,7 +534,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -494,6 +541,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S1",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -551,7 +605,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://example2.test",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -559,6 +612,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S1",
+            "destination": "android-app://example2.test",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -600,7 +660,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test",
-            "appDestination": "android-app://remove.me",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -614,7 +673,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.xyz",
-            "appDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -622,6 +680,18 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S1",
+            "destination": "android-app://remove.me",
+            "destinationType": 0
+          },
+          {
+            "sourceId": "S2",
+            "destination": "android-app://com.example.xyz",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -635,7 +705,6 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://com.example.xyz",
-            "appDestination": "android-app://com.example.xyz",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
@@ -643,6 +712,13 @@
             "priority": 100,
             "status": 0,
             "registrant": "android-app://dont.remove.me"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "S2",
+            "destination": "android-app://com.example.xyz",
+            "destinationType": 0
           }
         ],
         "triggers": [],

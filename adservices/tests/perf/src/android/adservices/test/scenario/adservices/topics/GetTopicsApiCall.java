@@ -24,7 +24,9 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,11 +52,19 @@ public class GetTopicsApiCall {
         disableGlobalKillSwitch();
         disableTopicsKillSwitch();
         enableUserConsent(true);
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void teardown() {
         enableUserConsent(false);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     private void measureGetTopics(String label) throws Exception {

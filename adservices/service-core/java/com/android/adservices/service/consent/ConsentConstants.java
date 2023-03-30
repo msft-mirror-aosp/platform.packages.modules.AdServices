@@ -16,17 +16,14 @@
 
 package com.android.adservices.service.consent;
 
+import com.android.internal.annotations.VisibleForTesting;
+
 /** ConsentManager related Constants. */
 public class ConsentConstants {
 
     static final String NOTIFICATION_DISPLAYED_ONCE = "NOTIFICATION-DISPLAYED-ONCE";
 
     static final String GA_UX_NOTIFICATION_DISPLAYED_ONCE = "GA-UX-NOTIFICATION-DISPLAYED-ONCE";
-
-    static final String TOPICS_CONSENT_PAGE_DISPLAYED = "TOPICS-CONSENT-PAGE-DISPLAYED";
-
-    static final String FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED =
-            "FLEDGE-AND-MSMT-CONSENT-PAGE-DISPLAYED";
 
     static final String DEFAULT_CONSENT = "DEFAULT_CONSENT";
 
@@ -37,6 +34,10 @@ public class ConsentConstants {
     static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
 
     static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
+    @VisibleForTesting
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     static final String CONSENT_KEY = "CONSENT";
 
@@ -68,4 +69,7 @@ public class ConsentConstants {
 
     public static final String ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "Invalid type of blocked topics source of truth.";
+
+    public static final String ERROR_MESSAGE_APPSEARCH_FAILURE =
+            "Failed to persist data to AppSearch.";
 }

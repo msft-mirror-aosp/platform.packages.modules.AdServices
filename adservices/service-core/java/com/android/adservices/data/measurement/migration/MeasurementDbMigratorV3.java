@@ -162,7 +162,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
     }
 
     @Override
-    protected void performMigration(SQLiteDatabase db) {
+    protected void performMigration(@NonNull SQLiteDatabase db) {
         // Add a check to see if source_event_id column is present in the msmt_event_report table.
         // We use this as a proxy to determine if the db is already at v3.
         if (MigrationHelpers.isColumnPresent(
@@ -237,7 +237,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.AggregateReport.TABLE,
                 AGGREGATE_REPORT_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_LATEST);
+                MeasurementTables.CREATE_TABLE_AGGREGATE_REPORT_V6);
     }
 
     private static void alterAttributionTable(SQLiteDatabase db) {

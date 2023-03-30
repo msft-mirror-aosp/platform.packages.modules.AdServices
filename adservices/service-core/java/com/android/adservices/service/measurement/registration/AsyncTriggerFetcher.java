@@ -31,14 +31,12 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.AttributionConfig;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.XNetworkData;
-import com.android.adservices.service.measurement.util.AsyncFetchStatus;
-import com.android.adservices.service.measurement.util.AsyncRedirect;
+import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -56,10 +54,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Download and decode Trigger registration.
@@ -88,8 +88,7 @@ public class AsyncTriggerFetcher {
     }
 
     /**
-     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given
-     * list.
+     * Parse a {@code Trigger}, given response headers, adding the {@code Trigger} to a given list.
      */
     @VisibleForTesting
     public boolean parseTrigger(
@@ -104,7 +103,7 @@ public class AsyncTriggerFetcher {
             boolean arDebugPermission) {
         Trigger.Builder result = new Trigger.Builder();
         result.setEnrollmentId(enrollmentId);
-        result.setAttributionDestination(topOrigin);
+        result.setAttributionDestination(getAttributionDestination(topOrigin, registrationType));
         result.setRegistrant(registrant);
         result.setAdIdPermission(adIdPermission);
         result.setArDebugPermission(arDebugPermission);
@@ -209,6 +208,15 @@ public class AsyncTriggerFetcher {
                         extractValidAttributionConfigs(
                                 json.getJSONArray(TriggerHeaderContract.ATTRIBUTION_CONFIG));
                 result.setAttributionConfig(attributionConfigsString);
+            }
+
+            Set<String> allowedEnrollmentsString =
+                    new HashSet<>(
+                            AllowLists.splitAllowList(
+                                    mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+            if (allowedEnrollmentsString.contains(enrollmentId)
+                    && !json.isNull(TriggerHeaderContract.DEBUG_JOIN_KEY)) {
+                result.setDebugJoinKey(json.optString(TriggerHeaderContract.DEBUG_JOIN_KEY));
             }
             triggers.add(result.build());
             return true;
@@ -558,6 +566,13 @@ public class AsyncTriggerFetcher {
         return true;
     }
 
+    private static Uri getAttributionDestination(Uri destination,
+            AsyncRegistration.RegistrationType registrationType) {
+        return registrationType == AsyncRegistration.RegistrationType.APP_TRIGGER
+                ? BaseUriExtractor.getBaseUri(destination)
+                : destination;
+    }
+
     private interface TriggerHeaderContract {
         String HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER =
                 "Attribution-Reporting-Register-Trigger";
@@ -571,5 +586,6 @@ public class AsyncTriggerFetcher {
         String DEBUG_KEY = "debug_key";
         String DEBUG_REPORTING = "debug_reporting";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
+        String DEBUG_JOIN_KEY = "debug_join_key";
     }
 }
