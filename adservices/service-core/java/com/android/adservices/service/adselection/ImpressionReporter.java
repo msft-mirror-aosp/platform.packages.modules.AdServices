@@ -514,32 +514,28 @@ public class ImpressionReporter {
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         sLogger.v("Invoking buyer script");
-        final boolean isContextual =
-                Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
-                        && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
 
-        if (isContextual) {
-            return FluentFuture.from(
-                    Futures.immediateFuture(
-                            Pair.create(new ReportingResults(null, sellerReportingResult), ctx)));
-        }
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+        AdSelectionSignals signals =
+                Optional.ofNullable(
+                                ctx.mAdSelectionConfig
+                                        .getPerBuyerSignals()
+                                        .get(customAudienceSignals.getBuyer()))
+                        .orElse(AdSelectionSignals.EMPTY);
+
         try {
             // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    Optional.ofNullable(
-                                                    ctx.mAdSelectionConfig
-                                                            .getPerBuyerSignals()
-                                                            .get(customAudienceSignals.getBuyer()))
-                                            .orElse(AdSelectionSignals.EMPTY),
+                                    signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
-                                    ctx.mDBAdSelectionEntry.getCustomAudienceSignals()))
+                                    customAudienceSignals))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(
