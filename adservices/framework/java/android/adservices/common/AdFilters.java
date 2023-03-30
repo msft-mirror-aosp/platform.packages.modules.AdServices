@@ -32,7 +32,7 @@ import java.util.Objects;
 /**
  * A container class for filters which are associated with an ad.
  *
- * <p>If any of the filters in an {@link AdFilters} instance are met or exceeded, the associated ad
+ * <p>If any of the filters in an {@link AdFilters} instance are not satisfied, the associated ad
  * will not be eligible for ad selection. Filters are optional ad parameters and are not required as
  * part of {@link AdData}.
  *
