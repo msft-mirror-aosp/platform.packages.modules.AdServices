@@ -47,12 +47,6 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-
-        <!-- Disable Register Ad Beacon Feature at setup -->
-        <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
-
-        <!-- Disable Register Ad Beacon Feature at teardown -->
-        <option name="teardown-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
     </target_preparer>
 
     <object type="module_controller"

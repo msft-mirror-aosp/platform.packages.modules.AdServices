@@ -132,7 +132,6 @@ public class DeviceRegionProvider {
         if (str == null || TextUtils.isEmpty(str)) {
             return false;
         }
-        return (str + ",")
-                .matches(String.format(Locale.US, "^([A-Z]{2},){%d}$", (str.length() + 1) / 3));
+        return (str + ",").matches(String.format("^([A-Z]{2},){%d}$", (str.length() + 1) / 3));
     }
 }

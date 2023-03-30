@@ -25,7 +25,6 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.util.UnsignedLong;
 
 public class ContentValueFixtures {
 
@@ -222,9 +221,6 @@ public class ContentValueFixtures {
         public static final String SOURCE_ID = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
         public static final long DEBUG_REPORT_STATUS = 4;
-
-        // Added in V9
-        public static final UnsignedLong DEDUP_KEY = new UnsignedLong(12L);
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -752,21 +748,6 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAggregateReportContentValuesV8() {
         return generateAggregateReportContentValuesV7();
-    }
-
-    public static ContentValues generateAggregateReportContentValuesV9() {
-        return generateAggregateReportContentValuesV8();
-    }
-
-    public static ContentValues generateAggregateReportContentValuesV10() {
-        ContentValues aggregateReport = generateAggregateReportContentValuesV9();
-
-        // Add columns.
-        aggregateReport.put(
-                MeasurementTables.AggregateReport.DEDUP_KEY,
-                AggregateReportValues.DEDUP_KEY.getValue());
-
-        return aggregateReport;
     }
 
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {

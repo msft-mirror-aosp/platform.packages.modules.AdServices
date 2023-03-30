@@ -21,10 +21,6 @@
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreUnitTests.
-      "name": "AdExtServicesServiceCoreUnitTests[com.google.android.extservices.apex]"
-    },
-    {
       // Install com.google.android.adservices.apex and run AdServicesJsEngineUnitTests.
       "name": "AdServicesJsEngineUnitTests[com.google.android.adservices.apex]"
     },
@@ -33,11 +29,7 @@
       "name": "CtsAdServicesDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsExtAdServicesDeviceTestCases.
-      "name": "CtsExtAdServicesDeviceTestCases[com.google.android.extservices.apex]"
-    },
-    {
-      // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
+      // Install com.google.android.adservices.apex and run CtsAdServicesDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]"
     },
     {
@@ -45,14 +37,7 @@
       "name": "CtsAdServicesEndToEndTests[com.google.android.adservices.apex]"
     },
     {
-      // Install com.google.android.extservices.apex and run CtsAdExtServicesEndToEndTests.
-      "name": "CtsAdExtServicesEndToEndTests[com.google.android.extservices.apex]"
-    },
-    {
       "name": "CtsAdServicesEndToEndTestMeasurement[com.google.android.adservices.apex]"
-    },
-    {
-      "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]"
     },
     {
       "name": "CtsAdServicesPermissionsValidEndToEndTests[com.google.android.adservices.apex]"
@@ -110,9 +95,6 @@
     },
     {
       "name": "AdServicesServiceCoreUnitTests"
-    },
-    {
-      "name": "AdExtServicesServiceCoreUnitTests"
     },
     {
       "name": "AdServicesJsEngineUnitTests"

@@ -390,10 +390,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -462,10 +458,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }
@@ -579,10 +571,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -653,10 +641,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_SOURCE,
                         asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }
@@ -739,11 +723,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_TRIGGER,
                         asyncRegistrationTwo.getType());
-
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else if (asyncRegistration
                     .getRegistrationUri()
                     .equals(
@@ -791,10 +770,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertEquals(
                         AsyncRegistration.RegistrationType.WEB_TRIGGER,
                         asyncRegistrationTwo.getType());
-                Assert.assertNotNull(asyncRegistration.getRegistrationId());
-                Assert.assertEquals(
-                        asyncRegistration.getRegistrationId(),
-                        asyncRegistrationTwo.getRegistrationId());
             } else {
                 Assert.fail();
             }

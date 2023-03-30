@@ -52,7 +52,6 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
-import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -146,11 +145,7 @@ public class AttributionJobHandlerTest {
     @Before
     public void before() {
         mDatastoreManager = new FakeDatastoreManager();
-        mHandler =
-                new AttributionJobHandler(
-                        mDatastoreManager,
-                        mFlags,
-                        new DebugReportApi(ApplicationProvider.getApplicationContext()));
+        mHandler = new AttributionJobHandler(mDatastoreManager, mFlags);
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
     }
 

@@ -225,15 +225,6 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-        UiObject leftControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_left_control_button_text);
-        UiObject rightControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(
-                leftControlButtonOnSecondPage,
-                rightControlButtonOnSecondPage,
-                moreButtonOnSecondPage);
 
         //        verify(mConsentManager, times(2)).getDefaultConsent();
         //        verify(mConsentManager, times(2)).getDefaultAdIdState();
@@ -264,15 +255,6 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-        UiObject leftControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_left_control_button_text);
-        UiObject rightControlButtonOnSecondPage =
-                getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
-        verifyControlsAndMoreButtonAreDisplayed(
-                leftControlButtonOnSecondPage,
-                rightControlButtonOnSecondPage,
-                moreButtonOnSecondPage);
 
         //        verify(mConsentManager, times(2)).getDefaultConsent();
         //        verify(mConsentManager, times(2)).getDefaultAdIdState();

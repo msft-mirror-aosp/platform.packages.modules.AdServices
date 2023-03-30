@@ -17,7 +17,6 @@
 package com.android.adservices.data.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
-import android.annotation.Nullable;
 
 import androidx.annotation.NonNull;
 import androidx.room.ColumnInfo;
@@ -72,12 +71,6 @@ public abstract class DBCustomAudienceOverride {
     @NonNull
     public abstract String getBiddingLogicJS();
 
-    /** @return the version of the override javascript result */
-    @CopyAnnotations
-    @ColumnInfo(name = "bidding_logic_version")
-    @Nullable
-    public abstract Long getBiddingLogicJsVersion();
-
     /**
      * @return The override trusted bidding data result
      */
@@ -93,7 +86,6 @@ public abstract class DBCustomAudienceOverride {
             String name,
             String appPackageName,
             String biddingLogicJS,
-            Long biddingLogicJsVersion,
             String trustedBiddingData) {
         return builder()
                 .setOwner(owner)
@@ -101,7 +93,6 @@ public abstract class DBCustomAudienceOverride {
                 .setName(name)
                 .setAppPackageName(appPackageName)
                 .setBiddingLogicJS(biddingLogicJS)
-                .setBiddingLogicJsVersion(biddingLogicJsVersion)
                 .setTrustedBiddingData(trustedBiddingData)
                 .build();
     }
@@ -129,9 +120,6 @@ public abstract class DBCustomAudienceOverride {
 
         /** Sets the biddingLogicJS of the {@link DBCustomAudienceOverride} entry. */
         public abstract DBCustomAudienceOverride.Builder setBiddingLogicJS(String biddingLogicJS);
-
-        /** Sets the biddingLogicJSVersion of the {@link DBCustomAudienceOverride} entry. */
-        public abstract Builder setBiddingLogicJsVersion(Long value);
 
         /** Sets the trustedBiddingData of the {@link DBCustomAudienceOverride} entry. */
         public abstract DBCustomAudienceOverride.Builder setTrustedBiddingData(

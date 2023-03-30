@@ -38,7 +38,6 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.compat.ServiceCompatUtils;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
 import com.google.common.annotations.VisibleForTesting;
@@ -107,11 +106,6 @@ public class MddJobService extends JobService {
     @Override
     public boolean onStartJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStartJob");
-
-        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
-            LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
-        }
 
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");

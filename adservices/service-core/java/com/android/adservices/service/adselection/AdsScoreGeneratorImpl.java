@@ -72,6 +72,9 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     static final String MISSING_TRUSTED_SCORING_SIGNALS = "Error fetching trusted scoring signals";
 
     @VisibleForTesting
+    static final String MISSING_SCORING_LOGIC = "Error fetching scoring decision logic";
+
+    @VisibleForTesting
     static final String SCORING_TIMED_OUT = "Scoring exceeded allowed time limit";
 
     @VisibleForTesting
@@ -85,7 +88,6 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final Flags mFlags;
     @NonNull private final AdSelectionExecutionLogger mAdSelectionExecutionLogger;
-    @NonNull private final JsFetcher mJsFetcher;
 
     public AdsScoreGeneratorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -116,11 +118,6 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 new AdSelectionDevOverridesHelper(devContext, adSelectionEntryDao);
         mFlags = flags;
         mAdSelectionExecutionLogger = adSelectionExecutionLogger;
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
     }
 
     /**
@@ -133,26 +130,18 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     @Override
     public FluentFuture<List<AdScoringOutcome>> runAdScoring(
             @NonNull List<AdBiddingOutcome> adBiddingOutcomes,
-            @NonNull final AdSelectionConfig adSelectionConfig) {
+            @NonNull final AdSelectionConfig adSelectionConfig)
+            throws AdServicesException {
         sLogger.v("Starting Ad scoring for #%d bidding outcomes", adBiddingOutcomes.size());
         mAdSelectionExecutionLogger.startRunAdScoring(adBiddingOutcomes);
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_AD_SCORING);
 
         final List<ContextualAds> contextualAds =
-                new ArrayList<>(adSelectionConfig.getBuyerContextualAds().values());
-
-        AdServicesHttpClientRequest scoringLogicUriHttpRequest =
-                AdServicesHttpClientRequest.builder()
-                        .setUri(adSelectionConfig.getDecisionLogicUri())
-                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
-                        .build();
+                adSelectionConfig.getBuyerContextualAds().values().stream()
+                        .collect(Collectors.toList());
 
         ListenableFuture<String> scoreAdJs =
-                mJsFetcher.getScoringLogic(
-                        scoringLogicUriHttpRequest,
-                        mAdSelectionDevOverridesHelper,
-                        adSelectionConfig,
-                        mAdSelectionExecutionLogger);
+                getAdSelectionLogic(adSelectionConfig.getDecisionLogicUri(), adSelectionConfig);
 
         AsyncFunction<String, List<Double>> getScoresFromLogic =
                 adScoringLogic ->
@@ -227,6 +216,64 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         sLogger.e(e, SCORING_TIMED_OUT);
         // DO NOT SUBMIT: Do we need to end tracing here as well?
         throw new UncheckedTimeoutException(SCORING_TIMED_OUT);
+    }
+
+    private ListenableFuture<String> getAdSelectionLogic(
+            @NonNull final Uri decisionLogicUri, @NonNull AdSelectionConfig adSelectionConfig) {
+        mAdSelectionExecutionLogger.startGetAdSelectionLogic();
+        int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_LOGIC);
+        FluentFuture<String> jsOverrideFuture =
+                FluentFuture.from(
+                        mBackgroundExecutorService.submit(
+                                () ->
+                                        mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
+                                                adSelectionConfig)));
+        AdServicesHttpClientRequest jsRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(decisionLogicUri)
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
+        return jsOverrideFuture
+                .transformAsync(
+                        jsOverride -> {
+                            if (jsOverride == null) {
+                                sLogger.v("Fetching Ad Scoring Logic from the server");
+                                return FluentFuture.from(
+                                                mAdServicesHttpsClient.fetchPayload(jsRequest))
+                                        .transform(
+                                                response -> response.getResponseBody(),
+                                                mLightweightExecutorService);
+                            } else {
+                                sLogger.d(
+                                        "Developer options enabled and an override JS is provided "
+                                                + "for the current ad selection config. "
+                                                + "Skipping call to server.");
+                                return Futures.immediateFuture(jsOverride);
+                            }
+                        },
+                        mLightweightExecutorService)
+                .transform(
+                        input -> {
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
+                            return input;
+                        },
+                        mLightweightExecutorService)
+                .transform(this::endSuccessfulGetAdSelectionLogic, mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
+                            sLogger.e(e, "Exception encountered when fetching scoring logic");
+                            throw new IllegalStateException(MISSING_SCORING_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    @NonNull
+    private String endSuccessfulGetAdSelectionLogic(@NonNull String adSelectionLogic) {
+        Objects.requireNonNull(adSelectionLogic);
+        mAdSelectionExecutionLogger.endGetAdSelectionLogic(adSelectionLogic);
+        return adSelectionLogic;
     }
 
     private ListenableFuture<List<Double>> getAdScores(

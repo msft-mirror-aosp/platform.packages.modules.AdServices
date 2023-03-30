@@ -23,12 +23,10 @@ import android.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Helper class to support the persistence and retrieval of dev overrides for the Custom Audience
@@ -77,14 +75,14 @@ public class CustomAudienceDevOverridesHelper {
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        DecisionLogic result =
+        String result =
                 mCustomAudienceDao.getBiddingLogicUriOverride(owner, buyer, name, appPackageName);
 
         sLogger.v(
                 "Override for app '%s' and key (%s,%s,%s): is %s",
                 appPackageName, owner, buyer, name, result);
 
-        return Optional.ofNullable(result).map(DecisionLogic::getPayload).orElse(null);
+        return result;
     }
 
     /**

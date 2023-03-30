@@ -23,6 +23,7 @@ import static com.android.adservices.service.measurement.PrivacyParams.MAX_REPOR
 import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_FILTERS;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
@@ -1985,14 +1986,13 @@ public final class AsyncSourceFetcherTest {
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
-        Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(
-                                request,
-                                AsyncRegistration.RedirectType.DAISY_CHAIN,
-                                FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects()),
-                        asyncFetchStatus,
-                        asyncRedirect);
+        Optional<Source> fetch = mFetcher.fetchSource(
+                appSourceRegistrationRequest(
+                        request,
+                        AsyncRegistration.RedirectType.DAISY_CHAIN,
+                        MAX_REDIRECTS_PER_REGISTRATION),
+                asyncFetchStatus,
+                asyncRedirect);
         // Assertion
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getStatus());
         assertTrue(fetch.isPresent());

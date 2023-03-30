@@ -1290,28 +1290,14 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        for (PrivacySandboxFeatureType featureType :
-                                PrivacySandboxFeatureType.values()) {
-                            if (featureType.name().equals(currentFeatureType.name())) {
-                                mDatastore.put(featureType.name(), true);
-                            } else {
-                                mDatastore.put(featureType.name(), false);
-                            }
-                        }
+                        mDatastore.put(currentFeatureType.name(), true);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.setCurrentPrivacySandboxFeature(
                                 currentFeatureType.name());
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        for (PrivacySandboxFeatureType featureType :
-                                PrivacySandboxFeatureType.values()) {
-                            if (featureType.name().equals(currentFeatureType.name())) {
-                                mDatastore.put(featureType.name(), true);
-                            } else {
-                                mDatastore.put(featureType.name(), false);
-                            }
-                        }
+                        mDatastore.put(currentFeatureType.name(), true);
                         mAdServicesManager.setCurrentPrivacySandboxFeature(
                                 currentFeatureType.name());
                         break;
@@ -1363,7 +1349,7 @@ public class ConsentManager {
                     case Flags.PPAPI_ONLY:
                         for (PrivacySandboxFeatureType featureType :
                                 PrivacySandboxFeatureType.values()) {
-                            if (Boolean.TRUE.equals(mDatastore.get(featureType.name()))) {
+                            if (mDatastore.get(featureType.name())) {
                                 return featureType;
                             }
                         }

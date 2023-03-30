@@ -41,18 +41,14 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-
-import com.google.common.collect.ImmutableMap;
 
 import org.junit.After;
 import org.junit.Before;
@@ -452,7 +448,6 @@ public class CustomAudienceDaoTest {
     private static final String APP_PACKAGE_NAME_1 = "appPackageName1";
     private static final String BIDDING_LOGIC_JS_1 =
             "function test() { return \"hello world_1\"; }";
-    private static final Long BIDDING_LOGIC_JS_VERSION_1 = 1L;
     private static final String TRUSTED_BIDDING_OVERRIDE_DATA_1 = "{\"trusted_bidding_data\":1}";
     public static final DBCustomAudienceOverride DB_CUSTOM_AUDIENCE_OVERRIDE_1 =
             DBCustomAudienceOverride.builder()
@@ -461,14 +456,12 @@ public class CustomAudienceDaoTest {
                     .setName(NAME_1)
                     .setAppPackageName(APP_PACKAGE_NAME_1)
                     .setBiddingLogicJS(BIDDING_LOGIC_JS_1)
-                    .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION_1)
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA_1)
                     .build();
 
     private static final String APP_PACKAGE_NAME_2 = "appPackageName2";
     private static final String BIDDING_LOGIC_JS_2 =
             "function test() { return \"hello world_2\"; }";
-    private static final Long BIDDING_LOGIC_JS_VERSION_2 = 2L;
     private static final String TRUSTED_BIDDING_OVERRIDE_DATA_2 = "{\"trusted_bidding_data\":2}";
     public static final DBCustomAudienceOverride DB_CUSTOM_AUDIENCE_OVERRIDE_2 =
             DBCustomAudienceOverride.builder()
@@ -477,7 +470,6 @@ public class CustomAudienceDaoTest {
                     .setName(NAME_2)
                     .setAppPackageName(APP_PACKAGE_NAME_2)
                     .setBiddingLogicJS(BIDDING_LOGIC_JS_2)
-                    .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION_2)
                     .setTrustedBiddingData(TRUSTED_BIDDING_OVERRIDE_DATA_2)
                     .build();
 
@@ -597,17 +589,11 @@ public class CustomAudienceDaoTest {
 
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
-        DecisionLogic biddingLogicJS =
+        String biddingLogicJS =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(
-                DecisionLogic.create(
-                        BIDDING_LOGIC_JS_1,
-                        ImmutableMap.of(
-                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                BIDDING_LOGIC_JS_VERSION_1)),
-                biddingLogicJS);
+        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJS);
     }
 
     @Test
@@ -616,7 +602,7 @@ public class CustomAudienceDaoTest {
 
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
 
-        DecisionLogic biddingLogicJs1 =
+        String biddingLogicJs1 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -624,19 +610,13 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(
-                DecisionLogic.create(
-                        BIDDING_LOGIC_JS_1,
-                        ImmutableMap.of(
-                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                BIDDING_LOGIC_JS_VERSION_1)),
-                biddingLogicJs1);
+        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
 
         // Persisting with same primary key
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE_3);
 
-        DecisionLogic biddingLogicJs3 =
+        String biddingLogicJs3 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -644,7 +624,7 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(DecisionLogic.create(BIDDING_LOGIC_JS_3, ImmutableMap.of()), biddingLogicJs3);
+        assertEquals(BIDDING_LOGIC_JS_3, biddingLogicJs3);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_3, trustedBiddingData_3);
     }
 
@@ -656,7 +636,7 @@ public class CustomAudienceDaoTest {
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_1, BUYER_1, NAME_1));
         assertTrue(mCustomAudienceDao.doesCustomAudienceOverrideExist(OWNER_2, BUYER_2, NAME_2));
 
-        DecisionLogic biddingLogicJs1 =
+        String biddingLogicJs1 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
@@ -664,16 +644,10 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_1, BUYER_1, NAME_1, APP_PACKAGE_NAME_1);
 
-        assertEquals(
-                DecisionLogic.create(
-                        BIDDING_LOGIC_JS_1,
-                        ImmutableMap.of(
-                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                BIDDING_LOGIC_JS_VERSION_1)),
-                biddingLogicJs1);
+        assertEquals(BIDDING_LOGIC_JS_1, biddingLogicJs1);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_1, trustedBiddingData_1);
 
-        DecisionLogic biddingLogicJs2 =
+        String biddingLogicJs2 =
                 mCustomAudienceDao.getBiddingLogicUriOverride(
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
@@ -681,13 +655,7 @@ public class CustomAudienceDaoTest {
                 mCustomAudienceDao.getTrustedBiddingDataOverride(
                         OWNER_2, BUYER_2, NAME_2, APP_PACKAGE_NAME_2);
 
-        assertEquals(
-                DecisionLogic.create(
-                        BIDDING_LOGIC_JS_2,
-                        ImmutableMap.of(
-                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                BIDDING_LOGIC_JS_VERSION_2)),
-                biddingLogicJs2);
+        assertEquals(BIDDING_LOGIC_JS_2, biddingLogicJs2);
         assertEquals(TRUSTED_BIDDING_OVERRIDE_DATA_2, trustedBiddingData_2);
     }
 

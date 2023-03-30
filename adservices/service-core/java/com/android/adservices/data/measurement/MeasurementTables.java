@@ -217,7 +217,6 @@ public final class MeasurementTables {
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
-        String DEDUP_KEY = "dedup_key";
     }
 
     /** Contract for aggregate encryption key. */
@@ -718,54 +717,7 @@ public final class MeasurementTables {
                     + ")";
 
     public static final String CREATE_TABLE_AGGREGATE_REPORT_LATEST =
-            "CREATE TABLE "
-                    + AggregateReport.TABLE
-                    + " ("
-                    + AggregateReport.ID
-                    + " TEXT PRIMARY KEY NOT NULL, "
-                    + AggregateReport.PUBLISHER
-                    + " TEXT, "
-                    + AggregateReport.ATTRIBUTION_DESTINATION
-                    + " TEXT, "
-                    + AggregateReport.SOURCE_REGISTRATION_TIME
-                    + " INTEGER, "
-                    + AggregateReport.SCHEDULED_REPORT_TIME
-                    + " INTEGER, "
-                    + AggregateReport.ENROLLMENT_ID
-                    + " TEXT, "
-                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
-                    + " TEXT, "
-                    + AggregateReport.STATUS
-                    + " INTEGER, "
-                    + AggregateReport.DEBUG_REPORT_STATUS
-                    + " INTEGER, "
-                    + AggregateReport.API_VERSION
-                    + " TEXT, "
-                    + AggregateReport.SOURCE_DEBUG_KEY
-                    + " INTEGER, "
-                    + AggregateReport.TRIGGER_DEBUG_KEY
-                    + " INTEGER, "
-                    + AggregateReport.SOURCE_ID
-                    + " TEXT, "
-                    + AggregateReport.TRIGGER_ID
-                    + " TEXT, "
-                    + AggregateReport.DEDUP_KEY
-                    + " INTEGER, "
-                    + "FOREIGN KEY ("
-                    + AggregateReport.SOURCE_ID
-                    + ") REFERENCES "
-                    + SourceContract.TABLE
-                    + "("
-                    + SourceContract.ID
-                    + ") ON DELETE CASCADE "
-                    + "FOREIGN KEY ("
-                    + AggregateReport.TRIGGER_ID
-                    + ") REFERENCES "
-                    + TriggerContract.TABLE
-                    + "("
-                    + TriggerContract.ID
-                    + ") ON DELETE CASCADE"
-                    + ")";
+            CREATE_TABLE_AGGREGATE_REPORT_V6;
 
     public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6 =
             "CREATE TABLE "

@@ -41,7 +41,6 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -225,31 +224,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                 });
     }
 
-    @Test
-    public void onStartJob_shouldDisableJobTrue() throws Exception {
-        runWithMocks(
-                () -> {
-                    // Setup
-                    ExtendedMockito.doReturn(true)
-                            .when(
-                                    () ->
-                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                                    any(Context.class)));
-
-                    // Execute
-                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
-
-                    // Validate
-                    assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1)).cancel(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
-                    ExtendedMockito.verifyZeroInteractions(
-                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
-                });
-    }
-
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -258,7 +232,6 @@ public class AsyncRegistrationQueueJobServiceTest {
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -278,11 +251,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .when(() -> AsyncRegistrationQueueJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
+
             // Execute
             execute.run();
         } finally {

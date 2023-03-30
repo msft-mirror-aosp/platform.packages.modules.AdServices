@@ -46,7 +46,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
-import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -107,17 +106,9 @@ public class MaintenanceJobServiceTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(TopicsWorker.class)
                         .spyStatic(FlagsFactory.class)
-                        .mockStatic(ServiceCompatUtils.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
-
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
 
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
@@ -532,42 +523,5 @@ public class MaintenanceJobServiceTest {
         verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
-    }
-
-    @Test
-    public void testOnStartJob_shouldDisableJobTrue() {
-        ExtendedMockito.doReturn(true)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
-        doNothing().when(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
-
-        // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
-        mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
-                mFledgeMaintenanceTasksWorkerSpy);
-
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo =
-                new JobInfo.Builder(
-                                MAINTENANCE_JOB_ID,
-                                new ComponentName(CONTEXT, EpochJobService.class))
-                        .setRequiresCharging(true)
-                        .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
-                        .setPersisted(true)
-                        .build();
-        JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
-
-        // Now verify that when the Job starts, it will unschedule itself.
-        assertFalse(mSpyMaintenanceJobService.onStartJob(mMockJobParameters));
-
-        assertNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
-
-        verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
-        verify(mFledgeMaintenanceTasksWorkerSpy, never()).clearExpiredAdSelectionData();
-        verifyNoMoreInteractions(mMockFlags);
     }
 }

@@ -76,8 +76,10 @@ public class UpdateAdCounterHistogramRequest {
     }
 
     /**
-     * Gets the ad event type which, along with an ad's counter keys, identifies which histogram
-     * should be updated.
+     * Gets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
+     * identifies which histogram should be updated.
+     *
+     * <p>See {@link FrequencyCapFilters.AdEventType} for more information.
      */
     @FrequencyCapFilters.AdEventType
     public int getAdEventType() {
@@ -131,7 +133,7 @@ public class UpdateAdCounterHistogramRequest {
     }
 
     /** Builder for {@link UpdateAdCounterHistogramRequest} objects. */
-    public static final class Builder {
+    public static class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @FrequencyCapFilters.AdEventType private int mAdEventType = AD_EVENT_TYPE_INVALID;
         @Nullable private AdTechIdentifier mCallerAdTech;
@@ -150,8 +152,8 @@ public class UpdateAdCounterHistogramRequest {
         }
 
         /**
-         * Sets the ad event type which, along with an ad's counter keys, identifies which histogram
-         * should be updated.
+         * Sets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
+         * identifies which histogram should be updated.
          *
          * <p>See {@link #getAdEventType()} for more information.
          */

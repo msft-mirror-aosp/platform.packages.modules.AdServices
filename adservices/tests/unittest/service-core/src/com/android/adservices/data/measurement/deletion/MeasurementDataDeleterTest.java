@@ -136,7 +136,6 @@ public class MeasurementDataDeleterTest {
     @Mock private EventReport mEventReport3;
     @Mock private AggregateReport mAggregateReport1;
     @Mock private AggregateReport mAggregateReport2;
-    @Mock private AggregateReport mAggregateReport3;
     @Mock private List<Uri> mOriginUris;
     @Mock private List<Uri> mDomainUris;
 
@@ -292,100 +291,13 @@ public class MeasurementDataDeleterTest {
     }
 
     @Test
-    public void resetDedupKeys_hasMatchingAggregateReports_removesTriggerDedupKeysFromSource()
-            throws DatastoreException {
-        // Setup
-        Source source1 =
-                SourceFixture.getValidSourceBuilder()
-                        .setId("sourceId1")
-                        .setAggregateReportDedupKeys(
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                new UnsignedLong("1"),
-                                                new UnsignedLong("2"),
-                                                new UnsignedLong("3"))))
-                        .build();
-        Source source2 =
-                SourceFixture.getValidSourceBuilder()
-                        .setId("sourceId2")
-                        .setAggregateReportDedupKeys(
-                                new ArrayList<>(
-                                        Arrays.asList(
-                                                new UnsignedLong("11"),
-                                                new UnsignedLong("22"),
-                                                new UnsignedLong("33"))))
-                        .build();
-
-        when(mAggregateReport1.getDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
-        when(mAggregateReport2.getDedupKey()).thenReturn(new UnsignedLong("22")); // S2 - T2
-        when(mAggregateReport3.getDedupKey()).thenReturn(new UnsignedLong("3")); // S1 - T3
-        when(mAggregateReport1.getSourceId()).thenReturn(source1.getId());
-        when(mAggregateReport2.getSourceId()).thenReturn(source2.getId());
-        when(mAggregateReport3.getSourceId()).thenReturn(source1.getId());
-
-        when(mMeasurementDao.getSource(source1.getId())).thenReturn(source1);
-        when(mMeasurementDao.getSource(source2.getId())).thenReturn(source2);
-
-        // Execution
-        mMeasurementDataDeleter.resetAggregateReportDedupKeys(
-                mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2, mAggregateReport3));
-
-        // Verification
-        verify(mMeasurementDao, times(2)).updateSourceAggregateReportDedupKeys(source1);
-        verify(mMeasurementDao).updateSourceAggregateReportDedupKeys(source2);
-        assertEquals(
-                Collections.singletonList(new UnsignedLong("2")),
-                source1.getAggregateReportDedupKeys());
-        assertEquals(
-                Arrays.asList(new UnsignedLong("11"), new UnsignedLong("33")),
-                source2.getAggregateReportDedupKeys());
-    }
-
-    @Test
-    public void resetDedupKeys_AggregateReportHasNullSourceId_ignoresRemoval()
-            throws DatastoreException {
-        // Setup
-        when(mAggregateReport1.getSourceId()).thenReturn(null);
-        when(mAggregateReport1.getDedupKey()).thenReturn(new UnsignedLong("1")); // S1 - T1
-
-        // Execution
-        mMeasurementDataDeleter.resetAggregateReportDedupKeys(
-                mMeasurementDao, List.of(mAggregateReport1));
-
-        // Verification
-        verify(mMeasurementDao, never()).getSource(anyString());
-        verify(mMeasurementDao, never()).updateSourceAggregateReportDedupKeys(any());
-    }
-
-    @Test
-    public void resetDedupKeys_AggregateReportHasNullDedupKey_ignoresRemoval()
-            throws DatastoreException {
-        // Setup
-        when(mAggregateReport1.getSourceId()).thenReturn(null);
-        when(mAggregateReport1.getDedupKey()).thenReturn(null); // S1 - T1
-
-        // Execution
-        mMeasurementDataDeleter.resetAggregateReportDedupKeys(
-                mMeasurementDao, List.of(mAggregateReport1));
-
-        // Verification
-        verify(mMeasurementDao, never()).getSource(anyString());
-        verify(mMeasurementDao, never()).updateSourceAggregateReportDedupKeys(any());
-    }
-
-    @Test
     public void delete_deletionModeAll_success() throws DatastoreException {
         // Setup
         MeasurementDataDeleter subjectUnderTest = spy(mMeasurementDataDeleter);
         List<String> triggerIds = List.of("triggerId1", "triggerId2");
         List<String> sourceIds = List.of("sourceId1", "sourceId2");
         Source source1 = SourceFixture.getValidSourceBuilder().setId("sourceId1").build();
-        Source source2 =
-                SourceFixture.getValidSourceBuilder()
-                        .setId("sourceId2")
-                        .setAggregateReportDedupKeys(
-                                List.of(new UnsignedLong(1L), new UnsignedLong(2L)))
-                        .build();
+        Source source2 = SourceFixture.getValidSourceBuilder().setId("sourceId2").build();
         Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("triggerId1").build();
         Trigger trigger2 = TriggerFixture.getValidTriggerBuilder().setId("triggerId2").build();
         when(mEventReport1.getId()).thenReturn("eventReportId1");
@@ -444,10 +356,6 @@ public class MeasurementDataDeleterTest {
                 .resetDedupKeys(mMeasurementDao, List.of(mEventReport1, mEventReport2));
         verify(mMeasurementDao).deleteSources(sourceIds);
         verify(mMeasurementDao).deleteTriggers(triggerIds);
-        verify(mMeasurementDao).deleteAsyncRegistrationsProvidedRegistrant(APP_PACKAGE_NAME);
-        verify(subjectUnderTest)
-                .resetAggregateReportDedupKeys(
-                        mMeasurementDao, List.of(mAggregateReport1, mAggregateReport2));
     }
 
     @Test

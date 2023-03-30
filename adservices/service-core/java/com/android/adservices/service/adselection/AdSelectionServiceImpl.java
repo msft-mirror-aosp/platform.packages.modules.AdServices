@@ -333,13 +333,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * @param inputParams includes list of outcomes, signals and uri to download selection logic
      * @param callerMetadata caller's metadata for stat logging
      * @param callback delivers the results via OutcomeReceiver
+     * @throws RemoteException thrown in case callback fails
      */
     @Override
     public void selectAdsFromOutcomes(
             @NonNull AdSelectionFromOutcomesInput inputParams,
             @NonNull CallerMetadata callerMetadata,
-            @NonNull AdSelectionCallback callback) {
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
+            @NonNull AdSelectionCallback callback)
+            throws RemoteException {
+        // TODO (b/258604183): This endpoint suppose to be an overload of selectAds but .aidl
+        //  doesn't allow overloading. Investigation where to go from here
+
+        // TODO(b/258836148): Use proper short name for this endpoint when there is one created
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -515,7 +521,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mFlags,
                         mAdSelectionServiceFilter,
-                        mConsentManager,
+                        ConsentManager.getInstance(mContext),
                         callingUid);
 
         worker.updateAdCounterHistogram(inputParams, callback);

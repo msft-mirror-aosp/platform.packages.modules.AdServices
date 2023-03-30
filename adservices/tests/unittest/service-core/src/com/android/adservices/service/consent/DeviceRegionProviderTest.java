@@ -40,7 +40,6 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
-import java.util.Locale;
 
 @SmallTest
 public class DeviceRegionProviderTest {
@@ -65,7 +64,6 @@ public class DeviceRegionProviderTest {
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // return the default EEA countries list for most test cases
         doReturn(Flags.UI_EEA_COUNTRIES).when(mMockFlags).getUiEeaCountries();
-        Locale.setDefault(Locale.US);
     }
 
     @After
@@ -297,50 +295,5 @@ public class DeviceRegionProviderTest {
     @Test
     public void invalidEeaCountriesStringTest_missingComma() {
         assertThat(DeviceRegionProvider.isValidEeaCountriesString("PLGB")).isFalse();
-    }
-
-    @Test
-    public void invalidEeaCountriesStringTest_nullString_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString(null)).isFalse();
-    }
-
-    @Test
-    public void invalidEeaCountriesStringTest_emptyString_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString(" ")).isFalse();
-    }
-
-    @Test
-    public void validEeaCountriesStringTest_singleCountry_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PL")).isTrue();
-    }
-
-    @Test
-    public void validEeaCountriesStringTest_multipleCountries_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PL,GB,CH")).isTrue();
-    }
-
-    @Test
-    public void invalidEeaCountriesStringTest_extraComma_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString("US,")).isFalse();
-    }
-
-    @Test
-    public void invalidEeaCountriesStringTest_missingComma_arabicAffectedLocale() {
-        Locale.setDefault(new Locale("ar", ""));
-        assertThat(DeviceRegionProvider.isValidEeaCountriesString("PLGB")).isFalse();
-    }
-
-    @Test
-    public void eeaCountriesForAllLocales_defaultList() {
-        for (Locale locale : Locale.getAvailableLocales()) {
-            Locale.setDefault(locale);
-            assertThat(DeviceRegionProvider.isValidEeaCountriesString(Flags.UI_EEA_COUNTRIES))
-                    .isTrue();
-        }
     }
 }

@@ -45,7 +45,7 @@ public final class FledgeErrorResponseTest {
     }
 
     @Test
-    public void testWriteToParcel() {
+    public void testWriteToParcel() throws Exception {
         String notImplementedMessage = "Not Implemented!";
         FledgeErrorResponse response =
                 new FledgeErrorResponse.Builder()
@@ -64,7 +64,7 @@ public final class FledgeErrorResponseTest {
     }
 
     @Test
-    public void testWriteToParcelEmptyMessage() {
+    public void testWriteToParcelEmptyMessage() throws Exception {
         FledgeErrorResponse response =
                 new FledgeErrorResponse.Builder()
                         .setStatusCode(AdServicesStatusUtils.STATUS_SUCCESS)
@@ -101,22 +101,5 @@ public final class FledgeErrorResponseTest {
                         .build();
 
         assertEquals(0, response.describeContents());
-    }
-
-    @Test
-    public void testToString() {
-        String notImplementedMessage = "Not Implemented!";
-        FledgeErrorResponse response =
-                new FledgeErrorResponse.Builder()
-                        .setStatusCode(AdServicesStatusUtils.STATUS_INTERNAL_ERROR)
-                        .setErrorMessage(notImplementedMessage)
-                        .build();
-
-        assertThat(response.toString())
-                .isEqualTo(
-                        String.format(
-                                "FledgeErrorResponse{mStatusCode=%s, mErrorMessage='%s'}",
-                                AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                notImplementedMessage));
     }
 }

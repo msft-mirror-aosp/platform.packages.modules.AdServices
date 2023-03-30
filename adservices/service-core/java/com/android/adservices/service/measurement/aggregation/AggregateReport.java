@@ -59,7 +59,6 @@ public class AggregateReport {
     @Nullable private UnsignedLong mTriggerDebugKey;
     private String mSourceId;
     private String mTriggerId;
-    private UnsignedLong mDedupKey;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -95,7 +94,6 @@ public class AggregateReport {
         mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
-        mDedupKey = null;
     }
 
     @Override
@@ -118,8 +116,7 @@ public class AggregateReport {
                 && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, aggregateReport.mSourceId)
-                && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
-                && Objects.equals(mDedupKey, aggregateReport.mDedupKey);
+                && Objects.equals(mTriggerId, aggregateReport.mTriggerId);
     }
 
     @Override
@@ -138,8 +135,7 @@ public class AggregateReport {
                 mSourceDebugKey,
                 mTriggerDebugKey,
                 mSourceId,
-                mTriggerId,
-                mDedupKey);
+                mTriggerId);
     }
 
     /**
@@ -230,12 +226,6 @@ public class AggregateReport {
      */
     public String getApiVersion() {
         return mApiVersion;
-    }
-
-    /** Deduplication key assigned to theis aggregate report. */
-    @Nullable
-    public UnsignedLong getDedupKey() {
-        return mDedupKey;
     }
 
     /**
@@ -413,12 +403,6 @@ public class AggregateReport {
             return this;
         }
 
-        /** See {@link AggregateReport#getDedupKey()} */
-        @NonNull
-        public AggregateReport.Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
-            mAttributionReport.mDedupKey = dedupKey;
-            return this;
-        }
         /**
          * Build the {@link AggregateReport}.
          */

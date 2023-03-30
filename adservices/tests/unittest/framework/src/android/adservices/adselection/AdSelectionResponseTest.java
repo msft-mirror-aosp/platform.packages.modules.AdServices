@@ -172,19 +172,4 @@ public class AdSelectionResponseTest {
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);
     }
-
-    @Test
-    public void testToString() {
-        AdSelectionResponse adSelectionResponse =
-                new AdSelectionResponse.Builder()
-                        .setAdSelectionId(TEST_AD_SELECTION_ID)
-                        .setRenderUri(VALID_RENDER_URI)
-                        .build();
-
-        assertThat(adSelectionResponse.toString())
-                .isEqualTo(
-                        String.format(
-                                "AdSelectionResponse{mAdSelectionId=%s, mRenderUri=%s}",
-                                TEST_AD_SELECTION_ID, VALID_RENDER_URI));
-    }
 }

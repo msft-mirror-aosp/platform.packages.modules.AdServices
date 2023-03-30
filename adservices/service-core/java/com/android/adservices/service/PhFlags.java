@@ -104,9 +104,6 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ENABLE_XNA = "measurement_enable_xna";
     static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS = "measurement_data_expiry_window_ms";
 
-    static final String KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS =
-            "measurement_max_registration_redirects";
-
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -742,14 +739,6 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS,
                 /* defaultValue */ MEASUREMENT_DATA_EXPIRY_WINDOW_MS);
-    }
-
-    @Override
-    public int getMeasurementMaxRegistrationRedirects() {
-        return DeviceConfig.getInt(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
-                /* defaultValue */ MEASUREMENT_MAX_REGISTRATION_REDIRECTS);
     }
 
     @Override
@@ -2572,8 +2561,6 @@ public final class PhFlags implements Flags {
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
-                "\t" + KEY_EU_NOTIF_FLOW_CHANGE_ENABLED + " = " + getEuNotifFlowChangeEnabled());
-        writer.println(
                 "\t"
                         + KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
                         + " = "
@@ -2710,15 +2697,5 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
-    }
-
-    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
-
-    @Override
-    public boolean getEuNotifFlowChangeEnabled() {
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
-                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
     }
 }

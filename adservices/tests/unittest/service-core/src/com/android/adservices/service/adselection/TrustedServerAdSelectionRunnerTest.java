@@ -51,7 +51,6 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionRunner.AdSelectionOrchestrationResult;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
-import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.proto.SellerFrontEndGrpc;
 import com.android.adservices.service.proto.SellerFrontEndGrpc.SellerFrontEndFutureStub;
@@ -143,7 +142,6 @@ public class TrustedServerAdSelectionRunnerTest {
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private JsFetcher mJsFetcher;
-    @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @Mock private AdSelectionIdGenerator mMockAdSelectionIdGenerator;
     @Mock private OkHttpChannelBuilder mChannelBuilder;
     @Mock private ManagedChannel mManagedChannel;
@@ -193,8 +191,8 @@ public class TrustedServerAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        FluentFuture<String> js = FluentFuture.from(Futures.immediateFuture("js"));
-        when(mJsFetcher.getBiddingLogic(any(), any(), any(), any(), any())).thenReturn(js);
+        FluentFuture js = FluentFuture.from(Futures.immediateFuture("js"));
+        when(mJsFetcher.getBuyerDecisionLogic(any(), any(), any(), any())).thenReturn(js);
 
         mAdSelectionRunner =
                 new TrustedServerAdSelectionRunner(
@@ -251,8 +249,8 @@ public class TrustedServerAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        FluentFuture<String> js = FluentFuture.from(Futures.immediateFuture("js"));
-        when(mJsFetcher.getBiddingLogic(any(), any(), any(), any(), any())).thenReturn(js);
+        FluentFuture js = FluentFuture.from(Futures.immediateFuture("js"));
+        when(mJsFetcher.getBuyerDecisionLogic(any(), any(), any(), any())).thenReturn(js);
 
         mAdSelectionRunner =
                 new TrustedServerAdSelectionRunner(
@@ -311,8 +309,8 @@ public class TrustedServerAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        FluentFuture<String> js = FluentFuture.from(Futures.immediateFuture("js"));
-        when(mJsFetcher.getBiddingLogic(any(), any(), any(), any(), any())).thenReturn(js);
+        FluentFuture js = FluentFuture.from(Futures.immediateFuture("js"));
+        when(mJsFetcher.getBuyerDecisionLogic(any(), any(), any(), any())).thenReturn(js);
 
         mAdSelectionRunner =
                 new TrustedServerAdSelectionRunner(
@@ -373,9 +371,8 @@ public class TrustedServerAdSelectionRunnerTest {
 
         doThrow(new IllegalStateException())
                 .when(mJsFetcher)
-                .getBiddingLogic(
+                .getBuyerDecisionLogic(
                         sDBCustomAudience.getBiddingLogicUri(),
-                        mCustomAudienceDevOverridesHelper,
                         sDBCustomAudience.getOwner(),
                         sDBCustomAudience.getBuyer(),
                         sDBCustomAudience.getName());
@@ -426,8 +423,8 @@ public class TrustedServerAdSelectionRunnerTest {
         AdSelectionConfig adSelectionConfig = sAdSelectionConfigBuilder.build();
         when(mMockAdSelectionIdGenerator.generateId()).thenReturn(AD_SELECTION_ID);
 
-        FluentFuture<String> js = FluentFuture.from(Futures.immediateFuture("js"));
-        when(mJsFetcher.getBiddingLogic(any(), any(), any(), any(), any())).thenReturn(js);
+        FluentFuture js = FluentFuture.from(Futures.immediateFuture("js"));
+        when(mJsFetcher.getBuyerDecisionLogic(any(), any(), any(), any())).thenReturn(js);
 
         mAdSelectionRunner =
                 new TrustedServerAdSelectionRunner(

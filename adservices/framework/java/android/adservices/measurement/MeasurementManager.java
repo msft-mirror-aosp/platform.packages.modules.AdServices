@@ -48,11 +48,8 @@ import com.android.internal.annotations.VisibleForTesting;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /** MeasurementManager. */
 // TODO(b/269798827): Enable for R.
@@ -82,12 +79,6 @@ public class MeasurementManager {
             })
     public @interface MeasurementApiState {}
 
-    private interface MeasurementAdIdCallback {
-        void onAdIdCallback(boolean isAdIdEnabled);
-    }
-
-    private final long AD_ID_TIMEOUT_MS = 400;
-
     private Context mContext;
     private ServiceBinder<IMeasurementService> mServiceBinder;
     private AdIdManager mAdIdManager;
@@ -100,25 +91,11 @@ public class MeasurementManager {
      * @return A {@link MeasurementManager} instance
      */
     @NonNull
-     public static MeasurementManager get(@NonNull Context context) {
+    public static MeasurementManager get(@NonNull Context context) {
         // On T+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 ? context.getSystemService(MeasurementManager.class)
                 : new MeasurementManager(context);
-    }
-
-    /**
-    * This is for test purposes, it helps to mock the adIdManager.
-    *
-    * @hide
-    */
-    @VisibleForTesting
-    @NonNull
-    public static MeasurementManager get(
-            @NonNull Context context, @NonNull AdIdManager adIdManager) {
-        MeasurementManager measurementManager = MeasurementManager.get(context);
-        measurementManager.mAdIdManager = adIdManager;
-        return measurementManager;
     }
 
     /**
@@ -153,7 +130,7 @@ public class MeasurementManager {
                 context,
                 AdServicesCommon.ACTION_MEASUREMENT_SERVICE,
                 IMeasurementService.Stub::asInterface);
-        mAdIdManager = AdIdManager.get(context);
+        mAdIdManager = new AdIdManager(mContext);
         return this;
     }
 
@@ -188,12 +165,6 @@ public class MeasurementManager {
             @Nullable @CallbackExecutor Executor executor,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         Objects.requireNonNull(registrationRequest);
-
-        String registrationType = "source";
-        if (registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_TRIGGER) {
-            registrationType = "trigger";
-        }
-        LogUtil.d("Registering " + registrationType);
 
         try {
             service.register(
@@ -260,13 +231,32 @@ public class MeasurementManager {
                                 getSdkPackageName())
                         .setRequestTime(SystemClock.uptimeMillis())
                         .setInputEvent(inputEvent);
-        getAdId(
-                isAdIdEnabled ->
+
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
                         register(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
                                 service,
                                 executor,
-                                callback));
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
+                        register(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                service,
+                                executor,
+                                callback);
+                    }
+                });
     }
 
     /**
@@ -325,15 +315,35 @@ public class MeasurementManager {
                         getSdkPackageName(),
                         SystemClock.uptimeMillis());
 
-        getAdId(
-                isAdIdEnabled ->
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
                         registerWebSourceWrapper(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
                                 service,
                                 executor,
                                 callerMetadata,
                                 measurementCallback,
-                                callback));
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
+                        registerWebSourceWrapper(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                service,
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+                });
     }
 
     /** Wrapper method for registerWebSource. */
@@ -345,7 +355,6 @@ public class MeasurementManager {
             @NonNull IMeasurementCallback measurementCallback,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         try {
-            LogUtil.d("Registering web source");
             service.registerWebSource(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
@@ -407,15 +416,35 @@ public class MeasurementManager {
                 new WebTriggerRegistrationRequestInternal.Builder(
                         request, getAppPackageName(), getSdkPackageName());
 
-        getAdId(
-                isAdIdEnabled ->
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
                         registerWebTriggerWrapper(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
                                 service,
                                 executor,
                                 callerMetadata,
                                 measurementCallback,
-                                callback));
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
+                        registerWebTriggerWrapper(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                service,
+                                executor,
+                                callerMetadata,
+                                measurementCallback,
+                                callback);
+                    }
+                });
     }
 
     /** Wrapper method for registerWebTrigger. */
@@ -427,7 +456,6 @@ public class MeasurementManager {
             @NonNull IMeasurementCallback measurementCallback,
             @Nullable OutcomeReceiver<Object, Exception> callback) {
         try {
-            LogUtil.d("Registering web trigger");
             service.registerWebTrigger(request, callerMetadata, measurementCallback);
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
@@ -467,13 +495,31 @@ public class MeasurementManager {
                         getAppPackageName(),
                         getSdkPackageName());
 
-        getAdId(
-                isAdIdEnabled ->
+        mAdIdManager.getAdId(
+                mAdIdExecutor,
+                new OutcomeReceiver<AdId, Exception>() {
+                    @Override
+                    public void onResult(AdId adId) {
                         register(
-                                builder.setAdIdPermissionGranted(isAdIdEnabled).build(),
+                                builder.setAdIdPermissionGranted(isAdIdPermissionEnabled(adId))
+                                        .build(),
                                 service,
                                 executor,
-                                callback));
+                                callback);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        LogUtil.w(
+                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
+                                        + " and enable advertising ID under device settings");
+                        register(
+                                builder.setAdIdPermissionGranted(false).build(),
+                                service,
+                                executor,
+                                callback);
+                    }
+                });
     }
 
     /**
@@ -648,39 +694,5 @@ public class MeasurementManager {
             }
         }
         return service;
-    }
-
-    /* Make AdId call with timeout */
-    private void getAdId(MeasurementAdIdCallback measurementAdIdCallback) {
-        CountDownLatch countDownLatch = new CountDownLatch(1);
-        AtomicBoolean isAdIdEnabled = new AtomicBoolean();
-        mAdIdManager.getAdId(
-                mAdIdExecutor,
-                new OutcomeReceiver<AdId, Exception>() {
-                    @Override
-                    public void onResult(AdId adId) {
-                        isAdIdEnabled.set(isAdIdPermissionEnabled(adId));
-                        countDownLatch.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        LogUtil.w(
-                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
-                                        + " and enable advertising ID under device settings");
-                        countDownLatch.countDown();
-                    }
-                });
-
-        boolean timedOut = false;
-        try {
-            timedOut = !countDownLatch.await(AD_ID_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            LogUtil.w(e, "InterruptedException while waiting for AdId");
-        }
-        if (timedOut) {
-            LogUtil.w("AdId call timed out");
-        }
-        measurementAdIdCallback.onAdIdCallback(isAdIdEnabled.get());
     }
 }

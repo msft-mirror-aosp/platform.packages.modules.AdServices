@@ -48,8 +48,7 @@ public final class AggregateReportFixture {
                 .setTriggerDebugKey(ValidAggregateReportParams.TRIGGER_DEBUG_KEY)
                 .setDebugCleartextPayload(ValidAggregateReportParams.getDebugPayload())
                 .setStatus(EventReport.Status.PENDING)
-                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
-                .setDedupKey(ValidAggregateReportParams.DEDUP_KEY);
+                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING);
     }
 
     public static AggregateReport getValidAggregateReport() {
@@ -65,7 +64,6 @@ public final class AggregateReportFixture {
         public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(43254545L);
         public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(67878545L);
         public static final String ENROLLMENT_ID = "enrollment-id";
-        public static final UnsignedLong DEDUP_KEY = new UnsignedLong(67878545L);
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

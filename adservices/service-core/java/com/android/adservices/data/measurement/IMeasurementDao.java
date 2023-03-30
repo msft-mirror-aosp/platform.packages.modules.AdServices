@@ -392,15 +392,6 @@ public interface IMeasurementDao {
     void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
 
     /**
-     * Delete records from Async Registration table whose registrant or app destination match with
-     * provided app URI.
-     *
-     * @param uri AsyncRegistrations registrant or OS Destination to match
-     * @throws DatastoreException database transaction issues
-     */
-    void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri) throws DatastoreException;
-
-    /**
      * Delete records from source table that match provided trigger IDs.
      *
      * @param triggerIds trigger IDs to match

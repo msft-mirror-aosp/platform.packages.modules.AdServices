@@ -23,8 +23,6 @@ import android.adservices.appsetid.AppSetIdManager;
 import android.content.Context;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
-import android.os.SystemProperties;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -54,7 +52,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class AppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    private static final int DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
 
     private static String sPreviousAppAllowList;
 
@@ -68,15 +65,15 @@ public class AppSetIdManagerTest {
     }
 
     @Before
-    public void setup() throws Exception {
+    public void setup() {
         overrideAppSetIdKillSwitch(true);
-        // Cool-off rate limiter in case it was initialized by another test
-        TimeUnit.SECONDS.sleep(1);
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         overrideAppSetIdKillSwitch(false);
+        // Cool-off rate limiter
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @AfterClass
@@ -125,24 +122,18 @@ public class AppSetIdManagerTest {
         final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final int requestPerSecond = getAppSetIdRequestPerSecond();
-        for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
-        }
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
+        assertFalse(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         getAppSetIdAndVerifyRateLimitReached(appSetIdManager);
 
         // Verify limit reached
-        // If the test takes less than 1 second, this test is reliable due to the rate limiter
-        // limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit = getAppSetIdAndVerifyRateLimitReached(appSetIdManager);
-        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
-        if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
-        }
+        assertTrue(getAppSetIdAndVerifyRateLimitReached(appSetIdManager));
     }
 
     private boolean getAppSetIdAndVerifyRateLimitReached(AppSetIdManager manager)
@@ -174,25 +165,5 @@ public class AppSetIdManagerTest {
                 countDownLatch.countDown();
             }
         };
-    }
-
-    private int getAppSetIdRequestPerSecond() {
-        try {
-            String permitString =
-                    SystemProperties.get("debug.adservices.appsetid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
-            }
-
-            permitString =
-                    ShellUtils.runShellCommand(
-                            "device_config get adservices appsetid_request_permits_per_second");
-            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
-                return Integer.parseInt(permitString);
-            }
-            return DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND;
-        } catch (Exception e) {
-            return DEFAULT_APPSETID_REQUEST_PERMITS_PER_SECOND;
-        }
     }
 }

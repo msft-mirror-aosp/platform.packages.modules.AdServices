@@ -19,6 +19,7 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_AGGREGATE_KEY_ID;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_FILTER_MAPS_PER_FILTER_SET;
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_REDIRECTS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_VALUES_PER_ATTRIBUTION_FILTER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS;
 
@@ -27,7 +28,6 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.measurement.util.Web;
@@ -198,9 +198,8 @@ class FetcherUtil {
     private static AsyncRedirect parseListRedirects(Map<String, List<String>> headers,
             List<Uri> redirects) {
         List<String> field = headers.get("Attribution-Reporting-Redirect");
-        int maxRedirects = FlagsFactory.getFlags().getMeasurementMaxRegistrationRedirects();
         if (field != null) {
-            for (int i = 0; i < Math.min(field.size(), maxRedirects); i++) {
+            for (int i = 0; i < Math.min(field.size(), MAX_REDIRECTS_PER_REGISTRATION); i++) {
                 redirects.add(Uri.parse(field.get(i)));
             }
         }

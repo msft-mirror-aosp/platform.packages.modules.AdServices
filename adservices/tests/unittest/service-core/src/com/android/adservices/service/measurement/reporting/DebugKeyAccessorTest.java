@@ -74,7 +74,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithAdIdPermission_debugKeysPresent() {
+    public void getDebugKeys_appAppWithAdIdPermission_debugKeysPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
@@ -88,7 +88,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppNoAdIdPermission_debugKeysAbsent() {
+    public void getDebugKeys_appAppNoAdIdPermission_debugKeysAbsent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
@@ -103,7 +103,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppNoAdIdPermissionWithJoinKeys_debugKeysAbsent() {
+    public void getDebugKeys_appAppNoAdIdPermissionWithJoinKeys_debugKeysAbsent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP,
@@ -126,7 +126,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithSourceAdId_sourceDebugKeyPresent() {
+    public void getDebugKeys_appAppWithSourceAdId_sourceDebugKeyPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
@@ -140,7 +140,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToAppWithTriggerAdId_triggerDebugKeyPresent() {
+    public void getDebugKeys_appAppWithTriggerAdId_triggerDebugKeyPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
@@ -155,7 +155,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebWithSameRegistrant_debugKeysPresent() {
+    public void getDebugKeys_webWebWithSameRegistrant_debugKeysPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB, false, true, ValidTriggerParams.REGISTRANT, null);
@@ -169,7 +169,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebNoJoinKeysAndDifferentRegistrants_debugKeysAbsent() {
+    public void getDebugKeys_webWebNoJoinKeysAndDifferentRegistrants_debugKeysAbsent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -192,7 +192,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebDiffJoinKeysSameRegFalseArDebug_debugKeysAbsent() {
+    public void getDebugKeys_webWebDiffJoinKeysSameRegFalseArDebug_debugKeysAbsent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -215,7 +215,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent() {
+    public void getDebugKeys_webWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -247,7 +247,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebOnlySourceJoinKeyAndDifferentRegistrants_debugKeysAbsent() {
+    public void getDebugKeys_webWebOnlySourceJoinKeyAndDifferentRegistrants_debugKeysPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -270,7 +270,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebDiffJoinKeysAndDifferentRegistrants_debugKeysAbsent() {
+    public void getDebugKeys_webWebDiffJoinKeysAndDifferentRegistrants_debugKeysAbsent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -302,7 +302,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent() {
+    public void getDebugKeys_webWebSameRegistrantWithArDebugOnSource_sourceDebugKeysPresent() {
         Trigger trigger =
                 createTrigger(
                         EventSurfaceType.WEB,
@@ -325,7 +325,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebNoJoinKeys_debugKeysAbsent() {
+    public void getDebugKeys_appWebNoJoinKeys_debugKeysAbsent() {
         Source source =
                 createSource(EventSurfaceType.APP, true, true, ValidSourceParams.REGISTRANT, null);
         Trigger trigger =
@@ -339,7 +339,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebJoinKeysMatch_debugKeysPresent() {
+    public void getDebugKeys_appWebMatchingJoinKeys_debugKeysPresent() {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -371,7 +371,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebOnlyTriggerJoinKeyProvided_debugKeysAbsent() {
+    public void getDebugKeys_appWebOnlyTriggerJoinKeyProvided_debugKeysAbsent() {
         Source source =
                 createSource(EventSurfaceType.APP, false, true, ValidSourceParams.REGISTRANT, null);
         Trigger trigger =
@@ -389,7 +389,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebJoinKeysMismatch_debugKeysAbsent() {
+    public void getDebugKeys_appWebNotMatchingJoinKeys_debugKeysAbsent() {
         Source source =
                 createSource(
                         EventSurfaceType.APP,
@@ -421,7 +421,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppNoJoinKeys_debugKeysAbsent() {
+    public void getDebugKeys_webAppNoJoinKeys_debugKeysAbsent() {
         Source source =
                 createSource(EventSurfaceType.WEB, true, true, ValidSourceParams.REGISTRANT, null);
         Trigger trigger =
@@ -435,7 +435,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppJoinKeysMatch_debugKeysPresent() {
+    public void getDebugKeys_webAppMatchingJoinKeys_debugKeysPresent() {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -467,7 +467,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppOnlySourceJoinKeyProvided_debugKeysAbsent() {
+    public void getDebugKeys_webAppOnlySourceJoinKeyProvided_debugKeysAbsent() {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -486,7 +486,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppJoinKeysMatchNotAllowListed_debugKeysAbsent() {
+    public void getDebugKeys_webAppMatchingJoinKeysNotAllowListed_debugKeysAbsent() {
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
         Source source =
                 createSource(
@@ -510,7 +510,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToAppJoinKeysMismatch_debugKeysAbsent() {
+    public void getDebugKeys_webAppNotMatchingJoinKeys_debugKeysAbsent() {
         Source source =
                 createSource(
                         EventSurfaceType.WEB,
@@ -542,7 +542,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_webToWebNotAllowListedDiffRegJoinKeysMatch_debugKeysAbsent() {
+    public void getDebugKeys_webWebNotAllowListedDiffRegMatchingJoinKeys_debugKeysAbsent() {
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
@@ -567,7 +567,7 @@ public class DebugKeyAccessorTest {
     }
 
     @Test
-    public void getDebugKeys_appToWebJoinKeysMatchNotAllowListed_debugKeysAbsent() {
+    public void getDebugKeys_appWebMatchingJoinKeysNotAllowListed_debugKeysAbsent() {
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn("some_random_enrollment1,some_random_enrollment2");
         Source source =
@@ -589,561 +589,6 @@ public class DebugKeyAccessorTest {
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
         verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_noSourceTriggerAdIdPermission_triggerDebugKeyPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_noSourceTriggerNoAdIdPermission_triggerDebugKeyAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_noSourceTriggerArdebugPermission_triggerDebugKeyPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB, false, true, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_noSourceTriggerNoArdebugPermission_triggerDebugKeyAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB, false, false, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(null, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToAppWithAdIdPermission_debugKeysPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
-        Source source =
-                createSource(EventSurfaceType.APP, true, false, ValidSourceParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToAppBothNoAdIdPermission_debugKeysAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
-        Source source =
-                createSource(
-                        EventSurfaceType.APP, false, false, ValidSourceParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToAppNoTriggerAdId_debugKeysAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, false, false, ValidTriggerParams.REGISTRANT, null);
-        Source source =
-                createSource(EventSurfaceType.APP, true, false, ValidSourceParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToAppNoSourceAdId_sourceDebugKeyAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, true, false, ValidTriggerParams.REGISTRANT, null);
-        Source source =
-                createSource(
-                        EventSurfaceType.APP, false, false, ValidSourceParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToAppBothNoAdIdWithJoinKeys_debugKeysAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP,
-                        false,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Source source =
-                createSource(
-                        EventSurfaceType.APP,
-                        false,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToWebWithSameRegistrant_debugKeysPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB, false, true, ValidTriggerParams.REGISTRANT, null);
-        Source source =
-                createSource(EventSurfaceType.WEB, false, true, ValidSourceParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToWebTriggerNoArDebugPermission_debugKeysAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void
-            getDebugKeysForVerbose_webToWebSameJoinKeysAndDifferentRegistrants_debugKeysPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("https://com.registrant1"),
-                        "debug-join-key");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        Uri.parse("https://com.registrant2"),
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_WEB)
-                        .setMatched(true)
-                        .setDebugJoinKeyHashedValue(54L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToWebNoJoinKeyDiffRegistrants_sourceDebugKeyAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("https://com.registrant1"),
-                        null);
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        Uri.parse("https://com.registrant2"),
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void
-            getDebugKeysForVerbose_webToWebDiffJoinKeysDifferentRegistrants_sourceDebugKeyAbsent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("https://com.registrant1"),
-                        "debug-join-key1");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        Uri.parse("https://com.registrant2"),
-                        "debug-join-key2");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_WEB)
-                        .setMatched(false)
-                        .setDebugJoinKeyHashedValue(0L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToWebSameRegistrantWithArDebug_debugKeysPresent() {
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void
-            getDebugKeysForVerbose_webToWebNotAllowListDiffRegJoinKeysMatch_sourceDebugKeyAbsent() {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
-                .thenReturn("some_random_enrollment1,some_random_enrollment2");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        Uri.parse("https://com.registrant1"),
-                        "debug-join-key");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        Uri.parse("https://com.registrant2"),
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebTriggerNoArDebugPermission_debugKeysAbsent() {
-        Source source =
-                createSource(EventSurfaceType.APP, true, true, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB, true, false, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebNoJoinKeys_sourceDebugKeysAbsent() {
-        Source source =
-                createSource(EventSurfaceType.APP, true, true, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB, true, true, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebJoinKeysMatch_debugKeysPresent() {
-        Source source =
-                createSource(
-                        EventSurfaceType.APP,
-                        false,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
-                        .setMatched(true)
-                        .setDebugJoinKeyHashedValue(54L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebNoSourceJoinKey_sourceDebugKeyAbsent() {
-        Source source =
-                createSource(EventSurfaceType.APP, false, true, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        false,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebJoinKeysMismatch_sourceDebugKeyAbsent() {
-        Source source =
-                createSource(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key1");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key2");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
-                        .setMatched(false)
-                        .setDebugJoinKeyHashedValue(0L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_appToWebJoinKeysMatchNotAllowListed_sourceDebugKeyAbsent() {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
-                .thenReturn("some_random_enrollment1,some_random_enrollment2");
-        Source source =
-                createSource(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToAppTriggerNoAdid_debugKeysAbsent() {
-        Source source =
-                createSource(EventSurfaceType.WEB, true, true, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, false, true, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertNull(debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToAppNoJoinKeys_sourceDebugKeyAbsent() {
-        Source source =
-                createSource(EventSurfaceType.WEB, true, true, ValidSourceParams.REGISTRANT, null);
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP, true, true, ValidTriggerParams.REGISTRANT, null);
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToAppJoinKeysMatch_debugKeysPresent() {
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        false,
-                        false,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
-                        .setMatched(true)
-                        .setDebugJoinKeyHashedValue(54L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToAppJoinKeysMatchNotAllowListed_sourceDebugKeyAbsent() {
-        when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
-    }
-
-    @Test
-    public void getDebugKeysForVerbose_webToAppJoinKeysMismatch_sourceDebugKeyAbsent() {
-        Source source =
-                createSource(
-                        EventSurfaceType.WEB,
-                        true,
-                        true,
-                        ValidSourceParams.REGISTRANT,
-                        "debug-join-key1");
-        Trigger trigger =
-                createTrigger(
-                        EventSurfaceType.APP,
-                        true,
-                        true,
-                        ValidTriggerParams.REGISTRANT,
-                        "debug-join-key2");
-        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
-        assertNull(debugKeyPair.first);
-        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
-        MsmtDebugKeysMatchStats stats =
-                MsmtDebugKeysMatchStats.builder()
-                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-                        .setAttributionType(
-                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
-                        .setMatched(false)
-                        .setDebugJoinKeyHashedValue(0L)
-                        .setDebugJoinKeyHashLimit(DEFAULT_JOIN_KEY_HASH_LIMIT)
-                        .build();
-        verify(mAdServicesLogger).logMeasurementDebugKeysMatch(eq(stats));
     }
 
     private static Trigger createTrigger(

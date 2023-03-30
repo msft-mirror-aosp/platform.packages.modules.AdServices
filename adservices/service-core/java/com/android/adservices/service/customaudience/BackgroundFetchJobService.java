@@ -32,7 +32,6 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.internal.annotations.VisibleForTesting;
@@ -56,13 +55,6 @@ public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         sLogger.d("BackgroundFetchJobService.onStartJob");
-
-        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
-            sLogger.d(
-                    "Disabling BackgroundFetchJobService job because it's running in ExtServices"
-                            + " on T+");
-            return skipAndCancelBackgroundJob(params);
-        }
 
         if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
             sLogger.d("FLEDGE background fetch is disabled; skipping and cancelling job");

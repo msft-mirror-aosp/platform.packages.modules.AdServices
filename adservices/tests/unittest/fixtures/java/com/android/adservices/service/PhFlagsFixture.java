@@ -35,7 +35,6 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
-import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 
 import static org.junit.Assert.assertEquals;
@@ -233,14 +232,5 @@ public class PhFlagsFixture {
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 Integer.toString(value),
                 true);
-    }
-
-    /** Overrides whether the {@code registerAdBeacon} feature is enabled. */
-    public static void overrideFledgeRegisterAdBeaconEnabled(boolean value) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
-                Boolean.toString(value),
-                false);
     }
 }
