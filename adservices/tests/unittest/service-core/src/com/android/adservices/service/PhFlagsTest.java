@@ -91,6 +91,7 @@ import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_DEFAULT_MAX
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.Flags.FLEDGE_PER_APP_CONSENT_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
@@ -238,6 +239,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_DEFAU
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_PER_APP_CONSENT_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
@@ -2146,6 +2148,81 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getGaUxFeatureEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgePerAppConsentEnabledWhenGaUxDisabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgePerAppConsentEnabled())
+                .isEqualTo(FLEDGE_PER_APP_CONSENT_ENABLED);
+
+        // Now overriding with the values from PH.
+        // Disabling GA UX
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GA_UX_FEATURE_ENABLED,
+                Boolean.toString(false),
+                /* makeDefault */ false);
+        // Enabling per-app consent
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_PER_APP_CONSENT_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        // Per-app consent is always disabled in FLEDGE if GA UX is disabled.
+        assertThat(phFlags.getFledgePerAppConsentEnabled()).isFalse();
+    }
+
+    @Test
+    public void testGetFledgePerAppConsentEnabledWhenGaUxEnabled_enabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgePerAppConsentEnabled())
+                .isEqualTo(FLEDGE_PER_APP_CONSENT_ENABLED);
+
+        // Now overriding with the values from PH.
+        // Enabling GA UX
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GA_UX_FEATURE_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        // Enabling per-app consent
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_PER_APP_CONSENT_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        // With GA UX enabled, per-app consent can be enabled.
+        assertThat(phFlags.getFledgePerAppConsentEnabled()).isTrue();
+    }
+
+    @Test
+    public void testGetFledgePerAppConsentEnabledWhenGaUxEnabled_disabled() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgePerAppConsentEnabled())
+                .isEqualTo(FLEDGE_PER_APP_CONSENT_ENABLED);
+
+        // Now overriding with the values from PH.
+        // Enabling GA UX
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_GA_UX_FEATURE_ENABLED,
+                Boolean.toString(true),
+                /* makeDefault */ false);
+        // Disabling per-app consent
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_PER_APP_CONSENT_ENABLED,
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        // Per-app consent can be disabled in FLEDGE even if GA UX is enabled.
+        assertThat(phFlags.getFledgePerAppConsentEnabled()).isFalse();
     }
 
     @Test
