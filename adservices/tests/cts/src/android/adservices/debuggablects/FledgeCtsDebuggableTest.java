@@ -61,6 +61,7 @@ import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -369,6 +370,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
 
+        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
+
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
@@ -389,6 +393,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
         AdservicesTestHelper.killAdservicesProcess(sContext);
+        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
     }
 
     @Test
@@ -1456,7 +1462,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
         CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
-        CustomAudience customAudience2 = this.createCustomAudience(BUYER_2, bidsForBuyer2);
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
@@ -1473,15 +1479,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
         String readBidFromAdMetadataWithDelayJs =
-                "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = customAudience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
+                "function generateBid(ad, auction_signals, per_buyer_signals,"
+                        + " trusted_bidding_signals, contextual_signals,"
+                        + " custom_audience_signals) { \n"
                         + jsWaitMoreThanAllowedForBiddingPerCa
                         + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
                         + "'render': result.render_uri };\n"

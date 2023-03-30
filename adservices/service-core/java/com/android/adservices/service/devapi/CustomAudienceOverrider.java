@@ -113,6 +113,7 @@ public class CustomAudienceOverrider {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         Objects.requireNonNull(callback);
@@ -139,7 +140,12 @@ public class CustomAudienceOverrider {
                 .transformAsync(
                         ignoredVoid ->
                                 callAddOverride(
-                                        owner, buyer, name, biddingLogicJS, trustedBiddingSignals),
+                                        owner,
+                                        buyer,
+                                        name,
+                                        biddingLogicJS,
+                                        biddingLogicJsVersion,
+                                        trustedBiddingSignals),
                         mListeningExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
@@ -254,6 +260,7 @@ public class CustomAudienceOverrider {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingData) {
         return FluentFuture.from(
                 mListeningExecutorService.submit(
@@ -265,7 +272,12 @@ public class CustomAudienceOverrider {
                             }
 
                             mCustomAudienceDevOverridesHelper.addOverride(
-                                    owner, buyer, name, biddingLogicJS, trustedBiddingData);
+                                    owner,
+                                    buyer,
+                                    name,
+                                    biddingLogicJS,
+                                    biddingLogicJsVersion,
+                                    trustedBiddingData);
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }

@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -1162,11 +1163,12 @@ public final class PhFlags implements Flags {
         // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
         // hard-coded value.
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
-                /* defaultValue */ DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_GLOBAL_KILL_SWITCH,
-                        /* defaultValue */ GLOBAL_KILL_SWITCH));
+                        getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_GLOBAL_KILL_SWITCH,
+                                /* defaultValue */ GLOBAL_KILL_SWITCH))
+                || /* S Minus Kill Switch */ !(SdkLevel.isAtLeastT() || getEnableBackCompat());
     }
 
     // MEASUREMENT Killswitches
@@ -2300,6 +2302,11 @@ public final class PhFlags implements Flags {
                         + KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES
                         + " = "
                         + getMaxResponseBasedRegistrationPayloadSizeBytes());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS
+                        + " = "
+                        + getMeasurementMaxRegistrationRedirects());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(

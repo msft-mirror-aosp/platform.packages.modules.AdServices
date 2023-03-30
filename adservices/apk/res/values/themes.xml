@@ -35,6 +35,9 @@
         <item name="android:windowDisablePreview">true</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowNoTitle">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 
     <style name="FilterTouches">
