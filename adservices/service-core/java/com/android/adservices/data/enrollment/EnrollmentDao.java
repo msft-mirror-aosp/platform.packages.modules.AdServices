@@ -132,7 +132,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
-        Optional<Uri> registrationBaseUri = Web.topPrivateDomainSchemeAndPath(url);
+        Optional<Uri> registrationBaseUri = Web.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (!registrationBaseUri.isPresent() || db == null) {
             return null;
@@ -177,10 +177,19 @@ public class EnrollmentDao implements IEnrollmentDao {
         }
     }
 
+    /**
+     * Validates enrollment urls returned by selection query by matching its scheme + first
+     * subdomain to that of registration uri.
+     *
+     * @param enrolledUris : urls returned by selection query
+     * @param registrationBaseUri : registration base url
+     * @return : true if validation is success
+     */
     private boolean validateAttributionUrl(
             List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
+        // This match is needed to avoid matching .co in registration url to .com in enrolled url
         for (String uri : enrolledUris) {
-            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainSchemeAndPath(Uri.parse(uri));
+            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainAndScheme(uri);
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -195,11 +204,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                 field,
                 DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"),
                 DatabaseUtils.sqlEscapeString(
-                        baseUri.getScheme()
-                                + "://%."
-                                + baseUri.getEncodedAuthority()
-                                + baseUri.getPath()
-                                + "%"));
+                        "%" + baseUri.getScheme() + "://%." + baseUri.getEncodedAuthority() + "%"));
     }
 
     @Override

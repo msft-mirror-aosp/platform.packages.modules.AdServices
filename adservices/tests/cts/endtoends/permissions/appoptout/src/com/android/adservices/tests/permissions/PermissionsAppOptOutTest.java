@@ -22,8 +22,6 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
-import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -36,6 +34,14 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.js.JSScriptEngine;
+import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
+
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,6 +58,35 @@ public class PermissionsAppOptOutTest {
     private static final String CALLER_NOT_AUTHORIZED =
             "java.lang.SecurityException: Caller is not authorized to call this API. "
                     + "Caller is not allowed.";
+
+    private String mPreviousAppAllowList;
+
+    @Before
+    public void setup() {
+        if (!SdkLevel.isAtLeastT()) {
+            overridePpapiAppAllowList();
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+    }
+
+    private void setPpapiAppAllowList(String allowList) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + allowList);
+    }
+
+    private void overridePpapiAppAllowList() {
+        mPreviousAppAllowList =
+                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
+        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    }
 
     @Test
     public void testAppOptOut_topics() {
@@ -152,6 +187,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testNoEnrollment_selectAds_adSelectionConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -171,6 +207,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testWithEnrollment_selectAds_adSelectionConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
@@ -192,46 +229,8 @@ public class PermissionsAppOptOutTest {
     }
 
     @Test
-    public void testNoEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        AdTechIdentifier.fromString("seller.example.com"));
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
-    public void testWithEnrollment_selectAds_adSelectionFromOutcomesConfig() {
-        // The "test.com" buyer is a pre-seeded enrolled ad tech
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        AdTechIdentifier.fromString("test.com"));
-
-        AdSelectionClient mAdSelectionClient =
-                new AdSelectionClient.Builder()
-                        .setContext(sContext)
-                        .setExecutor(CALLBACK_EXECUTOR)
-                        .build();
-
-        // When the ad tech is properly enrolled, just verify that the error thrown is not due to
-        // enrollment
-        ExecutionException exception =
-                assertThrows(
-                        ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
-        assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
-    }
-
-    @Test
     public void testNoEnrollment_reportImpression() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(
                         AdTechIdentifier.fromString("seller.example.com"));
@@ -256,6 +255,7 @@ public class PermissionsAppOptOutTest {
 
     @Test
     public void testWithEnrollment_reportImpression() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         // The "test.com" buyer is a pre-seeded enrolled ad tech
         AdSelectionConfig adSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfig(

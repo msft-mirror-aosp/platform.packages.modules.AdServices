@@ -22,8 +22,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -40,7 +41,9 @@ import java.util.concurrent.CancellationException;
 
 /** Runner executing actual background fetch tasks. */
 public class BackgroundFetchRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final CustomAudienceDao mCustomAudienceDao;
+    private final AppInstallDao mAppInstallDao;
     private final PackageManager mPackageManager;
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
@@ -48,14 +51,17 @@ public class BackgroundFetchRunner {
 
     public BackgroundFetchRunner(
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull AppInstallDao appInstallDao,
             @NonNull PackageManager packageManager,
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags) {
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(packageManager);
         Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(flags);
         mCustomAudienceDao = customAudienceDao;
+        mAppInstallDao = appInstallDao;
         mPackageManager = packageManager;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
@@ -75,10 +81,10 @@ public class BackgroundFetchRunner {
     public void deleteExpiredCustomAudiences(@NonNull Instant jobStartTime) {
         Objects.requireNonNull(jobStartTime);
 
-        LogUtil.d("Starting expired custom audience garbage collection");
+        sLogger.d("Starting expired custom audience garbage collection");
         int numCustomAudiencesDeleted =
                 mCustomAudienceDao.deleteAllExpiredCustomAudienceData(jobStartTime);
-        LogUtil.d("Deleted %d expired custom audiences", numCustomAudiencesDeleted);
+        sLogger.d("Deleted %d expired custom audiences", numCustomAudiencesDeleted);
     }
 
     /**
@@ -88,13 +94,22 @@ public class BackgroundFetchRunner {
      * <p>Also clears corresponding update information from the background fetch table.
      */
     public void deleteDisallowedOwnerCustomAudiences() {
-        LogUtil.d("Starting custom audience disallowed owner garbage collection");
+        sLogger.d("Starting custom audience disallowed owner garbage collection");
         CustomAudienceStats deletedCAStats =
                 mCustomAudienceDao.deleteAllDisallowedOwnerCustomAudienceData(
                         mPackageManager, mFlags);
-        LogUtil.d(
+        sLogger.d(
                 "Deleted %d custom audiences belonging to %d disallowed owner apps",
                 deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalOwnerCount());
+    }
+
+    /**
+     * Deletes app install data whose packages are not installed or are not in the app allowlist.
+     */
+    public void deleteDisallowedPackageAppInstallEntries() {
+        sLogger.d("Starting app install disallowed package garbage collection");
+        int numDeleted = mAppInstallDao.deleteAllDisallowedPackageEntries(mPackageManager, mFlags);
+        sLogger.d("Deleted %d app install entries", numDeleted);
     }
 
     /**
@@ -103,11 +118,11 @@ public class BackgroundFetchRunner {
      * <p>Also clears corresponding update information from the background fetch table.
      */
     public void deleteDisallowedBuyerCustomAudiences() {
-        LogUtil.d("Starting custom audience disallowed buyer garbage collection");
+        sLogger.d("Starting custom audience disallowed buyer garbage collection");
         CustomAudienceStats deletedCAStats =
                 mCustomAudienceDao.deleteAllDisallowedBuyerCustomAudienceData(
                         mEnrollmentDao, mFlags);
-        LogUtil.d(
+        sLogger.d(
                 "Deleted %d custom audiences belonging to %d disallowed buyer ad techs",
                 deletedCAStats.getTotalCustomAudienceCount(), deletedCAStats.getTotalBuyerCount());
     }
@@ -180,21 +195,21 @@ public class BackgroundFetchRunner {
             Throwable t, @NonNull Uri dailyFetchUri) {
         if (t instanceof IOException) {
             // TODO(b/237342352): Investigate separating connect and read timeouts
-            LogUtil.e(
+            sLogger.e(
                     t,
                     "Timed out while fetching custom audience update from %s",
                     dailyFetchUri.toSafeString());
             return Pair.create(UpdateResultType.NETWORK_FAILURE, "{}");
         }
         if (t instanceof CancellationException) {
-            LogUtil.e(
+            sLogger.e(
                     t,
                     "Custom audience update cancelled while fetching from %s",
                     dailyFetchUri.toSafeString());
             return Pair.create(UpdateResultType.UNKNOWN, "{}");
         }
 
-        LogUtil.e(
+        sLogger.e(
                 t,
                 "Encountered unexpected error while fetching custom audience update from" + " %s",
                 dailyFetchUri.toSafeString());

@@ -17,7 +17,9 @@
 package com.android.adservices.ui.util;
 
 import android.app.Instrumentation;
+import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -27,10 +29,13 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 
 /** Util class for APK tests. */
 public class ApkTestUtil {
+
+    public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
 
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
@@ -93,8 +98,19 @@ public class ApkTestUtil {
         return device.findObject(new UiSelector().text(getString(resId)));
     }
 
-    public static void killApp() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
-        ShellUtils.runShellCommand("am force-stop com.android.adservices.api");
+    public static void setCompatActivitiesAndFlags(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    context, ADEXTSERVICES_PACKAGE_NAME, true);
+        }
+    }
+
+    public static void resetCompatActivitiesAndFlags(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+            PackageManagerCompatUtils.updateAdExtServicesActivities(
+                    context, ADEXTSERVICES_PACKAGE_NAME, false);
+        }
     }
 }

@@ -41,8 +41,8 @@ public class AdSelectionConfigFixture {
             CommonFixture.getUri(SELLER, DECISION_LOGIC_FRAGMENT);
 
     public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer.example.com");
-    public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("test.com");
-    public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
+    public static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
     public static final AdTechIdentifier BUYER_3 = AdTechIdentifier.fromString("test3.com");
     public static final List<AdTechIdentifier> CUSTOM_AUDIENCE_BUYERS =
             Arrays.asList(BUYER_1, BUYER_2, BUYER_3);
@@ -66,13 +66,6 @@ public class AdSelectionConfigFixture {
                     BUYER,
                     AdSelectionSignals.fromString("{\"buyer_signals\":0}"));
 
-    public static final Map<AdTechIdentifier, ContextualAds> BUYER_CONTEXTUAL_ADS =
-            Map.of(
-                    BUYER_1,
-                    ContextualAdsFixture.aContextualAd(BUYER_1),
-                    BUYER_2,
-                    ContextualAdsFixture.aContextualAd(BUYER_2));
-
     public static final Uri TRUSTED_SCORING_SIGNALS_URI =
             CommonFixture.getUri(SELLER, TRUSTED_SCORING_SIGNAL_FRAGMENT);
 
@@ -93,7 +86,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI);
     }
 
@@ -109,7 +101,6 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
     }
@@ -126,8 +117,17 @@ public class AdSelectionConfigFixture {
                 .setAdSelectionSignals(AD_SELECTION_SIGNALS)
                 .setSellerSignals(SELLER_SIGNALS)
                 .setPerBuyerSignals(PER_BUYER_SIGNALS)
-                .setBuyerContextualAds(BUYER_CONTEXTUAL_ADS)
                 .setTrustedScoringSignalsUri(TRUSTED_SCORING_SIGNALS_URI)
                 .build();
+    }
+
+    /**
+     * @return returns a pre-loaded builder, where the internal members of the object can be changed
+     *     for the unit tests, this version of Ad Selection builder includes contextual Ads as well
+     * @hide
+     */
+    public static AdSelectionConfig.Builder anAdSelectionConfigWithContextualAdsBuilder() {
+        return anAdSelectionConfigBuilder()
+                .setBuyerContextualAds(ContextualAdsFixture.getBuyerContextualAdsMap());
     }
 }

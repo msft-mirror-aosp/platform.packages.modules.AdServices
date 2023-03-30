@@ -85,7 +85,7 @@ public class TopicsService extends Service {
             mTopicsService.init();
         }
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, FlagsFactory.getFlags());
             schedulePeriodicJobs();
         }
     }

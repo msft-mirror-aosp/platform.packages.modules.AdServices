@@ -27,6 +27,7 @@ import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -39,6 +40,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
@@ -102,22 +104,27 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Override needful PH Flags.
         overridePrerequisiteFlags();
+
+        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
     }
 
     @After
     public void teardown() throws UiObjectNotFoundException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // Reset epoch length.
         overrideEpochPeriod(FlagsFactory.getFlagsForTest().getTopicsEpochJobPeriodMs());
 
         // Reset PH Flags to default values.
         resetFlagsToDefault();
+
+        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
     }
 
     @Test
+    @FlakyTest(bugId = 272511638)
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         // Enable Beta UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(false);
@@ -188,7 +195,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         sDevice.pressBack();
 
         // restart the app since scrollToBeginning does not work.
-        ApkTestUtil.killApp();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         Thread.sleep(3000);
         launchSettingView();
 
@@ -201,6 +208,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);

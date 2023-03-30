@@ -18,10 +18,11 @@ package com.android.adservices.service.adselection;
 
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
  * <p>
  */
 public class PrebuiltLogicGenerator {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     // TODO (b/271055928): Investigate abstracting use cases to their own classes with different
     // flavors
     @VisibleForTesting
@@ -47,9 +49,13 @@ public class PrebuiltLogicGenerator {
     static final String UNRECOGNIZED_PREBUILT_PARAMS =
             "Unrecognized prebuilt URI query params: '%s'!";
 
-    @VisibleForTesting static final String AD_SELECTION_PREBUILT_SCHEMA = "ad-selection-prebuilt";
-    @VisibleForTesting static final String AD_SELECTION_USE_CASE = "ad-selection";
-    static final String AD_SELECTION_HIGHEST_BID_WINS = "highest-bid-wins";
+    @VisibleForTesting
+    public static final String AD_SELECTION_PREBUILT_SCHEMA = "ad-selection-prebuilt";
+
+    @VisibleForTesting public static final String AD_SELECTION_USE_CASE = "ad-selection";
+
+    @VisibleForTesting
+    public static final String AD_SELECTION_HIGHEST_BID_WINS = "highest-bid-wins";
 
     @VisibleForTesting
     static final String AD_SELECTION_HIGHEST_BID_WINS_JS =
@@ -68,7 +74,10 @@ public class PrebuiltLogicGenerator {
                     + "                + render_uri + '?bid=' + bid }};\n"
                     + "}";
 
+    @VisibleForTesting
     static final String AD_SELECTION_FROM_OUTCOMES_USE_CASE = "ad-selection-from-outcomes";
+
+    @VisibleForTesting
     static final String AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION =
             "waterfall-mediation-truncation";
 
@@ -82,7 +91,7 @@ public class PrebuiltLogicGenerator {
                     + "}";
 
     @VisibleForTesting static final String NAMED_PARAM_TEMPLATE = "\\$\\{%s\\}";
-    static final Pattern PARAM_IDENTIFIER_REGEX_PATTERN =
+    private static final Pattern PARAM_IDENTIFIER_REGEX_PATTERN =
             Pattern.compile(String.format(NAMED_PARAM_TEMPLATE, "(.*?)"));
 
     /**
@@ -93,21 +102,27 @@ public class PrebuiltLogicGenerator {
      * @return JS script
      */
     public String jsScriptFromPrebuiltUri(Uri prebuiltUri) {
+        if (!isPrebuiltUri(prebuiltUri)) {
+            String err = String.format(UNKNOWN_PREBUILT_IDENTIFIER, prebuiltUri);
+            sLogger.e(err);
+            throw new IllegalArgumentException(err);
+        }
+
         String jsTemplate =
                 getPrebuiltJsScriptTemplate(prebuiltUri.getHost(), prebuiltUri.getPath());
-        LogUtil.v("Template found for URI %s:%n%s", prebuiltUri, jsTemplate);
+        sLogger.v("Template found for URI %s:%n%s", prebuiltUri, jsTemplate);
 
         Set<String> requiredParams = calculateRequiredParameters(jsTemplate);
         Set<String> queryParams = prebuiltUri.getQueryParameterNames();
-        LogUtil.v("Required parameters are calculated: %s", requiredParams);
-        LogUtil.v("Query parameters are calculated: %s", queryParams);
+        sLogger.v("Required parameters are calculated: %s", requiredParams);
+        sLogger.v("Query parameters are calculated: %s", queryParams);
 
         crossValidateRequiredAndQueryParams(requiredParams, queryParams);
 
         for (String param : requiredParams) {
             if (!prebuiltUri.getQueryParameterNames().contains(param)) {
                 String err = String.format(MISSING_PREBUILT_PARAMS, param);
-                LogUtil.e(err);
+                sLogger.e(err);
                 throw new IllegalArgumentException(err);
             }
 
@@ -116,7 +131,7 @@ public class PrebuiltLogicGenerator {
                             String.format(NAMED_PARAM_TEMPLATE, param),
                             prebuiltUri.getQueryParameter(param));
         }
-        LogUtil.i("Final prebuilt JS is generated:%n%s", jsTemplate);
+        sLogger.i("Final prebuilt JS is generated:%n%s", jsTemplate);
 
         return jsTemplate;
     }
@@ -128,7 +143,8 @@ public class PrebuiltLogicGenerator {
      * @return true if prebuilt URI, otherwise false
      */
     public boolean isPrebuiltUri(Uri decisionUri) {
-        return decisionUri.getScheme().equals(AD_SELECTION_PREBUILT_SCHEMA);
+        String scheme = decisionUri.getScheme();
+        return Objects.nonNull(scheme) && scheme.equals(AD_SELECTION_PREBUILT_SCHEMA);
     }
 
     private Set<String> calculateRequiredParameters(String jsTemplate) {
@@ -141,17 +157,17 @@ public class PrebuiltLogicGenerator {
     }
 
     private String getPrebuiltJsScriptTemplate(String prebuiltUseCase, String prebuiltName) {
-        LogUtil.v("Use case is '%s', prebuilt name is '%s'.", prebuiltUseCase, prebuiltName);
+        sLogger.v("Use case is '%s', prebuilt name is '%s'.", prebuiltUseCase, prebuiltName);
         switch (prebuiltUseCase) {
             case AD_SELECTION_USE_CASE:
-                LogUtil.v("Use case matched with %s", AD_SELECTION_USE_CASE);
+                sLogger.v("Use case matched with %s", AD_SELECTION_USE_CASE);
                 return getPrebuiltJsScriptTemplateForAdSelection(prebuiltName);
             case AD_SELECTION_FROM_OUTCOMES_USE_CASE:
-                LogUtil.v("Use case matched with %s", AD_SELECTION_FROM_OUTCOMES_USE_CASE);
+                sLogger.v("Use case matched with %s", AD_SELECTION_FROM_OUTCOMES_USE_CASE);
                 return getPrebuiltJsScriptTemplateForAdSelectionFromOutcome(prebuiltName);
             default:
                 String err = String.format(UNKNOWN_PREBUILT_IDENTIFIER, prebuiltUseCase);
-                LogUtil.e(err);
+                sLogger.e(err);
                 throw new IllegalArgumentException(err);
         }
     }
@@ -159,11 +175,11 @@ public class PrebuiltLogicGenerator {
     private String getPrebuiltJsScriptTemplateForAdSelection(String prebuiltName) {
         switch (prebuiltName) {
             case "/" + AD_SELECTION_HIGHEST_BID_WINS + "/":
-                LogUtil.v("Prebuilt use case matched with %s", AD_SELECTION_HIGHEST_BID_WINS);
+                sLogger.v("Prebuilt use case matched with %s", AD_SELECTION_HIGHEST_BID_WINS);
                 return AD_SELECTION_HIGHEST_BID_WINS_JS;
             default:
                 String err = String.format(UNKNOWN_PREBUILT_IDENTIFIER, prebuiltName);
-                LogUtil.e(err);
+                sLogger.e(err);
                 throw new IllegalArgumentException(err);
         }
     }
@@ -171,13 +187,13 @@ public class PrebuiltLogicGenerator {
     private String getPrebuiltJsScriptTemplateForAdSelectionFromOutcome(String prebuiltName) {
         switch (prebuiltName) {
             case "/" + AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION + "/":
-                LogUtil.v(
+                sLogger.v(
                         "Prebuilt use case matched with %s",
                         AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION);
                 return AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS;
             default:
                 String err = String.format(UNKNOWN_PREBUILT_IDENTIFIER, prebuiltName);
-                LogUtil.e(err);
+                sLogger.e(err);
                 throw new IllegalArgumentException(err);
         }
     }
@@ -191,7 +207,7 @@ public class PrebuiltLogicGenerator {
                                 .collect(Collectors.toSet()))
                 .isEmpty()) {
             String err = String.format(MISSING_PREBUILT_PARAMS, erroneousParams);
-            LogUtil.e(err);
+            sLogger.e(err);
             throw new IllegalArgumentException(err);
         }
         if (!(erroneousParams =
@@ -200,7 +216,7 @@ public class PrebuiltLogicGenerator {
                                 .collect(Collectors.toSet()))
                 .isEmpty()) {
             String err = String.format(UNRECOGNIZED_PREBUILT_PARAMS, erroneousParams);
-            LogUtil.e(err);
+            sLogger.e(err);
             throw new IllegalArgumentException(err);
         }
     }

@@ -25,7 +25,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
-import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
@@ -37,6 +36,8 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -76,7 +77,6 @@ public class AbstractSelectAdsLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
     protected static final AdSelectionClient AD_SELECTION_CLIENT =
             new AdSelectionClient.Builder()
@@ -99,8 +99,12 @@ public class AbstractSelectAdsLatencyTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new CleanPackageRule(PPAPI_PACKAGE))
-                    .around(new KillAppsRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(
+                            new CleanPackageRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
+                    .around(
+                            new KillAppsRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
@@ -110,14 +114,14 @@ public class AbstractSelectAdsLatencyTest {
         // Extra flags need to be set when test is executed on S- for service to run (e.g.
         // to avoid invoking system-server related code).
         if (!SdkLevel.isAtLeastT()) {
-            CompatTestUtils.setFlags();
+            CompatAdServicesTestUtils.setFlags();
         }
     }
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            CompatTestUtils.resetFlagsToDefault();
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 

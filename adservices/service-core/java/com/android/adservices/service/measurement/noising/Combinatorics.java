@@ -16,6 +16,16 @@
 
 package com.android.adservices.service.measurement.noising;
 
+import com.android.adservices.LogUtil;
+import com.android.adservices.service.measurement.PrivacyParams;
+
+import com.google.common.math.DoubleMath;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Combinatorics utilities used for randomization.
  */
@@ -49,7 +59,7 @@ public class Combinatorics {
         // (n choose i) is fractional, which we know is not the case.
         int result = 1;
         for (int i = 1; i <= k; i++) {
-            result = Math.multiplyExact(result, (n + 1 - i));
+            result = Math.multiplyExact(result, n + 1 - i);
             result = result / i;
         }
         return result;
@@ -165,5 +175,156 @@ public class Combinatorics {
             starIndices[i] = starIndex - (starIndices.length - 1 - i);
         }
         return starIndices;
+    }
+
+    /**
+     * Compute number of states from the trigger specification
+     *
+     * @param numBucketIncrements number of bucket increments (equivalent to number of triggers)
+     * @param numTriggerData number of trigger data. (equivalent to number of metadata)
+     * @param numWindows number of reporting windows
+     * @return number of states
+     */
+    public static int getNumStatesArithmetic(
+            int numBucketIncrements, int numTriggerData, int numWindows) {
+        int numStars = numBucketIncrements;
+        int numBars = Math.multiplyExact(numTriggerData, numWindows);
+        return getNumberOfStarsAndBarsSequences(numStars, numBars);
+    }
+
+    /**
+     * Using dynamic programming to compute number of states. Assuming the parameter validation has
+     * been checked to avoid overflow or out of memory error
+     *
+     * @param totalCap total incremental cap
+     * @param perTypeNumWindowList reporting window per trigger data
+     * @param perTypeCapList cap per trigger data
+     * @return number of states
+     */
+    private static int getNumStatesRecursive(int totalCap, int[] perTypeNumWindowList,
+            int[] perTypeCapList) {
+        int index = perTypeNumWindowList.length - 1;
+        return getNumStatesRecursive(
+            totalCap,
+            index,
+            perTypeNumWindowList[index],
+            perTypeCapList[index],
+            perTypeNumWindowList,
+            perTypeCapList,
+            new HashMap<>());
+    }
+
+    private static int getNumStatesRecursive(
+            int totalCap,
+            int index,
+            int winVal,
+            int capVal,
+            int[] perTypeNumWindowList,
+            int[] perTypeCapList,
+            Map<List<Integer>, Integer> dp) {
+        List<Integer> key = List.of(totalCap, index, winVal, capVal);
+        if (!dp.containsKey(key)) {
+            if (winVal == 0 && index == 0) {
+                dp.put(key, 1);
+            } else if (winVal == 0) {
+                dp.put(key, getNumStatesRecursive(
+                        totalCap,
+                        index - 1,
+                        perTypeNumWindowList[index - 1],
+                        perTypeCapList[index - 1],
+                        perTypeNumWindowList,
+                        perTypeCapList,
+                        dp));
+            } else {
+                int result = 0;
+                for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
+                    result = Math.addExact(result, getNumStatesRecursive(
+                            totalCap - i,
+                            index,
+                            winVal - 1,
+                            capVal - i,
+                            perTypeNumWindowList,
+                            perTypeCapList,
+                            dp));
+                }
+                dp.put(key, result);
+            }
+        }
+        return dp.get(key);
+    }
+
+    /**
+     * Compute number of states for flexible event report API
+     *
+     * @param totalCap number of total increments
+     * @param perTypeNumWindowList reporting window for each trigger data
+     * @param perTypeCapList limit of the increment of each trigger data
+     * @return number of states
+     */
+    public static int getNumStatesFlexAPI(
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        if (!validateInputReportingPara(totalCap, perTypeNumWindowList, perTypeCapList)) {
+            LogUtil.e("Input parameters are out of range");
+            return -1;
+        }
+        boolean canComputeArithmetic = true;
+        for (int i = 1; i < perTypeNumWindowList.length; i++) {
+            if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
+                canComputeArithmetic = false;
+                break;
+            }
+        }
+        for (int n : perTypeCapList) {
+            if (n < totalCap) {
+                canComputeArithmetic = false;
+                break;
+            }
+        }
+        if (canComputeArithmetic) {
+            return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
+        }
+
+        return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+    }
+
+    private static boolean validateInputReportingPara(
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+        for (int n : perTypeNumWindowList) {
+            if (n > PrivacyParams.getMaxFlexibleEventReportingWindows()) return false;
+        }
+        return PrivacyParams.getMaxFlexibleEventReports()
+                        >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
+                && perTypeNumWindowList.length
+                        <= PrivacyParams.getMaxFlexibleEventTriggerDataCardinality();
+    }
+
+    /**
+     * @param numOfStates
+     * @return the probability to use fake reports
+     */
+    public static double getFlipProbability(int numOfStates) {
+        int epsilon = PrivacyParams.getPrivacyEpsilon();
+        return numOfStates / (numOfStates + Math.exp(epsilon) - 1);
+    }
+
+    private static double getBinaryEntropy(double x) {
+        if (DoubleMath.fuzzyEquals(x, 0.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+                || DoubleMath.fuzzyEquals(x, 1.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)) {
+            return 0;
+        }
+        return (-1.0) * x * DoubleMath.log2(x) - (1 - x) * DoubleMath.log2(1 - x);
+    }
+
+    /**
+     * @param numOfStates
+     * @param flipProbability
+     * @return the information gain
+     */
+    public static double getInformationGain(int numOfStates, double flipProbability) {
+        double log2Q = DoubleMath.log2(numOfStates);
+        double fakeProbability = flipProbability * (numOfStates - 1) / numOfStates;
+        return log2Q
+                - getBinaryEntropy(fakeProbability)
+                - fakeProbability * DoubleMath.log2(numOfStates - 1);
     }
 }
