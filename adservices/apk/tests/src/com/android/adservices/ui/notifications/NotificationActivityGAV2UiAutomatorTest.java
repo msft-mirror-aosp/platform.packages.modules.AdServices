@@ -173,6 +173,10 @@ public class NotificationActivityGAV2UiAutomatorTest {
         rightControlButton.click();
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
+
+        // verify that the 2nd screen doesn't show up
+        UiObject nextPageTitle = getElement(R.string.notificationUI_header_ga_title_eu_v2);
+        assertThat(nextPageTitle.exists()).isFalse();
     }
 
     @Test
