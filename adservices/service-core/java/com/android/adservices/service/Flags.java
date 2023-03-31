@@ -1702,6 +1702,14 @@ public interface Flags {
         return RECORD_MANUAL_INTERACTION_ENABLED;
     }
 
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
     /**
      * The check activity feature is off by default. When enabled, we check whether all Rubidium
      * activities are enabled when we determine whether AdServices is enabled
@@ -1786,6 +1794,14 @@ public interface Flags {
     /** Returns if the GA UX feature is enabled. */
     default boolean getGaUxFeatureEnabled() {
         return GA_UX_FEATURE_ENABLED;
+    }
+
+    // Enable per-app consent in FLEDGE if GA UX is enabled
+    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
+
+    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
+    default boolean getFledgePerAppConsentEnabled() {
+        return FLEDGE_PER_APP_CONSENT_ENABLED;
     }
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
