@@ -38,6 +38,8 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.notifications.ConsentNotificationActivity;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
@@ -75,6 +77,10 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         setupListeners(savedInstanceState);
 
         ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.FLEDGE);
+        ConsentManager.getInstance(requireContext())
+                .enable(requireContext(), AdServicesApiType.MEASUREMENTS);
     }
 
     @Override
@@ -221,7 +227,11 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
         private void onMoreOrAcceptClicked(View view) {
             if (mHasScrolledToBottom) {
                 // screen 2
-                startScreen2Fragment();
+                if (mIsEUDevice) {
+                    startScreen2Fragment();
+                } else {
+                    requireActivity().finish();
+                }
             } else {
                 mScrollContainer.smoothScrollTo(
                         0,
