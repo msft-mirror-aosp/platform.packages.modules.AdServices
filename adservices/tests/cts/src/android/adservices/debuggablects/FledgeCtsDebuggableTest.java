@@ -587,6 +587,204 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
     }
 
+    /*
+    // TODO(b/267712947) Unhide Contextual Ad flow with App Install API changes
+    @Test
+    public void testFledgeSelectionFlow_WithContextualAds_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        mCustomAudienceClient
+                .joinCustomAudience(customAudience2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        List<BuyerDecisionLogic> buyerDecisionLogicList = ImmutableList.of(
+                new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2,
+                        "function reportWin(ad_selection_signals, per_buyer_signals,"
+                                + " signals_for_buyer, contextual_signals, "
+                                + "custom_audience_signals) { \n"
+                                + " return {'status': 0, 'results': {'reporting_uri': '"
+                                + BUYER_2_REPORTING_URI
+                                + "' } };\n"
+                                + "}")
+        );
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS,
+                        buyerDecisionLogicList);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        AdSelectionConfig adSelectionConfigWithContextualAds =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_DECISION_LOGIC_URI_PATH)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(adSelectionConfigWithContextualAds)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with bid 500 from contextual ads is rendered
+        Assert.assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500),
+                outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(
+                        outcome.getAdSelectionId(), adSelectionConfigWithContextualAds);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeSelectionFlow_OnlyContextualAds_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        AdSelectionConfig adSelectionConfigOnlyContextualAds =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        // Adding no buyers in config
+                        .setCustomAudienceBuyers(ImmutableList.of())
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_DECISION_LOGIC_URI_PATH)))
+                        .setTrustedScoringSignalsUri(
+                                Uri.parse(
+                                        String.format(
+                                                "https://%s%s",
+                                                AdSelectionConfigFixture.SELLER,
+                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
+                        .setBuyerContextualAds(createContextualAds())
+                        .build();
+
+        List<BuyerDecisionLogic> buyerDecisionLogicList = ImmutableList.of(
+                new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2,
+                        "function reportWin(ad_selection_signals, per_buyer_signals,"
+                                + " signals_for_buyer, contextual_signals, "
+                                + "custom_audience_signals) { \n"
+                                + " return {'status': 0, 'results': {'reporting_uri': '"
+                                + BUYER_2_REPORTING_URI
+                                + "' } };\n"
+                                + "}")
+        );
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        adSelectionConfigOnlyContextualAds, DEFAULT_DECISION_LOGIC_JS,
+                        TRUSTED_SCORING_SIGNALS, buyerDecisionLogicList);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI "
+                        + adSelectionConfigOnlyContextualAds.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(adSelectionConfigOnlyContextualAds)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad with bid 500 from contextual ads is rendered
+        Assert.assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(CommonFixture.VALID_BUYER_2, 500),
+                outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(
+                        outcome.getAdSelectionId(), adSelectionConfigOnlyContextualAds);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+    */
+
     @Ignore
     @Test
     public void testFledgeAuctionSelectionFlow_overall_register_ad_beacon_Success()
@@ -1949,6 +2147,29 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .setAds(ads)
                 .build();
     }
+
+    /*
+    // TODO(b/267712947) Unhide Contextual Ad flow with App Install API changes
+    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+
+        AdTechIdentifier buyer1 = CommonFixture.VALID_BUYER_1;
+        ContextualAds contextualAds1 =
+                ContextualAdsFixture.generateContextualAds(
+                                buyer1, ImmutableList.of(100.0, 200.0, 300.0))
+                        .build();
+
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        ContextualAds contextualAds2 =
+                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(400.0, 500.0))
+                        .build();
+
+        buyerContextualAds.put(buyer1, contextualAds1);
+        buyerContextualAds.put(buyer2, contextualAds2);
+
+        return buyerContextualAds;
+    }
+    */
 
     private AdSelectionOutcome runAdSelectionAsPreSteps(
             double bid, AdTechIdentifier buyer, String buyerDecisionLogic) throws Exception {
