@@ -263,4 +263,53 @@ public class BroadcastRestrictionsTestApp {
 
         broadcastSdkApi.registerBroadcastReceiver();
     }
+
+    /**
+     * Tests that a SecurityException is thrown when SDK sandbox process tries to register a
+     * broadcast receiver with no action mentioned in the {@link android.content.IntentFilter}
+     * object.
+     */
+    @Test
+    public void testRegisterBroadcastReceiver_intentFilterWithoutAction() throws Exception {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        final SecurityException thrown =
+                assertThrows(
+                        SecurityException.class,
+                        () -> broadcastSdkApi.registerBroadcastReceiverWithoutAction());
+
+        assertThat(thrown)
+                .hasMessageThat()
+                .contains(
+                        "SDK sandbox not allowed to register receiver with the given IntentFilter");
+    }
+
+    /**
+     * Tests that broadcast receiver is registered successfully from SDK sandbox process with no
+     * action mentioned in the {@link android.content.IntentFilter} object.
+     */
+    @Test
+    public void testRegisterBroadcastReceiver_intentFilterWithoutAction_preU() throws Exception {
+        if (SdkLevel.isAtLeastU()) {
+            return;
+        }
+
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        IBinder binder = sandboxedSdk.getInterface();
+        IBroadcastSdkApi broadcastSdkApi = IBroadcastSdkApi.Stub.asInterface(binder);
+
+        broadcastSdkApi.registerBroadcastReceiverWithoutAction();
+    }
 }
