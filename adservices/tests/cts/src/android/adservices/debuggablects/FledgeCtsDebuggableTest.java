@@ -178,8 +178,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                             + "\t\"of\": \"of\",\n"
                             + "\t\"keys\": \"trusted bidding signal Values\"\n"
                             + "}");
-    private static final String APP_NOT_DEBUGGABLE = "App is not debuggable!";
-    private static final String DEVELOPER_OPTIONS_OFF = "Developer options are off!";
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfigBuilder()
                     .setCustomAudienceBuyers(Arrays.asList(BUYER_1, BUYER_2))
@@ -311,6 +309,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private String mAccessStatus;
     private String mPreviousAppAllowList;
 
+    private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
+
     @Before
     public void setup() throws InterruptedException {
         if (SdkLevel.isAtLeastT()) {
@@ -389,6 +389,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
+        leaveJoinedCustomAudiences();
 
         // Reset the filtering flag
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(false);
@@ -411,16 +412,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -497,16 +494,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         String paramKey = "reportingUrl";
         String paramValue = "https://www.test.com/reporting/seller";
@@ -603,16 +596,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         List<BuyerDecisionLogic> buyerDecisionLogicList = ImmutableList.of(
                 new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2,
@@ -804,16 +793,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -917,16 +902,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception.
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudienceUpdate)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudienceUpdate);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception.
@@ -1011,16 +992,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1101,16 +1078,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1188,16 +1161,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1268,16 +1237,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         String malformedScoringLogic = " This is an invalid javascript";
 
@@ -1341,16 +1306,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1412,16 +1373,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Skip adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1488,16 +1445,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1577,16 +1530,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -1659,16 +1608,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForBiddingPerCa = insertJsWait(5000);
         String readBidFromAdMetadataWithDelayJs =
@@ -1749,16 +1694,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         String jsWaitMoreThanAllowedForScoring = insertJsWait(10000);
         String useBidAsScoringWithDelayJs =
@@ -1877,16 +1818,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -2018,16 +1955,12 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Joining custom audiences, no result to do assertion on. Failures will generate an
         // exception."
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience1);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        mCustomAudienceClient
-                .joinCustomAudience(customAudience2)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        joinCustomAudience(customAudience2);
 
         // Adding AdSelection override, no result to do assertion on. Failures will generate an
         // exception."
@@ -2171,58 +2104,30 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     }
     */
 
-    private AdSelectionOutcome runAdSelectionAsPreSteps(
-            double bid, AdTechIdentifier buyer, String buyerDecisionLogic) throws Exception {
-        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
-
-        List<Double> bidsForBuyer = ImmutableList.of(bid);
-        CustomAudience customAudience1 = createCustomAudience(buyer, bidsForBuyer);
-
-        // Joining custom audiences
+    private void joinCustomAudience(CustomAudience customAudience)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mCustomAudiencesToCleanUp.add(customAudience);
         mCustomAudienceClient
-                .joinCustomAudience(customAudience1)
+                .joinCustomAudience(customAudience)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
-                new AddCustomAudienceOverrideRequest.Builder()
-                        .setBuyer(customAudience1.getBuyer())
-                        .setName(customAudience1.getName())
-                        .setBiddingLogicJs(buyerDecisionLogic)
-                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
-                        .build();
+    }
 
-        // Adding Custom audience override
-        mTestCustomAudienceClient
-                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        AdSelectionConfig adSelectionConfigBuyer1 =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setDecisionLogicUri(
-                                Uri.parse(
-                                        String.format(
-                                                "https://%s%s",
-                                                AdSelectionConfigFixture.SELLER,
-                                                SELLER_DECISION_LOGIC_URI_PATH)))
-                        .setTrustedScoringSignalsUri(
-                                Uri.parse(
-                                        String.format(
-                                                "https://%s%s",
-                                                AdSelectionConfigFixture.SELLER,
-                                                SELLER_TRUSTED_SIGNAL_URI_PATH)))
-                        .setCustomAudienceBuyers(Collections.singletonList(buyer))
-                        .build();
+    private void leaveJoinedCustomAudiences()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        try {
+            for (CustomAudience customAudience : mCustomAudiencesToCleanUp) {
+                // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted
+                //  for FLEDGE
+                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-        // Adding AdSelection override
-        mTestAdSelectionClient
-                .overrideAdSelectionConfigRemoteInfo(
-                        new AddAdSelectionOverrideRequest(
-                                adSelectionConfigBuyer1,
-                                DEFAULT_DECISION_LOGIC_JS,
-                                TRUSTED_SCORING_SIGNALS))
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        return mAdSelectionClient
-                .selectAds(adSelectionConfigBuyer1)
-                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                mCustomAudienceClient
+                        .leaveCustomAudience(
+                                customAudience.getBuyer(),
+                                customAudience.getName())
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            }
+        } finally {
+            mCustomAudiencesToCleanUp.clear();
+        }
     }
 }
