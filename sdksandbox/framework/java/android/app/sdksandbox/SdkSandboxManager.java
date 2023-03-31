@@ -154,13 +154,6 @@ public final class SdkSandboxManager {
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
 
     private static final String TAG = "SdkSandboxManager";
-    private TimeProvider mTimeProvider;
-
-    static class TimeProvider {
-        long getCurrentTime() {
-            return System.currentTimeMillis();
-        }
-    }
 
     /** @hide */
     @IntDef(
@@ -276,7 +269,6 @@ public final class SdkSandboxManager {
         mService = Objects.requireNonNull(binder, "binder should not be null");
         // TODO(b/239403323): There can be multiple package in the same app process
         mSyncManager = SharedPreferencesSyncManager.getInstance(context, binder);
-        mTimeProvider = new TimeProvider();
     }
 
     /** Returns the current state of the availability of the SDK sandbox feature. */
@@ -376,9 +368,7 @@ public final class SdkSandboxManager {
             @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
         try {
             mService.registerAppOwnedSdkSandboxInterface(
-                    mContext.getPackageName(),
-                    appOwnedSdkSandboxInterface,
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+                    mContext.getPackageName(), appOwnedSdkSandboxInterface);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -391,10 +381,7 @@ public final class SdkSandboxManager {
      */
     public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
         try {
-            mService.unregisterAppOwnedSdkSandboxInterface(
-                    mContext.getPackageName(),
-                    name,
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+            mService.unregisterAppOwnedSdkSandboxInterface(mContext.getPackageName(), name);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -408,9 +395,7 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
         try {
-            return mService.getAppOwnedSdkSandboxInterfaces(
-                    mContext.getPackageName(),
-                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
+            return mService.getAppOwnedSdkSandboxInterfaces(mContext.getPackageName());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
