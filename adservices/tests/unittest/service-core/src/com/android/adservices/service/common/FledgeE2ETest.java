@@ -800,7 +800,7 @@ public class FledgeE2ETest {
     }
 
     @Test
-    public void testFledgeFlowFailsWithMismatchedPackageNamesReportInteraction() throws Exception {
+    public void testFledgeFlowFailsWithWrongPackageNameReportInteraction() throws Exception {
         setupConsentGivenStubs();
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "different_package";
@@ -911,7 +911,7 @@ public class FledgeE2ETest {
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         assertEquals(
                 reportInteractionTestCallback.mFledgeErrorResponse.getErrorMessage(),
-                InteractionReporter.CALLER_PACKAGE_NAME_MISMATCH);
+                InteractionReporter.NO_MATCH_FOUND_IN_AD_SELECTION_DB);
     }
 
     @Test
