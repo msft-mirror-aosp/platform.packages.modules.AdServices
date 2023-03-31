@@ -113,7 +113,7 @@ public class ConsentNotificationTriggerTest {
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getNotificationDismissedOnClick();
-
+        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         cancelAllPreviousNotifications();
     }
 
