@@ -96,13 +96,14 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             violations.add("The adSelectionConfig should not be null.");
         }
         violations.addAll(validateSeller(adSelectionConfig.getSeller()));
-        if (!mPrebuiltLogicGenerator.isPrebuiltUri(adSelectionConfig.getDecisionLogicUri())) {
+        if (mPrebuiltLogicGenerator.isPrebuiltUri(adSelectionConfig.getDecisionLogicUri())) {
+            sLogger.v("AdSelectionConfig validation is skipped bc prebuilt uri is detected!");
+        } else {
+            sLogger.v("AdSelectionConfig validation is not skipped!");
             violations.addAll(
                     validateSellerDecisionUris(
                             adSelectionConfig.getSeller(),
                             adSelectionConfig.getDecisionLogicUri()));
-        } else {
-            sLogger.v("AdSelectionConfig validation is skipped bc prebuilt uri is detected!");
         }
         violations.addAll(
                 validateTrustedSignalsUri(
