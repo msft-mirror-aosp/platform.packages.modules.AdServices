@@ -164,6 +164,19 @@ public class PhFlagsFixture {
     }
 
     /**
+     * Allows tests to override seed enrollment data flag thereby seeding data into enrollment table
+     *
+     * @param enable disable enrollment seed
+     */
+    public static void overrideEnableEnrollmentSeed(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED,
+                Boolean.toString(enable),
+                false);
+    }
+
+    /**
      * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
      *
      * @param enable whether enable or disable the check
