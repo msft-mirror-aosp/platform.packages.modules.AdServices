@@ -39,7 +39,7 @@ import org.junit.Test;
 import java.util.stream.Collectors;
 
 @SmallTest
-public class AdSelectionConfigArgumentTest {
+public class AdSelectionConfigArgumentUtilTest {
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1");
     public static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("buyer2");
     public static final AdSelectionConfig AD_SELECTION_CONFIG =
@@ -61,34 +61,35 @@ public class AdSelectionConfigArgumentTest {
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
-        assertThat(AdSelectionConfigArgument.asScriptArgument(AD_SELECTION_CONFIG, "name"))
+        assertThat(AdSelectionConfigArgumentUtil.asScriptArgument(AD_SELECTION_CONFIG, "name"))
                 .isEqualTo(
                         recordArg(
                                 "name",
                                 stringArg(
-                                        AdSelectionConfigArgument.SELLER_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil.SELLER_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getSeller().toString()),
                                 stringArg(
-                                        AdSelectionConfigArgument.DECISION_LOGIC_URI_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil.DECISION_LOGIC_URI_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getDecisionLogicUri().toString()),
                                 stringArrayArg(
-                                        AdSelectionConfigArgument.CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil
+                                                .CUSTOM_AUDIENCE_BUYERS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getCustomAudienceBuyers().stream()
                                                 .map(AdTechIdentifier::toString)
                                                 .collect(Collectors.toList())),
                                 jsonArg(
-                                        AdSelectionConfigArgument.AUCTION_SIGNALS_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil.AUCTION_SIGNALS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getAdSelectionSignals().toString()),
                                 jsonArg(
-                                        AdSelectionConfigArgument.SELLER_SIGNALS_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil.SELLER_SIGNALS_FIELD_NAME,
                                         AD_SELECTION_CONFIG.getSellerSignals().toString()),
                                 recordArg(
-                                        AdSelectionConfigArgument.PER_BUYER_SIGNALS_FIELD_NAME,
+                                        AdSelectionConfigArgumentUtil.PER_BUYER_SIGNALS_FIELD_NAME,
                                         ImmutableList.of(
                                                 jsonArg("buyer1", "{\"buyer_signals\":1}"),
                                                 jsonArg("buyer2", "{\"buyer_signals\":2}"))),
                                 stringArg(
-                                        AdSelectionConfigArgument
+                                        AdSelectionConfigArgumentUtil
                                                 .TRUSTED_SCORING_SIGNAL_URI_FIELD_NAME,
                                         AD_SELECTION_CONFIG
                                                 .getTrustedScoringSignalsUri()
