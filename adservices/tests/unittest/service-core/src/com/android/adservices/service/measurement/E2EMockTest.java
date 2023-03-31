@@ -138,7 +138,8 @@ public abstract class E2EMockTest extends E2ETest {
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
                         DbTestUtil.getDbHelperForTest(),
-                        mFlags);
+                        mFlags,
+                        /* enable seed */ true);
 
         mAsyncSourceFetcher =
                 spy(
