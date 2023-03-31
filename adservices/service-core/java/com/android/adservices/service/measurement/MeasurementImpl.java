@@ -24,7 +24,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
-import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -53,9 +52,6 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
 import com.android.adservices.service.measurement.util.Web;
@@ -276,25 +272,6 @@ public final class MeasurementImpl {
             return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Implement a getMeasurementApiStatus request, returning a result code.
-     */
-    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            consent =
-                    ConsentManager.getInstance(mContext).getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            consent = ConsentManager.getInstance(mContext).getConsent();
-        }
-
-        if (consent.isGiven()) {
-            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
-        } else {
-            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
