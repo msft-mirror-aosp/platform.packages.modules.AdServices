@@ -22,6 +22,7 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.os.Build;
@@ -137,6 +138,39 @@ public class AdSelectionClient {
                     return "reportInteraction";
                 });
 */
+        return CallbackToFutureAdapter.getFuture(completer -> null);
+    }
+
+    /**
+     * Invokes {@link AdSelectionManager#updateAdCounterHistogram(UpdateAdCounterHistogramRequest,
+     * Executor, OutcomeReceiver)} and returns a {@link ListenableFuture} for the resulting call.
+     *
+     * @hide
+     */
+    @NonNull
+    public ListenableFuture<Void> updateAdCounterHistogram(
+            @NonNull UpdateAdCounterHistogramRequest request) {
+        // TODO(b/221876775): Uncomment this when un-hiding frequency cap classes
+        /*
+        return CallbackToFutureAdapter.getFuture(
+                completer -> {
+                    mAdSelectionManager.updateAdCounterHistogram(
+                            request,
+                            mExecutor,
+                            new OutcomeReceiver<Object, Exception>() {
+                                @Override
+                                public void onResult(@NonNull Object ignoredResult) {
+                                    completer.set(null);
+                                }
+
+                                @Override
+                                public void onError(@NonNull Exception error) {
+                                    completer.setException(error);
+                                }
+                            });
+                    return "updateAdCounterHistogram";
+                });
+        */
         return CallbackToFutureAdapter.getFuture(completer -> null);
     }
 
