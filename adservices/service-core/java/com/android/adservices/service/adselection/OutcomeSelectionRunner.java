@@ -126,6 +126,7 @@ public class OutcomeSelectionRunner {
             @NonNull final Context context,
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -136,6 +137,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(adCounterKeyCopier);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -151,7 +153,8 @@ public class OutcomeSelectionRunner {
                         new AdSelectionScriptEngine(
                                 mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
-                                flags::getIsolateMaxHeapSizeBytes),
+                                flags::getIsolateMaxHeapSizeBytes,
+                                adCounterKeyCopier),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
