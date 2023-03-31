@@ -408,6 +408,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST =
             "measurement_debug_join_key_enrollment_allowlist";
 
+    static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
+            "measurement_flexible_event_reporting_api_enabled";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -2094,6 +2097,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
+                /* defaultValue */ MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2308,6 +2320,11 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT
                         + " = "
                         + getMeasurementDebugJoinKeyHashLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
+                        + " = "
+                        + getMeasurementFlexibleEventReportingAPIEnabled());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST
