@@ -32,6 +32,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -51,6 +52,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -435,6 +437,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 AdScoringOutcome.Builder outcomeBuilder =
                         AdScoringOutcome.builder()
                                 .setAdWithScore(adWithScore)
+                                .setCustomAudienceSignals(
+                                        createPlaceHolderSignalsForContextualAds(ctx.getBuyer()))
                                 .setDecisionLogicUri(ctx.getDecisionLogicUri())
                                 .setBuyer(ctx.getBuyer());
 
@@ -461,5 +465,19 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
         sLogger.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
+    }
+
+    private CustomAudienceSignals createPlaceHolderSignalsForContextualAds(AdTechIdentifier buyer) {
+        // TODO(b/276333013) : Refactor the Ad Selection result to avoid using special contextual CA
+        return new CustomAudienceSignals.Builder()
+                .setName(CustomAudienceSignals.CONTEXTUAL_CA_NAME)
+                .setOwner(buyer.toString())
+                .setBuyer(buyer)
+                .setActivationTime(Instant.now())
+                .setExpirationTime(
+                        Instant.now()
+                                .plusSeconds(CustomAudienceSignals.EXPIRATION_OFFSET_TWO_WEEKS))
+                .setUserBiddingSignals(AdSelectionSignals.EMPTY)
+                .build();
     }
 }
