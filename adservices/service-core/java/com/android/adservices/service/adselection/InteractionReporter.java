@@ -66,8 +66,8 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class InteractionReporter {
-    public static final String CALLER_PACKAGE_NAME_MISMATCH =
-            "Caller package name does not match name used in ad selection";
+    public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
+            "Could not find a match in the database for this adSelectionId and callerPackageName!";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @ReportInteractionRequest.ReportingDestination
@@ -154,7 +154,7 @@ public class InteractionReporter {
                                                 mAdSelectionEntryDao
                                                         .doesAdSelectionMatchingCallerPackageNameExist(
                                                                 adSelectionId, callerPackageName),
-                                                CALLER_PACKAGE_NAME_MISMATCH);
+                                                NO_MATCH_FOUND_IN_AD_SELECTION_DB);
                                     } finally {
                                         sLogger.v("Completed filtering and validation.");
                                         Trace.endSection();
