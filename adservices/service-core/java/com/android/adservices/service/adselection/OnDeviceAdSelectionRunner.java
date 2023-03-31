@@ -116,7 +116,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         new AdSelectionScriptEngine(
                                 context,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
-                                () -> flags.getIsolateMaxHeapSizeBytes()),
+                                () -> flags.getIsolateMaxHeapSizeBytes(),
+                                mAdCounterKeyCopier),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -135,6 +136,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mScheduledExecutor,
                                 devContext,
                                 mCustomAudienceDao,
+                                mAdCounterKeyCopier,
                                 flags),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,

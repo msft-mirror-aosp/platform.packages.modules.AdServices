@@ -31,6 +31,7 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -55,6 +56,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +64,6 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
 
 /**
  * This class implements the ad bid generator. A new instance is assumed to be created for every
@@ -91,6 +92,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final AdSelectionScriptEngine mAdSelectionScriptEngine;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
+    @NonNull private final AdCounterKeyCopier mAdCounterKeyCopier;
     @NonNull private final Flags mFlags;
     @NonNull private final JsFetcher mJsFetcher;
 
@@ -102,6 +104,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull DevContext devContext,
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull AdCounterKeyCopier adCounterKeyCopier,
             @NonNull Flags flags) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -110,6 +113,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adCounterKeyCopier);
         Objects.requireNonNull(flags);
 
         mContext = context;
@@ -118,12 +122,14 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mScheduledExecutor = scheduledExecutor;
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(devContext, customAudienceDao);
+        mAdCounterKeyCopier = adCounterKeyCopier;
         mFlags = flags;
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
                         mContext,
                         () -> mFlags.getEnforceIsolateMaxHeapSize(),
-                        () -> mFlags.getIsolateMaxHeapSizeBytes());
+                        () -> mFlags.getIsolateMaxHeapSizeBytes(),
+                        mAdCounterKeyCopier);
         mJsFetcher =
                 new JsFetcher(
                         backgroundExecutorService,
@@ -139,6 +145,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
             @NonNull CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
+            @NonNull AdCounterKeyCopier adCounterKeyCopier,
             @NonNull Flags flags,
             @NonNull IsolateSettings isolateSettings,
             @NonNull JsFetcher jsFetcher) {
@@ -148,6 +155,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionScriptEngine);
         Objects.requireNonNull(customAudienceDevOverridesHelper);
+        Objects.requireNonNull(adCounterKeyCopier);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(isolateSettings);
         Objects.requireNonNull(jsFetcher);
@@ -158,6 +166,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionScriptEngine = adSelectionScriptEngine;
         mCustomAudienceDevOverridesHelper = customAudienceDevOverridesHelper;
+        mAdCounterKeyCopier = adCounterKeyCopier;
         mFlags = flags;
         mJsFetcher = jsFetcher;
     }
@@ -189,8 +198,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
 
         CustomAudienceSignals customAudienceSignals =
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
-
-        // TODO(b/221862406): implement ads filtering logic.
 
         long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
         AdServicesHttpClientRequest biddingLogicUriHttpRequest =
@@ -417,15 +424,18 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
             // the old generate bid.
             // TODO(b/231265311): update AdSelectionScriptEngine AdData class objects with DBAdData
             //  classes and remove this conversion.
-            List<AdData> ads =
-                    customAudience.getAds().stream()
-                            .map(
-                                    adData ->
-                                            new AdData.Builder()
-                                                    .setRenderUri(adData.getRenderUri())
-                                                    .setMetadata(adData.getMetadata())
-                                                    .build())
-                            .collect(Collectors.toList());
+            List<AdData> ads = new ArrayList<>(customAudience.getAds().size());
+            for (DBAdData adData : customAudience.getAds()) {
+                AdData.Builder adDataWithoutAdCounterKeysBuilder =
+                        new AdData.Builder()
+                                .setRenderUri(adData.getRenderUri())
+                                .setMetadata(adData.getMetadata())
+                                .setAdCounterKeys(adData.getAdCounterKeys());
+                ads.add(
+                        mAdCounterKeyCopier
+                                .copyAdCounterKeys(adDataWithoutAdCounterKeysBuilder, adData)
+                                .build());
+            }
             adsWithBids =
                     trustedBiddingSignals.transformAsync(
                             biddingSignals ->

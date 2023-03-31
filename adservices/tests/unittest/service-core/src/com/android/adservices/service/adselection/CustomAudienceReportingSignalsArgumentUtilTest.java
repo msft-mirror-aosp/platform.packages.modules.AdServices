@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
-import static com.android.adservices.service.adselection.CustomAudienceReportingSignalsArgument.NAME_FIELD_NAME;
+import static com.android.adservices.service.adselection.CustomAudienceReportingSignalsArgumentUtil.NAME_FIELD_NAME;
 import static com.android.adservices.service.adselection.ReportImpressionScriptEngine.CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
@@ -34,13 +34,13 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-public class CustomAudienceReportingSignalsArgumentTest {
+public class CustomAudienceReportingSignalsArgumentUtilTest {
     private final CustomAudienceSignals mCustomAudienceSignals = createCustomAudienceSignals("1");
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
         JSScriptArgument caSignalJsArgument =
-                CustomAudienceReportingSignalsArgument.asScriptArgument(
+                CustomAudienceReportingSignalsArgumentUtil.asScriptArgument(
                         CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME, mCustomAudienceSignals);
         matchCustomAudienceSignals(
                 CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME,
