@@ -35,13 +35,13 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-public class CustomAudienceBiddingSignalsArgumentTest {
+public class CustomAudienceBiddingSignalsArgumentUtilTest {
     private final CustomAudienceSignals mCustomAudienceSignals1 = createCustomAudience("1");
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
         JSScriptArgument caSignalJsArgument =
-                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                CustomAudienceBiddingSignalsArgumentUtil.asScriptArgument(
                         CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
         matchCustomAudienceSignals(
                 CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,
@@ -72,26 +72,28 @@ public class CustomAudienceBiddingSignalsArgumentTest {
                         recordArg(
                                 argName,
                                 stringArg(
-                                        CustomAudienceBiddingSignalsArgument.OWNER_FIELD_NAME,
+                                        CustomAudienceBiddingSignalsArgumentUtil.OWNER_FIELD_NAME,
                                         actualSignals.getOwner()),
                                 stringArg(
-                                        CustomAudienceBiddingSignalsArgument.BUYER_FIELD_NAME,
+                                        CustomAudienceBiddingSignalsArgumentUtil.BUYER_FIELD_NAME,
                                         actualSignals.getBuyer().toString()),
                                 stringArg(
-                                        CustomAudienceBiddingSignalsArgument.NAME_FIELD_NAME,
+                                        CustomAudienceBiddingSignalsArgumentUtil.NAME_FIELD_NAME,
                                         actualSignals.getName()),
                                 numericArg(
-                                        CustomAudienceBiddingSignalsArgument
+                                        CustomAudienceBiddingSignalsArgumentUtil
                                                 .ACTIVATION_TIME_FIELD_NAME,
-                                        CustomAudienceBiddingSignalsArgument.instantToEpochMilli(
-                                                actualSignals.getActivationTime())),
+                                        CustomAudienceBiddingSignalsArgumentUtil
+                                                .instantToEpochMilli(
+                                                        actualSignals.getActivationTime())),
                                 numericArg(
-                                        CustomAudienceBiddingSignalsArgument
+                                        CustomAudienceBiddingSignalsArgumentUtil
                                                 .EXPIRATION_TIME_FIELD_NAME,
-                                        CustomAudienceBiddingSignalsArgument.instantToEpochMilli(
-                                                actualSignals.getExpirationTime())),
+                                        CustomAudienceBiddingSignalsArgumentUtil
+                                                .instantToEpochMilli(
+                                                        actualSignals.getExpirationTime())),
                                 jsonArg(
-                                        CustomAudienceBiddingSignalsArgument
+                                        CustomAudienceBiddingSignalsArgumentUtil
                                                 .USER_BIDDING_SIGNALS_FIELD_NAME,
                                         actualSignals.getUserBiddingSignals().toString())));
     }
@@ -100,7 +102,7 @@ public class CustomAudienceBiddingSignalsArgumentTest {
     public void testInstantToLong() {
         long testLong = 123456789;
         Instant instant = Instant.ofEpochMilli(testLong);
-        assertThat(CustomAudienceBiddingSignalsArgument.instantToEpochMilli(instant))
+        assertThat(CustomAudienceBiddingSignalsArgumentUtil.instantToEpochMilli(instant))
                 .isEqualTo(testLong);
     }
 }

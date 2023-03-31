@@ -69,6 +69,17 @@ public abstract class AdSelectionEntryDao {
     public abstract void persistAdSelectionOverride(DBAdSelectionOverride adSelectionOverride);
 
     /**
+     * Add an ad selection override for Buyers' decision logic
+     *
+     * @param buyersDecisionLogicOverride is an override for the ad_selection_buyer_logic_overrides
+     *     If a {@link DBBuyerDecisionOverride} object with the {@code adSelectionConfigId} already
+     *     exists, this will replace the existing object.
+     */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    public abstract void persistBuyersDecisionLogicOverride(
+            List<DBBuyerDecisionOverride> buyersDecisionLogicOverride);
+
+    /**
      * Adds a list of registered ad interactions to the table registered_ad_interactions
      *
      * <p>This method is not meant to be used on its own, since it doesn't take into account the
@@ -246,6 +257,20 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Get ad selection buyer decision logic override by its unique key and the package name of the
+     * app that created the override.
+     *
+     * @return ad selection override result if exists.
+     */
+    @Query(
+            "SELECT * FROM ad_selection_buyer_logic_overrides WHERE"
+                    + " ad_selection_config_id = :adSelectionConfigId AND app_package_name ="
+                    + " :appPackageName")
+    @Nullable
+    public abstract List<DBBuyerDecisionOverride> getBuyersDecisionLogicOverride(
+            String adSelectionConfigId, String appPackageName);
+
+    /**
      * Gets the interaction reporting uri that was registered with the primary key combination of
      * {@code adSelectionId}, {@code interactionKey}, and {@code destination}.
      *
@@ -308,6 +333,18 @@ public abstract class AdSelectionEntryDao {
             String adSelectionConfigId, String appPackageName);
 
     /**
+     * Clean up buyer decision logic override data by its {@code adSelectionConfigId}
+     *
+     * @param adSelectionConfigId is the {@code adSelectionConfigId} to identify the data entries to
+     *     be removed from the ad_selection_overrides table.
+     */
+    @Query(
+            "DELETE FROM ad_selection_buyer_logic_overrides WHERE ad_selection_config_id = "
+                    + ":adSelectionConfigId AND app_package_name = :appPackageName")
+    public abstract void removeBuyerDecisionLogicOverrideByIdAndPackageName(
+            String adSelectionConfigId, String appPackageName);
+
+    /**
      * Clean up buyer_decision_logic entries in batch if the bidding_logic_uri no longer exists in
      * the table ad_selection.
      */
@@ -321,6 +358,12 @@ public abstract class AdSelectionEntryDao {
     /** Clean up all ad selection override data */
     @Query("DELETE FROM ad_selection_overrides WHERE  app_package_name = :appPackageName")
     public abstract void removeAllAdSelectionOverrides(String appPackageName);
+
+    /** Clean up all buyers' decision logic data */
+    @Query(
+            "DELETE FROM ad_selection_buyer_logic_overrides WHERE  app_package_name ="
+                    + " :appPackageName")
+    public abstract void removeAllBuyerDecisionOverrides(String appPackageName);
 
     /**
      * Checks if there is a row in the ad selection data with the unique combination of

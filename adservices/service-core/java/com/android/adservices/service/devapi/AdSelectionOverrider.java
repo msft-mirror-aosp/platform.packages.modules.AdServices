@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.BuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -49,6 +50,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -118,6 +120,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
@@ -138,7 +141,10 @@ public class AdSelectionOverrider {
                 .transformAsync(
                         ignoredVoid ->
                                 callAddOverride(
-                                        adSelectionConfig, decisionLogicJS, trustedScoringSignals),
+                                        adSelectionConfig,
+                                        decisionLogicJS,
+                                        trustedScoringSignals,
+                                        buyersDecisionLogic),
                         mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
@@ -398,7 +404,8 @@ public class AdSelectionOverrider {
     private FluentFuture<Integer> callAddOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull AdSelectionSignals trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic) {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
@@ -409,7 +416,10 @@ public class AdSelectionOverrider {
                             }
 
                             mAdSelectionDevOverridesHelper.addAdSelectionSellerOverride(
-                                    adSelectionConfig, decisionLogicJS, trustedScoringSignals);
+                                    adSelectionConfig,
+                                    decisionLogicJS,
+                                    trustedScoringSignals,
+                                    buyersDecisionLogic);
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
