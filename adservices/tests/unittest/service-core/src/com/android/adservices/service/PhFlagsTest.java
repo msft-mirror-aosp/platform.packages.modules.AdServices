@@ -122,6 +122,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_API_STATUS_KILL_S
 import static com.android.adservices.service.Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENABLE_XNA;
+import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
@@ -274,6 +275,7 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DB_SIZE_LIM
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENABLE_XNA;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
@@ -1012,6 +1014,24 @@ public class PhFlagsTest {
         Flags flags = FlagsFactory.getFlagsForTest();
         assertThat(flags.getMeasurementEventFallbackReportingJobPeriodMs())
                 .isEqualTo(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Test
+    public void testGetEnrollmentOriginMatch() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnforceEnrollmentOriginMatch())
+                .isEqualTo(MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH);
+
+        final boolean phOverridingValue = !MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnforceEnrollmentOriginMatch()).isEqualTo(phOverridingValue);
     }
 
     @Test
