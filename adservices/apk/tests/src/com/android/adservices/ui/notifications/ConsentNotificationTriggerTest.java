@@ -111,7 +111,7 @@ public class ConsentNotificationTriggerTest {
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
-        doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
+        doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getNotificationDismissedOnClick();
         doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         cancelAllPreviousNotifications();
