@@ -23,6 +23,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.BuyerDecisionLogic;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -36,6 +37,8 @@ import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CallerMetadata;
 import android.net.Uri;
+
+import java.util.List;
 
 /**
  * This is the Ad Selection Service, which defines the interface used for the Ad selection workflow
@@ -175,6 +178,7 @@ interface AdSelectionService {
      */
     void overrideAdSelectionConfigRemoteInfo(in AdSelectionConfig adSelectionConfig,
             in String decisionLogicJS, in AdSelectionSignals trustedScoringSignals,
+            in List<BuyerDecisionLogic> buyersDecisionLogic,
             in AdSelectionOverrideCallback callback);
     /**
      * Gives the provided list of adtechs permission do app install filtering based on the presence
