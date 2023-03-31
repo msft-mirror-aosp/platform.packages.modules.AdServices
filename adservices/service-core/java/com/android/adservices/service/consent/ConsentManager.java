@@ -29,6 +29,8 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -92,6 +94,7 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
+    private final AdSelectionEntryDao mAdSelectionEntryDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
 
@@ -104,6 +107,7 @@ public class ConsentManager {
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull Flags flags,
@@ -113,6 +117,7 @@ public class ConsentManager {
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(booleanFileDatastore);
 
         if (consentSourceOfTruth != Flags.PPAPI_ONLY) {
@@ -127,6 +132,7 @@ public class ConsentManager {
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
+        mAdSelectionEntryDao = adSelectionEntryDao;
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
@@ -159,6 +165,7 @@ public class ConsentManager {
                                     EnrollmentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                    AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                                     adServicesManager,
                                     datastore,
                                     // TODO(b/260601944): Remove Flag Instance.
@@ -536,6 +543,12 @@ public class ConsentManager {
         }
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(
+                    () ->
+                            mAdSelectionEntryDao.removeAdSelectionDataByPackageName(
+                                    app.getPackageName()));
+        }
     }
 
     /**
@@ -602,6 +615,9 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
+        }
     }
 
     /**
@@ -633,6 +649,9 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
+        }
     }
 
     /**
