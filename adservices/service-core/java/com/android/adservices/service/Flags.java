@@ -1512,6 +1512,7 @@ public interface Flags {
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
     boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
+    boolean ENABLE_ENROLLMENT_TEST_SEED = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1526,6 +1527,14 @@ public interface Flags {
     /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
+    }
+
+    /**
+     * @return {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
+     *     testing)
+     */
+    default boolean isEnableEnrollmentTestSeed() {
+        return ENABLE_ENROLLMENT_TEST_SEED;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;

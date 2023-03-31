@@ -345,6 +345,8 @@ public final class PhFlags implements Flags {
     static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
             "disable_measurement_enrollment_check";
 
+    static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -1874,6 +1876,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isEnableEnrollmentTestSeed() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_ENROLLMENT_TEST_SEED,
+                /* defaultValue */ ENABLE_ENROLLMENT_TEST_SEED);
+    }
+
+    @Override
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -2229,6 +2239,9 @@ public final class PhFlags implements Flags {
                         + KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK
                         + " = "
                         + isDisableMeasurementEnrollmentCheck());
+
+        writer.println(
+                "\t" + KEY_ENABLE_ENROLLMENT_TEST_SEED + " = " + isEnableEnrollmentTestSeed());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
