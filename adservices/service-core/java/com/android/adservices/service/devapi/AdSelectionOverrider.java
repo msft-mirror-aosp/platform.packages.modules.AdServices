@@ -59,6 +59,7 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @NonNull private final DevContext mDevContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
@@ -95,6 +96,7 @@ public class AdSelectionOverrider {
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
 
+        this.mDevContext = devContext;
         this.mAdSelectionEntryDao = adSelectionEntryDao;
         this.mLightweightExecutorService =
                 MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -409,9 +411,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -428,9 +431,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -444,9 +448,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -462,9 +467,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -479,9 +485,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -495,9 +502,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
