@@ -91,7 +91,7 @@ public class NotificationActivityUiAutomatorTest {
 
         doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
-        doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
+        doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mConsentManager)
@@ -179,11 +179,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-
-        //        verify(mConsentManager).getDefaultConsent();
-        //        verify(mConsentManager).getDefaultAdIdState();
-        //        verify(mConsentManager).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -198,13 +193,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
-
-        //        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton,
-        // moreButton);
-        //        verify(mConsentManager).getDefaultConsent();
-        //        verify(mConsentManager).getDefaultAdIdState();
-        //        verify(mConsentManager).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -226,15 +214,6 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        //        verify(mConsentManager, times(2)).getDefaultConsent();
-        //        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        //        verify(mConsentManager).enable(any(Context.class),
-        // eq(AdServicesApiType.MEASUREMENTS));
-        //        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -256,15 +235,6 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        //        verify(mConsentManager, times(2)).getDefaultConsent();
-        //        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        //        verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        //        verify(mConsentManager).enable(any(Context.class),
-        // eq(AdServicesApiType.MEASUREMENTS));
-        //        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
     }
 
     private void verifyControlsAndMoreButtonAreDisplayed(
