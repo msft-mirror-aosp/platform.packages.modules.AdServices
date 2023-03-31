@@ -402,6 +402,28 @@ public class SdkFledge extends SandboxedSdkProvider {
         //            throw new LoadSdkException(e, new Bundle());
         //        }
 
+        // TODO(b/221876775): Unhide for frequency cap mainline promotion
+        /*
+        try {
+            UpdateAdCounterHistogramRequest updateHistogramRequest =
+                    new UpdateAdCounterHistogramRequest.Builder()
+                            .setAdSelectionId(adSelectionId)
+                            .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                            .setCallerAdTech(AD_SELECTION_CONFIG.getSeller())
+                            .build();
+            mAdSelectionClient
+                    .updateAdCounterHistogram(updateHistogramRequest)
+                    .get(10, TimeUnit.SECONDS);
+        } catch (Exception exception) {
+            String errorMessage =
+                    String.format(
+                            "Error encountered during ad counter histogram update: message is %s",
+                            exception.getMessage());
+            Log.e(TAG, errorMessage);
+            throw new LoadSdkException(exception, new Bundle());
+        }
+        */
+
         // If we got this far, that means the test succeeded
         return new SandboxedSdk(new Binder());
     }
