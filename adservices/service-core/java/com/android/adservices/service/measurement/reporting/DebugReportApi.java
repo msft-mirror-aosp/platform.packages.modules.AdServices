@@ -47,6 +47,8 @@ public class DebugReportApi {
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
+        String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
+        String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
         String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
                 "trigger-event-no-matching-configurations";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
@@ -56,9 +58,12 @@ public class DebugReportApi {
     private interface Body {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String LIMIT = "limit";
+        String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
+        String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String SOURCE_EVENT_ID = "source_event_id";
         String SOURCE_SITE = "source_site";
+        String SOURCE_TYPE = "source_type";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
@@ -202,6 +207,25 @@ public class DebugReportApi {
     }
 
     /**
+     * Schedules Trigger Debug Report with all body fields, Used for trigger-low-priority report and
+     * trigger-event-excessive-reports.
+     */
+    public void scheduleTriggerDebugReportWithAllFields(
+            Source source, Trigger trigger, IMeasurementDao dao, String type) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), type)
+                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return;
+        }
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        scheduleReport(
+                type,
+                generateTriggerDebugReportBodyWithAllFields(source, trigger, debugKeyPair),
+                source.getEnrollmentId(),
+                dao);
+    }
+
+    /**
      * Schedules the Debug Report to be sent
      *
      * @param type The type of the debug report
@@ -243,7 +267,7 @@ public class DebugReportApi {
                 mContext, /*forceSchedule=*/ true, /*isDebugReportApi=*/ true);
     }
 
-    /* Get AdIdPermission State from Source */
+    /** Get AdIdPermission State from Source */
     private PermissionState getAdIdPermissionFromSource(Source source) {
         if (source.getPublisherType() == EventSurfaceType.APP) {
             if (source.hasAdIdPermission()) {
@@ -256,7 +280,7 @@ public class DebugReportApi {
         return PermissionState.NONE;
     }
 
-    /* Get ArDebugPermission State from Source */
+    /** Get ArDebugPermission State from Source */
     private PermissionState getArDebugPermissionFromSource(Source source) {
         if (source.getPublisherType() == EventSurfaceType.WEB) {
             if (source.hasArDebugPermission()) {
@@ -269,7 +293,7 @@ public class DebugReportApi {
         return PermissionState.NONE;
     }
 
-    /* Get is Ad tech not op-in and log */
+    /** Get is Ad tech not op-in and log */
     private boolean isAdTechNotOptIn(boolean optIn, String type) {
         if (!optIn) {
             LogUtil.d("Ad-tech not opt-in. Skipping debug report %s", type);
@@ -277,7 +301,7 @@ public class DebugReportApi {
         return !optIn;
     }
 
-    /*Generates source debug report body */
+    /** Generates source debug report body */
     private JSONObject generateSourceDebugReportBody(
             @NonNull Source source, @Nullable String limit) {
         JSONObject body = new JSONObject();
@@ -290,7 +314,7 @@ public class DebugReportApi {
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
         } catch (JSONException e) {
-            LogUtil.e(e, "Json error in source debug report");
+            LogUtil.e(e, "Json error while generating source debug report body.");
         }
         return body;
     }
@@ -301,7 +325,7 @@ public class DebugReportApi {
                 : ReportUtil.serializeAttributionDestinations(source.getWebDestinations());
     }
 
-    /*Generates trigger debug report body */
+    /** Generates trigger debug report body */
     private JSONObject generateTriggerDebugReportBody(
             @Nullable Source source,
             @NonNull Trigger trigger,
@@ -322,7 +346,41 @@ public class DebugReportApi {
                     Body.SOURCE_SITE,
                     BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
         } catch (JSONException e) {
-            LogUtil.e(e, "Json error in source debug report");
+            LogUtil.e(e, "Json error while generating trigger debug report body.");
+        }
+        return body;
+    }
+
+    /**
+     * Generates trigger debug report body with all fields in event-level attribution report. Used
+     * for trigger-low-priority, trigger-event-excessive-reports debug reports.
+     */
+    private JSONObject generateTriggerDebugReportBodyWithAllFields(
+            @NonNull Source source,
+            @NonNull Trigger trigger,
+            @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put(
+                    Body.ATTRIBUTION_DESTINATION,
+                    ReportUtil.serializeAttributionDestinations(
+                            source.getAttributionDestinations(trigger.getDestinationType())));
+            body.put(
+                    Body.SCHEDULED_REPORT_TIME,
+                    String.valueOf(
+                            source.getReportingTime(
+                                    trigger.getTriggerTime(), trigger.getDestinationType())));
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId());
+            body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
+            body.put(Body.RANDOMIZED_TRIGGER_RATE, source.getRandomAttributionProbability());
+            if (debugKeyPair.first != null) {
+                body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
+            }
+            if (debugKeyPair.second != null) {
+                body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
+            }
+        } catch (JSONException e) {
+            LogUtil.e(e, "Json error while generating trigger debug report body with all fields.");
         }
         return body;
     }
