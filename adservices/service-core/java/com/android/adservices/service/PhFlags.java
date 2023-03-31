@@ -377,6 +377,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
+    static final String KEY_FLEDGE_PER_APP_CONSENT_ENABLED = "fledge_per_app_consent_enabled";
+
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
@@ -2070,6 +2072,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgePerAppConsentEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+
+        // Per-app consent is only enabled in FLEDGE if GA UX is enabled
+        return getGaUxFeatureEnabled()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_FLEDGE_PER_APP_CONSENT_ENABLED),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_FLEDGE_PER_APP_CONSENT_ENABLED,
+                                /* defaultValue */ FLEDGE_PER_APP_CONSENT_ENABLED));
+    }
+
+    @Override
     public long getAdSelectionExpirationWindowS() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
@@ -2549,6 +2565,11 @@ public final class PhFlags implements Flags {
                         + KEY_FOREGROUND_STATUS_LEVEL
                         + " = "
                         + getForegroundStatuslLevelForValidation());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_PER_APP_CONSENT_ENABLED
+                        + " = "
+                        + getFledgePerAppConsentEnabled());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
