@@ -133,6 +133,7 @@ public abstract class AdSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final AdFilterer mAdFilterer;
     private final int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     /**
      * @param context service context
@@ -186,6 +187,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     @VisibleForTesting
@@ -234,6 +236,7 @@ public abstract class AdSelectionRunner {
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mAdFilterer = adFilterer;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /**
@@ -581,7 +584,8 @@ public abstract class AdSelectionRunner {
      */
     private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
