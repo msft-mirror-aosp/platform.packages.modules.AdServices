@@ -73,7 +73,9 @@ public class AttributionJobService extends JobService {
                             new AttributionJobHandler(
                                             DatastoreManagerFactory.getDatastoreManager(
                                                     getApplicationContext()),
-                                            new DebugReportApi(getApplicationContext()))
+                                            new DebugReportApi(
+                                                    getApplicationContext(),
+                                                    FlagsFactory.getFlags()))
                                     .performPendingAttributions();
                     jobFinished(params, !success);
                     // jobFinished is asynchronous, so forcing scheduling avoiding concurrency issue
