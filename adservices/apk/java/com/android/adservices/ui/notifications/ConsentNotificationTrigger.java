@@ -42,8 +42,8 @@ import com.android.adservices.ui.OTAResourcesManager;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
-    // Random integer for NotificationCompat purposes
-    private static final int NOTIFICATION_ID = 67920;
+    /* Random integer for NotificationCompat purposes. */
+    public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
 
@@ -97,10 +97,17 @@ public class ConsentNotificationTrigger {
     @NonNull
     private static Notification getNotification(
             @NonNull Context context, boolean isEuDevice, boolean gaUxFeatureEnabled) {
-        Notification notification =
-                gaUxFeatureEnabled
-                        ? getGaConsentNotification(context, isEuDevice)
-                        : getConsentNotification(context, isEuDevice);
+        Notification notification;
+        if (gaUxFeatureEnabled) {
+            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+                notification = getGaV2ConsentNotification(context, isEuDevice);
+            } else {
+                notification = getGaConsentNotification(context, isEuDevice);
+            }
+        } else {
+            notification = getConsentNotification(context, isEuDevice);
+        }
+
         // make notification sticky (non-dismissible) for EuDevices when the GA UX feature is on
         if (gaUxFeatureEnabled && isEuDevice) {
             notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
@@ -149,6 +156,40 @@ public class ConsentNotificationTrigger {
         }
     }
 
+    private static Notification getGaV2ConsentNotification(
+            @NonNull Context context, boolean isEuDevice) {
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_EU_DEVICE_ARGUMENT_KEY, isEuDevice);
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle()
+                        .bigText(
+                                isEuDevice
+                                        ? context.getString(
+                                        R.string.notificationUI_notification_ga_content_eu_v2)
+                                        : context.getString(
+                                        R.string.notificationUI_notification_ga_content_v2));
+        NotificationCompat.Builder notification =
+                new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_info_icon)
+                        .setContentTitle(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_title_eu_v2
+                                                : R.string.notificationUI_notification_ga_title_v2))
+                        .setContentText(
+                                context.getString(
+                                        isEuDevice
+                                                ? R.string.notificationUI_notification_ga_content_eu_v2
+                                                : R.string.notificationUI_notification_ga_content_v2))
+                        .setStyle(textStyle)
+                        .setPriority(NOTIFICATION_PRIORITY)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
+        return notification.build();
+    }
+
     /**
      * Returns a {@link NotificationCompat.Builder} which can be used to display consent
      * notification to the user when GaUxFeature flag is enabled.
@@ -186,6 +227,11 @@ public class ConsentNotificationTrigger {
                         .setPriority(NOTIFICATION_PRIORITY)
                         .setAutoCancel(true)
                         .setContentIntent(pendingIntent);
+
+        if (isEuDevice && !FlagsFactory.getFlags().getNotificationDismissedOnClick()) {
+            notification.setAutoCancel(false);
+        }
+
         return notification.build();
     }
 

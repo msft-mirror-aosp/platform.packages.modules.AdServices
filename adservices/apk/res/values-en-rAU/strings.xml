@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"You’re part of the beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta at any time in your privacy settings."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Manage privacy settings"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Got it"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android’s Privacy Sandbox provides new features that apps can use to show you ads that you might like. These technologies don’t use device identifiers.\n\nAndroid and your apps can estimate the kind of ads that you might be interested in, and save the interests temporarily on your device. This allows apps to show you ads that you might like, without tracking your activity across websites and apps from other developers."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Ad Personalisation with Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Apps can estimate your interests and temporarily save these with Android. For example, an app that you use to buy running shoes might estimate your interest as \'running marathons\'.\n\nLater, based on this interest, a different app can show you an ad related to marathons.\n\nIn your privacy settings, you can manage the list of apps that have saved interests."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"New ads privacy features"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Ad topics and new controls give you more choice over the ads that you see"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"New ads privacy features now available"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android notes topics of interest based on apps that you’ve used recently. Also, apps that you use can determine what you like. Later, apps can ask for this information to show you personalised ads. You can choose which topics and apps are used to show you ads."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"To measure the performance of an ad, limited types of data are shared between apps."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"More about ads on Android"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android auto-deletes topics and app-suggested data regularly. You can also block specific topics and apps that you don’t want to make suggestions."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Measuring how well an ad performs"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Apps that you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data, such as the time of day an ad was shown to you."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Try new ads privacy features"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Ad topics give you more choice over the ads that you see"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"View details"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Enhanced ads privacy on Android"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android is launching new privacy features that give you more choice over the ads that you see."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Ad topics help apps show you relevant ads while protecting your identity and information about your app usage. Android can note topics of interest based on the apps that you’ve used recently. Later, an app you use can ask Android for relevant topics to personalise the ads that you see."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"You can see ad topics in your device settings and block the ones that you don’t want shared with apps. Android also auto-deletes ad topics regularly."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"You can change your mind at any time in privacy settings."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"More about ad topics"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Learn more about how Android protects your data in our privacy policy."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Yes, I\'m in"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Try it out"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  What data is used"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Your ad topics are based on the apps that you’ve used recently on this device and how frequently you use them."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  How we use this data"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  How you can manage your data"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. You can also block topics that you don’t want Android to share with apps, and turn ad topics off at any time in privacy settings."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"You can make changes in privacy settings."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Other features that make ads more private"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android is launching new ways to limit what apps can learn about you when they show you personalised ads."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Other ads privacy features now available"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android also offers new ways to limit what apps can learn about you when they show you personalised ads."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  App-suggested ads help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app that you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions, in privacy settings."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  With ad measurement, limited types of data are shared between apps to measure the performance of their ads, such as the time of day that an ad was shown to you."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"More about app-suggested ads and ad measurement"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android auto-deletes app-suggested data regularly. An app that you use again might reappear on the list."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"You can also block an app from suggesting ads for you, reset all ad-suggestion data or turn app-suggested ads off at any time in privacy settings."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apps that you use can ask Android for information that helps them measure the performance of their ads. Android protects your privacy by limiting the information apps can share with one another."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"New ads privacy features now available"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Have more choice over the ads that you see while still protecting your identity"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"New ads privacy features now available"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  With app-suggested ads, new privacy features help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app that you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions in privacy settings."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  With ad measurement, limited types of data are shared between apps to understand the performance of their ads, such as the time of day that an ad was shown to you."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Turn on another ads privacy feature"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android also offers a new privacy feature that gives you more choice over the ads that you see."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Ad topics help apps show you relevant ads while protecting your identity and information about your app usage. Android can note topics of interest based on the apps that you\'ve used recently. Later, an app that you use can ask Android for relevant topics to show you more relevant ads."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"You can see ad topics in your privacy settings and block the ones that you don\'t want to be shared with apps. Android also auto-deletes ad topics regularly."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Turn it on"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"New ads privacy features now available"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Now, you have more choice over the ads that you see while still protecting your identity"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"New ads privacy features now available"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android now offers new privacy features that give you more choice over the ads that you see."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Next"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Participate in Android’s ads privacy beta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ads privacy"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Ad topics"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"App-suggested ads"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android notes topics of interest based on the apps that you’ve used recently and how frequently you use them."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apps that you use can also determine what you like based on how you use them."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apps you use can ask Android for information to help them measure the performance of their ads. Android lets apps collect limited types of data."</string>

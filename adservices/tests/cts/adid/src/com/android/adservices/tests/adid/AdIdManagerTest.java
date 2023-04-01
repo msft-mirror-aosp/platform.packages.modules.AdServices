@@ -62,11 +62,9 @@ public class AdIdManagerTest {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         overrideAdIdKillSwitch(false);
         setPpapiAppAllowList(mPreviousAppAllowList);
-        // Cool-off rate limiter
-        TimeUnit.SECONDS.sleep(1);
     }
 
     // Override adid related kill switch to ignore the effect of actual PH values.

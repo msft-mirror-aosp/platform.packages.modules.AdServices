@@ -69,4 +69,7 @@ public class ConsentConstants {
 
     public static final String ERROR_MESSAGE_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
             "Invalid type of blocked topics source of truth.";
+
+    public static final String ERROR_MESSAGE_APPSEARCH_FAILURE =
+            "Failed to persist data to AppSearch.";
 }

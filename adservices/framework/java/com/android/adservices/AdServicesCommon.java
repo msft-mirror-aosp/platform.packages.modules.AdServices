@@ -67,7 +67,7 @@ public class AdServicesCommon {
     private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices";
 
     /** The package name of the active AdServices APK on this device. */
-    public static final ServiceInfo resolveAdServicesService(
+    public static ServiceInfo resolveAdServicesService(
             List<ResolveInfo> intentResolveInfos, String intentAction) {
         if (intentResolveInfos == null || intentResolveInfos.isEmpty()) {
             LogUtil.e(
@@ -79,10 +79,13 @@ public class AdServicesCommon {
         // On T+ devices, we may have two versions of the services present due to
         // b/263904312.
         if (intentResolveInfos.size() > 2) {
-            LogUtil.e(
-                    "Found multiple services (%1$s) for the same intent action (%2$s)",
-                    intentAction, intentResolveInfos.toString());
-
+            StringBuilder intents = new StringBuilder("");
+            for (ResolveInfo intentResolveInfo : intentResolveInfos) {
+                if (intentResolveInfo != null && intentResolveInfo.serviceInfo != null) {
+                    intents.append(intentResolveInfo.serviceInfo.packageName);
+                }
+            }
+            LogUtil.e("Found multiple services " + intents + " for " + intentAction);
             return null;
         }
 
@@ -90,21 +93,28 @@ public class AdServicesCommon {
         // AdService is com.[google.]android.adservices while the package name of AdExtServices APK
         // is com.[google.]android.ext.adservices.
         ServiceInfo serviceInfo = null;
+
         // We have already checked if there are 0 OR more than 2 services returned.
         switch (intentResolveInfos.size()) {
             case 2:
                 // In the case of 2, always use the one from AdServicesApk.
-                if (intentResolveInfos
-                        .get(0)
-                        .serviceInfo
-                        .packageName
-                        .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                if (intentResolveInfos.get(0) != null
+                        && intentResolveInfos.get(0).serviceInfo != null
+                        && intentResolveInfos.get(0).serviceInfo.packageName != null
+                        && intentResolveInfos
+                                .get(0)
+                                .serviceInfo
+                                .packageName
+                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(0).serviceInfo;
-                } else if (intentResolveInfos
-                        .get(1)
-                        .serviceInfo
-                        .packageName
-                        .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+                } else if (intentResolveInfos.get(1) != null
+                        && intentResolveInfos.get(1).serviceInfo != null
+                        && intentResolveInfos.get(1).serviceInfo.packageName != null
+                        && intentResolveInfos
+                                .get(1)
+                                .serviceInfo
+                                .packageName
+                                .contains(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                     serviceInfo = intentResolveInfos.get(1).serviceInfo;
                 }
                 break;

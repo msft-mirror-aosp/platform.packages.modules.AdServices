@@ -40,6 +40,7 @@ android_test {
         "mts-adservices"
     ],
     manifest: "AndroidManifest.xml",
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
 
 android_test {
@@ -68,7 +69,6 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "31",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }

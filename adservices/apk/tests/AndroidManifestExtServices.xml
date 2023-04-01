@@ -25,7 +25,10 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <!--acts as an application that uses adservices in order for PPAPI to be enabled and notification to be displayed-->
     <uses-permission android:name="android.permission.ACCESS_ADSERVICES_TOPICS"/>
-    <uses-permission android:name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"/>
+    <!-- Permissions required for reading device configs -->
+    <uses-permission android:name="android.permission.READ_DEVICE_CONFIG"/>
+    <!-- Allows JobScheduler to persist jobs across reboot. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application android:debuggable="true">
         <!-- Activity for the main view of Adservices Settings UI-->
@@ -103,6 +106,75 @@
                 <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </activity>
+
+        <!-- Daily maintenance Job. -->
+        <!-- Used by SettingsGaUiAutomatorTest on S- -->
+        <service android:name="com.android.adservices.service.MaintenanceJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- START - Used by BlockedTopicsSettingsUiAutomatorTest ConsentManager.enable() on S- -->
+
+        <!-- Epoch computation Job. -->
+        <service android:name="com.android.adservices.service.topics.EpochJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Mdd background Job. -->
+        <service android:name="com.android.adservices.download.MddJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement aggregate main report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.AggregateReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement aggregate fallback report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Attribution Job.-->
+        <service android:name=
+                     "com.android.adservices.service.measurement.attribution.AttributionJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement event main report upload job. -->
+        <service
+            android:name="com.android.adservices.service.measurement.reporting.EventReportingJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement event fallback report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Deletion Job.-->
+        <service android:name=
+                     "com.android.adservices.service.measurement.DeleteExpiredJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Measurement Deletion Uninstalled Apps Job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.DeleteUninstalledJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- Registration Queue job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+
+        <!-- END - Used by ConsentManager.enable() in BlockedTopicsSettingsUiAutomatorTest on S- -->
+
         <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
 

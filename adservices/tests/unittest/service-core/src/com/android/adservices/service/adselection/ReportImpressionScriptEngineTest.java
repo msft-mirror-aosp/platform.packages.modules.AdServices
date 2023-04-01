@@ -121,6 +121,10 @@ public class ReportImpressionScriptEngineTest {
                     .setInteractionReportingUri(HOVER_URI)
                     .build();
 
+    // Only used for setup, so no need to use the real impl for now
+    private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
+            new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
+
     @Before
     public void setUp() {
         // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
@@ -135,7 +139,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
         final ReportingScriptResult result =
                 callReportingEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'results': {'result':"
@@ -149,7 +153,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -167,7 +171,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
