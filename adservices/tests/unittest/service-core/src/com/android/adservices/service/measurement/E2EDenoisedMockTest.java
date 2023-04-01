@@ -50,10 +50,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
 
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
@@ -61,7 +58,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         mDebugReportApi);
     }
 }

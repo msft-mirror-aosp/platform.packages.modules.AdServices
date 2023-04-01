@@ -212,7 +212,10 @@ public class FrequencyCapFilteringE2ETest {
         mFledgeAuthorizationFilter =
                 new FledgeAuthorizationFilter(
                         mContextSpy.getPackageManager(),
-                        new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest()),
+                        new EnrollmentDao(
+                                mContextSpy,
+                                DbTestUtil.getDbHelperForTest(),
+                                flagsEnablingAdFiltering),
                         mAdServicesLoggerMock);
 
         mAdFilteringFeatureFactory =
