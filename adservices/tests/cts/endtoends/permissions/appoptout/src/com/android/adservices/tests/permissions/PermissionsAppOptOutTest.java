@@ -280,4 +280,52 @@ public class PermissionsAppOptOutTest {
                         () -> mAdSelectionClient.reportImpression(request).get());
         assertThat(exception.getMessage()).isNotEqualTo(CALLER_NOT_AUTHORIZED);
     }
+
+    // TODO(b/221876775): Unhide for frequency cap mainline promotion
+    /*
+    @Test
+    public void testNoEnrollment_updateAdCounterHistogram() {
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        UpdateAdCounterHistogramRequest request =
+                new UpdateAdCounterHistogramRequest.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setCallerAdTech(AdTechIdentifier.fromString("seller.example.com"))
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    public void testWithEnrollment_updateAdCounterHistogram()
+            throws ExecutionException, InterruptedException {
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        UpdateAdCounterHistogramRequest request =
+                new UpdateAdCounterHistogramRequest.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
+                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                        .build();
+
+        mAdSelectionClient.updateAdCounterHistogram(request).get();
+    }
+    */
 }

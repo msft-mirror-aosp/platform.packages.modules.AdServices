@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Osallistut betaohjelmaan"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox on päällä laitteellasi, ja sovellukset voivat kokeilla näitä uusia, aiempaa yksityisempiä tapoja näyttää sinulle mainoksia. Voit laittaa betaohjelman pois päältä milloin tahansa yksityisyysasetuksista."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Muuta yksityisyysasetuksia"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidin Privacy Sandbox tarjoaa uusia ominaisuuksia, joiden avulla sovellukset voivat näyttää mainoksia, joista saatat pitää. Nämä teknologiat eivät käytä tunnisteita.\n\nAndroid ja sovelluksesi voivat arvioida, millaisista mainoksista voisit olla kiinnostunut, ja tallentaa kiinnostuksen kohteet väliaikaisesti laitteellesi. Näin sovellukset voivat näyttää mainoksia, joista saatat pitää, seuraamatta toimintaasi verkkosivustoilla ja muiden kehittäjien sovelluksissa."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Mainosten personointi Privacy Sandboxilla"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Sovellukset voivat arvioida kiinnostuksen kohteitasi ja tallentaa ne väliaikaisesti Androidiin. Sovellus, jonka kautta ostat juoksukengät, voi esimerkiksi arvioida kiinnostuksen kohteeksesi maratonin juoksun.\n\nMyöhemmin toinen sovellus voi näyttää sinulle tämän kiinnostuksen kohteen perusteella maratoneihin liittyviä mainoksia.\n\nVoit hallita kiinnostuksen kohteita tallentaneita sovelluksia yksityisyysasetuksissa."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Uusia mainosyksityisyysominaisuuksia"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Mainosaiheiden ja uusien asetusten ansiosta voit paremmin vaikuttaa näkemiisi mainoksiin"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android havaitsee äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Lisäksi käyttämäsi sovellukset voivat päätellä, mistä pidät. Sovellukset voivat myöhemmin pyytää näitä tietoja näyttääkseen sinulle personoituja mainoksia. Voit valita, minkä aiheiden ja sovellusten perusteella näet mainoksia."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Mainostulosten mittaamiseksi sovellusten välillä jaetaan rajoitetusti tietyntyyppistä dataa."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Lisätietoa mainoksista Androidissa"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android poistaa aiheita ja sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Voit myös estää tiettyjä aiheita ja sovelluksia, joista et halua ehdotuksia."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Mainostulosten mittaaminen"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoa mainostulosten mittaamiseksi. Android sallii sovellusten kerätä rajoitetusti tietyntyyppistä dataa, esimerkiksi kellonajan, jolloin mainos näkyi sinulle."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Kokeile uusia mainosyksityisyysominaisuuksia"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Mainosaiheiden ansiosta voit vaikuttaa paremmin näkemiisi mainoksiin"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Katso tiedot"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Parannettu mainosyksityisyys Android-laitteissa"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanseeraa uusia yksityisyysominaisuuksia, jotta voit paremmin vaikuttaa näkemiisi mainoksiin."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Mainosaiheiden avulla sovellukset voivat näyttää sinulle osuvia mainoksia niin, että henkilöllisyytesi ja tiedot sovellusten käytöstä pysyvät suojattuina. Android voi havaita äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Käyttämäsi sovellus voi myöhemmin pyytää osuvia aiheita Androidilta personoidakseen näkemiäsi mainoksia."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Laitteen asetuksista näet mainosaiheet ja voit estää sellaiset, joita et halua jakaa sovelluksille. Android myös poistaa mainosaiheita automaattisesti ja säännöllisesti."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Voit milloin tahansa muuttaa mieltäsi yksityisyysasetuksissa."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Lue lisää mainosten aiheista"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Tietosuojakäytännöstä voit lukea lisää siitä, miten Android suojaa dataasi."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Kyllä"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Kokeile"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Mitä dataa käytetään"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Mainosaiheet perustuvat tällä laitteella äskettäin käyttämiisi sovelluksiin ja siihen, kuinka usein käytät niitä."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Miten käytämme tätä dataa"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Miten voit ylläpitää dataasi"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android poistaa aiheita automaattisesti ja säännöllisesti. Kun jatkat sovellusten käyttöä, aihe voi näkyä listalla uudelleen. Voit myös estää aiheet, joita et halua Androidin jakavan sovelluksille, ja laittaa mainosaiheet pois päältä yksityisyysasetuksista milloin tahansa."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Voit tehdä muutoksia yksityisyysasetuksista."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Muut mainosten yksityisyyttä parantavat ominaisuudet"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android lanseeraa uusia tapoja, joilla voit rajoittaa sovellusten keräämiä tietoja, kun sinulle näytetään personoituja mainoksia."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Muita mainosyksityisyysominaisuuksia nyt saatavilla"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android myös tarjoaa uusia tapoja, joilla voit rajoittaa sovellusten keräämiä tietoja, kun sinulle näytetään personoituja mainoksia."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Sovellusten ehdottamat mainokset auttavat suojaamaan henkilöllisyyttäsi ja sovelluksen käyttöön liittyviä tietojasi. Ehdotusten avulla sovellukset voivat näyttää sinulle osuvia mainoksia. Käyttämäsi sovellus voi ehdottaa sinulle toimintasi perusteella aiheeseen liittyviä mainoksia muissa sovelluksissa. Yksityisyysasetuksista voit tarkistaa sovellukset ja estää niitä tekemästä ehdotuksia."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Jos mainosten mittaus on käytössä, sovellusten välillä jaetaan rajoitetusti tietyntyyppistä dataa (esim. kellonaika, jolloin mainos näkyi) mainostulosten mittaamiseksi."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Lue lisää sovellusten ehdottamista mainoksista ja mainosten mittauksesta"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android poistaa sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Jos käytät sovellusta uudelleen, se voi näkyä taas listalla."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Lisäksi voit milloin tahansa estää sovellusta ehdottamasta sinulle mainoksia, nollata kaiken mainosehdotusdatan tai laittaa sovelluksen ehdottamat mainokset pois päältä yksityisyysasetuksista."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android suojaa yksityisyyttäsi rajoittamalla sovellusten toistensa kanssa jakamia tietoja."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Vaikuta paremmin näkemiisi mainoksiin paljastamatta henkilöllisyyttäsi"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Sovellusten ehdottamissa mainoksissa uudet yksityisyysominaisuudet auttavat suojaamaan henkilöllisyyttäsi ja sovelluksen käyttöön liittyviä tietojasi. Ehdotusten avulla sovellukset voivat näyttää sinulle osuvia mainoksia. Käyttämäsi sovellus voi ehdottaa sinulle toimintasi perusteella aiheeseen liittyviä mainoksia muissa sovelluksissa. Yksityisyysasetuksista voit tarkistaa sovellukset ja estää niitä tekemästä ehdotuksia."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Jos mainosten mittaus on käytössä, sovellusten välillä jaetaan rajoitetusti tietyntyyppistä dataa (esim. kellonaika, jolloin mainos näkyi) mainostulosten tulkitsemiseksi."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Laita päälle toinen mainosyksityisyysominaisuus"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android tarjoaa myös uuden yksityisyysominaisuuden, jotta voit paremmin vaikuttaa näkemiisi mainoksiin."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Mainosten aiheiden avulla sovellukset voivat näyttää sinulle osuvia mainoksia niin, että henkilöllisyytesi ja tiedot sovellusten käytöstä pysyvät suojattuina. Android voi muistaa äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Myöhemmin käyttämäsi sovellus voi pyytää osuvia aiheita Androidilta näyttääkseen sinulle osuvampia mainoksia."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Yksityisyysasetuksista näet mainosten aiheet ja voit estää sellaiset, joita et halua jaettavan sovelluksille. Android myös poistaa mainosaiheita automaattisesti ja säännöllisesti."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Laita päälle"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Voit nyt vaikuttaa paremmin näkemiisi mainoksiin paljastamatta henkilöllisyyttäsi"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android tarjoaa nyt uusia yksityisyysominaisuuksia, jotta voit paremmin vaikuttaa näkemiisi mainoksiin."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Seuraava"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Osallistu Androidin mainosyksityisyyden betaohjelmaan"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Mainosyksityisyys"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Mainosten aiheet"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Sovellusten ehdottamat mainokset"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Androidin muistamat aiheet perustuvat äskettäin käyttämiisi sovelluksiin ja siihen, kuinka usein käytät niitä."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Käyttämäsi sovellukset voivat päätellä kiinnostuksen kohteitasi myös sen perusteella, miten käytät niitä."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Käyttämäsi sovellukset voivat pyytää Androidilta tietoja, jotka auttavat sovelluksia mittaamaan mainostuloksia. Android sallii sovellusten kerätä rajoitettuja datatyyppejä."</string>

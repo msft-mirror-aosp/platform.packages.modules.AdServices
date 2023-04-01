@@ -102,6 +102,7 @@ public class ImpressionReporter {
     @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -164,6 +165,7 @@ public class ImpressionReporter {
         mFlags = flags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -514,32 +516,28 @@ public class ImpressionReporter {
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         sLogger.v("Invoking buyer script");
-        final boolean isContextual =
-                Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
-                        && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
 
-        if (isContextual) {
-            return FluentFuture.from(
-                    Futures.immediateFuture(
-                            Pair.create(new ReportingResults(null, sellerReportingResult), ctx)));
-        }
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+        AdSelectionSignals signals =
+                Optional.ofNullable(
+                                ctx.mAdSelectionConfig
+                                        .getPerBuyerSignals()
+                                        .get(customAudienceSignals.getBuyer()))
+                        .orElse(AdSelectionSignals.EMPTY);
+
         try {
             // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
             return FluentFuture.from(
                             mJsEngine.reportWin(
                                     ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    Optional.ofNullable(
-                                                    ctx.mAdSelectionConfig
-                                                            .getPerBuyerSignals()
-                                                            .get(customAudienceSignals.getBuyer()))
-                                            .orElse(AdSelectionSignals.EMPTY),
+                                    signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
-                                    ctx.mDBAdSelectionEntry.getCustomAudienceSignals()))
+                                    customAudienceSignals))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(
@@ -561,7 +559,8 @@ public class ImpressionReporter {
      */
     private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
