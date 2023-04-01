@@ -36,7 +36,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
 public interface Flags {
     /** Topics Epoch Job Period. */
@@ -303,6 +305,13 @@ public interface Flags {
         return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
     }
 
+    int MEASUREMENT_MAX_REGISTRATION_REDIRECTS = 20;
+
+    /** Returns the number of maximum registration redirects allowed. */
+    default int getMeasurementMaxRegistrationRedirects() {
+        return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -543,11 +552,15 @@ public interface Flags {
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 3;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
-    // TODO(b/263055427): Replace with a more realistic number after getting input from ad-techs
-    long FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT = 100;
+    // RegisterAdBeacon  Constants
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT = 1000; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT = 10; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
+            20 * 2; // Num characters * 2 bytes per char in UTF-8
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -596,6 +609,11 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
     }
 
+    /** Returns the default JS version for running bidding. */
+    default long getFledgeAdSelectionBiddingLogicJsVersion() {
+        return FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
+    }
+
     /**
      * Returns the time out constant in milliseconds that limits the overall impression reporting
      * execution
@@ -605,11 +623,26 @@ public interface Flags {
     }
 
     /**
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that can be in the {@code
+     * registered_ad_interactions} database at any one time.
+     */
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
+    }
+
+    /**
      * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
      * in one call to {@code reportImpression}.
      */
-    default long getReportImpressionMaxEventUriEntriesCount() {
-        return FLEDGE_REPORT_IMPRESSION_MAX_EVENT_URI_ENTRIES_COUNT;
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
+    }
+
+    /**
+     * Returns the maximum size in bytes of {@link DBRegisteredAdInteraction#getInteractionKey()}
+     */
+    default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
+        return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
     }
 
     // 24 hours in seconds
@@ -630,11 +663,26 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
     }
 
+    // Enable contextual Ads feature, based on Filtering feature enabled or not
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
@@ -744,6 +792,7 @@ public interface Flags {
                 SYSTEM_SERVER_ONLY,
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
+                APPSEARCH_ONLY,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -754,6 +803,8 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
+    /** Write consent data to AppSearch only. */
+    int APPSEARCH_ONLY = 3;
 
     /* Consent source of truth intended to be used by default. */
     @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
@@ -1222,6 +1273,18 @@ public interface Flags {
         return ENABLE_BACK_COMPAT;
     }
 
+    /**
+     * Enable AppSearch read for consent data feature flag. The default value is false which means
+     * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
+     * support of consent data on T+ devices.
+     */
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+
+    /** @return value of enable appsearch consent data flag */
+    default boolean getEnableAppsearchConsentData() {
+        return ENABLE_APPSEARCH_CONSENT_DATA;
+    }
+
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
@@ -1343,6 +1406,12 @@ public interface Flags {
      */
     float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
 
+    /**
+     * PP API Rate Limit for Fledge Report Interaction API. This is the max allowed QPS for one SDK
+     * to one the Report Interaction API. Negative Value means skipping the rate limiting checking.
+     */
+    float FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
@@ -1376,6 +1445,11 @@ public interface Flags {
     /** Returns the Measurement Register Web Source Request Permits Per Second. */
     default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
         return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Fledge Report Interaction API Request Permits Per Second. */
+    default float getFledgeReportInteractionRequestPermitsPerSecond() {
+        return FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
@@ -1454,7 +1528,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
-
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1501,6 +1575,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1612,6 +1691,41 @@ public interface Flags {
         return IS_EEA_DEVICE;
     }
 
+    /** Default is that the ui feature type logging is enabled. */
+    boolean UI_FEATURE_TYPE_LOGGING_ENABLED = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isUiFeatureTypeLoggingEnabled() {
+        return UI_FEATURE_TYPE_LOGGING_ENABLED;
+    }
+
+    /** Default is that the manual interaction feature is enabled. */
+    boolean RECORD_MANUAL_INTERACTION_ENABLED = true;
+
+    /** Returns if the manual interaction feature is enabled. */
+    default boolean getRecordManualInteractionEnabled() {
+        return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
+    /**
+     * The check activity feature is off by default. When enabled, we check whether all Rubidium
+     * activities are enabled when we determine whether AdServices is enabled
+     */
+    boolean IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED = false;
+
+    /** Returns if the check activity feature has been enabled. */
+    default boolean isBackCompatActivityFeatureEnabled() {
+        return IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium
@@ -1687,6 +1801,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    // Enable per-app consent in FLEDGE if GA UX is enabled
+    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
+
+    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
+    default boolean getFledgePerAppConsentEnabled() {
+        return FLEDGE_PER_APP_CONSENT_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
@@ -1712,29 +1834,6 @@ public interface Flags {
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 
-    /**
-     * A feature flag to enable the feature of handling topics without any contributors. Note that
-     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
-     * epoch and is classified to the topic.
-     *
-     * <p>Default value is false, which means the feature is disabled by default and needs to be
-     * ramped up.
-     */
-    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
-
-    /** @return if to enable topic contributors check. */
-    default boolean getEnableTopicContributorsCheck() {
-        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
-    }
-
-    /** Whether to enable database schema version 7 */
-    boolean ENABLE_TOPIC_MIGRATION = false;
-
-    /** @return if to enable database schema version 7 */
-    default boolean getEnableTopicMigration() {
-        return ENABLE_TOPIC_MIGRATION;
-    }
-
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
     default boolean isEnrollmentBlocklisted(String enrollmentId) {
         return false;
@@ -1743,6 +1842,13 @@ public interface Flags {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    long DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT = 100L;
+
+    /** Returns debug keys hash limit. */
+    default long getMeasurementDebugJoinKeyHashLimit() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
     }
 
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
@@ -1759,5 +1865,34 @@ public interface Flags {
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
         return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /**
+     * Default allowlist of the enrollments for whom debug key insertion based on join key matching
+     * is allowed.
+     */
+    String DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST = "";
+
+    /**
+     * Allowlist of the enrollments for whom debug key insertion based on join key matching is
+     * allowed.
+     */
+    default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+
+    /** Determines whether EU notification flow change is enabled. */
+    default boolean getEuNotifFlowChangeEnabled() {
+        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Returns whether to enable flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 }

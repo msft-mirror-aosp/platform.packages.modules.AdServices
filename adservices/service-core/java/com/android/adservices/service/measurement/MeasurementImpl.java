@@ -98,7 +98,8 @@ public final class MeasurementImpl {
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
-        mEnrollmentDao = new EnrollmentDao(context, DbHelper.getInstance(mContext));
+        mEnrollmentDao =
+                new EnrollmentDao(context, DbHelper.getInstance(mContext), FlagsFactory.getFlags());
         deleteOnRollback();
     }
 
@@ -306,11 +307,15 @@ public final class MeasurementImpl {
         LogUtil.d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction((dao) -> {
-                dao.deleteAppRecords(appUri);
-                dao.undoInstallAttribution(appUri);
-            });
-            markDeletionInSystemService();
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> {
+                                dao.undoInstallAttribution(appUri);
+                                return dao.deleteAppRecords(appUri);
+                            });
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete package records received invalid parameters");
         } finally {
@@ -342,9 +347,12 @@ public final class MeasurementImpl {
         List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction(
-                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
-            markDeletionInSystemService();
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

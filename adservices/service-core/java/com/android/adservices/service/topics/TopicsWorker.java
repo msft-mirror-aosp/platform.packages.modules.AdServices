@@ -291,10 +291,6 @@ public class TopicsWorker {
         // Here we use Write lock to block Read during that computation time.
         mReadWriteLock.writeLock().lock();
         try {
-            // Clear data for TopicContributors Table only when feature flag is supported
-            if (!mEpochManager.supportsTopicContributorFeature()) {
-                tablesToExclude.add(TopicsTables.TopicContributorsContract.TABLE);
-            }
             mCacheManager.clearAllTopicsData(tablesToExclude);
 
             // If clearing all Topics data, clear preserved blocked topics in system server.

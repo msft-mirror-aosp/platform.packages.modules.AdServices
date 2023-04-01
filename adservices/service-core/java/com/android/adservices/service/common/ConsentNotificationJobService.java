@@ -38,6 +38,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 
@@ -192,6 +193,13 @@ public class ConsentNotificationJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("ConsentNotificationJobService.onStartJob");
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling ConsentNotificationJobService job because it's running in"
+                            + " ExtServices on T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
         }
@@ -240,6 +248,17 @@ public class ConsentNotificationJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("ConsentNotificationJobService.onStopJob");
         return true;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+        this.getSystemService(JobScheduler.class).cancel(CONSENT_NOTIFICATION_JOB_ID);
+
+        // Tell the JobScheduler that the job has completed and does not need to be
+        // rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 
     private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEuNotification) {

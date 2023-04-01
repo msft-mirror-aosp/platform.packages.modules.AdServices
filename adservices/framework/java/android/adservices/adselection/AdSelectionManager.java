@@ -37,7 +37,7 @@ import android.os.TransactionTooLargeException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
@@ -51,6 +51,7 @@ import java.util.concurrent.TimeoutException;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -192,11 +193,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -223,8 +224,20 @@ public class AdSelectionManager {
      *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
      *       {@link IllegalArgumentException} for input validation will raise listing violating ad
      *       selection ids.
-     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
-     *       IllegalArgumentException} will be thrown.
+     *   <li>{@code Selection logic URI} that could follow either the HTTPS or Ad Selection Prebuilt
+     *       schemas.
+     *       <p>If the URI follows HTTPS schema then the host should match the {@code seller}.
+     *       Otherwise, {@link IllegalArgumentException} will be thrown.
+     *       <p>Prebuilt URIs are a way of substituting a generic pre-built logics for the required
+     *       JavaScripts for {@code selectOutcome}. Prebuilt Uri for this endpoint should follow;
+     *       <ul>
+     *         <li>{@code
+     *             ad-selection-prebuilt://ad-selection-from-outcomes/<name>?<script-generation-parameters>}
+     *       </ul>
+     *       <p>If an unsupported prebuilt URI is passed or prebuilt URI feature is disabled by the
+     *       service then {@link IllegalArgumentException} will be thrown.
+     *       <p>See {@link AdSelectionFromOutcomesConfig.Builder#setSelectionLogicUri} for supported
+     *       {@code <name>} and required {@code <script-generation-parameters>}.
      * </ul>
      *
      * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
@@ -292,11 +305,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -339,11 +352,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -410,11 +423,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -478,17 +491,18 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Updates the counter histograms for an ad.
+     * Updates the counter histograms for an ad which was previously selected by a call to {@link
+     * #selectAds(AdSelectionConfig, Executor, OutcomeReceiver)}.
      *
      * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
      * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
@@ -552,11 +566,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service");
+            sLogger.e(e, "Unable to find the AdSelection service");
             outcomeReceiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }

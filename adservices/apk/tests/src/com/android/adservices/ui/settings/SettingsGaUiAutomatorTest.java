@@ -18,7 +18,7 @@ package com.android.adservices.ui.settings;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -33,6 +33,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
@@ -45,7 +46,6 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class SettingsGaUiAutomatorTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT = 1000;
     private static UiDevice sDevice;
@@ -64,6 +64,10 @@ public class SettingsGaUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
@@ -71,13 +75,18 @@ public class SettingsGaUiAutomatorTest {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
     public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // beta switch shouldn't exist
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -105,7 +114,8 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressHome();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // beta switch should exist
         mainSwitch = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
@@ -130,7 +140,8 @@ public class SettingsGaUiAutomatorTest {
     public void mainPageGaUxFlagDisableToEnableFlipTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // beta switch should exist
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -155,7 +166,8 @@ public class SettingsGaUiAutomatorTest {
         sDevice.pressHome();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // beta switch shouldn't exist
         mainSwitch = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
@@ -183,7 +195,8 @@ public class SettingsGaUiAutomatorTest {
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // no main switch any more
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -220,7 +233,8 @@ public class SettingsGaUiAutomatorTest {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // open measurement view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
 
@@ -243,7 +257,8 @@ public class SettingsGaUiAutomatorTest {
     public void topicsToggleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // 1) disable Topics API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
@@ -282,7 +297,8 @@ public class SettingsGaUiAutomatorTest {
     public void fledgeToggleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
@@ -321,7 +337,8 @@ public class SettingsGaUiAutomatorTest {
     public void measurementToggleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         // 1) disable Measurement API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
@@ -360,7 +377,8 @@ public class SettingsGaUiAutomatorTest {
     public void topicsSubTitleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
                 ".*:id/topics_preference_subtitle", R.string.settingsUI_topics_ga_title);
     }
@@ -369,7 +387,8 @@ public class SettingsGaUiAutomatorTest {
     public void appsSubTitleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
                 ".*:id/apps_preference_subtitle", R.string.settingsUI_apps_ga_title);
     }
@@ -378,7 +397,8 @@ public class SettingsGaUiAutomatorTest {
     public void measurementSubTitleTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        launchApp();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
                 ".*:id/measurement_preference_subtitle",
                 R.string.settingsUI_measurement_view_title);
@@ -422,17 +442,5 @@ public class SettingsGaUiAutomatorTest {
         UiObject element = ApkTestUtil.getPageElement(sDevice, resId);
         scrollView.scrollIntoView(element);
         return element;
-    }
-
-    private void launchApp() {
-        // launch app
-        Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
-
-        // Wait for the app to appear
-        sDevice.wait(
-                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 }

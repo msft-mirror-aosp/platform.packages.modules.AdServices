@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
@@ -26,6 +25,7 @@ import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -40,16 +40,17 @@ public class E2EDenoisedMockTest extends E2EMockTest {
         return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            ParamsProvider paramsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, paramsProvider, name);
+    public E2EDenoisedMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap) {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
 
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
@@ -57,7 +58,7 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         mDebugReportApi);
     }
 }

@@ -156,8 +156,12 @@ public class FledgeMaintenanceTasksWorkerTests {
                         DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid registered ad event
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                ImmutableList.of(DB_REGISTERED_INTERACTION));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -203,8 +207,19 @@ public class FledgeMaintenanceTasksWorkerTests {
                         EXPIRED_DB_BUYER_DECISION_LOGIC.getBiddingLogicUri()));
 
         // Add valid and expired registered ad events
-        mAdSelectionEntryDao.persistDBRegisteredAdInteractions(
-                ImmutableList.of(DB_REGISTERED_INTERACTION, EXPIRED_DB_REGISTERED_INTERACTION));
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_1,
+                ImmutableList.of(DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
+        // Add valid and expired registered ad events
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID_2,
+                ImmutableList.of(EXPIRED_DB_REGISTERED_INTERACTION),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount(),
+                TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount(),
+                SELLER_DESTINATION);
 
         assertTrue(
                 mAdSelectionEntryDao.doesRegisteredAdInteractionExist(

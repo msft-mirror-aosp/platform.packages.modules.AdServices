@@ -18,6 +18,9 @@ package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
@@ -54,7 +57,7 @@ public final class RegisterWebTrigger implements Action {
 
         WebTriggerRegistrationRequest registrationRequest =
                 new WebTriggerRegistrationRequest.Builder(
-                                createTriggerParams(triggerParamsArray),
+                                createTriggerParams(triggerParamsArray, obj),
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
@@ -69,8 +72,8 @@ public final class RegisterWebTrigger implements Action {
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
-        mDebugReporting = regParamsJson.optBoolean(TestFormatJsonMapping.DEBUG_REPORTING_KEY);
-        mAdIdPermission = regParamsJson.optBoolean(TestFormatJsonMapping.HAS_AD_ID_PERMISSION);
+        mDebugReporting = hasTriggerDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
     }
 
     @Override
@@ -78,7 +81,7 @@ public final class RegisterWebTrigger implements Action {
         return mTimestamp;
     }
 
-    private List<WebTriggerParams> createTriggerParams(JSONArray triggerParamsArray)
+    private List<WebTriggerParams> createTriggerParams(JSONArray triggerParamsArray, JSONObject obj)
             throws JSONException {
         List<WebTriggerParams> triggerParamsList = new ArrayList<>(triggerParamsArray.length());
 
@@ -89,9 +92,7 @@ public final class RegisterWebTrigger implements Action {
                                     Uri.parse(
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(
-                                    triggerParams.optBoolean(
-                                            TestFormatJsonMapping.DEBUG_KEY, false))
+                            .setDebugKeyAllowed(hasArDebugPermission(obj))
                             .build());
         }
 

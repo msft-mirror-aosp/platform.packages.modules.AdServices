@@ -1227,9 +1227,4 @@ public class TopicsDao {
                     tableName, e.getMessage());
         }
     }
-
-    /** Check whether TopContributors Table is supported in current database. */
-    public boolean supportsTopicContributorsTable() {
-        return mDbHelper.supportsTopicContributorsTable();
-    }
 }

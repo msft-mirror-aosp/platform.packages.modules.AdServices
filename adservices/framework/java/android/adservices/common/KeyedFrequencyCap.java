@@ -47,7 +47,7 @@ public final class KeyedFrequencyCap implements Parcelable {
     @VisibleForTesting public static final String MAX_COUNT_FIELD_NAME = "max_count";
     /** @hide */
     @VisibleForTesting public static final String INTERVAL_FIELD_NAME = "interval_in_seconds";
-
+    /** @hide */
     @VisibleForTesting public static final String JSON_ERROR_POSTFIX = " must be a String.";
     // 12 bytes for the duration and 4 for the maxCount
     private static final int SIZE_OF_FIXED_FIELDS = 16;
@@ -100,10 +100,16 @@ public final class KeyedFrequencyCap implements Parcelable {
     }
 
     /**
-     * Returns the maximum count within a given time interval that a frequency cap applies to.
+     * Returns the maximum count of previously occurring events allowed within a given time
+     * interval.
      *
-     * <p>If there are more events for an adtech counted on the device within the time interval
-     * defined by {@link #getInterval()}, the frequency cap has been exceeded.
+     * <p>If there are more events matching the ad counter key and ad event type counted on the
+     * device within the time interval defined by {@link #getInterval()}, the frequency cap has been
+     * exceeded, and the ad will not be eligible for ad selection.
+     *
+     * <p>For example, an ad that specifies a filter for a max count of two within one hour will not
+     * be eligible for ad selection if the event has been counted three or more times within the
+     * hour preceding the ad selection process.
      */
     public int getMaxCount() {
         return mMaxCount;
@@ -114,8 +120,9 @@ public final class KeyedFrequencyCap implements Parcelable {
      * over which the frequency cap is calculated.
      *
      * <p>When this frequency cap is computed, the number of persisted events is counted in the most
-     * recent time interval. If the count of specified events for an adtech is equal to or greater
-     * than the number returned by {@link #getMaxCount()}, the frequency cap has been exceeded.
+     * recent time interval. If the count of previously occurring matching events for an adtech is
+     * greater than the number returned by {@link #getMaxCount()}, the frequency cap has been
+     * exceeded, and the ad will not be eligible for ad selection.
      */
     @NonNull
     public Duration getInterval() {
@@ -236,7 +243,7 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public Builder setMaxCount(int maxCount) {
-            Preconditions.checkArgument(maxCount > 0, "Max count must be positive and non-zero");
+            Preconditions.checkArgument(maxCount >= 0, "Max count must be non-negative");
             mMaxCount = maxCount;
             return this;
         }
@@ -266,7 +273,7 @@ public final class KeyedFrequencyCap implements Parcelable {
         @NonNull
         public KeyedFrequencyCap build() throws NullPointerException, IllegalArgumentException {
             Objects.requireNonNull(mAdCounterKey, "Event key must be set");
-            Preconditions.checkArgument(mMaxCount > 0, "Max count must be positive and non-zero");
+            Preconditions.checkArgument(mMaxCount >= 0, "Max count must be non-negative");
             Objects.requireNonNull(mInterval, "Interval must not be null");
 
             return new KeyedFrequencyCap(this);
