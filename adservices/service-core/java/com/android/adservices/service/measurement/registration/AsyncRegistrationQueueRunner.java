@@ -31,6 +31,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -69,7 +70,7 @@ public class AsyncRegistrationQueueRunner {
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mEnrollmentDao = EnrollmentDao.getInstance(context);
         mContentResolver = context.getContentResolver();
-        mDebugReportApi = new DebugReportApi(context);
+        mDebugReportApi = new DebugReportApi(context, FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
