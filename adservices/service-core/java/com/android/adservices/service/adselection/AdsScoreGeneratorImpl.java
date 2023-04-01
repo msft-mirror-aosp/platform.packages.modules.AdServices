@@ -124,7 +124,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        mFlags);
     }
 
     /**

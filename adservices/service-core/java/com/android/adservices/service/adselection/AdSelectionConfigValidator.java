@@ -20,10 +20,9 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.AdDataValidator;
@@ -82,10 +81,12 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
 
     private static final String HTTPS_SCHEME = "https";
 
-    private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
-    public AdSelectionConfigValidator() {
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+    public AdSelectionConfigValidator(@NonNull PrebuiltLogicGenerator prebuiltLogicGenerator) {
+        Objects.requireNonNull(prebuiltLogicGenerator);
+
+        mPrebuiltLogicGenerator = prebuiltLogicGenerator;
     }
 
     @Override
