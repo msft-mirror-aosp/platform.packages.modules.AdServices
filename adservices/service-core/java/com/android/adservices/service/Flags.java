@@ -1528,7 +1528,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
-
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1575,6 +1575,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1876,11 +1881,18 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
-    /** Default Determines whether EU notification flow change is enabled.. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = false;
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
-    /** Determines whether EU notification flow change is enabled.. */
+    /** Determines whether EU notification flow change is enabled. */
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Returns whether to enable flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 }

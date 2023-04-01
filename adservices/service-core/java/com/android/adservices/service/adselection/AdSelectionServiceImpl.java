@@ -21,12 +21,13 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -377,6 +378,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mContext,
                                     mFlags,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                                     callingUid);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
@@ -424,7 +426,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void reportInteraction(
             @NonNull ReportInteractionInput inputParams,
             @NonNull ReportInteractionCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -491,7 +493,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramInput inputParams,
             @NonNull UpdateAdCounterHistogramCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -848,7 +850,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -877,7 +879,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -904,7 +906,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @Override
     public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);

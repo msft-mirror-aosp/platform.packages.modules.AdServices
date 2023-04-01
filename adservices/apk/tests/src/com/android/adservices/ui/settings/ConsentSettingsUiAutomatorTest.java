@@ -19,7 +19,7 @@ package com.android.adservices.ui.settings;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
-import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -33,6 +33,7 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -46,7 +47,6 @@ import org.junit.runner.RunWith;
 @RunWith(AndroidJUnit4.class)
 public class ConsentSettingsUiAutomatorTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
 
@@ -67,7 +67,9 @@ public class ConsentSettingsUiAutomatorTest {
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
-        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
@@ -76,7 +78,9 @@ public class ConsentSettingsUiAutomatorTest {
 
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
-        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
@@ -135,15 +139,9 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
-        // launch app
-        Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
 
-        // Wait for the app to appear
-        sDevice.wait(
-                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));

@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /**
  * A utility class to convert instances of {@link AdSelectionConfig} into {@link JSScriptArgument}
  */
-public class AdSelectionConfigArgument {
+public class AdSelectionConfigArgumentUtil {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String SELLER_FIELD_NAME = "seller";
@@ -49,11 +49,11 @@ public class AdSelectionConfigArgument {
     public static final String PER_BUYER_SIGNALS_FIELD_NAME = "per_buyer_signals";
 
     // No instance of this class is supposed to be created
-    private AdSelectionConfigArgument() {}
+    private AdSelectionConfigArgumentUtil() {}
 
     /**
      * @return A {@link JSScriptArgument} with the given {@code name} to represent this instance of
-     *     {@link AdSelectionConfigArgument}
+     *     {@link AdSelectionConfigArgumentUtil}
      * @throws JSONException if any of the signals in this class is not valid JSON.
      */
     public static JSScriptArgument asScriptArgument(

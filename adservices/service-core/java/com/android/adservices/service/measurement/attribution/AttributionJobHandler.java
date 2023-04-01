@@ -499,8 +499,11 @@ class AttributionJobHandler {
         return TriggeringStatus.ATTRIBUTED;
     }
 
-    private static boolean provisionEventReportQuota(Source source, Trigger trigger,
-            EventReport newEventReport, IMeasurementDao measurementDao)
+    private boolean provisionEventReportQuota(
+            Source source,
+            Trigger trigger,
+            EventReport newEventReport,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
@@ -526,6 +529,8 @@ class AttributionJobHandler {
         EventReport lowestPriorityEventReport = relevantEventReports.get(0);
         if (lowestPriorityEventReport.getTriggerPriority()
                 >= newEventReport.getTriggerPriority()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
             return false;
         }
 

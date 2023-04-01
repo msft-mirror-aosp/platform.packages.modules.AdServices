@@ -144,16 +144,29 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 LogUtil.d("Reconsent for ROW.");
 
                                 if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    consentManager.setCurrentPrivacySandboxFeature(
-                                            PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
+                                        consentManager.setCurrentPrivacySandboxFeature(
+                                                PrivacySandboxFeatureType
+                                                        .PRIVACY_SANDBOX_RECONSENT_FF);
+                                    } else {
+                                        consentManager.setCurrentPrivacySandboxFeature(
+                                                PrivacySandboxFeatureType
+                                                        .PRIVACY_SANDBOX_RECONSENT);
+                                    }
                                 }
 
                                 ConsentNotificationJobService.schedule(mContext, adIdEnabled, true);
                             } else if (getFirstConsentStatus()) {
                                 if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                                    consentManager.setCurrentPrivacySandboxFeature(
-                                            PrivacySandboxFeatureType
-                                                    .PRIVACY_SANDBOX_FIRST_CONSENT);
+                                    if (mFlags.getEuNotifFlowChangeEnabled()) {
+                                        consentManager.setCurrentPrivacySandboxFeature(
+                                                PrivacySandboxFeatureType
+                                                        .PRIVACY_SANDBOX_FIRST_CONSENT_FF);
+                                    } else {
+                                        consentManager.setCurrentPrivacySandboxFeature(
+                                                PrivacySandboxFeatureType
+                                                        .PRIVACY_SANDBOX_FIRST_CONSENT);
+                                    }
                                 }
 
                                 ConsentNotificationJobService.schedule(
@@ -201,8 +214,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                     // AdidEnabled status does not matter here as this is only for EU device, it
                     // will override by the EU in the scheduler
                     if (mFlags.isUiFeatureTypeLoggingEnabled()) {
-                        consentManager.setCurrentPrivacySandboxFeature(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                        if (mFlags.getEuNotifFlowChangeEnabled()) {
+                            consentManager.setCurrentPrivacySandboxFeature(
+                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT_FF);
+                        } else {
+                            consentManager.setCurrentPrivacySandboxFeature(
+                                    PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+                        }
                     }
 
                     ConsentNotificationJobService.schedule(mContext, false, true);

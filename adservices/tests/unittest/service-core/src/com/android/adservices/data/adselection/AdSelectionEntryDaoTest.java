@@ -33,6 +33,7 @@ import android.net.Uri;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
@@ -42,6 +43,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -215,6 +217,14 @@ public class AdSelectionEntryDaoTest {
                     .setDecisionLogic(BUYER_DECISION_LOGIC_JS_2)
                     .build();
 
+    private static final DBBuyerDecisionOverride DB_BUYER_DECISION_OVERRIDE_3 =
+            DBBuyerDecisionOverride.builder()
+                    .setAdSelectionConfigId(AD_SELECTION_CONFIG_ID_1)
+                    .setAppPackageName(CALLER_PACKAGE_NAME_2)
+                    .setBuyer(CommonFixture.VALID_BUYER_3)
+                    .setDecisionLogic(BUYER_DECISION_LOGIC_JS_2)
+                    .build();
+
     private static final ImmutableList<DBBuyerDecisionOverride> DB_BUYER_DECISION_OVERRIDES =
             ImmutableList.of(DB_BUYER_DECISION_OVERRIDE_1, DB_BUYER_DECISION_OVERRIDE_2);
 
@@ -382,7 +392,7 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testDeletesAllAdSelectionOverrides() {
+    public void testRemoveAdSelectionOverridesByPackageName() {
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_2);
         mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_4);
@@ -397,7 +407,7 @@ public class AdSelectionEntryDaoTest {
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
 
-        mAdSelectionEntryDao.removeAllAdSelectionOverrides(CALLER_PACKAGE_NAME_1);
+        mAdSelectionEntryDao.removeAdSelectionOverridesByPackageName(CALLER_PACKAGE_NAME_1);
 
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
@@ -1273,7 +1283,7 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
-    public void testRemoveAllBuyerDecisionLogicOverrides() {
+    public void testRemoveBuyerDecisionOverridesByPackageName() {
         mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
 
         List<DBBuyerDecisionOverride> overrides =
@@ -1282,8 +1292,262 @@ public class AdSelectionEntryDaoTest {
 
         assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
 
-        mAdSelectionEntryDao.removeAllBuyerDecisionOverrides(CALLER_PACKAGE_NAME_1);
+        mAdSelectionEntryDao.removeBuyerDecisionOverridesByPackageName(CALLER_PACKAGE_NAME_1);
 
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetAdSelectionBiddingLogicUrisByPackageName() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+
+        List<Uri> receivedUris =
+                mAdSelectionEntryDao.getAdSelectionBiddingLogicUrisByPackageName(
+                        CALLER_PACKAGE_NAME_1);
+
+        List<Uri> expectedUris = List.of(BIDDING_LOGIC_URI_1);
+        assertThat(receivedUris).containsExactlyElementsIn(expectedUris);
+    }
+
+    @Test
+    public void testRemoveAdSelectionEntriesByPackageName() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+
+        mAdSelectionEntryDao.removeAdSelectionEntriesByPackageName(CALLER_PACKAGE_NAME_1);
+
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+    }
+
+    @Test
+    public void testRemoveBuyerDecisionLogicByBiddingLogicUris() {
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+
+        mAdSelectionEntryDao.removeBuyerDecisionLogicByBiddingLogicUris(
+                List.of(BIDDING_LOGIC_URI_1));
+
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+    }
+
+    @Test
+    public void testRemoveBuyerDecisionLogicOverrideByPackageName() {
+        List<DBBuyerDecisionOverride> allOverrides =
+                List.of(
+                        DB_BUYER_DECISION_OVERRIDE_1,
+                        DB_BUYER_DECISION_OVERRIDE_2,
+                        DB_BUYER_DECISION_OVERRIDE_3);
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(allOverrides);
+
+        List<DBBuyerDecisionOverride> overridesFromPackage1 =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+        List<DBBuyerDecisionOverride> overridesFromPackage2 =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_2);
+        List<DBBuyerDecisionOverride> insertedOverrides = new ArrayList<>();
+        insertedOverrides.addAll(overridesFromPackage1);
+        insertedOverrides.addAll(overridesFromPackage2);
+
+        assertThat(insertedOverrides).containsExactlyElementsIn(allOverrides);
+
+        mAdSelectionEntryDao.removeBuyerDecisionLogicOverrideByPackageName(CALLER_PACKAGE_NAME_1);
+
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_2))
+                .containsExactlyElementsIn(List.of(DB_BUYER_DECISION_OVERRIDE_3));
+    }
+
+    @Test
+    public void testRemoveAdSelectionDataByPackageName() {
+        // Persist
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_4);
+        List<DBBuyerDecisionOverride> allOverrides =
+                List.of(
+                        DB_BUYER_DECISION_OVERRIDE_1,
+                        DB_BUYER_DECISION_OVERRIDE_2,
+                        DB_BUYER_DECISION_OVERRIDE_3);
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(allOverrides);
+
+        // Check if persisted
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_2, CALLER_PACKAGE_NAME_2));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
+        List<DBBuyerDecisionOverride> overridesFromPackage1 =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+        List<DBBuyerDecisionOverride> overridesFromPackage2 =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_2);
+        List<DBBuyerDecisionOverride> insertedOverrides = new ArrayList<>();
+        insertedOverrides.addAll(overridesFromPackage1);
+        insertedOverrides.addAll(overridesFromPackage2);
+        assertThat(insertedOverrides).containsExactlyElementsIn(allOverrides);
+
+        // Remove data of package
+        mAdSelectionEntryDao.removeAdSelectionDataByPackageName(CALLER_PACKAGE_NAME_1);
+
+        // Verify
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_2, CALLER_PACKAGE_NAME_2));
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_2))
+                .containsExactlyElementsIn(List.of(DB_BUYER_DECISION_OVERRIDE_3));
+    }
+
+    @Test
+    public void testRemoveAllAdSelectionEntries() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+
+        mAdSelectionEntryDao.removeAllAdSelectionEntries();
+
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+    }
+
+    @Test
+    public void testRemoveAllBuyerDecisionLogic() {
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertTrue(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+
+        mAdSelectionEntryDao.removeAllBuyerDecisionLogic();
+
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+    }
+
+    @Test
+    public void testRemoveAllAdSelectionOverrides() {
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_4);
+
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_2, CALLER_PACKAGE_NAME_2));
+        assertTrue(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
+
+        mAdSelectionEntryDao.removeAllAdSelectionOverrides();
+
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_2, CALLER_PACKAGE_NAME_2));
+    }
+
+    @Test
+    public void testRemoveAllBuyerDecisionLogicOverride() {
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+
+        List<DBBuyerDecisionOverride> overrides =
+                mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1);
+
+        assertThat(overrides).containsExactlyElementsIn(DB_BUYER_DECISION_OVERRIDES);
+
+        mAdSelectionEntryDao.removeAllBuyerDecisionLogicOverrides();
+
+        assertThat(
+                        mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
+                                AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testRemoveAdSelectionData() {
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_1);
+        mAdSelectionEntryDao.persistAdSelection(DB_AD_SELECTION_2);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_1);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(DB_BUYER_DECISION_LOGIC_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_1);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_2);
+        mAdSelectionEntryDao.persistAdSelectionOverride(DB_AD_SELECTION_OVERRIDE_4);
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(DB_BUYER_DECISION_OVERRIDES);
+
+        mAdSelectionEntryDao.removeAllAdSelectionData();
+
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_1));
+        assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(AD_SELECTION_ID_2));
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_1));
+        assertFalse(mAdSelectionEntryDao.doesBuyerDecisionLogicExist(BIDDING_LOGIC_URI_2));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_4, CALLER_PACKAGE_NAME_1));
+        assertFalse(
+                mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
+                        AD_SELECTION_CONFIG_ID_2, CALLER_PACKAGE_NAME_2));
         assertThat(
                         mAdSelectionEntryDao.getBuyersDecisionLogicOverride(
                                 AD_SELECTION_CONFIG_ID_1, CALLER_PACKAGE_NAME_1))

@@ -37,6 +37,8 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorTestUtil;
 
 import org.junit.Assert;
@@ -61,6 +63,8 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
     private AdSelectionFromOutcomesConfigValidator mValidator;
+    private PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    private Flags mFlags;
 
     @Before
     public void setup() {
@@ -70,10 +74,11 @@ public class AdSelectionFromOutcomesConfigValidatorTest {
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-
+        mFlags = FlagsFactory.getFlagsForTest();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
         mValidator =
                 new AdSelectionFromOutcomesConfigValidator(
-                        mAdSelectionEntryDao, CALLER_PACKAGE_NAME);
+                        mAdSelectionEntryDao, CALLER_PACKAGE_NAME, mPrebuiltLogicGenerator);
     }
 
     @Test
