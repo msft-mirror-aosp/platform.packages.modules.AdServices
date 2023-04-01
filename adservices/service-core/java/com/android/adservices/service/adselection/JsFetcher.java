@@ -25,6 +25,7 @@ import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DecisionLogic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -66,7 +67,8 @@ public class JsFetcher {
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull Flags flags) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -74,7 +76,7 @@ public class JsFetcher {
         mBackgroundExecutorService = backgroundExecutorService;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
     }
 
     /**

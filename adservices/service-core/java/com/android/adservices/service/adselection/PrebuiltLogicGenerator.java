@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashSet;
@@ -38,12 +39,15 @@ import java.util.stream.Collectors;
 public class PrebuiltLogicGenerator {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     // TODO (b/271055928): Investigate abstracting use cases to their own classes with different
-    // flavors
+    //  flavors
     @VisibleForTesting
     static final String UNKNOWN_PREBUILT_IDENTIFIER = "Unknown prebuilt identifier: '%s'!";
 
     @VisibleForTesting
     static final String MISSING_PREBUILT_PARAMS = "Missing prebuilt URI query params: '%s'!";
+
+    @VisibleForTesting
+    static final String PREBUILT_FEATURE_IS_DISABLED = "Prebuilt Uri feature is disabled!";
 
     @VisibleForTesting
     static final String UNRECOGNIZED_PREBUILT_PARAMS =
@@ -93,21 +97,50 @@ public class PrebuiltLogicGenerator {
     @VisibleForTesting static final String NAMED_PARAM_TEMPLATE = "\\$\\{%s\\}";
     private static final Pattern PARAM_IDENTIFIER_REGEX_PATTERN =
             Pattern.compile(String.format(NAMED_PARAM_TEMPLATE, "(.*?)"));
+    private final Flags mFlags;
+
+    public PrebuiltLogicGenerator(Flags flags) {
+        mFlags = flags;
+    }
 
     /**
-     * Returns generated JS script from a valid prebuilt URI.
+     * Returns true if the given URI is in FLEDGE Ad Selection Prebuilt format
+     *
+     * @param decisionUri URI to check
+     * @return true if prebuilt URI, otherwise false
+     */
+    public boolean isPrebuiltUri(Uri decisionUri) {
+        String scheme = decisionUri.getScheme();
+        boolean isPrebuilt = Objects.nonNull(scheme) && scheme.equals(AD_SELECTION_PREBUILT_SCHEMA);
+        sLogger.v("Checking if URI %s is of prebuilt schema: %s", decisionUri, isPrebuilt);
+        sLogger.v("Prebuilt enabled flag: %s", mFlags.getFledgeAdSelectionPrebuiltUriEnabled());
+        if (isPrebuilt && !mFlags.getFledgeAdSelectionPrebuiltUriEnabled()) {
+            sLogger.e(PREBUILT_FEATURE_IS_DISABLED);
+            throw new IllegalArgumentException(PREBUILT_FEATURE_IS_DISABLED);
+        }
+        return isPrebuilt;
+    }
+
+    /**
+     * Returns the generated JS script from a valid prebuilt URI.
      *
      * @param prebuiltUri valid prebuilt URI. {@link IllegalArgumentException} is thrown if the
      *     given URI is not valid or supported.
      * @return JS script
      */
     public String jsScriptFromPrebuiltUri(Uri prebuiltUri) {
+
         if (!isPrebuiltUri(prebuiltUri)) {
             String err = String.format(UNKNOWN_PREBUILT_IDENTIFIER, prebuiltUri);
             sLogger.e(err);
             throw new IllegalArgumentException(err);
         }
-
+        sLogger.v("Prebuilt enabled: %s", mFlags.getFledgeAdSelectionPrebuiltUriEnabled());
+        if (!mFlags.getFledgeAdSelectionPrebuiltUriEnabled()) {
+            sLogger.e(PREBUILT_FEATURE_IS_DISABLED);
+            throw new IllegalArgumentException(PREBUILT_FEATURE_IS_DISABLED);
+        }
+        sLogger.v("Generating JS for URI: %s", prebuiltUri);
         String jsTemplate =
                 getPrebuiltJsScriptTemplate(prebuiltUri.getHost(), prebuiltUri.getPath());
         sLogger.v("Template found for URI %s:%n%s", prebuiltUri, jsTemplate);
@@ -134,17 +167,6 @@ public class PrebuiltLogicGenerator {
         sLogger.i("Final prebuilt JS is generated:%n%s", jsTemplate);
 
         return jsTemplate;
-    }
-
-    /**
-     * Returns true if the given URI is in FLEDGE Ad Selection Prebuilt format
-     *
-     * @param decisionUri URI to check
-     * @return true if prebuilt URI, otherwise false
-     */
-    public boolean isPrebuiltUri(Uri decisionUri) {
-        String scheme = decisionUri.getScheme();
-        return Objects.nonNull(scheme) && scheme.equals(AD_SELECTION_PREBUILT_SCHEMA);
     }
 
     private Set<String> calculateRequiredParameters(String jsTemplate) {

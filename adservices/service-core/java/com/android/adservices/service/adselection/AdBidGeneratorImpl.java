@@ -134,7 +134,8 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 new JsFetcher(
                         backgroundExecutorService,
                         lightweightExecutorService,
-                        adServicesHttpsClient);
+                        adServicesHttpsClient,
+                        mFlags);
     }
 
     @VisibleForTesting
