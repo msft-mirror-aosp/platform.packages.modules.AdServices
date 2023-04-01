@@ -18,6 +18,7 @@ package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.BuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -27,12 +28,16 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
+import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /** Helper class to support the runtime retrieval of dev overrides for the AdSelection API. */
 public class AdSelectionDevOverridesHelper {
@@ -99,7 +104,7 @@ public class AdSelectionDevOverridesHelper {
 
     /**
      * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
-     * {@link DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in
+     * {@link DevContext#getDevOptionsEnabled()} returns null for the {@link DevContext} passed in
      * the constructor or if there is no override created by the app with package name specified in
      * {@link DevContext#getCallingAppPackageName()}.
      */
@@ -113,6 +118,31 @@ public class AdSelectionDevOverridesHelper {
         return mAdSelectionEntryDao.getDecisionLogicOverride(
                 calculateAdSelectionConfigId(adSelectionConfig),
                 mDevContext.getCallingAppPackageName());
+    }
+
+    /**
+     * Looks for an override for the given {@link AdSelectionConfig}. Will return {@code null} if
+     * {@link DevContext#getDevOptionsEnabled()} returns null for the {@link DevContext} passed in
+     * the constructor or if there is no override created by the app with package name specified in
+     * {@link DevContext#getCallingAppPackageName()}.
+     */
+    @Nullable
+    public Map<AdTechIdentifier, String> getBuyersDecisionLogicOverride(
+            @NonNull AdSelectionConfig adSelectionConfig) {
+        Objects.requireNonNull(adSelectionConfig);
+
+        if (!mDevContext.getDevOptionsEnabled()) {
+            return null;
+        }
+        return mAdSelectionEntryDao
+                .getBuyersDecisionLogicOverride(
+                        calculateAdSelectionConfigId(adSelectionConfig),
+                        mDevContext.getCallingAppPackageName())
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                DBBuyerDecisionOverride::getBuyer,
+                                DBBuyerDecisionOverride::getDecisionLogic));
     }
 
     /**
@@ -146,20 +176,36 @@ public class AdSelectionDevOverridesHelper {
     public void addAdSelectionSellerOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull AdSelectionSignals trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
         if (!mDevContext.getDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
+        final String adSelectionConfigId = calculateAdSelectionConfigId(adSelectionConfig);
         mAdSelectionEntryDao.persistAdSelectionOverride(
                 DBAdSelectionOverride.builder()
-                        .setAdSelectionConfigId(calculateAdSelectionConfigId(adSelectionConfig))
+                        .setAdSelectionConfigId(adSelectionConfigId)
                         .setAppPackageName(mDevContext.getCallingAppPackageName())
                         .setDecisionLogicJS(decisionLogicJS)
                         .setTrustedScoringSignals(trustedScoringSignals.toString())
                         .build());
+
+        List<DBBuyerDecisionOverride> dbBuyerDecisionOverrideList =
+                buyersDecisionLogic.stream()
+                        .map(
+                                x ->
+                                        DBBuyerDecisionOverride.builder()
+                                                .setBuyer(x.getBuyer())
+                                                .setDecisionLogic(x.getDecisionLogic())
+                                                .setAdSelectionConfigId(adSelectionConfigId)
+                                                .setAppPackageName(
+                                                        mDevContext.getCallingAppPackageName())
+                                                .build())
+                        .collect(Collectors.toList());
+        mAdSelectionEntryDao.persistBuyersDecisionLogicOverride(dbBuyerDecisionOverrideList);
     }
 
     /**
@@ -180,6 +226,8 @@ public class AdSelectionDevOverridesHelper {
 
         mAdSelectionEntryDao.removeAdSelectionOverrideByIdAndPackageName(
                 adSelectionConfigId, appPackageName);
+        mAdSelectionEntryDao.removeBuyerDecisionLogicOverrideByIdAndPackageName(
+                adSelectionConfigId, appPackageName);
     }
 
     /**
@@ -193,7 +241,10 @@ public class AdSelectionDevOverridesHelper {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
-        mAdSelectionEntryDao.removeAllAdSelectionOverrides(mDevContext.getCallingAppPackageName());
+        mAdSelectionEntryDao.removeAdSelectionOverridesByPackageName(
+                mDevContext.getCallingAppPackageName());
+        mAdSelectionEntryDao.removeBuyerDecisionOverridesByPackageName(
+                mDevContext.getCallingAppPackageName());
     }
 
     /**

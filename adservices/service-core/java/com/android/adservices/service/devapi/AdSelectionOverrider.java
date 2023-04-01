@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOverrideCallback;
+import android.adservices.adselection.BuyerDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.FledgeErrorResponse;
@@ -49,6 +50,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -57,6 +59,7 @@ import java.util.concurrent.ExecutorService;
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionOverrider {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @NonNull private final DevContext mDevContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
@@ -93,6 +96,7 @@ public class AdSelectionOverrider {
         Objects.requireNonNull(appImportanceFilter);
         Objects.requireNonNull(flags);
 
+        this.mDevContext = devContext;
         this.mAdSelectionEntryDao = adSelectionEntryDao;
         this.mLightweightExecutorService =
                 MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -118,6 +122,7 @@ public class AdSelectionOverrider {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         // Auto-generated variable name is too long for lint check
         int shortApiName =
@@ -138,7 +143,10 @@ public class AdSelectionOverrider {
                 .transformAsync(
                         ignoredVoid ->
                                 callAddOverride(
-                                        adSelectionConfig, decisionLogicJS, trustedScoringSignals),
+                                        adSelectionConfig,
+                                        decisionLogicJS,
+                                        trustedScoringSignals,
+                                        buyersDecisionLogic),
                         mLightweightExecutorService)
                 .addCallback(
                         new FutureCallback<Integer>() {
@@ -398,18 +406,23 @@ public class AdSelectionOverrider {
     private FluentFuture<Integer> callAddOverride(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
-            @NonNull AdSelectionSignals trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic) {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
                             mAdSelectionDevOverridesHelper.addAdSelectionSellerOverride(
-                                    adSelectionConfig, decisionLogicJS, trustedScoringSignals);
+                                    adSelectionConfig,
+                                    decisionLogicJS,
+                                    trustedScoringSignals,
+                                    buyersDecisionLogic);
                             return AdServicesStatusUtils.STATUS_SUCCESS;
                         }));
     }
@@ -418,9 +431,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -434,9 +448,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -452,9 +467,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -469,9 +485,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
@@ -485,9 +502,10 @@ public class AdSelectionOverrider {
         return FluentFuture.from(
                 mBackgroundExecutorService.submit(
                         () -> {
-                            AdServicesApiConsent userConsent = getAdServicesApiConsent();
-
-                            if (!userConsent.isGiven()) {
+                            try {
+                                mConsentManager.assertFledgeCallerHasUserConsent(
+                                        mDevContext.getCallingAppPackageName());
+                            } catch (ConsentManager.RevokedConsentException e) {
                                 return AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                             }
 
