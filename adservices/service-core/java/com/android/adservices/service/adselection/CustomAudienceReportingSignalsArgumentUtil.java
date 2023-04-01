@@ -29,17 +29,17 @@ import org.json.JSONException;
  * JSScriptArgument}. It strips out extraneous information from {@link CustomAudienceSignals} and
  * only passes the data relevant for reporting.
  */
-public class CustomAudienceReportingSignalsArgument {
+public class CustomAudienceReportingSignalsArgumentUtil {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     public static final String NAME_FIELD_NAME = "name";
 
     // No instance of this class is supposed to be created
-    private CustomAudienceReportingSignalsArgument() {}
+    private CustomAudienceReportingSignalsArgumentUtil() {}
 
     /**
      * @return A {@link JSScriptArgument} with the given {@code name} to represent this instance of
-     *     {@link CustomAudienceReportingSignalsArgument}
+     *     {@link CustomAudienceReportingSignalsArgumentUtil}
      * @throws JSONException if any of the signals in this class is not valid JSON.
      */
     public static JSScriptArgument asScriptArgument(

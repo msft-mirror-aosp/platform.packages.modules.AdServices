@@ -36,14 +36,14 @@ import org.junit.Test;
 
 import java.time.Instant;
 
-public class CustomAudienceScoringSignalsArgumentTest {
+public class CustomAudienceScoringSignalsArgumentUtilTest {
     private final CustomAudienceSignals mCustomAudienceSignals1 = createCustomAudience("1");
     private final CustomAudienceSignals mCustomAudienceSignals2 = createCustomAudience("2");
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {
         JSScriptArgument caSignalJsArgument =
-                CustomAudienceScoringSignalsArgument.asScriptArgument(
+                CustomAudienceScoringSignalsArgumentUtil.asScriptArgument(
                         CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME, mCustomAudienceSignals1);
         matchCustomAudienceSignals(
                 CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
@@ -56,7 +56,7 @@ public class CustomAudienceScoringSignalsArgumentTest {
         ImmutableList<CustomAudienceSignals> customAudienceSignalsList =
                 ImmutableList.of(mCustomAudienceSignals1, mCustomAudienceSignals2);
         JSScriptArgument customAudienceSignalsArgumentList =
-                CustomAudienceScoringSignalsArgument.asScriptArgument(
+                CustomAudienceScoringSignalsArgumentUtil.asScriptArgument(
                         CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME, customAudienceSignalsList);
 
         Assert.assertEquals(
@@ -93,7 +93,7 @@ public class CustomAudienceScoringSignalsArgumentTest {
      */
     private String createCAJsArrayListArgument(final CustomAudienceSignals caSignals) {
         try {
-            return CustomAudienceScoringSignalsArgument.asScriptArgument("ignored", caSignals)
+            return CustomAudienceScoringSignalsArgumentUtil.asScriptArgument("ignored", caSignals)
                     .variableDeclaration()
                     .split("=", 2)[1]
                     .trim()
@@ -127,10 +127,10 @@ public class CustomAudienceScoringSignalsArgumentTest {
                         recordArg(
                                 argName,
                                 stringArg(
-                                        CustomAudienceScoringSignalsArgument.BUYER_FIELD_NAME,
+                                        CustomAudienceScoringSignalsArgumentUtil.BUYER_FIELD_NAME,
                                         actualSignals.getBuyer().toString()),
                                 stringArg(
-                                        CustomAudienceScoringSignalsArgument.NAME_FIELD_NAME,
+                                        CustomAudienceScoringSignalsArgumentUtil.NAME_FIELD_NAME,
                                         actualSignals.getName())));
     }
 }

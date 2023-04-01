@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
+import static com.android.adservices.data.adselection.CustomAudienceSignals.CONTEXTUAL_CA_NAME;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
@@ -75,6 +76,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.android.adservices.service.Flags;
@@ -631,6 +633,7 @@ public class AdsScoreGeneratorImplTest {
         assertEquals(5L, scoringOutcome.get(4).getAdWithScore().getScore().longValue());
         assertEquals(300, scoringOutcome.get(4).getAdWithScore().getAdWithBid().getBid(), 0);
         assertEquals(500, scoringOutcome.get(6).getAdWithScore().getAdWithBid().getBid(), 0);
+        validateCustomAudienceSignals(scoringOutcome.get(6).getCustomAudienceSignals(), BUYER_2);
 
         // Only buyer2 decision logic should have been populated from overrides
         assertFalse(
@@ -1292,6 +1295,14 @@ public class AdsScoreGeneratorImplTest {
                     Thread.sleep(2 * flags.getAdSelectionScoringTimeoutMs());
                     return scores;
                 });
+    }
+
+    private void validateCustomAudienceSignals(
+            CustomAudienceSignals signals, AdTechIdentifier buyer) {
+        assertEquals(CONTEXTUAL_CA_NAME, signals.getName());
+        assertEquals(buyer.toString(), signals.getOwner());
+        assertEquals(buyer, signals.getBuyer());
+        assertEquals(AdSelectionSignals.EMPTY, signals.getUserBiddingSignals());
     }
 
     private Map<AdTechIdentifier, ContextualAds> createContextualAds() {

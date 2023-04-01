@@ -27,13 +27,13 @@ import com.android.internal.annotations.VisibleForTesting;
  * A wrapper class for {@code AdSelectionId} and {@code Bid} pair to support the conversion to JS
  * Script parameter and from JS result string.
  */
-public class SelectAdsFromOutcomesArgument {
+public class SelectAdsFromOutcomesArgumentUtil {
     @VisibleForTesting static final String ID_FIELD_NAME = "id";
 
     @VisibleForTesting static final String BID_FIELD_NAME = "bid";
 
     // No instance of this class is supposed to be created
-    private SelectAdsFromOutcomesArgument() {}
+    private SelectAdsFromOutcomesArgumentUtil() {}
 
     /** Converts {@link AdSelectionIdWithBidAndRenderUri} object to Json object */
     public static JSScriptArgument asScriptArgument(

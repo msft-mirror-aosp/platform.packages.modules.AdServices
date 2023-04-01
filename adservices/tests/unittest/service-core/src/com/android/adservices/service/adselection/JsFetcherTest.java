@@ -16,14 +16,20 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.NAMED_PARAM_TEMPLATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -35,16 +41,20 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
@@ -101,13 +111,8 @@ public class JsFetcherTest {
                     .setCallingAppPackageName(APP_PACKAGE_NAME)
                     .build();
 
-    private CustomAudienceDao mCustomAudienceDao =
-            Room.inMemoryDatabaseBuilder(
-                            ApplicationProvider.getApplicationContext(),
-                            CustomAudienceDatabase.class)
-                    .addTypeConverter(new DBCustomAudience.Converters(true))
-                    .build()
-                    .customAudienceDao();
+    private CustomAudienceDao mCustomAudienceDao;
+    private AdSelectionEntryDao mAdSelectionEntryDao;
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private AdServicesHttpsClient mWebClient;
@@ -115,9 +120,12 @@ public class JsFetcherTest {
     private MockWebServer mServer;
     private MockitoSession mStaticMockSession = null;
     private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
+    private AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
     private Uri mFetchJsUri;
     private AdServicesHttpClientRequest mFetchJsRequest;
+    private Flags mFlags;
+    private JsFetcher mJsFetcher;
 
     @Before
     public void setUp() throws Exception {
@@ -128,10 +136,12 @@ public class JsFetcherTest {
                         .startMocking();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
+        mFlags = new JsFetcherTestFlags(true);
         mWebClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
+
         mDevContext = DevContext.createForDevOptionsDisabled();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
@@ -140,6 +150,12 @@ public class JsFetcherTest {
                         .addTypeConverter(new DBCustomAudience.Converters(true))
                         .build()
                         .customAudienceDao();
+        mAdSelectionEntryDao =
+                Room.inMemoryDatabaseBuilder(
+                                ApplicationProvider.getApplicationContext(),
+                                AdSelectionDatabase.class)
+                        .build()
+                        .adSelectionEntryDao();
 
         mFetchJsUri = mMockWebServerRule.uriForPath(FETCH_JAVA_SCRIPT_PATH);
         mFetchJsRequest =
@@ -162,6 +178,14 @@ public class JsFetcherTest {
         mServer = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdSelectionDevOverridesHelper =
+                new AdSelectionDevOverridesHelper(mDevContext, mAdSelectionEntryDao);
+        mJsFetcher =
+                new JsFetcher(
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mWebClient,
+                        mFlags);
     }
 
     @After
@@ -181,14 +205,9 @@ public class JsFetcherTest {
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        JsFetcher jsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mWebClient);
 
         FluentFuture<String> buyerDecisionLogicFuture =
-                jsFetcher.getBiddingLogic(
+                mJsFetcher.getBiddingLogic(
                         mFetchJsUri, mCustomAudienceDevOverridesHelper, OWNER, BUYER, NAME);
         String buyerDecisionLogic = waitForFuture(() -> buyerDecisionLogicFuture);
         assertEquals(BIDDING_LOGIC_OVERRIDE, buyerDecisionLogic);
@@ -206,11 +225,7 @@ public class JsFetcherTest {
         mCustomAudienceDao.persistCustomAudienceOverride(DB_CUSTOM_AUDIENCE_OVERRIDE);
         mCustomAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        JsFetcher jsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mWebClient);
+
         // Logger calls come after the future result is returned
         CountDownLatch loggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -228,7 +243,7 @@ public class JsFetcherTest {
                 .when(mRunAdBiddingPerCAExecutionLoggerMock)
                 .endGetBuyerDecisionLogic(any());
         FluentFuture<DecisionLogic> buyerDecisionLogicFuture =
-                jsFetcher.getBuyerDecisionLogicWithLogger(
+                mJsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
                         mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
@@ -247,15 +262,8 @@ public class JsFetcherTest {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithoutOverride() throws Exception {
-
-        JsFetcher jsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mWebClient);
-
         FluentFuture<String> buyerDecisionLogicFuture =
-                jsFetcher.getBiddingLogic(
+                mJsFetcher.getBiddingLogic(
                         mFetchJsUri,
                         mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
@@ -273,11 +281,6 @@ public class JsFetcherTest {
 
     @Test
     public void testSuccessfulGetBuyerLogicWithoutOverrideAndLogger() throws Exception {
-        JsFetcher jsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mWebClient);
         // Logger calls come after the future result is returned
         CountDownLatch loggerLatch = new CountDownLatch(2);
         doAnswer(
@@ -295,7 +298,7 @@ public class JsFetcherTest {
                 .when(mRunAdBiddingPerCAExecutionLoggerMock)
                 .endGetBuyerDecisionLogic(any());
         FluentFuture<DecisionLogic> buyerDecisionLogicFuture =
-                jsFetcher.getBuyerDecisionLogicWithLogger(
+                mJsFetcher.getBuyerDecisionLogicWithLogger(
                         mFetchJsRequest,
                         mCustomAudienceDevOverridesHelper,
                         CustomAudienceFixture.VALID_OWNER,
@@ -316,13 +319,45 @@ public class JsFetcherTest {
     }
 
     @Test
+    public void testGetOutcomeSelectionLogicJsWithPrebuiltUri_featureDisabled_failure()
+            throws Exception {
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(prebuiltUri);
+        AdServicesHttpClientRequest outcomeSelectionLogicRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(prebuiltUri)
+                        .setUseCache(false)
+                        .build();
+        FluentFuture<String> decisionLogicFuture =
+                mJsFetcher.getOutcomeSelectionLogic(
+                        outcomeSelectionLogicRequest, mAdSelectionDevOverridesHelper, config);
+        String buyerDecisionLogic = waitForFuture(() -> decisionLogicFuture);
+
+        assertEquals(
+                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS.replaceAll(
+                        String.format(NAMED_PARAM_TEMPLATE, paramKey), paramValue),
+                buyerDecisionLogic);
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 0, Collections.emptyList(), REQUEST_MATCHER_EXACT_MATCH);
+    }
+
+    @Test
     public void testGerVersionHeader() {
-        JsFetcher jsFetcher =
-                new JsFetcher(mBackgroundExecutorService, mLightweightExecutorService, mWebClient);
         int payloadType = JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS;
         long version = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
         ImmutableMap<Integer, Long> versionMap =
-                jsFetcher.getVersionMap(
+                mJsFetcher.getVersionMap(
                         JsVersionHelper.getRequestWithVersionHeader(
                                 mFetchJsUri, ImmutableMap.of(payloadType, version), false),
                         AdServicesHttpClientResponse.builder()
@@ -336,9 +371,9 @@ public class JsFetcherTest {
                                 .build());
 
         assertEquals(1, versionMap.size());
-        assertTrue(
-                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
-                        == versionMap.get(JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS));
+        assertEquals(
+                (Long) JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
+                versionMap.get(JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS));
     }
 
     private <T> T waitForFuture(JsFetcherTest.ThrowingSupplier<ListenableFuture<T>> function)
@@ -352,5 +387,18 @@ public class JsFetcherTest {
 
     interface ThrowingSupplier<T> {
         T get() throws Exception;
+    }
+
+    private static class JsFetcherTestFlags implements Flags {
+        private final boolean mPrebuiltLogicEnabled;
+
+        JsFetcherTestFlags(boolean prebuiltLogicEnabled) {
+            mPrebuiltLogicEnabled = prebuiltLogicEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return mPrebuiltLogicEnabled;
+        }
     }
 }
