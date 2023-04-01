@@ -114,9 +114,10 @@ android_app {
         // Don't compress *.tflite files. Compressed models cannot be loaded on device.
         "-0 .tflite",
     ],
-     optimize: {
+    optimize: {
+        shrink_resources: true,
         proguard_flags_files: ["proguard.flags"],
-     },
+    },
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
     apex_available: ["com.android.adservices"],
 }

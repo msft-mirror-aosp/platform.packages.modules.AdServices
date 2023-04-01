@@ -188,7 +188,8 @@ public class ConsentManagerTest {
         // access it. (Refer to BooleanFileDatastore.class)
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mContextSpy.getPackageManager()));
-        mEnrollmentDao = spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest()));
+        mEnrollmentDao =
+                spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest(), mMockFlags));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
@@ -1470,6 +1471,160 @@ public class ConsentManagerTest {
                 () ->
                         mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                                 AppConsentDaoFixture.APP_NOT_FOUND_PACKAGE_NAME));
+    }
+
+    @Test
+    public void testAssertFledgeCallerHasUserConsentSuccessPerAppConsentDisabled() {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = false
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(false);
+
+        // Enabling PPAPI-wide consent
+        mConsentManager.enable(mContextSpy);
+
+        // Asserting PPAPI-wide consent is valid
+        assertTrue(mConsentManager.getConsent().isGiven());
+    }
+
+    @Test
+    public void testAssertFledgeCallerHasUserConsentThrowsPerAppConsentDisabled() {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = false
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(false);
+
+        // Revoking PPAPI-wide consent
+        mConsentManager.disable(mContextSpy);
+
+        // Asserting PPAPI-wide consent is revoked
+        assertFalse(mConsentManager.getConsent().isGiven());
+        // Assert RevokedConsentException is thrown
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mConsentManager.assertFledgeCallerHasUserConsent(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME));
+    }
+
+    @Test
+    public void
+            testAssertFledgeCallerHasUserConsentSuccessPerAppConsentDisabled_fledgeConsentValid() {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = true
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(false);
+
+        // Enabling FLEDGE-wide consent
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Asserting FLEDGE-wide consent is valid
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+    }
+
+    @Test
+    public void
+            testAssertFledgeCallerHasUserConsentThrowsPerAppConsentDisabled_fledgeConsentRevoked() {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = true
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(false);
+
+        // Revoking FLEDGE-wide consent
+        mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Asserting FLEDGE-wide consent is revoked
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        // Assert RevokedConsentException is thrown
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mConsentManager.assertFledgeCallerHasUserConsent(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME));
+    }
+
+    @Test
+    public void testAssertFledgeCallerHasUserConsentSuccessPerAppConsentEnabled_appConsentValid()
+            throws IOException, PackageManager.NameNotFoundException {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = true + GA_UX_FEATURE_ENABLED = true
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(true);
+
+        // Enabling FLEDGE-wide consent
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Adding valid package UID
+        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+
+        // Asserting FLEDGE-wide consent is valid
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        // Asserting per-app consent is valid for new first-time calling app
+        assertFalse(
+                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        // Asserting new app's consent is reflected in the datastore
+        assertEquals(Boolean.FALSE, mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+    }
+
+    @Test
+    public void testAssertFledgeCallerHasUserConsentThrowsPerAppConsentEnabled_appConsentRevoked()
+            throws IOException, PackageManager.NameNotFoundException {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED = true
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(true);
+
+        // Enabling FLEDGE-wide consent
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Revoking per-app consent
+        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
+
+        // Asserting FLEDGE-wide consent is valid
+        assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        // Asserting per-app consent is revoked for calling app
+        assertTrue(
+                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        // Assert RevokedConsentException is thrown
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mConsentManager.assertFledgeCallerHasUserConsent(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME));
+    }
+
+    @Test
+    public void
+            testAssertFledgeCallerHasUserConsentThrowsPerAppConsentEnabled_fledgeConsentRevoked()
+                    throws IOException, PackageManager.NameNotFoundException {
+        // FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED = true
+        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
+        when(mMockFlags.getFledgePerAppConsentEnabled()).thenReturn(true);
+
+        // Enabling FLEDGE-wide consent
+        mConsentManager.enable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Enabling per-app consent
+        mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
+        mDatastore.put(AppConsentDaoFixture.APP10_DATASTORE_KEY, false);
+
+        // Asserting per-app consent is valid for calling app
+        assertFalse(
+                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+
+        // Revoking FLEDGE-wide consent
+        mConsentManager.disable(mContextSpy, AdServicesApiType.FLEDGE);
+
+        // Asserting FLEDGE-wide consent is revoked
+        assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+        // Assert app consent is revoked after prior valid use of FLEDGE
+        assertTrue(
+                mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        AppConsentDaoFixture.APP10_PACKAGE_NAME));
+        // Assert datastore is cleared when consent is revoked
+        assertNull(mDatastore.get(AppConsentDaoFixture.APP10_DATASTORE_KEY));
+        // Assert RevokedConsentException is thrown
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mConsentManager.assertFledgeCallerHasUserConsent(
+                                AppConsentDaoFixture.APP10_PACKAGE_NAME));
     }
 
     @Test

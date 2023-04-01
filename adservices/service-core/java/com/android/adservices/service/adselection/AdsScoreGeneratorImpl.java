@@ -24,6 +24,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdWithBid;
 import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.exceptions.AdServicesException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -31,6 +32,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -50,8 +52,10 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 
 import org.json.JSONException;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -166,7 +170,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 Futures.transformAsync(scoreAdJs, getScoresFromLogic, mLightweightExecutorService);
 
         Function<List<Double>, List<AdScoringOutcome>> adsToScore =
-                scores -> mapAdsToScore(adBiddingOutcomes, contextualAds, scores);
+                scores ->
+                        mapAdsToScore(adBiddingOutcomes, contextualAds, scores, adSelectionConfig);
 
         return FluentFuture.from(adScores)
                 .transform(adsToScore, mLightweightExecutorService)
@@ -390,7 +395,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
     private List<AdScoringOutcome> mapAdsToScore(
             List<AdBiddingOutcome> adBiddingOutcomes,
             List<ContextualAds> contextualAds,
-            List<Double> adScores) {
+            List<Double> adScores,
+            AdSelectionConfig adSelectionConfig) {
         List<AdScoringOutcome> adScoringOutcomes = new ArrayList<>();
 
         sLogger.v(
@@ -428,13 +434,27 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                 final Double score = adScores.get(i);
                 final AdWithScore adWithScore =
                         AdWithScore.builder().setScore(score).setAdWithBid(adWithBid).build();
-
-                adScoringOutcomes.add(
+                AdScoringOutcome.Builder outcomeBuilder =
                         AdScoringOutcome.builder()
                                 .setAdWithScore(adWithScore)
+                                .setCustomAudienceSignals(
+                                        createPlaceHolderSignalsForContextualAds(ctx.getBuyer()))
                                 .setDecisionLogicUri(ctx.getDecisionLogicUri())
-                                .setBuyer(ctx.getBuyer())
-                                .build());
+                                .setBuyer(ctx.getBuyer());
+
+                Map<AdTechIdentifier, String> jsOverride =
+                        mAdSelectionDevOverridesHelper.getBuyersDecisionLogicOverride(
+                                adSelectionConfig);
+                if (jsOverride != null && jsOverride.containsKey(ctx.getBuyer())) {
+                    sLogger.v(
+                            "Found overrides for buyer:%s , setting decision logic",
+                            ctx.getBuyer());
+                    outcomeBuilder
+                            .setDecisionLogicJsDownloaded(true)
+                            .setDecisionLogicJs(jsOverride.get(ctx.getBuyer()));
+                }
+
+                adScoringOutcomes.add(outcomeBuilder.build());
                 i++;
             }
         }
@@ -445,5 +465,19 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
 
         sLogger.v("Returning Ad Scoring Outcome");
         return adScoringOutcomes;
+    }
+
+    private CustomAudienceSignals createPlaceHolderSignalsForContextualAds(AdTechIdentifier buyer) {
+        // TODO(b/276333013) : Refactor the Ad Selection result to avoid using special contextual CA
+        return new CustomAudienceSignals.Builder()
+                .setName(CustomAudienceSignals.CONTEXTUAL_CA_NAME)
+                .setOwner(buyer.toString())
+                .setBuyer(buyer)
+                .setActivationTime(Instant.now())
+                .setExpirationTime(
+                        Instant.now()
+                                .plusSeconds(CustomAudienceSignals.EXPIRATION_OFFSET_TWO_WEEKS))
+                .setUserBiddingSignals(AdSelectionSignals.EMPTY)
+                .build();
     }
 }

@@ -77,17 +77,14 @@ public class E2EInteropMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         mDebugReportApi);
     }
 
@@ -150,7 +147,7 @@ public class E2EInteropMockTest extends E2EMockTest {
     private Source getSource(String publisher, long timestamp, String uri,
             boolean arDebugPermission, RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
         List<Source> sourceWrapper = new ArrayList<>();
         mAsyncSourceFetcher.parseSource(
                 UUID.randomUUID().toString(),
@@ -174,7 +171,7 @@ public class E2EInteropMockTest extends E2EMockTest {
     private Trigger getTrigger(String destination, long timestamp, String uri,
             boolean arDebugPermission, RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
         List<Trigger> triggerWrapper = new ArrayList<>();
         mAsyncTriggerFetcher.parseTrigger(
                 Uri.parse(destination),

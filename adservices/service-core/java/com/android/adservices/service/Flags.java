@@ -1528,7 +1528,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
-
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1575,6 +1575,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1702,6 +1707,14 @@ public interface Flags {
         return RECORD_MANUAL_INTERACTION_ENABLED;
     }
 
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
     /**
      * The check activity feature is off by default. When enabled, we check whether all Rubidium
      * activities are enabled when we determine whether AdServices is enabled
@@ -1788,6 +1801,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    // Enable per-app consent in FLEDGE if GA UX is enabled
+    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
+
+    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
+    default boolean getFledgePerAppConsentEnabled() {
+        return FLEDGE_PER_APP_CONSENT_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
@@ -1860,11 +1881,18 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
-    /** Default Determines whether EU notification flow change is enabled.. */
-    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = false;
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
-    /** Determines whether EU notification flow change is enabled.. */
+    /** Determines whether EU notification flow change is enabled. */
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Returns whether to enable flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 }
