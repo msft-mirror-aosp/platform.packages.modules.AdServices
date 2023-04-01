@@ -45,6 +45,7 @@ import static com.android.adservices.service.adselection.JsFetcher.MISSING_SCORI
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_HIGHEST_BID_WINS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_PREBUILT_SCHEMA;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -827,6 +828,101 @@ public class AdSelectionE2ETest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
+    }
+
+    @Test
+    public void testRunAdSelectionSuccess_prebuiltFeatureDisabled_failure() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        Flags prebuiltDisabledFlags =
+                new AdSelectionE2ETestFlags() {
+                    @Override
+                    public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+                        return false;
+                    }
+                };
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDaoSpy,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mAdServicesHttpsClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContext,
+                        mAdServicesLoggerMock,
+                        prebuiltDisabledFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        mMockWebServerRule.startMockWebServer(mDispatcher);
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        DBCustomAudience dBCustomAudienceForBuyer1 =
+                createDBCustomAudience(
+                        BUYER_1,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1),
+                        bidsForBuyer1);
+        DBCustomAudience dBCustomAudienceForBuyer2 =
+                createDBCustomAudience(
+                        BUYER_2,
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2),
+                        bidsForBuyer2);
+
+        // Populating the Custom Audience DB
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer1,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_1));
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                dBCustomAudienceForBuyer2,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2));
+
+        String paramKey = "reportingUrl";
+        String paramValue = "https://www.test.com/reporting/seller";
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(ImmutableList.of(BUYER_1, BUYER_2, BUYER_3))
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(
+                                Uri.parse(
+                                        String.format(
+                                                "%s://%s/%s/?%s=%s",
+                                                AD_SELECTION_PREBUILT_SCHEMA,
+                                                AD_SELECTION_USE_CASE,
+                                                AD_SELECTION_HIGHEST_BID_WINS,
+                                                paramKey,
+                                                paramValue)))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+        assertCallbackFailed(resultsCallback);
+        assertTrue(
+                resultsCallback
+                        .mFledgeErrorResponse
+                        .getErrorMessage()
+                        .contains(PREBUILT_FEATURE_IS_DISABLED));
+        assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
     }
 
     @Test
