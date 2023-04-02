@@ -72,8 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Les applis peuvent déterminer vos centres d\'intérêt et les enregistrer provisoirement avec Android. Par exemple, une appli que vous utilisez pour acheter des chaussures de course peut déduire le centre d\'intérêt \"courir des marathons\".\n\nEnsuite, une autre appli peut vous présenter une annonce liée aux marathons d\'après ce centre d\'intérêt.\n\nDans vos paramètres de confidentialité, vous pouvez gérer la liste des applis qui disposent de centres d\'intérêt enregistrés."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nouvelles fonctionnalités de confidentialité des annonces"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Les thèmes des annonces et les nouvelles commandes vous donnent plus de choix concernant les annonces que vous voyez"</string>
-    <!-- no translation found for notificationUI_header_ga_title (3557937325021173836) -->
-    <skip />
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Nouvelles fonctionnalités de confidentialité des annonces désormais disponibles"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android se base sur les applis que vous avez utilisées récemment pour déterminer les thèmes qui vous intéressent. De plus, les applis que vous utilisez peuvent déterminer vos centres d\'intérêt. Par la suite, les applis peuvent demander ces informations pour vous présenter des annonces personnalisées. Vous pouvez choisir les thèmes et les applis qui sont utilisés pour vous présenter des annonces."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Pour mesurer les performances d\'une annonce, seuls quelques types de données sont partagés entre les applis."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"En savoir plus sur les annonces sur Android"</string>
@@ -88,16 +87,14 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Essayer les nouvelles fonctionnalités de confidentialité des annonces"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Les thèmes des annonces vous donnent plus de choix concernant les annonces que vous voyez"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Afficher les détails"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Essayer les nouvelles fonctionnalités de confidentialité des annonces"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lance de nouvelles fonctionnalités de confidentialité qui vous offrent une plus grande liberté de choix sur les annonces diffusées."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Les thèmes d\'annonces aident les applis à vous présenter des annonces pertinentes tout en protégeant votre identité et les informations concernant votre utilisation des applis. Android peut déterminer les thèmes qui vous intéressent en fonction des applis utilisées récemment. Par la suite, une appli que vous utilisez pourra demander à Android des thèmes pertinents pour personnaliser les annonces qui vous seront présentées."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Vous pouvez voir les thèmes d\'annonces dans les paramètres de votre appareil, et bloquer ceux que vous ne souhaitez pas partager avec les applis. Par ailleurs, Android supprime automatiquement les thèmes d\'annonces de manière régulière."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Vous pouvez changer d\'avis à tout moment dans les paramètres de confidentialité."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"En savoir plus sur les thèmes d\'annonces"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Pour savoir comment Android protège vos données, lisez nos règles de confidentialité."</string>
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu (7164165910760741822) -->
-    <skip />
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Essayer"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"• Données utilisées"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Vos thèmes d\'annonces sont basés sur les applis que vous avez récemment utilisées sur cet appareil et la fréquence à laquelle vous les utilisez."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"• Comment nous utilisons ces données"</string>
@@ -105,10 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"• Comment gérer vos données"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android supprime automatiquement les thèmes de manière régulière. À mesure que vous continuez d\'utiliser des applis, un thème peut réapparaître dans la liste. Vous pouvez aussi bloquer certains thèmes pour empêcher qu\'Android les partage avec les applis, et désactiver les thèmes d\'annonces à tout moment dans les paramètres de confidentialité."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Vous pouvez modifier les paramètres de confidentialité."</string>
-    <!-- no translation found for notificationUI_fledge_measurement_title (1721724915714192994) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1 (2217529852483952185) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Autres fonctionnalités de confidentialité des annonces désormais disponibles"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android propose aussi de nouvelles manières de limiter ce que les applis peuvent découvrir à votre sujet lorsqu\'elles vous proposent des annonces personnalisées."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"• Les annonces suggérées par les applis contribuent à protéger votre identité et vos données d\'utilisation, tout en permettant aux applis de vous présenter des annonces pertinentes. En fonction de votre activité, une appli que vous utilisez peut suggérer des annonces associées sur d\'autres applis. Vous pouvez consulter la liste des applis et les bloquer pour les empêcher de faire des suggestions dans les paramètres de confidentialité."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"• Avec la mesure des performances des annonces, seuls quelques types de données sont partagés entre les applis, comme l\'heure à laquelle une annonce vous a été présentée."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"En savoir plus sur les annonces suggérées par les applis et la mesure des performances des annonces"</string>
@@ -121,36 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android supprime automatiquement les données suggérées par les applis de manière régulière. Une appli peut réapparaître dans la liste si vous l\'utilisez à nouveau."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Vous pouvez aussi bloquer une appli pour l\'empêcher de suggérer des annonces pour vous, réinitialiser toutes les données de suggestion d\'annonces ou désactiver les annonces suggérées par les applis à tout moment dans les paramètres de confidentialité."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Les applis que vous utilisez peuvent demander à Android des informations qui les aident à mesurer les performances de leurs annonces. Android protège votre confidentialité en limitant les informations que les applis peuvent partager entre elles."</string>
-    <!-- no translation found for notificationUI_notification_ga_title_eu_v2 (9132669086237883391) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_eu_v2 (9205285241542339861) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_title_v2 (1097778529908285549) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text2_v2 (7324869061552803848) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text3_v2 (7061185974787039681) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_eu_v2 (8442776546238998877) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_body_ga_text_eu_v2 (1119632112904754361) -->
-    <skip />
-    <!-- no translation found for notificationUI_container2_body_ga_text_eu_v2 (7264946073865844642) -->
-    <skip />
-    <!-- no translation found for notificationUI_container3_body_ga_text_eu_v2 (3204499878554843655) -->
-    <skip />
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu_v2 (7227289411885047121) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_title_v2 (7429979629916798545) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_v2 (4673081782304081905) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_v2 (2079990149331373941) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_ga_introduction_v2 (3820258766801905248) -->
-    <skip />
-    <!-- no translation found for notificationUI_next_button_text (5564270455474313663) -->
-    <skip />
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nouvelles fonctionnalités de confidentialité des annonces désormais disponibles"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Profitez d\'un choix plus important concernant les annonces que vous voyez, tout en protégeant votre identité"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nouvelles fonctionnalités de confidentialité des annonces désormais disponibles"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"• Avec les annonces suggérées par les applis, de nouvelles fonctionnalités de confidentialité permettent de protéger votre identité et les informations concernant votre utilisation des applis, tout en permettant aux applis de vous proposer des publicités pertinentes. En fonction de votre activité, une appli que vous utilisez peut suggérer des annonces similaires sur d\'autres applis. Vous pouvez consulter une liste d\'applis et bloquer leurs suggestions depuis vos paramètres de confidentialité."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"• Avec la mesure des annonces, des types limités de données (comme l\'heure à laquelle une annonce vous a été présentée) sont partagés entre des applis afin de comprendre les performances de leurs annonces."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Activer une autre fonctionnalité de confidentialité des annonces"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android propose aussi une nouvelle fonctionnalité de confidentialité qui vous offre plus de choix concernant les annonces que vous voyez."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Les thèmes d\'annonces aident les applis à vous présenter des annonces pertinentes tout en protégeant votre identité et les informations concernant votre utilisation des applis. Android peut relever les thèmes qui vous intéressent en fonction des applis utilisées récemment. Plus tard, une appli que vous utilisez peut interroger Android sur les thèmes pertinents afin de vous proposer des annonces plus pertinentes."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Vous pouvez consulter les thèmes d\'annonces dans les paramètres de confidentialité, et bloquer ceux que vous ne souhaitez pas partager avec les applis. Android supprime aussi régulièrement et automatiquement les thèmes d\'annonces."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Activer l\'option"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nouvelles fonctionnalités de confidentialité des annonces désormais disponibles"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Dès maintenant, profitez d\'un choix plus important concernant les annonces que vous voyez, tout en protégeant votre identité"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nouvelles fonctionnalités de confidentialité des annonces désormais disponibles"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android propose de nouvelles fonctionnalités de confidentialité qui vous offrent plus de choix concernant les annonces que vous voyez."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Suivant"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Essayez la bêta Confidentialité des annonces d\'Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
