@@ -1880,6 +1880,14 @@ public interface Flags {
         return COMPAT_LOGGING_KILL_SWITCH;
     }
 
+    /** Kill switch to guard background jobs logging. */
+    boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
+
+    /** Returns true if background jobs logging should be disabled; false otherwise */
+    default boolean getBackgroundJobsLoggingKillSwitch() {
+        return BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
+    }
+
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
 
