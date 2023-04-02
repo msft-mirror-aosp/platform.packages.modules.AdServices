@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"حسنًا"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"أنت تشارك في تجربة الإصدار التجريبي."</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"يتم تفعيل \"مبادرة حماية الخصوصية\" على جهازك، ويمكن للتطبيقات تجربة هذه الطرق الجديدة التي توفر المزيد من الخصوصية لعرض إعلاناتك. يمكنك إيقاف الإصدار التجريبي في أي وقت من إعدادات الخصوصية لديك."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"إدارة إعدادات الخصوصية"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"حسنًا"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"‏توفّر \"مبادرة حماية الخصوصية\" من Android ميزات جديدة يمكن أن تستخدمها التطبيقات لعرض إعلانات قد تعجبك. لا تستخدِم هذه التقنيات معرّفات الأجهزة.\n\nيمكن لنظام Android والتطبيقات المثبّتة لديك أن تُحدّد أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام على جهازك مؤقّتًا. يتيح هذا الأمر للتطبيقات عرض الإعلانات التي قد تعجبك، بدون أن يتم تتبُّع نشاطك بواسطة المواقع الإلكترونية والتطبيقات التابعة لمطورين آخرين ."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"تخصيص الإعلانات باستخدام \"مبادرة حماية الخصوصية\""</string>
@@ -71,6 +72,8 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"‏يمكن أن تُحدّد التطبيقات اهتماماتك وتحفظها مؤقتًا على نظام Android. على سبيل المثال، قد يستنتج تطبيق تستخدمه في التسوق لشراء الأحذية المخصّصة للجري اهتمامك \"بالجري في سباقات الماراثون\".\n\nوفي وقت لاحق، ووفقًا لفئة الاهتمام هذه، قد يعرض أحد التطبيقات الأخرى إعلانًا يتعلق بسباقات الماراثون.\n\nفي \"إعدادات الخصوصية\"، يمكنك إدارة قائمة التطبيقات التي تم حفظ الاهتمامات فيها."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"ميزات جديدة للخصوصية في عرض الإعلانات"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"من خلال مواضيع الإعلانات وعناصر التحكّم الجديدة، يمكنك الآن التحكّم بشكل أفضل في الإعلانات التي تظهر لك."</string>
+    <!-- no translation found for notificationUI_header_ga_title (3557937325021173836) -->
+    <skip />
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"‏يحدّد نظام Android المواضيع التي تهمّك بناءً على التطبيقات التي استخدمتها مؤخرًا. ويمكن أيضًا للتطبيقات التي تستخدمها أن تحدّد المواضيع التي تعجبك. وبإمكان التطبيقات لاحقًا أن تطلب هذه المعلومات لعرض إعلانات مخصّصة لك. يمكنك اختيار المواضيع والتطبيقات التي يتم استخدامها لعرض الإعلانات لك."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"لقياس أداء إعلان، تتم مشاركة أنواع محدودة من البيانات بين التطبيقات."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"‏المزيد من المعلومات عن الإعلانات في Android"</string>
@@ -82,19 +85,19 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"‏يحذف Android تلقائيًا وبانتظام المواضيع والبيانات التي تقترحها التطبيقات. يمكنك أيضًا حظر مواضيع وتطبيقات معيّنة لا تريدها أن تقدِّم اقتراحات."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"قياس مستوى أداء إعلان"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"‏يمكن للتطبيقات التي تستخدمها أن تطلب من Android معلومات تساعدها في قياس أداء الإعلانات التي تعرضها. يسمح Android للتطبيقات بجمع أنواع محدودة من البيانات، مثل الوقت الذي تم فيه عرض الإعلان لك."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"جرِّب الميزات الجديدة للخصوصية في عرض الإعلانات"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"من خلال مواضيع الإعلانات، يمكنك الآن التحكّم بشكل أفضل في الإعلانات التي تظهر لك."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"عرض التفاصيل"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"‏خصوصية محسنّة في عرض الإعلانات على Android"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"‏سيطلق Android ميزات جديدة متعلّقة بالخصوصية توفّر لك خيارات أكثر لتحديد الإعلانات التي تظهر لك."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"‏تساعد ميزة \"مواضيع الإعلانات\" التطبيقات في عرض إعلانات ملائمة لك، مع حماية هويتك والمعلومات المتعلقة باستخدامك للتطبيق. ويمكن لنظام Android تحديد المواضيع التي تهمّك بناءً على التطبيقات التي استخدمتها مؤخرًا. بعد ذلك، يمكن للتطبيق الذي تستخدمه أن يطلب من Android مشاركته هذه المواضيع المهمّة لك، وذلك بهدف تخصيص الإعلانات التي تظهر لك."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"‏يمكنك الاطّلاع على مواضيع الإعلانات من خلال إعدادات جهازك، وحظر المواضيع التي لا تريد مشاركتها مع التطبيقات. ويحذف Android تلقائيًا مواضيع الإعلانات بشكل منتظم."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"يمكنك تغيير رأيك في أي وقت من إعدادات الخصوصية."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"مزيد من المعلومات حول مواضيع الإعلانات"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"‏يمكنك الاطّلاع على \"سياسة الخصوصية\" لمعرفة مزيد من المعلومات حول كيفية حماية Android لبياناتك."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"نعم، أوافق"</string>
+    <!-- no translation found for notificationUI_right_control_button_ga_text_eu (7164165910760741822) -->
+    <skip />
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  البيانات التي يتم استخدامها"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"تستند مواضيع الإعلانات إلى التطبيقات التي استخدمتها مؤخرًا على هذا الجهاز ومعدّل استخدامك لها."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  آلية استخدامنا لهذه البيانات"</string>
@@ -102,8 +105,10 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  الطريقة التي يمكنك من خلالها إدارة بياناتك"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"‏يحذف Android المواضيع تلقائيًا بانتظام. ومع استمرارك باستخدام التطبيقات، قد يظهر موضوع في القائمة مجددًا. يمكنك أيضًا حظر المواضيع التي لا تريد أن يشاركها Android مع التطبيقات، وإيقاف ميزة \"مواضيع الإعلانات\" متى شئت من خلال إعدادات الخصوصية."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"يمكنك إجراء تغييرات في إعدادات الخصوصية."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"ميزات أخرى تُحسّن الخصوصية في عرض الإعلانات"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"‏سيطلق Android طرقًا جديدة لتحديد المعلومات التي يمكن للتطبيقات معرفتها عنك عندما تعرض لك إعلانات مخصّصة."</string>
+    <!-- no translation found for notificationUI_fledge_measurement_title (1721724915714192994) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1 (2217529852483952185) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  تساعد ميزة \"الإعلانات المقترَحة من التطبيقات\" في حماية هويتك والمعلومات المتعلقة باستخدامك للتطبيقات، مع السماح للتطبيقات بأن تعرض لك إعلانات ذات صلة باهتماماتك. واستنادًا إلى نشاطك، يمكن للتطبيق الذي تستخدمه اقتراح إعلانات ذات صلة في تطبيقات أخرى. يمكنك الانتقال إلى إعدادات الخصوصية  للاطّلاع على قائمة بالتطبيقات ومنعها من تقديم اقتراحات."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  من خلال ميزة \"قياس أداء الإعلانات\"، تتم مشاركة أنواع محدودة من البيانات بين التطبيقات لقياس أداء إعلاناتها، مثل الوقت الذي تم فيه عرض الإعلان لك."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"مزيد من المعلومات عن الإعلانات المقترَحة من التطبيقات وقياس أداء الإعلانات"</string>
@@ -116,6 +121,36 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"‏يحذف Android تلقائيًا وبانتظام البيانات المقترَحة من التطبيقات. وإذا استخدمت تطبيقًا مرة أخرى، قد يظهر في القائمة من جديد."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"يمكنك أيضًا منع تطبيق من اقتراح إعلانات لك، أو إعادة ضبط جميع بيانات اقتراح الإعلانات، أو إيقاف ميزة \"الإعلانات المقترَحة من التطبيقات\" متى شئت من خلال إعدادات الخصوصية."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"‏يمكن للتطبيقات التي تستخدمها أن تطلب من Android معلومات تساعدها في قياس أداء الإعلانات التي تعرضها. يحمي Android خصوصيتك من خلال تحديد المعلومات التي يمكن للتطبيقات مشاركتها في ما بينها."</string>
+    <!-- no translation found for notificationUI_notification_ga_title_eu_v2 (9132669086237883391) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_content_eu_v2 (9205285241542339861) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_title_v2 (1097778529908285549) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text2_v2 (7324869061552803848) -->
+    <skip />
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text3_v2 (7061185974787039681) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_ga_title_eu_v2 (8442776546238998877) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_body_ga_text_eu_v2 (1119632112904754361) -->
+    <skip />
+    <!-- no translation found for notificationUI_container2_body_ga_text_eu_v2 (7264946073865844642) -->
+    <skip />
+    <!-- no translation found for notificationUI_container3_body_ga_text_eu_v2 (3204499878554843655) -->
+    <skip />
+    <!-- no translation found for notificationUI_right_control_button_ga_text_eu_v2 (7227289411885047121) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_title_v2 (7429979629916798545) -->
+    <skip />
+    <!-- no translation found for notificationUI_notification_ga_content_v2 (4673081782304081905) -->
+    <skip />
+    <!-- no translation found for notificationUI_header_ga_title_v2 (2079990149331373941) -->
+    <skip />
+    <!-- no translation found for notificationUI_container1_ga_introduction_v2 (3820258766801905248) -->
+    <skip />
+    <!-- no translation found for notificationUI_next_button_text (5564270455474313663) -->
+    <skip />
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"مبادرة حماية الخصوصية"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"‏المشاركة في الإصدار التجريبي من الخصوصية في عرض الإعلانات على Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"مبادرة حماية الخصوصية"</string>
@@ -177,8 +212,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"الخصوصية في عرض الإعلانات"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"مواضيع الإعلانات"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"الإعلانات المقترَحة من التطبيقات"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"‏يسجِّل نظام Android المواضيع ذات الأهمية بناءً على التطبيقات التي استخدمتها مؤخرًا ومعدّل استخدامك لها."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"يمكن للتطبيقات التي تستخدمها أيضًا تحديد المحتوى الذي يعجبك بناءً على طريقة استخدامك لها."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"‏التطبيقات التي تستخدمها يمكن أن تطلب من Android معلومات تساعدها في قياس أداء إعلاناتها. يسمح Android للتطبيقات بجمع أنواع محدودة من البيانات."</string>

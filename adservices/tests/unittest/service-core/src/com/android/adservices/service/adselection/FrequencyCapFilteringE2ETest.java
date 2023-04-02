@@ -54,6 +54,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.adselection.DBAdSelectionHistogramInfo;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.DBAdData;
@@ -100,6 +101,7 @@ import org.mockito.quality.Strictness;
 import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -210,7 +212,10 @@ public class FrequencyCapFilteringE2ETest {
         mFledgeAuthorizationFilter =
                 new FledgeAuthorizationFilter(
                         mContextSpy.getPackageManager(),
-                        new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest()),
+                        new EnrollmentDao(
+                                mContextSpy,
+                                DbTestUtil.getDbHelperForTest(),
+                                flagsEnablingAdFiltering),
                         mAdServicesLoggerMock);
 
         mAdFilteringFeatureFactory =
@@ -453,6 +458,39 @@ public class FrequencyCapFilteringE2ETest {
         } finally {
             Throttler.destroyExistingThrottler();
         }
+    }
+
+    @Test
+    public void testAdSelectionPersistsAdCounterKeys() throws InterruptedException {
+        // The JS Sandbox availability depends on an external component (the system webview) being
+        // higher than a certain minimum version.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .setAds(Collections.singletonList(AD_WITH_FILTER))
+                        .build(),
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+
+        AdSelectionTestCallback adSelectionCallback = callSelectAds();
+
+        assertWithMessage("Callback failed, was: %s", adSelectionCallback)
+                .that(adSelectionCallback.mIsSuccess)
+                .isTrue();
+        assertWithMessage(
+                        "Unexpected winning ad, ad selection responded with: %s",
+                        adSelectionCallback.mAdSelectionResponse)
+                .that(adSelectionCallback.mAdSelectionResponse.getRenderUri())
+                .isEqualTo(AD_WITH_FILTER.getRenderUri());
+
+        DBAdSelectionHistogramInfo histogramInfo =
+                mAdSelectionEntryDao.getAdSelectionHistogramInfo(
+                        adSelectionCallback.mAdSelectionResponse.getAdSelectionId(),
+                        CommonFixture.TEST_PACKAGE_NAME);
+        assertThat(histogramInfo).isNotNull();
+        assertThat(histogramInfo.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        assertThat(histogramInfo.getAdCounterKeys())
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 
     @Test
