@@ -121,6 +121,9 @@ public final class AdData implements Parcelable {
      * <p>The keys and counts per key are used in frequency cap filtering during ad selection to
      * disqualify associated ads from being submitted to bidding.
      *
+     * <p>Note that these keys can be overwritten along with the ads and other bidding data for a
+     * custom audience during the custom audience's daily update.
+     *
      * @hide
      */
     // TODO(b/221876775): Unhide for frequency cap API review

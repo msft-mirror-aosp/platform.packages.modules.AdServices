@@ -22,6 +22,10 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
 
+    <!-- For this test suite to get picked up in presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex" />
+
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
@@ -41,6 +45,7 @@
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

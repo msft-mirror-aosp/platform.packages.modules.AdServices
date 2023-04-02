@@ -47,6 +47,7 @@ public abstract class DecisionLogic {
      */
     @Nullable
     public Long getVersion(@JsVersionHelper.JsPayloadType Integer jsPayloadType) {
-        return getVersions().get(jsPayloadType);
+        return getVersions()
+                .getOrDefault(jsPayloadType, JsVersionHelper.DEFAULT_JS_VERSION_IF_ABSENT);
     }
 }

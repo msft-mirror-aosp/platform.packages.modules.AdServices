@@ -2594,7 +2594,7 @@ public class OnDeviceAdSelectionRunnerTest {
 
         doReturn(dbAdSelectionBuilder)
                 .when(mAdCounterKeyCopierMock)
-                .copyAdCounterKeys(any(), any());
+                .copyAdCounterKeys(any(DBAdSelection.Builder.class), any(AdScoringOutcome.class));
 
         AdSelectionTestCallback callback =
                 invokeRunAdSelection(mAdSelectionRunner, adSelectionConfig, MY_APP_PACKAGE_NAME);
@@ -2608,7 +2608,8 @@ public class OnDeviceAdSelectionRunnerTest {
                         mFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
-        verify(mAdCounterKeyCopierMock).copyAdCounterKeys(any(), any());
+        verify(mAdCounterKeyCopierMock)
+                .copyAdCounterKeys(any(DBAdSelection.Builder.class), any(AdScoringOutcome.class));
 
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionIdExist(

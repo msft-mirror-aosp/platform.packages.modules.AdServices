@@ -32,6 +32,7 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -62,7 +63,7 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext()));
+                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags));
     }
 
     static MeasurementImpl getMeasurementImpl(

@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Razumem"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Sodelujete v različici beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"V vaši napravi je vklopljen Zasebni peskovnik, zato lahko aplikacije preizkusijo te nove, bolj zasebne načine prikazovanja oglasov. V nastavitvah zasebnosti lahko kadar koli izklopite različico beta."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Upravljanje nastavitev zasebnosti"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"V redu"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Zasebni peskovnik za Android zagotavlja nove funkcije, s katerimi vam lahko aplikacije prikazujejo oglase, ki bi vam bili morda všeč. Te tehnologije ne uporabljajo identifikatorjev naprave.\n\nAndroid in aplikacije lahko predvidijo, katere vrste oglasov bi vas morda zanimale, in ta zanimanja začasno shranijo v vašo napravo. To aplikacijam omogoča, da vam prikazujejo oglase, ki bi vam bili morda všeč, ne da bi spremljale vašo dejavnost na spletnih mestih in v aplikacijah drugih razvijalcev."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Osebno prilagajanje oglasov z Zasebnim peskovnikom"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikacije lahko predvidijo vaša zanimanja in jih začasno shranijo v Android. Primer: Aplikacija, s katero kupujete tekaške čevlje, lahko predvidi, da je vaše zanimanje »teči na maratonih«.\n\nNa podlagi tega zanimanja vam lahko pozneje druga aplikacija prikaže oglas, povezan z maratoni.\n\nSeznam aplikacij s shranjenimi zanimanji lahko upravljate v nastavitvah zasebnosti."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nove funkcije za zasebnost pri oglaševanju"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Teme oglasov in novi kontrolniki vam dajejo več izbire glede tega, kakšne oglase vidite."</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Zdaj so na voljo nove funkcije za zasebnost pri oglaševanju"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android beleži teme zanimanja na podlagi aplikacij, ki ste jih nedavno uporabljali. Aplikacije, ki jih uporabljate, lahko tudi določijo, kaj vam je všeč. Pozneje lahko aplikacije zahtevajo te podatke, da vam prikažejo osebno prilagojene oglase. Izberete lahko, katere teme in aplikacije naj se uporabljajo za prikazovanje oglasov."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Zaradi merjenja uspešnosti oglasa se z aplikacijami delijo omejene vrste podatkov."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Več o oglasih v Androidu"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android redno samodejno briše teme in podatke o predlaganih oglasih. Blokirate lahko tudi določene teme in aplikacije, za katere ne želite, da dajejo predloge."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Merjenje uspešnosti oglasa"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Aplikacije, ki jih uporabljate, lahko od Androida zahtevajo podatke zaradi merjenja uspešnosti oglasov. Android omogoča aplikacijam zbiranje omejenih vrst podatkov, kot je ura v dnevu, ko je bil oglas prikazan."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Preizkusite nove funkcije za zasebnost pri oglaševanju"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Teme oglasov vam dajejo več izbire glede tega, kakšne oglase vidite."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Prikaži podrobnosti"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Izboljšana zasebnost pri oglaševanju v Androidu"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android uvaja nove funkcije za zasebnost, ki omogočajo večjo izbiro glede oglasov, ki jih vidite."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Teme oglasov pomagajo aplikacijam pri prikazovanju ustreznih oglasov, obenem pa varujejo vašo identiteto in informacije o vaši uporabi aplikacij. Android lahko beleži teme zanimanja na podlagi aplikacij, ki ste jih nedavno uporabljali. Pozneje lahko aplikacija, ki jo uporabljate, od Androida zahteva ustrezne teme zaradi osebnega prilagajanja oglasov, ki so vam prikazani."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"V nastavitvah naprave si lahko ogledate teme oglasov in blokirate tiste, ki jih ne želite deliti z aplikacijami. Android prav tako redno samodejno izbriše teme oglasov."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"V nastavitvah zasebnosti lahko kadar koli spremenite svojo izbiro."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Več o temah oglasov"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Več informacij o tem, kako Android varuje vaše podatke, najdete v našem pravilniku o zasebnosti."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Da, sem za"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Preizkusite"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Katere podatke uporabljamo"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Teme oglasov temeljijo na podlagi aplikacij, ki ste jih nedavno uporabljali v tej napravi, in na podlagi tega, kako pogosto jih uporabljate."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Kako uporabljamo te podatke"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Kako lahko upravljate podatke"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android redno samodejno briše teme. Ob nadaljnji uporabi aplikacij se tema lahko znova prikaže na seznamu. V nastavitvah zasebnosti lahko prav tako kadar koli blokirate teme, za katere ne želite, da jih Android deli z aplikacijami, in izklopite teme oglasov."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Spremembe lahko izvedete v nastavitvah zasebnosti."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Druge funkcije, ki poskrbijo za večjo zasebnost oglasov"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android uvaja nove načine, s katerimi lahko omejite, kaj lahko aplikacije izvejo o vas, ko vam prikažejo osebno prilagojene oglase."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Zdaj so na voljo druge funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android ponuja tudi nove načine za omejevanje podatkov, ki jih lahko aplikacije pridobijo o vas, ko prikazujejo osebno prilagojene oglase."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Oglasi, ki jih predlagajo aplikacije, pomagajo zaščititi vašo identiteto in informacije o vaši uporabi aplikacije ter hkrati omogočajo aplikacijam, da vam prikazujejo ustrezne oglase. Aplikacija, ki jo uporabljate, lahko na podlagi vaše dejavnosti predlaga sorodne oglase v drugih aplikacijah. Ogledate si lahko seznam teh aplikacij in v nastavitvah zasebnosti blokirate, da bi aplikacije dajale predloge."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Pri merjenju oglasov se z aplikacijami delijo omejene vrste podatkov, na primer ura v dnevu, ko je bil oglas prikazan."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Več o oglasih, ki jih predlaga aplikacija, in merjenju oglasov"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android redno samodejno briše podatke, ki jih predlagajo aplikacije. Aplikacija, ki jo znova uporabite, se morda znova prikaže na seznamu."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Poleg tega lahko v nastavitvah zasebnosti kadar koli blokirate, da bi aplikacija predlagala oglase za vas, ponastavite vse podatke za predlaganje oglasov ali izklopite oglase, ki jih predlagajo aplikacije."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Aplikacije, ki jih uporabljate, lahko od Androida zahtevajo podatke zaradi merjenja uspešnosti oglasov. Android ščiti vašo zasebnost tako, da omejuje podatke, ki jih lahko aplikacije medsebojno delijo."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Zdaj so na voljo nove funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Zagotovite si več izbire glede tega, kakšne oglase vidite, in hkrati zaščitite svojo identiteto."</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Zdaj so na voljo nove funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Z oglasi na predlog aplikacij vam nove funkcije za zasebnost pomagajo pri varovanju identitete in podatkov o uporabi aplikacije, hkrati pa aplikacijam omogočajo, da vam prikazujejo ustreznejše oglase. Aplikacija lahko na podlagi vaše dejavnosti predlaga sorodne oglase v drugih aplikacijah. V nastavitvah zasebnosti si lahko ogledate seznam aplikacij in preprečite, da bi aplikacije dajale predloge."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Z merjenjem oglasov si bodo aplikacije med seboj delile omejene vrste podatkov za razumevanje uspešnosti oglasov, na primer ob kateri uri vam je bil oglas prikazan."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Vklop druge funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android ponuja tudi novo funkcijo za zasebnost, ki vam daje več izbire glede tega, kakšne oglase vidite."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Teme oglasov pomagajo aplikacijam prikazovati ustrezne oglase, pri čemer ne razkrijejo niti vaše identitete niti informacij o vaši uporabi aplikacij. Android lahko beleži teme, ki vas zanimajo, na podlagi aplikacij, ki ste jih nedavno uporabljali. Pozneje lahko aplikacija, ki jo uporabljate, prosi Android, da ji posreduje ustrezne teme, tako da boste lahko videli ustreznejše oglase."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"V nastavitvah zasebnosti si lahko ogledate teme oglasov in blokirate tiste, ki jih ne želite deliti z aplikacijami. Poleg tega Android redno samodejno briše teme oglasov."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Vklopi"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Zdaj so na voljo nove funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Zdaj imate več izbire glede tega, kakšne oglase vidite, hkrati pa lahko zaščitite svojo identiteto."</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Zdaj so na voljo nove funkcije za zasebnost pri oglaševanju"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android zdaj ponuja nove funkcije za zasebnost, ki vam dajejo več izbire glede tega, kakšne oglase vidite."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Naprej"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Zasebni peskovnik"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Sodelujte v različici beta Androidove zasebnosti pri oglaševanju"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Zasebni peskovnik"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Zasebnost pri oglaševanju"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Teme oglasov"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Oglasi, ki jih predlagajo aplikacije"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android beleži teme, ki vas zanimajo, na podlagi aplikacij, ki ste jih nedavno uporabljali, in na podlagi tega, kako pogosto jih uporabljate."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikacije, ki jih uporabljate, lahko tudi ugotavljajo, kaj vam je všeč, na podlagi tega, kako jih uporabljate."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikacije, ki jih uporabljate, lahko prosijo Android za podatke, da bodo lažje merile uspešnost oglasov. Android aplikacijam omogoča, da zbirajo omejene vrste podatkov."</string>

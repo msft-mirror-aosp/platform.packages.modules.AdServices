@@ -109,7 +109,6 @@ android_test {
         "mts-extservices"
     ],
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
     data: [":com.example.adservices.samples.ui.consenttestapp"],
@@ -203,7 +202,6 @@ android_test {
     ],
     test_config: "AndroidTest.AppConsent.ExtServices.xml",
     required: ["privapp_allowlist_com.android.adservices.api.xml"],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdExtServicesApk",
     manifest: "AndroidManifestExtServices.xml"
