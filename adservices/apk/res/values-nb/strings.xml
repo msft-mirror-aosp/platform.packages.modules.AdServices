@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prøv nye funksjoner for annonsepersonvern"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Med annonseemner får du mer kontroll over annonsene du ser"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Se detaljer"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prøv nye funksjoner for annonsepersonvern"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanserer nye personvernfunksjoner som gir deg bedre mulighet til å velge hvilke annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Annonseemner gjør det enklere for apper å vise deg relevante annonser, samtidig som identiteten din og informasjonen om appbruken din beskyttes. Android kan merke seg interessante emner basert på appene du har brukt nylig. Senere kan en app du bruker, be Android om relevante emner for å tilpasse annonsene du ser."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonseemner i enhetsinnstillingene og blokkere dem du ikke vil dele med apper. Android sletter også annonseemner automatisk regelmessig."</string>
@@ -120,7 +119,7 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nye funksjoner for annonsepersonvern er tilgjengelige nå"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Få bedre mulighet til å velge hvilke annonser du ser, samtidig som identiteten din beskyttes"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nye funksjoner for annonsepersonvern er tilgjengelige nå"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Med annonser foreslått av apper beskytter nye personvernfunksjoner identiteten din og informasjon om appbruken din når du tillater at apper viser deg relevante annonser. Basert på aktiviteten din kan apper du bruker, foreslå relaterte annonser i andre apper. Du kan se en liste over apper og blokkere dem fra å gi forslag, i personverninnstillingene."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Med annonser foreslått av apper beskytter nye personvernfunksjoner identiteten din og informasjon om appbruken din, samtidig som du tillater at apper viser deg relevante annonser. Basert på aktiviteten din kan apper du bruker, foreslå relaterte annonser i andre apper. Du kan se en liste over apper og blokkere dem fra å gi forslag, i personverninnstillingene."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Med annonsemålinger blir begrensede typer data delt mellom apper for å forstå ytelsen til annonsene deres, for eksempel når på dagen du har sett en annonse."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Slå på en annen funksjon for annonsepersonvern"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android har også en ny personvernfunksjon som gir deg bedre mulighet til å velge hvilke annonser du ser."</string>
