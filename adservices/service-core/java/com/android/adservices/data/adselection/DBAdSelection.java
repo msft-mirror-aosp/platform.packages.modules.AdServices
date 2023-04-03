@@ -305,11 +305,8 @@ public final class DBAdSelection {
                     mAdSelectionId != UNSET_AD_SELECTION_ID, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
-            if (mCustomAudienceSignals == null) {
-                Preconditions.checkArgument(
-                        mBiddingLogicUri != null,
-                        "Buyer decision logic uri should not be null in case of contextual ad.");
-            }
+            Preconditions.checkArgument(
+                    mBiddingLogicUri != null, "Buyer decision logic uri should not be null.");
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
