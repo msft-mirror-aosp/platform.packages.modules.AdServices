@@ -413,6 +413,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mBackgroundExecutor,
                         mScheduledExecutor,
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         devContext,
                         mAdServicesLogger,
