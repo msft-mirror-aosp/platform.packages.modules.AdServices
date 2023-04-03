@@ -29,6 +29,8 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionDatabase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -92,6 +94,7 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
+    private final AdSelectionEntryDao mAdSelectionEntryDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
 
@@ -104,6 +107,7 @@ public class ConsentManager {
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull Flags flags,
@@ -113,6 +117,7 @@ public class ConsentManager {
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
+        Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(booleanFileDatastore);
 
         if (consentSourceOfTruth != Flags.PPAPI_ONLY) {
@@ -127,6 +132,7 @@ public class ConsentManager {
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
+        mAdSelectionEntryDao = adSelectionEntryDao;
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
@@ -159,6 +165,7 @@ public class ConsentManager {
                                     EnrollmentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                                    AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                                     adServicesManager,
                                     datastore,
                                     // TODO(b/260601944): Remove Flag Instance.
@@ -536,6 +543,12 @@ public class ConsentManager {
         }
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(
+                    () ->
+                            mAdSelectionEntryDao.removeAdSelectionDataByPackageName(
+                                    app.getPackageName()));
+        }
     }
 
     /**
@@ -602,6 +615,9 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
+        }
     }
 
     /**
@@ -633,6 +649,9 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
+        }
     }
 
     /**
@@ -743,6 +762,44 @@ public class ConsentManager {
                     LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                     return true;
             }
+        }
+    }
+
+    /**
+     * Asserts that the calling app, FLEDGE APIs and the Privacy Sandbox have user consent.
+     *
+     * @param callerPackageName String package name that uniquely identifies an installed
+     *     application that has used a FLEDGE API
+     * @throws RevokedConsentException if the app or FLEDGE or the Privacy Sandbox do not have user
+     *     consent
+     */
+    public void assertFledgeCallerHasUserConsent(String callerPackageName)
+            throws RevokedConsentException {
+        boolean isConsentRevoked;
+        // Note:
+        // The FLEDGE_PER_APP_CONSENT_ENABLED flag piggybacks on the GA_UX_FEATURE_ENABLED flag,
+        // that is, FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED && (true | false).
+        // This means there are 3 levels of "consent":
+        //     1. PPAPI-wide: When GA UX is disabled, this is the only option.
+        //     2. FLEDGE-wide: When GA UX is enabled but not per-app consent.
+        //     3. Per-app: When GA UX and per-app consent is enabled.
+
+        if (mFlags.getFledgePerAppConsentEnabled()) {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = true + GA_UX_FEATURE_ENABLED = true
+            // Checking for FLEDGE-wide and per-app consent.
+            isConsentRevoked = isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName);
+        } else if (mFlags.getGaUxFeatureEnabled()) {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = true
+            // Checking for FLEDGE-wide and per-app consent.
+            isConsentRevoked = !getConsent(AdServicesApiType.FLEDGE).isGiven();
+        } else {
+            // FLEDGE_PER_APP_CONSENT_ENABLED = false + GA_UX_FEATURE_ENABLED = false
+            // Checking for PPAPI-wide consent.
+            isConsentRevoked = !getConsent().isGiven();
+        }
+
+        if (isConsentRevoked) {
+            throw new ConsentManager.RevokedConsentException();
         }
     }
 
@@ -1400,14 +1457,28 @@ public class ConsentManager {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(currentFeatureType.name(), true);
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                mDatastore.put(featureType.name(), true);
+                            } else {
+                                mDatastore.put(featureType.name(), false);
+                            }
+                        }
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.setCurrentPrivacySandboxFeature(
                                 currentFeatureType.name());
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(currentFeatureType.name(), true);
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                mDatastore.put(featureType.name(), true);
+                            } else {
+                                mDatastore.put(featureType.name(), false);
+                            }
+                        }
                         mAdServicesManager.setCurrentPrivacySandboxFeature(
                                 currentFeatureType.name());
                         break;
@@ -1459,7 +1530,7 @@ public class ConsentManager {
                     case Flags.PPAPI_ONLY:
                         for (PrivacySandboxFeatureType featureType :
                                 PrivacySandboxFeatureType.values()) {
-                            if (mDatastore.get(featureType.name())) {
+                            if (Boolean.TRUE.equals(mDatastore.get(featureType.name()))) {
                                 return featureType;
                             }
                         }

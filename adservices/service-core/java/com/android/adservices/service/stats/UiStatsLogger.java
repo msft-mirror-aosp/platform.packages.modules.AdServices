@@ -85,7 +85,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_CONSENT__TOPICS_DEFAULT_OPT_OUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT_FF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT_FF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_UNSUPPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
@@ -519,7 +521,7 @@ public class UiStatsLogger {
     }
 
     private static int getPrivacySandboxFeatureType(@NonNull Context context) {
-        if (FlagsFactory.getFlags().isUiFeatureTypeLoggingEnabled()) {
+        if (!FlagsFactory.getFlags().isUiFeatureTypeLoggingEnabled()) {
             return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__FEATURE_UNSPECIFIED;
         }
 
@@ -530,6 +532,10 @@ public class UiStatsLogger {
         }
 
         switch (featureType) {
+            case PRIVACY_SANDBOX_FIRST_CONSENT_FF:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT_FF;
+            case PRIVACY_SANDBOX_RECONSENT_FF:
+                return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_RECONSENT_FF;
             case PRIVACY_SANDBOX_FIRST_CONSENT:
                 return AD_SERVICES_SETTINGS_USAGE_REPORTED__FEATURE_TYPE__PRIVACY_SANDBOX_FIRST_CONSENT;
             case PRIVACY_SANDBOX_RECONSENT:

@@ -74,17 +74,14 @@ public class E2EInteropMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         mDebugReportApi);
     }
 
@@ -142,7 +139,7 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private Source getSource(String publisher, long timestamp, String uri,
             RegistrationRequest request, Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
         // The Source parser compares the destination from the web request to the one provided in
         // the headers in order to allow either a web or app destination (otherwise, only an app
         // destination would be allowed). Since the test runner interprets the test JSON as an app
@@ -180,7 +177,7 @@ public class E2EInteropMockTest extends E2EMockTest {
 
     private Trigger getTrigger(String destination, long timestamp, String uri,
             RegistrationRequest request, Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
         List<Trigger> triggerWrapper = new ArrayList<>();
         mAsyncTriggerFetcher.parseTrigger(
                 Uri.parse(destination),

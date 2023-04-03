@@ -97,6 +97,8 @@ public final class PhFlags implements Flags {
             "measurement_enforce_foreground_status_register_web_source";
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
             "measurement_enforce_foreground_status_register_web_trigger";
+    static final String KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH =
+            "measurement_enforce_enrollment_origin_match";
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
             "measurement_enforce_foreground_status_delete_registrations";
     static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
@@ -354,6 +356,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+
+    static final String KEY_FLEDGE_PER_APP_CONSENT_ENABLED = "fledge_per_app_consent_enabled";
 
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
@@ -1863,6 +1867,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceEnrollmentOriginMatch() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH,
+                /* defaultValue */ MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH);
+    }
+
+    @Override
     public boolean getEnforceIsolateMaxHeapSize() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -1982,6 +1994,20 @@ public final class PhFlags implements Flags {
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_GA_UX_FEATURE_ENABLED,
                         /* defaultValue */ GA_UX_FEATURE_ENABLED));
+    }
+
+    @Override
+    public boolean getFledgePerAppConsentEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+
+        // Per-app consent is only enabled in FLEDGE if GA UX is enabled
+        return getGaUxFeatureEnabled()
+                && SystemProperties.getBoolean(
+                        getSystemPropertyName(KEY_FLEDGE_PER_APP_CONSENT_ENABLED),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                /* flagName */ KEY_FLEDGE_PER_APP_CONSENT_ENABLED,
+                                /* defaultValue */ FLEDGE_PER_APP_CONSENT_ENABLED));
     }
 
     @Override
@@ -2208,6 +2234,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnforceForegroundStatusForMeasurementRegisterWebTrigger());
         writer.println("\t" + KEY_MEASUREMENT_ENABLE_XNA + " = " + getMeasurementEnableXNA());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH
+                        + " = "
+                        + getEnforceEnrollmentOriginMatch());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
@@ -2467,7 +2498,12 @@ public final class PhFlags implements Flags {
                         + getForegroundStatuslLevelForValidation());
         writer.println(
                 "\t"
-                        + KEY_FLEDE_AD_SELECTION_OFF_DEVICE_ENABLED
+                        + KEY_FLEDGE_PER_APP_CONSENT_ENABLED
+                        + " = "
+                        + getFledgePerAppConsentEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceEnabled());
         writer.println(
@@ -2495,6 +2531,8 @@ public final class PhFlags implements Flags {
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
+                "\t" + KEY_EU_NOTIF_FLOW_CHANGE_ENABLED + " = " + getEuNotifFlowChangeEnabled());
+        writer.println(
                 "\t"
                         + KEY_UI_FEATURE_TYPE_LOGGING_ENABLED
                         + " = "
@@ -2505,6 +2543,11 @@ public final class PhFlags implements Flags {
                 "\t" + KEY_IS_EEA_DEVICE_FEATURE_ENABLED + " = " + isEeaDeviceFeatureEnabled());
         writer.println("\t" + KEY_IS_EEA_DEVICE + " = " + isEeaDevice());
         writer.println("\t" + KEY_UI_EEA_COUNTRIES + " = " + getUiEeaCountries());
+        writer.println(
+                "\t"
+                        + KEY_NOTIFICATION_DISMISSED_ON_CLICK
+                        + " = "
+                        + getNotificationDismissedOnClick());
         writer.println(
                 "\t"
                         + KEY_UI_OTA_STRINGS_FEATURE_ENABLED
@@ -2615,5 +2658,25 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
+    }
+
+    static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";
+
+    @Override
+    public boolean getEuNotifFlowChangeEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_EU_NOTIF_FLOW_CHANGE_ENABLED,
+                /* defaultValue */ DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED);
+    }
+
+    static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK = "notification_dmsmissed_on_click";
+
+    @Override
+    public boolean getNotificationDismissedOnClick() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_NOTIFICATION_DISMISSED_ON_CLICK,
+                /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
     }
 }
