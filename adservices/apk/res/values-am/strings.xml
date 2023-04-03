@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ገባኝ"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"የቅድመ ይሁንታው አካል ነዎት"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"የግላዊነት Sandbox ለእርስዎ መሣሪያ በርቷል እና መተግበሪያዎች ለእርስዎ ማስታወቂያዎችን ለማሳየት እነዚህን አዲስና ይበልጥ የግል የሆኑ መንገዶች መሞከር ይችላሉ። በማንኛውም ጊዜ በእርስዎ የግላዊነት ቅንብሮች ውስጥ ቅድመ-ይሁንታውን ማጥፋት ይችላሉ።"</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"የግላዊነት ቅንብሮችን አስተዳድር"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ገባኝ"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"የAndroid የግላዊነት Sandbox መተግበሪያዎች እርስዎ ሊወዷቸው የሚችሉ ማስታወቂያዎችን ለእርስዎ ለማሳየት ሊጠቀሙባቸው የሚችሏቸው አዲስ ባህሪያትን ያቀርባል። እነዚህ ቴክኖሎጂዎች የመሣሪያ ለዪዎችን አይጠቀሙም።\n\nAndroid እና መተግበሪያዎችዎ እርስዎ ሊፈልጓቸው የሚችሉ የማስታወቂያ አይነቶችን መገመት እና ዝንባሌዎቹን በመሣሪያዎ ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። ይህ መተግበሪያዎች በሌሎች ገንቢዎች በተሰሩ ድር ጣቢያዎች እና መተግበሪያዎች ላይ የሚኖርዎትን እንቅስቃሴ ሳይከታተሉ እርስዎ ሊወዷቸው የሚችሉ ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያስችላቸዋል።"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"በግላዊነት Sandbox ማስታወቂያን ግላዊነት ማላበስ"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"መተግበሪያዎች የእርስዎን ዝንባሌዎች መገመት እና እነዚህን Android ላይ በጊዜያዊነት ማስቀመጥ ይችላሉ። ለምሳሌ፣ የመሮጫ ጫማ ለመግዛት የሚጠቀሙበት መተግበሪያ የእርስዎ ዝንባሌ «ማራቶኖች መሮጥ» እንደሆነ ሊገምት ይችላል።\n\nበኋላ በዚህ ዝንባሌ መሠረት የተለየ መተግበሪያ ከማራቶኖች ጋር የተገናኘ ማስታወቂያ ሊያሳይዎት ይችላል።\n\nበእርስዎ የግላዊነት ቅንብሮች ውስጥ የተቀመጡ ዝንባሌዎች ያላቸውን የመተግበሪያዎች ዝርዝር ማስተዳደር ይችላሉ።"</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"አዲስ የማስታወቂያ ግላዊነት ባህሪያት"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"የማስታወቂያ ርዕሶች እና አዲሶቹ መቆጣጠሪያዎች እርስዎ በሚመለከቷቸው ማስታወቂያዎች ላይ ተጨማሪ ምርጫ ይሰጡዎታል"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"አሁን አዲስ የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android በቅርብ በተጠቀሙት መተግበሪያ ላይ በመመሥረት የዝንባሌ ርዕሶች ያስተውላል። እንዲሁም የሚጠቀሙባቸው መተግበሪያዎች እርስዎ ምን እንደሚወዱ መወሰን ይችላሉ። በኋላ ላይ፣ ግላዊነት የተላበሱ ማስታወቂያዎችን ለእርስዎ ለማሳየት መተግበሪያዎች ይህን መረጃ ሊጠይቁ ይችላሉ። ማስታወቂያዎችን ለእርስዎ ለማሳየት የትኛዎቹ ርዕሶች እና መተግበሪያዎች ጥቅም ላይ እንደሚውሉ መምረጥ ይችላሉ።"</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"የማስታወቂያ አፈጻጸምን ለመለካት የተገደቡ የውሂብ ዓይነቶች በመተግበሪያዎች መካከል ይጋራሉ።"</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"በAndroid ላይ ስለ ማስታወቂያዎች ተጨማሪ"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android ርዕሶችን እና በመተግበሪያ የተጠቆመ ውሂብን በመደበኝነት በራስ-ሰር ይሰርዛል። እንዲሁም እርስዎ የአስተያየት ጥቆማዎችን እንዲያደርጉ የማይፈልጓቸውን የተወሰኑ ርዕሶች እና መተግበሪያዎች ማገድ ይችላሉ።"</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"የአንድ ማስታወቂያ አፈጻጸም ምን ያህል ጥሩ እንደሆነ መለካት"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው Androidን መረጃ መጠየቅ ይችላሉ። Android መተግበሪያዎች እንደ ማስታወቂያ ለእርስዎ የታየበት የቀኑ ሰዓት ያሉ የተገደቡ የውሂብ ዓይነቶችን እንዲሰበስቡ ይፈቅድላቸዋል።"</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"አዲስ የማስታወቂያ ግላዊነት ባህሪያትን ይሞክሩ"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"የማስታወቂያ ርዕሶች እርስዎ ከሚመለከቷቸው ማስታወቂያዎች የበለጠ ምርጫ ይሰጡዎታል"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"ዝርዝሮችን አሳይ"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"የተሻሻለ የማስታወቂያ ግላዊነት በAndroid ላይ"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"አዲስ የማስታወቂያዎች የግላዊነት ባህሪያትን ይሞክሩ"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ ምርጫ የሚሰጡዎትን አዳዲስ የግላዊነት ባህሪያት እየጀመረ ነው።"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"የማስታወቂያ ርዕሶች ለማንነትዎ እና ስለመተግበሪያ አጠቃቀምዎ ላለ መረጃ ጥበቃ እያደረጉ መተግበሪያዎች አግባብነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያግዛሉ። Android በቅርብ ጊዜ የተጠቀሟቸው መተግበሪያዎች ላይ በመመስረት የዝንባሌ ርዕሶች ላይ ማስታወሻ መያዝ ይችላል። በኋላ ላይ የሚጠቀሙት መተግበሪያ የሚያዩዋቸውን ማስታወቂያዎች ለማበጀት አግባብነት ላላቸው ርዕሶች Androidን ሊጠይቅ ይችላል።"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"በመሣሪያዎ ቅንብሮች ውስጥ የማስታወቂያ ርዕሶችን ማየት እና ለመተግበሪያዎች ማጋራት የማይፈልጓቸውን ማገድ ይችላሉ። እንዲሁም Android የማስታወቂያ ርዕሶችን በራስ-ሰር ይሰርዛል።"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"በግላዊነት ቅንብሮች ውስጥ ሐሳብዎን በማንኛውም ጊዜ መቀየር ይችላሉ።"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"ስለማስታወቂያ ርዕሶች ተጨማሪ"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"በግላዊነት መመሪያችን ውስጥ Android እንዴት ውሂብዎን እንደሚጠብቅ የበለጠ ይወቁ።"</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"አዎ፣ ገብቼያለሁ"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"ይሞክሩት"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  ምን ውሂብ ጥቅም ላይ እንደሚውል"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"የእርስዎ የማስታወቂያ ርዕሶች በዚህ መሣሪያ ላይ በቅርቡ በተጠቀሟቸው መተግበሪያዎች እና ምን ያህል እንደተጠቀሟቸው ላይ የተመሰረቱ ናቸው።"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  ይህን ውሂብ እንዴት እንደምንጠቀምበት"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  የእርስዎን ውሂብ እንዴት ማስተዳደር እንደሚችሉ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android በመደበኛነት ርዕሶችን በራስ-ሰር ይሰርዛል። መተግበሪያዎችን መጠቀምዎን ሲቀጥሉ በዝርዝሩ ላይ ርዕስ እንደገና ሊታይ ይችላል። እንዲሁም Android ከመተግበሪያዎች ጋር እንዳያጋራ የሚፈልጓቸውን ርዕሶች ማገድ እና በግላዊነት ቅንብሮች ውስጥ በማንኛውም ጊዜ የማስታወቂያ ርዕሶችን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"በግላዊነት ቅንብሮች ውስጥ ለውጦችን ማድረግ ይችላሉ።"</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"ማስታወቂያዎችን ይበልጥ የግል የሚያደርጉ ሌሎች ባህሪያት"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android መተግበሪያዎች ለእርስዎ ግላዊነትን የተላበሱ ማስታወቂያዎች ሲያሳዩዎት ስለእርስዎ መማር የሚችሉትን ነገር ለመገደብ አዲስ መንገዶችን እየጀመረ ነው።"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"አሁን ሌሎች የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"እንዲሁም Android መተግበሪያዎች ለእርስዎ ግላዊነትን የተላበሱ ማስታወቂያዎች ሲያሳዩዎት ስለእርስዎ መማር የሚችሉትን ነገር ለመገደብ አዲስ መንገዶችን ያቀርባል።"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  በመተግበሪያ-የተጠቆሙ ማስታወቂያዎች መተግበሪያዎች አግባብነት ያላቸው ማስታወቂያዎችን እንዲያሳዩዎት እያስቻሉ የእርስዎን ማንነት እና የመተግበሪያ አጠቃቀም መረጃን ለመጠበቅ ያግዛሉ። በእርስዎ እንቅስቃሴ ላይ በመመሥረት፣ የሚጠቀሙበት መተግበሪያ በሌሎች መተግበሪያዎች ላይ ተዛማጅ ማስታወቂያዎችን ሊጠቁም ይችላል። በግላዊነት ቅንብሮች ውስጥ የመተግበሪያዎችን ዝርዝር ማየት እና ጥቆማዎችን እንዳይሰጡ ማገድ ይችላሉ።"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  በማስታወቂያ ልኬት፣ እንደ ማስታወቂያ ለእርስዎ የታየበት ቀን ያሉ የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት የተገደቡ የውሂብ ዓይነቶች በመተግበሪያዎች መካከል ይጋራሉ።"</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"ስለ በመተግበሪያ የተጠቆሙ ማስታወቂያዎች እና የማስታወቂያ ልኬት ተጨማሪ"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android በመተግበሪያ የተጠቆመ ውሂብን በመደበኛነት በራስ-ሰር ይሰርዛል። በድጋሚ የሚጠቀሙት መተግበሪያ በዝርዝሩ ላይ እንደገና ሊታይ ይችላል።"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"እንዲሁም አንድ መተግበሪያ ለእርስዎ ማስታወቂያዎችን እንዳይጠቁም ማገድ፣ ሁሉንም የማስታወቂያ ጥቆማ ውሂብ ዳግም ማስጀመር ወይም በማንኛውም ጊዜ በግላዊነት ቅንብሮች ውስጥ በመተግበሪያ የተጠቆሙ ማስታወቂያዎችን ማጥፋት ይችላሉ።"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት የሚያግዛቸውን መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች እርስ በርስ የሚያጋሩትን መረጃ በመገደብ ግላዊነትዎን ይጠብቃል።"</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"አሁን አዲስ የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"ማንነትዎን እየጠበቁ በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ ያግኙ"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"አሁን አዲስ የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  በመተግበሪያ በተጠቆሙ ማስታወቂያዎች አዲስ የግላዊነት ባህሪያት መተግበሪያዎች ለእርስዎ አግባብነት ያላቸው ማስታወቂያዎችን እንዲያሳዩ እያስቻሉ ለእርስዎ ማንነት እና ስለመተግበሪያዎ ላለ መረጃ ጥበቃ ለማድረግ ያግዛሉ። በእርስዎ እንቅስቃሴ ላይ በመመሥረት የሚጠቀሙበት መተግበሪያ በሌሎች መተግበሪያዎች ላይ ተዛማጅ ማስታወቂያዎችን መጠቆም ይችላል። በግላዊነት ቅንብሮች ውስጥ የመተግበሪያዎችን ዝርዝር ማየት እና ጥቆማዎችን እንዳይሰጡ ማገድ ይችላሉ።"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  በማስታወቂያ ልኬት እንደ ማስታወቂያ ለእርስዎ የታየበት የቀኑ ጊዜ ያሉ የተገደቡ የውሂብ ዓይነቶች የማስታወቂያዎቻቸውን አፈጻጸም ለመረዳት በመተግበሪያዎች መካከል ይጋራሉ።"</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"ሌላ የማስታወቂያዎች የግላዊነት ባህሪን ያብሩ"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"እንዲሁም Android በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ የሚሰጥዎት አዲስ የግላዊነት ባህሪ ያቀርባል።"</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"የማስታወቂያ ርዕሶች ለማንነትዎ እና ስለመተግበሪያ አጠቃቀምዎ ላለ መረጃ ጥበቃ እያደረጉ መተግበሪያዎች አግባብነት ያላቸው ማስታወቂያዎችን ለእርስዎ እንዲያሳዩ ያግዛሉ። Android በቅርብ ጊዜ በተጠቀሟቸው መተግበሪያዎች ላይ በመመስረት የዝንባሌ ርዕሶች ላይ ማስታወሻ መያዝ ይችላል። በኋላ ላይ እርስዎ የሚጠቀሙት መተግበሪያ ይበልጥ አግባብነት ያላቸው ማስታወቂያዎችን ለእርስዎ ለማሳየት አግባብነት ያላቸው ርዕሶችን ከAndroid መጠየቅ ይችላል።"</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"በግላዊነት ቅንብሮችዎ ውስጥ የማስታወቂያ ርዕሶችን ማየት እና ለመተግበሪያዎች እንዲጋሩ የማይፈልጓቸውን ማገድ ይችላሉ። እንዲሁም Android የማስታወቂያ ርዕሶችን በመደበኛነት በራስ-ሰር ይሰርዛል።"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"አብራው"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"አሁን አዲስ የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"አሁን ማንነትዎን እየጠበቁ በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ አለ"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"አሁን አዲስ የማስታወቂያዎች የግላዊነት ባህሪያት ይገኛሉ"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"አሁን Android በሚያዩዋቸው ማስታወቂያዎች ላይ ተጨማሪ አማራጭ የሚሰጡዎትን አዳዲስ የግላዊነት ባህሪያት ያቀርባል።"</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"ቀጣይ"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"የግላዊነት Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"በAndroid ማስታወቂያዎች የግላዊነት ቅድመ ይሁንታ ውስጥ ይሳተፉ"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"የግላዊነት Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"የማስታወቂያ ግላዊነት"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"የማስታወቂያ ርዕሶች"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"በመተግበሪያ የተጠቆሙ ማስታወቂያዎች"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android በቅርብ ጊዜ በተጠቀሟቸው መተግበሪያዎች ላይ እና ምን ያህል በተደጋጋሚ እንደተጠቀሟቸው ላይ በመመስረት በዝንባሌ ርዕሶች ላይ ማስታወሻ ይይዛል።"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"እንዲሁም የሚጠቀሟቸው መተግበሪያዎች እርስዎ እነሱን በሚጠቀሙበት መንገድ መሰረት ምን እንደሚወዱ መወሰን ይችላሉ።"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"እርስዎ የሚጠቀሙባቸው መተግበሪያዎች የማስታወቂያዎቻቸውን አፈጻጸም ለመለካት እንዲያግዛቸው መረጃ Androidን መጠየቅ ይችላሉ። Android መተግበሪያዎች የተገደቡ የውሂብ ዓይነቶችን እንዲሰበስቡ ያደርጋል።"</string>

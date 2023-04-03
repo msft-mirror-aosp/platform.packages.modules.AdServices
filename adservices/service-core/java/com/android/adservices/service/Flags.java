@@ -1657,6 +1657,14 @@ public interface Flags {
         return RECORD_MANUAL_INTERACTION_ENABLED;
     }
 
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
     String UI_EEA_COUNTRIES =
             "AT," // Austria
                     + "BE," // Belgium
@@ -1825,5 +1833,13 @@ public interface Flags {
      */
     default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+
+    /** Determines whether EU notification flow change is enabled. */
+    default boolean getEuNotifFlowChangeEnabled() {
+        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 }
