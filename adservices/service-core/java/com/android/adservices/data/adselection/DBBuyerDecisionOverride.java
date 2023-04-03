@@ -18,6 +18,7 @@ package com.android.adservices.data.adselection;
 
 import static com.google.auto.value.AutoValue.CopyAnnotations;
 
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.NonNull;
@@ -26,10 +27,7 @@ import androidx.room.Entity;
 
 import com.google.auto.value.AutoValue;
 
-/**
- * This POJO represents the {@link android.adservices.adselection.BuyerDecisionLogic} entity
- * associated with an Ad Selection
- */
+/** This POJO represents the {@link DecisionLogic} entity associated with an Ad Selection */
 @AutoValue
 @CopyAnnotations
 @Entity(
