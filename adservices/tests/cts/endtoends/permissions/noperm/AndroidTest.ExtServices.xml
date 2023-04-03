@@ -32,6 +32,10 @@
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
 
+    <!-- For this test suite to get picked up in presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex" />
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="CtsExtAdServicesPermissionsNoPermEndToEndTests.apk"/>
@@ -50,10 +54,17 @@
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+
+        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

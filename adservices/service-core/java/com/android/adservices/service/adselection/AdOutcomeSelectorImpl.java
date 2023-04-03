@@ -85,13 +85,14 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mBackgroundExecutorService = backgroundExecutor;
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionDevOverridesHelper = adSelectionDevOverridesHelper;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
         mFlags = flags;
         mJsFetcher =
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        mFlags);
     }
 
     /**

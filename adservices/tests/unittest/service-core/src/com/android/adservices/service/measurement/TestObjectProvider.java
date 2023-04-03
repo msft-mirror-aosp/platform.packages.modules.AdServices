@@ -63,7 +63,7 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext()));
+                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags));
     }
 
     static MeasurementImpl getMeasurementImpl(

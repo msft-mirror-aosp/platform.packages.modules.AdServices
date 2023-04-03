@@ -63,7 +63,7 @@ public class UpdateAdCounterHistogramWorkerTest {
     private static final int CALLER_UID = 10;
     private static final long AD_SELECTION_ID = 20;
     private static final int LOGGING_API_NAME =
-            AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+            AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
 
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
