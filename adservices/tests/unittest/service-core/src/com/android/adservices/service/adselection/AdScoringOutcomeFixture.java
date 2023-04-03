@@ -37,13 +37,13 @@ public class AdScoringOutcomeFixture {
                                 .setAdWithBid(adBiddingOutcome.getAdWithBid())
                                 .setScore(score)
                                 .build())
-                .setDecisionLogicUri(
+                .setBiddingLogicUri(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
                 .setCustomAudienceSignals(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
-                .setDecisionLogicJs(
+                .setBiddingLogicJs(
                         adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
-                .setDecisionLogicJsDownloaded(true)
+                .setBiddingLogicJsDownloaded(true)
                 .setBuyer(
                         adBiddingOutcome
                                 .getCustomAudienceBiddingInfo()
@@ -63,12 +63,12 @@ public class AdScoringOutcomeFixture {
                                 .setScore(score)
                                 .build())
                 .setBuyer(buyer)
-                .setDecisionLogicUri(CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
+                .setBiddingLogicUri(CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(buyer))
                 .setCustomAudienceSignals(
                         CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
                                 .setBuyer(buyer)
                                 .build())
-                .setDecisionLogicJs(CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
-                .setDecisionLogicJsDownloaded(true);
+                .setBiddingLogicJs(CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                .setBiddingLogicJsDownloaded(true);
     }
 }
