@@ -641,7 +641,7 @@ public class MeasurementManager {
         IMeasurementService service = null;
         try {
             service = getService();
-        } catch (IllegalStateException e) {
+        } catch (RuntimeException e) {
             LogUtil.e(e, "Failed binding to measurement service");
             if (callback != null && executor != null) {
                 executor.execute(() -> callback.onError(e));
