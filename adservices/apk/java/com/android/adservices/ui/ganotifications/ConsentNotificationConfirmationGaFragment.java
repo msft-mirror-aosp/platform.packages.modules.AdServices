@@ -40,8 +40,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -79,10 +79,12 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     }
 
     private void dismissNotificationIfNeeded() {
-        if (!FlagsFactory.getFlags().getNotificationDismissedOnClick()) {
+        try {
             NotificationManagerCompat notificationManager =
                     NotificationManagerCompat.from(requireContext());
             notificationManager.cancel(NOTIFICATION_ID);
+        } catch (Exception e) {
+            LogUtil.e(e.toString());
         }
     }
 
