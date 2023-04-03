@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.LogUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /** Helper methods for database migrations. */
@@ -41,14 +42,16 @@ public final class MigrationHelpers {
         db.execSQL(renameTableQuery);
         db.execSQL(createTableQuery);
         List<String> backupTableColumnNames = getTableColumnNames(db, backupTableName);
-        List<String> newTableColumnNames = getTableColumnNames(db, backupTableName);
+        List<String> newTableColumnNames = getTableColumnNames(db, tableName);
+        String dropBackupTable = String.format("DROP TABLE %1$s", backupTableName);
 
-        if (!newTableColumnNames.containsAll(backupTableColumnNames)) {
+        if (!new HashSet<>(newTableColumnNames).containsAll(backupTableColumnNames)) {
             // Not all the columns in the old table are present in the new table.  Proceeding with
             // an empty table.
-            LogUtil.e(
+            LogUtil.w(
                     "Error during measurement migration (copyAndUpdateTable()).  The new "
                             + "table does not have all of the columns from the old table.");
+            db.execSQL(dropBackupTable);
             return;
         }
 
@@ -60,7 +63,6 @@ public final class MigrationHelpers {
                         tableName, columns, backupTableName);
 
         db.execSQL(insertValuesFromBackupQuery);
-        String dropBackupTable = String.format("DROP TABLE %1$s", backupTableName);
         db.execSQL(dropBackupTable);
     }
 
