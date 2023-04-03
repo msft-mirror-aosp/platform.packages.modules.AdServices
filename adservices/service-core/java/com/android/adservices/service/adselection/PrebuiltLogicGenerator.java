@@ -63,7 +63,8 @@ public class PrebuiltLogicGenerator {
 
     @VisibleForTesting
     static final String AD_SELECTION_HIGHEST_BID_WINS_JS =
-            "function scoreAd(ad, bid, auction_config, seller_signals,"
+            "//From prebuilts AD_SELECTION_HIGHEST_BID_WINS_JS\n"
+                    + "function scoreAd(ad, bid, auction_config, seller_signals,"
                     + " trusted_scoring_signals,\n"
                     + "    contextual_signal, user_signal, custom_audience_signal) {\n"
                     + "    return {'status': 0, 'score': bid };\n"
@@ -71,7 +72,7 @@ public class PrebuiltLogicGenerator {
                     + "function reportResult(ad_selection_config, render_uri, bid,"
                     + " contextual_signals) {\n"
                     + "    // Add the address of your reporting server here\n"
-                    + "  let reporting_address = '${reportingUrl}';\n"
+                    + "    let reporting_address = '${reportingUrl}';\n"
                     + "    return {'status': 0, 'results': {'signals_for_buyer':"
                     + " '{\"signals_for_buyer\" : 1}'\n"
                     + "            , 'reporting_uri': reporting_address + '?render_uri='\n"
