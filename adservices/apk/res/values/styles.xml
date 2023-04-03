@@ -77,7 +77,7 @@
 
     <style name="NotificationButtonContainer">
         <item name="android:paddingTop">12dp</item>
-        <item name="android:paddingBottom">20dp</item>
+        <item name="android:paddingBottom">12dp</item>
         <item name="android:orientation">horizontal</item>
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
