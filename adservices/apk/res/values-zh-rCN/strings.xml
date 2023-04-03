@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"体验新的广告隐私权功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"广告主题使您能更好地掌控自己看到的广告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看详细信息"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"体验新的广告隐私权功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android 将推出新的隐私保护功能，让您能更好地掌控自己看到的广告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"广告主题有助于应用向您展示相关广告，同时保护您的身份信息和应用使用情况相关信息。Android 会根据您近期使用过的应用来记录您感兴趣的主题。之后，您使用的应用可请求 Android 提供相关主题，以便向您展示个性化广告。"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"您可以在设备设置中查看广告主题，并屏蔽您不想与应用分享的主题。Android 还会定期自动删除广告主题。"</string>
