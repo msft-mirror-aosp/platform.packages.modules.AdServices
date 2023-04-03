@@ -360,6 +360,9 @@ public final class AdSelectionConfig implements Parcelable {
          * Sets the URI endpoint of sell-side trusted signal from which creative specific realtime
          * information can be fetched from.
          *
+         * <p>If {@link Uri#EMPTY} is passed then network call will be skipped and {@link
+         * AdSelectionSignals#EMPTY} will be passed to ad selection.
+         *
          * <p>See {@link #getTrustedScoringSignalsUri()} for more details.
          */
         @NonNull

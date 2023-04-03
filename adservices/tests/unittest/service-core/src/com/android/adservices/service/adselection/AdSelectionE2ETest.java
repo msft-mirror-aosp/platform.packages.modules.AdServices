@@ -74,6 +74,8 @@ import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.ContextualAds;
 import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.ReportImpressionCallback;
+import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -192,12 +194,19 @@ public class AdSelectionE2ETest {
     private static final String SELLER_DECISION_LOGIC_URI_PATH = "/ssp/decision/logic/";
     private static final String SELLER_TRUSTED_SIGNAL_URI_PATH = "/kv/seller/signals/";
     private static final String SELLER_TRUSTED_SIGNAL_PARAMS = "?renderuris=";
+    private static final String SELLER_REPORTING_URI_PATH = "ssp/reporting/";
+    private static final String BUYER_REPORTING_URI_PATH = "dsp/reporting/";
 
     public static final String READ_BID_FROM_AD_METADATA_JS =
             "function generateBid(ad, auction_signals, per_buyer_signals,"
                     + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '%s' } };\n"
                     + "}";
 
     private static final String READ_BID_FROM_AD_METADATA_JS_V3 =
@@ -215,11 +224,18 @@ public class AdSelectionE2ETest {
                     + "}";
 
     public static final String USE_BID_AS_SCORE_JS =
-            "function scoreAd(ad, bid, auction_config, seller_signals, "
-                    + "trusted_scoring_signals, contextual_signal, user_signal, "
-                    + "custom_audience_signal) { \n"
-                    + "  return {'status': 0, 'score': bid };\n"
-                    + "}";
+            "//From dispatcher USE_BID_AS_SCORE_JS\n"
+                + "function scoreAd(ad, bid, auction_config, seller_signals,"
+                + " trusted_scoring_signals, contextual_signal, user_signal,"
+                + " custom_audience_signal) { \n"
+                + "  return {'status': 0, 'score': bid };\n"
+                + "}\n"
+                + "\n"
+                + "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
+                + " { \n"
+                + " return {'status': 0, 'results': {'signals_for_buyer':"
+                + " '{\"signals_for_buyer\":1}', 'reporting_uri': '%s' } };\n"
+                + "}";
 
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH =
             "/selectionPickHighestLogicJS/";
@@ -586,23 +602,37 @@ public class AdSelectionE2ETest {
                         mConsentManagerMock);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
+        Uri uriPathForScoringWithReportResults =
+                mMockWebServerRule.uriForPath(SELLER_REPORTING_URI_PATH);
+        Uri uriPathForBiddingWithReportResults =
+                mMockWebServerRule.uriForPath(BUYER_REPORTING_URI_PATH);
         mDispatcher =
                 new Dispatcher() {
                     @Override
                     public MockResponse dispatch(RecordedRequest request) {
                         if (SELLER_DECISION_LOGIC_URI_PATH.equals(request.getPath())) {
-                            return new MockResponse().setBody(USE_BID_AS_SCORE_JS);
+                            return new MockResponse()
+                                    .setBody(
+                                            String.format(
+                                                    USE_BID_AS_SCORE_JS,
+                                                    uriPathForScoringWithReportResults));
                         } else if ((BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1.toString())
                                         .equals(request.getPath())
                                 || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                         .equals(request.getPath())) {
-                            return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
+                            return new MockResponse()
+                                    .setBody(
+                                            String.format(
+                                                    READ_BID_FROM_AD_METADATA_JS,
+                                                    uriPathForBiddingWithReportResults));
                         } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
                         } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_PICK_NONE_LOGIC_JS);
                         } else if (request.getPath().equals(SELECTION_WATERFALL_LOGIC_JS_PATH)) {
                             return new MockResponse().setBody(SELECTION_WATERFALL_LOGIC_JS);
+                        } else if (SELLER_REPORTING_URI_PATH.equals(request.getPath())) {
+                            return new MockResponse().setBody("");
                         } else if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
                             String[] keys =
                                     Uri.parse(request.getPath())
@@ -1552,10 +1582,9 @@ public class AdSelectionE2ETest {
         // overrides are set
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                3,
+                2,
                 ImmutableList.of(
                         BUYER_BIDDING_LOGIC_URI_PATH + BUYER_1,
-                        BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2,
                         BUYER_TRUSTED_SIGNAL_URI_PATH),
                 REQUEST_PREFIX_MATCHER);
         verify(mAdServicesLoggerMock)
@@ -1815,6 +1844,104 @@ public class AdSelectionE2ETest {
                         eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
                         eq(STATUS_SUCCESS),
                         geq((int) BINDER_ELAPSED_TIME_MS));
+
+        ReportImpressionTestCallback reportingCallback =
+                invokeReporting(
+                        resultsCallback.mAdSelectionResponse.getAdSelectionId(),
+                        mAdSelectionService,
+                        adSelectionConfig,
+                        CALLER_PACKAGE_NAME);
+        assertCallbackIsSuccessful(reportingCallback);
+    }
+
+    @Test
+    public void testRunAdSelectionOnlyContextualAds_NoCAsNoNetworkCall_Success() throws Exception {
+        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(2);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(any());
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdSelectionProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(any());
+
+        MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
+
+        String sellerReportingPath = "/seller/report";
+        String paramKey = "reportingUrl";
+        String paramValue = mMockWebServerRule.uriForPath(sellerReportingPath).toString();
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_USE_CASE,
+                                AD_SELECTION_HIGHEST_BID_WINS,
+                                paramKey,
+                                paramValue));
+        AdSelectionConfig adSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigWithContextualAdsBuilder()
+                        .setCustomAudienceBuyers(Collections.emptyList())
+                        .setSeller(mSeller)
+                        .setDecisionLogicUri(prebuiltUri)
+                        .setBuyerContextualAds(createContextualAds())
+                        .setTrustedScoringSignalsUri(Uri.EMPTY)
+                        .build();
+
+        AdSelectionTestCallback resultsCallback =
+                invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
+        runAdSelectionProcessLoggerLatch.await();
+
+        assertCallbackIsSuccessful(resultsCallback);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDaoSpy.doesAdSelectionIdExist(resultSelectionId));
+
+        // The contextual Ad with maximum bid should have won
+        assertEquals(
+                AdDataFixture.getValidRenderUriByBuyer(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2)
+                                                .getHost()),
+                                500)
+                        .toString(),
+                resultsCallback.mAdSelectionResponse.getRenderUri().toString());
+        verify(mAdServicesLoggerMock)
+                .logRunAdScoringProcessReportedStats(isA(RunAdScoringProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logRunAdSelectionProcessReportedStats(
+                        isA(RunAdSelectionProcessReportedStats.class));
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS),
+                        eq(STATUS_SUCCESS),
+                        geq((int) BINDER_ELAPSED_TIME_MS));
+        mMockWebServerRule.verifyMockServerRequests(
+                server, 0, Collections.emptyList(), String::equals);
+
+        ReportImpressionTestCallback reportingCallback =
+                invokeReporting(
+                        resultsCallback.mAdSelectionResponse.getAdSelectionId(),
+                        mAdSelectionService,
+                        adSelectionConfig,
+                        CALLER_PACKAGE_NAME);
+        assertCallbackIsSuccessful(reportingCallback);
     }
 
     @Test
@@ -3204,6 +3331,19 @@ public class AdSelectionE2ETest {
     }
 
     private void assertCallbackIsSuccessful(AdSelectionTestCallback resultsCallback) {
+        assertTrue(
+                resultsCallback.mFledgeErrorResponse != null
+                        ? String.format(
+                                Locale.ENGLISH,
+                                "Expected callback to succeed but it failed with status %d and"
+                                        + " message '%s'",
+                                resultsCallback.mFledgeErrorResponse.getStatusCode(),
+                                resultsCallback.mFledgeErrorResponse.getErrorMessage())
+                        : "Expected callback to succeed but it failed with no details",
+                resultsCallback.mIsSuccess);
+    }
+
+    private void assertCallbackIsSuccessful(ReportImpressionTestCallback resultsCallback) {
         assertTrue(
                 resultsCallback.mFledgeErrorResponse != null
                         ? String.format(
@@ -5722,6 +5862,29 @@ public class AdSelectionE2ETest {
         return adSelectionTestCallback;
     }
 
+    private ReportImpressionTestCallback invokeReporting(
+            long adSelectionId,
+            AdSelectionServiceImpl adSelectionService,
+            AdSelectionConfig adSelectionConfig,
+            String callerPackageName)
+            throws InterruptedException {
+
+        CountDownLatch countdownLatch = new CountDownLatch(1);
+        ReportImpressionTestCallback reportImpressionCallback =
+                new ReportImpressionTestCallback(countdownLatch);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(callerPackageName)
+                        .build();
+
+        adSelectionService.reportImpression(input, reportImpressionCallback);
+        reportImpressionCallback.mCountDownLatch.await();
+        return reportImpressionCallback;
+    }
+
     private String insertJsWait(long waitTime) {
         return "    const wait = (ms) => {\n"
                 + "       var start = new Date().getTime();\n"
@@ -5772,6 +5935,28 @@ public class AdSelectionE2ETest {
                     + ", mFledgeErrorResponse="
                     + mFledgeErrorResponse
                     + '}';
+        }
+    }
+
+    public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
+        private final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        public ReportImpressionTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+        }
+
+        @Override
+        public void onSuccess() throws RemoteException {
+            mIsSuccess = true;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
         }
     }
 
