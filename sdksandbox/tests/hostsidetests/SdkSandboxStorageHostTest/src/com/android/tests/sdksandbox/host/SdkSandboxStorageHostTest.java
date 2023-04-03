@@ -198,6 +198,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify directory is created
         assertThat(getDevice().isDirectory(cePath)).isTrue();
