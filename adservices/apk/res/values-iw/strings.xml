@@ -72,8 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"‏האפליקציות יכולות להעריך את תחומי העניין שלך ולשמור אותם באופן זמני באמצעות Android. לדוגמה, אפליקציה שבה השתמשת כדי לקנות נעלי ריצה עשויה להעריך שאחד מתחומי העניין שלך הוא \'ריצת מרתונים\'.\n\nבהמשך, על סמך תחום העניין הזה, אפליקציה אחרת יכולה להציג לך מודעה שקשורה למרתונים.\n\nבהגדרות הפרטיות אפשר לנהל את רשימת האפליקציות ששמרו את תחומי העניין."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"תכונות חדשות של פרטיות בפרסום"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"נושאי המודעות ואמצעי בקרה חדשים מאפשרים לך לבחור טוב יותר את המודעות שמוצגות לך"</string>
-    <!-- no translation found for notificationUI_header_ga_title (3557937325021173836) -->
-    <skip />
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"‏מתגבשת ב-Android של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. גם האפליקציות עצמן יכולות להעריך מה מעניין אותך. לאחר מכן, האפליקציות יכולות לשלוח בקשה לקבלת המידע הזה כדי להציג לך מודעות בהתאמה אישית. יש לך אפשרות לבחור אילו אפליקציות ונושאים ישמשו כדי להציג לך מודעות."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"כדי למדוד את הביצועים של מודעה מסוימת, סוגים מסוימים של נתונים ישותפו בין האפליקציות."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"‏מידע נוסף על מודעות ב-Android"</string>
@@ -88,16 +87,14 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"רוצה לנסות את התכונות החדשות של פרטיות בפרסום?"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"נושאי המודעות מאפשרים לך לבחור טוב יותר את המודעות שיוצגו"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"לפרטים"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"רוצה לנסות את התכונות החדשות של פרטיות בפרסום?"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"‏מושקות ב-Android תכונות פרטיוּת חדשות שיעניקו לך יותר אפשרויות בחירה לגבי המודעות שיוצגו לך."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"‏נושאים של מודעות עוזרים לאפליקציות להציג לך מודעות רלוונטיות, תוך הגנה על הזהות שלך ועל מידע לגבי השימוש שלך באפליקציות. Android יכול לזהות נושאים שמעניינים אותך על סמך האפליקציות שהשתמשת בהן בזמן האחרון. לאחר מכן, אפליקציה שבחרת להשתמש בה יכולה לשלוח ל-Android בקשה לקבלת נושאים רלוונטיים כדי להתאים אישית את המודעות שמוצגות לך."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"‏אפשר לראות את הנושאים של המודעות בהגדרות של המכשיר, ולחסום את הנושאים שלא רוצים שישותפו עם האפליקציות. בנוסף, נושאי מודעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"אפשר לשנות את ההחלטה בכל שלב בהגדרות הפרטיות."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"מידע נוסף על נושאי מודעות"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"‏במדיניות הפרטיות שלנו מפורט מידע נוסף על האופן שבו Android מגן על הנתונים שלך."</string>
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu (7164165910760741822) -->
-    <skip />
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"אני רוצה לנסות"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  אילו נתונים יהיו בשימוש"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"הנושאים של המודעות שלך מבוססים על אפליקציות שבהן השתמשת לאחרונה במכשיר הזה ועל תדירות השימוש בהן."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  איך אנחנו משתמשים בנתונים האלה"</string>
@@ -105,10 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  מה האפשרויות שזמינות לך לניהול הנתונים שלך"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"‏נושאים נמחקים ב-Android באופן קבוע. אם המשכת להשתמש באפליקציות, אחד הנושאים עשוי להופיע ברשימה מחדש. בכל שלב ניתן להיכנס להגדרות הפרטיות, למנוע שיתוף של נושאים מסוימים בין Android לאפליקציות ולהשבית את נושאי המודעות."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"אפשר לערוך שינויים בהגדרות הפרטיות."</string>
-    <!-- no translation found for notificationUI_fledge_measurement_title (1721724915714192994) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1 (2217529852483952185) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"תכונות נוספות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"‏ב-Android יש גם דרכים חדשות שיאפשרו להגביל את מה שהאפליקציות יכולות לגלות עליך כשהן מציגות לך מודעות בהתאמה אישית."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  מודעות שאפליקציות מציעות עוזרות להגן על הזהות שלך ועל המידע לגבי השימוש שלך באפליקציות, ובמקביל מאפשרות לאפליקציות להציג לך מודעות רלוונטיות. על סמך הפעילות שלך, אפליקציה יכולה להציע מודעות קשורות באפליקציות אחרות. בהגדרות הפרטיות אפשר לראות את רשימת האפליקציות ולחסום את האפשרות שלהן להציע מודעות."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  במסגרת מדידת הנתונים של המודעות, סוגים מסוימים של נתונים ישותפו בין אפליקציות כדי למדוד את הביצועים של המודעות שלהן. למשל, השעה ביום שבה הוצגה לך מודעה מסוימת."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"מידע נוסף על מודעות שאפליקציות מציעות ועל מדידת הנתונים של המודעות"</string>
@@ -121,36 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"‏הנתונים שקשורים להצעות מאפליקציות נמחקים אוטומטית מ-Android באופן קבוע. אפליקציה שמשתמשים בה שוב עשויה להופיע ברשימה מחדש."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"בכל שלב, ניתן גם להיכנס להגדרות הפרטיות ולחסום את האפשרות של אפליקציה להציע לך מודעות, לאפס את כל הנתונים שקשורים להצעת מודעות או להשבית את ההצעות למודעות מאפליקציות."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"‏האפליקציות שבהן השתמשת יכולות לשלוח ל-Android בקשה לקבלת מידע שיעזור להן למדוד את ביצועי המודעות שלהן. הפרטיות שלך מוגנת ב-Android כי המידע שהאפליקציות יכולות לשתף זו עם זו מוגבל."</string>
-    <!-- no translation found for notificationUI_notification_ga_title_eu_v2 (9132669086237883391) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_eu_v2 (9205285241542339861) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_title_v2 (1097778529908285549) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text2_v2 (7324869061552803848) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text3_v2 (7061185974787039681) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_eu_v2 (8442776546238998877) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_body_ga_text_eu_v2 (1119632112904754361) -->
-    <skip />
-    <!-- no translation found for notificationUI_container2_body_ga_text_eu_v2 (7264946073865844642) -->
-    <skip />
-    <!-- no translation found for notificationUI_container3_body_ga_text_eu_v2 (3204499878554843655) -->
-    <skip />
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu_v2 (7227289411885047121) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_title_v2 (7429979629916798545) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_v2 (4673081782304081905) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_v2 (2079990149331373941) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_ga_introduction_v2 (3820258766801905248) -->
-    <skip />
-    <!-- no translation found for notificationUI_next_button_text (5564270455474313663) -->
-    <skip />
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"משתמשים נהנים מיותר השפעה על המודעות שיוצגו להם, ונתוני הזהות שלהם נשארים מוגנים"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  התכונה \'מודעות שאפליקציות מציעות\' מעניקה לך פרטיות רבה יותר – אפליקציות יכולות להציג לך מודעות רלוונטיות, ויחד עם זאת, הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. על סמך הפעילות שלך, אפליקציה יכולה להציע לך מודעות קשורות באפליקציות אחרות. בהגדרות הפרטיות ניתן לראות את רשימת האפליקציות ולחסום את האפשרות שלהן להציע מודעות."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  במסגרת מדידת הנתונים של המודעות, סוגים מסוימים של נתונים ישותפו בין אפליקציות כדי לבדוק את הביצועים של המודעות שלהן, למשל השעה ביום שבה הוצגה לך מודעה מסוימת."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"הפעלת תכונה נוספת לשמירה על פרטיות בפרסום"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"‏ב-Android יש גם תכונת פרטיות חדשה שנותנת לך יותר שליטה על המודעות שמוצגות לך."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"‏כשאפליקציות מציגות לך מודעות לפי נושאי המודעות שלך, המודעות שמוצגות לך רלוונטיות ובכל זאת הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. ב-Android יכולה להופיע רשימה של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. לאחר מכן, אפליקציה שבה השתמשת יכולה לשלוח ל-Android בקשה לקבלת מידע על חלק מהנושאים כדי להציג לך מודעות רלוונטיות יותר."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"‏אפשר לראות את הנושאים של המודעות בהגדרות הפרטיות, ולחסום את הנושאים שלא רוצים שישותפו עם האפליקציות. בנוסף, נושאי מודעות נמחקים אוטומטית מ-Android באופן קבוע."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"להפעלת ההגדרה"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"עכשיו יש למשתמשים יותר השפעה על המודעות שיוצגו להם, ונתוני הזהות שלהם נשארים מוגנים"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"‏ב-Android יש עכשיו תכונות פרטיות חדשות שנותנות לך יותר שליטה על המודעות שמוצגות לך."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"הבא"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"‏השתתפות בתוכנית הבטא של פרטיות בפרסום ב-Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"ארגז חול לפרטיות"</string>
