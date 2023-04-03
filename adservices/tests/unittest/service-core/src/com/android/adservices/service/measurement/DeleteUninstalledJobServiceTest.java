@@ -282,11 +282,6 @@ public class DeleteUninstalledJobServiceTest {
                     .when(AdServicesConfig::getMeasurementDeleteUninstalledJobPeriodMs);
             ExtendedMockito.doNothing()
                     .when(() -> DeleteUninstalledJobService.schedule(any(), any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
 
             // Execute
             execute.run();

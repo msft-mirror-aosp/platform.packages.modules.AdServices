@@ -316,11 +316,7 @@ public class AggregateFallbackReportingJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()
                     .when(() -> AggregateFallbackReportingJobService.schedule(any(), any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
+
             // Execute
             execute.run();
         } finally {

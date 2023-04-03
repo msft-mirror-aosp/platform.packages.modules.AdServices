@@ -104,13 +104,6 @@ public class BackgroundFetchJobServiceTest {
                         .initMocks(this)
                         .startMocking();
 
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
                 "Job already scheduled before setup!",

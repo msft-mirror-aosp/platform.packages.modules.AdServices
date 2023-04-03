@@ -120,13 +120,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOff() throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is off.
@@ -152,13 +145,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testOnStartJob_killswitchIsOn() {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Killswitch is on.
@@ -252,13 +238,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -284,13 +263,6 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeeded_ScheduledWithDifferentParameters()
             throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
@@ -318,13 +290,6 @@ public class MddJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -357,13 +322,6 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddMaintenancePeriodicTask()
             throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -384,13 +342,6 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddChargingPeriodicTask()
             throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.
@@ -411,13 +362,6 @@ public class MddJobServiceTest {
     @Test
     public void testScheduleIfNeededMddSingleTask_mddCellularChargingPeriodicTask()
             throws InterruptedException {
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock static method MddFlags.getInstance() to return Mock MddFlags.
         ExtendedMockito.doReturn(mMockMddFlags).when(MddFlags::getInstance);
         // Mock static method FlagsFactory.getFlags() to return test Flags.

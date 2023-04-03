@@ -112,13 +112,6 @@ public class MaintenanceJobServiceTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
         ExtendedMockito.doReturn(JOB_SCHEDULER)
