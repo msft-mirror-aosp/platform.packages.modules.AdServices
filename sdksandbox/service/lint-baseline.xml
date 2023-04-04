@@ -1,95 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<issues format="6" by="lint 8.0.0-dev" type="baseline" dependencies="true" variant="all" version="8.0.0-dev">
+<issues format="5" by="lint 8.1.0-dev" dependencies="true" type="baseline" variant="all" version="8.0.0-dev">
 
     <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.am.ActivityManagerLocal#stopSdkSandboxService`"
-        errorLine1="            mActivityManagerLocal.stopSdkSandboxService("
-        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxServiceProviderImpl.java"
-            line="212"
-            column="35"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.am.ActivityManagerLocal#killSdkSandboxClientAppProcess`">
+        id="ObsoleteSdkInt"
+        message="Unnecessary; SDK_INT is always >= 34">
         <location
             file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="1273"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getActivityInfo`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="381"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingPackage`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="377"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCallingUid`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="378"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getCheckedOptions`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="386"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="366"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptorInfo#getIntent`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="386"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#getInstance`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="389"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `com.android.server.wm.ActivityInterceptorCallbackRegistry#registerActivityInterceptorCallback`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="390"/>
-    </issue>
-
-    <issue
-        id="NewApi"
-        message="Call requires API level 34 (current min is 33): `new com.android.server.wm.ActivityInterceptorCallback.ActivityInterceptResult`">
-        <location
-            file="packages/modules/AdServices/sdksandbox/service/java/com/android/server/sdksandbox/SdkSandboxManagerService.java"
-            line="385"/>
+            line="369"/>
     </issue>
 
 </issues>
