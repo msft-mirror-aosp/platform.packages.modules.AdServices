@@ -65,7 +65,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -512,24 +511,13 @@ class AttributionJobHandler {
             return true;
         }
 
-        Map<Boolean, List<EventReport>> pendingReports =
-                sourceEventReports.stream()
-                        .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                        .collect(
-                                Collectors.partitioningBy(
-                                        (r) ->
-                                                r.getReportTime()
-                                                        == newEventReport.getReportTime()));
-
-        List<EventReport> excessiveEventReports = pendingReports.get(false);
-
-        if (!excessiveEventReports.isEmpty()) {
-            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
-        }
-
         List<EventReport> relevantEventReports =
-                pendingReports.get(true).stream()
+                sourceEventReports.stream()
+                        .filter(
+                                (r) ->
+                                        r.getStatus() == EventReport.Status.PENDING
+                                                && r.getReportTime()
+                                                        == newEventReport.getReportTime())
                         .sorted(
                                 Comparator.comparingLong(EventReport::getTriggerPriority)
                                         .thenComparing(
@@ -538,6 +526,8 @@ class AttributionJobHandler {
                         .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
             return false;
         }
 
