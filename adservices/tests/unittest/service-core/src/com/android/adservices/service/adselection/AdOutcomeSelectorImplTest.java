@@ -328,6 +328,25 @@ public class AdOutcomeSelectorImplTest {
     public void testAdOutcomeSelectorWithPrebuiltUriReturnsOutcomeSuccess() throws Exception {
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
+        Flags prebuiltFlagEnabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+                        return true;
+                    }
+                };
+
+        AdOutcomeSelector adOutcomeSelector =
+                new AdOutcomeSelectorImpl(
+                        mMockAdSelectionScriptEngine,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mSchedulingExecutor,
+                        mWebClient,
+                        new AdSelectionDevOverridesHelper(
+                                DevContext.createForDevOptionsDisabled(), mAdSelectionEntryDao),
+                        prebuiltFlagEnabled);
+
         String paramKey = "bidFloor";
         String paramValue = "bid_floor";
         Uri prebuiltUri =
@@ -367,7 +386,7 @@ public class AdOutcomeSelectorImplTest {
                 .thenReturn(Futures.immediateFuture(AD_SELECTION_ID));
 
         Long selectedOutcomeId =
-                waitForFuture(() -> mAdOutcomeSelector.runAdOutcomeSelector(adverts, config));
+                waitForFuture(() -> adOutcomeSelector.runAdOutcomeSelector(adverts, config));
 
         mMockWebServerRule.verifyMockServerRequests(
                 server,
