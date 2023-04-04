@@ -45,6 +45,7 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +63,7 @@ public class NotificationActivityUiAutomatorTest {
     private static final String NOTIFICATION_TEST_PACKAGE =
             "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
-    private static UiDevice sDevice =
+    private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private MockitoSession mStaticMockSession;
     @Mock private ConsentManager mConsentManager;
@@ -196,6 +197,34 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        String packageNameOfDefaultBrowser =
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
+        sDevice.pressHome();
+
+        /* isEUActivity false: Rest of World Notification landing page */
+        startActivity(false);
+        /* find the expander and click to expand to get the content */
+        UiObject moreExpander =
+                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
+        moreExpander.click();
+
+        UiObject sentence =
+                ApkTestUtil.scrollTo(
+                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
+        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+                packageNameOfDefaultBrowser, sentence, 20)) {
+            return;
+        }
+        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            return;
+        }
+        Assert.fail("Web browser not found after several clicks on the last line");
+    }
+
+    @Test
     public void acceptedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
@@ -298,4 +327,18 @@ public class NotificationActivityUiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 
+    private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+            String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
+            throws UiObjectNotFoundException {
+        int right = sentence.getBounds().right,
+                bottom = sentence.getBounds().bottom,
+                left = sentence.getBounds().left;
+        for (int x = left; x < right; x += (right - left) / countOfClicks) {
+            sDevice.click(x, bottom - 2);
+            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -121,6 +121,7 @@
                         android:text="@string/notificationUI_how_it_works_topics_expanded_text8"
                         style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
+                        android:id="@+id/learn_more_from_privacy_policy"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
