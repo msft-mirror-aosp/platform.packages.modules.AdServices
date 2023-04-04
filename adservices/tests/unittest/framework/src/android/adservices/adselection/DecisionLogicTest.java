@@ -21,8 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-import android.adservices.common.AdTechIdentifier;
-import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -30,40 +28,26 @@ import androidx.test.filters.SmallTest;
 import org.junit.Test;
 
 @SmallTest
-public class BuyerDecisionLogicTest {
-
-    private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
+public class DecisionLogicTest {
 
     private static final String DECISION_LOGIC = "reportWin()";
 
     @Test
     public void testBuildValid_Success() {
-        BuyerDecisionLogic valid = new BuyerDecisionLogic(BUYER, DECISION_LOGIC);
-
-        assertThat(valid.getBuyer()).isEqualTo(BUYER);
-        assertThat(valid.getDecisionLogic()).isEqualTo(DECISION_LOGIC);
+        DecisionLogic valid = new DecisionLogic(DECISION_LOGIC);
+        assertThat(valid.getLogic()).isEqualTo(DECISION_LOGIC);
     }
 
     @Test
     public void testParcelValid_Success() {
-        BuyerDecisionLogic valid = new BuyerDecisionLogic(BUYER, DECISION_LOGIC);
+        DecisionLogic valid = new DecisionLogic(DECISION_LOGIC);
 
         Parcel p = Parcel.obtain();
         valid.writeToParcel(p, 0);
         p.setDataPosition(0);
 
-        BuyerDecisionLogic fromParcel = BuyerDecisionLogic.CREATOR.createFromParcel(p);
-        assertThat(fromParcel.getBuyer()).isEqualTo(BUYER);
-        assertThat(fromParcel.getDecisionLogic()).isEqualTo(DECISION_LOGIC);
-    }
-
-    @Test
-    public void testBuildWith_NullBuyer_Failure() {
-        assertThrows(
-                NullPointerException.class,
-                () -> {
-                    new BuyerDecisionLogic(null, DECISION_LOGIC);
-                });
+        DecisionLogic fromParcel = DecisionLogic.CREATOR.createFromParcel(p);
+        assertThat(fromParcel.getLogic()).isEqualTo(DECISION_LOGIC);
     }
 
     @Test
@@ -71,13 +55,13 @@ public class BuyerDecisionLogicTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new BuyerDecisionLogic(BUYER, null);
+                    new DecisionLogic(null);
                 });
     }
 
     @Test
     public void testDescribeContents() {
-        BuyerDecisionLogic obj = new BuyerDecisionLogic(BUYER, DECISION_LOGIC);
+        DecisionLogic obj = new DecisionLogic(DECISION_LOGIC);
         assertEquals(0, obj.describeContents());
     }
 }

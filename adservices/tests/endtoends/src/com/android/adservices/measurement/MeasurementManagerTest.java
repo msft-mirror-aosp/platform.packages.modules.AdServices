@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -119,7 +120,7 @@ public class MeasurementManagerTest {
     public void testRegisterSource_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -161,7 +162,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -198,7 +199,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -235,7 +236,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -272,7 +273,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -350,7 +351,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -416,7 +417,7 @@ public class MeasurementManagerTest {
     public void testRegisterWebSource_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -443,7 +444,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -493,7 +494,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -529,7 +530,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -565,7 +566,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -601,7 +602,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -645,7 +646,7 @@ public class MeasurementManagerTest {
     public void testRegisterWebTrigger_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -672,7 +673,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -722,7 +723,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -758,7 +759,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -794,7 +795,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -830,7 +831,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -863,7 +864,7 @@ public class MeasurementManagerTest {
     public void testRegisterTrigger_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -888,7 +889,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -936,7 +937,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -970,7 +971,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1004,7 +1005,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1038,7 +1039,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1069,7 +1070,7 @@ public class MeasurementManagerTest {
     public void testDeleteRegistrations_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
         doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
@@ -1088,7 +1089,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
         doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 

@@ -47,9 +47,10 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.BuyerDecisionLogic;
+import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.ContextualAds;
 import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
@@ -181,10 +182,11 @@ public class FledgeE2ETest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
-    private static final List<BuyerDecisionLogic> BUYERS_DECISION_LOGIC =
-            List.of(
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_1, "reportWin()"),
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2, "reportWin()"));
+    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
+            new BuyersDecisionLogic(
+                    ImmutableMap.of(
+                            CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
+                            CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
 
     // Interaction reporting contestants
     private static final String CLICK_INTERACTION = "click";
@@ -2281,7 +2283,7 @@ public class FledgeE2ETest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
             AdSelectionSignals trustedScoringSignals,
-            List<BuyerDecisionLogic> buyerDecisionLogicList)
+            BuyersDecisionLogic buyerDecisionLogicMap)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);
@@ -2291,7 +2293,7 @@ public class FledgeE2ETest {
                 adSelectionConfig,
                 decisionLogicJS,
                 trustedScoringSignals,
-                buyerDecisionLogicList,
+                buyerDecisionLogicMap,
                 callback);
         resultLatch.await();
         return callback;
