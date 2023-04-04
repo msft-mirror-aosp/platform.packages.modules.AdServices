@@ -108,7 +108,7 @@ public class MeasurementManagerCtsTest {
         Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // To grant access to all pp api app
-        allowAllPackageNamesAccessMeasurementApis();
+        allowAllPackageNamesAccessToMeasurementApis();
 
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
@@ -341,8 +341,43 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_returnResultStatus() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
+    public void testMeasurementApiStatus_returnEnabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ false);
+        enableMeasurementKillSwitch(/* enabled= */ false);
+        allowAllPackageNamesAccessToMeasurementApis();
+        boolean result = callMeasurementApiStatus();
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_killSwitchGlobalOn_returnDisabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ true);
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_killSwitchMeasurementOn_returnDisabled() throws Exception {
+        enableMeasurementKillSwitch(/* enabled= */ true);
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_notInAllowList_returnDisabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ true);
+        blockAllPackageNamesAccessToMeasurementApis();
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * Performs calls to measurement status API and returns a boolean representing if the API was
+     * enabled {@code true} or disabled {@code false}.
+     *
+     * @return api status
+     */
+    private boolean callMeasurementApiStatus() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final MeasurementManager manager = MeasurementManager.get(sContext);
         List<Integer> resultCodes = new ArrayList<>();
@@ -357,11 +392,19 @@ public class MeasurementManagerCtsTest {
         assertThat(countDownLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
         Assert.assertNotNull(resultCodes);
         Assert.assertEquals(1, resultCodes.size());
-        overrideDisableMeasurementEnrollmentCheck("0");
+        return resultCodes.get(0) == MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
     }
 
-    private void allowAllPackageNamesAccessMeasurementApis() {
+    private void allowAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "*";
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + packageName);
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list " + packageName);
+    }
+
+    private void blockAllPackageNamesAccessToMeasurementApis() {
+        final String packageName = "";
         ShellUtils.runShellCommand(
                 "device_config put adservices ppapi_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
@@ -420,6 +463,14 @@ public class MeasurementManagerCtsTest {
                         + overrideString);
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+    }
+
+    private void enableGlobalKillSwitch(boolean enabled) {
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+    }
+
+    private void enableMeasurementKillSwitch(boolean enabled) {
+        ShellUtils.runShellCommand("setprop debug.adservices.measurement_kill_switch " + enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(MeasurementManager manager)
