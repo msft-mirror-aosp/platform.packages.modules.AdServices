@@ -156,7 +156,9 @@ public abstract class E2EMockTest extends E2ETest {
     @Override
     void prepareRegistrationServer(RegisterSource sourceRegistration) throws IOException {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
-            updateEnrollment(uri);
+            if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
@@ -169,7 +171,9 @@ public abstract class E2EMockTest extends E2ETest {
     @Override
     void prepareRegistrationServer(RegisterTrigger triggerRegistration) throws IOException {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
-            updateEnrollment(uri);
+            if (triggerRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
@@ -183,7 +187,9 @@ public abstract class E2EMockTest extends E2ETest {
     @Override
     void prepareRegistrationServer(RegisterWebSource sourceRegistration) throws IOException {
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
-            updateEnrollment(uri);
+            if (sourceRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
@@ -196,7 +202,9 @@ public abstract class E2EMockTest extends E2ETest {
     @Override
     void prepareRegistrationServer(RegisterWebTrigger triggerRegistration) throws IOException {
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
-            updateEnrollment(uri);
+            if (triggerRegistration.mUriConfigMap.get(uri).shouldEnroll()) {
+                updateEnrollment(uri);
+            }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
