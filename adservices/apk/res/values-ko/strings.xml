@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"확인"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"베타 참여 중"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"기기에 개인 정보 보호 샌드박스가 사용 설정되어 있으며 앱에서 개인 정보 보호를 강화하면서 광고를 표시하는 새로운 방법을 테스트할 수 있습니다. 언제든지 개인 정보 보호 설정에서 베타 참여를 중단할 수 있습니다."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"개인 정보 보호 설정 관리"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"확인"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android의 개인 정보 보호 샌드박스는 앱에서 사용자가 좋아할 만한 광고를 표시할 수 있는 새로운 기능을 제공합니다. 이 새로운 기술은 기기 식별자를 사용하지 않습니다.\n\nAndroid와 앱은 사용자가 관심을 보일 만한 광고 종류를 추정하고 관심분야를 기기에 임시 저장합니다. 이렇게 하면 앱이 다른 개발자의 웹사이트/앱에서 이루어진 활동을 추적하지 않고도 사용자가 관심을 보일 만한 광고를 표시할 수 있습니다."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"개인 정보 보호 샌드박스를 이용한 광고 개인 최적화"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"앱에서 관심분야를 추정하고 Android를 통해 임시로 저장할 수 있습니다. 예를 들어 러닝화 구입에 사용했던 앱은 ‘마라톤 뛰기’를 관심분야로 추정할 수 있습니다.\n\n나중에 이 관심분야를 바탕으로 다른 앱에서도 마라톤 관련 광고가 표시될 수 있습니다.\n\n개인 정보 보호 설정에서 관심분야를 저장한 앱 목록을 관리할 수 있습니다."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"새로운 광고 개인 정보 보호 기능"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"광고와 관련해 더 많은 선택권을 제공하는 새로운 설정과 광고 주제"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"새로운 광고 개인 정보 보호 기능 출시"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android는 최근 사용한 앱을 기반으로 관심 주제를 파악합니다. 사용하는 앱에서 관심분야를 파악할 수도 있습니다. 나중에 앱에서 개인 맞춤 광고를 표시하기 위해 이 정보를 요청할 수 있습니다. 나에게 광고를 표시하는 데 사용되는 주제와 앱을 직접 선택할 수 있습니다."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"광고 실적을 측정하기 위해 제한된 유형의 데이터가 앱 간에 공유됩니다."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android에 표시되는 광고에 관해 자세히 알아보기"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android는 주제 및 앱 추천 데이터를 정기적으로 자동 삭제합니다. 특정 주제 및 추천하길 원하지 않는 앱을 차단할 수도 있습니다."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"광고 실적 측정"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"사용하는 앱에서 광고 실적을 측정하는 데 도움이 되는 정보를 Android에 요청할 수 있습니다. Android는 앱에서 제한된 유형의 데이터(예: 광고가 표시된 시간)를 수집하도록 허용합니다."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"새로운 광고 개인 정보 보호 기능 사용해 보기"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"광고 주제를 통해 표시되는 광고를 더 세밀하게 제어할 수 있습니다."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"세부정보 보기"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android의 개선된 광고 개인 정보 보호"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"새로운 광고 개인 정보 보호 기능 사용해 보기"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android에서는 표시되는 광고와 관련해 사용자에게 더 많은 선택권을 제공하는 새로운 개인 정보 보호 기능을 도입합니다."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"광고 주제는 앱에서 내 신원 정보와 앱 사용 정보를 보호하면서 관련성 있는 광고를 표시하는 데 도움이 됩니다. Android는 최근 사용한 앱을 기반으로 관심 주제를 파악할 수 있습니다. 나중에 앱을 사용하면 앱에서 광고 개인 최적화를 위해 관련 주제를 Android에 요청할 수 있습니다."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"기기 설정에서 광고 주제를 확인하고 앱과 공유하길 원하지 않는 주제를 차단할 수 있습니다. Android에서는 광고 주제를 정기적으로 자동 삭제합니다."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"언제든지 개인 정보 보호 설정에서 변경할 수 있습니다."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"광고 주제에 관해 자세히 알아보기"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"개인정보처리방침에서 Android가 내 데이터를 보호하는 방법을 자세히 알아보세요."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"동의"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"사용해 보기"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  사용되는 데이터"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"광고 주제는 내가 이 기기에서 최근 사용한 앱과 사용 빈도에 기반합니다."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Android의 데이터 사용 방식"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  데이터 관리 방법"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android에서는 주제를 정기적으로 자동 삭제합니다. 앱을 사용하다 보면 동일한 주제가 목록에 다시 표시될 수 있습니다. 사용자는 언제든지 개인 정보 보호 설정에서 Android가 앱과 공유하길 원하지 않는 주제를 차단하고 광고 주제를 사용 중지할 수도 있습니다."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"개인 정보 보호 설정에서 변경할 수 있습니다."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"광고의 개인 정보 보호를 위한 기타 기능"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android에서는 앱에서 개인 맞춤 광고를 표시할 때 수집할 수 있는 사용자에 관한 정보를 제한하는 새로운 방법을 도입합니다."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"기타 광고 개인 정보 보호 기능 출시"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android에서는 개인 맞춤 광고를 표시할 때 앱에서 획득할 수 있는 사용자에 관한 정보를 제한하는 새로운 방법도 제공합니다."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  앱 추천 광고는 내 신원 및 앱 사용 관련 정보를 보호하면서 앱에서 관련성 있는 광고를 표시하도록 지원합니다. 사용하는 앱은 내 활동을 토대로 다른 앱에 표시될 관련 광고를 추천할 수 있습니다. 개인 정보 보호 설정에서 앱 목록을 확인하고 광고 추천을 원하지 않는 앱을 차단할 수 있습니다."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  광고 측정을 사용하면 광고 실적을 측정하기 위해 광고가 표시된 시간과 같이 제한된 유형의 데이터가 앱 간에 공유됩니다."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"앱 추천 광고 및 광고 측정에 관해 자세히 알아보기"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android는 앱 추천 데이터를 정기적으로 자동 삭제합니다. 앱을 다시 사용하면 목록에 이 앱이 다시 표시될 수 있습니다."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"언제든지 개인 정보 보호 설정에서 특정 앱이 광고를 추천하지 않도록 차단하거나, 모든 광고 추천 데이터를 재설정하거나, 앱 추천 광고를 사용 중지할 수 있습니다."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"앱을 사용하면 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요청할 수 있습니다. Android는 앱 간에 공유할 수 있는 정보를 제한하여 내 개인 정보를 보호합니다."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"새로운 광고 개인 정보 보호 기능 출시"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"신원을 보호하는 동시에 표시되는 광고와 관련된 보다 많은 선택권 제공"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"새로운 광고 개인 정보 보호 기능 출시"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  앱 추천 광고 기능에서는 새로운 개인 정보 보호 기능이 앱에서 관련성 있는 광고를 표시할 수 있도록 하는 동시에 사용자의 신원 및 앱 사용에 관한 정보를 보호합니다. 사용하는 앱은 내 활동을 토대로 다른 앱에 표시될 관련성 있는 광고를 추천할 수 있습니다. 개인 정보 보호 설정에서 앱 목록을 확인하고 광고를 추천하지 못하도록 차단할 수 있습니다."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  광고 측정 시 광고의 실적을 파악하기 위해 제한된 유형의 데이터(예: 하루 중 광고가 사용자에게 표시된 시간)가 앱 간에 공유됩니다."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"다른 광고 개인 정보 보호 기능 사용 설정"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"표시되는 광고와 관련해 더 많은 선택권을 보장하기 위해 Android에서 새로운 개인 정보 보호 기능도 제공합니다"</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"광고 주제는 앱에서 내 신원 정보와 앱 사용 정보를 보호하면서 관련성 있는 광고를 표시하는 데 도움이 됩니다. Android는 최근 사용한 앱을 기반으로 관심분야 주제를 파악할 수 있습니다. 나중에 내게 관련성이 더 높은 광고를 표시하기 위해 내가 사용하는 앱에서 Android에 관련 주제를 요청할 수 있습니다."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"개인 정보 보호 설정에서 광고 주제를 확인하고 앱과 공유하고 싶지 않은 주제를 차단할 수 있습니다. 또한 Android에서 광고 주제를 정기적으로 자동 삭제합니다."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"사용 설정"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"새로운 광고 개인 정보 보호 기능 출시"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"이제 신원을 보호하는 동시에 표시되는 광고와 관련해 더 많은 선택권이 제공됩니다"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"새로운 광고 개인 정보 보호 기능 출시"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"표시되는 광고와 관련해 더 많은 선택권을 보장하기 위해 이제 Android에서 새로운 개인 정보 보호 기능을 제공합니다"</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"다음"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"개인 정보 보호 샌드박스"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android 광고 개인 정보 보호 베타에 참여하기"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"개인 정보 보호 샌드박스"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"광고 개인 정보 보호"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"광고 주제"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"앱 추천 광고"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android는 최근 사용한 앱과 앱 사용 빈도를 기반으로 관심 주제를 파악합니다."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"앱을 사용하면 앱에서 내가 앱을 사용하는 방식을 기반으로 내 관심분야를 파악할 수도 있습니다."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"사용하는 앱에서 광고 실적 측정에 도움이 되는 정보를 Android에 요구할 수 있습니다. Android는 제한된 유형의 데이터를 앱에서 수집하도록 허용합니다."</string>

@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ବୁଝିଗଲି"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"ଆପଣ ବିଟା ପ୍ରୋଗ୍ରାମର ଏକ ଅଂଶ ଅଟନ୍ତି"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"ଆପଣଙ୍କର ଡିଭାଇସ ନିମନ୍ତେ ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ଚାଲୁ ଅଛି ଏବଂ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ଏହି ନୂଆ, ଅଧିକ ବ୍ୟକ୍ତିଗତ ଉପାୟକୁ ପରୀକ୍ଷା କରିପାରେ। ଆପଣ ଯେ କୌଣସି ସମୟରେ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସରେ ବିଟାକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"ଗୋପନୀୟତା ସେଟିଂସକୁ ପରିଚାଳନା କରନ୍ତୁ"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ବୁଝିଗଲି"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"ଆପଣ ପସନ୍ଦ କରୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ବ୍ୟବହାର କରିପାରୁଥିବା ନୂଆ ଫିଚରଗୁଡ଼ିକ Androidର ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ପ୍ରଦାନ କରେ। ଏହି ଟେକ୍ନୋଲୋଜିଗୁଡ଼ିକ ଡିଭାଇସ ଚିହ୍ନଟକାରୀଗୁଡ଼ିକ ବ୍ୟବହାର କରେ ନାହିଁ।\n\nଆପଣ କେଉଁ ପ୍ରକାରର ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆଗ୍ରହୀ ହୋଇପାରନ୍ତି ତାହା Android ଓ ଆପଣଙ୍କ ଆପ୍ସ ଆକଳନ କରିପାରେ ଏବଂ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆପଣଙ୍କ ଡିଭାଇସରେ ସାମୟିକ ଭାବରେ ସେଭ କରିପାରେ। ସମସ୍ତ ୱେବସାଇଟ ଏବଂ ଅନ୍ୟ ଡେଭେଲପରଙ୍କ ଆପ୍ସରେ ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପକୁ ଟ୍ରାକ ନକରି, ଏହା ଆପଣ ପସନ୍ଦ କରୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଆପଣଙ୍କୁ ଦେଖାଇବା ପାଇଁ ଅନୁମତି ଦିଏ।"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ ମାଧ୍ୟମରେ ବିଜ୍ଞାପନ ପର୍ସନାଲାଇଜେସନ"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"ଆପ୍ସ ଆପଣଙ୍କ ଆଗ୍ରହଗୁଡ଼ିକୁ ଆକଳନ କରିପାରେ ଏବଂ Android ମାଧ୍ୟମରେ ସେଗୁଡ଼ିକୁ ସାମୟିକ ଭାବେ ସେଭ କରିପାରେ। ଉଦାହରଣ ସ୍ୱରୂପ, ଦୌଡ଼ିବା ପାଇଁ ଜୋତାଗୁଡ଼ିକ କିଣିବାକୁ ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଆପଣଙ୍କର ଆଗ୍ରହକୁ “ରନିଂ ମାରାଥନ” ଭାବେ ଆକଳନ କରିପାରେ।\n\nପରେ, ଏହି ଆଗ୍ରହ ଆଧାରରେ, ଏକ ଭିନ୍ନ ଆପ ଆପଣଙ୍କୁ ମାରାଥନଗୁଡ଼ିକ ସହ ସମ୍ବନ୍ଧିତ ଏକ ବିଜ୍ଞାପନ ଦେଖାଇପାରେ।\n\nଆପଣଙ୍କର ଗୋପନୀୟତା ସେଟିଂସରେ, ସେଭ କରାଯାଇଥିବା ଆଗ୍ରହଗୁଡ଼ିକ ଥିବା ଆପ୍ସର ତାଲିକାକୁ ଆପଣ ପରିଚାଳନା କରିପାରିବେ।"</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ଏବଂ ନୂଆ ନିୟନ୍ତ୍ରଣଗୁଡ଼ିକ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆପଣଙ୍କୁ ଅଧିକ ବିକଳ୍ପ ପ୍ରଦାନ କରେ"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଆଧାରରେ Android ଆପଣଙ୍କର ରୁଚି ଥିବା ବିଷୟଗୁଡ଼ିକୁ ନୋଟ କରେ। ଏହା ସହିତ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ ଆପଣ କଣ ପସନ୍ଦ କରନ୍ତି ତାହା ନିର୍ଦ୍ଧାରଣ କରିପାରିବ। ପରେ, ଆପଣଙ୍କୁ ପର୍ସନାଲାଇଜ କରାଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ପାଇଁ ଆପ୍ସ ଏହି ସୂଚନା ମାଗିପାରେ। ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ପାଇଁ କେଉଁ ବିଷୟ ଏବଂ ଆପ୍ସ ବ୍ୟବହାର କରାଯାଏ, ତାହା ଆପଣ ବାଛିପାରିବେ।"</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"କୌଣସି ବିଜ୍ଞାପନର ପରଫରମାନ୍ସକୁ ମାପିବା ପାଇଁ, ଆପ୍ସ ମଧ୍ୟରେ ସୀମିତ ପ୍ରକାରର ଡାଟା ସେୟାର କରାଯାଏ।"</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Androidରେ ବିଜ୍ଞାପନଗୁଡ଼ିକ ବିଷୟରେ ଅଧିକ"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android ବିଷୟ ଏବଂ ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ନିର୍ଦ୍ଦିଷ୍ଟ ବିଷୟ ଏବଂ ଆପ୍ସକୁ ବ୍ଲକ କରିପାରିବେ ଯାହା ପରାମର୍ଶ ଦେଉ ବୋଲି ଆପଣ ଚାହୁଁନାହାଁନ୍ତି।"</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"କୌଣସି ବିଜ୍ଞାପନ କେତେ ଭଲ ପରଫର୍ମ କରେ ତାହା ମାପିବା"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ, ନିଜର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସ ମାପିବାରେ ସେଗୁଡ଼ିକୁ ସାହାଯ୍ୟ କରିବା ପାଇଁ Androidକୁ ସୂଚନା ମାଗିପାରେ। Android ଆପ୍ସକୁ ସୀମିତ ପ୍ରକାରର ଡାଟା ସଂଗ୍ରହ କରିବାକୁ ଦିଏ, ଯେପରି ଦିନର କେଉଁ ସମୟରେ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଟି ଦେଖାଯାଇଥିଲା।"</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକୁ ବ୍ୟବହାର କରି ଦେଖନ୍ତୁ"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆପଣଙ୍କୁ ଅଧିକ ବିକଳ୍ପ ପ୍ରଦାନ କରେ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"ବିବରଣୀ ଦେଖନ୍ତୁ"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Androidରେ ଉନ୍ନତ ବିଜ୍ଞାପନ ଗୋପନୀୟତା"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକୁ ବ୍ୟବହାର କରି ଦେଖନ୍ତୁ"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆପଣଙ୍କୁ ଅଧିକ ବିକଳ୍ପ ପ୍ରଦାନ କରୁଥିବା ନୂଆ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକୁ ଲଞ୍ଚ କରୁଛି।"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଆପଣଙ୍କର ଆପ ବ୍ୟବହାର ବିଷୟରେ ସୂଚନାକୁ ସୁରକ୍ଷିତ ରଖିବା ସହିତ ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବାରେ ଆପ୍ସକୁ ସାହାଯ୍ୟ କରେ। ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଆଧାରରେ Android ଆପଣଙ୍କର ରୁଚି ଥିବା ବିଷୟଗୁଡ଼ିକୁ ନୋଟ କରିପାରିବ। ପରେ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ପର୍ସନାଲାଇଜ କରିବା ପାଇଁ Androidକୁ ପ୍ରାସଙ୍ଗିକ ବିଷୟଗୁଡ଼ିକ ସମ୍ପର୍କରେ ପଚାରିପାରେ।"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"ଆପଣ ଆପଣଙ୍କ ଡିଭାଇସ ସେଟିଂସରେ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ଦେଖିପାରିବେ ଏବଂ ଆପଣ ଆପ୍ସ ସହ ସେୟାର କରିବାକୁ ଚାହୁଁନଥିବା ବିଷୟଗୁଡ଼ିକୁ ବ୍ଲକ କରିପାରିବେ। Android ମଧ୍ୟ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ।"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"ଗୋପନୀୟତା ସେଟିଂସରେ ଆପଣ ଯେ କୌଣସି ସମୟରେ ଆପଣଙ୍କ ମନ ପରିବର୍ତ୍ତନ କରିପାରିବେ।"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ସମ୍ପର୍କରେ ଅଧିକ"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android ଆପଣଙ୍କ ଡାଟାକୁ କିପରି ସୁରକ୍ଷିତ କରେ, ସେ ବିଷୟରେ ଆମର ଗୋପନୀୟତା ନୀତିରେ ଅଧିକ ଜାଣନ୍ତୁ।"</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"ହଁ, ମୁଁ ରାଜି ଅଛି"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"ଏହାକୁ ବ୍ୟବହାର କରି ଦେଖନ୍ତୁ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  କେଉଁ ଡାଟା ବ୍ୟବହାର କରାଯାଏ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"ଏହି ଡିଭାଇସରେ ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଏବଂ ଆପଣ ସେଗୁଡ଼ିକୁ କେତେ ଥର ବ୍ୟବହାର କରନ୍ତି ତାହା ଉପରେ ଆପଣଙ୍କ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ଆଧାରିତ ଅଟେ।"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  ଆମେ ଏହି ଡାଟାକୁ କିପରି ବ୍ୟବହାର କରୁ"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  ଆପଣ ଆପଣଙ୍କ ଡାଟାକୁ କିପରି ପରିଚାଳନା କରିପାରିବେ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android ବିଷୟଗୁଡ଼ିକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ଆପ୍ସ ବ୍ୟବହାର କରିବା ଜାରି ରଖିବା ସମୟରେ, ତାଲିକାରେ କୌଣସି ବିଷୟ ପୁଣି ଦେଖାଯାଇପାରେ। ଗୋପନୀୟତା ସେଟିଂସରେ ଯେ କୌଣସି ସମୟରେ ଆପଣ Android ଯେଉଁ ବିଷୟଗୁଡ଼ିକୁ ଆପ୍ସ ସହ ସେୟାର କରୁ ବୋଲି ଚାହୁଁନାହାଁନ୍ତି ସେଗୁଡ଼ିକୁ ବ୍ଲକ କରିପାରିବେ ଏବଂ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"ଆପଣ ଗୋପନୀୟତା ସେଟିଂସରେ ପରିବର୍ତ୍ତନଗୁଡ଼ିକ କରିପାରିବେ।"</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ଅଧିକ ବ୍ୟକ୍ତିଗତ କରୁଥିବା ଅନ୍ୟ ଫିଚରଗୁଡ଼ିକ"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"ଆପଣଙ୍କୁ ପର୍ସନାଲାଇଜ କରାଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ସମୟରେ ଆପ୍ସ ଆପଣଙ୍କ ବିଷୟରେ ଜାଣିପାରୁଥିବା ସୂଚନାକୁ ସୀମିତ କରିବା ପାଇଁ Android ନୂଆ ଉପାୟଗୁଡ଼ିକ ଲଞ୍ଚ କରୁଛି।"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"ଅନ୍ୟ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"ଆପଣଙ୍କୁ ପର୍ସନାଲାଇଜ କରାଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବା ସମୟରେ ଆପ୍ସ ଆପଣଙ୍କ ବିଷୟରେ ଜାଣିପାରୁଥିବା ସୂଚନାକୁ ସୀମିତ କରିବା ପାଇଁ Android ମଧ୍ୟ ନୂଆ ଉପାୟଗୁଡ଼ିକ ଅଫର କରେ।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ, ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନ ଦେଖାଇବା ପାଇଁ ଆପ୍ସକୁ ସକ୍ଷମ କରିବା ସମୟରେ ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଆପଣଙ୍କର ଆପ ବ୍ୟବହାର ବିଷୟରେ ସୂଚନାକୁ ସୁରକ୍ଷିତ ରଖିବାରେ ସାହାଯ୍ୟ କରେ। ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପ ଆଧାରରେ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଅନ୍ୟ ଆପ୍ସରେ ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରାମର୍ଶ ଦେଇପାରିବ। ଗୋପନୀୟତା ସେଟିଂସରେ ଆପଣ ଆପ୍ସର ଏକ ତାଲିକା ଦେଖିପାରିବେ ଏବଂ ସେଗୁଡ଼ିକୁ ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  ବିଜ୍ଞାପନର ପରିମାପ ସହ, ଆପ୍ସର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସ ମାପିବା ପାଇଁ ସେଗୁଡ଼ିକ ମଧ୍ୟରେ ସୀମିତ ପ୍ରକାରର ଡାଟା ସେୟାର କରାଯାଏ, ଯେପରି ଦିନର କେଉଁ ସମୟରେ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଟି ଦେଖାଯାଇଥିଲା।"</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ଏବଂ ବିଜ୍ଞାପନର ପରିମାପ ବିଷୟରେ ଅଧିକ"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ଡାଟାକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ। ଆପଣ ପୁଣି ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ, ତାଲିକାରେ ପୁଣି ଦେଖାଯାଇପାରେ।"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"ଆପଣ ମଧ୍ୟ ଯେ କୌଣସି ସମୟରେ ଗୋପନୀୟତା ସେଟିଂସରେ, କୌଣସି ଆପକୁ ଆପଣଙ୍କ ପାଇଁ ବିଜ୍ଞାପନର ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ, ସମସ୍ତ ବିଜ୍ଞାପନ-ପରାମର୍ଶ ଡାଟାକୁ ରିସେଟ କରିପାରିବେ କିମ୍ବା ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକୁ ବନ୍ଦ କରିପାରିବେ।"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ, ସେଗୁଡ଼ିକର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସ ମାପିବାରେ ସେଗୁଡ଼ିକୁ ସାହାଯ୍ୟ କରୁଥିବା ସୂଚନା Androidକୁ ମାଗିପାରେ। ଆପ୍ସ ପରସ୍ପର ସହିତ ସେୟାର କରିପାରୁଥିବା ସୂଚନାକୁ ସୀମିତ କରି Android ଆପଣଙ୍କ ଗୋପନୀୟତାକୁ ସୁରକ୍ଷିତ କରେ।"</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"ଆପଣଙ୍କ ପରିଚୟକୁ ସୁରକ୍ଷିତ ରଖିବା ସହିତ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଅଧିକ ବିକଳ୍ପ ପାଆନ୍ତୁ"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ସହ, ନୂଆ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନ ଦେଖାଇବା ପାଇଁ ଆପ୍ସକୁ ସକ୍ଷମ କରିବା ସହିତ ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଆପଣଙ୍କର ଆପ ବ୍ୟବହାର ବିଷୟରେ ସୂଚନାକୁ ସୁରକ୍ଷିତ ରଖିବାରେ ସାହାଯ୍ୟ କରେ। ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପ ଆଧାରରେ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଅନ୍ୟ ଆପ୍ସରେ ସମ୍ବନ୍ଧିତ ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରାମର୍ଶ ଦେଇପାରିବ। ଗୋପନୀୟତା ସେଟିଂସରେ ଆପଣ ଆପ୍ସର ଏକ ତାଲିକା ଦେଖିପାରିବେ ଏବଂ ସେଗୁଡ଼ିକୁ ପରାମର୍ଶ ଦେବାରୁ ବ୍ଲକ କରିପାରିବେ।"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  ବିଜ୍ଞାପନର ପରିମାପ ସହ, ଆପ୍ସର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସକୁ ବୁଝିବା ପାଇଁ ସେଗୁଡ଼ିକ ମଧ୍ୟରେ ସୀମିତ ପ୍ରକାରର ଡାଟା ସେୟାର କରାଯାଏ, ଯେପରି ଦିନର କେଉଁ ସମୟରେ ଆପଣଙ୍କୁ ବିଜ୍ଞାପନଟି ଦେଖାଯାଇଥିଲା।"</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"ଅନ୍ୟ ଏକ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରକୁ ଚାଲୁ କରନ୍ତୁ"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆପଣଙ୍କୁ ଅଧିକ ବିକଳ୍ପ ପ୍ରଦାନ କରୁଥିବା ଏକ ନୂଆ ଗୋପନୀୟତା ଫିଚର ମଧ୍ୟ ଅଫର କରେ।"</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ ଆପଣଙ୍କ ପରିଚୟ ଏବଂ ଆପଣଙ୍କର ଆପ ବ୍ୟବହାର ବିଷୟରେ ସୂଚନାକୁ ସୁରକ୍ଷିତ ରଖିବା ସହିତ ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନଗୁଡ଼ିକ ଦେଖାଇବାରେ ଆପ୍ସକୁ ସାହାଯ୍ୟ କରେ। ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଆଧାରରେ Android ଆପଣଙ୍କର ରୁଚି ଥିବା ବିଷୟଗୁଡ଼ିକୁ ନୋଟ କରିପାରିବ। ପରେ, ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଏକ ଆପ ଆପଣଙ୍କୁ ଅଧିକ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନ ଦେଖାଇବା ପାଇଁ Androidକୁ ପ୍ରାସଙ୍ଗିକ ବିଷୟଗୁଡ଼ିକ ସମ୍ପର୍କରେ ପଚାରିପାରିବ।"</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"ଆପଣ ଆପଣଙ୍କ ଗୋପନୀୟତା ସେଟିଂସରେ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ଦେଖିପାରିବେ ଏବଂ ଆପଣ ଆପ୍ସ ସହ ସେୟାର କରିବାକୁ ଚାହୁଁନଥିବା ବିଷୟଗୁଡ଼ିକୁ ବ୍ଲକ କରିପାରିବେ। Android ମଧ୍ୟ ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକୁ ନିୟମିତ ଭାବେ ସ୍ୱତଃ-ଡିଲିଟ କରେ।"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"ଏହାକୁ ଚାଲୁ କରନ୍ତୁ"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"ବର୍ତ୍ତମାନ, ଆପଣଙ୍କ ପରିଚୟକୁ ସୁରକ୍ଷିତ ରଖିବା ସହିତ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଅଧିକ ବିକଳ୍ପ ଅଛି"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"ନୂଆ ବିଜ୍ଞାପନ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ବର୍ତ୍ତମାନ ଉପଲବ୍ଧ ଅଛି"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android ବର୍ତ୍ତମାନ ଆପଣ ଦେଖୁଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ ପାଇଁ ଆପଣଙ୍କୁ ଅଧିକ ବିକଳ୍ପ ପ୍ରଦାନ କରୁଥିବା ନୂଆ ଗୋପନୀୟତା ଫିଚରଗୁଡ଼ିକ ଅଫର କରୁଛି।"</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"ପରବର୍ତ୍ତୀ"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Androidର ବିଜ୍ଞାପନ ଗୋପନୀୟତା ବିଟାରେ ଅଂଶଗ୍ରହଣ କରନ୍ତୁ"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"ପ୍ରାଇଭେସି ସେଣ୍ଡବକ୍ସ"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ବିଜ୍ଞାପନ ଗୋପନୀୟତା"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ବିଜ୍ଞାପନ ବିଷୟଗୁଡ଼ିକ"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ଆପ ଦ୍ୱାରା-ପରାମର୍ଶ ଦିଆଯାଇଥିବା ବିଜ୍ଞାପନଗୁଡ଼ିକ"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"ଆପଣ ବର୍ତ୍ତମାନ ବ୍ୟବହାର କରିଥିବା ଆପ୍ସ ଏବଂ ଆପଣ ସେଗୁଡ଼ିକୁ କେତେ ଥର ବ୍ୟବହାର କରନ୍ତି ତାହା ଆଧାରରେ Android ଆପଣଙ୍କର ରୁଚି ଥିବା ବିଷୟକୁ ନୋଟ କରେ।"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ, ଆପଣ ସେଗୁଡ଼ିକୁ କିପରି ବ୍ୟବହାର କରନ୍ତି ସେହି ଆଧାରରେ ଆପଣ କଣ ପସନ୍ଦ କରନ୍ତି ତାହା ମଧ୍ୟ ନିର୍ଦ୍ଧାରଣ କରିପାରିବ।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ଆପଣ ବ୍ୟବହାର କରୁଥିବା ଆପ୍ସ, ସେଗୁଡ଼ିକର ବିଜ୍ଞାପନଗୁଡ଼ିକର ପରଫରମାନ୍ସ ମାପିବାରେ ସେଗୁଡ଼ିକୁ ସାହାଯ୍ୟ କରିବା ପାଇଁ Androidକୁ ସୂଚନା ମାଗିପାରେ। Android ଆପ୍ସକୁ ସୀମିତ ପ୍ରକାରର ଡାଟା ସଂଗ୍ରହ କରିବାକୁ ଦିଏ।"</string>
