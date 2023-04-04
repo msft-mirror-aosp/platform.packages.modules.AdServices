@@ -19,22 +19,35 @@ package com.android.adservices.service.measurement.registration;
 /** POJO for storing source and trigger fetcher status */
 public class AsyncFetchStatus {
     public enum ResponseStatus {
+        UNKNOWN,
         SUCCESS,
         SERVER_UNAVAILABLE,
         NETWORK_ERROR,
+        INVALID_URL
+    }
+
+    public enum EntityStatus {
+        UNKNOWN,
+        SUCCESS,
+        HEADER_MISSING,
+        HEADER_ERROR,
         PARSING_ERROR,
+        VALIDATION_ERROR,
         INVALID_ENROLLMENT
     }
 
-    private ResponseStatus mStatus;
+    private ResponseStatus mResponseStatus;
+
+    private EntityStatus mEntityStatus;
 
     public AsyncFetchStatus() {
-        mStatus = ResponseStatus.SERVER_UNAVAILABLE;
+        mResponseStatus = ResponseStatus.UNKNOWN;
+        mEntityStatus = EntityStatus.UNKNOWN;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
-    public ResponseStatus getStatus() {
-        return mStatus;
+    public ResponseStatus getResponseStatus() {
+        return mResponseStatus;
     }
 
     /**
@@ -43,7 +56,28 @@ public class AsyncFetchStatus {
      * @param status a {@link ResponseStatus} that is used up the call stack to determine errors in
      *     the Ad tech server during source and trigger fetching.
      */
-    public void setStatus(ResponseStatus status) {
-        mStatus = status;
+    public void setResponseStatus(ResponseStatus status) {
+        mResponseStatus = status;
+    }
+
+    /** Get entity status */
+    public EntityStatus getEntityStatus() {
+        return mEntityStatus;
+    }
+
+    /** Set entity status */
+    public void setEntityStatus(EntityStatus entityStatus) {
+        mEntityStatus = entityStatus;
+    }
+
+    /** Returns true if request is successful. */
+    public boolean isRequestSuccess() {
+        return mResponseStatus == ResponseStatus.SUCCESS;
+    }
+
+    /** Returns true if request can be retried. */
+    public boolean canRetry() {
+        return mResponseStatus == ResponseStatus.NETWORK_ERROR
+                || mResponseStatus == ResponseStatus.SERVER_UNAVAILABLE;
     }
 }
