@@ -670,5 +670,10 @@ public class AdSelectionFromOutcomesE2ETest {
         public boolean getFledgeAdSelectionFilteringEnabled() {
             return false;
         }
+
+        @Override
+        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return true;
+        }
     }
 }
