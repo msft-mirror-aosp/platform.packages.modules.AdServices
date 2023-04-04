@@ -144,7 +144,7 @@
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_body_text">The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_left_control_button_text">@string/notificationUI_confirmation_left_control_button_text</string>
+    <string name="notificationUI_left_control_button_text" translatable="false">@string/notificationUI_confirmation_left_control_button_text</string>
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text">Got it</string>
 
