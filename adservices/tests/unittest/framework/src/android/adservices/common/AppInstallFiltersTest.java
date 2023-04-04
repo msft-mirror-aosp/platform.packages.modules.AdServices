@@ -30,7 +30,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-
 /** Unit tests for {@link AppInstallFilters}. */
 // TODO(b/266837113): Move to CTS tests once public APIs are unhidden
 @SmallTest

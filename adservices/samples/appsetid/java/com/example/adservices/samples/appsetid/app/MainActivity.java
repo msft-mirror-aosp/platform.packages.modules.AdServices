@@ -17,6 +17,7 @@ package com.example.adservices.samples.appsetid.app;
 
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
 import android.view.View;
@@ -35,8 +36,6 @@ import java.util.concurrent.Executors;
  * on the screen. If there is an error, it displays the error.
  */
 public class MainActivity extends AppCompatActivity {
-
-    private static final String TAG = "AppSetIdSampleApp";
     private Button mAppSetIdButton;
     private TextView mAppSetIdTextView;
     private AppSetIdManager mAppSetIdManager;
@@ -48,7 +47,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mAppSetIdTextView = findViewById(R.id.appSetIdTextView);
         mAppSetIdButton = findViewById(R.id.appSetIdButton);
-        mAppSetIdManager = getSystemService(AppSetIdManager.class);
+        mAppSetIdManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? this.getSystemService(AppSetIdManager.class)
+                        : AppSetIdManager.get(this);
         registerAppSetIdButton();
     }
 

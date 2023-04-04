@@ -35,7 +35,7 @@ import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
@@ -77,6 +77,7 @@ import java.util.concurrent.TimeoutException;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OutcomeSelectionRunner {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @VisibleForTesting static final String AD_SELECTION_FROM_OUTCOMES_ERROR_PATTERN = "%s: %s";
 
     @VisibleForTesting
@@ -102,6 +103,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -125,6 +127,7 @@ public class OutcomeSelectionRunner {
             @NonNull final Context context,
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(backgroundExecutorService);
@@ -135,6 +138,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(adCounterKeyCopier);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
@@ -150,7 +154,8 @@ public class OutcomeSelectionRunner {
                         new AdSelectionScriptEngine(
                                 mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
-                                flags::getIsolateMaxHeapSizeBytes),
+                                flags::getIsolateMaxHeapSizeBytes,
+                                adCounterKeyCopier),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -159,6 +164,7 @@ public class OutcomeSelectionRunner {
                         mFlags);
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     @VisibleForTesting
@@ -198,6 +204,7 @@ public class OutcomeSelectionRunner {
         mAdOutcomeSelector = adOutcomeSelector;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /**
@@ -219,7 +226,7 @@ public class OutcomeSelectionRunner {
                             () -> {
                                 try {
                                     Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                    LogUtil.v("Starting filtering and validation.");
+                                    sLogger.v("Starting filtering and validation.");
                                     mAdSelectionServiceFilter.filterRequest(
                                             adSelectionFromOutcomesConfig.getSeller(),
                                             inputParams.getCallerPackageName(),
@@ -232,7 +239,7 @@ public class OutcomeSelectionRunner {
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
                                     validateAdSelectionFromOutcomesConfig(inputParams);
                                 } finally {
-                                    LogUtil.v("Completed filtering and validation.");
+                                    sLogger.v("Completed filtering and validation.");
                                     Trace.endSection();
                                 }
                             },
@@ -278,7 +285,7 @@ public class OutcomeSelectionRunner {
                     mLightweightExecutorService);
 
         } catch (Throwable t) {
-            LogUtil.v("runOutcomeSelection fails fast with exception %s.", t.toString());
+            sLogger.v("runOutcomeSelection fails fast with exception %s.", t.toString());
             notifyFailureToCaller(t, callback);
         }
     }
@@ -316,7 +323,7 @@ public class OutcomeSelectionRunner {
 
     @Nullable
     private AdSelectionOutcome handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, "Ad Selection exceeded time limit");
+        sLogger.e(e, "Ad Selection exceeded time limit");
         throw new UncheckedTimeoutException(AD_SELECTION_TIMED_OUT);
     }
 
@@ -338,9 +345,9 @@ public class OutcomeSelectionRunner {
                                 .build());
             }
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            sLogger.e(e, "Encountered exception during notifying AdSelectionCallback");
         } finally {
-            LogUtil.v("Ad Selection from outcomes completed and attempted notifying success");
+            sLogger.v("Ad Selection from outcomes completed and attempted notifying success");
         }
     }
 
@@ -351,9 +358,9 @@ public class OutcomeSelectionRunner {
             //  consent for selectAdsFromOutcomes
             callback.onSuccess(null);
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            sLogger.e(e, "Encountered exception during notifying AdSelectionCallback");
         } finally {
-            LogUtil.v(
+            sLogger.v(
                     "Ad Selection from outcomes completed, attempted notifying success for a"
                             + " silent failure");
         }
@@ -362,7 +369,7 @@ public class OutcomeSelectionRunner {
     /** Sends a failure notification to the caller */
     private void notifyFailureToCaller(Throwable t, AdSelectionCallback callback) {
         try {
-            LogUtil.e("Notify caller of error: " + t);
+            sLogger.e("Notify caller of error: " + t);
             int resultCode = AdServicesLoggerUtil.getResultCodeFromException(t);
 
             // Skip logging if a FilterException occurs.
@@ -382,12 +389,12 @@ public class OutcomeSelectionRunner {
                                             t.getMessage()))
                             .setStatusCode(resultCode)
                             .build();
-            LogUtil.e(t, "Ad Selection failure: ");
+            sLogger.e(t, "Ad Selection failure: ");
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
-            LogUtil.e(e, "Encountered exception during notifying AdSelectionCallback");
+            sLogger.e(e, "Encountered exception during notifying AdSelectionCallback");
         } finally {
-            LogUtil.v("Ad Selection From Outcomes failed");
+            sLogger.v("Ad Selection From Outcomes failed");
         }
     }
 
@@ -420,7 +427,7 @@ public class OutcomeSelectionRunner {
             Long adSelectionId) {
         return adSelectionIdWithBidAndRenderUrisFuture.transformAsync(
                 idWithBidAndUris -> {
-                    LogUtil.i(
+                    sLogger.i(
                             "Converting ad selection id: <%s> to AdSelectionOutcome.",
                             adSelectionId);
                     return idWithBidAndUris.stream()
@@ -452,7 +459,9 @@ public class OutcomeSelectionRunner {
 
         AdSelectionFromOutcomesConfigValidator validator =
                 new AdSelectionFromOutcomesConfigValidator(
-                        mAdSelectionEntryDao, inputParams.getCallerPackageName());
+                        mAdSelectionEntryDao,
+                        inputParams.getCallerPackageName(),
+                        mPrebuiltLogicGenerator);
         validator.validate(inputParams.getAdSelectionFromOutcomesConfig());
     }
 

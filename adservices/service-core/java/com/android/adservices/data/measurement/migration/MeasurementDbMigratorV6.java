@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.measurement.migration;
 
+import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -50,7 +51,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
         String.format(
                 "ALTER TABLE %1$s RENAME COLUMN %2$s TO %3$s",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTablesDeprecated.Source.DEDUP_KEYS,
+                MeasurementTablesDeprecated.SourceContract.DEDUP_KEYS,
                 MeasurementTables.SourceContract.EVENT_REPORT_DEDUP_KEYS),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
@@ -131,7 +132,7 @@ public class MeasurementDbMigratorV6 extends AbstractMeasurementDbMigrator {
     }
 
     @Override
-    protected void performMigration(SQLiteDatabase db) {
+    protected void performMigration(@NonNull SQLiteDatabase db) {
         // See if registration_id column is present in the msmt_async_registration table.
         // We use this as a proxy to determine if the db is already at v6.
         if (MigrationHelpers.isColumnPresent(

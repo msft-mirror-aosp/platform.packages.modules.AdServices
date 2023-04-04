@@ -30,7 +30,7 @@ import android.os.RemoteException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.Flags;
@@ -54,6 +54,7 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppInstallAdvertisersSetter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE = "app install adtech set";
     private static final String AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE = "adtech";
@@ -100,7 +101,7 @@ public class AppInstallAdvertisersSetter {
     public void setAppInstallAdvertisers(
             @NonNull SetAppInstallAdvertisersInput input,
             @NonNull SetAppInstallAdvertisersCallback callback) {
-        LogUtil.v("Executing setAppInstallAdvertisers API");
+        sLogger.v("Executing setAppInstallAdvertisers API");
 
         // Auto-generated variable name is too long for lint check
         int shortApiName = AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
@@ -115,7 +116,7 @@ public class AppInstallAdvertisersSetter {
                         new FutureCallback<Void>() {
                             @Override
                             public void onSuccess(Void result) {
-                                LogUtil.v("SetAppInstallAdvertisers succeeded!");
+                                sLogger.v("SetAppInstallAdvertisers succeeded!");
                                 // Note: Success is logged before the callback to ensure
                                 // deterministic testing.
                                 mAdServicesLogger.logFledgeApiCallStats(
@@ -125,23 +126,16 @@ public class AppInstallAdvertisersSetter {
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(t, "SetAppInstallAdvertisers invocation failed!");
+                                sLogger.e(t, "SetAppInstallAdvertisers invocation failed!");
                                 if ((t instanceof FilterException
                                         && t.getCause()
                                                 instanceof
                                                 ConsentManager.RevokedConsentException)) {
-                                    invokeSuccess(callback);
-                                } else if (t instanceof ConsentManager.RevokedConsentException) {
-                                    // TODO(b/271921887): Remove the duplicate check once
-                                    // app-specific consent check has been moved to a shared
-                                    // validation component.
-                                    // TODO(b/271921887): Remove the failure log once app-specific
-                                    //  consent check has been moved to a shared validation
-                                    // component.
-                                    mAdServicesLogger.logFledgeApiCallStats(
-                                            shortApiName,
-                                            AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
-                                            0);
+                                    // Skip logging if a FilterException occurs.
+                                    // AdSelectionServiceFilter ensures the failing assertion is
+                                    // logged internally.
+
+                                    // Fail Silently by notifying success to caller
                                     invokeSuccess(callback);
                                 } else {
                                     notifyFailureToCaller(callback, t);
@@ -164,7 +158,7 @@ public class AppInstallAdvertisersSetter {
                             .build());
         } catch (RemoteException e) {
             // TODO(b/269724912) Unit test this block
-            LogUtil.e(e, "Unable to send failed result to the callback");
+            sLogger.e(e, "Unable to send failed result to the callback");
             throw e.rethrowFromSystemServer();
         }
     }
@@ -175,7 +169,7 @@ public class AppInstallAdvertisersSetter {
             callback.onSuccess();
         } catch (RemoteException e) {
             // TODO(b/269724912) Unit test this block
-            LogUtil.e(e, "Unable to send successful result to the callback");
+            sLogger.e(e, "Unable to send successful result to the callback");
             throw e.rethrowFromSystemServer();
         }
     }
@@ -209,6 +203,9 @@ public class AppInstallAdvertisersSetter {
             Set<AdTechIdentifier> advertisers, String callerPackageName) {
         validateRequest(advertisers, callerPackageName);
 
+        sLogger.v(
+                "Writing %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         ArrayList<DBAppInstallPermissions> permissions = new ArrayList<>();
         for (AdTechIdentifier advertiser : advertisers) {
             permissions.add(
@@ -218,11 +215,14 @@ public class AppInstallAdvertisersSetter {
                             .build());
         }
         mAppInstallDao.setAdTechsForPackage(callerPackageName, permissions);
+        sLogger.v(
+                "Wrote %d adtechs to the calling app's app install permission list",
+                advertisers.size());
         return null;
     }
 
     private void validateRequest(Set<AdTechIdentifier> advertisers, String callerPackageName) {
-        LogUtil.v("Validating setAppInstallAdvertisers Request");
+        sLogger.v("Validating setAppInstallAdvertisers Request");
         mAdSelectionServiceFilter.filterRequest(
                 null,
                 callerPackageName,
@@ -236,8 +236,12 @@ public class AppInstallAdvertisersSetter {
                                 AD_TECH_IDENTIFIER_ERROR_MESSAGE_SCOPE,
                                 AD_TECH_IDENTIFIER_ERROR_MESSAGE_ROLE)))
                 .validate(advertisers);
-        if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(callerPackageName)) {
-            throw new ConsentManager.RevokedConsentException();
+        // TODO(b/269378272): Remove the duplicate check once advertiser check has been moved to a
+        //  shared validation component.
+        try {
+            mConsentManager.assertFledgeCallerHasUserConsent(callerPackageName);
+        } catch (Exception e) {
+            throw new FilterException(e);
         }
     }
 }

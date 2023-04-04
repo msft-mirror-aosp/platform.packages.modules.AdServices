@@ -59,6 +59,7 @@ import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.data.topics.TopicsDbHelper;
 import com.android.server.adservices.data.topics.TopicsDbTestUtil;
 import com.android.server.adservices.data.topics.TopicsTables;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import org.junit.After;
 import org.junit.Before;
@@ -138,7 +139,7 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testAdServicesSystemService_enabled_then_disabled() {
+    public void testAdServicesSystemService_enabled_then_disabled() throws Exception {
         // First enable the flag.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -197,6 +198,12 @@ public class AdServicesManagerServiceTest {
                 KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
                 Boolean.toString(Boolean.FALSE),
                 /* makeDefault */ false);
+
+        // When flag value is changed above, then TestableDeviceConfig invokes the DeviceConfig
+        // .OnPropertiesChangedListener. The listener is invoked on the separate thread. So, we
+        // need to add a wait time to ensure the listener gets executed. If listener gets
+        // executed after the test is finished, we hit READ_DEVICE_CONFIG exception.
+        Thread.sleep(500);
 
         // Calling when the flag is disabled will unregister the Receiver!
         mService.registerReceivers();
@@ -564,29 +571,16 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
-    public void testRecordTopicsConsentPageDisplayed() throws IOException {
+    public void recordUserManualInteractionWithConsent() throws IOException {
         AdServicesManagerService service =
                 spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
         // Since unit test cannot execute an IPC call currently, disable the permission check.
         disableEnforceAdServicesManagerPermission(service);
 
         // First, the topic consent page displayed is false.
-        assertThat(service.wasTopicsConsentPageDisplayed()).isFalse();
-        service.recordTopicsConsentPageDisplayed();
-        assertThat(service.wasTopicsConsentPageDisplayed()).isTrue();
-    }
-
-    @Test
-    public void testRecordFledgeConsentPageDisplayed() throws IOException {
-        AdServicesManagerService service =
-                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
-        // Since unit test cannot execute an IPC call currently, disable the permission check.
-        disableEnforceAdServicesManagerPermission(service);
-
-        // First, the fledge consent page displayed is false.
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        service.recordFledgeAndMsmtConsentPageDisplayed();
-        assertThat(service.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(0);
+        service.recordUserManualInteractionWithConsent(1);
+        assertThat(service.getUserManualInteractionWithConsent()).isEqualTo(1);
     }
 
     @Test
@@ -927,6 +921,30 @@ public class AdServicesManagerServiceTest {
                 .isTrue();
         Mockito.verify(service, times(1))
                 .resetAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    public void setCurrentPrivacySandboxFeatureWithConsent() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+        // Since unit test cannot execute an IPC call currently, disable the permission check.
+        disableEnforceAdServicesManagerPermission(service);
+
+        // The default feature is PRIVACY_SANDBOX_UNSUPPORTED
+        assertThat(service.getCurrentPrivacySandboxFeature())
+                .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        service.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        assertThat(service.getCurrentPrivacySandboxFeature())
+                .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        service.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        assertThat(service.getCurrentPrivacySandboxFeature())
+                .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        service.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        assertThat(service.getCurrentPrivacySandboxFeature())
+                .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
     }
 
     // Mock the call to get the AdServices module version from the PackageManager.

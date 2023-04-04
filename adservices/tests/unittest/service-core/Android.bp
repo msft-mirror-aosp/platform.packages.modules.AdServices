@@ -43,7 +43,6 @@ android_test {
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
-        "ub-uiautomator",
         "adservices-assets",
         "adservices-service-core-schema",
         "androidx.room_room-runtime",
@@ -97,7 +96,6 @@ android_test {
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
-        "ub-uiautomator",
         "adservices-assets",
         "adservices-test-fixtures",
     ],
@@ -181,7 +179,6 @@ android_test {
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-test-fixtures",
-        "android.ext.adservices",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -193,18 +190,18 @@ android_test {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth-prebuilt",
-        "ub-uiautomator",
     ],
     libs: [
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
         "framework-annotations-lib",
-        "framework-sdksandbox.impl",
         "framework-configinfrastructure",
+        "framework-sdksandbox.impl",
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-extservices"
     ],
     test_config: "AndroidTest.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],
@@ -237,15 +234,14 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-test-fixtures",
-        "android.ext.adservices",
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
-        "ub-uiautomator",
     ],
     libs: [
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
         "framework-annotations-lib",
@@ -253,10 +249,9 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-extservices"
     ],
     test_config: "AndroidTest.JsScriptEngine.ExtServices.xml",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     instrumentation_for: "AdExtServicesApk",
 }
 
@@ -276,7 +271,6 @@ android_test {
     static_libs: [
         "adservices-assets",
         "adservices-test-fixtures",
-        "android.ext.adservices",
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
         "compatibility-device-util-axt",
@@ -285,6 +279,7 @@ android_test {
         "truth-prebuilt",
     ],
     libs: [
+        "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
@@ -292,7 +287,7 @@ android_test {
     ],
     test_suites: [
         "general-tests",
-        "mts-adservices"
+        "mts-extservices"
     ],
     test_config: "AndroidTestMDD.ExtServices.xml",
     test_mainline_modules: ["com.google.android.extservices.apex"],

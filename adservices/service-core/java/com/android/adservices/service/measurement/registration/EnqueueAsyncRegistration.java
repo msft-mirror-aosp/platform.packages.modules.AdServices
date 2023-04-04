@@ -25,18 +25,12 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Source;
-import com.android.adservices.service.measurement.util.Enrollment;
-
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 /** Class containing static functions for enqueueing AsyncRegistrations */
@@ -53,42 +47,28 @@ public class EnqueueAsyncRegistration {
             Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
-        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(datastoreManager);
         return datastoreManager.runInTransaction(
-                (dao) -> {
-                    Optional<String> enrollmentData =
-                            Enrollment.maybeGetEnrollmentId(
-                                    registrationRequest.getRegistrationUri(), enrollmentDao);
-                    if (enrollmentData == null || enrollmentData.isEmpty()) {
-                        LogUtil.d("no enrollment data");
-                        return;
-                    }
-                    String enrollmentId = enrollmentData.get();
-                    insertAsyncRegistration(
-                            UUID.randomUUID().toString(),
-                            enrollmentId,
-                            registrationRequest.getRegistrationUri(),
-                            /* mWebDestination */ null,
-                            /* mOsDestination */ null,
-                            registrant,
-                            /* verifiedDestination */ null,
-                            registrant,
-                            registrationRequest.getRegistrationType()
-                                            == RegistrationRequest.REGISTER_SOURCE
-                                    ? AsyncRegistration.RegistrationType.APP_SOURCE
-                                    : AsyncRegistration.RegistrationType.APP_TRIGGER,
-                            sourceType,
-                            requestTime,
-                            /* mRetryCount */ 0,
-                            System.currentTimeMillis(),
-                            AsyncRegistration.RedirectType.ANY,
-                            false,
-                            adIdPermission,
-                            dao);
-                });
+                (dao) ->
+                        insertAsyncRegistration(
+                                UUID.randomUUID().toString(),
+                                registrationRequest.getRegistrationUri(),
+                                /* mWebDestination */ null,
+                                /* mOsDestination */ null,
+                                registrant,
+                                /* verifiedDestination */ null,
+                                registrant,
+                                registrationRequest.getRegistrationType()
+                                                == RegistrationRequest.REGISTER_SOURCE
+                                        ? AsyncRegistration.RegistrationType.APP_SOURCE
+                                        : AsyncRegistration.RegistrationType.APP_TRIGGER,
+                                sourceType,
+                                requestTime,
+                                false,
+                                adIdPermission,
+                                UUID.randomUUID().toString(),
+                                dao));
     }
 
     /**
@@ -102,25 +82,15 @@ public class EnqueueAsyncRegistration {
             Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
-        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(datastoreManager);
+        String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
                 (dao) -> {
                     for (WebSourceParams webSourceParams :
                             webSourceRegistrationRequest.getSourceParams()) {
-                        Optional<String> enrollmentData =
-                                Enrollment.maybeGetEnrollmentId(
-                                        webSourceParams.getRegistrationUri(), enrollmentDao);
-                        if (enrollmentData == null || enrollmentData.isEmpty()) {
-                            LogUtil.d("no enrollment data");
-                            return;
-                        }
-                        String enrollmentId = enrollmentData.get();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
-                                enrollmentId,
                                 webSourceParams.getRegistrationUri(),
                                 webSourceRegistrationRequest.getWebDestination(),
                                 webSourceRegistrationRequest.getAppDestination(),
@@ -130,11 +100,9 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RegistrationType.WEB_SOURCE,
                                 sourceType,
                                 requestTime,
-                                /* mRetryCount */ 0,
-                                System.currentTimeMillis(),
-                                AsyncRegistration.RedirectType.NONE,
                                 webSourceParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                registrationId,
                                 dao);
                     }
                 });
@@ -150,25 +118,15 @@ public class EnqueueAsyncRegistration {
             boolean adIdPermission,
             Uri registrant,
             long requestTime,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull DatastoreManager datastoreManager) {
-        Objects.requireNonNull(enrollmentDao);
         Objects.requireNonNull(datastoreManager);
+        String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
                 (dao) -> {
                     for (WebTriggerParams webTriggerParams :
                             webTriggerRegistrationRequest.getTriggerParams()) {
-                        Optional<String> enrollmentData =
-                                Enrollment.maybeGetEnrollmentId(
-                                        webTriggerParams.getRegistrationUri(), enrollmentDao);
-                        if (enrollmentData == null || enrollmentData.isEmpty()) {
-                            LogUtil.d("no enrollment data");
-                            return;
-                        }
-                        String enrollmentId = enrollmentData.get();
                         insertAsyncRegistration(
                                 UUID.randomUUID().toString(),
-                                enrollmentId,
                                 webTriggerParams.getRegistrationUri(),
                                 /* mWebDestination */ null,
                                 /* mOsDestination */ null,
@@ -178,19 +136,16 @@ public class EnqueueAsyncRegistration {
                                 AsyncRegistration.RegistrationType.WEB_TRIGGER,
                                 /* mSourceType */ null,
                                 requestTime,
-                                /* mRetryCount */ 0,
-                                System.currentTimeMillis(),
-                                AsyncRegistration.RedirectType.NONE,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                registrationId,
                                 dao);
                     }
                 });
     }
 
     private static void insertAsyncRegistration(
-            String iD,
-            String enrollmentId,
+            String id,
             Uri registrationUri,
             Uri webDestination,
             Uri osDestination,
@@ -200,31 +155,27 @@ public class EnqueueAsyncRegistration {
             AsyncRegistration.RegistrationType registrationType,
             Source.SourceType sourceType,
             long mRequestTime,
-            long mRetryCount,
-            long mLastProcessingTime,
-            @AsyncRegistration.RedirectType int redirectType,
             boolean debugKeyAllowed,
             boolean adIdPermission,
+            String registrationId,
             @NonNull IMeasurementDao dao)
             throws DatastoreException {
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
-                        .setId(iD)
-                        .setEnrollmentId(enrollmentId)
+                        .setId(id)
                         .setRegistrationUri(registrationUri)
                         .setWebDestination(webDestination)
                         .setOsDestination(osDestination)
                         .setRegistrant(registrant)
                         .setVerifiedDestination(verifiedDestination)
                         .setTopOrigin(topOrigin)
-                        .setType(registrationType.ordinal())
+                        .setType(registrationType)
                         .setSourceType(sourceType)
                         .setRequestTime(mRequestTime)
-                        .setRetryCount(mRetryCount)
-                        .setLastProcessingTime(mLastProcessingTime)
-                        .setRedirectType(redirectType)
+                        .setRetryCount(0)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .setAdIdPermission(adIdPermission)
+                        .setRegistrationId(registrationId)
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);

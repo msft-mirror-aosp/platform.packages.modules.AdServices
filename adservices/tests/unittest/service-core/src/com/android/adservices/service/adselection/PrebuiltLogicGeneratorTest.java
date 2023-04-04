@@ -25,23 +25,29 @@ import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_USE_CASE;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.MISSING_PREBUILT_PARAMS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.NAMED_PARAM_TEMPLATE;
+import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.PREBUILT_FEATURE_IS_DISABLED;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.UNKNOWN_PREBUILT_IDENTIFIER;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.UNRECOGNIZED_PREBUILT_PARAMS;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 
 import android.net.Uri;
+
+import com.android.adservices.service.Flags;
 
 import org.junit.Before;
 import org.junit.Test;
 
 public class PrebuiltLogicGeneratorTest {
     private PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    private Flags mFlags;
 
     @Before
     public void setup() {
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mFlags = new PrebuiltLogicGeneratorTestFlags(true);
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     @Test
@@ -59,11 +65,27 @@ public class PrebuiltLogicGeneratorTest {
                                 paramValue));
 
         String result = mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(prebuiltUri);
-
         assertEquals(
                 AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS.replaceAll(
                         String.format(NAMED_PARAM_TEMPLATE, paramKey), paramValue),
                 result);
+    }
+
+    @Test
+    public void testPrebuiltLogicRunnerNotPrebuiltSchemaReturnFalseSuccess() {
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                "not-ad-selection-schema",
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+
+        assertFalse(mPrebuiltLogicGenerator.isPrebuiltUri(prebuiltUri));
     }
 
     @Test
@@ -81,7 +103,6 @@ public class PrebuiltLogicGeneratorTest {
                                 paramValue));
 
         String result = mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(prebuiltUri);
-
         assertEquals(
                 AD_SELECTION_HIGHEST_BID_WINS_JS.replaceAll(
                         String.format(NAMED_PARAM_TEMPLATE, paramKey), paramValue),
@@ -153,5 +174,55 @@ public class PrebuiltLogicGeneratorTest {
                 String.format(UNRECOGNIZED_PREBUILT_PARAMS, paramExtraKey),
                 IllegalArgumentException.class,
                 () -> mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(prebuiltUri));
+    }
+
+    @Test
+    public void testPrebuiltLogicFeatureFlagDisabledPrebuiltUriFailure() {
+        Flags prebuiltFeatureDisabled = new PrebuiltLogicGeneratorTestFlags(false);
+
+        PrebuiltLogicGenerator prebuiltLogicGenerator =
+                new PrebuiltLogicGenerator(prebuiltFeatureDisabled);
+
+        String paramKey = "bidFloor";
+        String paramValue = "bid_floor";
+        Uri prebuiltUri =
+                Uri.parse(
+                        String.format(
+                                "%s://%s/%s/?%s=%s",
+                                AD_SELECTION_PREBUILT_SCHEMA,
+                                AD_SELECTION_FROM_OUTCOMES_USE_CASE,
+                                AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION,
+                                paramKey,
+                                paramValue));
+
+        assertThrows(
+                PREBUILT_FEATURE_IS_DISABLED,
+                IllegalArgumentException.class,
+                () -> prebuiltLogicGenerator.isPrebuiltUri(prebuiltUri));
+    }
+
+    @Test
+    public void testPrebuiltLogicFeatureFlagDisabledNonPrebuiltUriSuccess() {
+        Flags prebuiltFeatureDisabled = new PrebuiltLogicGeneratorTestFlags(false);
+
+        PrebuiltLogicGenerator prebuiltLogicGenerator =
+                new PrebuiltLogicGenerator(prebuiltFeatureDisabled);
+
+        Uri nonPrebuiltUri = Uri.parse("www.test.com");
+
+        assertFalse(prebuiltLogicGenerator.isPrebuiltUri(nonPrebuiltUri));
+    }
+
+    private static class PrebuiltLogicGeneratorTestFlags implements Flags {
+        private final boolean mPrebuiltLogicEnabled;
+
+        PrebuiltLogicGeneratorTestFlags(boolean prebuiltLogicEnabled) {
+            mPrebuiltLogicEnabled = prebuiltLogicEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return mPrebuiltLogicEnabled;
+        }
     }
 }

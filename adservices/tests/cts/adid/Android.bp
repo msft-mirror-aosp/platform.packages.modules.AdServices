@@ -26,7 +26,6 @@ android_test {
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
-        "ub-uiautomator",
     ],
     libs: [
         "android.test.base",
@@ -38,9 +37,36 @@ android_test {
         "general-tests",
         "mts-adservices"
     ],
-    javacflags: ["-parameters"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     test_mainline_modules: ["com.google.android.adservices.apex"],
     manifest: "AndroidManifest.xml",
+}
+
+android_test {
+    name: "CtsExtAdIdEndToEndTest",
+    srcs: [
+        "src/**/*.java",
+    ],
+    static_libs: [
+        "adservices-clients",
+        "androidx.concurrent_concurrent-futures",
+        "compatibility-device-util-axt",
+        "truth-prebuilt",
+    ],
+    libs: [
+        "android.ext.adservices",
+        "android.test.base",
+        "framework-sdksandbox.impl",
+    ],
+    test_suites: [
+        "cts",
+        "general-tests",
+        "mts-extservices"
+    ],
+    sdk_version: "module_current",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+    test_config: "AndroidTest.ExtServices.xml",
+    manifest: "AndroidManifestExtServices.xml",
 }

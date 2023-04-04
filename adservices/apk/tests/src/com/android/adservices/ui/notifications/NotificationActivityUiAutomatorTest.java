@@ -18,12 +18,8 @@ package com.android.adservices.ui.notifications;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.content.Context;
 import android.content.Intent;
@@ -44,12 +40,12 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,6 +53,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
@@ -66,11 +63,11 @@ public class NotificationActivityUiAutomatorTest {
     private static final String NOTIFICATION_TEST_PACKAGE =
             "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
-    private static Context sContext;
-    private static UiDevice sDevice;
-    private static Intent sIntent;
+    private static final UiDevice sDevice =
+            UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private MockitoSession mStaticMockSession;
     @Mock private ConsentManager mConsentManager;
+    @Spy private Context mContext;
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
@@ -79,6 +76,8 @@ public class NotificationActivityUiAutomatorTest {
     public void setup() throws UiObjectNotFoundException, IOException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
+        mContext = InstrumentationRegistry.getInstrumentation().getContext();
 
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
@@ -91,41 +90,29 @@ public class NotificationActivityUiAutomatorTest {
                         .initMocks(this)
                         .startMocking();
 
+        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
+        doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
+        doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
-
-        ExtendedMockito.doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
 
-        // Initialize UiDevice instance
-        sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        // Start from the home screen
         sDevice.pressHome();
 
-        // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-
-        // Create intent
-        sContext = ApplicationProvider.getApplicationContext();
-        sIntent = new Intent(NOTIFICATION_TEST_PACKAGE);
-        sIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     }
 
     @After
-    public void teardown() throws IOException {
+    public void teardown() throws Exception {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -152,6 +139,8 @@ public class NotificationActivityUiAutomatorTest {
     @Test
     public void acceptedConfirmationScreenTest()
             throws UiObjectNotFoundException, InterruptedException {
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+
         startActivity(true);
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
@@ -177,7 +166,7 @@ public class NotificationActivityUiAutomatorTest {
 
     @Test
     public void notificationEuGaTest() throws UiObjectNotFoundException, InterruptedException {
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
 
@@ -191,14 +180,11 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
-        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
     public void notificationRowGaTest() throws UiObjectNotFoundException, InterruptedException {
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(false);
 
@@ -208,17 +194,40 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+    }
 
-        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-        verify(mConsentManager).getDefaultConsent();
-        verify(mConsentManager).getDefaultAdIdState();
-        verifyNoMoreInteractions(mConsentManager);
+    @Test
+    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        String packageNameOfDefaultBrowser =
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
+        sDevice.pressHome();
+
+        /* isEUActivity false: Rest of World Notification landing page */
+        startActivity(false);
+        /* find the expander and click to expand to get the content */
+        UiObject moreExpander =
+                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
+        moreExpander.click();
+
+        UiObject sentence =
+                ApkTestUtil.scrollTo(
+                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
+        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+                packageNameOfDefaultBrowser, sentence, 20)) {
+            return;
+        }
+        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            return;
+        }
+        Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     @Test
     public void acceptedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
 
@@ -234,19 +243,21 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        verify(mConsentManager, times(2)).getDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
-        verifyNoMoreInteractions(mConsentManager);
+        UiObject leftControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_left_control_button_text);
+        UiObject rightControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_right_control_button_text);
+        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
+        verifyControlsAndMoreButtonAreDisplayed(
+                leftControlButtonOnSecondPage,
+                rightControlButtonOnSecondPage,
+                moreButtonOnSecondPage);
     }
 
     @Test
     public void declinedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
-        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
 
@@ -262,13 +273,15 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        verify(mConsentManager, times(2)).getDefaultConsent();
-        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.MEASUREMENTS));
-        verifyNoMoreInteractions(mConsentManager);
+        UiObject leftControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_left_control_button_text);
+        UiObject rightControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_right_control_button_text);
+        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
+        verifyControlsAndMoreButtonAreDisplayed(
+                leftControlButtonOnSecondPage,
+                rightControlButtonOnSecondPage,
+                moreButtonOnSecondPage);
     }
 
     private void verifyControlsAndMoreButtonAreDisplayed(
@@ -298,11 +311,11 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     private void startActivity(boolean isEUActivity) {
-        // Send intent
-        sIntent.putExtra("isEUDevice", isEUActivity);
-        sContext.startActivity(sIntent);
+        Intent intent = new Intent(NOTIFICATION_TEST_PACKAGE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.putExtra("isEUDevice", isEUActivity);
+        mContext.startActivity(intent);
 
-        // Wait for the app to appear
         sDevice.wait(Until.hasObject(By.pkg(NOTIFICATION_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
@@ -314,4 +327,18 @@ public class NotificationActivityUiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 
+    private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+            String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
+            throws UiObjectNotFoundException {
+        int right = sentence.getBounds().right,
+                bottom = sentence.getBounds().bottom,
+                left = sentence.getBounds().left;
+        for (int x = left; x < right; x += (right - left) / countOfClicks) {
+            sDevice.click(x, bottom - 2);
+            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

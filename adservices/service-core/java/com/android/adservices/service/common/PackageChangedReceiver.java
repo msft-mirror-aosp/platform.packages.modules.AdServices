@@ -31,7 +31,9 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -71,9 +73,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     private static final int DEFAULT_PACKAGE_UID = -1;
+    private static boolean sFilteringEnabled;
 
     /** Enable the PackageChangedReceiver */
-    public static boolean enableReceiver(@NonNull Context context) {
+    public static boolean enableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        sFilteringEnabled = BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
         try {
             context.getPackageManager()
                     .setComponentEnabledSetting(
@@ -222,6 +226,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
+        if (sFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
+        }
     }
 
     /**
@@ -299,5 +311,17 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return CustomAudienceDatabase.getInstance(context);
+    }
+
+    /**
+     * Returns an instance of the {@link SharedStorageDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * SharedStorageDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return SharedStorageDatabase.getInstance(context);
     }
 }

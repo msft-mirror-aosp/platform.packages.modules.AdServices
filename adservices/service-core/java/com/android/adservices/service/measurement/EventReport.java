@@ -22,8 +22,11 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.util.DebugKey;
+import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+
+import com.google.common.collect.ImmutableMultiset;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -88,6 +91,8 @@ public class EventReport {
                 && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestinations, eventReport.mAttributionDestinations)
+                && ImmutableMultiset.copyOf(mAttributionDestinations).equals(
+                        ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)
@@ -378,11 +383,13 @@ public class EventReport {
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                    new DebugKeyAccessor().getDebugKeys(source, trigger);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (mBuilding.mSourceDebugKey != null || mBuilding.mTriggerDebugKey != null) {
+            if (Debug.isAttributionDebugReportPermitted(source, trigger,
+                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();

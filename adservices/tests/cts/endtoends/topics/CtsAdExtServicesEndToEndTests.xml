@@ -22,6 +22,16 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
 
+    <!-- Prevent test from running on Android T+ -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
+        <option name="max-sdk-level" value="32"/>
+    </object>
+
+    <!-- Prevent tests from running on Android R- -->
+    <object type="module_controller"
+            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="CtsAdExtServicesEndToEndTests.apk"/>
@@ -36,6 +46,8 @@
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
         <option name="run-command" value="device_config put adservices topics_kill_switch false" />
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
+
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
@@ -51,6 +63,10 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+
+        <!-- Revert the classifier type to the default value. This is to avoid skipping the in-test
+        reverting when the on-device classifier test fails. -->
+        <option name="teardown-command" value="device_config put adservices classifier_type 3" />
     </target_preparer>
 
     <object type="module_controller"

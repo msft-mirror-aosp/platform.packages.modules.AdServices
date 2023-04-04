@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Entendido"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Estás participando na versión beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox está activado no teu dispositivo, e as aplicacións poden probar estas novas formas máis privadas de mostrarche anuncios. Podes desactivar a versión beta cando queiras na configuración de privacidade."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Xestionar configuración de privacidade"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entendido"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox de Android ofrece novas funcións que poden utilizar as aplicacións para mostrarche anuncios que poderían gustarche. Estas tecnoloxías non utilizan identificadores de dispositivos.\n\nAndroid e as túas aplicacións poden determinar os tipos de anuncios que poderían interesarche e gardar os intereses de maneira temporal no teu dispositivo. Deste xeito, as aplicacións poden mostrarche anuncios que poderían gustarche sen facer un seguimento da túa actividade nos sitios web e nas aplicacións doutros programadores."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalización de anuncios con Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"As aplicacións poden determinar cales son os teus intereses e gardalos de forma temporal en Android. Por exemplo, unha aplicación que utilices a fin de comprar calzado para correr podería determinar que che interesan os maratóns.\n\nMáis adiante, sobre a base dese interese, outra aplicación pode mostrarche un anuncio relacionado con maratóns.\n\nNa configuración de privacidade podes xestionar a lista de aplicacións que teñen intereses gardados."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Novas funcións de privacidade nos anuncios"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Os temas de anuncios e os novos controis ofrécenche máis opcións sobre os anuncios que ves"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Xa están dispoñibles novas funcións de privacidade nos anuncios"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android rexistra temas de interese en función das aplicacións que usases recentemente. As aplicacións que usas tamén poden determinar o que che gusta. Máis tarde, as aplicacións poderán solicitar esta información para mostrarche anuncios personalizados. Podes escoller que temas e aplicacións se usarán para mostrarche anuncios."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Para medir o rendemento dun anuncio, compártense tipos limitados de datos entre as aplicacións."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Máis información sobre os anuncios en Android"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android elimina automaticamente os temas e os datos suxeridos polas aplicacións de forma regular. Tamén podes bloquear determinados temas e aplicacións que non queiras que che fagan suxestións."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Medir o rendemento dun anuncio"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"As aplicacións que usas poden solicitarlle información a Android para axudarlles a medir o rendemento dos seus anuncios. Android permite que as aplicacións recompilen tipos limitados de datos (por exemplo, a hora do día na que se che mostrou un anuncio)."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Proba as novas funcións de privacidade nos anuncios"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Cos temas dos anuncios tes máis opcións de escolla sobre os anuncios que ves"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Ver detalles"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Privacidade mellorada nos anuncios en Android"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Proba as novas funcións de privacidade nos anuncios"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android está lanzando novas funcións de privacidade que che ofrecen máis opcións sobre os anuncios que ves."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Os temas de anuncios axudan a que as aplicacións che mostren anuncios relevantes protexendo a túa identidade e a información sobre o uso que fas delas. Android pode tomar nota dos temas de interese en función das aplicacións que usases recentemente. Máis tarde, as aplicacións que uses poderán solicitarlle información a Android sobre os temas relevantes para personalizar os anuncios que se che mostren."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Na configuración do teu dispositivo podes ver os temas de anuncios e bloquear os que non queiras que se compartan coas aplicacións. Android tamén elimina automaticamente os temas de anuncios con frecuencia."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Podes cambiar de opinión en calquera momento na configuración de privacidade."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Máis información sobre os temas dos anuncios"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Para obter máis información sobre como protexe Android os teus datos, consulta a nosa Política de privacidade."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Si, acepto"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Probar"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Que datos se utilizan?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Os temas dos anuncios baséanse nas aplicacións que usases recentemente neste dispositivo e na frecuencia coa que as utilizases."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Como usamos estes datos?"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Como podes xestionar os teus datos?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android elimina automaticamente temas con frecuencia. Algúns poderían aparecer outra vez na lista ao seguires usando as aplicacións. Tamén podes bloquear os temas que non queiras que Android comparta cos sitios, así como desactivar os temas de anuncios en calquera momento na configuración de privacidade."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Podes facer cambios na configuración de privacidade."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Outras funcións que melloran a privacidade nos anuncios"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android vai ofrecer novas formas de limitar a información que as aplicacións poden obter sobre ti cando che mostran anuncios personalizados."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Xa están dispoñibles outras funcións de privacidade nos anuncios"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android tamén ofrece novas formas de limitar a información sobre ti que poden obter as aplicacións cando che mostran anuncios personalizados."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Os anuncios suxeridos polas aplicacións axudan a protexer a túa identidade e a túa información sobre o uso das aplicacións, ao mesmo tempo que permiten que as aplicacións che mostren anuncios relevantes. En función da túa actividade, as aplicacións que uses poden suxerir anuncios relacionados noutras aplicacións. Podes ver a lista de aplicacións na configuración de privacidade e impedir que realicen suxestións."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Coa medición de anuncios, compártense tipos limitados de datos entre as aplicacións para medir o rendemento publicitario, como a hora do día na que se che mostrou un anuncio."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Máis información sobre os anuncios suxeridos polas aplicacións e a medición de anuncios"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android elimina de xeito automático e periódico os datos suxeridos polas aplicacións. Se volves usar unha aplicación, podería aparecer outra vez na lista."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Tamén podes impedir que unha aplicación che suxira anuncios, restablecer todos os datos de suxestión de anuncios ou desactivar os anuncios suxeridos polas aplicacións en calquera momento na configuración de privacidade."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"As aplicacións que usas poden solicitarlle información a Android para axudarlles a medir o rendemento dos seus anuncios. Co obxectivo de protexer a túa privacidade, Android limita a información que as aplicacións poden compartir entre si."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Xa están dispoñibles novas funcións de privacidade nos anuncios"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Goza de máis opcións sobre os anuncios sen deixar de protexer a túa identidade"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Xa están dispoñibles novas funcións de privacidade nos anuncios"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Cos anuncios suxeridos polas aplicacións, as novas funcións de privacidade axudan a protexer a túa identidade e a información sobre o uso que fas das aplicacións, ao mesmo tempo que permiten que estas últimas che mostren anuncios relevantes. En función da túa actividade, as aplicacións que usas poden suxerir anuncios relacionados noutras aplicacións. Podes ver a lista de aplicacións na configuración de privacidade e impedir que realicen suxestións."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Coa medición de anuncios, as aplicacións comparten tipos limitados de datos para comprender o rendemento publicitario, como a hora do día en que se che mostrou un anuncio."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Activa outra función de privacidade nos anuncios"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android tamén ofrece unha nova función de privacidade que che proporciona máis opcións sobre os anuncios que ves."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Os temas dos anuncios axudan a que as aplicacións che mostren anuncios relevantes protexendo a túa identidade e a información sobre o uso que fas delas. Android pode rexistrar temas de interese en función das aplicacións que usases recentemente. Despois, esas aplicacións poden pedirlle a Android temas relevantes para mostrarche anuncios máis significativos."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Podes ver os temas dos anuncios na configuración de privacidade e bloquear os que non queiras compartir coas aplicacións. Android tamén elimina automaticamente os temas dos anuncios con frecuencia."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Activar"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Xa están dispoñibles novas funcións de privacidade nos anuncios"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Agora dispós de máis opcións sobre os anuncios sen deixar de protexer a túa identidade"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Xa están dispoñibles novas funcións de privacidade nos anuncios"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android agora ofrece novas funcións de privacidade que che proporcionan máis opcións sobre os anuncios que ves."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Seguinte"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Participa na versión beta de privacidade nos anuncios en Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privacidade nos anuncios"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Temas dos anuncios"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Anuncios suxeridos polas aplicacións"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android rexistra temas de interese en función das aplicacións que utilizaches recentemente e da frecuencia coa que as usas."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"As aplicacións que usas tamén poden determinar o que che gusta en función de como as usas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"As aplicacións que usas poden solicitarlle a Android información que lles axude a medir o rendemento dos seus anuncios. Android permite que as aplicacións recompilen tipos de datos limitados."</string>

@@ -16,8 +16,10 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.reporting.DebugReportApi;
 
 /**
  * A wrapper class to expose a constructor for AttributionJobHandler in testing.
@@ -25,8 +27,10 @@ import com.android.adservices.service.Flags;
 public class AttributionJobHandlerWrapper {
     private final AttributionJobHandler mAttributionJobHandler;
 
-    public AttributionJobHandlerWrapper(DatastoreManager datastoreManager, Flags flags) {
-        this.mAttributionJobHandler = new AttributionJobHandler(datastoreManager, flags);
+    public AttributionJobHandlerWrapper(
+            DatastoreManager datastoreManager, Flags flags, DebugReportApi debugReportApi) {
+        this.mAttributionJobHandler =
+                new AttributionJobHandler(datastoreManager, flags, debugReportApi);
     }
 
     public boolean performPendingAttributions() {
