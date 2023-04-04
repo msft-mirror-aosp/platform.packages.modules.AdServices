@@ -30,10 +30,10 @@ import android.content.Context;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
 import android.provider.DeviceConfig;
-import android.support.test.uiautomator.UiDevice;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
