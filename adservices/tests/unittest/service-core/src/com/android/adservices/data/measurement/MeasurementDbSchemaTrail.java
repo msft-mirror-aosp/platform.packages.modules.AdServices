@@ -28,6 +28,7 @@ import static com.android.adservices.data.measurement.MeasurementTables.SourceDe
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 
+import com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
 import com.android.adservices.data.measurement.migration.MeasurementTablesDeprecated;
 
 import com.google.common.collect.ImmutableList;
@@ -572,7 +573,7 @@ public class MeasurementDbSchemaTrail {
                     + " ("
                     + AsyncRegistrationContract.ID
                     + " TEXT PRIMARY KEY NOT NULL, "
-                    + AsyncRegistrationContract.ENROLLMENT_ID
+                    + MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID
                     + " TEXT, "
                     + AsyncRegistrationContract.REGISTRATION_URI
                     + " TEXT, "
@@ -584,9 +585,9 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + AsyncRegistrationContract.REDIRECT_TYPE
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE
                     + " INTEGER, "
-                    + AsyncRegistrationContract.REDIRECT_COUNT
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT
                     + " INTEGER, "
                     + AsyncRegistrationContract.SOURCE_TYPE
                     + " INTEGER, "
@@ -596,7 +597,7 @@ public class MeasurementDbSchemaTrail {
                     + " INTEGER, "
                     + AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME
                     + " INTEGER, "
                     + AsyncRegistrationContract.TYPE
                     + " INTEGER, "
@@ -606,6 +607,40 @@ public class MeasurementDbSchemaTrail {
                     + " INTEGER, "
                     + AsyncRegistrationContract.REGISTRATION_ID
                     + " TEXT "
+                    + ")";
+
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V11 =
+            "CREATE TABLE "
+                    + AsyncRegistrationContract.TABLE
+                    + " ("
+                    + AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRATION_ID
+                    + " TEXT NOT NULL"
                     + ")";
 
     private static final String CREATE_TABLE_DEBUG_REPORT_V6 =
@@ -638,6 +673,23 @@ public class MeasurementDbSchemaTrail {
                     + SourceContract.ID
                     + ") ON DELETE CASCADE"
                     + ")";
+
+    public static final String CREATE_TABLE_KEY_VALUE_DATA_V11 =
+            "CREATE TABLE "
+                    + KeyValueDataContract.TABLE
+                    + " ("
+                    + KeyValueDataContract.DATA_TYPE
+                    + " TEXT NOT NULL, "
+                    + KeyValueDataContract.KEY
+                    + " TEXT NOT NULL, "
+                    + KeyValueDataContract.VALUE
+                    + " TEXT, "
+                    + " CONSTRAINT type_key_primary_con PRIMARY KEY ( "
+                    + KeyValueDataContract.DATA_TYPE
+                    + ", "
+                    + KeyValueDataContract.KEY
+                    + " )"
+                    + " )";
 
     private static final Map<String, String> CREATE_STATEMENT_BY_TABLE_V6 =
             ImmutableMap.of(
@@ -826,6 +878,13 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV11() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV10());
+        createStatements.put(AsyncRegistrationContract.TABLE, CREATE_TABLE_ASYNC_REGISTRATION_V11);
+        createStatements.put(KeyValueDataContract.TABLE, CREATE_TABLE_KEY_VALUE_DATA_V11);
+        return createStatements;
+    }
+
     private static List<String> getCreateIndexesV7() {
         ArrayList<String> createIndexes = new ArrayList<>(CREATE_INDEXES_V6);
         createIndexes.addAll(Arrays.asList(CREATE_INDEXES_V6_V7));
@@ -850,6 +909,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV9();
     }
 
+    private static List<String> getCreateIndexesV11() {
+        return getCreateIndexesV10();
+    }
+
     private static final Map<Integer, Map<String, String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Map<String, String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6)
@@ -857,6 +920,7 @@ public class MeasurementDbSchemaTrail {
                     .put(8, getCreateStatementByTableV8())
                     .put(9, getCreateStatementByTableV9())
                     .put(10, getCreateStatementByTableV10())
+                    .put(11, getCreateStatementByTableV11())
                     .build();
 
     private static final Map<Integer, List<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -866,6 +930,7 @@ public class MeasurementDbSchemaTrail {
                     .put(8, getCreateIndexesV8())
                     .put(9, getCreateIndexesV9())
                     .put(10, getCreateIndexesV10())
+                    .put(11, getCreateIndexesV11())
                     .build();
 
     /**
