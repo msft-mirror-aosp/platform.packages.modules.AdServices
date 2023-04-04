@@ -106,10 +106,12 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
                             adSelectionConfig.getSeller(),
                             adSelectionConfig.getDecisionLogicUri()));
         }
-        violations.addAll(
-                validateTrustedSignalsUri(
-                        adSelectionConfig.getSeller(),
-                        adSelectionConfig.getTrustedScoringSignalsUri()));
+        if (!adSelectionConfig.getTrustedScoringSignalsUri().equals(Uri.EMPTY)) {
+            violations.addAll(
+                    validateTrustedSignalsUri(
+                            adSelectionConfig.getSeller(),
+                            adSelectionConfig.getTrustedScoringSignalsUri()));
+        }
         violations.addAll(validateContextualAds(adSelectionConfig.getBuyerContextualAds()));
     }
 
