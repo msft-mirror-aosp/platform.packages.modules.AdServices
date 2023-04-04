@@ -6057,5 +6057,10 @@ public class AdSelectionE2ETest {
         public boolean getFledgeAdSelectionContextualAdsEnabled() {
             return true;
         }
+
+        @Override
+        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+            return true;
+        }
     }
 }
