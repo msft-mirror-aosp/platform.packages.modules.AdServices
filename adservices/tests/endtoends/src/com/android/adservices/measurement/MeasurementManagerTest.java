@@ -23,6 +23,7 @@ import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -45,6 +46,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -1130,26 +1132,9 @@ public class MeasurementManagerTest {
 
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        overrideConsentManagerDebugMode();
-
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-        OutcomeReceiver<Integer, Exception> callback =
-                new OutcomeReceiver<Integer, Exception>() {
-                    @Override
-                    public void onResult(Integer result) {
-                        future.complete(result);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-
-        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-        Assert.assertEquals(
-                Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+        final MeasurementManager mm = getMeasurementManager();
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, response);
     }
 
     @Test
@@ -1170,6 +1155,100 @@ public class MeasurementManagerTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, /* callback */ null));
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_getServiceThrowsIllegalState_returnDisabled()
+            throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(mm).getService();
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_getServiceThrowsRuntimeException_propagateOnError()
+            throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        doThrow(new RuntimeException()).when(mm).getService();
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+
+        mm.getMeasurementApiStatus(
+                CALLBACK_EXECUTOR,
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(error);
+                    }
+                });
+
+        Exception exception = future.get();
+        Assert.assertTrue(exception instanceof RuntimeException);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_remoteException_returnDisabled() throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
+        doReturn(mockMeasurementService).when(mm).getService();
+        doThrow(new RemoteException())
+                .when(mockMeasurementService)
+                .getMeasurementApiStatus(any(), any(), any());
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_RuntimeException_propagateOnError() throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
+        doReturn(mockMeasurementService).when(mm).getService();
+        doThrow(new RuntimeException())
+                .when(mockMeasurementService)
+                .getMeasurementApiStatus(any(), any(), any());
+
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+        mm.getMeasurementApiStatus(
+                CALLBACK_EXECUTOR,
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(error);
+                    }
+                });
+
+        Exception exception = future.get();
+        Assert.assertTrue(exception instanceof RuntimeException);
+    }
+
+    private int callMeasurementApiStatus(MeasurementManager mm) throws Exception {
+        overrideConsentManagerDebugMode();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        OutcomeReceiver<Integer, Exception> callback =
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+
+        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
+        return future.get();
     }
 
     // Override the Consent Manager behaviour - Consent Given

@@ -18,7 +18,6 @@ package android.adservices.measurement;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_ATTRIBUTION;
 import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE;
 
-import android.adservices.AdServicesState;
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
 import android.adservices.common.AdServicesStatusUtils;
@@ -564,22 +563,16 @@ public class MeasurementManager {
         Objects.requireNonNull(executor);
         Objects.requireNonNull(callback);
 
-        // TODO (b/241149306): Remove here and apply across the board.
-        if (!AdServicesState.isAdServicesStateEnabled()) {
-            executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
-            return;
-        }
-
-        IMeasurementService service = null;
+        final IMeasurementService service;
         try {
             service = getService();
         } catch (IllegalStateException e) {
             LogUtil.e(e, "Failed to bind to measurement service");
+            executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
+            return;
+        } catch (RuntimeException e) {
+            LogUtil.e(e, "Unknown failure while binding measurement service");
             executor.execute(() -> callback.onError(e));
-        }
-
-        if (service == null) {
-            LogUtil.d("Measurement service not found");
             return;
         }
 
@@ -595,7 +588,10 @@ public class MeasurementManager {
                     });
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
-            executor.execute(() -> callback.onError(new IllegalStateException(e)));
+            executor.execute(() -> callback.onResult(MEASUREMENT_API_STATE_DISABLED));
+        } catch (RuntimeException e) {
+            LogUtil.e(e, "Unknown failure while getting measurement status");
+            executor.execute(() -> callback.onError(e));
         }
     }
 
