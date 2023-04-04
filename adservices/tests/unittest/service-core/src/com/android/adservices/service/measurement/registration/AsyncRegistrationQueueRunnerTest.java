@@ -24,6 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyShort;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
@@ -42,7 +43,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.RemoteException;
-import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -61,6 +61,7 @@ import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.SystemHealthParams;
@@ -93,6 +94,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -153,9 +155,6 @@ public class AsyncRegistrationQueueRunnerTest {
     private AsyncSourceFetcher mAsyncSourceFetcher;
     private AsyncTriggerFetcher mAsyncTriggerFetcher;
     private Source mMockedSource;
-
-    @Mock HttpsURLConnection mUrlConnection1;
-    @Mock HttpsURLConnection mUrlConnection2;
     @Mock private IMeasurementDao mMeasurementDao;
     @Mock private Trigger mMockedTrigger;
     @Mock private ITransaction mTransaction;
@@ -194,8 +193,6 @@ public class AsyncRegistrationQueueRunnerTest {
     @After
     public void cleanup() {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
-        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
-        enrollmentDb.delete("enrollment_data", null, null);
         emptyTables(db);
         mStaticMockSession.finishMocking();
     }
@@ -219,6 +216,7 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(mMockContentProviderClient);
         when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        when(mFlags.getMeasurementMaxRegistrationRedirects()).thenReturn(20);
     }
 
     @Test
@@ -232,11 +230,13 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            List.of(
+                                    WebUtil.validUri("https://example.test/sF1"),
+                                    WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -248,19 +248,31 @@ public class AsyncRegistrationQueueRunnerTest {
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
         when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
                 .thenReturn(eventReportList);
-
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue(null) // Should default to 1
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, times(2)).insertAsyncRegistration(any(AsyncRegistration.class));
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(3, redirectCountCaptor.getValue().getRegistrationRedirectCount());
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
@@ -276,12 +288,13 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<Optional<Source>> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LIST_TYPE_REDIRECT_URI_1),
-                            Uri.parse(LIST_TYPE_REDIRECT_URI_2)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.NONE);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            List.of(
+                                    Uri.parse(LIST_TYPE_REDIRECT_URI_1),
+                                    Uri.parse(LIST_TYPE_REDIRECT_URI_2)));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -294,6 +307,15 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue(null) // Should default to 1
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -303,30 +325,28 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, times(2)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
 
-        // Assert 'none' type redirect and values
         Assert.assertEquals(2, asyncRegistrationArgumentCaptor.getAllValues().size());
-
         AsyncRegistration asyncReg1 = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
-        Assert.assertEquals(1, asyncReg1.getRedirectCount());
         assertEquals(
                 AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
                 asyncReg1.getRegistrationId());
-
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
-        Assert.assertEquals(1, asyncReg2.getRedirectCount());
         assertEquals(
                 AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
                 asyncReg2.getRegistrationId());
+
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(3, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -341,11 +361,11 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<Optional<Source>> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.DAISY_CHAIN);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LOCATION,
+                            List.of(Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -358,6 +378,15 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue(null) // Should default to 1
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -367,18 +396,20 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, times(1)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
 
-        // Assert 'location' type redirect and value
         Assert.assertEquals(1, asyncRegistrationArgumentCaptor.getAllValues().size());
         AsyncRegistration asyncReg = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LOCATION_TYPE_REDIRECT_URI), asyncReg.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncReg.getRedirectType());
-        Assert.assertEquals(1, asyncReg.getRedirectCount());
+
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(2, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -389,16 +420,15 @@ public class AsyncRegistrationQueueRunnerTest {
         // Setup
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
-        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource(
-                AsyncRegistration.RedirectType.DAISY_CHAIN, 3);
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppSource();
         Answer<Optional<Source>> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.DAISY_CHAIN);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LOCATION,
+                            List.of(Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -411,6 +441,15 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("5")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -420,18 +459,19 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, times(1)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
 
-        // Assert 'location' type redirect and value
         Assert.assertEquals(1, asyncRegistrationArgumentCaptor.getAllValues().size());
         AsyncRegistration asyncReg = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LOCATION_TYPE_REDIRECT_URI), asyncReg.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncReg.getRedirectType());
-        Assert.assertEquals(4, asyncReg.getRedirectCount());
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(6, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -448,12 +488,13 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<Optional<Trigger>> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LIST_TYPE_REDIRECT_URI_1),
-                            Uri.parse(LIST_TYPE_REDIRECT_URI_2)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.NONE);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            List.of(
+                                    Uri.parse(LIST_TYPE_REDIRECT_URI_1),
+                                    Uri.parse(LIST_TYPE_REDIRECT_URI_2)));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -462,6 +503,15 @@ public class AsyncRegistrationQueueRunnerTest {
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue(null) // Should default to 1
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -471,29 +521,29 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, times(2)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
 
-        // Assert 'none' type redirect and values
         Assert.assertEquals(2, asyncRegistrationArgumentCaptor.getAllValues().size());
 
         AsyncRegistration asyncReg1 = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_1), asyncReg1.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg1.getRedirectType());
-        Assert.assertEquals(1, asyncReg1.getRedirectCount());
         Assert.assertEquals(
                 AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
                 asyncReg1.getRegistrationId());
 
         AsyncRegistration asyncReg2 = asyncRegistrationArgumentCaptor.getAllValues().get(1);
         Assert.assertEquals(Uri.parse(LIST_TYPE_REDIRECT_URI_2), asyncReg2.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.NONE, asyncReg2.getRedirectType());
-        Assert.assertEquals(1, asyncReg2.getRedirectCount());
         Assert.assertEquals(
                 AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID,
                 asyncReg2.getRegistrationId());
+
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(3, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -510,11 +560,11 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<Optional<Trigger>> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.DAISY_CHAIN);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LOCATION,
+                            List.of(Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -523,6 +573,15 @@ public class AsyncRegistrationQueueRunnerTest {
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue(null) // Should default to 1
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -532,18 +591,20 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, times(1)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
 
-        // Assert 'location' type redirect and values
         Assert.assertEquals(1, asyncRegistrationArgumentCaptor.getAllValues().size());
 
         AsyncRegistration asyncReg = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LOCATION_TYPE_REDIRECT_URI), asyncReg.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncReg.getRedirectType());
-        Assert.assertEquals(1, asyncReg.getRedirectCount());
+
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(2, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
@@ -555,17 +616,16 @@ public class AsyncRegistrationQueueRunnerTest {
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
                 getSpyAsyncRegistrationQueueRunner();
 
-        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger(
-                AsyncRegistration.RedirectType.DAISY_CHAIN, 4);
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
 
         Answer<Optional<Trigger>> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
-                    asyncRedirect.setRedirectType(AsyncRegistration.RedirectType.DAISY_CHAIN);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LOCATION,
+                            List.of(Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -574,6 +634,15 @@ public class AsyncRegistrationQueueRunnerTest {
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("4")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
@@ -583,22 +652,136 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, times(1)).insertAsyncRegistration(
                 asyncRegistrationArgumentCaptor.capture());
-
-        // Assert 'location' type redirect and values
         Assert.assertEquals(1, asyncRegistrationArgumentCaptor.getAllValues().size());
-
         AsyncRegistration asyncReg = asyncRegistrationArgumentCaptor.getAllValues().get(0);
         Assert.assertEquals(Uri.parse(LOCATION_TYPE_REDIRECT_URI), asyncReg.getRegistrationUri());
-        Assert.assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncReg.getRedirectType());
-        Assert.assertEquals(5, asyncReg.getRedirectCount());
+        // Increment Redirect Count by 1
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(5, redirectCountCaptor.getValue().getRegistrationRedirectCount());
 
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
+    @Test
+    public void runAsyncRegistrationQueueWorker_appTrigger_nearMaxCount_addSomeRedirects()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
+
+        Answer<Optional<Trigger>> answerAsyncTriggerFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            IntStream.range(1, 10)
+                                    .mapToObj((i) -> Uri.parse(LIST_TYPE_REDIRECT_URI_1 + "/" + i))
+                                    .collect(Collectors.toList()));
+                    return Optional.of(mMockedTrigger);
+                };
+        doAnswer(answerAsyncTriggerFetcher)
+                .when(mAsyncTriggerFetcher)
+                .fetchTrigger(any(), any(), any());
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
+                .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("15")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
+
+        // Execution
+        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
+
+        ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
+                ArgumentCaptor.forClass(AsyncRegistration.class);
+
+        // Assertions
+        verify(mAsyncTriggerFetcher, times(1))
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
+        // Already has 15, only 5 out of the new 10 Uri should be added.
+        verify(mMeasurementDao, times(5))
+                .insertAsyncRegistration(asyncRegistrationArgumentCaptor.capture());
+        Assert.assertEquals(5, asyncRegistrationArgumentCaptor.getAllValues().size());
+        AtomicInteger i = new AtomicInteger(1);
+        asyncRegistrationArgumentCaptor
+                .getAllValues()
+                .forEach(
+                        (asyncRegistration -> {
+                            Assert.assertEquals(
+                                    Uri.parse(LIST_TYPE_REDIRECT_URI_1 + "/" + i.getAndIncrement()),
+                                    asyncRegistration.getRegistrationUri());
+                        }));
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(20, redirectCountCaptor.getValue().getRegistrationRedirectCount());
+        verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
+    }
+
+    @Test
+    public void runAsyncRegistrationQueueWorker_appTrigger_maxCount_addNoRedirects()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
+
+        Answer<Optional<Trigger>> answerAsyncTriggerFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LOCATION,
+                            Collections.singletonList(Uri.parse(LOCATION_TYPE_REDIRECT_URI)));
+                    return Optional.of(mMockedTrigger);
+                };
+        doAnswer(answerAsyncTriggerFetcher)
+                .when(mAsyncTriggerFetcher)
+                .fetchTrigger(any(), any(), any());
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
+                .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("20")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
+
+        // Execution
+        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
+
+        // Assertions
+        verify(mAsyncTriggerFetcher, times(1))
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
+        verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
+        // No insertions expected as redirectCount is already 20 (Max).
+        verify(mMeasurementDao, times(0)).insertAsyncRegistration(any());
+        verify(mMeasurementDao, never()).insertOrUpdateKeyValueData(any());
+    }
     // End tests for redirect types
 
     @Test
@@ -613,7 +796,7 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -634,10 +817,11 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).insertOrUpdateKeyValueData(any());
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
@@ -653,11 +837,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
-                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -678,7 +859,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -705,11 +886,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
-                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -730,7 +908,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
 
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
@@ -758,7 +936,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -773,7 +952,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
         verify(mMeasurementDao, never()).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, never()).insertSource(any(Source.class));
@@ -793,11 +972,13 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            List.of(
+                                    WebUtil.validUri("https://example.test/sF1"),
+                                    WebUtil.validUri("https://example.test/sF2")));
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -807,14 +988,28 @@ public class AsyncRegistrationQueueRunnerTest {
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
 
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("1")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
+
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, times(2)).insertAsyncRegistration(any(AsyncRegistration.class));
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(3, redirectCountCaptor.getValue().getRegistrationRedirectCount());
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
@@ -830,7 +1025,7 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -845,9 +1040,10 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).getKeyValueData(anyString(), any());
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
@@ -863,11 +1059,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
-                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -882,7 +1075,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -907,11 +1100,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
-                    AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -926,7 +1116,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -940,7 +1130,7 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     @Test
-    public void test_runAsyncRegistrationQueueWorker_appTrigger_parsingError()
+    public void test_runAsyncRegistrationQueueWorker_appTrigger_parsingError_withRedirects()
             throws DatastoreException {
         // Setup
         AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -951,11 +1141,14 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
                     AsyncRedirect asyncRedirect = invocation.getArgument(2);
-                    asyncRedirect.addToRedirects(List.of(
-                            WebUtil.validUri("https://example.test/sF1"),
-                            WebUtil.validUri("https://example.test/sF2")));
+                    asyncRedirect.addToRedirects(
+                            AsyncRegistration.RedirectType.LIST,
+                            List.of(
+                                    WebUtil.validUri("https://example.test/sF1"),
+                                    WebUtil.validUri("https://example.test/sF2")));
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -964,16 +1157,40 @@ public class AsyncRegistrationQueueRunnerTest {
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyShort(), any()))
                 .thenReturn(validAsyncRegistration);
+        KeyValueData redirectCount =
+                new KeyValueData.Builder()
+                        .setDataType(KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT)
+                        .setKey(
+                                AsyncRegistrationFixture.ValidAsyncRegistrationParams
+                                        .REGISTRATION_ID)
+                        .setValue("1")
+                        .build();
+        when(mMeasurementDao.getKeyValueData(anyString(), any())).thenReturn(redirectCount);
 
         // Execution
         asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(1L, (short) 5);
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
         verify(mMeasurementDao, never()).insertTrigger(any(Trigger.class));
-        verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        // Verifying redirect insertion
+        ArgumentCaptor<AsyncRegistration> argumentCaptor =
+                ArgumentCaptor.forClass(AsyncRegistration.class);
+        verify(mMeasurementDao, times(2)).insertAsyncRegistration(argumentCaptor.capture());
+        List<AsyncRegistration> redirects = argumentCaptor.getAllValues();
+        assertEquals(2, redirects.size());
+        assertEquals(
+                WebUtil.validUri("https://example.test/sF1"),
+                redirects.get(0).getRegistrationUri());
+        assertEquals(
+                WebUtil.validUri("https://example.test/sF2"),
+                redirects.get(1).getRegistrationUri());
+        ArgumentCaptor<KeyValueData> redirectCountCaptor =
+                ArgumentCaptor.forClass(KeyValueData.class);
+        verify(mMeasurementDao, times(1)).insertOrUpdateKeyValueData(redirectCountCaptor.capture());
+        assertEquals(3, redirectCountCaptor.getValue().getRegistrationRedirectCount());
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
 
@@ -988,7 +1205,7 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     return Optional.of(mMockedSource);
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -1008,7 +1225,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
         verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
@@ -1027,7 +1244,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -1048,7 +1266,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -1074,7 +1292,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -1089,7 +1308,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -1115,7 +1334,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncSourceFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncSourceFetcher)
@@ -1136,7 +1356,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncSourceFetcher, times(1))
-                .fetchSource(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
         verify(mMeasurementDao, never()).insertEventReport(any(EventReport.class));
         verify(mMeasurementDao, never()).insertSource(any(Source.class));
@@ -1156,7 +1376,7 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
                     return Optional.of(mMockedTrigger);
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1171,7 +1391,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
@@ -1189,7 +1409,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1204,7 +1425,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -1229,7 +1450,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
+                    asyncFetchStatus.setResponseStatus(
+                            AsyncFetchStatus.ResponseStatus.NETWORK_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1244,7 +1466,7 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor =
                 ArgumentCaptor.forClass(AsyncRegistration.class);
         verify(mMeasurementDao, times(1))
@@ -1269,7 +1491,8 @@ public class AsyncRegistrationQueueRunnerTest {
         Answer<?> answerAsyncTriggerFetcher =
                 invocation -> {
                     AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
-                    asyncFetchStatus.setStatus(AsyncFetchStatus.ResponseStatus.PARSING_ERROR);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.PARSING_ERROR);
                     return Optional.empty();
                 };
         doAnswer(answerAsyncTriggerFetcher)
@@ -1284,13 +1507,12 @@ public class AsyncRegistrationQueueRunnerTest {
 
         // Assertions
         verify(mAsyncTriggerFetcher, times(1))
-                .fetchTrigger(any(AsyncRegistration.class), any(AsyncFetchStatus.class), any());
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, never()).updateRetryCount(any());
         verify(mMeasurementDao, never()).insertTrigger(any(Trigger.class));
         verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
         verify(mMeasurementDao, times(1)).deleteAsyncRegistration(any(String.class));
     }
-
     @Test
     public void insertSource_withFakeReportsFalseAppAttribution_accountsForFakeReportAttribution()
             throws DatastoreException {
@@ -1504,7 +1726,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1541,7 +1762,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1580,7 +1800,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1611,7 +1830,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
         // Execution
@@ -1649,7 +1867,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1688,7 +1905,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1726,7 +1942,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
@@ -1756,7 +1971,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1786,7 +2000,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1820,7 +2033,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 new FakeDatastoreManager(),
                                 mDebugReportApi));
 
@@ -1831,127 +2043,6 @@ public class AsyncRegistrationQueueRunnerTest {
                         AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
                                 mMeasurementDao, TRIGGER))
                 .isFalse();
-    }
-
-    @Test
-    public void testRegisterAppSource_redirectOverridesOsButNotWebDestination()
-            throws DatastoreException, IOException {
-        // Setup
-        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        AsyncSourceFetcher mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
-        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        doReturn(mUrlConnection2).when(mFetcher).openUrl(new URL("https://foo-redirect.test"));
-        when(mUrlConnection1.getResponseCode()).thenReturn(200);
-        when(mUrlConnection2.getResponseCode()).thenReturn(200);
-        when(mUrlConnection1.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\n"
-                                                + "  \"priority\": \"123\",\n"
-                                                + "  \"expiry\": \"456789\",\n"
-                                                + "  \"source_event_id\": \"987654321\",\n"
-                                                + "  \"destination\": \""
-                                                + DEFAULT_OS_DESTINATION
-                                                + "\",\n"
-                                                + "\"web_destination\": \""
-                                                + DEFAULT_WEB_DESTINATION
-                                                + "\""
-                                                + "}"),
-                                "Attribution-Reporting-Redirect",
-                                List.of("https://foo-redirect.test")));
-        when(mUrlConnection2.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{\n"
-                                                + "  \"priority\": \"321\",\n"
-                                                + "  \"expiry\": \"987654\",\n"
-                                                + "  \"source_event_id\": \"123456789\",\n"
-                                                + "  \"destination\": \""
-                                                + ALT_APP_DESTINATION
-                                                + "\",\n"
-                                                + "\"web_destination\": \""
-                                                + ALT_WEB_DESTINATION
-                                                + "\""
-                                                + "}")));
-        DatastoreManager datastoreManager =
-                spy(new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()));
-        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                spy(
-                        new AsyncRegistrationQueueRunner(
-                                mContentResolver,
-                                mFetcher,
-                                mAsyncTriggerFetcher,
-                                mEnrollmentDao,
-                                datastoreManager,
-                                mDebugReportApi));
-        ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
-                ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
-        EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
-                request,
-                /* adIdPermission */ true,
-                APP_TOP_ORIGIN,
-                /* requestTime */ 100,
-                Source.SourceType.NAVIGATION,
-                mEnrollmentDao,
-                datastoreManager);
-
-        // Execution
-        asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker(2L, (short) 5);
-
-        // Assertion
-        verify(datastoreManager, times(3)).runInTransaction(consumerArgCaptor.capture());
-        consumerArgCaptor.getValue().accept(mMeasurementDao);
-
-        String sourceId1;
-        String sourceId2;
-        try (Cursor cursor =
-                DbTestUtil.getMeasurementDbHelperForTest()
-                        .getReadableDatabase()
-                        .query(
-                                MeasurementTables.SourceContract.TABLE,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null,
-                                null)) {
-            Assert.assertTrue(cursor.moveToNext());
-            sourceId1 = cursor.getString(cursor.getColumnIndex(
-                    MeasurementTables.SourceContract.ID));
-            Assert.assertTrue(cursor.moveToNext());
-            sourceId2 = cursor.getString(cursor.getColumnIndex(
-                    MeasurementTables.SourceContract.ID));
-        }
-
-        // Assert insertion to source and source destination table
-
-        Source source1 = datastoreManager.runInTransactionWithResult(
-                measurementDao -> measurementDao.getSource(sourceId1)).get();
-
-        assertEquals(new UnsignedLong(987654321L), source1.getEventId());
-
-        Pair<List<Uri>, List<Uri>> destinations1 = datastoreManager.runInTransactionWithResult(
-                measurementDao -> measurementDao.getSourceDestinations(source1.getId())).get();
-        assertEquals(1, destinations1.first.size());
-        assertEquals(DEFAULT_OS_DESTINATION, destinations1.first.get(0));
-        assertEquals(1, destinations1.second.size());
-        assertEquals(DEFAULT_WEB_DESTINATION, destinations1.second.get(0));
-
-        Source source2 = datastoreManager.runInTransactionWithResult(
-                measurementDao -> measurementDao.getSource(sourceId2)).get();
-
-        assertEquals(new UnsignedLong(123456789L), source2.getEventId());
-
-        Pair<List<Uri>, List<Uri>> destinations2 = datastoreManager.runInTransactionWithResult(
-                measurementDao -> measurementDao.getSourceDestinations(source2.getId())).get();
-        assertEquals(1, destinations2.first.size());
-        assertEquals(DEFAULT_OS_DESTINATION, destinations2.first.get(0));
-        assertEquals(1, destinations2.second.size());
-        assertEquals(ALT_WEB_DESTINATION, destinations2.second.get(0));
     }
 
     @Test
@@ -1991,7 +2082,6 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mContentResolver,
                                 mFetcher,
                                 mAsyncTriggerFetcher,
-                                mEnrollmentDao,
                                 datastoreManager,
                                 mDebugReportApi));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
@@ -2002,7 +2092,6 @@ public class AsyncRegistrationQueueRunnerTest {
                 APP_TOP_ORIGIN,
                 100,
                 Source.SourceType.NAVIGATION,
-                mEnrollmentDao,
                 datastoreManager);
 
         // Execution
@@ -2062,27 +2151,18 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     private static AsyncRegistration createAsyncRegistrationForAppSource() {
-        return createAsyncRegistrationForAppSource(AsyncRegistration.RedirectType.ANY, 0);
-    }
-
-    private static AsyncRegistration createAsyncRegistrationForAppSource(
-            @AsyncRegistration.RedirectType int redirectType, int redirectCount) {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                 .setRegistrationUri(REGISTRATION_URI)
                 // null .setWebDestination(webDestination)
                 // null .setOsDestination(osDestination)
                 .setRegistrant(DEFAULT_REGISTRANT)
                 // null .setVerifiedDestination(null)
                 .setTopOrigin(APP_TOP_ORIGIN)
-                .setType(AsyncRegistration.RegistrationType.APP_SOURCE.ordinal())
+                .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
                 .setSourceType(Source.SourceType.EVENT)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(0)
-                .setLastProcessingTime(System.currentTimeMillis())
-                .setRedirectType(redirectType)
-                .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
                 .setRegistrationId(
                         AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
@@ -2090,27 +2170,18 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     private static AsyncRegistration createAsyncRegistrationForAppTrigger() {
-        return createAsyncRegistrationForAppTrigger(AsyncRegistration.RedirectType.ANY, 0);
-    }
-
-    private static AsyncRegistration createAsyncRegistrationForAppTrigger(
-            @AsyncRegistration.RedirectType int redirectType, int redirectCount) {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                 .setRegistrationUri(REGISTRATION_URI)
                 // null .setWebDestination(webDestination)
                 // null .setOsDestination(osDestination)
                 .setRegistrant(DEFAULT_REGISTRANT)
                 // null .setVerifiedDestination(null)
                 .setTopOrigin(APP_TOP_ORIGIN)
-                .setType(AsyncRegistration.RegistrationType.APP_TRIGGER.ordinal())
+                .setType(AsyncRegistration.RegistrationType.APP_TRIGGER)
                 // null .setSourceType(null)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(0)
-                .setLastProcessingTime(System.currentTimeMillis())
-                .setRedirectType(redirectType)
-                .setRedirectCount(redirectCount)
                 .setDebugKeyAllowed(true)
                 .setRegistrationId(
                         AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
@@ -2120,40 +2191,38 @@ public class AsyncRegistrationQueueRunnerTest {
     private static AsyncRegistration createAsyncRegistrationForWebSource() {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                 .setRegistrationUri(REGISTRATION_URI)
                 .setWebDestination(WEB_DESTINATION)
                 .setOsDestination(APP_DESTINATION)
                 .setRegistrant(DEFAULT_REGISTRANT)
                 .setVerifiedDestination(DEFAULT_VERIFIED_DESTINATION)
                 .setTopOrigin(WEB_TOP_ORIGIN)
-                .setType(AsyncRegistration.RegistrationType.WEB_SOURCE.ordinal())
+                .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
                 .setSourceType(Source.SourceType.EVENT)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(0)
-                .setLastProcessingTime(System.currentTimeMillis())
-                .setRedirectType(AsyncRegistration.RedirectType.NONE)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 
     private static AsyncRegistration createAsyncRegistrationForWebTrigger() {
         return new AsyncRegistration.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setEnrollmentId(DEFAULT_ENROLLMENT_ID)
                 .setRegistrationUri(REGISTRATION_URI)
                 // null .setWebDestination(webDestination)
                 // null .setOsDestination(osDestination)
                 .setRegistrant(DEFAULT_REGISTRANT)
                 // null .setVerifiedDestination(null)
                 .setTopOrigin(WEB_TOP_ORIGIN)
-                .setType(AsyncRegistration.RegistrationType.WEB_TRIGGER.ordinal())
+                .setType(AsyncRegistration.RegistrationType.WEB_TRIGGER)
                 // null .setSourceType(null)
                 .setRequestTime(System.currentTimeMillis())
                 .setRetryCount(0)
-                .setLastProcessingTime(System.currentTimeMillis())
-                .setRedirectType(AsyncRegistration.RedirectType.NONE)
                 .setDebugKeyAllowed(true)
+                .setRegistrationId(
+                        AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
                 .build();
     }
 
@@ -2163,7 +2232,6 @@ public class AsyncRegistrationQueueRunnerTest {
                         mContentResolver,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mEnrollmentDao,
                         new FakeDatastoreManager(),
                         mDebugReportApi));
     }

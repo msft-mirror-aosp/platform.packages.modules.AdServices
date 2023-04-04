@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
 import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
@@ -38,6 +39,7 @@ import java.util.Map;
 public final class RegisterSource implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
     // Used in interop tests
     public final String mPublisher;
@@ -75,6 +77,7 @@ public final class RegisterSource implements Action {
         mDebugReporting = hasSourceDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
         mArDebugPermission = hasArDebugPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
     @Override
