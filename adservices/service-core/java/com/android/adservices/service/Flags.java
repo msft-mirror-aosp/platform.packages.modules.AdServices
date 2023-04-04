@@ -699,7 +699,7 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
@@ -1878,6 +1878,14 @@ public interface Flags {
     /** Returns true if backward-compatible logging should be disabled; false otherwise. */
     default boolean getCompatLoggingKillSwitch() {
         return COMPAT_LOGGING_KILL_SWITCH;
+    }
+
+    /** Kill switch to guard background jobs logging. */
+    boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
+
+    /** Returns true if background jobs logging should be disabled; false otherwise */
+    default boolean getBackgroundJobsLoggingKillSwitch() {
+        return BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
     }
 
     // New Feature Flags

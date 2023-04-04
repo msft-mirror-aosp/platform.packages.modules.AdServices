@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"නව දැන්වීම් රහස්‍යතා විශේෂාංග උත්සාහ කරන්න"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"දැන්වීම් මාතෘකා ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙයි"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"විස්තර බලන්න"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"නව දැන්වීම් පෞද්ගලිකත්ව විශේෂාංග උත්සාහ කරන්න"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android ඔබ දකින දැන්වීම්වලට වඩා වැඩි තේරීමක් ලබා දෙන නව පෞද්ගලිකත්ව විශේෂාංග දියත් කරයි."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"දැන්වීම් මාතෘකා ඔබේ අනන්‍යතාවය සහ ඔබේ යෙදුම් භාවිතය පිළිබඳ තොරතුරු ආරක්ෂා කරන අතරම ඔබට අදාළ දැන්වීම් පෙන්වීමට යෙදුම්වලට උදවු කරයි. Android හට ඔබ මෑතක දී භාවිතා කළ යෙදුම් මත පදනම්ව උනන්දුවක් දක්වන මාතෘකා සටහන් කළ හැක. පසුව, ඔබ භාවිතා කරන යෙදුමකට ඔබ දකින දැන්වීම් පෞද්ගලීකරණය කිරීමට අදාළ මාතෘකා සඳහා Android විමසා සිටිය හැක."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"ඔබට ඔබේ උපාංග සැකසීම් තුළ දැන්වීම් මාතෘකා දැකීමට සහ ඔබට යෙදුම් සමග බෙදා ගැනීමට අවශ්‍ය නොවන ඒවා අවහිර කිරීමට හැක. Android දැන්වීම් මාතෘකා නිතිපතා ස්වයංව ද මකා දමයි."</string>

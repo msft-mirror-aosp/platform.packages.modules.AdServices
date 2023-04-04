@@ -296,6 +296,9 @@ public final class PhFlags implements Flags {
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH =
             "fledge_custom_audience_service_kill_switch";
 
+    static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
+            "background_jobs_logging_kill_switch";
+
     // App/SDK AllowList/DenyList keys
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
@@ -2761,6 +2764,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_COMPAT_LOGGING_KILL_SWITCH,
                 /* defaultValue */ COMPAT_LOGGING_KILL_SWITCH);
+    }
+
+    @Override
+    public boolean getBackgroundJobsLoggingKillSwitch() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH,
+                /* defaultValue */ BACKGROUND_JOBS_LOGGING_KILL_SWITCH);
     }
 
     @Override

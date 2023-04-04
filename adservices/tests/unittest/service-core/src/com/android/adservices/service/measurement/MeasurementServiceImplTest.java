@@ -564,7 +564,6 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
         assertThat(resultWrapper.get()).isEqualTo(MEASUREMENT_API_STATE_DISABLED);
     }
 
@@ -1338,10 +1337,6 @@ public final class MeasurementServiceImplTest {
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
-
-        // Results
-        when(mMockMeasurementImpl.getMeasurementApiStatus())
-                .thenReturn(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
     }
 
     private void doThrowExceptionCallerNotInForeground() {
