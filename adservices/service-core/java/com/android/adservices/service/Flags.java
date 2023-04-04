@@ -677,7 +677,7 @@ public interface Flags {
     }
 
     // Filtering feature flag disabled by default
-    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
+    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = true;
 
     /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
     default boolean getFledgeAdSelectionFilteringEnabled() {
@@ -699,7 +699,7 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
@@ -1889,7 +1889,7 @@ public interface Flags {
     }
 
     // New Feature Flags
-    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
+    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = true;
 
     /** Returns whether the {@code registerAdBeacon} feature is enabled. */
     default boolean getFledgeRegisterAdBeaconEnabled() {
