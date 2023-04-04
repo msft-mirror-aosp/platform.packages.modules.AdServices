@@ -98,7 +98,8 @@ public final class MeasurementImpl {
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
-        mEnrollmentDao = new EnrollmentDao(context, DbHelper.getInstance(mContext));
+        mEnrollmentDao =
+                new EnrollmentDao(context, DbHelper.getInstance(mContext), FlagsFactory.getFlags());
         deleteOnRollback();
     }
 

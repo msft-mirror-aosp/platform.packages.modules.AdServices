@@ -98,12 +98,6 @@ import co.nstant.in.cbor.model.UnicodeString;
  */
 public abstract class E2EMockTest extends E2ETest {
 
-    static EnrollmentDao sEnrollmentDao =
-            new EnrollmentDao(
-                    ApplicationProvider.getApplicationContext(), DbTestUtil.getDbHelperForTest());
-    static DatastoreManager sDatastoreManager =
-            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
-
     // Class extensions may choose to disable or enable added noise.
     AttributionJobHandlerWrapper mAttributionHelper;
     MeasurementImpl mMeasurementImpl;
@@ -113,6 +107,10 @@ public abstract class E2EMockTest extends E2ETest {
     AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunner;
     AsyncSourceFetcher mAsyncSourceFetcher;
     AsyncTriggerFetcher mAsyncTriggerFetcher;
+
+    EnrollmentDao mEnrollmentDao;
+    static DatastoreManager sDatastoreManager =
+            new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
     private static final long MAX_RECORDS_PROCESSED = 20L;
     private static final short ASYNC_REG_RETRY_LIMIT = 1;
@@ -134,14 +132,20 @@ public abstract class E2EMockTest extends E2ETest {
         mE2EMockStaticRule = new E2EMockStatic.E2EMockStaticRule(paramsProvider);
         mMeasurementDataDeleter = spy(new MeasurementDataDeleter(sDatastoreManager));
 
+        mEnrollmentDao =
+                new EnrollmentDao(
+                        ApplicationProvider.getApplicationContext(),
+                        DbTestUtil.getDbHelperForTest(),
+                        mFlags);
+
         mAsyncSourceFetcher =
                 spy(
                         new AsyncSourceFetcher(
-                                sEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
-                                sEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
         mDebugReportApi = new DebugReportApi(sContext);
 
         when(mClickVerifier.isInputEventVerifiable(any(), anyLong())).thenReturn(true);
@@ -279,7 +283,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processDebugReportJob(long timestamp) throws IOException, JSONException {
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         sDatastoreManager,
                         timestamp - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         timestamp,
@@ -292,7 +296,7 @@ public abstract class E2EMockTest extends E2ETest {
 
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         sDatastoreManager,
                         timestamp - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
                         timestamp,
@@ -308,7 +312,7 @@ public abstract class E2EMockTest extends E2ETest {
     protected void processDebugReportApiJob() throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
-                        sEnrollmentDao, sDatastoreManager);
+                        mEnrollmentDao, sDatastoreManager);
 
         processDebugReports((List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
     }
@@ -338,7 +342,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(EventReportingJob reportingJob) throws IOException, JSONException {
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -355,7 +359,7 @@ public abstract class E2EMockTest extends E2ETest {
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
-                        sEnrollmentDao,
+                        mEnrollmentDao,
                         sDatastoreManager,
                         reportingJob.mTimestamp
                                 - SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
@@ -530,9 +534,9 @@ public abstract class E2EMockTest extends E2ETest {
         mSeenUris.add(uri);
         String enrollmentId = getEnrollmentId(uri);
         Set<String> attributionRegistrationUrls;
-        EnrollmentData enrollmentData = sEnrollmentDao.getEnrollmentData(enrollmentId);
+        EnrollmentData enrollmentData = mEnrollmentDao.getEnrollmentData(enrollmentId);
         if (enrollmentData != null) {
-            sEnrollmentDao.delete(enrollmentId);
+            mEnrollmentDao.delete(enrollmentId);
             attributionRegistrationUrls = new HashSet<>(
                     enrollmentData.getAttributionSourceRegistrationUrl());
             attributionRegistrationUrls.addAll(
@@ -554,7 +558,7 @@ public abstract class E2EMockTest extends E2ETest {
                 .setAttributionTriggerRegistrationUrl(attributionRegistrationUrls)
                 .setAttributionReportingUrl(List.of(reportingUrl))
                 .build();
-        Assert.assertTrue(sEnrollmentDao.insert(enrollmentData));
+        Assert.assertTrue(mEnrollmentDao.insert(enrollmentData));
     }
 
     private String getEnrollmentId(String uri) {
