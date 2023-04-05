@@ -2199,7 +2199,7 @@ class MeasurementDao implements IMeasurementDao {
                                         + " NOT LIKE "
                                         + DatabaseUtils.sqlEscapeString(origin + "%"));
                     });
-            originExclusion = mergeConditions(" AND ", notLikes.toArray(String[]::new));
+            originExclusion = mergeConditions(" AND ", notLikes.toArray(new String[0]));
         }
         try (Cursor cursor =
                 mSQLTransaction
