@@ -68,14 +68,13 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mEnrollmentDao,
                         mDebugReportApi);
         getExpectedTriggerDataDistributions();
     }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.measurement;
 
+import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
+
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -31,6 +33,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -52,6 +56,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -1263,6 +1268,26 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AsyncRegistrationContract.TABLE,
                 MeasurementTables.AsyncRegistrationContract.REQUEST_TIME + " < ?",
                 new String[] {earliestValidInsertionStr});
+
+        // Cleanup unnecessary Registration Redirect Counts
+        String subQuery =
+                "SELECT "
+                        + "DISTINCT("
+                        + MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID
+                        + ")"
+                        + " FROM "
+                        + MeasurementTables.AsyncRegistrationContract.TABLE;
+        db.delete(
+                MeasurementTables.KeyValueDataContract.TABLE,
+                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                        + " = ? "
+                        + " AND "
+                        + MeasurementTables.KeyValueDataContract.KEY
+                        + " NOT IN "
+                        + "("
+                        + subQuery
+                        + ")",
+                new String[] {KeyValueData.DataType.REGISTRATION_REDIRECT_COUNT.toString()});
     }
 
     @Override
@@ -2081,9 +2106,6 @@ class MeasurementDao implements IMeasurementDao {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AsyncRegistrationContract.ID, asyncRegistration.getId());
         values.put(
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
-                asyncRegistration.getEnrollmentId());
-        values.put(
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
                 asyncRegistration.getRegistrationUri().toString());
         values.put(
@@ -2102,12 +2124,6 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
                 asyncRegistration.getTopOrigin().toString());
         values.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
-                asyncRegistration.getRedirectType());
-        values.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
-                asyncRegistration.getRedirectCount());
-        values.put(
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 asyncRegistration.getSourceType() == null
                         ? null
@@ -2118,9 +2134,6 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 asyncRegistration.getRetryCount());
-        values.put(
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
-                asyncRegistration.getLastProcessingTime());
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE,
                 asyncRegistration.getType().ordinal());
@@ -2174,21 +2187,19 @@ class MeasurementDao implements IMeasurementDao {
 
     @Override
     public AsyncRegistration fetchNextQueuedAsyncRegistration(
-            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException {
-        StringBuilder notIn = new StringBuilder();
-        StringBuilder lessThanRetryLimit = new StringBuilder();
-        lessThanRetryLimit.append(" < ? ");
+            short retryLimit, Set<Uri> failedOrigins) throws DatastoreException {
+        String originExclusion = "";
 
-        if (!failedAdTechEnrollmentIds.isEmpty()) {
-            lessThanRetryLimit.append(
-                    "AND " + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID);
-            notIn.append(" NOT IN ");
-            notIn.append(
-                    "("
-                            + failedAdTechEnrollmentIds.stream()
-                                    .map((o) -> "'" + o + "'")
-                                    .collect(Collectors.joining(", "))
-                            + ")");
+        if (!failedOrigins.isEmpty()) {
+            List<String> notLikes = new ArrayList<>();
+            failedOrigins.forEach(
+                    (origin) -> {
+                        notLikes.add(
+                                MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
+                                        + " NOT LIKE "
+                                        + DatabaseUtils.sqlEscapeString(origin + "%"));
+                    });
+            originExclusion = mergeConditions(" AND ", notLikes.toArray(String[]::new));
         }
         try (Cursor cursor =
                 mSQLTransaction
@@ -2196,9 +2207,11 @@ class MeasurementDao implements IMeasurementDao {
                         .query(
                                 MeasurementTables.AsyncRegistrationContract.TABLE,
                                 /*columns=*/ null,
-                                MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
-                                        + lessThanRetryLimit.toString()
-                                        + notIn.toString(),
+                                mergeConditions(
+                                        " AND ",
+                                        MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                                                + " < ? ",
+                                        originExclusion),
                                 new String[] {String.valueOf(retryLimit)},
                                 /*groupBy=*/ null,
                                 /*having=*/ null,
@@ -2210,6 +2223,55 @@ class MeasurementDao implements IMeasurementDao {
             }
             cursor.moveToNext();
             return SqliteObjectMapper.constructAsyncRegistration(cursor);
+        }
+    }
+
+    @Override
+    public KeyValueData getKeyValueData(@NonNull String key, @NonNull DataType dataType)
+            throws DatastoreException {
+        String value = null;
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.KeyValueDataContract.TABLE,
+                                new String[] {MeasurementTables.KeyValueDataContract.VALUE},
+                                MeasurementTables.KeyValueDataContract.DATA_TYPE
+                                        + " = ? "
+                                        + " AND "
+                                        + MeasurementTables.KeyValueDataContract.KEY
+                                        + " = ?",
+                                new String[] {dataType.toString(), key},
+                                null,
+                                null,
+                                null,
+                                null)) {
+            if (cursor.moveToNext()) {
+                value = cursor.getString(0);
+            }
+        }
+        return new KeyValueData.Builder().setDataType(dataType).setKey(key).setValue(value).build();
+    }
+
+    @Override
+    public void insertOrUpdateKeyValueData(@NonNull KeyValueData keyValueData)
+            throws DatastoreException {
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(
+                MeasurementTables.KeyValueDataContract.DATA_TYPE,
+                keyValueData.getDataType().toString());
+        contentValues.put(MeasurementTables.KeyValueDataContract.KEY, keyValueData.getKey());
+        contentValues.put(MeasurementTables.KeyValueDataContract.VALUE, keyValueData.getValue());
+        long rowId =
+                mSQLTransaction
+                        .getDatabase()
+                        .insertWithOnConflict(
+                                MeasurementTables.KeyValueDataContract.TABLE,
+                                null,
+                                contentValues,
+                                CONFLICT_REPLACE);
+        if (rowId == -1) {
+            throw new DatastoreException("KeyValueData insertion failed: " + contentValues);
         }
     }
 

@@ -23,35 +23,41 @@ import java.util.List;
 
 /** Wrapper for a list of redirect Uris and a redirect type */
 public class AsyncRedirect {
-    private final List<Uri> mRedirects;
-    private @AsyncRegistration.RedirectType int mRedirectType;
+    private final List<Uri> mLocationRedirects;
+    private final List<Uri> mListRedirects;
 
     public AsyncRedirect() {
-        mRedirects = new ArrayList<>();
-        mRedirectType = AsyncRegistration.RedirectType.ANY;
+        mLocationRedirects = new ArrayList<>();
+        mListRedirects = new ArrayList<>();
     }
 
-    public AsyncRedirect(List<Uri> redirects, @AsyncRegistration.RedirectType int redirectType) {
-        mRedirects = redirects;
-        mRedirectType = redirectType;
+    public AsyncRedirect(List<Uri> locationRedirects, List<Uri> listRedirects) {
+        mLocationRedirects = locationRedirects;
+        mListRedirects = listRedirects;
     }
 
     /** The list the redirect Uris */
     public List<Uri> getRedirects() {
-        return new ArrayList<>(mRedirects);
+        List<Uri> allRedirects = new ArrayList<>(mListRedirects);
+        allRedirects.addAll(mLocationRedirects);
+        return allRedirects;
     }
 
-    /** The redirect type */
-    public @AsyncRegistration.RedirectType int getRedirectType() {
-        return mRedirectType;
+    /** Get list by redirect type */
+    public List<Uri> getRedirectsByType(AsyncRegistration.RedirectType redirectType) {
+        if (redirectType == AsyncRegistration.RedirectType.LOCATION) {
+            return new ArrayList<>(mLocationRedirects);
+        } else {
+            return new ArrayList<>(mListRedirects);
+        }
     }
 
-    /** Add to the list the redirect Uris */
-    public void addToRedirects(List<Uri> uris) {
-        mRedirects.addAll(uris);
-    }
-
-    public void setRedirectType(@AsyncRegistration.RedirectType int redirectType) {
-        mRedirectType = redirectType;
+    /** Add to the list the redirect Uris based on type */
+    public void addToRedirects(AsyncRegistration.RedirectType redirectType, List<Uri> uris) {
+        if (redirectType == AsyncRegistration.RedirectType.LOCATION) {
+            mLocationRedirects.addAll(uris);
+        } else {
+            mListRedirects.addAll(uris);
+        }
     }
 }
