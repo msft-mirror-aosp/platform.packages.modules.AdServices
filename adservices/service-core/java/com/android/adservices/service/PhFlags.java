@@ -343,6 +343,9 @@ public final class PhFlags implements Flags {
     // Adservices enable status keys.
     static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
 
+    // AdServices error logging enabled
+    static final String KEY_ADSERVICES_ERROR_LOGGING_ENABLED = "adservice_error_logging_enabled";
+
     // Disable enrollment check
     static final String KEY_DISABLE_TOPICS_ENROLLMENT_CHECK = "disable_topics_enrollment_check";
     static final String KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK = "disable_fledge_enrollment_check";
@@ -1859,6 +1862,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getAdServicesErrorLoggingEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_ERROR_LOGGING_ENABLED,
+                /* defaultValue */ ADSERVICES_ERROR_LOGGING_ENABLED);
+    }
+
+    @Override
     public int getNumberOfEpochsToKeepInHistory() {
         int numberOfEpochsToKeepInHistory =
                 DeviceConfig.getInt(
@@ -2891,6 +2902,12 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getFledgeReportInteractionRequestPermitsPerSecond());
+        writer.println("==== AdServices PH Flags Error Logging Enabled ====");
+        writer.println(
+                "\t"
+                        + KEY_ADSERVICES_ERROR_LOGGING_ENABLED
+                        + " = "
+                        + getAdServicesErrorLoggingEnabled());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
