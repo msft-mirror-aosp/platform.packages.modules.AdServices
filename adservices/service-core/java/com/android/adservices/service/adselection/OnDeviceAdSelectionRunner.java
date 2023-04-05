@@ -37,7 +37,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
-import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
@@ -116,7 +115,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                         new AdSelectionScriptEngine(
                                 context,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
-                                () -> flags.getIsolateMaxHeapSizeBytes()),
+                                () -> flags.getIsolateMaxHeapSizeBytes(),
+                                mAdCounterKeyCopier),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -135,6 +135,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 mScheduledExecutor,
                                 devContext,
                                 mCustomAudienceDao,
+                                mAdCounterKeyCopier,
                                 flags),
                         new TrustedBiddingDataFetcher(
                                 adServicesHttpsClient,
@@ -349,35 +350,35 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 .setCustomAudienceSignals(scoringWinner.getCustomAudienceSignals())
                 .setWinningAdRenderUri(
                         scoringWinner.getAdWithScore().getAdWithBid().getAdData().getRenderUri())
-                .setBiddingLogicUri(scoringWinner.getDecisionLogicUri())
+                .setBiddingLogicUri(scoringWinner.getBiddingLogicUri())
                 .setContextualSignals("{}");
         // TODO(b/230569187): get the contextualSignal securely = "invoking app name"
 
         final DBAdSelection.Builder copiedDBAdSelectionBuilder =
                 mAdCounterKeyCopier.copyAdCounterKeys(dbAdSelectionBuilder, scoringWinner);
 
-        return getOutcomeDecisionLogic(scoringWinner)
+        return getWinnerBiddingLogicJs(scoringWinner)
                 .transform(
-                        decisionLogic ->
+                        biddingLogicJs ->
                                 new AdSelectionOrchestrationResult(
-                                        copiedDBAdSelectionBuilder, decisionLogic),
+                                        copiedDBAdSelectionBuilder, biddingLogicJs),
                         mLightweightExecutorService);
     }
 
     @VisibleForTesting
-    FluentFuture<String> getOutcomeDecisionLogic(AdScoringOutcome scoringOutcome) {
-        if (scoringOutcome.getDecisionLogicJsDownloaded()) {
-            return FluentFuture.from(Futures.immediateFuture(scoringOutcome.getDecisionLogicJs()));
-        }
+    FluentFuture<String> getWinnerBiddingLogicJs(AdScoringOutcome scoringOutcome) {
+        String biddingLogicJs =
+                (scoringOutcome.isBiddingLogicJsDownloaded())
+                        ? scoringOutcome.getBiddingLogicJs()
+                        : "";
+        //
+        //        final AdServicesHttpClientRequest downloadRequest =
+        //                AdServicesHttpClientRequest.builder()
+        //                        .setUri(scoringOutcome.getBiddingLogicUri())
+        //                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+        //                        .build();
 
-        final AdServicesHttpClientRequest downloadRequest =
-                AdServicesHttpClientRequest.builder()
-                        .setUri(scoringOutcome.getDecisionLogicUri())
-                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
-                        .build();
-
-        return FluentFuture.from(mAdServicesHttpsClient.fetchPayload(downloadRequest))
-                .transform(response -> response.getResponseBody(), mLightweightExecutorService);
+        return FluentFuture.from(Futures.immediateFuture(biddingLogicJs));
     }
 
     private Map<AdTechIdentifier, List<DBCustomAudience>> mapBuyerToCustomAudience(

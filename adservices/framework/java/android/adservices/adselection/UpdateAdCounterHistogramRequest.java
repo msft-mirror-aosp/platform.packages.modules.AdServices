@@ -25,10 +25,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.os.OutcomeReceiver;
 
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * Request object wrapping the required arguments needed to update an ad counter histogram.
@@ -65,6 +67,8 @@ public class UpdateAdCounterHistogramRequest {
     /**
      * Gets the ad selection ID with which the rendered ad's events are associated.
      *
+     * <p>For more information about the ad selection ID, see {@link AdSelectionOutcome}.
+     *
      * <p>The ad must have been selected from FLEDGE ad selection in the last 24 hours, and the ad
      * selection call must have been initiated from the same app as the current calling app. Event
      * histograms for all ad counter keys associated with the ad specified by the ad selection ID
@@ -76,10 +80,8 @@ public class UpdateAdCounterHistogramRequest {
     }
 
     /**
-     * Gets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
-     * identifies which histogram should be updated.
-     *
-     * <p>See {@link FrequencyCapFilters.AdEventType} for more information.
+     * Gets the ad event type which, along with an ad's counter keys, identifies which histogram
+     * should be updated.
      */
     @FrequencyCapFilters.AdEventType
     public int getAdEventType() {
@@ -94,6 +96,10 @@ public class UpdateAdCounterHistogramRequest {
      * adtech is not required to be the same adtech as either the buyer which owns the rendered ad
      * or the seller which initiated the ad selection associated with the ID returned by {@link
      * #getAdSelectionId()}.
+     *
+     * <p>For more information about API requirements and exceptions, see {@link
+     * AdSelectionManager#updateAdCounterHistogram(UpdateAdCounterHistogramRequest, Executor,
+     * OutcomeReceiver)}.
      */
     @NonNull
     public AdTechIdentifier getCallerAdTech() {
@@ -152,8 +158,8 @@ public class UpdateAdCounterHistogramRequest {
         }
 
         /**
-         * Sets the {@link FrequencyCapFilters.AdEventType} which, along with an ad's counter keys,
-         * identifies which histogram should be updated.
+         * Sets the ad event type which, along with an ad's counter keys, identifies which histogram
+         * should be updated.
          *
          * <p>See {@link #getAdEventType()} for more information.
          */

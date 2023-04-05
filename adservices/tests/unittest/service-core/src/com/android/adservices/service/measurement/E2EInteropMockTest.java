@@ -18,22 +18,22 @@ package com.android.adservices.service.measurement;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.net.Uri;
-import android.util.Log;
 
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
+import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.util.Enrollment;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop
- * Friday February 17, 2023
+ * Saturday March 24, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -77,17 +77,13 @@ public class E2EInteropMockTest extends E2EMockTest {
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.DENOISED,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
                         mDebugReportApi);
     }
 
@@ -150,43 +146,44 @@ public class E2EInteropMockTest extends E2EMockTest {
     private Source getSource(String publisher, long timestamp, String uri,
             boolean arDebugPermission, RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
-        List<Source> sourceWrapper = new ArrayList<>();
-        mAsyncSourceFetcher.parseSource(
-                UUID.randomUUID().toString(),
-                Uri.parse(publisher),
-                enrollmentId,
-                /* appDestination */ null,
-                /* webDestination */ null,
-                getRegistrant(request.getAppPackageName()),
-                timestamp,
-                getSourceType(request),
-                /* shouldValidateDestinationWebSource */ true,
-                /* shouldOverrideDestinationAppSource */ false,
-                headers,
-                sourceWrapper,
-                /* isWebSource */ true,
-                /* adIdPermission */ true,
-                arDebugPermission);
-        return sourceWrapper.get(0);
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setTopOrigin(Uri.parse(publisher))
+                        .setOsDestination(null)
+                        .setWebDestination(null)
+                        .setRegistrant(getRegistrant(request.getAppPackageName()))
+                        .setRequestTime(timestamp)
+                        .setSourceType(getSourceType(request))
+                        .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
+                        .setAdIdPermission(true)
+                        .setDebugKeyAllowed(arDebugPermission)
+                        .build();
+
+        return mAsyncSourceFetcher
+                .parseSource(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
+                .orElseThrow();
     }
 
     private Trigger getTrigger(String destination, long timestamp, String uri,
             boolean arDebugPermission, RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), sEnrollmentDao).get();
-        List<Trigger> triggerWrapper = new ArrayList<>();
-        mAsyncTriggerFetcher.parseTrigger(
-                Uri.parse(destination),
-                getRegistrant(request.getAppPackageName()),
-                enrollmentId,
-                timestamp,
-                headers,
-                triggerWrapper,
-                AsyncRegistration.RegistrationType.WEB_TRIGGER,
-                /* adIdPermission */ true,
-                arDebugPermission);
-        return triggerWrapper.get(0);
+        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setTopOrigin(Uri.parse(destination))
+                        .setRegistrant(getRegistrant(request.getAppPackageName()))
+                        .setRequestTime(timestamp)
+                        .setType(AsyncRegistration.RegistrationType.WEB_TRIGGER)
+                        .setAdIdPermission(true)
+                        .setDebugKeyAllowed(arDebugPermission)
+                        .build();
+
+        return mAsyncTriggerFetcher
+                .parseTrigger(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
+                .orElseThrow();
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {

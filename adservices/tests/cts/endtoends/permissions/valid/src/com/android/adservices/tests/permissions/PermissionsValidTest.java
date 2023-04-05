@@ -63,28 +63,41 @@ public class PermissionsValidTest {
     @Before
     public void setup() {
         if (!SdkLevel.isAtLeastT()) {
-            overridePpapiAppAllowList();
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
+            // TODO: Remove after EngProd figures out why setprop commands from AndroidTest
+            //  .ExtServices.xml are not executing in post-submit (b/276909363)
+            setAdditionalFlags();
         }
     }
 
     @After
     public void tearDown() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
+            // TODO: Remove after EngProd figures out why setprop commands from AndroidTest
+            //  .ExtServices.xml are not executing in post-submit (b/276909363)
+            resetAdditionalFlags();
         }
     }
 
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
+    private void setAdditionalFlags() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check true");
+        // TODO: Investigate why this is needed (b/276916172)
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_signature_allow_list *");
     }
 
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    private void resetAdditionalFlags() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check null");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check null");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_allow_list null");
     }
 
     @Test
@@ -124,6 +137,7 @@ public class PermissionsValidTest {
 
     @Test
     public void testValidPermissions_selectAds_adSelectionConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =
@@ -163,8 +177,8 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-// TODO(b/274723533): Uncomment after un-hiding the API
-/*
+    // TODO(b/274723533): Uncomment after un-hiding the API
+    /*
     @Test
     public void testValidPermissions_reportInteraction() {
         long adSelectionId = 1;
@@ -192,7 +206,35 @@ public class PermissionsValidTest {
         // We only need to get past the permissions check for this test to be valid
         assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
     }
-*/
+    */
+
+    // TODO(b/221876775): Unhide for frequency cap mainline promotion
+    /*
+    @Test
+    public void testValidPermissions_updateAdCounterHistogram() {
+        long adSelectionId = 1;
+
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        UpdateAdCounterHistogramRequest request =
+                new UpdateAdCounterHistogramRequest.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                        .build();
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.updateAdCounterHistogram(request).get());
+
+        // We only need to get past the permissions check for this test to be valid
+        assertThat(exception.getMessage()).isNotEqualTo(PERMISSION_NOT_REQUESTED);
+    }
+    */
 
     @Test
     public void testValidPermissions_fledgeLeaveCustomAudience()

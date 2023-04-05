@@ -34,9 +34,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -111,48 +109,55 @@ public final class FetcherUtilTest {
 
     @Test
     public void parseRedirects_noRedirectHeaders_returnsEmpty() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(), AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
-        assertEquals(0, asyncRedirect.getRedirects().size());
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(Map.of());
+        assertEquals(2, redirectMap.size());
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LIST).isEmpty());
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LOCATION).isEmpty());
     }
 
     @Test
-    public void parseRedirects_bothHeaderTypes_choosesListType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(
-                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
-                        "Location", List.of("baz.test")),
-                AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
+    public void parseRedirects_bothHeaderTypes() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(
+                        Map.of(
+                                "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
+                                "Location", List.of("baz.test")));
+        assertEquals(2, redirectMap.size());
+        // Verify List Redirects
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LIST);
         assertEquals(2, redirects.size());
         assertEquals(Uri.parse("foo.test"), redirects.get(0));
         assertEquals(Uri.parse("bar.test"), redirects.get(1));
-    }
-
-    @Test
-    public void parseRedirects_locationHeaderOnly_choosesLocationType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of("Location", List.of("foo.test")),
-                AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
-        assertEquals(1, redirects.size());
-        assertEquals(Uri.parse("foo.test"), redirects.get(0));
-    }
-
-    @Test
-    public void parseRedirects_bothHeaderTypes_providedLocationType_choosesLocationType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(
-                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
-                        "Location", List.of("baz.test")),
-                AsyncRegistration.RedirectType.DAISY_CHAIN);
-        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
+        // Verify Location Redirect
+        redirects = redirectMap.get(AsyncRegistration.RedirectType.LOCATION);
         assertEquals(1, redirects.size());
         assertEquals(Uri.parse("baz.test"), redirects.get(0));
+    }
+
+    @Test
+    public void parseRedirects_locationHeaderOnly() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(Map.of("Location", List.of("baz.test")));
+        assertEquals(2, redirectMap.size());
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LOCATION);
+        assertEquals(1, redirects.size());
+        assertEquals(Uri.parse("baz.test"), redirects.get(0));
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LIST).isEmpty());
+    }
+
+    @Test
+    public void parseRedirects_lsitHeaderOnly() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(
+                        Map.of("Attribution-Reporting-Redirect", List.of("foo.test", "bar.test")));
+        assertEquals(2, redirectMap.size());
+        // Verify List Redirects
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LIST);
+        assertEquals(2, redirects.size());
+        assertEquals(Uri.parse("foo.test"), redirects.get(0));
+        assertEquals(Uri.parse("bar.test"), redirects.get(1));
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LOCATION).isEmpty());
     }
 
     @Test

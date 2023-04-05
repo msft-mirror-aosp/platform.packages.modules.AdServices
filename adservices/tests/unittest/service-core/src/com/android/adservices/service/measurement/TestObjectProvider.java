@@ -26,12 +26,12 @@ import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -62,21 +62,15 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext()));
+                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags));
     }
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            MeasurementDataDeleter measurementDataDeleter,
-            EnrollmentDao enrollmentDao) {
+            MeasurementDataDeleter measurementDataDeleter) {
         return spy(
-                new MeasurementImpl(
-                        null,
-                        datastoreManager,
-                        clickVerifier,
-                        measurementDataDeleter,
-                        enrollmentDao));
+                new MeasurementImpl(null, datastoreManager, clickVerifier, measurementDataDeleter));
     }
 
     static AsyncRegistrationQueueRunner getAsyncRegistrationQueueRunner(
@@ -84,7 +78,6 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            EnrollmentDao enrollmentDao,
             DebugReportApi debugReportApi) {
         if (type == Type.DENOISED) {
             AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -93,7 +86,6 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
-                                    enrollmentDao,
                                     datastoreManager,
                                     debugReportApi));
             // Disable Impression Noise
@@ -108,7 +100,6 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
-                                    enrollmentDao,
                                     datastoreManager,
                                     debugReportApi));
             // Create impression noise with 100% probability
@@ -140,7 +131,6 @@ class TestObjectProvider {
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
-                enrollmentDao,
                 datastoreManager,
                 debugReportApi);
     }

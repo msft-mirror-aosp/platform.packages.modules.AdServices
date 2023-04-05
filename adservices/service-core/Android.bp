@@ -58,6 +58,7 @@ android_library {
     ],
     manifest: "AndroidManifest.xml",
     plugins: [
+        "androidx.appsearch_appsearch-compiler-plugin",
         "androidx.room_room-compiler-plugin",
         "auto_value_plugin",
         "auto_annotation_plugin"
@@ -77,6 +78,8 @@ android_library {
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "androidx.annotation_annotation",
+        "androidx.appsearch_appsearch",
+        "androidx.appsearch_appsearch-platform-storage",
         "cbor-java",
         "guava",
         "mobile_data_downloader_lib",
@@ -102,10 +105,10 @@ cc_library_shared {
         "-Wno-unused-parameter",
         "-Wno-unused-but-set-variable",
     ],
-    srcs: ["jni/cpp/hpke_jni.cpp"],
+    srcs: ["jni/cpp/hpke_jni.cpp", "jni/cpp/ohttp_jni.cpp"],
     include_dirs: ["packages/modules/AdServices/adservices/service-core/jni/include"],
     header_libs: [ "jni_headers"  ],
-    shared_libs: ["libcrypto"],
+    shared_libs: ["libcrypto", "liblog"],
     apex_available: ["com.android.adservices", "com.android.extservices"],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",

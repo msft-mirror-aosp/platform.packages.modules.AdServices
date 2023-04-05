@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Siz beta sinovdasiz"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Qurilmangiz uchun Privacy Sandbox yoqilgan va ilovalar sizga reklama chiqarishning yanada maxfiy usullarini sinashi mumkin. Beta versiyani istalgan vaqt maxfiylik sozlamalari orqali faolsizlashtirish mumkin."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Maxfiylik sozlamalarini boshqarish"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android Privacy Sandbox yangi funksiyalari yordamida ilovalar sizga yoqishi mumkin reklama chiqara oladi. Bu texnologiyalar qurilma identifikatorlarini ishlatmaydi.\n\nAndroid va ilovalaringiz sizga qiziq boʻlishi mumkin reklamalarni taxmin qiladi, qiziqishlar axborotini vaqtincha qurilmada saqlaydi. Bunda ilovalar boshqa ishlab chiquvchilarning saytlari va ilovalaridagi faoliyatingizni kuzatmagan holda sizga yoqishi mumkin reklamalarni chiqarishi mumkin."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox yordamida reklamalarni moslashtirish"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Android orqali ilovalar qiziqishlarni taxmin qilishi va vaqtincha saqlashi mumkin. Masalan, yugurish poyabzali xarid qilishda ishlatilgan ilova “marafonda yugurish” qiziqishini taxmin qilishi mumkin.\n\nKeyin bu qiziqish asosida boshqa ilova sizga marafonga aloqador reklamalar chiqarishi mumkin.\n\nMaxfiylik sozlamalari orqali qiziqishlarni saqlagan ilovalar roʻyxatini boshqarish mumkin."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Reklamalardagi maxfiylikka oid yangi funksiyalar"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Reklama mavzulari va yangi parametrlar sizga chiqadigan reklamalarni yanada aniqroq sozlash imkonini beradi"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android yaqinda ishlatilgan ilovalar asosida qiziqish mavzularini qayd qiladi. Shuningdek, ilovalar ham qiziqishlarni aniqlashi mumkin. Keyinchalik ilovalar reklamalarni moslashtirishda ushbu maʼlumotlarni olishga ruxsat soʻrashi mumkin. Sizga sizga chiqadigan reklamalarni aniqlashda ishlatiladigan mavzular va ilovalarni tanlashingiz mumkin."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Reklamalar unumdorligini hisoblash uchun ilovalar orasida ayrim turdagi maʼlumotlar ulashiladi."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android qurilmalarida reklamalar haqida batafsil"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android mavzular va ilovalar taklif qiladigan reklamalarga oid maʼlumotlarni muntazam ravishda tozalab turadi. Shuningdek, siz muayyan mavzular va ilovalarni ham bloklashingiz mumkin."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Reklamalar samaradorligini hisoblash"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Siz foydalanadigan ilovalar oʻz reklamalari samaradorligini hisoblashda yordam berishi uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalarga reklama chiqqan kundagi vaqt kabi ayrim turdagi maʼlumotlarni olish imkonini beradi."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Reklamalardagi maxfiylikka oid yangi funksiyalarni sinang"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Reklama mavzulari sizga chiqadigan reklamalarni yanada aniqroq sozlash imkonini beradi"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Tafsilotlar"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Androidda reklamalardagi kuchaytirilgan maxfiylik"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Yangi reklamalarda maxfiylik funksiyalarini sinab koʻring"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Yangi maxfiylik sozlamalari Android foydalanuvchilariga ularga chiqadigan reklamalarni boshqarish imkonini beradi."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Reklama mavzulari ilovalarga shaxsingiz va ilovadan foydalanishga oid maʼlumotlarni himoyalagan holda sizga mos reklamalarni chiqarishga yordam beradi. Android yaqinda ochilgan ilovalar asosida qiziq mavzularni qayd qiladi. Keyinchalik siz foydalanadigan ilova sizga chiqadigan reklamalarni moslashtirish uchun Android tizimidan mos mavzularni olishi mumkin."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Qurilma sozlamalarida reklama mavzularini koʻrish va ilovalarga ulashilmaydigan mavzularni bloklash mumkin. Android muntazam ravishda reklama mavzularini avtomatik ravishda oʻchirib turadi."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Istalgan vaqt maxfiylik sozlamalari orqali roziligingizni bekor qilishingiz mumkin."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Reklamadagi mavzular haqida batafsil"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android maʼlumotlaringizni qanday himoyalashi haqida Maxfiylik siyosati orqali batafsil axborot olishingiz mumkin."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ha, roziman"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Sinab koʻring"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Qanday maʼlumotlar ishlatiladi"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Reklamalardagi mavzular ushbu qurilmada yaqinda ishlatilgan ilovalar va ulardan qanchalik foydalanishingizga asoslanadi."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Bu maʼlumotlar qanday ishlatiladi"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Maʼlumotlaringizni qanday boshqarish mumkin"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android muntazam ravishda eski mavzularni avtomatik oʻchirib turadi. Biror ilovadan yana foydalansangiz, tegishli mavzu roʻyxatga qayta kiritilishi mumkin. Android boshqa ilovalarga ulashmasligi va aloqador reklamalar chiqmasligi uchun istalgan mavzuni maxfiylik sozlamalari orqali taqiqlash mumkin."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Maxfiylik sozlamalarida oʻzgartirishlar kiritishingiz mumkin."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Reklamalarda maxfiylikni oshiruvchi boshqa funksiyalar"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android ilovalar sizga moslashtirilgan reklamalarni chiqarishiga oid qanday maʼlumotlarni olishini cheklaydigan yangi usullar ustida ishlayapti."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Boshqa reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android, shuningdek, ilovalar sizga moslashtirilgan reklamalarni chiqarishda siz haqingizda nimalarni bilishini cheklashning yangi usullarini taklif etadi."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Ilovalar taklif qilgan reklamalarda shaxsingiz va ilovalardan foydalanish haqidagi maʼlumotlar himoya qilinadi, shuningdek, ilovalar sizga aloqador reklamalarni chiqaradi. Siz foydalanadigan ilova, xatti-harakatlaringiz asosida, boshqa ilovalarda sizga aloqador reklamalarni taklif qilishi mumkin. Maxfiylik sozlamalarida ilovalar roʻyxatini koʻrish va ularni bloklashingiz mumkin."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Reklamalarni baholash orqali ilovalar orasida reklamalar samaradorligini hisoblash uchun sizga reklama chiqarilgan kun vaqti kabi cheklangan turdagi axborotlar ulashiladi."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Ilovalar taklif qiladigan reklamalar va reklamalarni baholash haqida batafsil"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android ilovalar taklif qiladigan maʼlumotlarni muntazam ravishda avtomatik tozalab turadi. Agar biror ilovadan yana foydalansangiz, unga oid maʼlumotlar yana roʻyxatga kiritilishi mumkin."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Shuningdek, istalgan vaqtda maxfiylik sozlamalarida ilovani sizga reklama taklif qilishini taqiqlash, ilovalarda taklif qiladigan barcha maʼlumotlarni tozalash yoki ilovalarning reklama taklif qilishini taqiqlashingiz mumkin."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini hisoblashda yordam berishi uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalar ulasha oladigan maʼlumotlarni cheklash orqali maxfiyligingizni himoyalaydi."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Shaxsingizni himoya qilgan holda koʻriladigan reklamalar ustidan koʻproq tanlovga ega boʻling"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Ilova taklif qiladigan reklamalar bilan yangi maxfiylik funksiyalari shaxsingiz va ilovalaringizdan foydalanish haqidagi axborotni himoya qilishga yordam beradi hamda ilovalar sizga aloqador reklamalarni chiqarishga imkon beradi. Faoliyatingiz asosida siz foydalanadigan ilova boshqa ilovalarda tegishli reklamalarni taklif qilishi mumkin. Maxfiylik sozlamalarida ilovalar roʻyxatini koʻrishingiz va ularni bloklashingiz mumkin."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Reklamalarni baholash orqali ilovalar oʻrtasida reklamalar samaradorligini hisoblash uchun sizga reklama koʻrsatilgan kun vaqti kabi cheklangan turdagi maʼlumotlar taqsimlanadi."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Boshqa reklamalarda maxfiylik funksiyasini yoqish"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Shuningdek, Android sizga chiqadigan reklamalar ustidan koʻproq tanlov beradigan yangi maxfiylik funksiyasini taklif etadi."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Reklamadagi mavzular ilovalarga shaxsingiz va ilovadan foydalanish axborotini himoyalagan holda mos reklamalarni chiqarishga yordam beradi. Android yaqinda ochilgan ilovalar asosida qiziq mavzularni qayd qiladi. Keyinchalik, siz foydalanadigan ilova sizga mosroq reklamalarni chiqarish uchun Androiddan tegishli mavzularni soʻrashi mumkin."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Maxfiylik sozlamalarida reklama mavzularini koʻrish va ilovalarga ulashilmaydigan mavzularni bloklash mumkin. Android muntazam ravishda reklama mavzularini avtomatik ravishda oʻchirib tashlaydi."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Yoqish"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Endi shaxsingizni himoya qilishda chiqadigan reklamalar uchun koʻproq tanlov mavjud"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Yangi reklamalarda maxfiylik funksiyalari ishga tushirildi"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android sizga chiqariladigan reklamalarni boshqarish imkonini beruvchi yangi maxfiylik funksiyalarini taqdim etadi."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Keyingisi"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Androidda reklamalardagi maxfiylik beta dasturida ishtirok eting"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklamalardagi maxfiylik"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklama mavzulari"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Ilovalar taklif qiladigan reklama"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android yaqinda ochilgan ilovalar va ulardan qanchalik foydalanishingiz asosida qiziqish mavzularini qayd qiladi."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Shuningdek, ilovalar ham ularning ishlatilishi asosida qiziqishlarni aniqlashi mumkin."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Siz foydalanadigan ilovalar oʻz reklamalari unumdorligini oʻlchashda yordam berish uchun Androiddan maʼlumot soʻrashi mumkin. Android ilovalarga cheklangan turdagi maʼlumotlarni toʻplashga ruxsat beradi."</string>

@@ -18,8 +18,12 @@ package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+
 import android.content.Context;
-import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -33,8 +37,14 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
@@ -42,13 +52,18 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 @RunWith(AndroidJUnit4.class)
 public class ConsentSettingsUiAutomatorTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+    private MockitoSession mStaticMockSession;
+    private PhFlags mPhFlags;
+    @Mock Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -65,9 +80,12 @@ public class ConsentSettingsUiAutomatorTest {
         final String launcherPackage = sDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
-        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            startMockCompatFlags();
+        } else {
+            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+        }
     }
 
     @After
@@ -76,7 +94,9 @@ public class ConsentSettingsUiAutomatorTest {
 
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
-        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
@@ -90,8 +110,14 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentPpApiOnlyTest() throws UiObjectNotFoundException {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
+            doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
+        } else {
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
+            ShellUtils.runShellCommand(
+                    "device_config put adservices ui_dialogs_feature_enabled false");
+        }
         consentTest(false);
     }
 
@@ -113,8 +139,14 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentPpApiOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
+            doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
+        } else {
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
+            ShellUtils.runShellCommand(
+                    "device_config put adservices ui_dialogs_feature_enabled true");
+        }
         consentTest(true);
     }
 
@@ -126,16 +158,25 @@ public class ConsentSettingsUiAutomatorTest {
         consentTest(true);
     }
 
-    private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
-        // launch app
-        Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+    @Test
+    public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            doReturn(3).when(mMockFlags).getConsentSourceOfTruth();
+            doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
+            consentTest(true);
+        } else {
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+            ShellUtils.runShellCommand(
+                    "device_config put adservices ui_dialogs_feature_enabled true");
+            consentTest(true);
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
+        }
+    }
 
-        // Wait for the app to appear
-        sDevice.wait(
-                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+    private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
+
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -175,5 +216,33 @@ public class ConsentSettingsUiAutomatorTest {
         } else {
             mainSwitch.click();
         }
+    }
+
+    private void startMockCompatFlags() {
+        // Static mocking
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(PhFlags.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(BackgroundJobsManager.class)
+                        .strictness(Strictness.WARN)
+                        .initMocks(this)
+                        .startMocking();
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doNothing()
+                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                BackgroundJobsManager.scheduleJobsPerApi(
+                                        any(Context.class), any(AdServicesApiType.class)));
+        mPhFlags = spy(PhFlags.getInstance());
+        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
+
+        // Back compat only supports the following flags
+        doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
+        doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
     }
 }

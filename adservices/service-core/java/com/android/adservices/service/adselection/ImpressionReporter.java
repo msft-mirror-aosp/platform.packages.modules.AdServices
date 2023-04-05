@@ -39,20 +39,24 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionEntry;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
+import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
+import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
@@ -73,6 +77,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -91,17 +96,21 @@ public class ImpressionReporter {
     private static final String EVENT_URI_FIELD_NAME = "event URI";
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
+    @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final ReportImpressionScriptEngine mJsEngine;
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
+    @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
     @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
+    @NonNull private final JsFetcher mJsFetcher;
     private int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -109,6 +118,7 @@ public class ImpressionReporter {
             @NonNull ExecutorService backgroundExecutor,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull CustomAudienceDao customAudienceDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
@@ -120,6 +130,7 @@ public class ImpressionReporter {
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adSelectionEntryDao);
+        Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
@@ -130,6 +141,7 @@ public class ImpressionReporter {
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutor);
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionEntryDao = adSelectionEntryDao;
+        mCustomAudienceDao = customAudienceDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         boolean isRegisterAdBeaconEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeRegisterAdBeaconEnabled);
@@ -160,10 +172,19 @@ public class ImpressionReporter {
 
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
+        mCustomAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mJsFetcher =
+                new JsFetcher(
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mAdServicesHttpsClient,
+                        mFlags);
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -406,6 +427,12 @@ public class ImpressionReporter {
         return fetchAdSelectionEntry(adSelectionId, callerPackageName)
                 .transformAsync(
                         dbAdSelectionEntry -> {
+                            LogUtil.v(
+                                    "DecisionLogicJs from db entry: "
+                                            + dbAdSelectionEntry.getBuyerDecisionLogicJs());
+                            LogUtil.v(
+                                    "DecisionLogicUri from db entry: "
+                                            + dbAdSelectionEntry.getBiddingLogicUri().toString());
                             ReportingContext ctx = new ReportingContext();
                             ctx.mDBAdSelectionEntry = dbAdSelectionEntry;
                             ctx.mAdSelectionConfig = adSelectionConfig;
@@ -457,37 +484,47 @@ public class ImpressionReporter {
 
     private FluentFuture<Pair<String, ReportingContext>> fetchSellerDecisionLogic(
             ReportingContext ctx) {
-        sLogger.v("Fetching Seller decision logic");
-        FluentFuture<String> jsOverrideFuture =
-                FluentFuture.from(
-                        mBackgroundExecutorService.submit(
-                                () ->
-                                        mAdSelectionDevOverridesHelper.getDecisionLogicOverride(
-                                                ctx.mAdSelectionConfig)));
+        sLogger.v("Fetching seller reporting script");
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(ctx.mAdSelectionConfig.getDecisionLogicUri())
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
 
-        return jsOverrideFuture
-                .transformAsync(
-                        jsOverride -> {
-                            if (jsOverride == null) {
-                                return FluentFuture.from(
-                                                mAdServicesHttpsClient.fetchPayload(
-                                                        ctx.mAdSelectionConfig
-                                                                .getDecisionLogicUri()))
-                                        .transform(
-                                                response -> response.getResponseBody(),
-                                                mLightweightExecutorService);
-                            } else {
-                                sLogger.i(
-                                        "Developer options enabled and an override JS is provided "
-                                                + "for the current ad selection config. "
-                                                + "Skipping call to server.");
-                                return Futures.immediateFuture(jsOverride);
-                            }
-                        },
-                        mLightweightExecutorService)
+        return mJsFetcher
+                .getSellerReportingLogic(
+                        request, mAdSelectionDevOverridesHelper, ctx.mAdSelectionConfig)
                 .transform(
-                        stringResult -> Pair.create(stringResult, ctx),
+                        stringResult -> {
+                            sLogger.v(
+                                    "Seller script from uri: %s: %s",
+                                    request.getUri(), stringResult);
+                            return Pair.create(stringResult, ctx);
+                        },
                         mLightweightExecutorService);
+    }
+
+    private FluentFuture<String> fetchBuyerDecisionLogic(
+            ReportingContext ctx, CustomAudienceSignals customAudienceSignals) {
+        if (!ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs().isEmpty()) {
+            sLogger.v(
+                    "Buyer decision logic fetched during ad selection. No need to fetch it again.");
+            return FluentFuture.from(
+                    Futures.immediateFuture(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs()));
+        }
+        sLogger.v("Fetching buyer script");
+        AdServicesHttpClientRequest request =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(ctx.mDBAdSelectionEntry.getBiddingLogicUri())
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
+
+        return mJsFetcher.getBuyerReportingLogic(
+                request,
+                mCustomAudienceDevOverridesHelper,
+                customAudienceSignals.getOwner(),
+                customAudienceSignals.getBuyer(),
+                customAudienceSignals.getName());
     }
 
     private FluentFuture<Pair<ReportImpressionScriptEngine.SellerReportingResult, ReportingContext>>
@@ -514,32 +551,30 @@ public class ImpressionReporter {
             ReportImpressionScriptEngine.SellerReportingResult sellerReportingResult,
             ReportingContext ctx) {
         sLogger.v("Invoking buyer script");
-        final boolean isContextual =
-                Objects.isNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals())
-                        && Objects.isNull(ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
+        sLogger.v("buyer JS: " + ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs());
+        sLogger.v("Buyer JS Uri: " + ctx.mDBAdSelectionEntry.getBiddingLogicUri());
 
-        if (isContextual) {
-            return FluentFuture.from(
-                    Futures.immediateFuture(
-                            Pair.create(new ReportingResults(null, sellerReportingResult), ctx)));
-        }
         final CustomAudienceSignals customAudienceSignals =
                 Objects.requireNonNull(ctx.mDBAdSelectionEntry.getCustomAudienceSignals());
+
+        AdSelectionSignals signals =
+                Optional.ofNullable(
+                                ctx.mAdSelectionConfig
+                                        .getPerBuyerSignals()
+                                        .get(customAudienceSignals.getBuyer()))
+                        .orElse(AdSelectionSignals.EMPTY);
+
         try {
             // TODO(b/233239475) : Validate Buyer signals in Ad Selection Config
             return FluentFuture.from(
                             mJsEngine.reportWin(
-                                    ctx.mDBAdSelectionEntry.getBuyerDecisionLogicJs(),
+                                    fetchBuyerDecisionLogic(ctx, customAudienceSignals).get(),
                                     ctx.mAdSelectionConfig.getAdSelectionSignals(),
-                                    Optional.ofNullable(
-                                                    ctx.mAdSelectionConfig
-                                                            .getPerBuyerSignals()
-                                                            .get(customAudienceSignals.getBuyer()))
-                                            .orElse(AdSelectionSignals.EMPTY),
+                                    signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     AdSelectionSignals.fromString(
                                             ctx.mDBAdSelectionEntry.getContextualSignals()),
-                                    ctx.mDBAdSelectionEntry.getCustomAudienceSignals()))
+                                    customAudienceSignals))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(
@@ -549,6 +584,10 @@ public class ImpressionReporter {
                             mLightweightExecutorService);
         } catch (JSONException e) {
             throw new IllegalArgumentException("Invalid JSON args", e);
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException(
+                    "Error while fetching buyer script from uri: "
+                            + ctx.mDBAdSelectionEntry.getBiddingLogicUri());
         }
     }
 
@@ -561,7 +600,8 @@ public class ImpressionReporter {
      */
     private void validateAdSelectionConfig(AdSelectionConfig adSelectionConfig)
             throws IllegalArgumentException {
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
