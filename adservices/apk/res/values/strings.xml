@@ -289,7 +289,7 @@
     <!-- Text for title of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_fledge_measurement_title_v2">New ads privacy features now available</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_fledge_measurement_introduction_text1_v2" translatable="false">@string/notificationUI_fledge_measurement_introduction_text1</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2">@string/notificationUI_fledge_measurement_introduction_text1</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_fledge_measurement_introduction_text2_v2">&#8226;&#160;&#160;With app-suggested ads, new privacy features help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions in privacy settings.</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
@@ -301,7 +301,7 @@
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text1</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" translatable="false">Your activity in an app on this device can be used to suggest ads.</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2">@string/notificationUI_how_it_works_fledge_measurement_expanded_text2</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text3</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
