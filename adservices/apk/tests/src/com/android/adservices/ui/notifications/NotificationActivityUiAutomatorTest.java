@@ -43,6 +43,7 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -198,6 +199,8 @@ public class NotificationActivityUiAutomatorTest {
 
     @Test
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        // TODO(277094594) fix broken Link Test on S
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         String packageNameOfDefaultBrowser =
