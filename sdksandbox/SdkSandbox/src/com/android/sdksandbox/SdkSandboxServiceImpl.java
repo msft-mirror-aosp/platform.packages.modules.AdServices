@@ -181,34 +181,27 @@ public class SdkSandboxServiceImpl extends Service {
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            loadSdkInternal(
-                    callingPackageName,
-                    applicationInfo,
-                    sdkName,
-                    sdkProviderClassName,
-                    customizedApplicationInfo,
-                    params,
-                    callback,
-                    sandboxLatencyInfo);
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+
+        loadSdkInternal(
+                callingPackageName,
+                applicationInfo,
+                sdkName,
+                sdkProviderClassName,
+                customizedApplicationInfo,
+                params,
+                callback,
+                sandboxLatencyInfo);
     }
 
     /** Unloads SDK. */
     public void unloadSdk(
             String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
-            unloadSdkInternal(sdkName);
-            sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+
+        sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
+        unloadSdkInternal(sdkName);
+        sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
+
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
             callback.onUnloadSdk(sandboxLatencyInfo);
