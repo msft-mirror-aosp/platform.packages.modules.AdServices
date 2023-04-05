@@ -73,7 +73,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + " ("
                     + MeasurementTables.AsyncRegistrationContract.ID
                     + " TEXT PRIMARY KEY NOT NULL, "
-                    + MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID
+                    + MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID
                     + " TEXT, "
                     + MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
                     + " TEXT, "
@@ -85,9 +85,9 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + " TEXT, "
                     + MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT
                     + " INTEGER, "
                     + MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE
                     + " INTEGER, "
@@ -97,7 +97,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                     + " INTEGER, "
                     + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME
                     + " INTEGER, "
                     + MeasurementTables.AsyncRegistrationContract.TYPE
                     + " INTEGER, "

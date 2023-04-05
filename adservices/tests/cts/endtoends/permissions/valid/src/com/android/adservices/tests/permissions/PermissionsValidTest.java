@@ -124,6 +124,7 @@ public class PermissionsValidTest {
 
     @Test
     public void testValidPermissions_selectAds_adSelectionConfig() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
 
         AdSelectionClient mAdSelectionClient =
