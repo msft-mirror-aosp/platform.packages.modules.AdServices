@@ -769,6 +769,13 @@ public interface Flags {
         return ADSERVICES_ENABLED;
     }
 
+    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
+
+    /** Return {@code true} if error logging is enabled */
+    default boolean getAdServicesErrorLoggingEnabled() {
+        return ADSERVICES_ERROR_LOGGING_ENABLED;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
@@ -1609,6 +1616,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
+
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
