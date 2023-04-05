@@ -37,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class MigrationTestHelper {
     private static final float FLOAT_COMPARISON_EPSILON = 0.00005f;
@@ -70,11 +71,21 @@ public class MigrationTestHelper {
 
     public static void verifyDataInDb(
             SQLiteDatabase newDb, Map<String, List<ContentValues>> fakeData) {
-        verifyDataInDb(newDb, fakeData, ImmutableMap.of());
+        verifyDataInDb(newDb, fakeData, ImmutableMap.of(), ImmutableMap.of());
     }
 
-    public static void verifyDataInDb(SQLiteDatabase newDb,
-            Map<String, List<ContentValues>> fakeData, Map<String, List<String>> droppedKeys) {
+    /**
+     * @param newDb    Database from where the data should be read
+     * @param fakeData Data to me verified in <Table: <Column, Value>> format
+     * @param droppedKeys Columns that have been dropped in <Table: Set<Column> format
+     * @param columnsToBeSkipped Columns that shouldn't be match in <Table: Set<Column> format.
+     *                           This is for columns that need custom matching logic.
+     */
+    public static void verifyDataInDb(
+            SQLiteDatabase newDb,
+            Map<String, List<ContentValues>> fakeData,
+            Map<String, Set<String>> droppedKeys,
+            Map<String, Set<String>> columnsToBeSkipped) {
         fakeData.forEach(
                 (table, rows) -> {
                     List<ContentValues> newRows = new ArrayList<>();
@@ -94,16 +105,22 @@ public class MigrationTestHelper {
                                 String.format(
                                         "Table: %s, Row: %d, Expected: %s, Actual: %s",
                                         table, i, expected, actual),
-                                doContentValueMatch(expected, actual,
-                                        droppedKeys.getOrDefault(table, List.of())));
+                                doContentValueMatch(
+                                        expected,
+                                        actual,
+                                        droppedKeys.getOrDefault(table, Set.of()),
+                                        columnsToBeSkipped.getOrDefault(table, Set.of())));
                     }
                 });
     }
 
     // 'Expected' here are the original "fake values" seeding the datastore. If we have a datastore
     // upgrade that's dropping columns, the "fake values" may still contain those values.
-    private static boolean doContentValueMatch(ContentValues expected, ContentValues actual,
-            List<String> droppedKeys) {
+    private static boolean doContentValueMatch(
+            ContentValues expected,
+            ContentValues actual,
+            Set<String> droppedKeys,
+            Set<String> columnsToBeSkipped) {
         for (Map.Entry<String, Object> expectedElement : expected.valueSet()) {
             String expectedKey = expectedElement.getKey();
             Object expectedValue = expectedElement.getValue();
@@ -111,6 +128,9 @@ public class MigrationTestHelper {
                 if (actual.containsKey(expectedKey)) {
                     return false;
                 }
+                continue;
+            }
+            if (columnsToBeSkipped.contains(expectedKey)) {
                 continue;
             }
             if (!actual.containsKey(expectedKey)) {

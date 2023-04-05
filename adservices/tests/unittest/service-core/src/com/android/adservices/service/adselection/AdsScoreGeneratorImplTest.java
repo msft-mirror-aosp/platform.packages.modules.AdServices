@@ -638,12 +638,12 @@ public class AdsScoreGeneratorImplTest {
         // Only buyer2 decision logic should have been populated from overrides
         assertFalse(
                 "Buyer 1 should not have gotten decision logic",
-                scoringOutcome.get(4).getDecisionLogicJsDownloaded());
+                scoringOutcome.get(4).isBiddingLogicJsDownloaded());
         assertTrue(
                 "Buyer 2 ctx ads should have gotten decision logic from overrides",
-                scoringOutcome.get(5).getDecisionLogicJsDownloaded()
-                        && scoringOutcome.get(6).getDecisionLogicJsDownloaded());
-        assertEquals(fakeDecisionLogicForBuyer, scoringOutcome.get(6).getDecisionLogicJs());
+                scoringOutcome.get(5).isBiddingLogicJsDownloaded()
+                        && scoringOutcome.get(6).isBiddingLogicJsDownloaded());
+        assertEquals(fakeDecisionLogicForBuyer, scoringOutcome.get(6).getBiddingLogicJs());
 
         verifySuccessAdScoringLogging(
                 mSellerDecisionLogicJs, mTrustedScoringSignals, mAdBiddingOutcomeList);

@@ -21,10 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
-import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -45,17 +43,12 @@ import android.view.InputEvent;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
 import com.android.adservices.service.measurement.util.Web;
@@ -89,7 +82,6 @@ public final class MeasurementImpl {
     private final ClickVerifier mClickVerifier;
     private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
-    private EnrollmentDao mEnrollmentDao;
 
     @VisibleForTesting
     MeasurementImpl(Context context) {
@@ -98,8 +90,6 @@ public final class MeasurementImpl {
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
-        mEnrollmentDao =
-                new EnrollmentDao(context, DbHelper.getInstance(mContext), FlagsFactory.getFlags());
         deleteOnRollback();
     }
 
@@ -108,14 +98,12 @@ public final class MeasurementImpl {
             Context context,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            MeasurementDataDeleter measurementDataDeleter,
-            EnrollmentDao enrollmentDao) {
+            MeasurementDataDeleter measurementDataDeleter) {
         mContext = context;
         mDatastoreManager = datastoreManager;
         mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = FlagsFactory.getFlagsForTest();
-        mEnrollmentDao = enrollmentDao;
     }
 
     /**
@@ -173,7 +161,6 @@ public final class MeasurementImpl {
                                             : getSourceType(
                                                     request.getInputEvent(),
                                                     request.getRequestTime()),
-                                    mEnrollmentDao,
                                     mDatastoreManager)
                             ? STATUS_SUCCESS
                             : STATUS_IO_ERROR;
@@ -211,7 +198,6 @@ public final class MeasurementImpl {
                             getSourceType(
                                     sourceRegistrationRequest.getInputEvent(),
                                     request.getRequestTime()),
-                            mEnrollmentDao,
                             mDatastoreManager);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
@@ -246,7 +232,6 @@ public final class MeasurementImpl {
                             adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
-                            mEnrollmentDao,
                             mDatastoreManager);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
@@ -277,25 +262,6 @@ public final class MeasurementImpl {
             return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Implement a getMeasurementApiStatus request, returning a result code.
-     */
-    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            consent =
-                    ConsentManager.getInstance(mContext).getConsent(AdServicesApiType.MEASUREMENTS);
-        } else {
-            consent = ConsentManager.getInstance(mContext).getConsent();
-        }
-
-        if (consent.isGiven()) {
-            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
-        } else {
-            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 

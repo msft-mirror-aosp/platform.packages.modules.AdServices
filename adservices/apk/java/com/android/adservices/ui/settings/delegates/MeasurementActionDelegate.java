@@ -16,7 +16,9 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
@@ -85,6 +87,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         mMeasurementActivity.setTitle(R.string.settingsUI_measurement_view_title);
         configureMeasurementConsentSwitch(fragment);
         configureResetMeasurementButton(fragment);
+        configurePrivacyPolicyLink();
     }
 
     private void configureResetMeasurementButton(AdServicesSettingsMeasurementFragment fragment) {
@@ -104,5 +107,10 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         measurementSwitchBar.setOnClickListener(
                 switchBar ->
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
+    }
+
+    private void configurePrivacyPolicyLink() {
+        TextView measurementFooter = mMeasurementActivity.findViewById(R.id.measurement_footer);
+        measurementFooter.setMovementMethod(LinkMovementMethod.getInstance());
     }
 }
