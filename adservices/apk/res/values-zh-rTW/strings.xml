@@ -72,7 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"應用程式可以推測你的興趣喜好，並暫時儲存在 Android 系統中。舉例來說，你用來購買慢跑鞋的應用程式可能會推測你的興趣是「跑馬拉松」。\n\n之後，其他應用程式可以根據這項興趣喜好，向你顯示與馬拉松相關的廣告。\n\n你可以前往隱私權設定管理曾經儲存興趣喜好的應用程式清單。"</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"新的廣告隱私權功能"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"利用廣告主題和新的控制選項，進一步掌控看到的廣告"</string>
-    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"全新廣告隱私權功能現已開放使用"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"全新廣告隱私權功能正式上線"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android 會根據你最近使用的應用程式記下感興趣的主題。此外，你使用的應用程式可以判斷你喜歡的內容。在此之後，應用程式就能要求取得這項資訊，據此向你放送個人化廣告。你可以選擇要根據哪些主題和應用程式顯示廣告。"</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"為評估廣告成效，應用程式之間僅會分享特定類型的資料。"</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"進一步瞭解 Android 上的廣告"</string>
@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"試試新的廣告隱私權功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"廣告主題讓你更能掌控自己看到的廣告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看詳細資料"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"體驗新的廣告隱私權功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android 即將推出新的隱私權功能，讓你進一步掌控看到的廣告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"廣告主題可協助應用程式顯示相關廣告，同時保護你的身分資料和應用程式使用資訊。Android 會根據你最近使用的應用程式，記錄你感興趣的主題。你使用的應用程式可在之後要求 Android 提供相關主題資訊，以便向你顯示個人化廣告。"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"你可以在裝置設定中查看廣告主題，封鎖不想與網站分享的主題。Android 會定期自動刪除廣告主題。"</string>
@@ -103,7 +102,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  如何管理自己的資料"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android 會定期自動刪除主題，隨著你繼續使用應用程式，清單中可能會再次出現特定主題。你隨時可以在隱私權設定中封鎖想讓 Android 與應用程式分享的主題，也可以關閉廣告主題設定。"</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"你可以前往隱私權設定進行變更。"</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"其他廣告隱私權功能現已開放使用"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"更多廣告隱私權功能正式上線"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android 也推出新功能，可限制應用程式在顯示個人化廣告時能取得的個人資訊。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"應用程式建議廣告有助於保護你的身分資料和應用程式使用資訊，同時可讓應用程式向你顯示相關廣告。你使用的應用程式可以根據你的活動向其他應用程式推薦相關廣告。你可以查看這些應用程式清單，在隱私權設定中封鎖不希望建議廣告的應用程式。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"使用廣告評估功能時，應用程式之間僅會分享特定類型的資料，例如在一天中向使用者放送廣告的時段。"</string>
@@ -117,20 +116,20 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android 會定期自動刪除應用程式建議的資料。你再次使用的應用程式可能會重新加入清單中。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"你隨時可以在隱私權設定中禁止應用程式建議廣告、重設所有廣告建議資料，或關閉應用程式建議廣告設定。"</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"你使用的應用程式可以要求 Android 提供相關資訊，協助應用程式評估廣告成效。為了保護你的隱私，Android 會限制應用程式之間可以彼此分享的資訊。"</string>
-    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"全新廣告隱私權功能現已開放使用"</string>
-    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"您可以進一步掌控看到的廣告，並保護自己的身分資料"</string>
-    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"全新廣告隱私權功能現已開放使用"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  透過應用程式建議廣告，全新隱私權功能可保護您的身分資料和應用程式使用情況資訊，同時讓應用程式顯示相關廣告。您使用的應用程式可根據您的活動向其他應用程式建議相關廣告。您可以前往隱私權設定查看應用程式清單，並封鎖不希望建議廣告的應用程式。"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  透過廣告評估，應用程式間可分享少數幾種資料，以瞭解廣告成效，例如一天中向使用者放送廣告的時段。"</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"全新廣告隱私權功能正式上線"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"你可以進一步掌控自己看到的廣告，並保護你的身分資料"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"全新廣告隱私權功能正式上線"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  採用「應用程式建議廣告」時，新的隱私權功能可保護你的身分資料和應用程式使用資訊，同時讓應用程式顯示相關廣告。你使用的應用程式可根據你的活動向其他應用程式建議相關廣告。隱私權設定頁面列出了這些應用程式，你可以選擇是否予以封鎖，不讓特定的應用程式建議廣告。"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  藉由廣告評估機制，應用程式之間可分享某些特定資料，以便瞭解廣告成效，例如一天中向使用者放送廣告的時段。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"開啟另一項廣告隱私權功能"</string>
-    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android 也推出新的隱私權功能，讓您進一步掌控看到的廣告。"</string>
-    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"廣告主題可協助應用程式顯示相關廣告，同時保護您的身分資料和應用程式使用情況資訊。Android 可根據您最近使用的應用程式，記錄您感興趣的主題。之後，您使用的應用程式可要求 Android 提供相關主題資訊，以便顯示更相關的廣告。"</string>
-    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"您可以在隱私權設定中查看廣告主題，並封鎖不想與應用程式分享的主題。此外，Android 也會定期自動刪除廣告主題。"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android 也推出新的隱私權功能，讓你進一步掌控自己看到的廣告。"</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"廣告主題可協助應用程式顯示相關廣告，同時保護你的身分資料和應用程式使用資訊。Android 可根據你最近使用的應用程式，記住你感興趣的主題。之後，你使用的應用程式便能要求 Android 提供相關主題資訊，以便顯示更合適的廣告。"</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"你可以在隱私權設定中查看廣告主題，並封鎖不想與應用程式分享的主題。此外，Android 也會定期自動刪除廣告主題。"</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"開啟"</string>
-    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"全新廣告隱私權功能現已開放使用"</string>
-    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"現在，您可以進一步掌控看到的廣告，並保護自己的身分資料"</string>
-    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"全新廣告隱私權功能現已開放使用"</string>
-    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android 現在推出新的隱私權功能，讓您進一步掌控看到的廣告。"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"全新廣告隱私權功能正式上線"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"現在，你可以進一步掌控自己看到的廣告，並保護你的身分資料"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"全新廣告隱私權功能正式上線"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android 現在推出新的隱私權功能，讓你進一步掌控自己看到的廣告。"</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"繼續"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"參與 Android 廣告隱私權 Beta 版測試計畫"</string>

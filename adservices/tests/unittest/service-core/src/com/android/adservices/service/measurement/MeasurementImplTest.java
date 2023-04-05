@@ -178,8 +178,7 @@ public final class MeasurementImplTest {
                                 DEFAULT_CONTEXT,
                                 mDatastoreManager,
                                 mClickVerifier,
-                                mMeasurementDataDeleter,
-                                mEnrollmentDao));
+                                mMeasurementDataDeleter));
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
@@ -192,8 +191,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 measurement.deleteRegistrations(
@@ -340,8 +338,7 @@ public final class MeasurementImplTest {
                             DEFAULT_CONTEXT,
                             mDatastoreManager,
                             mockClickVerifier,
-                            mMeasurementDataDeleter,
-                            mEnrollmentDao);
+                            mMeasurementDataDeleter);
 
             // Because click verification is disabled, the SourceType is NAVIGATION even if the
             // input event is not verifiable.
@@ -378,8 +375,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         measurement.deleteRegistrations(
                 new DeletionParam.Builder(
@@ -420,8 +416,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         measurement.deleteRegistrations(
                 new DeletionParam.Builder(
@@ -465,8 +460,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         measurement.deletePackageRecords(DEFAULT_URI);
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -501,8 +495,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         measurement.deletePackageRecords(DEFAULT_URI);
 
         Mockito.verify(mockAdServicesManager, Mockito.never())
@@ -534,8 +527,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         measurement.deleteAllMeasurementData(Collections.EMPTY_LIST);
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -570,8 +562,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         measurement.deleteAllUninstalledMeasurementData();
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -606,8 +597,7 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mMeasurementDataDeleter);
         measurement.deleteAllUninstalledMeasurementData();
 
         Mockito.verify(mockAdServicesManager, Mockito.never())
