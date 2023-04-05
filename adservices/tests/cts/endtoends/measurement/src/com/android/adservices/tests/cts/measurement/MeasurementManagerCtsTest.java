@@ -34,14 +34,18 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
+import android.os.SystemProperties;
 import android.test.suitebuilder.annotation.SmallTest;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -81,17 +85,30 @@ public class MeasurementManagerCtsTest {
     private static final Uri WEB_DESTINATION = Uri.parse("http://web-destination.com");
     private static final Uri ORIGIN_URI = Uri.parse("https://sample.example1.com");
     private static final Uri DOMAIN_URI = Uri.parse("https://example2.com");
+    private static final int DEFAULT_REQUEST_PER_SECOND = 5;
+    private static final String FLAG_REGISTER_SOURCE =
+            "measurement_register_source_request_permits_per_second";
+    private static final String FLAG_REGISTER_WEB_SOURCE =
+            "measurement_register_web_source_request_permits_per_second";
     private final ExecutorService mExecutorService = Executors.newCachedThreadPool();
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
+    private String mPreviousAppAllowList;
+
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // To grant access to all pp api app
-        allowAllPackageNamesAccessMeasurementApis();
+        allowAllPackageNamesAccessToMeasurementApis();
 
         // We need to turn the Consent Manager into debug mode
         overrideConsentManagerDebugMode();
@@ -103,16 +120,20 @@ public class MeasurementManagerCtsTest {
                         .setContext(sContext)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
+        // Cool-off rate limiter in case it was initialized by another test
+        TimeUnit.SECONDS.sleep(1);
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
         resetAllowSandboxPackageNameAccessMeasurementApis();
         resetOverrideConsentManagerDebugMode();
         resetOverrideDisableMeasurementEnrollmentCheck();
         overrideMeasurementKillSwitches(false);
-        // Cool-off rate limiter
-        TimeUnit.SECONDS.sleep(1);
     }
 
     @Test
@@ -130,18 +151,24 @@ public class MeasurementManagerCtsTest {
         final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerSourceAndVerifyRateLimitReached(manager));
+        }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         registerSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        assertTrue(registerSourceAndVerifyRateLimitReached(manager));
+        // If the test takes less than 1 second, this test is reliable due to the rate limiter
+        // limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerSourceAndVerifyRateLimitReached(manager);
+        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
 
         overrideDisableMeasurementEnrollmentCheck("0");
     }
@@ -184,18 +211,24 @@ public class MeasurementManagerCtsTest {
         final MeasurementManager manager = MeasurementManager.get(sContext);
 
         // Rate limit hasn't reached yet
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
-        assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        final long nowInMillis = System.currentTimeMillis();
+        final int requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        for (int i = 0; i < requestPerSecond; i++) {
+            assertFalse(registerWebSourceAndVerifyRateLimitReached(manager));
+        }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
         // triggering one more call without checking the outcome.
         registerWebSourceAndVerifyRateLimitReached(manager);
 
         // Verify limit reached
-        assertTrue(registerWebSourceAndVerifyRateLimitReached(manager));
+        // If the test takes less than 1 second, this test is reliable due to the rate limiter
+        // limits queries per second. If duration is longer than a second, skip it.
+        final boolean reachedLimit = registerWebSourceAndVerifyRateLimitReached(manager);
+        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        if (executedInLessThanOneSec) {
+            assertTrue(reachedLimit);
+        }
 
         overrideDisableMeasurementEnrollmentCheck("0");
     }
@@ -308,8 +341,43 @@ public class MeasurementManagerCtsTest {
     }
 
     @Test
-    public void testMeasurementApiStatus_returnResultStatus() throws Exception {
-        overrideDisableMeasurementEnrollmentCheck("1");
+    public void testMeasurementApiStatus_returnEnabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ false);
+        enableMeasurementKillSwitch(/* enabled= */ false);
+        allowAllPackageNamesAccessToMeasurementApis();
+        boolean result = callMeasurementApiStatus();
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_killSwitchGlobalOn_returnDisabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ true);
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_killSwitchMeasurementOn_returnDisabled() throws Exception {
+        enableMeasurementKillSwitch(/* enabled= */ true);
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    @Test
+    public void testMeasurementApiStatus_notInAllowList_returnDisabled() throws Exception {
+        enableGlobalKillSwitch(/* enabled= */ true);
+        blockAllPackageNamesAccessToMeasurementApis();
+        boolean result = callMeasurementApiStatus();
+        Assert.assertFalse(result);
+    }
+
+    /**
+     * Performs calls to measurement status API and returns a boolean representing if the API was
+     * enabled {@code true} or disabled {@code false}.
+     *
+     * @return api status
+     */
+    private boolean callMeasurementApiStatus() throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
         final MeasurementManager manager = MeasurementManager.get(sContext);
         List<Integer> resultCodes = new ArrayList<>();
@@ -324,11 +392,19 @@ public class MeasurementManagerCtsTest {
         assertThat(countDownLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
         Assert.assertNotNull(resultCodes);
         Assert.assertEquals(1, resultCodes.size());
-        overrideDisableMeasurementEnrollmentCheck("0");
+        return resultCodes.get(0) == MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
     }
 
-    private void allowAllPackageNamesAccessMeasurementApis() {
+    private void allowAllPackageNamesAccessToMeasurementApis() {
         final String packageName = "*";
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_allow_list " + packageName);
+        ShellUtils.runShellCommand(
+                "device_config put adservices web_context_client_allow_list " + packageName);
+    }
+
+    private void blockAllPackageNamesAccessToMeasurementApis() {
+        final String packageName = "";
         ShellUtils.runShellCommand(
                 "device_config put adservices ppapi_app_allow_list " + packageName);
         ShellUtils.runShellCommand(
@@ -387,6 +463,14 @@ public class MeasurementManagerCtsTest {
                         + overrideString);
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+    }
+
+    private void enableGlobalKillSwitch(boolean enabled) {
+        ShellUtils.runShellCommand("setprop debug.adservices.global_kill_switch " + enabled);
+    }
+
+    private void enableMeasurementKillSwitch(boolean enabled) {
+        ShellUtils.runShellCommand("setprop debug.adservices.measurement_kill_switch " + enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(MeasurementManager manager)
@@ -448,5 +532,22 @@ public class MeasurementManagerCtsTest {
                 countDownLatch.countDown();
             }
         };
+    }
+
+    private int getRequestPerSecond(String flagName) {
+        try {
+            String permitString = SystemProperties.get("debug.adservices." + flagName);
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+
+            permitString = ShellUtils.runShellCommand("device_config get adservices " + flagName);
+            if (!TextUtils.isEmpty(permitString) && !"null".equalsIgnoreCase(permitString)) {
+                return Integer.parseInt(permitString);
+            }
+            return DEFAULT_REQUEST_PER_SECOND;
+        } catch (Exception e) {
+            return DEFAULT_REQUEST_PER_SECOND;
+        }
     }
 }

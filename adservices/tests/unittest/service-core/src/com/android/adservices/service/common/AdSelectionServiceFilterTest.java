@@ -21,6 +21,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -42,8 +44,8 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -96,7 +98,7 @@ public class AdSelectionServiceFilterTest {
     FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
+                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest(), TEST_FLAGS),
                     mAdServicesLoggerMock);
 
     @Mock private Throttler mMockThrottler;
@@ -141,72 +143,40 @@ public class AdSelectionServiceFilterTest {
     }
 
     @Test
-    public void testFilterRequestSucceedsGaUxDisabled() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        mAdSelectionServiceFilter.filterRequest(
-                SELLER_VALID,
-                CALLER_PACKAGE_NAME,
-                false,
-                true,
-                MY_UID,
-                API_NAME,
-                Throttler.ApiKey.UNKNOWN);
-    }
-
-    @Test
-    public void testFilterRequestSucceedsGaUxEnabled() {
-        mAdSelectionServiceFilter =
-                new AdSelectionServiceFilter(
-                        mContext,
-                        mConsentManagerMock,
-                        FLAGS_WITH_GA_UX_ENABLED,
-                        mAppImportanceFilter,
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-        mAdSelectionServiceFilter.filterRequest(
-                SELLER_VALID,
-                CALLER_PACKAGE_NAME,
-                false,
-                true,
-                MY_UID,
-                API_NAME,
-                Throttler.ApiKey.UNKNOWN);
-    }
-
-    @Test
     public void testFilterRequestThrowsCallerMismatchExceptionWithInvalidPackageName() {
-        assertThrows(
-                FledgeAuthorizationFilter.CallerMismatchException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                "invalidPackageName",
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        "invalidPackageName",
+                                        false,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause())
+                .isInstanceOf(FledgeAuthorizationFilter.CallerMismatchException.class);
     }
 
     @Test
     public void testFilterRequestThrowsLimitExceededExceptionIfThrottled() {
         when(mMockThrottler.tryAcquire(eq(Throttler.ApiKey.UNKNOWN), anyString()))
                 .thenReturn(false);
-        assertThrows(
-                LimitExceededException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause()).isInstanceOf(LimitExceededException.class);
     }
 
     @Test
@@ -215,17 +185,20 @@ public class AdSelectionServiceFilterTest {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mAppImportanceFilter)
                 .assertCallerIsInForeground(Process.myUid(), API_NAME, null);
-        assertThrows(
-                AppImportanceFilter.WrongCallingApplicationStateException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                true,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        CALLER_PACKAGE_NAME,
+                                        true,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause())
+                .isInstanceOf(AppImportanceFilter.WrongCallingApplicationStateException.class);
     }
 
     @Test
@@ -246,7 +219,6 @@ public class AdSelectionServiceFilterTest {
 
     @Test
     public void testFilterRequestThrowsAdTechNotAllowedExceptionWhenAdTechNotAuthorized() {
-
         // Create new AdSelectionServiceFilter with new flags
         mAdSelectionServiceFilter =
                 new AdSelectionServiceFilter(
@@ -261,17 +233,20 @@ public class AdSelectionServiceFilterTest {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterSpy)
                 .assertAdTechAllowed(mContext, CALLER_PACKAGE_NAME, SELLER_VALID, API_NAME);
-        assertThrows(
-                FledgeAuthorizationFilter.AdTechNotAllowedException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause())
+                .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
     }
 
     @Test
@@ -279,75 +254,20 @@ public class AdSelectionServiceFilterTest {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterSpy)
                 .assertAppCanUsePpapi(CALLER_PACKAGE_NAME, API_NAME);
-        assertThrows(
-                FledgeAllowListsFilter.AppNotAllowedException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
-    }
-
-    @Test
-    public void testFilterRequestThrowsRevokedConsentExceptionAppDoesNotHaveConsentGaUxDisabled() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
-        assertThrows(
-                ConsentManager.RevokedConsentException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
-    }
-
-    @Test
-    public void testFilterRequestSucceedsConsentRevokedEnforceConsentFalse() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
-        mAdSelectionServiceFilter.filterRequest(
-                SELLER_VALID,
-                CALLER_PACKAGE_NAME,
-                false,
-                false,
-                MY_UID,
-                API_NAME,
-                Throttler.ApiKey.UNKNOWN);
-        verifyNoMoreInteractions(mConsentManagerMock);
-    }
-
-    @Test
-    public void testFilterRequestThrowsRevokedConsentExceptionAppDoesNotHaveConsentGaUxEnabled() {
-        // Create new AdSelectionServiceFilter with new flags
-        mAdSelectionServiceFilter =
-                new AdSelectionServiceFilter(
-                        mContext,
-                        mConsentManagerMock,
-                        FLAGS_WITH_GA_UX_ENABLED,
-                        mAppImportanceFilter,
-                        mFledgeAuthorizationFilterSpy,
-                        mFledgeAllowListsFilterSpy,
-                        mThrottlerSupplier);
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(mConsentManagerMock)
-                .getConsent(AdServicesApiType.FLEDGE);
-        assertThrows(
-                ConsentManager.RevokedConsentException.class,
-                () ->
-                        mAdSelectionServiceFilter.filterRequest(
-                                SELLER_VALID,
-                                CALLER_PACKAGE_NAME,
-                                false,
-                                true,
-                                MY_UID,
-                                API_NAME,
-                                Throttler.ApiKey.UNKNOWN));
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause())
+                .isInstanceOf(FledgeAllowListsFilter.AppNotAllowedException.class);
     }
 
     @Test
@@ -360,4 +280,60 @@ public class AdSelectionServiceFilterTest {
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt());
     }
+
+    @Test
+    public void testFilterRequestThrowsRevokedConsentExceptionAppConsentRevoked() {
+        // App does not have consent
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mConsentManagerMock)
+                .assertFledgeCallerHasUserConsent(CALLER_PACKAGE_NAME);
+        FilterException exception =
+                assertThrows(
+                        FilterException.class,
+                        () ->
+                                mAdSelectionServiceFilter.filterRequest(
+                                        SELLER_VALID,
+                                        CALLER_PACKAGE_NAME,
+                                        false,
+                                        true,
+                                        MY_UID,
+                                        API_NAME,
+                                        Throttler.ApiKey.UNKNOWN));
+        assertThat(exception.getCause()).isInstanceOf(ConsentManager.RevokedConsentException.class);
+    }
+
+    @Test
+    public void testFilterRequestSucceedsAppConsentGranted() {
+        // App has consent
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                true,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
+        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(CALLER_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testFilterRequestSucceedsAppConsentRevokedEnforceConsentFalse() {
+        // App does not have consent
+        doThrow(new ConsentManager.RevokedConsentException())
+                .when(mConsentManagerMock)
+                .assertFledgeCallerHasUserConsent(CALLER_PACKAGE_NAME);
+        // Not enforcing consent
+        mAdSelectionServiceFilter.filterRequest(
+                SELLER_VALID,
+                CALLER_PACKAGE_NAME,
+                false,
+                false,
+                MY_UID,
+                API_NAME,
+                Throttler.ApiKey.UNKNOWN);
+        verifyNoMoreInteractions(mConsentManagerMock);
+    }
+
+
+
 }

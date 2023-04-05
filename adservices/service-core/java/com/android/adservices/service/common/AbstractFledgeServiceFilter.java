@@ -27,11 +27,10 @@ import android.os.LimitExceededException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -40,6 +39,7 @@ import java.util.function.Supplier;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final Flags mFlags;
@@ -74,21 +74,16 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
-     * Asserts that FLEDGE APIs and the Privacy Sandbox as a whole have user consent.
+     * Asserts that the calling app, FLEDGE APIs and the Privacy Sandbox have user consent.
      *
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
+     * @param callerPackageName String package name that uniquely identifies an installed
+     *     application that has used a FLEDGE API
+     * @throws ConsentManager.RevokedConsentException if the app or FLEDGE or the Privacy Sandbox do
+     *     not have user consent
      */
-    protected void assertCallerHasUserConsent() throws ConsentManager.RevokedConsentException {
-        AdServicesApiConsent userConsent;
-        if (mFlags.getGaUxFeatureEnabled()) {
-            userConsent = mConsentManager.getConsent(AdServicesApiType.FLEDGE);
-        } else {
-            userConsent = mConsentManager.getConsent();
-        }
-        if (!userConsent.isGiven()) {
-            throw new ConsentManager.RevokedConsentException();
-        }
+    protected void assertCallerHasUserConsent(String callerPackageName)
+            throws ConsentManager.RevokedConsentException {
+        mConsentManager.assertFledgeCallerHasUserConsent(callerPackageName);
     }
 
     /**
@@ -153,12 +148,12 @@ public abstract class AbstractFledgeServiceFilter {
      */
     protected void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
             throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
+        sLogger.v("Checking if API is throttled for package: %s ", callerPackageName);
         Throttler throttler = mThrottlerSupplier.get();
         boolean isThrottled = !throttler.tryAcquire(apiKey, callerPackageName);
 
         if (isThrottled) {
-            LogUtil.e(String.format("Rate Limit Reached for API: %s", apiKey));
+            sLogger.e(String.format("Rate Limit Reached for API: %s", apiKey));
             throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
         }
     }
@@ -172,17 +167,8 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce a consent check
-     * @throws FledgeAuthorizationFilter.CallerMismatchException if the {@code callerPackageName} is
-     *     not valid
-     * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check is
-     *     enabled and fails
-     * @throws FledgeAuthorizationFilter.AdTechNotAllowedException if the ad tech is not authorized
-     *     to perform the operation
-     * @throws FledgeAllowListsFilter.AppNotAllowedException if the package is not authorized.
-     * @throws ConsentManager.RevokedConsentException if FLEDGE or the Privacy Sandbox do not have
-     *     user consent
-     * @throws LimitExceededException if the provided {@code callerPackageName} exceeds the rate
-     *     limits
+     * @throws FilterException if any filter assertion fails and wraps the exception thrown by the
+     *     failing filter
      */
     public abstract void filterRequest(
             @Nullable AdTechIdentifier adTech,

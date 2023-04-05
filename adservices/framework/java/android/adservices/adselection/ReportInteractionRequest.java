@@ -21,7 +21,6 @@ import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTI
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 
 import com.android.internal.util.Preconditions;
 
@@ -45,15 +44,21 @@ public class ReportInteractionRequest {
     private final long mAdSelectionId;
     @NonNull private final String mInteractionKey;
     @NonNull private final String mInteractionData;
-    private final int mReportingDestinations; // buyer, seller, or both
+    @ReportingDestination private final int mReportingDestinations; // buyer, seller, or both
 
-    private ReportInteractionRequest(
+    public ReportInteractionRequest(
             long adSelectionId,
             @NonNull String interactionKey,
             @NonNull String interactionData,
-            int reportingDestinations) {
+            @ReportingDestination int reportingDestinations) {
         Objects.requireNonNull(interactionKey);
         Objects.requireNonNull(interactionData);
+
+        Preconditions.checkArgument(
+                adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
+        Preconditions.checkArgument(
+                reportingDestinations != UNSET_REPORTING_DESTINATIONS,
+                UNSET_REPORTING_DESTINATIONS_MESSAGE);
 
         this.mAdSelectionId = adSelectionId;
         this.mInteractionKey = interactionKey;
@@ -91,15 +96,14 @@ public class ReportInteractionRequest {
     /**
      * Returns the bitfield of reporting destinations to report to (buyer, seller, or both).
      *
-     * <p>To create this bitfield, place an {@code |} bitwise operator between each {@link
-     * ReportingDestination} to be reported to. For example to only report to buyer, set the
-     * reportingDestinations field to {@link ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER}
-     * To only report to seller, set the reportingDestinations field to {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER} To report to both buyers and sellers,
-     * set the reportingDestinations field to {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_BUYER} | {@link
-     * ReportingDestination#FLAG_REPORTING_DESTINATION_SELLER}
+     * <p>To create this bitfield, place an {@code |} bitwise operator between each {@code
+     * reportingDestination} to be reported to. For example to only report to buyer, set the
+     * reportingDestinations field to {@link #FLAG_REPORTING_DESTINATION_BUYER} To only report to
+     * seller, set the reportingDestinations field to {@link #FLAG_REPORTING_DESTINATION_SELLER} To
+     * report to both buyers and sellers, set the reportingDestinations field to {@link
+     * #FLAG_REPORTING_DESTINATION_BUYER} | {@link #FLAG_REPORTING_DESTINATION_SELLER}
      */
+    @ReportingDestination
     public int getReportingDestinations() {
         return mReportingDestinations;
     }
@@ -111,92 +115,4 @@ public class ReportInteractionRequest {
             value = {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER})
     @Retention(RetentionPolicy.SOURCE)
     public @interface ReportingDestination {}
-
-    /**
-     * Builder for {@link ReportInteractionRequest} objects.
-     *
-     * @hide
-     */
-    // TODO(b/261812140): Unhide for report interaction API review
-    public static final class Builder {
-        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
-        @Nullable private String mInteractionKey;
-        @Nullable private String mInteractionData;
-        private int mReportingDestinations = UNSET_REPORTING_DESTINATIONS;
-
-        public Builder() {}
-
-        /**
-         * Sets the adSelectionId.
-         *
-         * <p>See {@link ReportInteractionRequest#getAdSelectionId()} for more details
-         */
-        @NonNull
-        public ReportInteractionRequest.Builder setAdSelectionId(long adSelectionId) {
-            Preconditions.checkArgument(
-                    adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
-
-            mAdSelectionId = adSelectionId;
-            return this;
-        }
-
-        /**
-         * Sets the interactionKey.
-         *
-         * <p>See {@link ReportInteractionRequest#getInteractionKey()}} for more details.
-         */
-        @NonNull
-        public ReportInteractionRequest.Builder setInteractionKey(@NonNull String interactionKey) {
-            Objects.requireNonNull(interactionKey);
-
-            mInteractionKey = interactionKey;
-            return this;
-        }
-
-        /**
-         * Sets the interactionData.
-         *
-         * <p>See {@link ReportInteractionRequest#getInteractionData()} for more details.
-         */
-        @NonNull
-        public ReportInteractionRequest.Builder setInteractionData(
-                @NonNull String interactionData) {
-            Objects.requireNonNull(interactionData);
-
-            mInteractionData = interactionData;
-            return this;
-        }
-
-        /**
-         * Sets the bitfield of reporting destinations.
-         *
-         * <p>See {@link ReportInteractionRequest#getReportingDestinations()} for more details.
-         */
-        @NonNull
-        public ReportInteractionRequest.Builder setReportingDestinations(
-                int reportingDestinations) {
-            Preconditions.checkArgument(
-                    reportingDestinations != UNSET_REPORTING_DESTINATIONS,
-                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
-
-            mReportingDestinations = reportingDestinations;
-            return this;
-        }
-
-        /** Builds a {@link ReportInteractionRequest} instance. */
-        @NonNull
-        public ReportInteractionRequest build() {
-            Objects.requireNonNull(mInteractionKey);
-            Objects.requireNonNull(mInteractionData);
-
-            Preconditions.checkArgument(
-                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
-            Preconditions.checkArgument(
-                    mReportingDestinations != UNSET_REPORTING_DESTINATIONS,
-                    UNSET_REPORTING_DESTINATIONS_MESSAGE);
-
-            return new ReportInteractionRequest(
-                    mAdSelectionId, mInteractionKey, mInteractionData, mReportingDestinations);
-        }
-    }
 }

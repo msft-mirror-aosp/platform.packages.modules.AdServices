@@ -27,10 +27,6 @@
         <option name="test-file-name" value="CtsAdServicesPermissionsNoPermEndToEndTests.apk"/>
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-        <option name="force-skip-system-props" value="true" />
-    </target_preparer>
-
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="setprop debug.adservices.global_kill_switch false" />
@@ -43,10 +39,17 @@
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 1000" />
         <option name="teardown-command" value="setprop debug.adservices.sdk_request_permits_per_second 1" />
+
+        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

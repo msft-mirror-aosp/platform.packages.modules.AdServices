@@ -17,6 +17,10 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdBiddingOutcomeFixture;
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.CustomAudienceBiddingInfoFixture;
+import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
 
 public class AdScoringOutcomeFixture {
@@ -28,9 +32,43 @@ public class AdScoringOutcomeFixture {
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(buyerName, 1.0).build();
 
         return AdScoringOutcome.builder()
-                .setAdWithScore(AdWithScore.builder()
-                        .setAdWithBid(adBiddingOutcome.getAdWithBid())
-                        .setScore(score).build())
-                .setCustomAudienceBiddingInfo(adBiddingOutcome.getCustomAudienceBiddingInfo());
+                .setAdWithScore(
+                        AdWithScore.builder()
+                                .setAdWithBid(adBiddingOutcome.getAdWithBid())
+                                .setScore(score)
+                                .build())
+                .setBiddingLogicUri(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBiddingLogicUri())
+                .setCustomAudienceSignals(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getCustomAudienceSignals())
+                .setBiddingLogicJs(
+                        adBiddingOutcome.getCustomAudienceBiddingInfo().getBuyerDecisionLogicJs())
+                .setBiddingLogicJsDownloaded(true)
+                .setBuyer(
+                        adBiddingOutcome
+                                .getCustomAudienceBiddingInfo()
+                                .getCustomAudienceSignals()
+                                .getBuyer());
+    }
+
+    public static AdScoringOutcome.Builder anAdScoringBuilderWithAdCounterKeys(
+            AdTechIdentifier buyer, Double score) {
+        return AdScoringOutcome.builder()
+                .setAdWithScore(
+                        AdWithScore.builder()
+                                .setAdWithBid(
+                                        new AdWithBid(
+                                                AdDataFixture.getValidFilterAdDataByBuyer(buyer, 0),
+                                                1.0))
+                                .setScore(score)
+                                .build())
+                .setBuyer(buyer)
+                .setBiddingLogicUri(CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(buyer))
+                .setCustomAudienceSignals(
+                        CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                                .setBuyer(buyer)
+                                .build())
+                .setBiddingLogicJs(CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
+                .setBiddingLogicJsDownloaded(true);
     }
 }

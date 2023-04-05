@@ -145,6 +145,23 @@ public final class AdSelectionConfig implements Parcelable {
                 mTrustedScoringSignalsUri);
     }
 
+    /**
+     * @return a new builder instance created from this object's cloned data
+     * @hide
+     */
+    @NonNull
+    public AdSelectionConfig.Builder cloneToBuilder() {
+        return new AdSelectionConfig.Builder()
+                .setSeller(this.getSeller())
+                .setBuyerContextualAds(this.getBuyerContextualAds())
+                .setAdSelectionSignals(this.getAdSelectionSignals())
+                .setCustomAudienceBuyers(this.getCustomAudienceBuyers())
+                .setDecisionLogicUri(this.getDecisionLogicUri())
+                .setPerBuyerSignals(this.getPerBuyerSignals())
+                .setSellerSignals(this.getSellerSignals())
+                .setTrustedScoringSignalsUri(this.getTrustedScoringSignalsUri());
+    }
+
     /** @return a AdTechIdentifier of the seller, for example "www.example-ssp.com" */
     @NonNull
     public AdTechIdentifier getSeller() {
@@ -342,6 +359,9 @@ public final class AdSelectionConfig implements Parcelable {
         /**
          * Sets the URI endpoint of sell-side trusted signal from which creative specific realtime
          * information can be fetched from.
+         *
+         * <p>If {@link Uri#EMPTY} is passed then network call will be skipped and {@link
+         * AdSelectionSignals#EMPTY} will be passed to ad selection.
          *
          * <p>See {@link #getTrustedScoringSignalsUri()} for more details.
          */

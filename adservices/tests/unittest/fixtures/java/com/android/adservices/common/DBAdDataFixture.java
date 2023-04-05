@@ -16,8 +16,10 @@
 
 package com.android.adservices.common;
 
+import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 
 import com.android.adservices.data.common.DBAdData;
 
@@ -25,21 +27,48 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DBAdDataFixture {
+    public static final DBAdData VALID_DB_AD_DATA_NO_FILTERS =
+            getValidDbAdDataNoFiltersBuilder().build();
+
+    public static DBAdData.Builder getValidDbAdDataBuilder() {
+        AdData mirrorAdData =
+                AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
+        return getValidDbAdDataNoFiltersBuilder()
+                .setAdCounterKeys(mirrorAdData.getAdCounterKeys())
+                .setAdFilters(mirrorAdData.getAdFilters());
+    }
+
+    public static DBAdData.Builder getValidDbAdDataNoFiltersBuilder() {
+        AdData mirrorAdData =
+                AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 0);
+        return new DBAdData.Builder()
+                .setRenderUri(mirrorAdData.getRenderUri())
+                .setMetadata(mirrorAdData.getMetadata());
+    }
+
     public static List<DBAdData> getValidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getValidFilterAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
     }
 
     public static List<DBAdData> getValidDbAdDataListByBuyerNoFilters(AdTechIdentifier buyer) {
         return AdDataFixture.getValidAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
     }
 
     public static List<DBAdData> getInvalidDbAdDataListByBuyer(AdTechIdentifier buyer) {
         return AdDataFixture.getInvalidAdsByBuyer(buyer).stream()
-                .map(DBAdData::fromServiceObject)
+                .map(DBAdDataFixture::convertAdDataToDBAdData)
                 .collect(Collectors.toList());
+    }
+
+    public static DBAdData convertAdDataToDBAdData(AdData adData) {
+        return new DBAdData(
+                adData.getRenderUri(),
+                adData.getMetadata(),
+                adData.getAdCounterKeys(),
+                adData.getAdFilters());
     }
 }

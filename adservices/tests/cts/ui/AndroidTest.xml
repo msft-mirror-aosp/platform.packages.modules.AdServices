@@ -15,19 +15,17 @@
   ~ limitations under the License.
   -->
 <configuration description="TF Config for AdServices Ui Cts test">
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-        <option name="force-skip-system-props" value="true" />
+    <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
+
+    <target_preparer class="com.android.tradefed.targetprep.DeviceCleaner">
+        <option name="cleanup-action" value="REBOOT" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- disable device config sync during test -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
 
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
-        <option
-            name="run-command"
-            value="device_config put adservices ga_ux_enabled false" />
         <option
             name="run-command"
             value="device_config put adservices adservice_enable_status true" />

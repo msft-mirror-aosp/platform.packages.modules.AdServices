@@ -17,9 +17,9 @@
 package android.adservices.test.scenario.adservices.fledge;
 
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.platform.test.scenario.annotation.Scenario;
 
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -46,7 +46,7 @@ public class SelectAdsTestServerLatency extends AbstractSelectAdsLatencyTest {
         }
         ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests none");
         if (!SdkLevel.isAtLeastT()) {
-            CompatTestUtils.resetFlagsToDefault();
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 

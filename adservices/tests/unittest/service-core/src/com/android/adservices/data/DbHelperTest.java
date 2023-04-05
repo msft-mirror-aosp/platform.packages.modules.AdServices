@@ -16,14 +16,10 @@
 
 package com.android.adservices.data;
 
-import static com.android.adservices.data.DbHelper.CURRENT_DATABASE_VERSION;
-import static com.android.adservices.data.DbHelper.DATABASE_VERSION_V7;
+import static com.android.adservices.data.DbHelper.DATABASE_VERSION;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
-import static com.android.adservices.data.DbTestUtil.getDatabaseNameForTest;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -32,7 +28,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -142,7 +137,7 @@ public class DbHelperTest {
     }
 
     @Test
-    public void testOnUpgrade_topicsV5Migration() {
+    public void testOnUpgrade_topicsV7Migration() {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
@@ -156,47 +151,21 @@ public class DbHelperTest {
         doReturn(List.of(topicDbMigratorV7)).when(dbHelper).topicsGetOrderedDbMigrators();
 
         // Negative case - target version 5 is not in (oldVersion, newVersion]
-        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ CURRENT_DATABASE_VERSION);
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 5);
         Mockito.verify(topicDbMigratorV7, Mockito.never()).performMigration(db);
 
         // Positive case - target version 5 is in (oldVersion, newVersion]
-        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ DATABASE_VERSION_V7);
+        dbHelper.onUpgrade(db, /* oldVersion */ 1, /* new Version */ 7);
         Mockito.verify(topicDbMigratorV7).performMigration(db);
     }
 
     @Test
-    public void testOnDowngrade_topicsV5ToV3() {
+    public void testOnDowngrade() {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = mock(SQLiteDatabase.class);
 
-        // Verify no error if migrate db from V5 to V3
-        dbHelper.onDowngrade(db, DATABASE_VERSION_V7, CURRENT_DATABASE_VERSION);
-    }
-
-    @Test
-    public void testSupportsTopicContributorsTable() {
-        DbHelper dbHelperV2 =
-                new DbHelper(
-                        sContext,
-                        getDatabaseNameForTest(), /* dbVersion*/
-                        CURRENT_DATABASE_VERSION);
-        assertThat(dbHelperV2.supportsTopicContributorsTable()).isFalse();
-
-        DbHelper dbHelperV5 =
-                new DbHelper(
-                        sContext, getDatabaseNameForTest(), /* dbVersion*/ DATABASE_VERSION_V7);
-        assertThat(dbHelperV5.supportsTopicContributorsTable()).isTrue();
-    }
-
-    @Test
-    public void testGetDatabaseVersionToCreate() {
-        // Test feature flag is off
-        when(mMockFlags.getEnableTopicMigration()).thenReturn(false);
-        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(CURRENT_DATABASE_VERSION);
-
-        // Test feature flag is on
-        when(mMockFlags.getEnableTopicMigration()).thenReturn(true);
-        assertThat(DbHelper.getDatabaseVersionToCreate()).isEqualTo(DATABASE_VERSION_V7);
+        // Verify no error if downgrading db from current version to V1
+        dbHelper.onDowngrade(db, DATABASE_VERSION, 1);
     }
 
     @Test
@@ -207,8 +176,8 @@ public class DbHelperTest {
 
         assertEquals(1, db.getVersion());
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, CURRENT_DATABASE_VERSION);
-        dbHelper.onUpgrade(db, 1, CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION);
+        dbHelper.onUpgrade(db, 1, DATABASE_VERSION);
         assertMeasurementSchema(db);
     }
 
@@ -221,8 +190,8 @@ public class DbHelperTest {
         assertEquals(1, db.getVersion());
         Arrays.stream(MeasurementTables.V1_TABLES).forEach((table) -> dropTable(db, table));
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, CURRENT_DATABASE_VERSION);
-        dbHelper.onUpgrade(db, 1, CURRENT_DATABASE_VERSION);
+        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION);
+        dbHelper.onUpgrade(db, 1, DATABASE_VERSION);
         assertMeasurementTablesDoNotExist(db);
     }
 

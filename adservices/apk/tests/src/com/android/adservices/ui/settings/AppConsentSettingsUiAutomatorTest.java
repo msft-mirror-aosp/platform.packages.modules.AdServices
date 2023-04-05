@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -34,9 +35,13 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -44,6 +49,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class AppConsentSettingsUiAutomatorTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String TEST_APP_NAME = "com.example.adservices.samples.ui.consenttestapp";
     private static final String TEST_APP_APK_PATH =
             "/data/local/tmp/cts/install/" + TEST_APP_NAME + ".apk";
@@ -51,9 +57,12 @@ public class AppConsentSettingsUiAutomatorTest {
     private static final ComponentName COMPONENT =
             new ComponentName(TEST_APP_NAME, TEST_APP_ACTIVITY_NAME);
 
-    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_PACKAGE = "android.adservices.ui.SETTINGS";
+    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+    private static final String ADEXTSERVICES_PACKAGE_NAME =
+            "com.google.android.ext.adservices.api";
 
     @Before
     public void setup() throws UiObjectNotFoundException {
@@ -65,14 +74,22 @@ public class AppConsentSettingsUiAutomatorTest {
 
         // Start from the home screen
         sDevice.pressHome();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void teardown() {
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
         ShellUtils.runShellCommand("pm uninstall --user 0 " + TEST_APP_NAME);
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
@@ -87,6 +104,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, false);
     }
 
@@ -100,6 +119,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, false);
     }
 
@@ -107,6 +128,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, true);
     }
 
@@ -121,6 +144,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        // System server is not available on S-, skip this test for S-
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, true);
     }
 
@@ -138,14 +163,19 @@ public class AppConsentSettingsUiAutomatorTest {
     }
 
     private void launchSettingApp() {
+        String privacySandboxUi;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            privacySandboxUi = PRIVACY_SANDBOX_TEST_PACKAGE;
+        } else {
+            privacySandboxUi = PRIVACY_SANDBOX_PACKAGE;
+        }
         Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
+        Intent intent = new Intent(privacySandboxUi);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
 
         // Wait for the app to appear
-        sDevice.wait(
-                Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        sDevice.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), LAUNCH_TIMEOUT);
     }
 
     private void appConsentTest(int consentSourceOfTruth, boolean dialogsOn)
@@ -154,7 +184,7 @@ public class AppConsentSettingsUiAutomatorTest {
                 "device_config put adservices consent_source_of_truth " + consentSourceOfTruth);
         ShellUtils.runShellCommand(
                 "device_config put adservices ui_dialogs_feature_enabled " + dialogsOn);
-        ShellUtils.runShellCommand("am force-stop com.google.android.adservices.api");
+        AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         // Wait for launcher
         final String launcherPackage = sDevice.getLauncherPackageName();

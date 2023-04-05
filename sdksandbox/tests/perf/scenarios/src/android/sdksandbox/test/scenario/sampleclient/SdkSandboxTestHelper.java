@@ -20,10 +20,11 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.SystemClock;
-import android.support.test.uiautomator.By;
-import android.support.test.uiautomator.UiDevice;
-import android.support.test.uiautomator.UiObject2;
-import android.support.test.uiautomator.Until;
+
+import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject2;
+import androidx.test.uiautomator.Until;
 
 import java.io.IOException;
 
@@ -31,7 +32,7 @@ import java.io.IOException;
 public class SdkSandboxTestHelper {
     private static final UiDevice sUiDevice = UiDevice.getInstance(getInstrumentation());
 
-    private static final long UI_NAVIGATION_WAIT_MS = 1000;
+    private static final long UI_NAVIGATION_WAIT_MS = 5000;
     private static final long UI_WAIT_LOADSDK_MS = 500;
     private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";

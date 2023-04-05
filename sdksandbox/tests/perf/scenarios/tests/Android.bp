@@ -29,7 +29,6 @@ android_test {
         "platform-test-options",
         "platform-test-rules",
         "sdksandbox-perf-test-scenarios",
-        "ub-uiautomator",
     ],
     // Certificate and platform api is needed for collector-device-lib-platform.
     certificate: "platform",
