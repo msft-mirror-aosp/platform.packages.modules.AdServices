@@ -308,11 +308,6 @@ public class AttributionJobServiceTest {
                             () ->
                                     DebugReportingJobService.scheduleIfNeeded(
                                             any(), anyBoolean(), anyBoolean()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
 
             // Execute
             execute.run();
