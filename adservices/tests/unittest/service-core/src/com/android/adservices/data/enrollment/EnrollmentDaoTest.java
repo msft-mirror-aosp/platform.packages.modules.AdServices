@@ -532,9 +532,13 @@ public class EnrollmentDaoTest {
         mEnrollmentDao.insert(ENROLLMENT_DATA4);
         EnrollmentData e =
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://2test.com/trigger"));
-        assertNotNull(e);
-        assertEquals(e, ENROLLMENT_DATA2);
+                        Uri.parse("https://test-prefix.com"));
+        assertEquals(e, ENROLLMENT_DATA4);
+
+        EnrollmentData e1 =
+                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
+                        Uri.parse("https://other-prefix.test-prefix.com"));
+        assertEquals(e1, ENROLLMENT_DATA4);
     }
 
     @Test
@@ -599,51 +603,6 @@ public class EnrollmentDaoTest {
                 mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
                         Uri.parse("https://4test.com/path"));
         assertNull(e);
-    }
-
-    @Test
-    public void getEnrollmentDataFromMeasurementUrl_forPathAsPrefix_matchesCorrectPath() {
-        EnrollmentData enrollmentData =
-                new EnrollmentData.Builder()
-                        .setEnrollmentId("21")
-                        .setCompanyId("1002")
-                        .setSdkNames(Arrays.asList("2sdk", "anotherSdk"))
-                        .setAttributionSourceRegistrationUrl(
-                                Arrays.asList("https://2test.com/sourceanotherone"))
-                        .setAttributionTriggerRegistrationUrl(
-                                Arrays.asList("https://2test.com/triggeranotherone"))
-                        .setAttributionReportingUrl(Arrays.asList("https://2test.com"))
-                        .setRemarketingResponseBasedRegistrationUrl(
-                                Arrays.asList("https://2test.com"))
-                        .setEncryptionKeyUrl(Arrays.asList("https://2test.com/keys"))
-                        .build();
-        mEnrollmentDao.insert(enrollmentData);
-        mEnrollmentDao.insert(ENROLLMENT_DATA2);
-
-        EnrollmentData e1 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://2test.com/source"));
-
-        EnrollmentData e2 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://2test.com/sourceanotherone"));
-
-        EnrollmentData e3 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://2test.com/trigger"));
-
-        EnrollmentData e4 =
-                mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(
-                        Uri.parse("https://2test.com/triggeranotherone"));
-
-        assertNotNull(e1);
-        assertNotNull(e2);
-        assertNotNull(e3);
-        assertNotNull(e4);
-        assertEquals(e1, ENROLLMENT_DATA2);
-        assertEquals(e2, enrollmentData);
-        assertEquals(e3, ENROLLMENT_DATA2);
-        assertEquals(e4, enrollmentData);
     }
 
     @Test
