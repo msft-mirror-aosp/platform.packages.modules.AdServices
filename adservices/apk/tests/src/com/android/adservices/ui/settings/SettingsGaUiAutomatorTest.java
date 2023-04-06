@@ -26,6 +26,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -469,6 +470,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 277205534)
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
