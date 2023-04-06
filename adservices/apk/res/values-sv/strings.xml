@@ -72,7 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Appar kan uppskatta dina intressen och spara dem tillfälligt med Android. Om du till exempel använder en app för att köpa löparskor kan den uppskatta dina intressen som ”springa maraton”.\n\nSedan kan en annan app visa en annons relaterad till maraton utifrån detta intresse.\n\nDu kan hantera listan över appar som har sparade intressen i integritetsinställningarna."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nya funktioner för annonsintegritet"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Annonsämnen och nya inställningar ger dig mer kontroll över annonserna som visas"</string>
-    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Nya annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Nya funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android registrerar ämnen du är intresserad av baserat på appar du nyligen har använt. Appar som du använder kan också bedöma vad du gillar. Senare kan appar be om denna information för att visa anpassade annonser för dig. Du kan välja vilka ämnen och appar som ska användas för att visa annonser."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"För att mäta en annons resultat delas begränsade typer av data mellan appar."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Mer om annonser på Android"</string>
@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Testa nya funktioner för annonsintegritet"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Annonsämnen ger dig större kontroll över vilka annonser du ser"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Visa information"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Testa nya funktioner för annonsintegritet"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanserar nya integritetsfunktioner som ger dig större kontroll över vilka annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Annonsämnen hjälper appar att visa relevanta annonser samtidigt som din appanvändning och identitet skyddas. Android kan registrera ämnen du är intresserad av baserat på vilka appar du nyligen har använt. Senare kan en app be Android om relevanta ämnen för att anpassa vilka annonser som visas."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonsämnen i enhetsinställningarna och blockera dem som du inte vill ska delas med appar. Android raderar även annonsämnen regelbundet och automatiskt."</string>
@@ -103,7 +102,7 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Så här kan du hantera din data"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android raderar ämnen automatiskt och regelbundet. När du använder appar kan ett ämne dyka upp på listan igen. Du kan också blockera ämnen som du inte vill att Android ska dela med appar och inaktivera annonsämnen när som helst i integritetsinställningarna."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Du kan göra ändringar i integritetsinställningarna."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Andra annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Andra funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android erbjuder även nya sätt att begränsa vilken information appar kan få om dig när de visar anpassade annonser."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Föreslagna annonser i appar bidrar till att skydda din identitet och appanvändning samtidigt som appar kan visa relevanta annonser. Utifrån din aktivitet kan en app föreslå relaterade annonser i andra appar. I integritetsinställningarna kan du se en lista över appar och blockera dem från att ge förslag."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Med annonsmätning delas begränsade typer av data mellan appar för att mäta annonsernas resultat, till exempel vilken tidpunkt en annons visades för dig."</string>
@@ -117,19 +116,19 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android raderar föreslagen data från appar automatiskt och regelbundet. Om du använder en app på nytt kan den dyka upp på listan igen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Du kan även blockera en app från att föreslå annonser för dig, återställa all data om annonsförslag eller inaktivera föreslagna annonser i appar när som helst i integritetsinställningarna."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Appar du använder kan be Android om information som hjälper dem att mäta annonsernas resultat. Android skyddar din integritet genom att begränsa informationen som appar kan dela med varandra."</string>
-    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nya annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nya funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Få större kontroll över vilka annonser du ser och skydda din identitet"</string>
-    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nya annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nya funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Med föreslagna annonser i appar bidrar de nya integritetsfunktionerna till att skydda din identitet och appanvändning samtidigt som webbplatser kan visa relevanta annonser. Utifrån din aktivitet kan en app föreslå relaterade annonser i andra appar. I integritetsinställningarna kan du se en lista över appar och blockera dem från att ge förslag."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Med annonsmätning delas begränsade typer av data mellan appar för att tolka annonsernas resultat, till exempel vilken tidpunkt en annons visades för dig."</string>
-    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktivera en till annonsintegritetsfunktion"</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktivera en till funktion för annonsintegritet"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android erbjuder även en ny integritetsfunktion som ger dig större kontroll över vilka annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Annonsämnen hjälper appar att visa relevanta annonser samtidigt som din appanvändning och identitet skyddas. Android kan registrera ämnen du är intresserad av baserat på appar du nyligen har använt. Senare kan en app be Android om relevanta ämnen för att visa mer relevanta annonser."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Du kan se annonsämnen i integritetsinställningarna och blockera dem som du inte vill ska delas med appar. Android raderar också annonsämnen automatiskt och regelbundet."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Aktivera"</string>
-    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nya annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nya funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Nu får du större kontroll över vilka annonser du ser samtidigt som du skyddar din identitet"</string>
-    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nya annonsintegritetsfunktioner är nu tillgängliga"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nya funktioner för annonsintegritet är nu tillgängliga"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android erbjuder nu nya integritetsfunktioner som ger dig större kontroll över vilka annonser du ser."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Nästa"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>

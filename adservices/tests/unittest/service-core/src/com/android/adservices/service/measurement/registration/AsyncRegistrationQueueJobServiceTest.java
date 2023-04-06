@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -82,7 +82,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Allow background thread to execute
                     Thread.sleep(WAIT_IN_MILLIS);
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1)).cancel(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -106,7 +107,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Allow background thread to execute
                     Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
-                    verify(mMockJobScheduler, never()).cancel(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                    verify(mMockJobScheduler, never())
+                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -124,17 +126,17 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -153,17 +155,17 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ false);
+                            mockContext, /* forceSchedule= */ false);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -182,18 +184,18 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule = */ true);
+                            mockContext, /* forceSchedule= */ true);
 
                     // Validate
                     ExtendedMockito.verify(
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -209,9 +211,9 @@ public class AsyncRegistrationQueueJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo = */ null)
+                    doReturn(/* noJobInfo= */ null)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
 
                     // Execute
                     AsyncRegistrationQueueJobService.scheduleIfNeeded(mockContext, false);
@@ -221,7 +223,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                             () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
                             times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
 
@@ -244,7 +246,8 @@ public class AsyncRegistrationQueueJobServiceTest {
                     // Allow background thread to execute
                     Thread.sleep(WAIT_IN_MILLIS);
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1)).cancel(eq(ASYNC_REGISTRATION_QUEUE_JOB_ID));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                     ExtendedMockito.verifyZeroInteractions(
                             ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });

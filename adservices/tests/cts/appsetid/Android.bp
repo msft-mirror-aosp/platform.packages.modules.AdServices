@@ -27,7 +27,6 @@ android_test {
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
-        "ub-uiautomator",
     ],
     libs: [
         "android.test.base",

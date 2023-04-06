@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +26,8 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -34,13 +38,11 @@ import android.view.InputEvent;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.Source;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -54,17 +56,15 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class EnqueueAsyncRegistrationTest {
 
-    private static Context sDefaultContext = ApplicationProvider.getApplicationContext();
+    private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://foo.test/bar?ad=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test/bar?ad=256");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final boolean DEFAULT_AD_ID_PERMISSION = false;
-    private static final String DEFAULT_ENROLLMENT = "enrollment-id";
     private static final WebSourceParams INPUT_SOURCE_REGISTRATION_1 =
             new WebSourceParams.Builder(REGISTRATION_URI_1).setDebugKeyAllowed(true).build();
 
@@ -77,9 +77,9 @@ public class EnqueueAsyncRegistrationTest {
     private static final WebTriggerParams INPUT_TRIGGER_REGISTRATION_2 =
             new WebTriggerParams.Builder(REGISTRATION_URI_2).setDebugKeyAllowed(false).build();
 
-    private static List<WebSourceParams> sSourceParamsList = new ArrayList<>();
+    private static final List<WebSourceParams> sSourceParamsList = new ArrayList<>();
 
-    private static List<WebTriggerParams> sTriggerParamsList = new ArrayList<>();
+    private static final List<WebTriggerParams> sTriggerParamsList = new ArrayList<>();
 
     static {
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
@@ -89,8 +89,9 @@ public class EnqueueAsyncRegistrationTest {
     }
 
     @Mock private DatastoreManager mDatastoreManagerMock;
-    @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private InputEvent mInputEvent;
+    @Mock private ContentResolver mContentResolver;
+    @Mock private ContentProviderClient mMockContentProviderClient;
 
     private MockitoSession mStaticMockSession;
 
@@ -107,10 +108,6 @@ public class EnqueueAsyncRegistrationTest {
             new WebTriggerRegistrationRequest.Builder(
                             sTriggerParamsList, Uri.parse("android-app://test.e.abc"))
                     .build();
-
-    private static EnrollmentData getEnrollment(String enrollmentId) {
-        return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
-    }
 
     @After
     public void cleanup() {
@@ -130,8 +127,9 @@ public class EnqueueAsyncRegistrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         MockitoAnnotations.initMocks(this);
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
-                .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
+        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+                .thenReturn(mMockContentProviderClient);
+        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
     }
 
     @Test
@@ -153,8 +151,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -209,8 +207,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -264,8 +262,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         null,
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -307,8 +305,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -334,9 +332,6 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -363,9 +358,6 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -403,9 +395,6 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistration.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -435,9 +424,6 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(Source.SourceType.EVENT, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -494,8 +480,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -521,9 +507,6 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
                 Assert.assertEquals(
@@ -551,9 +534,6 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
@@ -593,9 +573,6 @@ public class EnqueueAsyncRegistrationTest {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
-                Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistration.getSourceType());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -625,9 +602,6 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
                 Assert.assertEquals(
                         Source.SourceType.NAVIGATION, asyncRegistrationTwo.getSourceType());
                 Assert.assertEquals(
@@ -674,8 +648,8 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
-                        mEnrollmentDao,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -700,10 +674,7 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
-                Assert.assertEquals(null, asyncRegistration.getSourceType());
+                Assert.assertNull(asyncRegistration.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -723,10 +694,7 @@ public class EnqueueAsyncRegistrationTest {
 
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
-                Assert.assertEquals(null, asyncRegistrationTwo.getSourceType());
+                Assert.assertNull(asyncRegistrationTwo.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -753,10 +721,7 @@ public class EnqueueAsyncRegistrationTest {
                                     .getRegistrationUri())) {
                 Assert.assertNotNull(asyncRegistration.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_2, asyncRegistration.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistration.getRedirectType());
-                Assert.assertEquals(null, asyncRegistration.getSourceType());
+                Assert.assertNull(asyncRegistration.getSourceType());
                 Assert.assertNotNull(asyncRegistration.getRegistrant());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -775,10 +740,7 @@ public class EnqueueAsyncRegistrationTest {
                         SqliteObjectMapper.constructAsyncRegistration(cursor);
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrationUri());
                 Assert.assertEquals(REGISTRATION_URI_1, asyncRegistrationTwo.getRegistrationUri());
-                Assert.assertEquals(
-                        AsyncRegistration.RedirectType.NONE,
-                        asyncRegistrationTwo.getRedirectType());
-                Assert.assertEquals(null, asyncRegistrationTwo.getSourceType());
+                Assert.assertNull(asyncRegistrationTwo.getSourceType());
                 Assert.assertNotNull(asyncRegistrationTwo.getRegistrant());
                 Assert.assertEquals(
                         Uri.parse("android-app://test.destination"),
@@ -810,21 +772,8 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
-                        mEnrollmentDao,
-                        mDatastoreManagerMock));
-    }
-
-    @Test
-    public void testMissingEnrollmentData_inValid() {
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
-        Assert.assertFalse(
-                EnqueueAsyncRegistration.webTriggerRegistrationRequest(
-                        VALID_WEB_TRIGGER_REGISTRATION,
-                        DEFAULT_AD_ID_PERMISSION,
-                        Uri.parse("android-app://test.destination"),
-                        System.currentTimeMillis(),
-                        mEnrollmentDao,
-                        mDatastoreManagerMock));
+                        mDatastoreManagerMock,
+                        mContentResolver));
     }
 
     /** Test that the AsyncRegistration is inserted correctly. */
@@ -846,8 +795,8 @@ public class EnqueueAsyncRegistrationTest {
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
                 Source.SourceType.EVENT,
-                mEnrollmentDao,
-                datastoreManager);
+                datastoreManager,
+                mContentResolver);
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -880,61 +829,6 @@ public class EnqueueAsyncRegistrationTest {
             Assert.assertNotNull(asyncRegistration.getType());
             Assert.assertEquals(
                     AsyncRegistration.RegistrationType.APP_SOURCE, asyncRegistration.getType());
-            Assert.assertEquals(
-                    AsyncRegistration.RedirectType.ANY,
-                    asyncRegistration.getRedirectType());
         }
-    }
-
-
-    private void enqueueSourceRegistrationRequestWithDebugRelatedKeys(
-            final boolean adIdPermission, final boolean debugKeyAllowed) {
-        final DatastoreManager datastore =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
-        final List<WebSourceParams> params =
-                Collections.singletonList(
-                        new WebSourceParams.Builder(REGISTRATION_URI_1)
-                                .setDebugKeyAllowed(debugKeyAllowed)
-                                .build());
-        final WebSourceRegistrationRequest request =
-                new WebSourceRegistrationRequest.Builder(
-                                params, Uri.parse("android-app://example.test/aD1"))
-                        .setWebDestination(Uri.parse("android-app://example.test/aD1"))
-                        .setAppDestination(Uri.parse("android-app://example.test/aD1"))
-                        .setVerifiedDestination(Uri.parse("android-app://example.test/aD1"))
-                        .setInputEvent(mInputEvent)
-                        .build();
-
-        EnqueueAsyncRegistration.webSourceRegistrationRequest(
-                request,
-                adIdPermission,
-                Uri.parse("android-app://test.destination"),
-                System.currentTimeMillis(),
-                Source.SourceType.NAVIGATION,
-                mEnrollmentDao,
-                datastore);
-    }
-
-    private void enqueueTriggerRegistrationRequestWithDebugRelatedKeys(
-            final boolean adIdPermission, final boolean debugKeyAllowed) {
-        final DatastoreManager datastore =
-                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
-        final List<WebTriggerParams> params =
-                Collections.singletonList(
-                        new WebTriggerParams.Builder(REGISTRATION_URI_1)
-                                .setDebugKeyAllowed(debugKeyAllowed)
-                                .build());
-        final WebTriggerRegistrationRequest request =
-                new WebTriggerRegistrationRequest.Builder(
-                                params, Uri.parse("android-app://test.e.abc"))
-                        .build();
-
-        EnqueueAsyncRegistration.webTriggerRegistrationRequest(
-                request,
-                adIdPermission,
-                Uri.parse("android-app://test.destination"),
-                System.currentTimeMillis(),
-                mEnrollmentDao,
-                datastore);
     }
 }

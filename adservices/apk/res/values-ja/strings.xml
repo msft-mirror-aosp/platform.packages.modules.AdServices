@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"広告の新しいプライバシー機能を試す"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"広告のトピックを通じて、表示される広告をご自身でより細かくコントロールできます"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"詳細を表示"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"広告のプライバシーの新機能を使ってみる"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android では、表示される広告について選択の幅が広がる新たなプライバシー機能がリリースされます。"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"広告のトピックは、ユーザーの個人情報やアプリの使用状況に関する情報を保護しながら、アプリで関連性の高い広告を表示できるようにする機能です。Android では、ユーザーが最近使用したアプリに基づいて興味 / 関心のあるトピックが保存されます。その後、使用するアプリでは、表示する広告をカスタマイズするために、Android に関連するトピックを提示するよう要求できます。"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"デバイスの設定で広告のトピックを確認して、アプリと共有したくないトピックをブロックできます。Android では、定期的に広告のトピックも自動削除されます。"</string>
@@ -120,11 +119,11 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"新しい広告のプライバシー機能がリリースされました"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"個人情報を保護しつつ、表示される広告をご自身でより細かく選択できます"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"新しい広告のプライバシー機能がリリースされました"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  新しいプライバシー機能の「アプリによる広告の提案」では、アプリに関連性の高い広告を表示することを有効にしている場合、個人情報とアプリの使用に関する情報が保護されます。ユーザーのアクティビティに基づいて、使用するアプリは他のアプリに表示する関連性の高い広告を提案できます。プライバシー設定で、アプリのリストを確認したり、アプリによる提案をブロックしたりできます。"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  新しいプライバシー機能の「アプリによる広告の提案」では、個人情報とアプリの使用に関する情報を保護しながら、ユーザーに関連性の高い広告をアプリで表示できるようにします。ユーザーのアクティビティに基づいて、ユーザーが使用しているアプリから他のアプリに対して、表示する関連広告を提案することができます。プライバシー設定で、アプリのリストを確認したり、アプリによる提案をブロックしたりできます。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  広告の測定では、限られた種類のデータ（広告が表示された時間帯など）が、広告パフォーマンスの把握のためにアプリ間で共有されます。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"その他の広告のプライバシー機能を ON にする"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android は、表示される広告をご自身でより細かく選択できる新しいプライバシー機能もリリースします。"</string>
-    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"広告のトピックによって、関連性の高い広告をアプリが表示できるようになるとともに、ユーザーの個人情報やアプリの使い方に関する情報も保護できます。Android は、ユーザーが最近使用したアプリに基づき、興味に関するトピックを記録できます。関連性の高い広告を表示するために、使用するアプリから後で Android に対して、関連性の高いトピックを後で求められることがあります。"</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"広告のトピックによって、関連性の高い広告をアプリが表示できるようになるとともに、ユーザーの個人情報やアプリの使い方に関する情報も保護できます。Android は、最近使用されたアプリをもとにユーザーが興味のあるトピックを記録できます。トピックが記録されたら、今度はアプリが Android からその情報を得てユーザーに関連性の高い広告を表示することができます。"</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"プライバシー設定で広告のトピックを確認し、アプリと共有したくないトピックをブロックすることができます。また Android では、広告のトピックを定期的に自動削除しています。"</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"ON にする"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"新しい広告のプライバシー機能がリリースされました"</string>

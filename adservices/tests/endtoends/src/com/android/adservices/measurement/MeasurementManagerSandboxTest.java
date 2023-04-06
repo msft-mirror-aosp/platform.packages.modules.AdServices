@@ -17,11 +17,15 @@
 package com.android.adservices.measurement;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
+import android.adservices.adid.AdId;
+import android.adservices.adid.AdIdManager;
 import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.adservices.measurement.IMeasurementService;
@@ -54,7 +58,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import java.util.Collections;
 import java.util.concurrent.Executor;
@@ -95,9 +98,18 @@ public class MeasurementManagerSandboxTest {
         // same parameters are being sent as with a regular context. In these cases, the sdk package
         // name could be the only parameter that could differ, so package name would need to be
         // verified that it remains the same as the context package name on all the APIs.
-        mMeasurementManager =
-                Mockito.spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
+        String adId = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
+        AdIdManager adIdManager = mock(AdIdManager.class);
+        mMeasurementManager = spy(MeasurementManager.get(sContext, adIdManager));
         doReturn(mMockMeasurementService).when(mMeasurementManager).getService();
+        doAnswer(
+                (invocation) -> {
+                    ((OutcomeReceiver) invocation.getArgument(1))
+                            .onResult(new AdId(adId, true));
+                    return null;
+                })
+                .when(adIdManager)
+                .getAdId(any(), any());
 
         overrideMeasurementKillSwitches(true);
     }

@@ -144,7 +144,7 @@
     <!-- Text for container2 body text. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container2_body_text">The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta any time in your privacy settings.</string>
     <!-- Text for button to open Privacy Sandbox Settings from detailed notification activity. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_left_control_button_text">@string/notificationUI_confirmation_left_control_button_text</string>
+    <string name="notificationUI_left_control_button_text" translatable="false">@string/notificationUI_confirmation_left_control_button_text</string>
     <!-- Text for button to acknowledge and dismiss detailed notification activity.  [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_text">Got it</string>
 
@@ -225,7 +225,7 @@
     <!-- Text for expander button in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_container1_control_ga_text_eu">More about ad topics</string>
     <!-- Text for content of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_learn_more_from_privacy_policy">Learn more about how Android protects your data in our Privacy Policy.</string>
+    <string name="notificationUI_learn_more_from_privacy_policy">Learn more about how Android protects your data in our <a href="https://policies.google.com/privacy">Privacy Policy</a>.</string>
     <!-- Text for the button to join ad topics in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_right_control_button_ga_text_eu">Try it out</string>
     <!-- Text for the explanation of ad topics in the expander in the EU notification landing page about ad topics. [CHAR LIMIT=NONE] -->
@@ -289,7 +289,7 @@
     <!-- Text for title of the EU notification landing page about app-suggested ad and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_fledge_measurement_title_v2">New ads privacy features now available</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_fledge_measurement_introduction_text1_v2" translatable="false">@string/notificationUI_fledge_measurement_introduction_text1</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2">Android is launching new ways to limit what apps can learn about you when they show you personalized ads.</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_fledge_measurement_introduction_text2_v2">&#8226;&#160;&#160;With app-suggested ads, new privacy features help protect your identity and information about your app usage while enabling apps to show you relevant ads. Based on your activity, an app you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions in privacy settings.</string>
     <!-- Text for explanation in the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
@@ -301,7 +301,7 @@
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text1_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text1</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" translatable="false">Your activity in an app on this device can be used to suggest ads.</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2">Your activity in an app on this device can be used to suggest ads.</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text3_v2" translatable="false">@string/notificationUI_how_it_works_fledge_measurement_expanded_text3</string>
     <!-- Text for explanation inside the expander of the EU notification landing page about app-suggested ads and ad measurement. [CHAR LIMIT=NONE] -->
@@ -495,7 +495,7 @@
     <!-- Title for the ads measurement view. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_measurement_view_title" translatable="false">@string/settingsUI_main_view_info_text8</string>
     <!-- Text for the footer of measurement view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_measurement_view_footer_text">Android protects your privacy by limiting the information apps can share with one another. Reports are sent with a delay to protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\nLearn more about how Android protects your data in our Privacy Policy.</string>
+    <string name="settingsUI_measurement_view_footer_text">Android protects your privacy by limiting the information apps can share with one another. Reports are sent with a delay to protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\nLearn more about how Android protects your data in our <a href="https://policies.google.com/privacy">Privacy Policy</a>.</string>
     <!-- Text for the toast message of measurement reset. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_measurement_are_reset">Ad measurement data was reset</string>
 

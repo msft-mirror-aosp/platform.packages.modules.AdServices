@@ -36,7 +36,7 @@ public class ContentValueFixtures {
         public static final String OS_DESTINATION = "android-app://com.os.destination";
         public static final String VERIFIED_DESTINATION = "android-app://com.verified.destination";
         public static final String TOP_ORIGIN = "android-app://com.top.origin";
-        public static final long REDIRECT = AsyncRegistration.RedirectType.DAISY_CHAIN;
+        public static final long REDIRECT = 2;
         public static final long INPUT_EVENT = 1;
         public static final String REGISTRANT = "android-app://com.registrant";
         public static final long SCHEDULED_TIME = 8640000000L;
@@ -46,7 +46,7 @@ public class ContentValueFixtures {
 
         // Added in V3.
         public static final String ENROLLMENT_ID = "enrollment-id";
-        public static final long REDIRECT_TYPE = AsyncRegistration.RedirectType.DAISY_CHAIN;
+        public static final long REDIRECT_TYPE = 2;
         public static final long REDIRECT_COUNT = 10;
         public static final long SOURCE_TYPE = Source.SourceType.NAVIGATION.ordinal();
         public static final long REQUEST_TIME = 8660000000L;
@@ -284,7 +284,7 @@ public class ContentValueFixtures {
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 AsyncRegistrationValues.RETRY_COUNT);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
+                MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME,
                 AsyncRegistrationValues.LAST_PROCESSING_TIME);
         asyncRegistration.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE, AsyncRegistrationValues.TYPE);
@@ -307,13 +307,13 @@ public class ContentValueFixtures {
 
         // Add columns.
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
+                MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID,
                 AsyncRegistrationValues.ENROLLMENT_ID);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
+                MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE,
                 AsyncRegistrationValues.REDIRECT_TYPE);
         asyncRegistration.put(
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
+                MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT,
                 AsyncRegistrationValues.REDIRECT_COUNT);
         asyncRegistration.put(
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
@@ -345,6 +345,14 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAsyncRegistrationContentValuesV8() {
         return generateAsyncRegistrationContentValuesV7();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV9() {
+        return generateAsyncRegistrationContentValuesV8();
+    }
+
+    public static ContentValues generateAsyncRegistrationContentValuesV10() {
+        return generateAsyncRegistrationContentValuesV9();
     }
 
     public static ContentValues generateSourceContentValuesV1() {
