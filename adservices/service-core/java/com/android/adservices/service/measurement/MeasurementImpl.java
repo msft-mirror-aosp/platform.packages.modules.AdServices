@@ -32,6 +32,7 @@ import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -79,6 +80,7 @@ public final class MeasurementImpl {
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
+    private final ContentResolver mContentResolver;
     private final ClickVerifier mClickVerifier;
     private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
@@ -90,6 +92,7 @@ public final class MeasurementImpl {
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
+        mContentResolver = mContext.getContentResolver();
         deleteOnRollback();
     }
 
@@ -98,12 +101,14 @@ public final class MeasurementImpl {
             Context context,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            MeasurementDataDeleter measurementDataDeleter) {
+            MeasurementDataDeleter measurementDataDeleter,
+            ContentResolver contentResolver) {
         mContext = context;
         mDatastoreManager = datastoreManager;
         mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = FlagsFactory.getFlagsForTest();
+        mContentResolver = contentResolver;
     }
 
     /**
@@ -161,7 +166,8 @@ public final class MeasurementImpl {
                                             : getSourceType(
                                                     request.getInputEvent(),
                                                     request.getRequestTime()),
-                                    mDatastoreManager)
+                                    mDatastoreManager,
+                                    mContentResolver)
                             ? STATUS_SUCCESS
                             : STATUS_IO_ERROR;
 
@@ -198,7 +204,8 @@ public final class MeasurementImpl {
                             getSourceType(
                                     sourceRegistrationRequest.getInputEvent(),
                                     request.getRequestTime()),
-                            mDatastoreManager);
+                            mDatastoreManager,
+                            mContentResolver);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
             } else {
@@ -232,7 +239,8 @@ public final class MeasurementImpl {
                             adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
-                            mDatastoreManager);
+                            mDatastoreManager,
+                            mContentResolver);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
             } else {

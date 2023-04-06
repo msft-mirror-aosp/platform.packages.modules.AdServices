@@ -551,7 +551,7 @@ public class ConsentManagerTest {
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         verify(mJobSchedulerMock)
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID);
+        verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
