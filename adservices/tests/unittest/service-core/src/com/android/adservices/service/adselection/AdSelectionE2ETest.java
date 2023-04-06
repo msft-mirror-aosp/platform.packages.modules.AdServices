@@ -296,16 +296,7 @@ public class AdSelectionE2ETest {
                                     .equals(request.getPath())
                             || (BUYER_BIDDING_LOGIC_URI_PATH + BUYER_2.toString())
                                     .equals(request.getPath())) {
-                        String headerName =
-                                JsVersionHelper.getVersionHeaderName(
-                                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
-                        long versionFromHeader = Long.parseLong(request.getHeader(headerName));
-                        if (JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
-                                != versionFromHeader) {
-                            return new MockResponse()
-                                    .setBody(READ_BID_FROM_AD_METADATA_JS)
-                                    .setHeader(headerName, versionFromHeader);
-                        }
+                        return new MockResponse().setBody(READ_BID_FROM_AD_METADATA_JS);
                     } else if (request.getPath().equals(SELECTION_PICK_HIGHEST_LOGIC_JS_PATH)) {
                         return new MockResponse().setBody(SELECTION_PICK_HIGHEST_LOGIC_JS);
                     } else if (request.getPath().equals(SELECTION_PICK_NONE_LOGIC_JS_PATH)) {
@@ -4478,7 +4469,7 @@ public class AdSelectionE2ETest {
         int largeCACountForBuyer = 300;
 
         Flags flagsWithLenientBuyerBiddingLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return lenientPerBuyerTimeOutLimit;
@@ -4602,7 +4593,7 @@ public class AdSelectionE2ETest {
 
         // Now we run the same Ad selection with tight per buyer timeout limits
         Flags flagsWithTightBuyerBiddingLimits =
-                new Flags() {
+                new AdSelectionE2ETestFlags() {
                     @Override
                     public long getAdSelectionBiddingTimeoutPerBuyerMs() {
                         return tightPerBuyerTimeOutLimit;
@@ -5964,7 +5955,7 @@ public class AdSelectionE2ETest {
         final long mBiddingLogicVersion;
 
         AdSelectionE2ETestFlags() {
-            this(Flags.FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION);
+            this(JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3);
         }
 
         AdSelectionE2ETestFlags(long biddingLogicVersion) {
