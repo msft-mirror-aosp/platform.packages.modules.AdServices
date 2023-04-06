@@ -150,7 +150,9 @@ public class AsyncRegistrationQueueRunner {
                 });
     }
 
-    private void storeSource(
+    /** Visible only for testing. */
+    @VisibleForTesting
+    public void storeSource(
             Source source, AsyncRegistration asyncRegistration, IMeasurementDao dao)
             throws DatastoreException {
         Uri topOrigin =
@@ -187,7 +189,9 @@ public class AsyncRegistrationQueueRunner {
                 });
     }
 
-    private void storeTrigger(Trigger trigger, IMeasurementDao dao) throws DatastoreException {
+    /** Visible only for testing. */
+    @VisibleForTesting
+    public void storeTrigger(Trigger trigger, IMeasurementDao dao) throws DatastoreException {
         if (isTriggerAllowedToInsert(dao, trigger)) {
             dao.insertTrigger(trigger);
             notifyTriggerContentProvider();
