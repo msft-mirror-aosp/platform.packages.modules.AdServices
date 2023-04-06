@@ -68,23 +68,14 @@ class FetcherUtil {
      * Check HTTP response codes that indicate a redirect.
      */
     static boolean isRedirect(int responseCode) {
-        // TODO: Decide if all of these should be allowed.
-        return responseCode == 301
-                || // Moved Permanently.
-                responseCode == 308
-                || // Permanent Redirect.
-                responseCode == 302
-                || // Found
-                responseCode == 303
-                || // See Other
-                responseCode == 307; // Temporary Redirect.
+        return (responseCode / 100) == 3;
     }
 
     /**
      * Check HTTP response code for success.
      */
     static boolean isSuccess(int responseCode) {
-        return responseCode == 200;
+        return (responseCode / 100) == 2;
     }
 
     /**
