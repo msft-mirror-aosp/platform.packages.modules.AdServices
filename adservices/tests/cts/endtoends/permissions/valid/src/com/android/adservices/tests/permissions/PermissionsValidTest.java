@@ -63,28 +63,41 @@ public class PermissionsValidTest {
     @Before
     public void setup() {
         if (!SdkLevel.isAtLeastT()) {
-            overridePpapiAppAllowList();
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
             CompatAdServicesTestUtils.setFlags();
+            // TODO: Remove after EngProd figures out why setprop commands from AndroidTest
+            //  .ExtServices.xml are not executing in post-submit (b/276909363)
+            setAdditionalFlags();
         }
     }
 
     @After
     public void tearDown() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
+            // TODO: Remove after EngProd figures out why setprop commands from AndroidTest
+            //  .ExtServices.xml are not executing in post-submit (b/276909363)
+            resetAdditionalFlags();
         }
     }
 
-    private void setPpapiAppAllowList(String allowList) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices ppapi_app_allow_list " + allowList);
+    private void setAdditionalFlags() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check true");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check true");
+        // TODO: Investigate why this is needed (b/276916172)
+        ShellUtils.runShellCommand("device_config put adservices ppapi_app_signature_allow_list *");
     }
 
-    private void overridePpapiAppAllowList() {
-        mPreviousAppAllowList =
-                ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
-        setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    private void resetAdditionalFlags() {
+        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_fledge_enrollment_check null");
+        ShellUtils.runShellCommand("setprop debug.adservices.disable_topics_enrollment_check null");
+        ShellUtils.runShellCommand(
+                "device_config put adservices ppapi_app_signature_allow_list null");
     }
 
     @Test
