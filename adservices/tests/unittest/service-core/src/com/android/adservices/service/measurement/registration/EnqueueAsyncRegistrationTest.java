@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +26,8 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -86,6 +90,8 @@ public class EnqueueAsyncRegistrationTest {
 
     @Mock private DatastoreManager mDatastoreManagerMock;
     @Mock private InputEvent mInputEvent;
+    @Mock private ContentResolver mContentResolver;
+    @Mock private ContentProviderClient mMockContentProviderClient;
 
     private MockitoSession mStaticMockSession;
 
@@ -121,6 +127,9 @@ public class EnqueueAsyncRegistrationTest {
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
         MockitoAnnotations.initMocks(this);
+        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+                .thenReturn(mMockContentProviderClient);
+        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
     }
 
     @Test
@@ -142,7 +151,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -197,7 +207,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -251,7 +262,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         null,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -293,7 +305,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -467,7 +480,8 @@ public class EnqueueAsyncRegistrationTest {
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -634,7 +648,8 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
-                        datastoreManager));
+                        datastoreManager,
+                        mContentResolver));
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
@@ -757,7 +772,8 @@ public class EnqueueAsyncRegistrationTest {
                         DEFAULT_AD_ID_PERMISSION,
                         Uri.parse("android-app://test.destination"),
                         System.currentTimeMillis(),
-                        mDatastoreManagerMock));
+                        mDatastoreManagerMock,
+                        mContentResolver));
     }
 
     /** Test that the AsyncRegistration is inserted correctly. */
@@ -779,7 +795,8 @@ public class EnqueueAsyncRegistrationTest {
                 Uri.parse("android-app://test.destination"),
                 System.currentTimeMillis(),
                 Source.SourceType.EVENT,
-                datastoreManager);
+                datastoreManager,
+                mContentResolver);
 
         try (Cursor cursor =
                 DbTestUtil.getMeasurementDbHelperForTest()
