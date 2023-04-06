@@ -5,8 +5,16 @@
       "name": "AdServicesApkUITests[com.google.android.adservices.apex]"
     },
     {
+      // Install com.google.android.extservices.apex and run AdExtServicesApkUITests.
+      "name": "AdExtServicesApkUITests[com.google.android.extservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUITestsAppConsent.
       "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesApkUITestsAppConsent.
+      "name": "AdExtServicesApkUITestsAppConsent[com.google.android.extservices.apex]"
     },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
@@ -186,11 +194,11 @@
     {
       "name": "AdServicesApkUITests",
       "options": [
-              {
-                // Exclude tests that are marked flaky
-                "exclude-annotation": "androidx.test.filters.FlakyTest"
-              }
-            ]
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "AdServicesApkUITestsAppConsent"
@@ -210,20 +218,20 @@
     {
       "name": "CtsAppSetIdEndToEndTest",
       "options": [
-              {
-                // Exclude tests that are marked flaky
-                "exclude-annotation": "androidx.test.filters.FlakyTest"
-              }
-            ]
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "CtsRootAdServicesUiTest",
       "options": [
-                    {
-                      // Exclude tests that are marked flaky
-                      "exclude-annotation": "androidx.test.filters.FlakyTest"
-                    }
-                  ]
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "CtsAdServicesHostTests"
