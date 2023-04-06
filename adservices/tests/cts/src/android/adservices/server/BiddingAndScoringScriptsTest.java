@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionManager;
+import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -34,10 +35,19 @@ import android.adservices.server.MockHttpResponse;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
@@ -46,15 +56,12 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /** Test class designed to exercise {@link HostedTestServer}. */
 @RunWith(AndroidJUnit4.class)
 public class BiddingAndScoringScriptsTest {
   private static final String TAG = "BiddingAndScoringScriptsTest";
+    private AdvertisingCustomAudienceClient mClient;
 
   private HostedTestServer mTestServer;
   private String sessionId;
@@ -129,8 +136,13 @@ public class BiddingAndScoringScriptsTest {
         .respondWith(MockHttpResponse.builder().setBody("200 OK").build());
 
     mExecutor = Executors.newSingleThreadExecutor();
-    mCustomAudienceManager = sContext.getSystemService(CustomAudienceManager.class);
-    mAdSelectionManager = sContext.getSystemService(AdSelectionManager.class);
+        mCustomAudienceManager = sContext.getSystemService(CustomAudienceManager.class);
+        mAdSelectionManager = sContext.getSystemService(AdSelectionManager.class);
+        mClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .build();
   }
 
   @After
@@ -148,28 +160,38 @@ public class BiddingAndScoringScriptsTest {
                 .setUri(Uri.parse(String.format("%s/buyer/bidding/simple_logic", sessionId)))
                 .build())
         .respondWith(MockHttpResponse.builder().setBody(loadResource("BiddingLogic.js")).build());
-    mTestServer.syncToServer();
+        mTestServer.syncToServer();
 
-    CountDownLatch latch = new CountDownLatch(1);
-    mCustomAudienceManager.joinCustomAudience(
-        makeJoinCustomAudienceRequest(CUSTOM_AUDIENCE, sessionId),
-        mExecutor,
-        caResult -> {
-          Log.v(TAG, "Joined Custom Audience");
-          mAdSelectionManager.selectAds(
-              makeAdSelectionConfig(sessionId),
-              mExecutor,
-              result -> {
-                assertThat(result.hasOutcome()).isTrue();
-                latch.countDown();
-                Log.v(
-                    TAG,
-                    String.format(
-                        "Selected ad with following render uri: %s", result.getRenderUri()));
-              });
-        });
+        JoinCustomAudienceRequest joinCustomAudienceRequest =
+                makeJoinCustomAudienceRequest(CUSTOM_AUDIENCE, sessionId);
 
-    latch.await();
+        try {
+            CountDownLatch latch = new CountDownLatch(1);
+
+            mCustomAudienceManager.joinCustomAudience(
+                    joinCustomAudienceRequest,
+                    mExecutor,
+                    caResult -> {
+                        Log.v(TAG, "Joined Custom Audience");
+                        mAdSelectionManager.selectAds(
+                                makeAdSelectionConfig(sessionId),
+                                mExecutor,
+                                result -> {
+                                    assertThat(result.hasOutcome()).isTrue();
+                                    latch.countDown();
+                                    Log.v(
+                                            TAG,
+                                            String.format(
+                                                    "Selected ad with following render uri: %s",
+                                                    result.getRenderUri()));
+                                });
+                    });
+
+            latch.await();
+        } finally {
+            mClient.leaveCustomAudience(
+                    joinCustomAudienceRequest.getCustomAudience().getBuyer(), CUSTOM_AUDIENCE);
+        }
   }
 
   private static AdSelectionConfig makeAdSelectionConfig(String sessionId) {
