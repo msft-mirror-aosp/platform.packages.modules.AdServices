@@ -83,9 +83,7 @@ public class AdServicesConfig {
         return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
     }
 
-    /**
-     * Returns the URL for fetching public encryption keys for aggregatable reports.
-     */
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
     public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
         return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
     }
@@ -153,9 +151,12 @@ public class AdServicesConfig {
     public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     /**
-     * Job ID for the Async Registration Queue JobService ({@link AsyncRegistrationQueueJobService})
+     * @deprecated
+     * Old Job ID for Async Registration Queue JobService
+     * DO NOT REUSE
      */
-    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    @Deprecated
+    private static final int DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
 
     /**
      * Job ID for Measurement Delete Records From UninstalledApps Job ({@link
@@ -174,4 +175,15 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
      */
     public static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID = 18;
+
+    /**
+     * Job ID for the Async Registration Fallback JobService ({@link
+     * AsyncRegistrationQueueJobService})
+     */
+    public static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID = 19;
+
+    /**
+     * Job ID for the Async Registration Queue JobService ({@link AsyncRegistrationQueueJobService})
+     */
+    public static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID = 20;
 }

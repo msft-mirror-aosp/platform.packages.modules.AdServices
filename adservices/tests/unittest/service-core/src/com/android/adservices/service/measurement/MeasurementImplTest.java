@@ -21,11 +21,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -58,7 +57,9 @@ import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -84,6 +85,7 @@ public final class MeasurementImplTest {
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
+
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test/bar?ad=134");
@@ -113,22 +115,21 @@ public final class MeasurementImplTest {
     private DatastoreManager mDatastoreManager =
             new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
-    @Mock
-    private ContentProviderClient mMockContentProviderClient;
-    @Mock
-    private ContentResolver mContentResolver;
+    @Mock private ContentProviderClient mMockContentProviderClient;
+    @Mock private ContentResolver mContentResolver;
     @Mock private ClickVerifier mClickVerifier;
     private MeasurementImpl mMeasurementImpl;
-    @Mock
-    EnrollmentDao mEnrollmentDao;
+    @Mock EnrollmentDao mEnrollmentDao;
     @Mock MeasurementDataDeleter mMeasurementDataDeleter;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
     }
+
     public static InputEvent getInputEvent() {
         return MotionEvent.obtain(0, 0, ACTION_BUTTON_PRESS, 0, 0, 0);
     }
+
     private static WebTriggerRegistrationRequestInternal createWebTriggerRegistrationRequest(
             Uri destination) {
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -143,11 +144,13 @@ public final class MeasurementImplTest {
                         SDK_PACKAGE_NAME)
                 .build();
     }
+
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
             Uri appDestination, Uri webDestination, Uri verifiedDestination) {
         return createWebSourceRegistrationRequest(
                 appDestination, webDestination, verifiedDestination, DEFAULT_URI);
     }
+
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
             Uri appDestination, Uri webDestination, Uri verifiedDestination, Uri topOriginUri) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
@@ -166,19 +169,28 @@ public final class MeasurementImplTest {
                         REQUEST_TIME)
                 .build();
     }
+
     @Before
     public void before() throws RemoteException {
         MockitoAnnotations.initMocks(this);
-        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+        when(mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        when(mContentResolver.acquireContentProviderClient(
+                        AsyncRegistrationContentProvider.TRIGGER_URI))
+                .thenReturn(mMockContentProviderClient);
+        when(mMockContentProviderClient.insert(eq(TriggerContentProvider.TRIGGER_URI), any()))
+                .thenReturn(TriggerContentProvider.TRIGGER_URI);
+        when(mMockContentProviderClient.insert(
+                        eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
+                .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
         mMeasurementImpl =
                 spy(
                         new MeasurementImpl(
                                 DEFAULT_CONTEXT,
                                 mDatastoreManager,
                                 mClickVerifier,
-                                mMeasurementDataDeleter));
+                                mMeasurementDataDeleter,
+                                mContentResolver));
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
@@ -191,7 +203,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 measurement.deleteRegistrations(
@@ -270,7 +283,7 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
-        }
+    }
 
     @Test
     public void testRegisterWebSource_invalidWebDestination() {
@@ -291,6 +304,7 @@ public final class MeasurementImplTest {
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
+
     @Test
     public void testRegisterWebSource_verifiedDestination_appDestinationMismatch() {
         final int result =
@@ -301,6 +315,7 @@ public final class MeasurementImplTest {
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
+
     @Test
     public void testGetSourceType_verifiedInputEvent_returnsNavigationSourceType() {
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
@@ -308,10 +323,12 @@ public final class MeasurementImplTest {
                 Source.SourceType.NAVIGATION,
                 mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
     }
+
     @Test
     public void testGetSourceType_noInputEventGiven() {
         assertEquals(Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L));
     }
+
     @Test
     public void testGetSourceType_inputEventNotVerifiable_returnsEventSourceType() {
         doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
@@ -338,7 +355,8 @@ public final class MeasurementImplTest {
                             DEFAULT_CONTEXT,
                             mDatastoreManager,
                             mockClickVerifier,
-                            mMeasurementDataDeleter);
+                            mMeasurementDataDeleter,
+                            mContentResolver);
 
             // Because click verification is disabled, the SourceType is NAVIGATION even if the
             // input event is not verifiable.
@@ -375,7 +393,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         measurement.deleteRegistrations(
                 new DeletionParam.Builder(
@@ -416,7 +435,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         measurement.deleteRegistrations(
                 new DeletionParam.Builder(
@@ -460,7 +480,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         measurement.deletePackageRecords(DEFAULT_URI);
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -495,7 +516,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         measurement.deletePackageRecords(DEFAULT_URI);
 
         Mockito.verify(mockAdServicesManager, Mockito.never())
@@ -527,7 +549,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         measurement.deleteAllMeasurementData(Collections.EMPTY_LIST);
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -562,7 +585,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         measurement.deleteAllUninstalledMeasurementData();
 
         Mockito.verify(mockAdServicesManager, Mockito.times(1))
@@ -597,7 +621,8 @@ public final class MeasurementImplTest {
                         DEFAULT_CONTEXT,
                         mDatastoreManager,
                         mClickVerifier,
-                        mMeasurementDataDeleter);
+                        mMeasurementDataDeleter,
+                        mContentResolver);
         measurement.deleteAllUninstalledMeasurementData();
 
         Mockito.verify(mockAdServicesManager, Mockito.never())
