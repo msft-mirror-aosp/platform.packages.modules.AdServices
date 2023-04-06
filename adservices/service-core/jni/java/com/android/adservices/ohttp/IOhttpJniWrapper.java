@@ -16,6 +16,8 @@
 
 package com.android.adservices.ohttp;
 
+import android.annotation.Nullable;
+
 /** Interface for {@link OhttpJniWrapper} to allow mocking of native methods. */
 interface IOhttpJniWrapper {
 
@@ -49,9 +51,12 @@ interface IOhttpJniWrapper {
      * @param kdfNativeRef The reference to the KDF algorithm
      * @param aeadNativeRef The reference to the AEAD algorithm
      * @param publicKey The server's public key
-     * @param info Info for AEAD encryption
-     * @param seed A randomly generated seed used for KEM shared secret
-     * @return The encapsulated shared secret
+     * @param info Optional info parameter used by the KDF algorithm. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-encryption-to-a-public-key
+     * @param seed Seed to deterministically generate the KEM ephemeral key. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @return The encapsulated shared secret that can be decrypted by the server using their
+     *     private key and will also be required on the client to decrypt server's response
      */
     byte[] hpkeCtxSetupSenderWithSeed(
             HpkeContextNativeRef ctx,
@@ -59,6 +64,37 @@ interface IOhttpJniWrapper {
             KdfNativeRef kdfNativeRef,
             AeadNativeRef aeadNativeRef,
             byte[] publicKey,
-            byte[] info,
+            @Nullable byte[] info,
             byte[] seed);
+
+    /**
+     * Calls HPKE setupSender and Seal operations. These two operations combined make up HPKE
+     * encryption.
+     *
+     * @param hpkeContextNativeRef Reference to the HPKE context object
+     * @param kemNativeRef Reference to the KEM object
+     * @param kdfNativeRef Reference to the KDF object
+     * @param aeadNativeRef Reference to the AEAD object
+     * @param publicKey Server's public key used to encapsulate shared secret
+     * @param info Optional info parameter used by the KDF algorithm during setupSender operation.
+     *     See https://www.rfc-editor.org/rfc/rfc9180#name-encryption-to-a-public-key
+     * @param seed Seed to deterministically generate the KEM ephemeral key. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @param plainText The plain text to be encrypted
+     * @param aad An optional additional info parameter that provides additional authenticated data
+     *     to the AEAD algorithm in use. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @return {@link HpkeEncryptResponse} containing the encrypted cipher text and the encapsulated
+     *     shared secret that would later be useful for decrypting the response from the server.
+     */
+    HpkeEncryptResponse hpkeEncrypt(
+            HpkeContextNativeRef hpkeContextNativeRef,
+            KemNativeRef kemNativeRef,
+            KdfNativeRef kdfNativeRef,
+            AeadNativeRef aeadNativeRef,
+            byte[] publicKey,
+            @Nullable byte[] info,
+            byte[] seed,
+            @Nullable byte[] plainText,
+            @Nullable byte[] aad);
 }

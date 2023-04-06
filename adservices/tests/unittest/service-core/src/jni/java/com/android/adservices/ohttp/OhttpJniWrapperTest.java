@@ -76,6 +76,70 @@ public class OhttpJniWrapperTest {
     }
 
     @Test
+    public void hpkeEncrypt_returnsCorrectResponse() throws Exception {
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+        String plainText = "test request 1";
+        byte[] plainTextBytes = plainText.getBytes(StandardCharsets.US_ASCII);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        plainTextBytes,
+                        null);
+
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(response.encapsulatedSharedSecret()),
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(response.cipherText()),
+                "2ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34");
+    }
+
+    @Test
+    public void hpkeEncrypt_emptyPlainText_returnsNullCipherText() throws Exception {
+        KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
+        KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
+        AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
+        HpkeContextNativeRef evpCtxSender = HpkeContextNativeRef.createHpkeContextReference();
+        byte[] seedBytes = KEM_SEED.getBytes(StandardCharsets.US_ASCII);
+        byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
+        byte[] keyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PUBLIC_KEY);
+
+        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
+        HpkeEncryptResponse response =
+                mOhttpJniWrapper.hpkeEncrypt(
+                        evpCtxSender,
+                        kem,
+                        kdf,
+                        aead,
+                        keyBytes,
+                        recipientKeyInfoBytes,
+                        seedBytes,
+                        null,
+                        null);
+
+        Assert.assertEquals(
+                BaseEncoding.base16().lowerCase().encode(response.encapsulatedSharedSecret()),
+                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        Assert.assertNull(response.cipherText());
+    }
+
+    @Test
     public void hpkeCtxSetupSenderWithSeed_nullContext_throwsException() throws Exception {
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
@@ -99,7 +163,7 @@ public class OhttpJniWrapperTest {
     }
 
     @Test
-    public void hpkeCtxSetupSenderWithSeed_emptyPublicKey_returnsNullArray() throws Exception {
+    public void hpkeCtxSetupSenderWithSeed_emptyPublicKey_throwsException() throws Exception {
         KemNativeRef kem = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference();
         KdfNativeRef kdf = KdfNativeRef.getHpkeKdfHkdfSha256Reference();
         AeadNativeRef aead = AeadNativeRef.getHpkeAeadAes256GcmReference();
@@ -108,11 +172,17 @@ public class OhttpJniWrapperTest {
         byte[] recipientKeyInfoBytes = createRecipientKeyInfoBytes();
         byte[] keyBytes = null;
 
-        byte[] enc =
-                mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
-                        evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
-
-        Assert.assertNull(enc);
+        Assert.assertThrows(
+                NullPointerException.class,
+                () ->
+                        mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
+                                evpCtxSender,
+                                kem,
+                                kdf,
+                                aead,
+                                keyBytes,
+                                recipientKeyInfoBytes,
+                                seedBytes));
     }
 
     @Test
