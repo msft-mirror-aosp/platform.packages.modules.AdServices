@@ -201,12 +201,16 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 CustomAudienceSignals.buildFromCustomAudience(customAudience);
 
         long versionRequested = mFlags.getFledgeAdSelectionBiddingLogicJsVersion();
+        Map<Integer, Long> jsVersionMap =
+                versionRequested >= JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3
+                        ? ImmutableMap.of(
+                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                versionRequested)
+                        : ImmutableMap.of();
         AdServicesHttpClientRequest biddingLogicUriHttpRequest =
                 JsVersionHelper.getRequestWithVersionHeader(
                         customAudience.getBiddingLogicUri(),
-                        ImmutableMap.of(
-                                JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
-                                versionRequested),
+                        jsVersionMap,
                         mFlags.getFledgeHttpJsCachingEnabled());
 
         FluentFuture<DecisionLogic> buyerDecisionLogic =
