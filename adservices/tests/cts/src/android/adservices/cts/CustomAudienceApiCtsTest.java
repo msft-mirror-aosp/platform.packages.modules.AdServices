@@ -99,7 +99,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
-        Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     @After
@@ -265,13 +265,15 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
-                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+                                CommonFixture.doSleep(
+                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
                                 mClient.joinCustomAudience(customAudience2).get();
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
-                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+                                CommonFixture.doSleep(
+                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
                                 mClient.joinCustomAudience(customAudience3).get();
                             });
@@ -309,13 +311,15 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
-                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+                                CommonFixture.doSleep(
+                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
                                 mClient.joinCustomAudience(customAudience2).get();
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
-                                Thread.sleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+                                CommonFixture.doSleep(
+                                        PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
                                 mClient.joinCustomAudience(customAudience3).get();
                             });

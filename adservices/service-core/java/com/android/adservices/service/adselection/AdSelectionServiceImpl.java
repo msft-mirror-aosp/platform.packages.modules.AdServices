@@ -21,12 +21,13 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -35,6 +36,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
+import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -333,19 +335,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
      * @param inputParams includes list of outcomes, signals and uri to download selection logic
      * @param callerMetadata caller's metadata for stat logging
      * @param callback delivers the results via OutcomeReceiver
-     * @throws RemoteException thrown in case callback fails
      */
     @Override
     public void selectAdsFromOutcomes(
             @NonNull AdSelectionFromOutcomesInput inputParams,
             @NonNull CallerMetadata callerMetadata,
-            @NonNull AdSelectionCallback callback)
-            throws RemoteException {
-        // TODO (b/258604183): This endpoint suppose to be an overload of selectAds but .aidl
-        //  doesn't allow overloading. Investigation where to go from here
-
-        // TODO(b/258836148): Use proper short name for this endpoint when there is one created
-        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+            @NonNull AdSelectionCallback callback) {
+        int apiName = AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -381,6 +377,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                     mContext,
                                     mFlags,
                                     mAdSelectionServiceFilter,
+                                    mAdFilteringFeatureFactory.getAdCounterKeyCopier(),
                                     callingUid);
                     runner.runOutcomeSelection(inputParams, callback);
                 });
@@ -415,6 +412,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mBackgroundExecutor,
                         mScheduledExecutor,
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         devContext,
                         mAdServicesLogger,
@@ -428,7 +426,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void reportInteraction(
             @NonNull ReportInteractionInput inputParams,
             @NonNull ReportInteractionCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -495,7 +493,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void updateAdCounterHistogram(
             @NonNull UpdateAdCounterHistogramInput inputParams,
             @NonNull UpdateAdCounterHistogramCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -532,6 +530,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull BuyersDecisionLogic buyersDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
@@ -541,6 +540,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         try {
             Objects.requireNonNull(adSelectionConfig);
             Objects.requireNonNull(decisionLogicJS);
+            Objects.requireNonNull(buyersDecisionLogic);
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(apiName, STATUS_INVALID_ARGUMENT, 0);
@@ -576,7 +576,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mFlags,
                         callingUid);
 
-        overrider.addOverride(adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+        overrider.addOverride(
+                adSelectionConfig,
+                decisionLogicJS,
+                trustedScoringSignals,
+                buyersDecisionLogic,
+                callback);
     }
 
     private int getCallingUid(int apiNameLoggingId) {
@@ -845,7 +850,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void setAdCounterHistogramOverride(
             @NonNull SetAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -874,7 +879,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void removeAdCounterHistogramOverride(
             @NonNull RemoveAdCounterHistogramOverrideInput inputParams,
             @NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
@@ -901,7 +906,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
     @Override
     public void resetAllAdCounterHistogramOverrides(@NonNull AdSelectionOverrideCallback callback) {
-        int apiName = AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+        int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 
         // Caller permissions must be checked in the binder thread, before anything else
         mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);

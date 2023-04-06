@@ -48,6 +48,7 @@ import com.android.adservices.service.measurement.aggregation.AggregatePayloadGe
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
@@ -156,8 +157,11 @@ class AttributionJobHandler {
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     if (!doTopLevelFiltersMatch(source, trigger)) {
-                        mDebugReportApi.scheduleTriggerNoMatchingFilterDebugReport(
-                                source, trigger, measurementDao);
+                        mDebugReportApi.scheduleTriggerNoLimitDebugReport(
+                                source,
+                                trigger,
+                                measurementDao,
+                                Type.TRIGGER_NO_MATCHING_FILTER_DATA);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -426,8 +430,9 @@ class AttributionJobHandler {
         }
     }
 
-    private static TriggeringStatus maybeGenerateEventReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private TriggeringStatus maybeGenerateEventReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
 
         if (source.getParentId() != null) {
             LogUtil.d("Event report generation skipped because it's a derived source.");
@@ -446,6 +451,8 @@ class AttributionJobHandler {
         Optional<EventTrigger> matchingEventTrigger =
                 findFirstMatchingEventTrigger(source, trigger);
         if (!matchingEventTrigger.isPresent()) {
+            mDebugReportApi.scheduleTriggerNoLimitDebugReport(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
             return TriggeringStatus.DROPPED;
         }
 
@@ -492,8 +499,11 @@ class AttributionJobHandler {
         return TriggeringStatus.ATTRIBUTED;
     }
 
-    private static boolean provisionEventReportQuota(Source source, Trigger trigger,
-            EventReport newEventReport, IMeasurementDao measurementDao)
+    private boolean provisionEventReportQuota(
+            Source source,
+            Trigger trigger,
+            EventReport newEventReport,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
@@ -503,8 +513,11 @@ class AttributionJobHandler {
 
         List<EventReport> relevantEventReports =
                 sourceEventReports.stream()
-                        .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                        .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
+                        .filter(
+                                (r) ->
+                                        r.getStatus() == EventReport.Status.PENDING
+                                                && r.getReportTime()
+                                                        == newEventReport.getReportTime())
                         .sorted(
                                 Comparator.comparingLong(EventReport::getTriggerPriority)
                                         .thenComparing(
@@ -513,12 +526,16 @@ class AttributionJobHandler {
                         .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
             return false;
         }
 
         EventReport lowestPriorityEventReport = relevantEventReports.get(0);
         if (lowestPriorityEventReport.getTriggerPriority()
                 >= newEventReport.getTriggerPriority()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
             return false;
         }
 

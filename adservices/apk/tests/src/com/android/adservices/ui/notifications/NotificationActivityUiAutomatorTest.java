@@ -45,6 +45,7 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +63,7 @@ public class NotificationActivityUiAutomatorTest {
     private static final String NOTIFICATION_TEST_PACKAGE =
             "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
-    private static UiDevice sDevice =
+    private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private MockitoSession mStaticMockSession;
     @Mock private ConsentManager mConsentManager;
@@ -89,8 +90,9 @@ public class NotificationActivityUiAutomatorTest {
                         .initMocks(this)
                         .startMocking();
 
+        doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
         doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
-        doReturn(false).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
+        doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getRecordManualInteractionEnabled();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         ExtendedMockito.doReturn(mConsentManager)
@@ -178,11 +180,6 @@ public class NotificationActivityUiAutomatorTest {
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
 
         verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton, moreButton);
-
-        //        verify(mConsentManager).getDefaultConsent();
-        //        verify(mConsentManager).getDefaultAdIdState();
-        //        verify(mConsentManager).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
     }
 
     @Test
@@ -197,13 +194,34 @@ public class NotificationActivityUiAutomatorTest {
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
         UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
+    }
 
-        //        verifyControlsAndMoreButtonAreDisplayed(leftControlButton, rightControlButton,
-        // moreButton);
-        //        verify(mConsentManager).getDefaultConsent();
-        //        verify(mConsentManager).getDefaultAdIdState();
-        //        verify(mConsentManager).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
+    @Test
+    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
+
+        String packageNameOfDefaultBrowser =
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
+        sDevice.pressHome();
+
+        /* isEUActivity false: Rest of World Notification landing page */
+        startActivity(false);
+        /* find the expander and click to expand to get the content */
+        UiObject moreExpander =
+                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
+        moreExpander.click();
+
+        UiObject sentence =
+                ApkTestUtil.scrollTo(
+                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
+        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+                packageNameOfDefaultBrowser, sentence, 20)) {
+            return;
+        }
+        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            return;
+        }
+        Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     @Test
@@ -225,15 +243,15 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        //        verify(mConsentManager, times(2)).getDefaultConsent();
-        //        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        //        verify(mConsentManager).enable(any(Context.class),
-        // eq(AdServicesApiType.MEASUREMENTS));
-        //        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
+        UiObject leftControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_left_control_button_text);
+        UiObject rightControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_right_control_button_text);
+        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
+        verifyControlsAndMoreButtonAreDisplayed(
+                leftControlButtonOnSecondPage,
+                rightControlButtonOnSecondPage,
+                moreButtonOnSecondPage);
     }
 
     @Test
@@ -255,15 +273,15 @@ public class NotificationActivityUiAutomatorTest {
 
         UiObject acceptedTitle = getElement(R.string.notificationUI_fledge_measurement_title);
         assertThat(acceptedTitle.exists()).isTrue();
-
-        //        verify(mConsentManager, times(2)).getDefaultConsent();
-        //        verify(mConsentManager, times(2)).getDefaultAdIdState();
-        //        verify(mConsentManager).disable(any(Context.class), eq(AdServicesApiType.TOPICS));
-        //        verify(mConsentManager).enable(any(Context.class), eq(AdServicesApiType.FLEDGE));
-        //        verify(mConsentManager).enable(any(Context.class),
-        // eq(AdServicesApiType.MEASUREMENTS));
-        //        verify(mConsentManager, times(2)).getCurrentPrivacySandboxFeature();
-        //        verifyNoMoreInteractions(mConsentManager);
+        UiObject leftControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_left_control_button_text);
+        UiObject rightControlButtonOnSecondPage =
+                getElement(R.string.notificationUI_confirmation_right_control_button_text);
+        UiObject moreButtonOnSecondPage = getElement(R.string.notificationUI_more_button_text);
+        verifyControlsAndMoreButtonAreDisplayed(
+                leftControlButtonOnSecondPage,
+                rightControlButtonOnSecondPage,
+                moreButtonOnSecondPage);
     }
 
     private void verifyControlsAndMoreButtonAreDisplayed(
@@ -309,4 +327,18 @@ public class NotificationActivityUiAutomatorTest {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
     }
 
+    private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+            String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
+            throws UiObjectNotFoundException {
+        int right = sentence.getBounds().right,
+                bottom = sentence.getBounds().bottom,
+                left = sentence.getBounds().left;
+        for (int x = left; x < right; x += (right - left) / countOfClicks) {
+            sDevice.click(x, bottom - 2);
+            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

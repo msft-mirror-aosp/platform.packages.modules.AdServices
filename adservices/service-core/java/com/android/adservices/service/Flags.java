@@ -298,11 +298,39 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
+
+    /** Returns whether verbose debug report generation is enabled. */
+    default boolean getMeasurementEnableDebugReport() {
+        return MEASUREMENT_ENABLE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT = true;
+
+    /** Returns whether source debug report generation is enabled. */
+    default boolean getMeasurementEnableSourceDebugReport() {
+        return MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT = true;
+
+    /** Returns whether trigger debug report generation is enabled. */
+    default boolean getMeasurementEnableTriggerDebugReport() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
     default long getMeasurementDataExpiryWindowMs() {
         return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+    }
+
+    int MEASUREMENT_MAX_REGISTRATION_REDIRECTS = 20;
+
+    /** Returns the number of maximum registration redirects allowed. */
+    default int getMeasurementMaxRegistrationRedirects() {
+        return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -671,7 +699,7 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
@@ -785,6 +813,7 @@ public interface Flags {
                 SYSTEM_SERVER_ONLY,
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
+                APPSEARCH_ONLY,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -795,6 +824,8 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
+    /** Write consent data to AppSearch only. */
+    int APPSEARCH_ONLY = 3;
 
     /* Consent source of truth intended to be used by default. */
     @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
@@ -1518,7 +1549,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
-
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1565,6 +1596,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1692,6 +1728,14 @@ public interface Flags {
         return RECORD_MANUAL_INTERACTION_ENABLED;
     }
 
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
     /**
      * The check activity feature is off by default. When enabled, we check whether all Rubidium
      * activities are enabled when we determine whether AdServices is enabled
@@ -1778,6 +1822,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    // Enable per-app consent in FLEDGE if GA UX is enabled
+    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
+
+    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
+    default boolean getFledgePerAppConsentEnabled() {
+        return FLEDGE_PER_APP_CONSENT_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
@@ -1828,6 +1880,14 @@ public interface Flags {
         return COMPAT_LOGGING_KILL_SWITCH;
     }
 
+    /** Kill switch to guard background jobs logging. */
+    boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
+
+    /** Returns true if background jobs logging should be disabled; false otherwise */
+    default boolean getBackgroundJobsLoggingKillSwitch() {
+        return BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
+    }
+
     // New Feature Flags
     boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
 
@@ -1850,11 +1910,18 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
-    /** Default Determines whether EU notification flow change is enabled.. */
+    /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
-    /** Determines whether EU notification flow change is enabled.. */
+    /** Determines whether EU notification flow change is enabled. */
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Returns whether to enable flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
     }
 }

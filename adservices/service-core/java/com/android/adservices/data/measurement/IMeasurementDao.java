@@ -23,19 +23,22 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Interface for Measurement related data access operations.
@@ -428,11 +431,28 @@ public interface IMeasurementDao {
      * Get the record with the earliest request time and a valid retry count.
      *
      * @param retryLimit a long that is used for determining the next valid record to be serviced
-     * @param failedAdTechEnrollmentIds a String that contains the Ids of records that have been
-     *     serviced during the current run
+     * @param failedOrigins set of origins that have failed during the current run
      */
-    AsyncRegistration fetchNextQueuedAsyncRegistration(
-            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException;
+    AsyncRegistration fetchNextQueuedAsyncRegistration(short retryLimit, Set<Uri> failedOrigins)
+            throws DatastoreException;
+
+    /**
+     * Insert/Update the supplied {@link KeyValueData} object
+     *
+     * @param keyValueData a {@link KeyValueData} to be stored/update
+     * @throws DatastoreException when insertion fails
+     */
+    void insertOrUpdateKeyValueData(@NonNull KeyValueData keyValueData) throws DatastoreException;
+
+    /**
+     * Returns the {@link KeyValueData} for {key, dataType} pair
+     *
+     * @param key of the stored data
+     * @param dataType of the stored datta
+     * @return {@link KeyValueData} object
+     */
+    KeyValueData getKeyValueData(@NonNull String key, @NonNull DataType dataType)
+            throws DatastoreException;
 
     /**
      * Update the retry count for a record in the Async Registration table.

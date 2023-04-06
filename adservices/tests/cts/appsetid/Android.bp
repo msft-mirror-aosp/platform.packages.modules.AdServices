@@ -27,7 +27,6 @@ android_test {
         "androidx.concurrent_concurrent-futures",
         "compatibility-device-util-axt",
         "truth-prebuilt",
-        "ub-uiautomator",
     ],
     libs: [
         "android.test.base",
@@ -71,7 +70,6 @@ android_test {
     sdk_version: "module_current",
     min_sdk_version: "31",
     max_sdk_version: "32",
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
 }
