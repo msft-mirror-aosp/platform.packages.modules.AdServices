@@ -72,8 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Apps können deine Interessen schätzen und sie vorübergehend unter Android speichern. So könnte z. B. eine App, mit der du Laufschuhe kaufst, davon ausgehen, dass du dich für das Thema „Marathonlauf“ interessierst.\n\nDanach kann dir eine andere App auf Grundlage dessen eine Werbeanzeige zu Marathonläufen präsentieren.\n\nIn den Datenschutzeinstellungen lässt sich die Liste der Apps mit gespeicherten Interessen verwalten."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Neue Funktionen zum Datenschutz bei Anzeigen"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Mit Werbethemen und neuen Einstellmöglichkeiten hast du mehr Kontrolle über die Werbung, die dir angezeigt wird"</string>
-    <!-- no translation found for notificationUI_header_ga_title (3557937325021173836) -->
-    <skip />
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Neue Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android schließt aufgrund der in letzter Zeit von dir genutzten Apps auf Themen, die dich interessieren könnten. Außerdem können von dir genutzte Apps feststellen, was dir gefällt. Weitere Apps, die du nutzt, können diese Informationen abfragen und dir dann personalisierte Werbung anzeigen. Du kannst die Themen und Apps festlegen, auf deren Grundlage dir Werbung angezeigt wird."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Zur Analyse der Leistung von Werbeanzeigen werden nur bestimmte Arten von Daten zwischen Apps geteilt."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Weitere Informationen über Werbung unter Android"</string>
@@ -88,16 +87,14 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Neue Funktionen zum Datenschutz bei Anzeigen testen"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Über Anzeigenthemen kannst du genauer eingrenzen, welche Werbung du siehst"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Details ansehen"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Neue Funktionen zum Datenschutz bei Anzeigen ausprobieren"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"In Android werden neue Datenschutzeinstellungen eingeführt, mit denen du mehr Auswahlmöglichkeiten in Bezug auf die angezeigte Werbung hast."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Werbethemen unterstützen Apps dabei, dir relevante Werbung zu zeigen – deine Identität und Daten zu deiner App-Nutzung werden dabei geschützt. Android kann aufgrund der in letzter Zeit von dir genutzten Apps auf Themen schließen, die dich interessieren könnten. Apps, die du verwendest, können dann relevante Themen bei Android anfordern, um die dir angezeigte Werbung zu personalisieren."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kannst dir die Werbethemen in deinen Geräteeinstellungen ansehen und diejenigen blockieren, die nicht an Apps weitergegeben werden sollen. Darüber hinaus werden bei Android Werbethemen in regelmäßigen Abständen automatisch gelöscht."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Du kannst deine Vorgaben in den Datenschutzeinstellungen jederzeit ändern."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Weitere Informationen zu Anzeigenthemen"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Weitere Informationen dazu, wie Android zum Schutz deiner Daten beiträgt, findest du in unserer Datenschutzerklärung."</string>
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu (7164165910760741822) -->
-    <skip />
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Ausprobieren"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"• Welche Daten verwendet werden"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Deine Werbethemen basieren auf Apps, die du in letzter Zeit auf diesem Gerät verwendet hast, und darauf, wie oft du sie verwendet hast."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"• So verwenden wir diese Daten"</string>
@@ -105,10 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"• So kannst du deine Daten verwalten"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Themen werden in Android regelmäßig automatisch gelöscht. Wenn du Apps weiter verwendest, können die Themen wieder in der Liste erscheinen. Du kannst in den Datenschutzeinstellungen auch Themen blockieren, die Android nicht mit Apps teilen soll, und Werbethemen deaktivieren."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Du kannst Änderungen in den Datenschutzeinstellungen vornehmen."</string>
-    <!-- no translation found for notificationUI_fledge_measurement_title (1721724915714192994) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1 (2217529852483952185) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Weitere Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android bietet auch neue Möglichkeiten, mit denen sich einschränken lässt, was Apps über dich erfahren können, wenn sie dir personalisierte Werbung anzeigen."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"• Wenn du von Apps vorgeschlagene Werbung erlaubst, dürfen Apps dir relevante Werbung präsentieren – deine Identität und Daten zu deiner App-Nutzung bleiben dabei aber geschützt. Eine von dir genutzte App kann ausgehend von deinen Aktivitäten in anderen Apps entsprechende Werbung vorschlagen. In den Datenschutzeinstellungen kannst du eine Liste der Apps aufrufen und verhindern, dass bestimmte Apps Vorschläge machen."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"• Ist die Funktion zur Analyse von Werbung aktiviert, werden zwischen Apps bestimmte Daten übertragen, um die Leistung der in ihnen präsentierten Werbung zu messen. Unter anderem wird erfasst, zu welcher Uhrzeit welche Werbung eingeblendet wurde."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Weitere Informationen zu von Apps vorgeschlagener Werbung und zur Analyse von Werbung"</string>
@@ -121,42 +116,27 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Daten zu App-Vorschlägen werden von Android regelmäßig automatisch gelöscht. Apps, die du noch einmal verwendest, können aber wieder in der Liste angezeigt werden."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"In den Datenschutzeinstellungen kannst du auch von Apps vorgeschlagene Werbung blockieren, entweder für einzelne oder für alle Apps. Außerdem kannst du alle Daten zu vorgeschlagener Werbung zurücksetzen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Von dir genutzte Apps können von Android Informationen abfragen, um die Leistung ihrer Werbeanzeigen messen zu können. Android trägt zum Schutz deiner Daten bei, indem die Informationen beschränkt werden, die Apps miteinander teilen können."</string>
-    <!-- no translation found for notificationUI_notification_ga_title_eu_v2 (9132669086237883391) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_eu_v2 (9205285241542339861) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_title_v2 (1097778529908285549) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text2_v2 (7324869061552803848) -->
-    <skip />
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text3_v2 (7061185974787039681) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_eu_v2 (8442776546238998877) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_body_ga_text_eu_v2 (1119632112904754361) -->
-    <skip />
-    <!-- no translation found for notificationUI_container2_body_ga_text_eu_v2 (7264946073865844642) -->
-    <skip />
-    <!-- no translation found for notificationUI_container3_body_ga_text_eu_v2 (3204499878554843655) -->
-    <skip />
-    <!-- no translation found for notificationUI_right_control_button_ga_text_eu_v2 (7227289411885047121) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_title_v2 (7429979629916798545) -->
-    <skip />
-    <!-- no translation found for notificationUI_notification_ga_content_v2 (4673081782304081905) -->
-    <skip />
-    <!-- no translation found for notificationUI_header_ga_title_v2 (2079990149331373941) -->
-    <skip />
-    <!-- no translation found for notificationUI_container1_ga_introduction_v2 (3820258766801905248) -->
-    <skip />
-    <!-- no translation found for notificationUI_next_button_text (5564270455474313663) -->
-    <skip />
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Neue Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Du erhältst mehr Kontrolle über die Werbung, die dir angezeigt wird, während gleichzeitig deine Identität geschützt wird"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Neue Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"• Wenn du von Apps vorgeschlagene Werbung erlaubst, können Apps dir relevante Werbung anzeigen – dank neuer Datenschutzfunktionen werden deine Identität und die Daten zu deiner App-Nutzung dabei aber geschützt. Wenn du eine App nutzt, kann diese anhand deiner Aktivitäten Vorschläge machen, welche Werbung du in anderen Apps siehst. In den Datenschutzeinstellungen kannst du eine Liste der Apps aufrufen und für einzelne Apps festlegen, dass sie keine Vorschläge machen dürfen."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"• Ist die Funktion zur Analyse von Werbung aktiviert, werden zwischen Apps bestimmte Daten übertragen, um die Leistung der in ihnen eingeblendeten Werbung nachzuvollziehen. Unter anderem wird erfasst, zu welcher Uhrzeit dir welche Werbeanzeige präsentiert wurde."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Weitere Funktion zum Datenschutz bei Anzeigen aktivieren"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android bietet auch eine neue Datenschutzfunktion, mit der du mehr Kontrolle über die Werbung hast, die dir angezeigt wird."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Werbethemen helfen Apps dabei, dir relevante Werbung anzuzeigen – deine Identität und die Daten zu deiner App-Nutzung werden dabei geschützt. Android kann anhand der in letzter Zeit von dir genutzten Apps auf Themen schließen, die dich interessieren könnten. Apps, die du verwendest, können dann diese Themen bei Android anfordern, um dir relevantere Werbung anzuzeigen."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Du kannst dir die Werbethemen in deinen Datenschutzeinstellungen ansehen und diejenigen blockieren, die nicht an Apps weitergegeben werden sollen. Android löscht außerdem Werbethemen in regelmäßigen Abständen automatisch."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Aktivieren"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Neue Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Du hast jetzt mehr Kontrolle über die Werbung, die dir angezeigt wird, während gleichzeitig deine Identität geschützt wird"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Neue Funktionen zum Datenschutz bei Anzeigen jetzt verfügbar"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android bietet jetzt neue Datenschutzfunktionen, mit denen du mehr Kontrolle über die Werbung hast, die dir angezeigt wird."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Weiter"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Am Betaprogramm für Android-Datenschutz bei Anzeigen teilnehmen"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Von Android geschätzte Interessen"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"Apps, die Interessen schätzen"</string>
-    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Analyse von Werbung"</string>
+    <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"Erfolgsmessung von Anzeigen"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"Apps können die Privacy Sandbox verwenden, um die Effektivität ihrer Anzeigen zu messen. Werbetreibende können dazu unter Android vorübergehend Daten zu deinen Interaktionen mit ihren Werbeanzeigen und Apps speichern. Die Menge der Daten, die gespeichert werden können, ist begrenzt und die Daten werden regelmäßig gelöscht.\n\nDu kannst sie auch jederzeit manuell löschen, indem du die Privacy Sandbox deaktivierst."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android schätzt aufgrund der von dir genutzten Apps von Zeit zu Zeit deine Hauptinteressen. Apps können diese Informationen von Android anfordern, um dir relevantere Werbung zu präsentieren.\n\nWenn du ein Interesse blockierst, wird es der Liste nicht noch einmal hinzugefügt – es sei denn, du hebst die Blockierung auf. Es kann aber sein, dass du weiterhin entsprechende Werbung siehst."</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"Blockieren"</string>

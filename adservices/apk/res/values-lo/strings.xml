@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"ລອງໃຊ້ຄຸນສົມບັດໃໝ່ດ້ານຄວາມເປັນສ່ວນຕົວກ່ຽວກັບໂຄສະນາ"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"ຫົວຂໍ້ໂຄສະນາຊ່ວຍໃຫ້ທ່ານມີຕົວເລືອກຫຼາຍຂຶ້ນສຳລັບໂຄສະນາທີ່ທ່ານເຫັນ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"ເບິ່ງລາຍລະອຽດ"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"ລອງໃຊ້ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາໃໝ່"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android ກຳລັງຈະເປີດຕົວຄຸນສົມບັດໃໝ່ດ້ານຄວາມເປັນສ່ວນຕົວທີ່ໃຫ້ທ່ານມີຕົວເລືອກຫຼາຍຂຶ້ນກ່ຽວກັບໂຄສະນາທີ່ທ່ານເຫັນ."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"ຫົວຂໍ້ໂຄສະນາຊ່ວຍໃຫ້ແອັບສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານໃນຂະນະທີ່ປົກປ້ອງຂໍ້ມູນລະບຸຕົວຕົນຂອງທ່ານ ແລະ ຂໍ້ມູນກ່ຽວກັບການໃຊ້ແອັບຂອງທ່ານ. Android ສາມາດບັນທຶກຫົວຂໍ້ທີ່ສົນໃຈໂດຍອີງໃສ່ແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ. ແອັບທີ່ທ່ານໃຊ້ສາມາດຂໍຫົວຂໍ້ທີ່ກ່ຽວຂ້ອງຈາກ Android ໄດ້ໃນພາຍຫຼັງເພື່ອປັບແຕ່ງໂຄສະນາທີ່ທ່ານເຫັນໃຫ້ເປັນແບບສ່ວນຕົວ."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"ທ່ານສາມາດເຫັນຫົວຂໍ້ໂຄສະນາໃນການຕັ້ງຄ່າອຸປະກອນຂອງທ່ານ ແລະ ບລັອກຫົວຂໍ້ທີ່ທ່ານບໍ່ຕ້ອງການແບ່ງປັນກັບແອັບໄດ້. ນອກຈາກນັ້ນ, Android ຍັງລຶບຫົວຂໍ້ໂຄສະນາໂດຍອັດຕະໂນມັດຢູ່ເປັນປະຈຳ."</string>
@@ -124,13 +123,13 @@
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  ດ້ວຍການວັດແທກຜົນໂຄສະນາ, ຂໍ້ມູນບາງປະເພດຈະຖືກແບ່ງປັນລະຫວ່າງແອັບຕ່າງໆເພື່ອເຂົ້າໃຈປະສິດທິພາບໂຄສະນາຂອງແອັບດັ່ງກ່າວ, ເຊັ່ນ: ເວລາຂອງມື້ທີ່ສະແດງໂຄສະນາໃຫ້ທ່ານເຫັນ."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"ເປີດໃຊ້ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາອື່ນ"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"ນອກຈາກນັ້ນ, Android ຍັງມີຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວໃໝ່ທີ່ມອບຕົວເລືອກໃຫ້ທ່ານຕໍ່ກັບໂຄສະນາທີ່ທ່ານເຫັນນຳ."</string>
-    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"ຫົວຂໍ້ໂຄສະນາຊ່ວຍໃຫ້ແອັບສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານໃນຂະນະທີ່ປົກປ້ອງຂໍ້ມູນລະບຸຕົວຕົນຂອງທ່ານ ແລະ ຂໍ້ມູນກ່ຽວກັບການໃຊ້ແອັບຂອງທ່ານ. Android ສາມາດບັນທຶກຫົວຂໍ້ທີ່ສົນໃຈໂດຍອີງໃສ່ແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ. ແອັບໃດໜຶ່ງທີ່ທ່ານໃຊ້ຈະສາມາດຂໍ Android ໃຫ້ສະແດງຫົວຂໍ້ທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ມີຄວາມກ່ຽວຂ້ອງຫຼາຍຂຶ້ນໄດ້ໃນພາຍຫຼັງ."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"ຫົວຂໍ້ໂຄສະນາຊ່ວຍໃຫ້ແອັບສະແດງໂຄສະນາທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານໃນຂະນະທີ່ປົກປ້ອງຂໍ້ມູນລະບຸຕົວຕົນຂອງທ່ານ ແລະ ຂໍ້ມູນກ່ຽວກັບການໃຊ້ແອັບຂອງທ່ານ. Android ສາມາດບັນທຶກຫົວຂໍ້ທີ່ສົນໃຈໂດຍອີງໃສ່ແອັບທີ່ທ່ານໃຊ້ຫຼ້າສຸດ. ແອັບໃດໜຶ່ງທີ່ທ່ານໃຊ້ຈະສາມາດຂໍໃຫ້ Android ສະແດງຫົວຂໍ້ທີ່ກ່ຽວຂ້ອງໃຫ້ທ່ານເຫັນໂຄສະນາທີ່ມີຄວາມກ່ຽວຂ້ອງຫຼາຍຂຶ້ນໄດ້ໃນພາຍຫຼັງ."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"ທ່ານສາມາດເຫັນຫົວຂໍ້ໂຄສະນາໃນການຕັ້ງຄ່າຄວາມເປັນສ່ວນຕົວຂອງທ່ານ ແລະ ບລັອກຫົວຂໍ້ທີ່ທ່ານບໍ່ຕ້ອງການແບ່ງປັນກັບແອັບໄດ້. ນອກຈາກນັ້ນ, Android ຍັງລຶບຫົວຂໍ້ໂຄສະນາໂດຍອັດຕະໂນມັດຢູ່ເປັນປະຈຳ."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"ເປີດໃຊ້ມັນ"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"ຕອນນີ້ສາມາດໃຊ້ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາໃໝ່ໄດ້ແລ້ວ"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"ຕອນນີ້, ລະບົບຈະມີຕົວເລືອກສຳລັບໂຄສະນາທີ່ທ່ານເຫັນໄດ້ຫຼາຍຂຶ້ນໃນຂະນະທີ່ປົກປ້ອງຕົວຕົນຂອງທ່ານ"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"ຕອນນີ້ສາມາດໃຊ້ຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວກ່ຽວກັບຕົວໂຄສະນາໃໝ່ໄດ້ແລ້ວ"</string>
-    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"ຕອນນີ້ Android ຈະມອບຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວໃໝ່ທີ່ໃຫ້ຕົວເລືອກທ່ານຕໍ່ກັບໂຄສະນາທີ່ທ່ານ."</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"ຕອນນີ້ Android ຈະມອບຄຸນສົມບັດຄວາມເປັນສ່ວນຕົວໃໝ່ທີ່ໃຫ້ຕົວເລືອກທ່ານຕໍ່ກັບໂຄສະນາທີ່ທ່ານເຫັນ."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"ຕໍ່ໄປ"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"ເຂົ້າຮ່ວມເວີຊັນເບຕ້າຂອງຄວາມເປັນສ່ວນຕົວສຳລັບໂຄສະນາໃນ Android"</string>

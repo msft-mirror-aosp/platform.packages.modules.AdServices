@@ -111,6 +111,7 @@ public class ConsentNotificationTriggerTest {
         ExtendedMockito.doReturn(mAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
         doReturn(mAdServicesManager).when(mContext).getSystemService(AdServicesManager.class);
         doReturn(mConsentManager).when(() -> ConsentManager.getInstance(any(Context.class)));
+        doReturn(true).when(mMockFlags).isEeaDeviceFeatureEnabled();
         doReturn(true).when(mMockFlags).isUiFeatureTypeLoggingEnabled();
         doReturn(true).when(mMockFlags).getNotificationDismissedOnClick();
         doReturn(false).when(mMockFlags).getEuNotifFlowChangeEnabled();
@@ -127,6 +128,7 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testEuNotification() throws InterruptedException, UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
         final String expectedTitle =
@@ -181,6 +183,7 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotification_gaUxFlagEnabled()
             throws InterruptedException, UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         final String expectedTitle =
@@ -243,6 +246,7 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testNonEuNotifications() throws InterruptedException, UiObjectNotFoundException {
+        doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
         final String expectedTitle = mContext.getString(R.string.notificationUI_notification_title);
@@ -297,6 +301,7 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
+        doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         final String expectedTitle =
@@ -341,6 +346,7 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotifications_gaUxEnabled_nonDismissable()
             throws InterruptedException, UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
 
@@ -405,6 +411,7 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
+        doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
 
