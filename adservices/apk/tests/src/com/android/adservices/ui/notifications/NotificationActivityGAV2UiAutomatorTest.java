@@ -89,7 +89,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -111,7 +111,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -127,12 +127,9 @@ public class NotificationActivityGAV2UiAutomatorTest {
         rightControlButton.click();
         UiObject title2 = getElement(R.string.notificationUI_header_ga_title_eu_v2);
         assertThat(title2.exists()).isTrue();
-
-        leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text_eu);
-        rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
-        moreButton = getElement(R.string.notificationUI_next_button_text);
+        leftControlButton = getElement(R.string.notificationUI_left_control_button_text_eu);
+        rightControlButton = getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
+        moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -153,11 +150,9 @@ public class NotificationActivityGAV2UiAutomatorTest {
     public void rowClickGotItTest()
             throws UiObjectNotFoundException, InterruptedException {
         startActivity(false);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
+        UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -183,11 +178,9 @@ public class NotificationActivityGAV2UiAutomatorTest {
     public void rowClickSettingsTest()
             throws UiObjectNotFoundException, InterruptedException {
         startActivity(false);
-        UiObject leftControlButton =
-                getElement(R.string.notificationUI_left_control_button_text);
-        UiObject rightControlButton =
-                getElement(R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
+        UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
