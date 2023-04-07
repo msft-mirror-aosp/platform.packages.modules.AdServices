@@ -21,10 +21,12 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import org.junit.After;
@@ -34,16 +36,17 @@ import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 @SmallTest
-public class AppSearchConsentDaoTest {
+public class AppSearchAppConsentDaoTest {
     private static final String ID = "1";
     private static final String ID2 = "2";
     private static final String NAMESPACE = "consent";
-    private static final String API_TYPE = "CONSENT-TOPICS";
-    private static final String API_TYPE2 = "CONSENT-FLEDGE";
-    private static final String CONSENT = "true";
+    private static final List<String> APPS =
+            ImmutableList.of(ApplicationProvider.getApplicationContext().getPackageName());
     private MockitoSession mStaticMockSession;
 
     @Before
@@ -65,26 +68,34 @@ public class AppSearchConsentDaoTest {
 
     @Test
     public void testToString() {
-        AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
+        AppSearchAppConsentDao dao =
+                new AppSearchAppConsentDao(
+                        ID, ID, NAMESPACE, AppSearchAppConsentDao.APPS_WITH_CONSENT, APPS);
         assertThat(dao.toString())
                 .isEqualTo(
                         "id="
                                 + ID
                                 + "; userId="
                                 + ID
-                                + "; apiType="
-                                + API_TYPE
+                                + "; consentType="
+                                + AppSearchAppConsentDao.APPS_WITH_CONSENT
                                 + "; namespace="
                                 + NAMESPACE
-                                + "; consent="
-                                + CONSENT);
+                                + "; apps="
+                                + Arrays.toString(APPS.toArray()));
     }
 
     @Test
     public void testEquals() {
-        AppSearchConsentDao dao1 = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
-        AppSearchConsentDao dao2 = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
-        AppSearchConsentDao dao3 = new AppSearchConsentDao(ID, "foo", NAMESPACE, API_TYPE, CONSENT);
+        AppSearchAppConsentDao dao1 =
+                new AppSearchAppConsentDao(
+                        ID, ID, NAMESPACE, AppSearchAppConsentDao.APPS_WITH_CONSENT, APPS);
+        AppSearchAppConsentDao dao2 =
+                new AppSearchAppConsentDao(
+                        ID, ID, NAMESPACE, AppSearchAppConsentDao.APPS_WITH_CONSENT, APPS);
+        AppSearchAppConsentDao dao3 =
+                new AppSearchAppConsentDao(
+                        ID, ID, NAMESPACE, AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT, APPS);
         assertThat(dao1.equals(dao2)).isTrue();
         assertThat(dao1.equals(dao3)).isFalse();
         assertThat(dao2.equals(dao3)).isFalse();
@@ -92,25 +103,30 @@ public class AppSearchConsentDaoTest {
 
     @Test
     public void testGetQuery() {
-        String expected = "userId:" + ID + " " + "apiType:" + API_TYPE;
-        assertThat(AppSearchConsentDao.getQuery(ID, API_TYPE)).isEqualTo(expected);
+        String expected =
+                "userId:" + ID + " " + "consentType:" + AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        assertThat(AppSearchAppConsentDao.getQuery(ID, AppSearchAppConsentDao.APPS_WITH_CONSENT))
+                .isEqualTo(expected);
     }
 
     @Test
     public void testGetRowId() {
-        String expected = ID + "_" + API_TYPE;
-        assertThat(AppSearchConsentDao.getRowId(ID, API_TYPE)).isEqualTo(expected);
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        String expected = ID + "_" + consentType;
+        assertThat(AppSearchAppConsentDao.getRowId(ID, consentType)).isEqualTo(expected);
     }
 
     @Test
     public void testReadConsentData_null() {
+        String consentType = AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT;
         ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
         Executor mockExecutor = Mockito.mock(Executor.class);
         ExtendedMockito.doReturn(null)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
-        boolean result =
-                AppSearchConsentDao.readConsentData(mockSearchSession, mockExecutor, ID, API_TYPE);
-        assertThat(result).isFalse();
+        AppSearchAppConsentDao result =
+                AppSearchAppConsentDao.readConsentData(
+                        mockSearchSession, mockExecutor, ID, consentType);
+        assertThat(result).isNull();
     }
 
     @Test
@@ -118,22 +134,24 @@ public class AppSearchConsentDaoTest {
         ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
         Executor mockExecutor = Mockito.mock(Executor.class);
 
-        String query = "userId:" + ID + " " + "apiType:" + API_TYPE;
-        AppSearchConsentDao dao = Mockito.mock(AppSearchConsentDao.class);
-        Mockito.when(dao.isConsented()).thenReturn(false);
+        String consentType = AppSearchAppConsentDao.APPS_WITH_CONSENT;
+        String query = "userId:" + ID + " " + "consentType:" + consentType;
+        AppSearchAppConsentDao dao = Mockito.mock(AppSearchAppConsentDao.class);
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
-        boolean result =
-                AppSearchConsentDao.readConsentData(mockSearchSession, mockExecutor, ID, API_TYPE);
-        assertThat(result).isFalse();
+        AppSearchAppConsentDao result =
+                AppSearchAppConsentDao.readConsentData(
+                        mockSearchSession, mockExecutor, ID, consentType);
+        assertThat(result).isEqualTo(dao);
 
         // Confirm that the right value is returned even when it is true.
-        String query2 = "userId:" + ID2 + " " + "apiType:" + API_TYPE2;
-        Mockito.when(dao.isConsented()).thenReturn(true);
+        String consentType2 = AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT;
+        String query2 = "userId:" + ID2 + " " + "consentType:" + consentType2;
         ExtendedMockito.doReturn(dao)
                 .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query2)));
-        boolean result2 =
-                AppSearchConsentDao.readConsentData(mockSearchSession, mockExecutor, ID, API_TYPE);
-        assertThat(result2).isTrue();
+        AppSearchAppConsentDao result2 =
+                AppSearchAppConsentDao.readConsentData(
+                        mockSearchSession, mockExecutor, ID2, consentType2);
+        assertThat(result2).isEqualTo(dao);
     }
 }
