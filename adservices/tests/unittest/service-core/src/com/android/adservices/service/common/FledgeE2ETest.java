@@ -2675,5 +2675,10 @@ public class FledgeE2ETest {
         public boolean getFledgeAdSelectionContextualAdsEnabled() {
             return true;
         }
+
+        @Override
+        public long getFledgeAdSelectionBiddingLogicJsVersion() {
+            return JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
+        }
     }
 }

@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -43,6 +44,7 @@ import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -197,7 +199,10 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @FlakyTest(bugId = 277226738)
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        // TODO(277094594) fix broken Link Test on S
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         String packageNameOfDefaultBrowser =

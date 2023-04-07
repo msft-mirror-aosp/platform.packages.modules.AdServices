@@ -17,6 +17,7 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -378,14 +379,28 @@ public class AppUpdateManager {
      *     which have no contributors
      * @param randomTopics a {@link List} of random top topics
      * @param percentageForRandomTopic the probability to select random object
-     * @return a selected {@link Topic} to be assigned to newly installed app
+     * @return a selected {@link Topic} to be assigned to newly installed app. Return null if both
+     *     lists are empty.
      */
     @VisibleForTesting
-    @NonNull
+    @Nullable
     Topic selectAssignedTopicFromTopTopics(
             @NonNull List<Topic> regularTopics,
             @NonNull List<Topic> randomTopics,
             int percentageForRandomTopic) {
+        // Return null if both lists are empty.
+        if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
+            return null;
+        }
+
+        // If one of the list is empty, select from the other list.
+        if (regularTopics.isEmpty()) {
+            return randomTopics.get(mRandom.nextInt(randomTopics.size()));
+        } else if (randomTopics.isEmpty()) {
+            return regularTopics.get(mRandom.nextInt(regularTopics.size()));
+        }
+
+        // If both lists are not empty, make a draw to determine whether to pick a random topic.
         // If random number is in [0, randomPercentage - 1], a random topic will be selected.
         boolean shouldSelectRandomTopic = mRandom.nextInt(100) < percentageForRandomTopic;
 
@@ -451,17 +466,17 @@ public class AppUpdateManager {
             regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
             List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
 
-            if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
+            Topic assignedTopic =
+                    selectAssignedTopicFromTopTopics(
+                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
+
+            if (assignedTopic == null) {
                 LogUtil.v(
                         "No topic is available to assign in Epoch %d, do not assign topic to App"
                                 + " %s.",
                         epochId, app);
                 continue;
             }
-
-            Topic assignedTopic =
-                    selectAssignedTopicFromTopTopics(
-                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
 
             // Persist this topic to database as returned topic in this epoch
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, assignedTopic));

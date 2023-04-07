@@ -208,9 +208,6 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             LogUtil.e("Failed to find serviceInfo for adServices service");
             return null;
         }
-        // TODO Bug:240679755
-        // If the action == ACTION_ADID_PROVIDER_SERVICE, add permissions
-        // check on returned serviceInfo for signature permissions.
         return new ComponentName(serviceInfo.packageName, serviceInfo.name);
     }
 
