@@ -115,6 +115,18 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS =
             "measurement_max_registration_redirects";
 
+    static final String KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION =
+            "measurement_max_registration_per_job_invocation";
+
+    static final String KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST =
+            "measurement_max_retries_per_registration_request";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS =
+            "measurement_registration_job_trigger_delay_ms";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            "measurement_registration_job_trigger_max_delay_ms";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -285,6 +297,9 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
             "measurement_job_registration_job_queue_kill_switch";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_job_registration_fallback_job_kill_switch";
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
@@ -790,6 +805,38 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
                 /* defaultValue */ MEASUREMENT_MAX_REGISTRATION_REDIRECTS);
+    }
+
+    @Override
+    public int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION,
+                /* defaultValue */ MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION);
+    }
+
+    @Override
+    public int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST,
+                /* defaultValue */ MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST);
+    }
+
+    @Override
+    public long getMeasurementRegistrationJobTriggerDelayMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS,
+                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS);
+    }
+
+    @Override
+    public long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
+                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
     }
 
     @Override
@@ -1451,6 +1498,23 @@ public final class PhFlags implements Flags {
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                flagName,
+                                MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -2402,7 +2466,36 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS
                         + " = "
                         + getMeasurementMaxRegistrationRedirects());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION
+                        + " = "
+                        + getMeasurementMaxRegistrationsPerJobInvocation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST
+                        + " = "
+                        + getMeasurementMaxRetriesPerRegistrationRequest());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS
+                        + " = "
+                        + getMeasurementRegistrationJobTriggerDelayMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
+                        + " = "
+                        + getMeasurementRegistrationJobTriggerMaxDelayMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
+                        + " = "
+                        + getAsyncRegistrationJobQueueKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getAsyncRegistrationFallbackJobKillSwitch());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());

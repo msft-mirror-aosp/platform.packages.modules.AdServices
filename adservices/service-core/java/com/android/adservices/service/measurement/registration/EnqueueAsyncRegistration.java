@@ -23,8 +23,12 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.ContentProviderClient;
+import android.content.ContentResolver;
 import android.net.Uri;
+import android.os.RemoteException;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
@@ -47,7 +51,9 @@ public class EnqueueAsyncRegistration {
             Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
-            @NonNull DatastoreManager datastoreManager) {
+            @NonNull DatastoreManager datastoreManager,
+            @NonNull ContentResolver contentResolver) {
+        Objects.requireNonNull(contentResolver);
         Objects.requireNonNull(datastoreManager);
         return datastoreManager.runInTransaction(
                 (dao) ->
@@ -68,7 +74,8 @@ public class EnqueueAsyncRegistration {
                                 false,
                                 adIdPermission,
                                 UUID.randomUUID().toString(),
-                                dao));
+                                dao,
+                                contentResolver));
     }
 
     /**
@@ -82,7 +89,9 @@ public class EnqueueAsyncRegistration {
             Uri registrant,
             long requestTime,
             @Nullable Source.SourceType sourceType,
-            @NonNull DatastoreManager datastoreManager) {
+            @NonNull DatastoreManager datastoreManager,
+            @NonNull ContentResolver contentResolver) {
+        Objects.requireNonNull(contentResolver);
         Objects.requireNonNull(datastoreManager);
         String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
@@ -103,7 +112,8 @@ public class EnqueueAsyncRegistration {
                                 webSourceParams.isDebugKeyAllowed(),
                                 adIdPermission,
                                 registrationId,
-                                dao);
+                                dao,
+                                contentResolver);
                     }
                 });
     }
@@ -118,7 +128,9 @@ public class EnqueueAsyncRegistration {
             boolean adIdPermission,
             Uri registrant,
             long requestTime,
-            @NonNull DatastoreManager datastoreManager) {
+            @NonNull DatastoreManager datastoreManager,
+            @NonNull ContentResolver contentResolver) {
+        Objects.requireNonNull(contentResolver);
         Objects.requireNonNull(datastoreManager);
         String registrationId = UUID.randomUUID().toString();
         return datastoreManager.runInTransaction(
@@ -139,7 +151,8 @@ public class EnqueueAsyncRegistration {
                                 webTriggerParams.isDebugKeyAllowed(),
                                 adIdPermission,
                                 registrationId,
-                                dao);
+                                dao,
+                                contentResolver);
                     }
                 });
     }
@@ -158,7 +171,8 @@ public class EnqueueAsyncRegistration {
             boolean debugKeyAllowed,
             boolean adIdPermission,
             String registrationId,
-            @NonNull IMeasurementDao dao)
+            IMeasurementDao dao,
+            ContentResolver contentResolver)
             throws DatastoreException {
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
@@ -179,5 +193,18 @@ public class EnqueueAsyncRegistration {
                         .build();
 
         dao.insertAsyncRegistration(asyncRegistration);
+        notifyContentProvider(contentResolver);
+    }
+
+    private static void notifyContentProvider(ContentResolver contentResolver) {
+        try (ContentProviderClient contentProviderClient =
+                contentResolver.acquireContentProviderClient(
+                        AsyncRegistrationContentProvider.TRIGGER_URI)) {
+            if (contentProviderClient != null) {
+                contentProviderClient.insert(AsyncRegistrationContentProvider.TRIGGER_URI, null);
+            }
+        } catch (RemoteException e) {
+            LogUtil.e(e, "AsyncRegistration Content Provider invocation failed.");
+        }
     }
 }

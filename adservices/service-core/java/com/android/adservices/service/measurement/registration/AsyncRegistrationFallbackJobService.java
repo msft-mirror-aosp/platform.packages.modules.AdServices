@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -29,32 +29,32 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
 import java.time.Instant;
 
-/** Job Service for servicing queued registration requests */
-public class AsyncRegistrationQueueJobService extends JobService {
+/** Fallback Job Service for servicing queued registration requests */
+public class AsyncRegistrationFallbackJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
-                    "Disabling AsyncRegistrationQueueJobService job because it's running in"
+                    "Disabling AsyncRegistrationFallbackJobService job because it's running in"
                             + " ExtServices on T+");
             return skipAndCancelBackgroundJob(params);
         }
 
-        if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
-            LogUtil.e("AsyncRegistrationQueueJobService is disabled");
+        if (FlagsFactory.getFlags().getAsyncRegistrationFallbackJobKillSwitch()) {
+            LogUtil.e("AsyncRegistrationFallbackJobService is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
         Instant jobStartTime = Clock.systemUTC().instant();
         LogUtil.d(
-                "AsyncRegistrationQueueJobService.onStartJob " + "at %s", jobStartTime.toString());
+                "AsyncRegistrationFallbackJobService.onStartJob " + "at %s",
+                jobStartTime.toString());
         AsyncRegistrationQueueRunner asyncQueueRunner =
                 AsyncRegistrationQueueRunner.getInstance(getApplicationContext());
 
@@ -63,16 +63,13 @@ public class AsyncRegistrationQueueJobService extends JobService {
                         () -> {
                             asyncQueueRunner.runAsyncRegistrationQueueWorker();
                             jobFinished(params, false);
-                            // jobFinished is asynchronous, so forcing scheduling avoiding
-                            // concurrency issue
-                            scheduleIfNeeded(this, /* forceSchedule */ true);
                         });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("AsyncRegistrationQueueJobService.onStopJob");
+        LogUtil.d("AsyncRegistrationFallbackJobService.onStopJob");
         return false;
     }
 
@@ -80,30 +77,26 @@ public class AsyncRegistrationQueueJobService extends JobService {
     protected static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
-                                new ComponentName(context, AsyncRegistrationQueueJobService.class))
-                        .addTriggerContentUri(
-                                new JobInfo.TriggerContentUri(
-                                        AsyncRegistrationContentProvider.TRIGGER_URI,
-                                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
-                        .setTriggerContentUpdateDelay(
-                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_DELAY_MS)
-                        .setTriggerContentMaxDelay(
-                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_MAX_DELAY_MS)
+                                MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,
+                                new ComponentName(
+                                        context, AsyncRegistrationFallbackJobService.class))
+                        .setRequiresBatteryNotLow(true)
+                        .setPeriodic(
+                                FlagsFactory.getFlags().getAsyncRegistrationJobQueueIntervalMs())
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
+                        .setPersisted(true)
                         .build();
         jobScheduler.schedule(job);
     }
     /**
-     * Schedule Async Registration Queue Job Service if it is not already scheduled
+     * Schedule Fallback Async Registration Job Service if it is not already scheduled
      *
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
-        if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
-            LogUtil.e("AsyncRegistrationQueueJobService is disabled, skip scheduling");
+        if (FlagsFactory.getFlags().getAsyncRegistrationFallbackJobKillSwitch()) {
+            LogUtil.e("AsyncRegistrationFallbackJobService is disabled, skip scheduling");
             return;
         }
 
@@ -113,20 +106,21 @@ public class AsyncRegistrationQueueJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+        final JobInfo job =
+                jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler);
-            LogUtil.d("Scheduled AsyncRegistrationQueueJobService");
+            LogUtil.d("Scheduled AsyncRegistrationFallbackJobService");
         } else {
-            LogUtil.d("AsyncRegistrationQueueJobService already scheduled, skipping reschedule");
+            LogUtil.d("AsyncRegistrationFallbackJobService already scheduled, skipping reschedule");
         }
     }
 
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+            jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
         }
         // Tell the JobScheduler that the job is done and does not need to be rescheduled
         jobFinished(params, false);

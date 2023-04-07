@@ -674,6 +674,55 @@ public class AppUpdateManagerTest {
     }
 
     @Test
+    public void testSelectAssignedTopicFromTopTopics_bothListsAreEmpty() {
+        final int topicsPercentageForRandomTopic = 5;
+
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
+
+        List<Topic> regularTopics = List.of();
+        List<Topic> randomTopics = List.of();
+
+        Topic selectedTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(selectedTopic).isNull();
+    }
+
+    @Test
+    public void testSelectAssignedTopicFromTopTopics_oneListIsEmpty() {
+        final int topicsPercentageForRandomTopic = 5;
+
+        // Test the randomness with pre-defined values. Ask it to select the second element for next
+        // two random draws.
+        MockRandom mockRandom = new MockRandom(new long[] {1, 1});
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mDbHelper, mTopicsDao, mockRandom, mMockFlags);
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+
+        // Return a regular topic if the list of random topics is empty.
+        List<Topic> regularTopics = List.of(topic1, topic2, topic3);
+        List<Topic> randomTopics = List.of();
+
+        Topic regularTopTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(regularTopTopic).isEqualTo(topic2);
+
+        // Return a random topic if the list of regular topics is empty.
+        regularTopics = List.of();
+        randomTopics = List.of(topic1, topic2, topic3);
+
+        Topic randomTopTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(randomTopTopic).isEqualTo(topic2);
+    }
+
+    @Test
     public void testAssignTopicsToNewlyInstalledApps() {
         final String appName = "app";
         final long currentEpochId = 4L;
