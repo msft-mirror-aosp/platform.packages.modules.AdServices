@@ -101,7 +101,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
@@ -112,6 +112,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
         leaveJoinedCustomAudiences();
     }
 
