@@ -74,6 +74,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.js.JSScriptEngine;
@@ -256,6 +257,51 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + BUYER_2_REPORTING_URI
                     + "' } };\n"
                     + "}";
+    private static final String BUYER_2_BIDDING_LOGIC_JS_V3 =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_2_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final String BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + "    registerAdBeacon('click', '"
+                    + BUYER_2_CLICK_URI
+                    + "');\n"
+                    + "    registerAdBeacon('hover', '"
+                    + BUYER_2_HOVER_URI
+                    + "');\n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_2_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
 
     private static final String BUYER_1_REPORTING_URI =
             String.format("https://%s%s", AdSelectionConfigFixture.BUYER_1, BUYER_REPORTING_PATH);
@@ -284,6 +330,52 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + " trusted_bidding_signals, contextual_signals,"
                     + " custom_audience_signals) { \n"
                     + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + "    registerAdBeacon('click', '"
+                    + BUYER_1_CLICK_URI
+                    + "');\n"
+                    + "    registerAdBeacon('hover', '"
+                    + BUYER_1_HOVER_URI
+                    + "');\n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_1_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final String BUYER_1_BIDDING_LOGIC_JS_V3 =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '"
+                    + BUYER_1_REPORTING_URI
+                    + "' } };\n"
+                    + "}";
+
+    private static final String BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON =
+            "function generateBid(customAudience, auction_signals, per_buyer_signals,\n"
+                    + "    trusted_bidding_signals, contextual_signals) {\n"
+                    + "    const ads = customAudience.ads;\n"
+                    + "    let result = null;\n"
+                    + "    for (const ad of ads) {\n"
+                    + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                    + "            result = ad;\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                    + "'render': result.render_uri };\n"
                     + "}\n"
                     + "function reportWin(ad_selection_signals, per_buyer_signals,"
                     + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
@@ -492,6 +584,172 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_v3BiddingLogic_overall_Success() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        PhFlagsFixture.overrideFledgeAdSelectionBiddingLogicJsVersion(3);
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        joinCustomAudience(customAudience2);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(AD_SELECTION_CONFIG)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that the ad3 from buyer 2 is rendered, since it had the highest bid and score
+        Assert.assertEquals(
+                CommonFixture.getUri(BUYER_2, AD_URI_PREFIX + "/ad3"), outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), AD_SELECTION_CONFIG);
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testFledgeAuctionSelectionFlow_v3HeaderV2Logic_overall_fail() throws Exception {
+        Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+
+        CustomAudience customAudience1 = createCustomAudience(BUYER_1, bidsForBuyer1);
+
+        CustomAudience customAudience2 = createCustomAudience(BUYER_2, bidsForBuyer2);
+
+        // Joining custom audiences, no result to do assertion on. Failures will generate an
+        // exception."
+        joinCustomAudience(customAudience1);
+
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+        joinCustomAudience(customAudience2);
+
+        // Adding AdSelection override, no result to do assertion on. Failures will generate an
+        // exception."
+        AddAdSelectionOverrideRequest addAdSelectionOverrideRequest =
+                new AddAdSelectionOverrideRequest(
+                        AD_SELECTION_CONFIG, DEFAULT_DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
+
+        mTestAdSelectionClient
+                .overrideAdSelectionConfigRemoteInfo(addAdSelectionOverrideRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest1 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience1.getBuyer())
+                        .setName(customAudience1.getName())
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+        AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(customAudience2.getBuyer())
+                        .setName(customAudience2.getName())
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
+                        .build();
+
+        // Adding Custom audience override, no result to do assertion on. Failures will generate an
+        // exception."
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest1)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        mTestCustomAudienceClient
+                .overrideCustomAudienceRemoteInfo(addCustomAudienceOverrideRequest2)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        Log.i(
+                TAG,
+                "Running ad selection with logic URI " + AD_SELECTION_CONFIG.getDecisionLogicUri());
+        Log.i(
+                TAG,
+                "Decision logic URI domain is "
+                        + AD_SELECTION_CONFIG.getDecisionLogicUri().getHost());
+
+        // Running ad selection and asserting that the run is failed.
+        Exception e =
+                assertThrows(
+                        ExecutionException.class,
+                        () ->
+                                mAdSelectionClient
+                                        .selectAds(AD_SELECTION_CONFIG)
+                                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        assertThat(e.getCause()).isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -802,6 +1060,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
+        PhFlagsFixture.overrideFledgeAdSelectionBiddingLogicJsVersion(3);
+
         // Enable registerAdBeacon feature
         PhFlagsFixture.overrideFledgeRegisterAdBeaconEnabled(true);
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -838,14 +1098,18 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience1.getBuyer())
                         .setName(customAudience1.getName())
-                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_1_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
         AddCustomAudienceOverrideRequest addCustomAudienceOverrideRequest2 =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(customAudience2.getBuyer())
                         .setName(customAudience2.getName())
-                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_REGISTER_AD_BEACON)
+                        .setBiddingLogicJs(BUYER_2_BIDDING_LOGIC_JS_V3_REGISTER_AD_BEACON)
+                        .setBiddingLogicJsVersion(
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_SIGNALS)
                         .build();
 
