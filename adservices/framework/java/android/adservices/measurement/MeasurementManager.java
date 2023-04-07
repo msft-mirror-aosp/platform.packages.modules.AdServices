@@ -92,6 +92,10 @@ public class MeasurementManager {
     private AdIdManager mAdIdManager;
     private Executor mAdIdExecutor = Executors.newCachedThreadPool();
 
+    private static final String DEBUG_API_WARNING_MESSAGE =
+            "To enable debug api, include ACCESS_ADSERVICES_AD_ID "
+                    + "permission and enable advertising ID under device settings";
+
     /**
      * Factory method for creating an instance of MeasurementManager.
      *
@@ -661,9 +665,15 @@ public class MeasurementManager {
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(
-                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
-                                        + " and enable advertising ID under device settings");
+                        boolean isExpected =
+                                error instanceof IllegalStateException
+                                        || error instanceof SecurityException;
+                        if (isExpected) {
+                            LogUtil.w(DEBUG_API_WARNING_MESSAGE);
+                        } else {
+                            LogUtil.w(error, DEBUG_API_WARNING_MESSAGE);
+                        }
+
                         countDownLatch.countDown();
                     }
                 });
