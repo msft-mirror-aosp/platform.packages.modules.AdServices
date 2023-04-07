@@ -679,6 +679,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
+        PhFlagsFixture.overrideFledgeAdSelectionBiddingLogicJsVersion(3);
+
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
 
