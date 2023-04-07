@@ -367,6 +367,22 @@ public interface Flags {
         return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
     }
 
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /** Returns the kill switch for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for Attribution Fallback Job . */
+    default long getMeasurementAttributionFallbackJobPeriodMs() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
