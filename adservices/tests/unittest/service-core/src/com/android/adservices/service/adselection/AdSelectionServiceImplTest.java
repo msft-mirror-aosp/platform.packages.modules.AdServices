@@ -130,6 +130,7 @@ import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -4076,6 +4077,36 @@ public class AdSelectionServiceImplTest {
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
+    }
+
+    @Test
+    public void testJSScriptEngineConnectionExceptionAtShutDown() {
+        JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
+        doThrow(JSSandboxIsNotAvailableException.class)
+                .when(() -> JSScriptEngine.getInstance(any()));
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        adSelectionService.destroy();
+        verify(jsScriptEngineMock, never()).shutdown();
     }
 
     @Test
