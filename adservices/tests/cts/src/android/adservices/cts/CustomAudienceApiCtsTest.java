@@ -53,8 +53,10 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     private AdvertisingCustomAudienceClient mClient;
@@ -68,6 +70,8 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     private boolean mIsDebugMode;
     private String mPreviousAppAllowList;
+
+    private final ArrayList<CustomAudience> mCustomAudiencesToCleanUp = new ArrayList<>();
 
     @Before
     public void setup() throws InterruptedException {
@@ -103,20 +107,19 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        leaveJoinedCustomAudiences();
     }
 
     @Test
     public void testJoinCustomAudience_validCustomAudience_success()
-            throws ExecutionException, InterruptedException {
-        mClient.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .build())
-                .get();
+            throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build());
     }
 
     @Test
@@ -125,11 +128,10 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                 assertThrows(
                         ExecutionException.class,
                         () ->
-                                mClient.joinCustomAudience(
-                                                CustomAudienceFixture.getValidBuilderForBuyer(
-                                                                CommonFixture.NOT_ENROLLED_BUYER)
-                                                        .build())
-                                        .get());
+                                joinCustomAudience(
+                                        CustomAudienceFixture.getValidBuilderForBuyer(
+                                                        CommonFixture.NOT_ENROLLED_BUYER)
+                                                .build()));
         assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
         assertThat(exception)
                 .hasCauseThat()
@@ -147,9 +149,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () ->
-                                mClient.joinCustomAudience(customAudienceWithInvalidAdDataMetadata)
-                                        .get());
+                        () -> joinCustomAudience(customAudienceWithInvalidAdDataMetadata));
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }
@@ -167,10 +167,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () ->
-                                mClient.joinCustomAudience(
-                                                customAudienceWithInvalidAdDataRenderUris)
-                                        .get());
+                        () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }
@@ -194,9 +191,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             Exception exception =
                     assertThrows(
                             ExecutionException.class,
-                            () ->
-                                    mClient.joinCustomAudience(customAudienceWithInvalidNumberOfAds)
-                                            .get());
+                            () -> joinCustomAudience(customAudienceWithInvalidNumberOfAds));
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
             assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
         } finally {
@@ -216,10 +211,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () ->
-                                mClient.joinCustomAudience(
-                                                customAudienceWithMismatchedDailyFetchUriDomain)
-                                        .get());
+                        () -> joinCustomAudience(customAudienceWithMismatchedDailyFetchUriDomain));
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }
@@ -231,9 +223,7 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         .setExpirationTime(CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME)
                         .build();
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> mClient.joinCustomAudience(customAudience).get());
+                assertThrows(ExecutionException.class, () -> joinCustomAudience(customAudience));
         assertTrue(exception.getCause() instanceof IllegalArgumentException);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
     }
@@ -261,21 +251,21 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                     assertThrows(
                             ExecutionException.class,
                             () -> {
-                                mClient.joinCustomAudience(customAudience1).get();
+                                joinCustomAudience(customAudience1);
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
                                 CommonFixture.doSleep(
                                         PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-                                mClient.joinCustomAudience(customAudience2).get();
+                                joinCustomAudience(customAudience2);
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
                                 CommonFixture.doSleep(
                                         PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-                                mClient.joinCustomAudience(customAudience3).get();
+                                joinCustomAudience(customAudience3);
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
             assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
@@ -307,21 +297,21 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                     assertThrows(
                             ExecutionException.class,
                             () -> {
-                                mClient.joinCustomAudience(customAudience1).get();
+                                joinCustomAudience(customAudience1);
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
                                 CommonFixture.doSleep(
                                         PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-                                mClient.joinCustomAudience(customAudience2).get();
+                                joinCustomAudience(customAudience2);
 
                                 // TODO(b/266725238): Remove/modify once the API rate limit has been
                                 //  adjusted for FLEDGE
                                 CommonFixture.doSleep(
                                         PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
 
-                                mClient.joinCustomAudience(customAudience3).get();
+                                joinCustomAudience(customAudience3);
                             });
             assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
             assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
@@ -332,11 +322,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Test
     public void testLeaveCustomAudience_joinedCustomAudience_success()
-            throws ExecutionException, InterruptedException {
-        mClient.joinCustomAudience(
-                        CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                                .build())
-                .get();
+            throws ExecutionException, InterruptedException, TimeoutException {
+        joinCustomAudience(
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build());
         mClient.leaveCustomAudience(
                         CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME)
@@ -414,5 +402,27 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+    }
+
+    private void joinCustomAudience(CustomAudience customAudience)
+            throws ExecutionException, InterruptedException, TimeoutException {
+        mClient.joinCustomAudience(customAudience).get(10, TimeUnit.SECONDS);
+        mCustomAudiencesToCleanUp.add(customAudience);
+    }
+
+    private void leaveJoinedCustomAudiences()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        try {
+            for (CustomAudience customAudience : mCustomAudiencesToCleanUp) {
+                // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted
+                //  for FLEDGE
+                CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
+
+                mClient.leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
+                        .get(10, TimeUnit.SECONDS);
+            }
+        } finally {
+            mCustomAudiencesToCleanUp.clear();
+        }
     }
 }

@@ -81,6 +81,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -934,6 +935,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
-        JSScriptEngine.getInstance(mContext).shutdown();
+        try {
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext);
+            jsScriptEngine.shutdown();
+        } catch (JSSandboxIsNotAvailableException exception) {
+            sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");
+        }
     }
 }

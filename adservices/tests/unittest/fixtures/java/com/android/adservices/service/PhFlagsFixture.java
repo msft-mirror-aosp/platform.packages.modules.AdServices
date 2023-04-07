@@ -29,6 +29,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
@@ -251,6 +252,14 @@ public class PhFlagsFixture {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
                 Boolean.toString(value),
+                false);
+    }
+
+    public static void overrideFledgeAdSelectionBiddingLogicJsVersion(long value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+                Long.toString(value),
                 false);
     }
 }

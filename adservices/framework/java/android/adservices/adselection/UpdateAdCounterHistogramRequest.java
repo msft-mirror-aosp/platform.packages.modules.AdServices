@@ -37,10 +37,7 @@ import java.util.concurrent.Executor;
  *
  * <p>The ad counter histograms, which are historical logs of events which are associated with an ad
  * counter key and an ad event type, are used to inform frequency cap filtering in FLEDGE.
- *
- * @hide
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public class UpdateAdCounterHistogramRequest {
     /** @hide */
     public static final String UNSET_AD_EVENT_TYPE_MESSAGE = "Ad event type must be set";

@@ -44,7 +44,6 @@ public class AddAdSelectionOverrideRequest {
     /**
      * Builds a {@link AddAdSelectionOverrideRequest} instance.
      *
-     * @hide
      */
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
@@ -100,7 +99,6 @@ public class AddAdSelectionOverrideRequest {
     /**
      * @return The override for the decision logic for each buyer that is used by contextual ads for
      *     reporting, which may be extended to updating bid values for contextual ads in the future
-     * @hide
      */
     @NonNull
     public BuyersDecisionLogic getBuyersDecisionLogic() {

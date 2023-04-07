@@ -30,16 +30,13 @@ import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
 
 /** Unit tests for {@link AdData} */
 @SmallTest
 public final class AdDataTest {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
-
 
     @Test
     public void testBuildValidAdDataSuccess() {
@@ -101,7 +98,7 @@ public final class AdDataTest {
         if (AdDataFixture.FCAP_ENABLED) {
             builder.setAdCounterKeys(AdDataFixture.getAdCounterKeys());
         }
-        if (AdDataFixture.FCAP_ENABLED && AdDataFixture.APP_INSTALL_ENABLED) {
+        if (AdDataFixture.FCAP_ENABLED || AdDataFixture.APP_INSTALL_ENABLED) {
             builder.setAdFilters(AdFiltersFixture.getValidUnhiddenFilters());
         }
         AdData obj = builder.build();
@@ -142,7 +139,6 @@ public final class AdDataTest {
         assertEquals(0, obj.describeContents());
     }
 
-    @Ignore
     @Test
     public void testParcelWithFilters_success() {
         final AdData originalAdData =
@@ -163,7 +159,6 @@ public final class AdDataTest {
                 .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
     }
 
-    @Ignore
     @Test
     public void testEqualsIdenticalFilters_success() {
         final AdData originalAdData =
@@ -178,7 +173,6 @@ public final class AdDataTest {
         assertThat(originalAdData.equals(identicalAdData)).isTrue();
     }
 
-    @Ignore
     @Test
     public void testEqualsDifferentFilters_success() {
         final AdData originalAdData =
@@ -193,7 +187,6 @@ public final class AdDataTest {
         assertThat(originalAdData.equals(differentAdData)).isFalse();
     }
 
-    @Ignore
     @Test
     public void testEqualsNullFilters_success() {
         final AdData originalAdData =
@@ -205,7 +198,6 @@ public final class AdDataTest {
         assertThat(originalAdData.equals(nullAdData)).isFalse();
     }
 
-    @Ignore
     @Test
     public void testHashCodeIdenticalFilters_success() {
         final AdData originalAdData =
@@ -220,7 +212,6 @@ public final class AdDataTest {
         assertThat(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
     }
 
-    @Ignore
     @Test
     public void testHashCodeDifferentFilters_success() {
         final AdData originalAdData =
@@ -235,7 +226,6 @@ public final class AdDataTest {
         assertThat(originalAdData.hashCode()).isNotEqualTo(differentAdData.hashCode());
     }
 
-    @Ignore
     @Test
     public void testBuildValidAdDataWithUnsetFilters_success() {
         final AdData validAdData =
