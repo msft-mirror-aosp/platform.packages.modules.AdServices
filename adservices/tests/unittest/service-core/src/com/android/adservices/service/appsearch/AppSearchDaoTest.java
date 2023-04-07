@@ -112,21 +112,23 @@ public class AppSearchDaoTest {
 
     @Test
     public void testReadConsentData_emptyQuery() {
-        assertThat(
-                        AppSearchDao.readConsentData(
-                                AppSearchConsentDao.class,
-                                Futures.immediateFuture(mGlobalSearchSession),
-                                mExecutor,
-                                null))
-                .isEqualTo(null);
+        AppSearchDao dao =
+                AppSearchDao.readConsentData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mGlobalSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        null);
+        assertThat(dao).isEqualTo(null);
 
-        assertThat(
-                        AppSearchDao.readConsentData(
-                                AppSearchConsentDao.class,
-                                Futures.immediateFuture(mGlobalSearchSession),
-                                mExecutor,
-                                ""))
-                .isEqualTo(null);
+        AppSearchDao dao2 =
+                AppSearchDao.readConsentData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mGlobalSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        "");
+        assertThat(dao2).isEqualTo(null);
     }
 
     @Test
@@ -144,17 +146,18 @@ public class AppSearchDaoTest {
                 new SearchResult.Builder(TEST, TEST).setGenericDocument(document).build();
         when(mMockPage.get(0)).thenReturn(searchResult);
         when(mGlobalSearchSession.search(any(), any())).thenReturn(mSearchResults);
-        assertThat(
-                        AppSearchDao.readConsentData(
-                                AppSearchConsentDao.class,
-                                Futures.immediateFuture(mGlobalSearchSession),
-                                mExecutor,
-                                TEST))
-                .isEqualTo(dao);
+        AppSearchDao result =
+                AppSearchDao.readConsentData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mGlobalSearchSession),
+                        mExecutor,
+                        NAMESPACE,
+                        TEST);
+        assertThat(result).isEqualTo(dao);
     }
 
     @Test
-    public void testWriteConsentData_failure() throws Exception {
+    public void testWriteConsentData_failure() {
         AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
         verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
 
@@ -204,6 +207,66 @@ public class AppSearchDaoTest {
         FluentFuture future =
                 dao.writeConsentData(
                         Futures.immediateFuture(mockSession), PACKAGE_IDENTIFIER, mExecutor);
+        assertThat(future.get()).isNotNull();
+    }
+
+    @Test
+    public void testDeleteConsentData_failure() {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+
+        AppSearchResult mockResult = Mockito.mock(AppSearchResult.class);
+        SetSchemaResponse.MigrationFailure failure =
+                new SetSchemaResponse.MigrationFailure(
+                        /* namespace= */ TEST,
+                        /* id= */ TEST,
+                        /* schemaType= */ TEST,
+                        /* appSearchResult= */ mockResult);
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
+        // We can't use the base class instance since writing will fail without the necessary
+        // Document fields defined on the class, so we use a subclass instance.
+        FluentFuture<AppSearchBatchResult<String, Void>> result =
+                AppSearchDao.deleteConsentData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mockSession),
+                        mExecutor,
+                        NAMESPACE,
+                        TEST);
+        ExecutionException e = assertThrows(ExecutionException.class, () -> result.get());
+        assertThat(e.getMessage())
+                .isEqualTo(
+                        "java.lang.RuntimeException: "
+                                + ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    @Test
+    public void testDeleteConsentData() throws Exception {
+        AppSearchSession mockSession = Mockito.mock(AppSearchSession.class);
+        verify(mockSession, atMost(1)).setSchemaAsync(any(SetSchemaRequest.class));
+
+        SetSchemaResponse mockResponse = Mockito.mock(SetSchemaResponse.class);
+        when(mockSession.setSchemaAsync(any(SetSchemaRequest.class)))
+                .thenReturn(Futures.immediateFuture(mockResponse));
+
+        verify(mockResponse, atMost(1)).getMigrationFailures();
+        when(mockResponse.getMigrationFailures()).thenReturn(List.of());
+        // We can't use the base class instance since writing will fail without the necessary
+        // Document fields defined on the class, so we use a subclass instance.
+        AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
+        when(mockSession.removeAsync(any())).thenReturn(Futures.immediateFuture(result));
+
+        // Verify that no exception is thrown.
+        FluentFuture future =
+                AppSearchDao.deleteConsentData(
+                        AppSearchConsentDao.class,
+                        Futures.immediateFuture(mockSession),
+                        mExecutor,
+                        NAMESPACE,
+                        TEST);
         assertThat(future.get()).isNotNull();
     }
 }
