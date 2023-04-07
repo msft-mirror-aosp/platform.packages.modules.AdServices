@@ -123,7 +123,18 @@ public class TopicsManagerTest {
     }
 
     @Test
+    public void testTopicsManager_runDefaultClassifier_usingGetMethodToCreateManager()
+            throws Exception {
+        testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ true);
+    }
+
+    @Test
     public void testTopicsManager_runDefaultClassifier() throws Exception {
+        testTopicsManager_runDefaultClassifier(/* useGetMethodToCreateManager */ false);
+    }
+
+    private void testTopicsManager_runDefaultClassifier(boolean useGetMethodToCreateManager)
+            throws Exception {
         // Set classifier flag to use precomputed-then-on-device classifier.
         overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
 
@@ -135,6 +146,7 @@ public class TopicsManagerTest {
                         .setContext(sContext)
                         .setSdkName("sdk1")
                         .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
         // At beginning, Sdk1 receives no topic.
@@ -179,6 +191,7 @@ public class TopicsManagerTest {
                         .setContext(sContext)
                         .setSdkName("sdk2")
                         .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
         GetTopicsResponse sdk2Result2 = advertisingTopicsClient2.getTopics().get();
@@ -186,7 +199,18 @@ public class TopicsManagerTest {
     }
 
     @Test
+    public void testTopicsManager_runOnDeviceClassifier_usingGetMethodToCreateManager()
+            throws Exception {
+        testTopicsManager_runOnDeviceClassifier(true);
+    }
+
+    @Test
     public void testTopicsManager_runOnDeviceClassifier() throws Exception {
+        testTopicsManager_runOnDeviceClassifier(false);
+    }
+
+    private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
+            throws Exception {
         // Set classifier flag to use on-device classifier.
         overrideClassifierType(TEST_CLASSIFIER_TYPE);
 
@@ -202,6 +226,7 @@ public class TopicsManagerTest {
                         .setContext(sContext)
                         .setSdkName("sdk3")
                         .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
                         .build();
 
         // At beginning, Sdk3 receives no topic.
