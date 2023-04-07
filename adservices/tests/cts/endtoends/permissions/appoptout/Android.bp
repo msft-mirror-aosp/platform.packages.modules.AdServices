@@ -48,7 +48,7 @@ android_test {
 }
 
 android_test {
-    name: "CtsExtAdServicesPermissionsAppOptOutEndToEndTests",
+    name: "CtsAdExtServicesPermissionsAppOptOutEndToEndTests",
     defaults: [
         "cts_defaults",
         "modules-utils-testable-device-config-defaults"
