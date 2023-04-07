@@ -49,6 +49,12 @@
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
+
         <!-- Disable Register Ad Beacon Feature at run -->
         <option name="run-command" value="device_config put adservices fledge_register_ad_beacon_enabled false" />
 

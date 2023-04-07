@@ -377,7 +377,8 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-
+        // Set disable seed enrollment to false
+        ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         // Make sure the flags are picked up cold
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
@@ -404,6 +405,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         AdservicesTestHelper.killAdservicesProcess(sContext);
         // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
+        // Re-set disable enrollment test seed to true
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_enrollment_test_seed false");
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
