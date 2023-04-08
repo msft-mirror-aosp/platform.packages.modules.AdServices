@@ -203,8 +203,9 @@ class AttributionJobHandler {
         return false;
     }
 
-    private static TriggeringStatus maybeGenerateAggregateReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private TriggeringStatus maybeGenerateAggregateReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
 
         if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
             return TriggeringStatus.DROPPED;
@@ -234,14 +235,12 @@ class AttributionJobHandler {
                                     aggregateDeduplicationKeyOptional
                                             .get()
                                             .getDeduplicationKey())) {
-                return TriggeringStatus.DROPPED;
-            }
-            if (aggregateDeduplicationKeyOptional.isPresent()
-                    && source.getAggregateReportDedupKeys()
-                            .contains(
-                                    aggregateDeduplicationKeyOptional
-                                            .get()
-                                            .getDeduplicationKey())) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_AGGREGATE_DEDUPLICATED);
                 return TriggeringStatus.DROPPED;
             }
             Optional<List<AggregateHistogramContribution>> contributions =
