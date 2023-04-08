@@ -302,9 +302,14 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
-        <!-- Attribution Job.-->
+        <!-- Measurement Attribution Job.-->
         <service android:name=
                      "com.android.adservices.service.measurement.attribution.AttributionJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- Measurement Attribution Fallback Job.-->
+        <service android:name=
+                     "com.android.adservices.service.measurement.attribution.AttributionFallbackJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

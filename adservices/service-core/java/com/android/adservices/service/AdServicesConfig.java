@@ -41,8 +41,6 @@ public class AdServicesConfig {
      */
     public static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID = 3;
 
-    public static long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
-
     public static long getMeasurementEventMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
     }
@@ -75,9 +73,6 @@ public class AdServicesConfig {
      */
     public static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID = 6;
 
-    public static long MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(24);
-
     /** Returns the min time period (in millis) between each event fallback reporting job run. */
     public static long getMeasurementEventFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
@@ -104,9 +99,6 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.AggregateFallbackReportingJobService})
      */
     public static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID = 8;
-
-    public static long MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(24);
 
     /**
      * Returns the min time period (in millis) between each aggregate fallback reporting job run.
@@ -186,4 +178,10 @@ public class AdServicesConfig {
      * Job ID for the Async Registration Queue JobService ({@link AsyncRegistrationQueueJobService})
      */
     public static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID = 20;
+
+    /**
+     * Job ID for Measurement Attribution Fallback JobService ({@link
+     * com.android.adservices.service.measurement.attribution.AttributionFallbackJobService})
+     */
+    public static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID = 21;
 }
