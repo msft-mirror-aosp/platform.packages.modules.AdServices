@@ -17,18 +17,24 @@
 package com.android.adservices.service.common;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.List;
+import java.util.Objects;
 
 /** Handles the BootCompleted initialization for AdExtServices APK on S-. */
 // TODO(b/269798827): Enable for R.
@@ -39,12 +45,13 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         // TODO(b/269798827): Enable for R.
-        // On T+ devices, always disable the AdExtServices activities.
+        // On T+ devices, always disable the AdExtServices activities and services.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
                 && Build.VERSION.SDK_INT != Build.VERSION_CODES.S_V2) {
-            // If this is not an S- device, disable the service activities and do not register the
-            // broadcast receivers.
-            updateAdExtServicesActivities(context, /* enable= */ false);
+            // If this is not an S- device, disable the activities, services, and do not
+            // register the broadcast receivers.
+            updateAdExtServicesActivities(context, /* shouldEnable= */ false);
+            disableAdExtServicesServices(context);
             return;
         }
         // If this is an S- device but the flags are disabled, do nothing.
@@ -55,7 +62,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         }
 
         registerPackagedChangedBroadcastReceivers(context);
-        updateAdExtServicesActivities(context, /* enable= */ true);
+        updateAdExtServicesActivities(context, /* shouldEnable= */ true);
     }
 
     /**
@@ -74,16 +81,70 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
      * the flag is enabled, we enable the activities.
      */
     @VisibleForTesting
-    void updateAdExtServicesActivities(Context context, boolean enable) {
+    void updateAdExtServicesActivities(@NonNull Context context, boolean shouldEnable) {
+        Objects.requireNonNull(context);
+
         PackageManager packageManager = context.getPackageManager();
         try {
             PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-            PackageManagerCompatUtils.updateAdExtServicesActivities(
-                    context, packageInfo.packageName, enable);
-            LogUtil.d("Updated state of AdExtServices activities: [enabled=" + enable + "]");
+            updateComponents(
+                    context,
+                    PackageManagerCompatUtils.CONSENT_ACTIVITIES_CLASSES,
+                    packageInfo.packageName,
+                    shouldEnable);
+            LogUtil.d("Updated state of AdExtServices activities: [enabled=" + shouldEnable + "]");
         } catch (Exception e) {
-            LogUtil.e("Error when enabling activities: " + e.getMessage());
+            LogUtil.e("Error when updating activities: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Disables services with intent filters defined in AdExtServicesManifest to avoid dupes on T+
+     * devices.
+     */
+    @VisibleForTesting
+    void disableAdExtServicesServices(@NonNull Context context) {
+        Objects.requireNonNull(context);
+
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            updateComponents(
+                    context,
+                    PackageManagerCompatUtils.SERVICE_CLASSES,
+                    packageInfo.packageName,
+                    /* shouldEnable= */ false);
+            LogUtil.d("Disabled AdExtServices services.");
+        } catch (Exception e) {
+            LogUtil.e("Error when disabling services: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @VisibleForTesting
+    static void updateComponents(
+            @NonNull Context context,
+            @NonNull List<String> components,
+            @NonNull String adServicesPackageName,
+            boolean shouldEnable) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(components);
+        Objects.requireNonNull(adServicesPackageName);
+        if (adServicesPackageName.contains(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
+            throw new IllegalStateException(
+                    "Components for package with AdServices APK package suffix should not be "
+                            + "updated!");
+        }
+
+        PackageManager packageManager = context.getPackageManager();
+        for (String component : components) {
+            packageManager.setComponentEnabledSetting(
+                    new ComponentName(adServicesPackageName, component),
+                    shouldEnable
+                            ? PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                            : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                    PackageManager.DONT_KILL_APP);
         }
     }
 }

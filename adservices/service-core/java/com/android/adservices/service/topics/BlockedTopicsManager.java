@@ -248,6 +248,13 @@ public class BlockedTopicsManager {
 
         switch (blockedTopicsSourceOfTruth) {
             case Flags.PPAPI_ONLY:
+                // Technically we only need to reset the SHARED_PREFS_KEY_HAS_MIGRATED bit once.
+                // What we need is clearIfSet operation which is not available in SP. So here we
+                // always reset the bit since otherwise we need to read the SP to read the value and
+                // the clear the value.
+                // The only flow we would do are:
+                // Case 1: DUAL-> PPAPI if there is a bug in System Server
+                // Case 2: DUAL -> SYSTEM_SERVER_ONLY: if everything goes smoothly.
                 resetSharedPreference(context, SHARED_PREFS_KEY_HAS_MIGRATED);
                 break;
             case Flags.PPAPI_AND_SYSTEM_SERVER:

@@ -56,11 +56,19 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @VisibleForTesting
     public EnrollmentDao(Context context, DbHelper dbHelper, Flags flags) {
+        this(context, dbHelper, flags, flags.isEnableEnrollmentTestSeed());
+    }
+
+    @VisibleForTesting
+    public EnrollmentDao(Context context, DbHelper dbHelper, Flags flags, boolean enableTestSeed) {
+        // performSeed is needed to force seeding in tests that do not have DEVICE_CONFIG
+        // permissions
         mContext = context;
         mDbHelper = dbHelper;
         mFlags = flags;
-        // TODO: move this to be called when the enrollment download job is scheduled.
-        seed();
+        if (enableTestSeed) {
+            seed();
+        }
     }
 
     /** Returns an instance of the EnrollmentDao given a context. */
