@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import android.os.RemoteException;
+
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
@@ -45,12 +47,16 @@ public class E2EDenoisedMockTest extends E2EMockTest {
             ReportObjects expectedOutput,
             ParamsProvider paramsProvider,
             String name,
-            Map<String, String> phFlagsMap) {
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
         super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mMeasurementDataDeleter,
+                        mMockContentResolver);
 
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
@@ -58,7 +64,6 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mEnrollmentDao,
                         mDebugReportApi);
     }
 }

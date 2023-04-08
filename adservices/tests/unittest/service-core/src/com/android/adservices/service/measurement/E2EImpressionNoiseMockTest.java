@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement;
 
 
 import android.net.Uri;
+import android.os.RemoteException;
 
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
@@ -63,19 +64,22 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
             ReportObjects expectedOutput,
             ParamsProvider paramsProvider,
             String name,
-            Map<String, String> phFlagsMap) {
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
         super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
-                        sDatastoreManager, mClickVerifier, mMeasurementDataDeleter, mEnrollmentDao);
+                        sDatastoreManager,
+                        mClickVerifier,
+                        mMeasurementDataDeleter,
+                        mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        mEnrollmentDao,
                         mDebugReportApi);
         getExpectedTriggerDataDistributions();
     }

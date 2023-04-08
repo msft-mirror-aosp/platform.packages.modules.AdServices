@@ -33,6 +33,7 @@ import java.time.temporal.ChronoUnit;
 public class DBAdSelectionEntryTest {
 
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
+    private static final Uri BUYER_DECISION_LOGIC_URI = Uri.parse("http://www.domain.com/logic");
     private static final String BUYER_DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; }";
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
@@ -50,6 +51,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -59,6 +61,7 @@ public class DBAdSelectionEntryTest {
 
         assertEquals(AD_SELECTION_ID, dbAdSelectionEntry.getAdSelectionId());
         assertEquals(CUSTOM_AUDIENCE_SIGNALS, dbAdSelectionEntry.getCustomAudienceSignals());
+        assertEquals(BUYER_DECISION_LOGIC_URI, dbAdSelectionEntry.getBiddingLogicUri());
         assertEquals(CONTEXTUAL_SIGNALS, dbAdSelectionEntry.getContextualSignals());
         assertEquals(RENDER_URI, dbAdSelectionEntry.getWinningAdRenderUri());
         assertEquals(BID, dbAdSelectionEntry.getWinningAdBid(), 0);
@@ -124,6 +127,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -135,6 +139,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -151,6 +156,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -161,6 +167,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(2)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals(CONTEXTUAL_SIGNALS)
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)
@@ -171,6 +178,7 @@ public class DBAdSelectionEntryTest {
                 new DBAdSelectionEntry.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                        .setBiddingLogicUri(BUYER_DECISION_LOGIC_URI)
                         .setContextualSignals("different-signals")
                         .setWinningAdRenderUri(RENDER_URI)
                         .setWinningAdBid(BID)

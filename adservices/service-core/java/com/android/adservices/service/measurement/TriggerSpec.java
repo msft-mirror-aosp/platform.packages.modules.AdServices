@@ -99,6 +99,15 @@ public class TriggerSpec {
         return json;
     }
 
+    private static <T extends Comparable<T>> boolean isStrictIncreasing(List<T> list) {
+        for (int i = 1; i < list.size(); i++) {
+            if (list.get(i).compareTo(list.get(i - 1)) <= 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** The choice of the summary operator with the reporting window */
     public enum SummaryOperatorType {
         COUNT,
@@ -115,6 +124,18 @@ public class TriggerSpec {
         return result;
     }
 
+    private void validateParameters() {
+        if (!isStrictIncreasing(mEventReportWindowsEnd)) {
+            throw new IllegalArgumentException(FieldsKey.EVENT_REPORT_WINDOWS + " not increasing");
+        }
+        if (!isStrictIncreasing(mSummaryBucket)) {
+            throw new IllegalArgumentException(FieldsKey.SUMMARY_BUCKETS + " not increasing");
+        }
+        if (mEventReportWindowsStart < 0) {
+            mEventReportWindowsStart = 0;
+        }
+    }
+
     /** */
     public static final class Builder {
         private final TriggerSpec mBuilding;
@@ -126,13 +147,23 @@ public class TriggerSpec {
             mBuilding.mSummaryBucket = new ArrayList<>();
             mBuilding.mEventReportWindowsEnd = new ArrayList<>();
             this.setTriggerData(getIntArrayFromJSON(jsonObject, FieldsKey.TRIGGER_DATA));
-
+            if (mBuilding.mTriggerData.size()
+                    > PrivacyParams.getMaxFlexibleEventTriggerDataCardinality()) {
+                throw new IllegalArgumentException(
+                        "Trigger Data Cardinality Exceeds "
+                                + PrivacyParams.getMaxFlexibleEventTriggerDataCardinality());
+            }
             JSONObject jsonReportWindows = jsonObject.getJSONObject(FieldsKey.EVENT_REPORT_WINDOWS);
             if (!jsonReportWindows.isNull(FieldsKey.START_TIME)) {
                 this.setEventReportWindowsStart(jsonReportWindows.getInt(FieldsKey.START_TIME));
             }
 
             JSONArray jsonArray = jsonReportWindows.getJSONArray(FieldsKey.END_TIME);
+            if (jsonArray.length() > PrivacyParams.getMaxFlexibleEventReportingWindows()) {
+                throw new IllegalArgumentException(
+                        "Number of Reporting Windows Exceeds "
+                                + PrivacyParams.getMaxFlexibleEventReportingWindows());
+            }
             List<Long> data = new ArrayList<>();
             for (int i = 0; i < jsonArray.length(); i++) {
                 data.add(jsonArray.getLong(i));
@@ -150,10 +181,12 @@ public class TriggerSpec {
                 } catch (IllegalArgumentException e) {
                     // if a summary window operator is defined, but not in the pre-defined list, it
                     // will throw to exception.
-                    throw new JSONException(FieldsKey.SUMMARY_WINDOW_OPERATOR + " invalid");
+                    throw new IllegalArgumentException(
+                            FieldsKey.SUMMARY_WINDOW_OPERATOR + " invalid");
                 }
             }
             this.setSummaryBucket(getIntArrayFromJSON(jsonObject, FieldsKey.SUMMARY_BUCKETS));
+            mBuilding.validateParameters();
         }
 
         /** See {@link TriggerSpec#getTriggerData()} ()}. */

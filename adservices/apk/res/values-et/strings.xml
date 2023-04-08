@@ -87,15 +87,14 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Proovige uusi reklaamide privaatsuse funktsioone"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Reklaamiteemade abil saate paremini hallata, milliseid reklaame näete"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Vaadake üksikasju"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Proovige uusi reklaamide privaatsusfunktsioone"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android laseb välja uued privaatsusfunktsioonid, mis võimaldavad teil esitatavate reklaamidega seoses täpsemaid valikuid teha."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Reklaamiteemad aitavad rakendustel esitada teile asjakohaseid reklaame, kaitstes samas teie identiteeti ja rakenduste kasutusteavet. Android saab hiljuti kasutatud rakenduste alusel talleteda teid huvitavad teemad. Hiljem võib mõni teie kasutatav rakendus kuvatavate reklaamide isikupärastamiseks Androidilt asjakohaseid teemasid küsida."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Seadme seadetes saate reklaamiteemasid vaadata ja blokeerida teemad, mida te ei soovi rakendustega jagada. Samuti kustutab Android reklaamiteemasid regulaarselt."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Saate oma meelt igal ajal privaatsusseadete kaudu muuta."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Lisateave reklaamiteemade kohta"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Vaadake meie privaatsuseeskirjadest lisateavet selle kohta, kuidas Android teie andmeid kaitseb."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Proovi järele"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Proovige"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Milliseid andmeid kasutatakse?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Teie reklaamiteemad põhinevad selles seadmes hiljuti kasutatud rakendustel ja nende kasutamissagedusel."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Kuidas me neid andmeid kasutame?"</string>
@@ -118,17 +117,17 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Samuti võite igal ajal privaatsusseadetes blokeerida reklaamide soovitamise konkreetsest rakendusest, lähtestada kõik reklaamisoovituste andmed või lülitada välja rakenduste soovitatud reklaamid."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Teie kasutatavad rakendused võivad küsida Androidilt teavet, mis aitab neil mõõta reklaamide toimivust. Teie privaatsuse kaitsmiseks piirab Android teavet, mida rakendused üksteisega jagada saavad."</string>
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nüüd on saadaval uued reklaamide privaatsusfunktsioonid"</string>
-    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Saate rohkem valikuvõimalusi vaadatavate reklaamide osas, kaitstes samal ajal oma identiteeti."</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Saate rohkem valikuvõimalusi vaadatavate reklaamide osas, kaitstes samal ajal oma identiteeti"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nüüd on saadaval uued reklaamide privaatsusfunktsioonid"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Rakenduse soovitatud reklaamide abil aitavad uued privaatsusfunktsioonid kaitsta teie identiteeti ja teavet teie rakenduse kasutamise kohta, võimaldades samal ajal rakendustel teile asjakohaseid reklaame näidata. Kasutatav rakendus saab teie tegevuse alusel teistele rakendustele seotud reklaame soovitada. Rakenduste loendit näete privaatsusseadetes. Seal saate ka blokeerida soovituste esitamise konkreetsetest rakendustest."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Reklaamide mõõtmise puhul jagatakse reklaamide toimivuse mõistmiseks rakenduste vahel piiratud andmetüüpe, näiteks reklaami näitamise kellaaega."</string>
-    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Mõne muu reklaamide privaatsusfunktsioonide sisselülitamine"</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Lülitage veel mõni reklaamide privaatsusfunktsioon sisse"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android pakub ka uut privaatsusfunktsiooni, mis annab teile kuvatavate reklaamide osas rohkem valikuvõimalusi."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Reklaamiteemad aitavad rakendustel teile asjakohaseid reklaame näidata, kaitstes samal ajal teie identiteeti ja rakenduste kasutusteavet. Android saab hiljuti kasutatud rakenduste alusel meelde jätta teid huvitavad teemad. Hiljem saab teie kasutatav rakendus küsida Androidilt asjakohaseid teemasid, et teile asjakohasemaid reklaame näidata."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Reklaamiteemasid saate vaadata oma privaatsusseadetes. Seal saate ka blokeerida need teemad, mida te ei soovi rakendustega jagada. Samuti kustutab Android reklaamiteemasid automaatselt ja regulaarselt."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Lülita sisse"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nüüd on saadaval uued reklaamide privaatsusfunktsioonid"</string>
-    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Nüüd on teil rohkem valikuvõimalusi näha reklaame, kaitstes samal ajal oma identiteeti."</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Nüüd on teil rohkem valikuvõimalusi näha reklaame, kaitstes samal ajal oma identiteeti"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nüüd on saadaval uued reklaamide privaatsusfunktsioonid"</string>
     <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android pakub nüüd uusi privaatsusfunktsioone, mis annavad teile kuvatavate reklaamide osas rohkem valikuvõimalusi."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Edasi"</string>

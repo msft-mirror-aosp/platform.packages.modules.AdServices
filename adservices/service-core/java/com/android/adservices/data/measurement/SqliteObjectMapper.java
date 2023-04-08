@@ -308,10 +308,6 @@ public class SqliteObjectMapper {
     public static AsyncRegistration constructAsyncRegistration(Cursor cursor) {
         AsyncRegistration.Builder builder = new AsyncRegistration.Builder();
         setTextColumn(cursor, MeasurementTables.AsyncRegistrationContract.ID, builder::setId);
-        setTextColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
-                builder::setEnrollmentId);
         setUriColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
@@ -334,14 +330,6 @@ public class SqliteObjectMapper {
                 builder::setTopOrigin);
         setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
-                builder::setRedirectType);
-        setIntColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
-                builder::setRedirectCount);
-        setIntColumn(
-                cursor,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 (enumValue) ->
                         builder.setSourceType(
@@ -358,11 +346,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 builder::setRetryCount);
-        setLongColumn(
+        setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
-                builder::setLastProcessingTime);
-        setIntColumn(cursor, MeasurementTables.AsyncRegistrationContract.TYPE, builder::setType);
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                (enumValue) ->
+                        builder.setType(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRegistration.RegistrationType.values()[enumValue]));
         setBooleanColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,

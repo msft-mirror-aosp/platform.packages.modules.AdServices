@@ -36,7 +36,7 @@ import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
-import android.adservices.adselection.BuyerDecisionLogic;
+import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -81,6 +81,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -89,7 +90,6 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -413,6 +413,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mBackgroundExecutor,
                         mScheduledExecutor,
                         mAdSelectionEntryDao,
+                        mCustomAudienceDao,
                         mAdServicesHttpsClient,
                         devContext,
                         mAdServicesLogger,
@@ -530,7 +531,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic,
+            @NonNull BuyersDecisionLogic buyersDecisionLogic,
             @NonNull AdSelectionOverrideCallback callback) {
         int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 
@@ -934,6 +935,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @SuppressWarnings("FutureReturnValueIgnored")
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
-        JSScriptEngine.getInstance(mContext).shutdown();
+        try {
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(mContext);
+            jsScriptEngine.shutdown();
+        } catch (JSSandboxIsNotAvailableException exception) {
+            sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");
+        }
     }
 }
