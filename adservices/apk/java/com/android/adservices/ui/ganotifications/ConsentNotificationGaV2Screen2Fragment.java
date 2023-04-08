@@ -201,7 +201,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                                 : R.string.notificationUI_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);
-                mRightControlButton.setText(R.string.notificationUI_next_button_text);
+                mRightControlButton.setText(R.string.notificationUI_more_button_text);
             }
         }
 

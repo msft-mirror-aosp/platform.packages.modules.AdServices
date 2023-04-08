@@ -31,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit tests for {@link TriggerSpec} */
 public class TriggerSpecTest {
-    private JSONObject getJson(
+    public static JSONObject getJson(
             int[] triggerData,
             int eventReportWindowsStart,
             long[] eventReportWindowsEnd,
@@ -59,7 +59,7 @@ public class TriggerSpecTest {
         return json;
     }
 
-    private JSONObject getValidBaselineTestCase() throws JSONException {
+    public static JSONObject getValidBaselineTestCase() throws JSONException {
         int[] triggerData = {1, 2, 3};
         int eventReportWindowsStart = 0;
         long[] eventReportWindowsEnd = {
@@ -134,7 +134,7 @@ public class TriggerSpecTest {
     }
 
     @Test
-    public void triggerSpecBuilder_invalidSummaryOperator_assertThrow() throws JSONException {
+    public void triggerSpecBuilder_invalidSummaryOperator_throws() throws JSONException {
         // Setup
         int[] triggerData = {1, 2, 3};
         int eventReportWindowsStart = 0;
@@ -151,11 +151,12 @@ public class TriggerSpecTest {
                         summaryWindowOperator,
                         summaryBucket);
         // Assertion
-        assertThrows(JSONException.class, () -> new TriggerSpec.Builder(JSONInput).build());
+        assertThrows(
+                IllegalArgumentException.class, () -> new TriggerSpec.Builder(JSONInput).build());
     }
 
     @Test
-    public void triggerSpecBuilder_missingFields_assertThrow() throws JSONException {
+    public void triggerSpecBuilder_missingFields_throws() throws JSONException {
         // Setup
         int[] triggerData = {1, 2, 3};
         int eventReportWindowsStart = 0;
@@ -212,5 +213,121 @@ public class TriggerSpecTest {
                 testObject.getSummaryWindowOperator().name().toLowerCase(), summaryWindowOperator);
         List<Integer> expectedSummaryBuckets = Arrays.asList(1, 2, 3, 4);
         assertEquals(expectedSummaryBuckets, testObject.getSummaryBucket());
+    }
+
+    @Test
+    public void triggerSpecBuilder_nonStrictIncreaseSummaryBuckets_throws() throws JSONException {
+        // Setup
+        int[] triggerData = {1, 2, 3};
+        int eventReportWindowsStart = 0;
+        long[] eventReportWindowsEnd = {
+            TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7), TimeUnit.DAYS.toMillis(30)
+        };
+        String summaryWindowOperator = "count";
+        int[] summaryBucket = {1, 2, 2, 4};
+        JSONObject JSONInput =
+                getJson(
+                        triggerData,
+                        eventReportWindowsStart,
+                        eventReportWindowsEnd,
+                        summaryWindowOperator,
+                        summaryBucket);
+
+        // Assertion
+        assertThrows(
+                IllegalArgumentException.class, () -> new TriggerSpec.Builder(JSONInput).build());
+    }
+
+    @Test
+    public void triggerSpecBuilder_nonStrictIncreaseReportWindowEnd_throws() throws JSONException {
+        // Setup
+        int[] triggerData = {1, 2, 3};
+        int eventReportWindowsStart = 0;
+        long[] eventReportWindowsEnd = {
+            TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(30)
+        };
+        String summaryWindowOperator = "count";
+        int[] summaryBucket = {1, 2, 2, 4};
+        JSONObject JSONInput =
+                getJson(
+                        triggerData,
+                        eventReportWindowsStart,
+                        eventReportWindowsEnd,
+                        summaryWindowOperator,
+                        summaryBucket);
+
+        // Assertion
+        assertThrows(
+                IllegalArgumentException.class, () -> new TriggerSpec.Builder(JSONInput).build());
+    }
+
+    @Test
+    public void triggerSpecBuilder_exceedReportDataCardinalityLimitation_throws()
+            throws JSONException {
+        // Setup
+        int[] triggerData = new int[PrivacyParams.getMaxFlexibleEventTriggerDataCardinality() + 1];
+        for (int i = 0; i < triggerData.length; i++) {
+            triggerData[i] = i;
+        }
+        int eventReportWindowsStart = 0;
+        long[] eventReportWindowsEnd = {TimeUnit.DAYS.toMillis(2)};
+        String summaryWindowOperator = "count";
+        int[] summaryBucket = {1};
+        JSONObject JSONInput =
+                getJson(
+                        triggerData,
+                        eventReportWindowsStart,
+                        eventReportWindowsEnd,
+                        summaryWindowOperator,
+                        summaryBucket);
+
+        // Assertion
+        assertThrows(
+                IllegalArgumentException.class, () -> new TriggerSpec.Builder(JSONInput).build());
+    }
+
+    @Test
+    public void triggerSpecBuilder_exceedReportWindowLimitation_throws() throws JSONException {
+        // Setup
+        int[] triggerData = {1};
+        int eventReportWindowsStart = 0;
+        long[] eventReportWindowsEnd =
+                new long[PrivacyParams.getMaxFlexibleEventReportingWindows() + 1];
+        for (int i = 0; i < eventReportWindowsEnd.length; i++) {
+            eventReportWindowsEnd[i] = TimeUnit.DAYS.toMillis(i + 1);
+        }
+        String summaryWindowOperator = "count";
+        int[] summaryBucket = {1};
+        JSONObject JSONInput =
+                getJson(
+                        triggerData,
+                        eventReportWindowsStart,
+                        eventReportWindowsEnd,
+                        summaryWindowOperator,
+                        summaryBucket);
+
+        // Assertion
+        assertThrows(
+                IllegalArgumentException.class, () -> new TriggerSpec.Builder(JSONInput).build());
+    }
+
+    @Test
+    public void triggerSpecBuilder_autoCorrectionNegStartTime_equal() throws JSONException {
+        // Setup
+        int[] triggerData = {1, 2, 3, 4, 5, 6, 7, 8};
+        int eventReportWindowsStart = -1;
+        long[] eventReportWindowsEnd = {TimeUnit.DAYS.toMillis(2)};
+        String summaryWindowOperator = "count";
+        int[] summaryBucket = {1};
+        JSONObject JSONInput =
+                getJson(
+                        triggerData,
+                        eventReportWindowsStart,
+                        eventReportWindowsEnd,
+                        summaryWindowOperator,
+                        summaryBucket);
+
+        // Assertion
+        assertEquals(0, new TriggerSpec.Builder(JSONInput).build().getEventReportWindowsStart());
     }
 }

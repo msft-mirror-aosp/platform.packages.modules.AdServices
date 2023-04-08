@@ -150,13 +150,12 @@ public class AppSearchConsentService {
         Intent serviceIntent = new Intent(AdServicesCommon.ACTION_TOPICS_SERVICE);
         List<ResolveInfo> resolveInfos =
                 context.getPackageManager()
-                        .queryIntentServicesAsUser(
+                        .queryIntentServices(
                                 serviceIntent,
                                 PackageManager.GET_SERVICES
                                         | PackageManager.MATCH_SYSTEM_ONLY
                                         | PackageManager.MATCH_DIRECT_BOOT_AWARE
-                                        | PackageManager.MATCH_DIRECT_BOOT_UNAWARE,
-                                UserHandle.SYSTEM);
+                                        | PackageManager.MATCH_DIRECT_BOOT_UNAWARE);
         final ServiceInfo serviceInfo =
                 AdServicesCommon.resolveAdServicesService(resolveInfos, serviceIntent.getAction());
         if (serviceInfo != null) {

@@ -315,11 +315,6 @@ public class EventFallbackReportingJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()
                     .when(() -> EventFallbackReportingJobService.schedule(any(), any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
 
             // Execute
             execute.run();
