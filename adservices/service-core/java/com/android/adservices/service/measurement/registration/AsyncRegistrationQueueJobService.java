@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -27,9 +27,9 @@ import android.content.Context;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -37,9 +37,6 @@ import java.time.Instant;
 
 /** Job Service for servicing queued registration requests */
 public class AsyncRegistrationQueueJobService extends JobService {
-
-    private long mRecordServiceLimit = 50;
-    private short mRetryLimit = 5;
 
     @Override
     public boolean onStartJob(JobParameters params) {
@@ -64,9 +61,11 @@ public class AsyncRegistrationQueueJobService extends JobService {
         AdServicesExecutors.getBackgroundExecutor()
                 .execute(
                         () -> {
-                            asyncQueueRunner.runAsyncRegistrationQueueWorker(
-                                    mRecordServiceLimit, mRetryLimit);
+                            asyncQueueRunner.runAsyncRegistrationQueueWorker();
                             jobFinished(params, false);
+                            // jobFinished is asynchronous, so forcing scheduling avoiding
+                            // concurrency issue
+                            scheduleIfNeeded(this, /* forceSchedule */ true);
                         });
         return true;
     }
@@ -79,19 +78,23 @@ public class AsyncRegistrationQueueJobService extends JobService {
 
     @VisibleForTesting
     protected static void schedule(Context context, JobScheduler jobScheduler) {
-        Flags flags = FlagsFactory.getFlags();
         final JobInfo job =
                 new JobInfo.Builder(
-                                ASYNC_REGISTRATION_QUEUE_JOB_ID,
+                                MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
                                 new ComponentName(context, AsyncRegistrationQueueJobService.class))
-                        .setRequiresBatteryNotLow(true)
-                        .setPeriodic(flags.getAsyncRegistrationJobQueueIntervalMs())
+                        .addTriggerContentUri(
+                                new JobInfo.TriggerContentUri(
+                                        AsyncRegistrationContentProvider.TRIGGER_URI,
+                                        JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
+                        .setTriggerContentUpdateDelay(
+                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_DELAY_MS)
+                        .setTriggerContentMaxDelay(
+                                SystemHealthParams.ASYNC_REGISTRATION_JOB_TRIGGERING_MAX_DELAY_MS)
                         .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                        .setPersisted(true)
+                        .setPersisted(false) // Can't call addTriggerContentUri() on a persisted job
                         .build();
         jobScheduler.schedule(job);
     }
-
     /**
      * Schedule Async Registration Queue Job Service if it is not already scheduled
      *
@@ -110,7 +113,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
             return;
         }
 
-        final JobInfo job = jobScheduler.getPendingJob(ASYNC_REGISTRATION_QUEUE_JOB_ID);
+        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler);
@@ -123,7 +126,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
     private boolean skipAndCancelBackgroundJob(final JobParameters params) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(ASYNC_REGISTRATION_QUEUE_JOB_ID);
+            jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         }
         // Tell the JobScheduler that the job is done and does not need to be rescheduled
         jobFinished(params, false);

@@ -29,6 +29,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -56,6 +57,7 @@ import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownloadBuilder;
 import com.google.android.libraries.mobiledatadownload.TaskScheduler;
+import com.google.android.libraries.mobiledatadownload.TimeSource;
 import com.google.android.libraries.mobiledatadownload.downloader.FileDownloader;
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
@@ -588,7 +590,19 @@ public class MobileDataDownloadTest {
         FileDownloader fileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(context, flags, fileStorage);
         NetworkUsageMonitor networkUsageMonitor =
-                new NetworkUsageMonitor(context, System::currentTimeMillis);
+                new NetworkUsageMonitor(
+                        context,
+                    new TimeSource() {
+                        @Override
+                        public long currentTimeMillis() {
+                            return System.currentTimeMillis();
+                        }
+
+                        @Override
+                        public long elapsedRealtimeNanos() {
+                            return SystemClock.elapsedRealtimeNanos();
+                        }
+                    });
 
         return MobileDataDownloadBuilder.newBuilder()
                 .setContext(context)

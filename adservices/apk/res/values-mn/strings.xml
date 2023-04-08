@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Зарын нууцлалын шинэ онцлогуудыг турших"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Зарын сэдвүүд танд хардаг зараасаа илүү их сонголт хийх боломжийг өгдөг"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Дэлгэрэнгүйг үзэх"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Зарын нууцлалын шинэ онцлогуудыг турших"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android танд хардаг зараа хэрхэх талаар илүү их сонголт өгөх нууцлалын шинэ онцлогуудыг эхлүүлж байна."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Зарын сэдвүүд нь таны таниулбар болон апп ашиглалтын талаарх мэдээллийг хамгаалахын зэрэгцээ аппуудад танд хамааралтай зар харуулахад тусалдаг. Android таны саяхан ашигласан аппуудад тулгуурлан сонирхсон сэдвүүдийг тэмдэглэж авах боломжтой. Дараа нь таны ашигладаг апп таны хардаг зарыг хувийн болгохын тулд Android-с хамааралтай сэдвүүдийг авахыг хүсэх боломжтой."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Та зарын сэдвүүдийг төхөөрөмжийнхөө тохиргоонд харах, аппуудтай хуваалцахыг хүсэхгүй байгаагаа блоклох боломжтой. Android мөн зарын сэдвүүдийг тогтмол автоматаар устгадаг."</string>

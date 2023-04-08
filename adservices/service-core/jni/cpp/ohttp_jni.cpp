@@ -24,20 +24,23 @@
 
 constexpr char const *LOG_TAG = "OhttpJniWrapper";
 
-// TODO(b/274425716) : Use macros similar to Conscrypt's JNI_TRACE for cleaner logging
+// TODO(b/274425716) : Use macros similar to Conscrypt's JNI_TRACE for cleaner
+// logging
 // TODO(b/274598556) : Add error throwing convenience methods
 
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKemDhkemX25519HkdfSha256(JNIEnv *env,
-                                                                  jclass) {
-  __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeKemDhkemX25519HkdfSha256");
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKemDhkemX25519HkdfSha256(
+    JNIEnv *env, jclass) {
+  __android_log_write(ANDROID_LOG_INFO, LOG_TAG,
+                      "hpkeKemDhkemX25519HkdfSha256");
 
   const EVP_HPKE_KEM *ctx = EVP_hpke_x25519_hkdf_sha256();
   return reinterpret_cast<jlong>(ctx);
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *env, jclass) {
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *env,
+                                                                    jclass) {
   __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeKdfHkdfSha256");
 
   const EVP_HPKE_KDF *ctx = EVP_hpke_hkdf_sha256();
@@ -45,14 +48,16 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *env,
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes256Gcm(JNIEnv *env, jclass) {
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes256Gcm(JNIEnv *env,
+                                                                    jclass) {
   __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeAeadAes256Gcm");
 
   const EVP_HPKE_AEAD *ctx = EVP_hpke_aes_256_gcm();
   return reinterpret_cast<jlong>(ctx);
 }
 
-JNIEXPORT void JNICALL Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxFree(
+JNIEXPORT void JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxFree(
     JNIEnv *env, jclass, jlong hpkeCtxRef) {
   __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeCtxFree");
 
@@ -63,7 +68,8 @@ JNIEXPORT void JNICALL Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtx
 }
 
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxNew(JNIEnv *env, jclass) {
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxNew(JNIEnv *env,
+                                                             jclass) {
   __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeCtxNew");
 
   const EVP_HPKE_CTX *ctx = EVP_HPKE_CTX_new();
@@ -82,13 +88,12 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
     JNIEnv *env, jclass, jlong senderHpkeCtxRef, jlong evpKemRef,
     jlong evpKdfRef, jlong evpAeadRef, jbyteArray publicKeyArray,
     jbyteArray infoArray, jbyteArray seedArray) {
-    __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeCtxSetupSenderWithSeed");
+  __android_log_write(ANDROID_LOG_INFO, LOG_TAG, "hpkeCtxSetupSenderWithSeed");
 
   EVP_HPKE_CTX *ctx = reinterpret_cast<EVP_HPKE_CTX *>(senderHpkeCtxRef);
   if (ctx == nullptr) {
     // TODO(b/274598556) : throw NullPointerException
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
-                          "hpke context is null");
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "hpke context is null");
     return {};
   }
 
@@ -103,16 +108,15 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
       (long)evpKemRef, (long)evpKdfRef, (long)evpAeadRef, publicKeyArray,
       infoArray, seedArray);
 
-
   if (kem == nullptr || kdf == nullptr || aead == nullptr) {
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
-                       "kem or kdf or aead is null");
+                        "kem or kdf or aead is null");
     return {};
   }
 
   if (publicKeyArray == nullptr || seedArray == nullptr) {
     __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
-                       "public key array or seed array is null");
+                        "public key array or seed array is null");
     return {};
   }
 
@@ -152,15 +156,14 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
       env->ReleaseByteArrayElements(infoArray, infoArrayBytes, JNI_ABORT);
     }
 
-    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
-                        "setup sender returned 0");
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "setup sender returned 0");
     return {};
   }
 
   env->ReleaseByteArrayElements(publicKeyArray, peer_public_key, JNI_ABORT);
   env->ReleaseByteArrayElements(seedArray, seed, JNI_ABORT);
 
-  if (infoArrayBytes!= nullptr) {
+  if (infoArrayBytes != nullptr) {
     env->ReleaseByteArrayElements(infoArray, infoArrayBytes, JNI_ABORT);
   }
 
@@ -170,4 +173,68 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
       reinterpret_cast<const jbyte *>(encapsulatedSharedSecret.data()));
 
   return encArray;
+}
+
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSeal(
+    JNIEnv *env, jclass, jlong senderHpkeCtxRef, jbyteArray plaintextArray,
+    jbyteArray aadArray) {
+  __android_log_print(ANDROID_LOG_INFO, LOG_TAG,
+                      "EVP_HPKE_CTX_seal(%ld, %p, %p)", (long)senderHpkeCtxRef,
+                      plaintextArray, aadArray);
+
+  EVP_HPKE_CTX *ctx = reinterpret_cast<EVP_HPKE_CTX *>(senderHpkeCtxRef);
+  if (ctx == nullptr) {
+    // TODO(b/274598556) : throw NullPointerException
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "hpke context is null");
+    return {};
+  }
+
+  if (plaintextArray == nullptr) {
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG,
+                        "plaintext array is null");
+    return {};
+  }
+
+  jbyte *plaintext = env->GetByteArrayElements(plaintextArray, 0);
+
+  jbyte *aadArrayElement = nullptr;
+  const uint8_t *aad = nullptr;
+  size_t aadLen = 0;
+  if (aadArray != nullptr) {
+    aadArrayElement = env->GetByteArrayElements(aadArray, 0);
+    aad = reinterpret_cast<const uint8_t *>(aadArrayElement);
+    aadLen = env->GetArrayLength(aadArray);
+  }
+
+  size_t encryptedLen;
+  std::vector<uint8_t> encrypted(env->GetArrayLength(plaintextArray) +
+                                 EVP_HPKE_CTX_max_overhead(ctx));
+
+  if (!EVP_HPKE_CTX_seal(/* ctx= */ ctx,
+                         /* out= */ encrypted.data(),
+                         /* out_len= */ &encryptedLen,
+                         /* max_out_len= */ encrypted.size(),
+                         /* in= */ reinterpret_cast<const uint8_t *>(plaintext),
+                         /* in_len= */ env->GetArrayLength(plaintextArray),
+                         /* aad= */ aad,
+                         /* aad_len= */ aadLen)) {
+    env->ReleaseByteArrayElements(plaintextArray, plaintext, JNI_ABORT);
+    if (aadArrayElement != nullptr) {
+      env->ReleaseByteArrayElements(aadArray, aadArrayElement, JNI_ABORT);
+    }
+
+    __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, "EVP_HPKE_CTX_seal failed");
+    return {};
+  }
+
+  env->ReleaseByteArrayElements(plaintextArray, plaintext, JNI_ABORT);
+  if (aadArrayElement != nullptr) {
+    env->ReleaseByteArrayElements(aadArray, aadArrayElement, JNI_ABORT);
+  }
+
+  jbyteArray ciphertextArray = env->NewByteArray(encryptedLen);
+  env->SetByteArrayRegion(ciphertextArray, 0, encryptedLen,
+                          reinterpret_cast<const jbyte *>(encrypted.data()));
+  return ciphertextArray;
 }

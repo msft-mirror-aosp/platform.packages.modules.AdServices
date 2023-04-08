@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prueba nuevas funciones de privacidad en la publicidad"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Los temas de anuncios te permiten indicar el tipo de anuncios que te gusta ver"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Ver detalles"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prueba las nuevas funciones de privacidad en la publicidad"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android va a lanzar nuevas funciones de privacidad para que puedas controlar mejor los anuncios que ves."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Los temas de anuncios ayudan a las aplicaciones a mostrarte anuncios relevantes a la vez que protegen tu identidad y tus datos de uso de aplicaciones. Android puede consultar temas de interés basándose en las aplicaciones que has utilizado recientemente. Después, las aplicaciones que uses pueden pedirle a Android consultar temas relevantes para personalizar los anuncios que ves."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Puedes ver temas de anuncios en los ajustes de tu dispositivo y bloquear los que no quieras que se compartan con aplicaciones. Android también elimina automáticamente temas de anuncios de forma habitual."</string>

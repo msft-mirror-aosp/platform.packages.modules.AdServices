@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prófaðu nýja eiginleika fyrir persónuvernd auglýsingar"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Umfjöllunarefni auglýsinga veita þér meira val um auglýsingarnar sem birtast þér"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Skoða upplýsingar"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prófaðu nýja eiginleika fyrir persónuvernd auglýsinga"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android kynnir nýja persónuverndareiginleika sem veita þér meira val um auglýsingarnar sem birtast þér."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Umfjöllunarefni auglýsinga hjálpa forritum að birta þér viðeigandi auglýsingar en vernda um leið auðkenni þitt og upplýsingar um forritanotkun þína. Android getur skráð áhugasvið í samræmi við forritin sem þú hefur notað nýlega. Seinna getur forrit sem þú notar beðið Android um viðeigandi umfjöllunarefni til að sérsníða auglýsingarnar sem birtast þér."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Þú getur séð umfjöllunarefni auglýsinga í stillingum tækisins og lokað á þau sem þú vilt ekki deila með forritum. Android eyðir einnig umfjöllunarefnum auglýsinga reglulega sjálfkrafa."</string>

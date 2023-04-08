@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Provo veçoritë e reja të privatësisë së reklamave"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Temat e reklamave të japin më shumë zgjedhje se cilat reklama të shikosh"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Shiko detajet"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Provo veçoritë e reja të privatësisë së reklamave"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android po prezanton veçori të reja të privatësisë që të japin më shumë mundësi zgjedhjeje për reklamat që shikon."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Temat e reklamave ndihmojnë aplikacionet të të shfaqin reklama të përshtatshme teksa mbrojnë identitetin dhe informacionet e tua rreth përdorimit të aplikacionit. Android mund të shënojë tema interesi bazuar në aplikacionet që ke përdorur së fundi. Më vonë, një aplikacion që ti përdor mund të kërkojë tema të përshtatshme për të personalizuar reklamat që ti shikon."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Mund të shikosh temat e reklamave te cilësimet e pajisjes dhe të bllokosh ato që nuk dëshiron të ndahen me aplikacionet. Gjithashtu, Android i fshin rregullisht në mënyrë automatike temat e reklamave."</string>

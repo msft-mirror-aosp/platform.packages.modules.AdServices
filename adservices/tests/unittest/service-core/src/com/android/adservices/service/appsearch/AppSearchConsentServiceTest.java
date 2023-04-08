@@ -251,14 +251,14 @@ public class AppSearchConsentServiceTest {
         serviceInfo2.packageName = ADEXTSERVICES_PACKAGE_NAME;
         ResolveInfo resolveInfo2 = new ResolveInfo();
         resolveInfo2.serviceInfo = serviceInfo2;
-        Mockito.when(mockPackageManager.queryIntentServicesAsUser(any(), anyInt(), any()))
+        Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
                 .thenReturn(List.of(resolveInfo1, resolveInfo2));
         assertThat(AppSearchConsentService.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);
 
         // When the resolveInfo returns AdExtServices package name, the AdServices package name
         // is returned.
-        Mockito.when(mockPackageManager.queryIntentServicesAsUser(any(), anyInt(), any()))
+        Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
                 .thenReturn(List.of(resolveInfo2));
         assertThat(AppSearchConsentService.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);

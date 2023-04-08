@@ -48,6 +48,8 @@ public class DebugReportApi {
         String SOURCE_STORAGE_LIMIT = "source-storage-limit";
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
+        String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
+                "trigger-attributions-per-source-destination-limit";
         String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
         String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
         String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
@@ -208,12 +210,13 @@ public class DebugReportApi {
                 dao);
     }
 
-    /**
-     * Schedules Trigger Debug Reports (except trigger-no-matching-source) without limit, pass in
-     * Type for different types.
-     */
-    public void scheduleTriggerNoLimitDebugReport(
-            Source source, Trigger trigger, IMeasurementDao dao, String type) {
+    /** Schedules Trigger Debug Reports with/without limit, pass in Type for different types. */
+    public void scheduleTriggerDebugReport(
+            Source source,
+            Trigger trigger,
+            @Nullable String limit,
+            IMeasurementDao dao,
+            String type) {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -225,7 +228,7 @@ public class DebugReportApi {
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
-                generateTriggerDebugReportBody(source, trigger, null, debugKeyPair, false),
+                generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
                 source.getEnrollmentId(),
                 dao);
     }
