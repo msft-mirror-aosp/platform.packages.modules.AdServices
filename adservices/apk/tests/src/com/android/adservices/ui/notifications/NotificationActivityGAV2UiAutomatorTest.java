@@ -110,7 +110,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -130,7 +130,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
         UiObject rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -146,7 +146,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
         assertThat(title2.exists()).isTrue();
         leftControlButton = getElement(R.string.notificationUI_left_control_button_text_eu);
         rightControlButton = getElement(R.string.notificationUI_right_control_button_ga_text_eu_v2);
-        moreButton = getElement(R.string.notificationUI_next_button_text);
+        moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -166,7 +166,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
@@ -190,7 +190,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
-        UiObject moreButton = getElement(R.string.notificationUI_next_button_text);
+        UiObject moreButton = getElement(R.string.notificationUI_more_button_text);
         assertThat(leftControlButton.exists()).isFalse();
         assertThat(rightControlButton.exists()).isFalse();
         assertThat(moreButton.exists()).isTrue();
