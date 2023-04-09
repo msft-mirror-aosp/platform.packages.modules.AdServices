@@ -87,15 +87,14 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Жарнамалардын купуялыгын коргоочу жаңы функцияларды байкап көрүңүз"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Жарнамалардын темалары боюнча кандай жарнамаларды көргүңүз келерин тандай аласыз"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Кеңири маалымат"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Жарнамалардын купуялыгын коргой турган жаңы функцияларды байкап көрүңүз"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Жаңы купуялык параметрлери аркылуу Android\'де кандай жарнамалар көрүнөрүн тандай аласыз."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Жарнамалардын темалары функциясы сиздин ким экениңизди жана кандай колдонмолорду колдонуп жатканыңызды жашырып, колдонмолорго керектүү жарнамаларды көрсөтүү мүмкүнчүлүгүн берет. Android жакында пайдаланган колдонмолоруңуздун негизинде кандай темаларга кызыгарыңызды билип турат. Кийинчерээк сиз пайдаланган колдонмолор керектүү жарнамаларды көрсөтүү үчүн Android\'ден темалардын аталыштарын сурашы мүмкүн."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Жарнамалардын темаларын түзмөгүңүздүн параметрлеринен көрүп, колдонмолор менен бөлүшкүңүз келбегендерин жашыра аласыз. Ошондой эле, Android жарнамалардын темаларын автоматтык түрдө өчүрүп турат."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Купуялык параметрлерине өтүп, аларды каалаган убакта өзгөртө аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнамалардын темалары тууралуу кеңири маалымат"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android маалыматыңызды кандай коргой турганын билгиңиз келсе, Купуялык саясатыбызга өтүңүз."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүү"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байкап көрүңүз"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Кандай маалымат колдонулат"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнамалардын темалары соңку пайдаланган колдонмолоруңузга жана аларды канчалык көп ачканыңызга жараша аныкталат."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Бул маалымат кандайча колдонулат"</string>
@@ -124,9 +123,9 @@
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Жарнамалардын майнаптуулугун түшүнүү үчүн колдонмолор бири-бири менен жарнаманын кайсы убакытта көрсөтүлгөнү сыяктуу белгилүү бир маалыматтын түрлөрүн бөлүшөт."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Жарнамалардын купуялыгына байланыштуу башка функцияларды күйгүзүү"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Жаңы купуялык функциясы аркылуу Android колдонуучулары көрсөтүлө турган жарнамаларды тандай алышат."</string>
-    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Жарнамалардын темалары функциясы сиздин ким экениңизди жана кандай колдонмолорду пайдаланып жатканыңызды жашырып, колдонмолорго керектүү жарнамаларды көрсөтүү мүмкүнчүлүгүн берет. Android жакында пайдаланган колдонмолоруңуздун негизинде кандай темаларга кызыгарыңызды билип турат. Кийинчерээк сиз пайдаланган колдонмо ылайыктуу жарнамаларды көрсөтүү үчүн Android\'ден темалардын аталыштарын сурашы мүмкүн."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Жарнамалардын темалары функциясы сиздин ким экениңизди жана кандай колдонмолорду колдонуп жатканыңызды жашырып, колдонмолорго керектүү жарнамаларды көрсөтүү мүмкүнчүлүгүн берет. Android жакында пайдаланган колдонмолоруңуздун негизинде кандай темаларга кызыгарыңызды билип турат. Кийинчерээк сиз пайдаланган колдонмо ылайыктуу жарнамаларды көрсөтүү үчүн Android\'ден темалардын аталыштарын сурашы мүмкүн."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Жарнамалардын темаларын купуялык параметрлеринен көрүп, колдонмолор менен бөлүшкүңүз келбегендерин бөгөттөй аласыз. Android жарнамалардын темаларын автоматтык түрдө өчүрүп турат."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Күйгүзүү"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Аны күйгүзүү"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Эми жарнамалардын купуялыгына байланыштуу жаңы функциялар жеткиликтүү"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Эми ким экениңизди жашырып, көрсөтүлө турган жарнамаларды тандай аласыз"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Эми жарнамалардын купуялыгына байланыштуу жаңы функциялар жеткиликтүү"</string>

@@ -104,7 +104,7 @@ class AttributionJobHandler {
      *
      * @return false if there are datastore failures or pending {@link Trigger} left, true otherwise
      */
-    synchronized boolean performPendingAttributions() {
+    boolean performPendingAttributions() {
         Optional<List<String>> pendingTriggersOpt = mDatastoreManager
                 .runInTransactionWithResult(IMeasurementDao::getPendingTriggerIds);
         if (!pendingTriggersOpt.isPresent()) {
@@ -157,9 +157,10 @@ class AttributionJobHandler {
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     if (!doTopLevelFiltersMatch(source, trigger)) {
-                        mDebugReportApi.scheduleTriggerNoLimitDebugReport(
+                        mDebugReportApi.scheduleTriggerDebugReport(
                                 source,
                                 trigger,
+                                /* limit = */ null,
                                 measurementDao,
                                 Type.TRIGGER_NO_MATCHING_FILTER_DATA);
                         ignoreTrigger(trigger, measurementDao);
@@ -190,8 +191,9 @@ class AttributionJobHandler {
                 });
     }
 
-    private static boolean shouldAttributionBeBlockedByRateLimits(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean shouldAttributionBeBlockedByRateLimits(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         if (!hasAttributionQuota(source, trigger, measurementDao)
                 || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
             LogUtil.d("Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
@@ -451,8 +453,12 @@ class AttributionJobHandler {
         Optional<EventTrigger> matchingEventTrigger =
                 findFirstMatchingEventTrigger(source, trigger);
         if (!matchingEventTrigger.isPresent()) {
-            mDebugReportApi.scheduleTriggerNoLimitDebugReport(
-                    source, trigger, measurementDao, Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    /* limit = */ null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
             return TriggeringStatus.DROPPED;
         }
 
@@ -513,8 +519,11 @@ class AttributionJobHandler {
 
         List<EventReport> relevantEventReports =
                 sourceEventReports.stream()
-                        .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                        .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
+                        .filter(
+                                (r) ->
+                                        r.getStatus() == EventReport.Status.PENDING
+                                                && r.getReportTime()
+                                                        == newEventReport.getReportTime())
                         .sorted(
                                 Comparator.comparingLong(EventReport::getTriggerPriority)
                                         .thenComparing(
@@ -523,6 +532,8 @@ class AttributionJobHandler {
                         .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
             return false;
         }
 
@@ -592,10 +603,19 @@ class AttributionJobHandler {
         measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
-    private static boolean hasAttributionQuota(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean hasAttributionQuota(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         long attributionCount =
                 measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(attributionCount),
+                    measurementDao,
+                    Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        }
         return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
     }
 

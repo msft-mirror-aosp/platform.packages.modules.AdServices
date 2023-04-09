@@ -432,7 +432,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             return;
                         }
 
-                        callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
+                        callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
                         statusCode = STATUS_SUCCESS;
                     } catch (RemoteException e) {
                         LogUtil.e(e, CALLBACK_ERROR);

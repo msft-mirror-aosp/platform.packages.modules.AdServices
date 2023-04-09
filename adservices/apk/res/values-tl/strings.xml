@@ -87,8 +87,7 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Subukan ang mga bagong feature sa privacy sa mga ad"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Nagbibigay sa iyo ang mga paksa ng ad ng higit pang opsyon kaugnay ng mga nakikita mong ad"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Tingnan ang Mga Detalye"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Subukan ang mga bagong feature sa privacy sa mga ad"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Maglulunsad ang Android ng mga bagong feature sa privacy na magbibigay sa iyo ng higit pang pagpipilian tungkol sa mga ad na nakikita mo."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Tinutulungan ng mga paksa ng ad ang mga app na magpakita sa iyo ng mga may kaugnayang ad habang pinoprotektahan ang pagkakakilanlan mo at impormasyon tungkol sa iyong paggamit ng app. Posibleng magtala ang Android ng mga paksa kung saan ka interesado batay sa mga app na kamakailan mong ginamit. Sa ibang pagkakataon, puwedeng humiling ang isang app na ginagamit mo sa Android ng mga nauugnay na paksa para ma-personalize ang mga ad na nakikita mo."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Makikita mo ang mga paksa ng ad sa mga setting ng iyong device at i-block ang mga ayaw mong ibahagi sa mga app. Regular ding awtomatikong nagde-delete ang Android ng mga paksa ng ad."</string>

@@ -82,6 +82,22 @@ public class CommonFixture {
         Truth.assertThat(helperSet).hasSize(objs.length);
     }
 
+    public static void doSleep(long timeout) {
+        LogUtil.i("Starting to sleep for %d ms", timeout);
+        long currentTime = System.currentTimeMillis();
+        long wakeupTime = currentTime + timeout;
+        while (wakeupTime - currentTime > 0) {
+            LogUtil.i("Time left to sleep: %d ms", wakeupTime - currentTime);
+            try {
+                Thread.sleep(wakeupTime - currentTime);
+            } catch (InterruptedException ignored) {
+
+            }
+            currentTime = System.currentTimeMillis();
+        }
+        LogUtil.i("Done sleeping");
+    }
+
     private static String processName() {
         if (SdkLevel.isAtLeastT()) {
             return Process.myProcessName();

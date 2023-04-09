@@ -111,6 +111,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
         PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
         PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
     }
 
     @After
@@ -119,6 +120,7 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
     @Test

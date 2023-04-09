@@ -319,6 +319,14 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             @NonNull final List<AdBiddingOutcome> adBiddingOutcomes) {
         mAdSelectionExecutionLogger.startGetTrustedScoringSignals();
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_TRUSTED_SCORING_SIGNALS);
+
+        if (adSelectionConfig.getTrustedScoringSignalsUri().equals(Uri.EMPTY)) {
+            Tracing.endAsyncSection(Tracing.GET_TRUSTED_SCORING_SIGNALS, traceCookie);
+            return FluentFuture.from(
+                    Futures.immediateFuture(
+                            endGetSuccessfulTrustedScoringSignals(AdSelectionSignals.EMPTY)));
+        }
+
         final List<String> adRenderUris =
                 adBiddingOutcomes.stream()
                         .map(a -> a.getAdWithBid().getAdData().getRenderUri().toString())
@@ -416,11 +424,11 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
             adScoringOutcomes.add(
                     AdScoringOutcome.builder()
                             .setAdWithScore(adWithScore)
-                            .setDecisionLogicUri(customAudienceBiddingInfo.getBiddingLogicUri())
+                            .setBiddingLogicUri(customAudienceBiddingInfo.getBiddingLogicUri())
                             .setCustomAudienceSignals(
                                     customAudienceBiddingInfo.getCustomAudienceSignals())
-                            .setDecisionLogicJs(customAudienceBiddingInfo.getBuyerDecisionLogicJs())
-                            .setDecisionLogicJsDownloaded(true)
+                            .setBiddingLogicJs(customAudienceBiddingInfo.getBuyerDecisionLogicJs())
+                            .setBiddingLogicJsDownloaded(true)
                             .setBuyer(
                                     customAudienceBiddingInfo.getCustomAudienceSignals().getBuyer())
                             .build());
@@ -440,7 +448,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                                 .setAdWithScore(adWithScore)
                                 .setCustomAudienceSignals(
                                         createPlaceHolderSignalsForContextualAds(ctx.getBuyer()))
-                                .setDecisionLogicUri(ctx.getDecisionLogicUri())
+                                .setBiddingLogicUri(ctx.getDecisionLogicUri())
                                 .setBuyer(ctx.getBuyer());
 
                 Map<AdTechIdentifier, String> jsOverride =
@@ -451,8 +459,8 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
                             "Found overrides for buyer:%s , setting decision logic",
                             ctx.getBuyer());
                     outcomeBuilder
-                            .setDecisionLogicJsDownloaded(true)
-                            .setDecisionLogicJs(jsOverride.get(ctx.getBuyer()));
+                            .setBiddingLogicJsDownloaded(true)
+                            .setBiddingLogicJs(jsOverride.get(ctx.getBuyer()));
                 }
 
                 adScoringOutcomes.add(outcomeBuilder.build());

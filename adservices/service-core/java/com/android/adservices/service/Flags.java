@@ -333,6 +333,56 @@ public interface Flags {
         return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
     }
 
+    int MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION = 100;
+
+    /** Returns the number of maximum registration per job invocation. */
+    default int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
+    }
+
+    int MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST = 5;
+
+    /** Returns the number of maximum retires per registration request. */
+    default int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /** Returns the kill switch for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for Attribution Fallback Job . */
+    default long getMeasurementAttributionFallbackJobPeriodMs() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -573,7 +623,7 @@ public interface Flags {
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
-    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 3;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 2L;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -699,7 +749,7 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
@@ -717,6 +767,13 @@ public interface Flags {
 
     default boolean getAdServicesEnabled() {
         return ADSERVICES_ENABLED;
+    }
+
+    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
+
+    /** Return {@code true} if error logging is enabled */
+    default boolean getAdServicesErrorLoggingEnabled() {
+        return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
 
     /** Dump some debug info for the flags */
@@ -1478,6 +1535,7 @@ public interface Flags {
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
     boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
+    boolean ENABLE_ENROLLMENT_TEST_SEED = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1492,6 +1550,14 @@ public interface Flags {
     /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
+    }
+
+    /**
+     * @return {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
+     *     testing)
+     */
+    default boolean isEnableEnrollmentTestSeed() {
+        return ENABLE_ENROLLMENT_TEST_SEED;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
@@ -1550,6 +1616,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
+
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
      *     running in foreground.
@@ -1844,7 +1911,7 @@ public interface Flags {
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * Returns the kill switch value for Registration Job Queue. The job will be disabled if either
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
@@ -1853,6 +1920,20 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Fallback Job. The Job will be disabled if
+     * either the Global Kill Switch, Measurement Kill Switch, or the Registration Fallback Job Kill
+     * Switch value is true.
+     */
+    default boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
