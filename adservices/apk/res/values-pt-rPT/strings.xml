@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Faz parte da versão beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"O Privacy Sandbox está ativado para o seu dispositivo e as apps podem testar estas novas formas mais privadas de lhe mostrar anúncios. Pode desativar a versão beta em qualquer altura nas suas definições de privacidade."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"O Privacy Sandbox do Android fornece novas funcionalidades que as apps podem usar para lhe mostrar anúncios de que pode gostar. Estas tecnologias não usam identificadores de dispositivos.\n\nO Android e as suas apps podem estimar os tipos de anúncios em que pode ter interesse e guardar temporariamente os interesses no seu dispositivo. Isto permite que as apps lhe mostrem anúncios de que pode gostar, sem monitorizar a sua atividade em Websites e apps de outros programadores."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalização de anúncios com o Privacy Sandbox"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Pode ver tópicos de anúncios nas definições do dispositivo e bloquear os que não quer partilhar com as apps. O Android também apaga automaticamente os tópicos de anúncios com regularidade."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Pode mudar de ideias em qualquer altura nas definições de privacidade."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Mais sobre tópicos de anúncios"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Saiba como o Android protege os seus dados na nossa Política de Privacidade."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Saiba como o Android protege os seus dados na nossa "<a href="https://policies.google.com/privacy">"Política de Privacidade"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Experimentar"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Que dados são usados"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Os tópicos de anúncios baseiam-se nas apps que usou recentemente neste dispositivo e na frequência com que as usa."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Novas funcionalidades de privacidade dos anúncios já disponíveis"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Obtenha mais opções sobre os anúncios que vê enquanto protege a sua identidade"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Novas funcionalidades de privacidade dos anúncios já disponíveis"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Com anúncios sugeridos por apps, as novas funcionalidades de privacidade ajudam a proteger a sua identidade e informações de utilização das apps enquanto permitem que as apps lhe mostrem anúncios relevantes. Com base na sua atividade, uma app que usa pode sugerir anúncios relacionados noutras apps. Pode ver uma lista de apps e impedi-las de fazer sugestões nas definições de privacidade."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Com a medição de anúncios, os tipos de dados limitados são partilhados entre apps para compreender o desempenho dos respetivos anúncios, como a hora do dia em que um anúncio lhe foi mostrado."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Ative outra funcionalidade de privacidade dos anúncios"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"O Android também oferece uma nova funcionalidade de privacidade que lhe dá mais opções sobre os anúncios que vê."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Os tópicos de anúncios ajudam as apps a mostrar-lhe anúncios relevantes enquanto protegem a sua identidade e informações sobre a utilização das apps. O Android pode registar os tópicos de interesse com base nas apps que usou recentemente. Mais tarde, uma app que usa pode pedir alguns tópicos relevantes ao Android para lhe mostrar mais anúncios relevantes."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Permitir medição de anúncios"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"As apps e os anunciantes podem pedir ao Android informações que os ajudem a medir o desempenho dos respetivos anúncios.\n\nOs dados de medição de anúncios são apagados do dispositivo regularmente."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Repor dados de medição"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"O Android protege a sua privacidade ao limitar as informações que as apps podem partilhar entre si. Os relatórios são enviados com um atraso para proteger a sua identidade.\n\nO seu navegador pode ter uma definição semelhante. Se a medição de anúncios estiver ativada no Android e no seu navegador, uma empresa pode conseguir medir a eficácia de um anúncio entre as apps que usa e os sites que visita. O seu histórico de navegação permanece privado no dispositivo.\n\nSaiba como o Android protege os seus dados na nossa Política de Privacidade."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"O Android protege a sua privacidade através da limitação das informações que as apps podem partilhar entre si. Os relatórios são enviados com um atraso para proteger a sua identidade.\n\nO seu navegador pode ter uma definição semelhante. Se a medição de anúncios estiver ativada no Android e no seu navegador, uma empresa pode conseguir medir a eficácia de um anúncio entre as apps que usa e os sites que visita. O seu histórico de navegação permanece privado no dispositivo.\n\nSaiba como o Android protege os seus dados na nossa "<a href="https://policies.google.com/privacy">"Política de Privacidade"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Os dados de medição de anúncios foram repostos"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Cancelar"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Desativar o Privacy Sandbox?"</string>
