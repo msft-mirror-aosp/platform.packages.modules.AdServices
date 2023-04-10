@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services Permissions E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesPermissionsAppOptOutEndToEndTests"/>
+    <option name="test-tag" value="CtsAdExtServicesPermissionsAppOptOutEndToEndTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -39,7 +39,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name"
-                value="CtsExtAdServicesPermissionsAppOptOutEndToEndTests.apk"/>
+                value="CtsAdExtServicesPermissionsAppOptOutEndToEndTests.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
