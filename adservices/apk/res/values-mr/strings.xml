@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"समजले"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"तुम्ही बीटाचा भाग आहात"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"तुमच्या डिव्हाइससाठी प्रायव्हसी सॅंडबाॅक्स सुरू केला आहे आणि अ‍ॅप्स तुम्हाला जाहिराती दाखवण्यासाठी या नवीन आणखी खाजगी मार्गांची चाचणी घेऊ शकतात. तुम्ही तुमच्या गोपनीयता सेटिंग्जमध्ये बीटा कधीही बंद करू शकता."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"समजले"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"तुम्हाला कदाचित आवडतील अशा जाहिराती दाखवण्यासाठी अ‍ॅप्सना वापरता येतील अशी नवीन वैशिष्ट्ये Android चा प्रायव्हसी सॅंडबाॅक्स पुरवतो. ही तंत्रज्ञाने डिव्हाइस आयडेंटिफायर वापरत नाहीत.\n\nतुम्हाला कोणत्या प्रकारच्या जाहिरातींमध्ये स्वारस्य असू शकते याच अंदाज Android आणि तुमची अ‍ॅप्स लावू शकतात व तुमच्या डिव्हाइसवर ती स्वारस्ये तात्पुरती सेव्ह करू शकतात. हे अ‍ॅप्सना इतर डेव्हलपरच्या सर्व वेबसाइटवर आणि अ‍ॅप्सवर तुमची अ‍ॅक्टिव्हिटी ट्रॅक न करता तुम्हाला आवडू शकतील अशा जाहिराती दाखवण्याची अनुमती देते."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"प्रायव्हसी सॅंडबाॅक्ससह जाहिरात पर्सनलायझेशन"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"तुम्ही तुमच्या डिव्हाइस सेटिंग्जमध्ये जाहिरातीचे विषय पाहू शकता आणि तुम्हाला जे विषय अ‍ॅप्ससोबत शेअर करायचे नाहीत ते ब्लॉक करू शकता. Android हे जाहिरातीचे विषय नियमितपणे ऑटो-डिलीटदेखील करते."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"तुम्ही गोपनीयता सेटिंग्जमध्ये तुमचा निर्णय कधीही बदलू शकता."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"जाहिरातीच्या विषयांबद्दल अधिक माहिती"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android हे तुमच्या डेटाचे संरक्षण कसे करते याबद्दल आमचे गोपनीयता धोरण यामध्ये अधिक जाणून घ्या."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android तुमचा डेटा कसा संरक्षित करते याबद्दल आमचे "<a href="https://policies.google.com/privacy">"गोपनीयता धोरण"</a>" यामध्ये अधिक जाणून घ्या."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"हे वापरून पहा"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  कोणता डेटा वापरला जातो"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"तुमचे जाहिरातीचे विषय तुम्ही अलीकडे या डिव्हाइसवर वापरलेल्या ॲप्सवर आणि तुम्ही ती किती वारंवार वापरता यावर आधारित असतात."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"जाहिरातविषयक नवीन गोपनीयता वैशिष्‍ट्ये आता उपलब्ध आहेत"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"तुमची ओळख संरक्षित करताना, तुम्ही पाहता त्या जाहिरातींच्या बाबतीत अधिक पर्याय मिळवा"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"जाहिरातविषयक नवीन गोपनीयता वैशिष्‍ट्ये आता उपलब्ध आहेत"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  अ‍ॅपने सुचवलेल्या जाहिरातींसह, नवीन गोपनीयता वैशिष्‍ट्ये तुमची ओळख आणि तुमच्‍या अ‍ॅप वापराविषयी माहितीचे संरक्षण करण्‍यात मदत करतात व अ‍ॅप्सना तुम्‍हाला संबंधित जाहिराती दाखवण्‍यात मदत करतात. तुमच्या अ‍ॅक्टिव्हिटीवर आधारित, तुम्ही वापरत असलेले अ‍ॅप हे इतर अ‍ॅप्सवर संबंधित जाहिराती सुचवू शकते. तुम्ही गोपनीयता सेटिंग्जमध्ये अ‍ॅप्सची सूची पाहू शकता आणि सूचना देण्यापासून त्यांना ब्लॉक करू शकता."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  जाहिरात मापनासह, ॲप्सदरम्यान त्यांच्या जाहिरातींसंबंधी जाणून घेण्यासाठी मर्यादित प्रकारचा डेटा शेअर केला जातो, जसे की तुम्हाला जाहिरात दाखवण्यात आलेली दिवसाची वेळ."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"जाहिरातविषयक दुसरे गोपनीयता वैशिष्‍ट्य सुरू करा"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"तुम्ही पाहता त्या जाहिरातींच्या बाबतीत तुम्हाला अधिक पर्याय देण्यासाठी, Android एक नवीन गोपनीयता वैशिष्ट्यदेखील देते."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"जाहिरात विषय तुमची ओळख आणि तुमच्या अ‍ॅप वापरासंबंधित माहितीचे संरक्षण करताना तुम्हाला उपयुक्त जाहिराती दाखवण्यात अ‍ॅप्सना मदत करतात. Android हे तुम्ही अलीकडे वापरलेल्या अ‍ॅप्सच्या आधारावर स्वारस्य असलेल्या विषयांची नोंद ठेवू शकते. नंतर, तुम्ही वापरत असलेले अ‍ॅप तुम्हाला अधिक उपयुक्त जाहिराती दाखवण्यासाठी Android कडून संबंधित विषय मागू शकते."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"जाहिरातीशी संबंधित मापनाला अनुमती द्या"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"ॲप्स आणि जाहिरातदारांना त्यांच्या जाहिरातींचा परफॉर्मन्स मोजण्यात मदत करणाऱ्या माहितीची ते Android कडून विनंती करू शकतात.\n\nतुमच्या डिव्हाइसवरून जाहिरात मापन डेटा नियमितपणे हटवला जातो."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"मापन डेटा रीसेट करा"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"अ‍ॅप्स एकमेकांसोबत शेअर करू शकत असलेली माहिती मर्यादित करून Android हे तुमची गोपनीयता संरक्षित करते. तुमची ओळख संरक्षित करण्यासाठी अहवाल उशिरा पाठवले जातात.\n\nतुमच्या ब्राउझरमध्ये यासारखे सेटिंग असू शकते. जाहिरात मापन हे Android आणि तुमचा ब्राउझर या दोन्ही गोष्टींसाठी सुरू केले असल्यास, एखादी कंपनी तुम्ही वापरत असलेली ॲप्स आणि तुम्ही भेट देत असलेल्या वेबसाइट यांदरम्यान जाहिरातीची परिणामकारकता मोजू शकते. तुमचा ब्राउझिंग इतिहास तुमच्या डिव्हाइसवर खाजगी ठेवला जातो.\n\nAndroid तुमचा डेटा कसा संरक्षित करते याबद्दल आमचे गोपनीयता धोरण यामध्ये अधिक जाणून घ्या."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"अ‍ॅप्स एकमेकांसोबत शेअर करू शकत असलेली माहिती मर्यादित करून Android हे तुमची गोपनीयता संरक्षित करते. तुमची ओळख संरक्षित करण्यासाठी अहवाल उशिरा पाठवले जातात.\n\nतुमच्या ब्राउझरमध्ये यासारखे सेटिंग असू शकते. जाहिरात मापन हे Android आणि तुमचा ब्राउझर या दोन्ही गोष्टींसाठी सुरू केले असल्यास, एखादी कंपनी तुम्ही वापरत असलेली ॲप्स आणि तुम्ही भेट देत असलेल्या वेबसाइट यांदरम्यान जाहिरातीची परिणामकारकता मोजू शकते. तुमचा ब्राउझिंग इतिहास तुमच्या डिव्हाइसवर खाजगी ठेवला जातो.\n\nAndroid तुमचा डेटा कसा संरक्षित करते याबद्दल आमचे "<a href="https://policies.google.com/privacy">"गोपनीयता धोरण"</a>" यामध्ये अधिक जाणून घ्या."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"जाहिरात मापन डेटा रीसेट केला होता"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"रद्द करा"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"प्रायव्हसी सॅंडबाॅक्स बंद करायचा आहे का?"</string>
