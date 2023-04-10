@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Anladım"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Beta programına dahil edildiniz"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Özel Korumalı Alan, cihazınızda açık ve uygulamalar size reklam göstermek için daha gizlilik odaklı bu yeni yöntemleri test edebilir. Beta programını istediğiniz zaman gizlilik ayarlarınızdan kapatabilirsiniz."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Anladım"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android\'den Özel Korumalı Alan, uygulamaların size beğenebileceğiniz reklamlar göstermek için kullanabileceği yeni özellikler sunar. Bu teknolojiler, cihaz tanımlayıcılarını kullanmaz.\n\nAndroid ve uygulamalarınız, ilginizi çekebilecek reklam türlerini tahmin edebilir ve ilgi alanlarınızı geçici olarak cihazınıza kaydedebilir. Böylece, uygulamalar, web sitelerindeki ve diğer geliştiricilerin uygulamalarındaki etkinliklerinizi izlemeden size beğenebileceğiniz reklamlar gösterebilir."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Özel Korumalı Alan ile reklam kişiselleştirme"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Cihaz ayarlarınızda reklam konularını görebilir ve uygulamalarla paylaşılmasını istemediğiniz konuları engelleyebilirsiniz. Ayrıca Android, reklam konularını düzenli bir şekilde otomatik olarak siler."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Fikrinizi değiştirirseniz bunu gizlilik ayarlarında düzenleyebilirsiniz."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Reklam konuları hakkında daha fazla bilgi"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android\'in verilerinizi nasıl koruduğuyla ilgili daha fazla bilgi için Gizlilik Politikamıza göz atın."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android\'in verilerinizi nasıl koruduğuyla ilgili daha fazla bilgi için "<a href="https://policies.google.com/privacy">"Gizlilik Politikamıza göz atın."</a></string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Deneyin"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Hangi veriler kullanılır?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Reklam konularınız, bu cihazda son kullandığınız uygulamalara ve bu uygulamaları kullanma sıklığınıza göre belirlenir."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Reklam gizliliği ile ilgili yeni özellikler artık kullanılabilir"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Göreceğiniz reklamlarla ilgili daha fazla seçenek elde ederken kimliğinizi koruyun"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Reklam gizliliği ile ilgili yeni özellikler artık kullanılabilir"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Uygulama tarafından önerilen reklamlar özelliğiyle yeni gizlilik özellikleri uygulamaların size alakalı reklamlar göstermesine olanak sağlarken kimliğinizi ve uygulama kullanımınızla ilgili bilgileri korur. Etkinliğinize bağlı olarak, kullandığınız bir uygulama başka uygulamalarda alakalı reklamlar önerebilir. Gizlilik ayarlarında uygulamaların listesini görebilir ve bunların öneride bulunmasını engelleyebilirsiniz."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Reklam ölçümü, uygulamaların gösterdikleri reklamların performansının anlaşılması için sınırlı türde verinin (örneğin, reklamın size gösterildiği saat) uygulamalar arasında paylaşılmasını sağlar."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Reklam gizliliği ile ilgili diğer özelliği etkinleştirin"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android ayrıca gördüğünüz reklamlarla ilgili size daha fazla seçenek sunan yeni bir gizlilik özelliğine de sahip."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Reklam konuları, size alakalı reklamlar gösterirken kimliğinizi ve uygulama kullanımı bilgilerinizi korur. Android, son kullandığınız uygulamalara bağlı olarak ilgilendiğiniz konuları not edebilir. Daha sonra, kullandığınız bir uygulama size daha alakalı reklamlar göstermek için Android\'den ilgili konuları isteyebilir."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Reklam ölçümüne izin ver"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Uygulamalar ve reklamverenler Android\'den reklamlarının performansını ölçmeye yardımcı olacak bilgiler isteyebilir.\n\nReklam ölçümü verileri, cihazınızdan düzenli olarak silinir."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Ölçüm verilerini sıfırla"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android, uygulamaların diğer uygulamalarla paylaşacağı bilgileri sınırlandırarak gizliliğinizi korur. Kimliğinizi korumak amacıyla raporlar gecikmeli olarak gönderilir.\n\nTarayıcınızda benzer bir ayar olabilir. Reklam ölçümü hem Android\'de hem de tarayıcınızda etkinse şirketler, reklamların kullandığınız uygulamalar ve ziyaret ettiğiniz siteler arasındaki etkisini ölçebilirler. Cihazınızdaki tarama geçmişiniz gizli kalır.\n\nGizlilik Politikamızda Android\'in verilerinizi nasıl koruduğuyla ilgili daha fazla bilgi edinin."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android, uygulamaların diğer uygulamalarla paylaşabileceği bilgileri sınırlandırarak gizliliğinizi korur. Kimliğinizi korumak amacıyla raporlar gecikmeli olarak gönderilir.\n\nTarayıcınızda benzer bir ayar olabilir. Reklam ölçümü hem Android\'de hem de tarayıcınızda etkinse şirketler, reklamların kullandığınız uygulamalar ve ziyaret ettiğiniz siteler arasındaki etkisini ölçebilirler. Cihazınızdaki tarama geçmişiniz gizli kalır.\n\n"<a href="https://policies.google.com/privacy">"Gizlilik Politikamızda"</a>" Android\'in verilerinizi nasıl koruduğuyla ilgili daha fazla bilgi edinin."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Reklam ölçümü verileri sıfırlandı"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"İptal"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Özel Korumalı Alan kapatılsın mı?"</string>
