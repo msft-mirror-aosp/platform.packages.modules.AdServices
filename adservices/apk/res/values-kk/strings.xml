@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Түсінікті"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Бета нұсқасын пайдаланатын қатысушысыз"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Құрылғыңызда Privacy Sandbox қосулы. Енді қолданбалар жарнама көрсетудің осы жаңа әрі жеке жолдарын сынап көре алады. Бета нұсқасын кез келген уақытта құпиялық параметрлерінен өшіруге болады."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түсінікті"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-тың Privacy Sandbox технологиялар жинағы қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid пен қолданбалар сізді қызықтыруы мүмкін жарнама түрлерін бағалап, қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге ұнауы мүмкін жарнамаларды көрсете алады."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox-та жарнамаларды жекелендіру"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Жарнамадағы құпиялықтың жаңа функцияларын пайдаланып көріңіз"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Жарнама тақырыптары сіз көретін жарнамаларды таңдауға мүмкіндік береді."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Мәліметтерді көру"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Жарнамадағы құпиялыққа қатысты жаңа функцияларды байқап көріңіз"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android көрсетілетін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын іске қосып жатыр."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, сізге қолданбалардың қатысты жарнамаларды көрсетуіне көмектеседі. Android өзіңіз жақында пайдаланған қолданбалар бойынша қызық тақырыптарды көрсете алады. Кейін пайдаланатын қолданбаңыз көрсетілетін жарнамаларды жекелендіру үшін Android-тан қатысты тақырыптар сұрауы мүмкін."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Құрылғы параметрлерінен жарнама тақырыптарын көре аласыз және қолданбалармен бөліскіңіз келмейтінін бөгеуіңізге болады. Сондай-ақ Android жарнама тақырыптарын автоматты түрде жойып отырады."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Құпиялық параметрлерінен шешіміңізді кез келген уақытта өзгерте аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнама тақырыптары туралы толық ақпарат"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Құпиялық саясатымыздан Android-тың деректерді қалай қорғайтыны туралы толық ақпарат алыңыз."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android-тың деректерді қалай қорғайтыны туралы толық ақпаратты мына құжаттан алуға болады: "<a href="https://policies.google.com/privacy">"Құпиялық саясаты"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байқап көру"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Пайдаланылатын деректер"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнама тақырыптары сіз жақында осы құрылғыда пайдаланған қолданбаларға және оларды пайдалану жиілігіне негізделген."</string>
@@ -120,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Жеке басыңызды қорғай отырып, өзіңіз көретін жарнамаларды таңдау мүмкіндігіне ие болыңыз."</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Қолданба ұсынған жарнамалар бойынша жаңа құпиялық функциялары қолданбалардың сәйкес жарнамалар көрсетуіне мүмкіндік бере отырып, жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғауға көмектеседі. Әрекеттеріңізге байланысты сіз пайдаланатын қолданба басқа қолданбаларда сәйкес жарнамалар ұсына алады. Құпиялық параметрлерінен қолданбалар тізімін көріп, олардың ұсыныстар беруін бөгеуіңізге болады."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Жарнама көрсеткіштерін өлшеу кезінде шектеулі дерек түрлерін қолданбалар өзара бөлісіп, ондағы жарнамалардың өнімділігі, соның ішінде жарнама сізге көрсетілген уақыт анықталады."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Жарнамадағы құпиялыққа қатысты кезекті функцияны қосыңыз"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android жүйесі өзіңіз көретін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функциясын да ұсынады."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, қолданбаларға сәйкес жарнамаларды көрсетуге көмектеседі. Android сіз жақында пайдаланған қолданбаларға негізделген қызық тақырыптарды көрсете алады. Кейін сіз пайдаланатын қолданба сәйкес жарнамалар көрсету үшін Android-тан қатысы бар тақырыптарды сұрай алады."</string>
@@ -130,7 +131,7 @@
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Жеке басыңызды қорғай отырып, өзіңіз көретін жарнамаларды таңдау мүмкіндігіне ие боласыз."</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
-    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Қазір Android жүйесі өзіңіз көретін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын ұсынады."</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Енді Android жүйесі өзіңіз көретін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын ұсынады."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Келесі"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android-тың жарнама құпиялығына (бета нұсқасы) арналған бағдарламасына қатысыңыз."</string>
@@ -166,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Жарнама тиімділігін анықтауға рұқсат ету"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Қолданбалар мен жарнама берушілер Android жүйесінен тиісті жарнамалардың өнімділігін анықтауға көмектесетін ақпаратты сұрауы мүмкін.\n\nЖарнама көрсеткіштерін анықтау деректері құрылғыңыздан тұрақты негізде жойылып отырады."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Тиімділікті анықтау деректерін қайта орнату"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android қолданбалар өз арасында бөлісетін ақпаратты шектеу арқылы құпиялығыңызды қорғайды. Есептер жеке басыңызды қорғау үшін кешіктіріп жіберіледі.\n\nБраузеріңізде осындай параметр орнатылған болуы мүмкін. Жарнама тиімділігін анықтау Android пен браузерде қосулы болса, компания қолданбаларда және сіз кірген сайттарда көрсетілетін жарнаманың тиімділігін анықтай алады. Браузерді қолдану тарихы құрылғыда құпия сақталады.\n\nҚұпиялық саясатымызда Android-тың деректерді қалай қорғайтыны туралы толық ақпарат алыңыз."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android қолданбалар өзара бөлісетін ақпаратты шектеу арқылы құпиялығыңызды қорғайды. Есептер жеке басыңызды қорғау үшін кешіктіріп жіберіледі.\n\nБраузеріңізде осындай параметр орнатылған болуы мүмкін. Жарнама көрсеткіштерін өлшеу Android пен браузерде қосулы болса, компания сіз пайдаланатын қолданбалар мен кіретін сайттар арасында жарнаманың тиімділігін анықтай алады. Браузерді қолдану тарихы құрылғыда құпия сақталады.\n\nAndroid-тың деректерді қалай қорғайтыны туралы толық ақпаратты мына құжаттан алуға болады: "<a href="https://policies.google.com/privacy">"Құпиялық саясаты"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Жарнама көрсеткіштерін анықтау деректері өшірілді."</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Бас тарту"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox өшірілсін бе?"</string>
