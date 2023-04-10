@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Greit"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Du er en del av betaversjonen"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox er på for enheten din, og apper kan teste disse nye, mer private måtene å vise deg annonser på. Du kan når som helst slå av betaversjonen i personverninnstillingene."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Greit"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox for Android leverer nye funksjoner som apper kan bruke for å vise deg annonser du kan være interessert i. Disse teknologiene bruker ikke enhetsidentifikatorer.\n\nAndroid og appene dine kan anslå hvilke typer annonser du kan være interessert i, og lagre interessene midlertidig på enheten din. Dette gjør at apper kan vise deg annonser du kan være interessert i, uten å spore aktiviteten din på nettsteder og i apper fra andre utviklere."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personlig tilpasning av annonser med Privacy Sandbox"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prøv nye funksjoner for annonsepersonvern"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Med annonseemner får du mer kontroll over annonsene du ser"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Se detaljer"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prøv nye funksjoner for annonsepersonvern"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanserer nye personvernfunksjoner som gir deg bedre mulighet til å velge hvilke annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Annonseemner gjør det enklere for apper å vise deg relevante annonser, samtidig som identiteten din og informasjonen om appbruken din beskyttes. Android kan merke seg interessante emner basert på appene du har brukt nylig. Senere kan en app du bruker, be Android om relevante emner for å tilpasse annonsene du ser."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonseemner i enhetsinnstillingene og blokkere dem du ikke vil dele med apper. Android sletter også annonseemner automatisk regelmessig."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Du kan ombestemme deg når som helst via personverninnstillingene."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Mer om annonseemner"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Finn ut mer om hvordan Android beskytter dataene dine, i personvernreglene."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Finn ut mer om hvordan Android beskytter dataene dine, i "<a href="https://policies.google.com/privacy">"personvernreglene"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Prøv nå"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Disse dataene brukes"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Annonseemnene dine er basert på appene du har brukt nylig på denne enheten, samt hvor ofte du bruker dem."</string>
@@ -120,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nye funksjoner for annonsepersonvern er tilgjengelige nå"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Få bedre mulighet til å velge hvilke annonser du ser, samtidig som identiteten din beskyttes"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nye funksjoner for annonsepersonvern er tilgjengelige nå"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Med annonser foreslått av apper beskytter nye personvernfunksjoner identiteten din og informasjon om appbruken din når du tillater at apper viser deg relevante annonser. Basert på aktiviteten din kan apper du bruker, foreslå relaterte annonser i andre apper. Du kan se en liste over apper og blokkere dem fra å gi forslag, i personverninnstillingene."</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Med annonser foreslått av apper beskytter nye personvernfunksjoner identiteten din og informasjon om appbruken din, samtidig som du tillater at apper viser deg relevante annonser. Basert på aktiviteten din kan apper du bruker, foreslå relaterte annonser i andre apper. Du kan se en liste over apper og blokkere dem fra å gi forslag, i personverninnstillingene."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Med annonsemålinger blir begrensede typer data delt mellom apper for å forstå ytelsen til annonsene deres, for eksempel når på dagen du har sett en annonse."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Slå på en annen funksjon for annonsepersonvern"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android har også en ny personvernfunksjon som gir deg bedre mulighet til å velge hvilke annonser du ser."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Annonseemner gjør det enklere for apper å vise deg relevante annonser, samtidig som identiteten din og informasjonen om appbruken din beskyttes. Android kan merke seg interessante emner basert på apper du har brukt nylig. Senere kan en app du bruker, be Android om relevante emner for å vise mer relevante annonser."</string>
@@ -166,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Tillat annonsemålinger"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apper og annonsører kan be om informasjon fra Android for å måle resultatene annonsene deres oppnår.\n\nData for annonsemåling slettes regelmessig fra enheten din."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Tilbakestill måledata"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android ivaretar personvernet ditt ved å begrense informasjonen apper kan dele med hverandre. Rapporter sendes med en forsinkelse for å beskytte identiteten din.\n\nNettleseren din kan ha en lignende innstilling. Hvis annonsemålinger er på for både Android og nettleseren din, kan selskaper ha mulighet til å måle effektiviteten til annonser mellom apper du bruker, og nettsteder du besøker. Nettleserloggen din holdes privat på enheten din.\n\nFinn ut mer om hvordan Android beskytter dataene dine, i personvernreglene."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android ivaretar personvernet ditt ved å begrense informasjonen apper kan dele med hverandre. Rapporter sendes med en forsinkelse for å beskytte identiteten din.\n\nNettleseren din kan ha en lignende innstilling. Hvis annonsemålinger er på for både Android og nettleseren din, kan bedrifter muligens måle effektiviteten til annonser mellom apper du bruker, og nettsteder du besøker. Nettleserloggen din holdes privat på enheten din.\n\nFinn ut mer om hvordan Android beskytter dataene dine, i "<a href="https://policies.google.com/privacy">"personvernreglene"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Dataene for annonsemåling er tilbakestilt"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Avbryt"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vil du slå av Privacy Sandbox?"</string>

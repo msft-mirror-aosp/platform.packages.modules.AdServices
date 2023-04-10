@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"您已加入 Beta 版测试计划"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"您的设备已开启 Privacy Sandbox，因此应用已能测试这些更注重保护隐私的新方式来向您展示广告。您随时可在隐私设置中关闭 Beta 版。"</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"知道了"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android 的 Privacy Sandbox 提供了新功能，以便应用向您展示您可能会喜欢的广告。这些技术不使用标识符。\n\nAndroid 和您的应用可推测您可能会对哪些类型的广告感兴趣，并将这些兴趣暂时存储在您的设备上。这样一来，应用不必追踪您在其他开发者的网站和应用上的活动便能向您展示您可能会喜欢的广告。"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"通过 Privacy Sandbox 实现广告个性化"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"体验新的广告隐私权功能"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"广告主题使您能更好地掌控自己看到的广告"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"查看详细信息"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"体验新的广告隐私权功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android 将推出新的隐私保护功能，让您能更好地掌控自己看到的广告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"广告主题有助于应用向您展示相关广告，同时保护您的身份信息和应用使用情况相关信息。Android 会根据您近期使用过的应用来记录您感兴趣的主题。之后，您使用的应用可请求 Android 提供相关主题，以便向您展示个性化广告。"</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"您可以在设备设置中查看广告主题，并屏蔽您不想与应用分享的主题。Android 还会定期自动删除广告主题。"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"如果您改变主意，随时可以在隐私设置中进行更改。"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"详细了解广告主题"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"如需详细了解 Android 如何保护您的数据，请参阅我们的隐私权政策。"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"在我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"中详细了解 Android 如何保护您的数据。"</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"试试看"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  会使用哪些数据"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"您看到的广告的主题取决于您在此设备上最近使用过的应用和使用这些应用的频率。"</string>
@@ -120,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"全新广告隐私功能现已上线"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"更好地掌控自己看到的广告，同时保护您的身份信息"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"全新广告隐私功能现已上线"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  应用建议的广告采用新的隐私功能，可以更好地保护您的身份和应用使用情况相关信息，同时让应用向您展示更符合您喜好的广告。您使用的应用可以根据您的活动记录，在其他应用上建议相关广告。您可以在隐私设置中查看应用列表，以及阻止应用提供建议。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  广告衡量功能使应用能够相互分享有限类型的数据（例如一天当中向您展示广告的时间），以便了解广告效果。"</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"开启其他广告隐私功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android 还提供新的隐私功能，使您能更好地掌控自己看到的广告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"广告主题有助于应用向您展示相关广告，同时保护您的身份和应用使用情况相关信息。Android 可根据您最近使用过的应用了解您感兴趣的主题。之后，您使用的应用可请求 Android 提供相关主题信息，以便向您展示更符合您喜好的广告。"</string>
@@ -166,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"允许广告衡量"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"应用和广告主可请求 Android 提供某些信息，以帮助他们衡量其广告效果。\n\n系统会定期从您的设备中删除广告衡量数据。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"重置衡量数据"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n在我们的隐私权政策中详细了解 Android 如何保护您的数据。"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android 会限制各种应用相互之间可以分享的信息，从而保护您的隐私。系统会延迟发送报告，以便保护您的身份信息。\n\n您的浏览器可能有相似的设置。如果 Android 和您的浏览器都开启了广告衡量功能，相关公司或许就能够衡量广告在您使用的应用和访问的网站中的效果。您的浏览记录会保留在设备上，确保其私密性。\n\n在我们的"<a href="https://policies.google.com/privacy">"隐私权政策"</a>"中详细了解 Android 如何保护您的数据。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"广告衡量数据已重置"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"取消"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"要关闭 Privacy Sandbox 吗？"</string>
