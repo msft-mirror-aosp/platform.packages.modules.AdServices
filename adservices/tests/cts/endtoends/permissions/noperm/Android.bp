@@ -44,7 +44,7 @@ android_test {
 }
 
 android_test {
-    name: "CtsExtAdServicesPermissionsNoPermEndToEndTests",
+    name: "CtsAdExtServicesPermissionsNoPermEndToEndTests",
     srcs: [
         "src/**/*.java",
     ],
