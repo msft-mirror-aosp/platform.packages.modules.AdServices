@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Razumijem"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Koristite beta verziju"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Okruženje zaštićene privatnosti je uključeno za vaš uređaj i aplikacije mogu testirati ove nove, privatnije načine za prikazivanje oglasa. Možete isključiti beta verziju bilo kada u postavkama privatnosti."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Razumijem"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androidovo Okruženje zaštićene privatnosti pruža nove funkcije koje aplikacije mogu koristiti za prikazivanje oglasa koji bi vam se mogli svidjeti. Ove tehnologije ne koriste identifikatore uređaja.\n\nAndroid i vaše aplikacije mogu procijeniti vrste oglasa koji vas mogu zanimati te privremeno sačuvati interesovanja na vašem uređaju. Ovo omogućava aplikacijama da vam prikazuju oglase koji bi vam se mogli svidjeti, ali bez praćenja vaše aktivnosti na web lokacijama i u aplikacijama drugih programera."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalizacija oglasa uz Okruženje zaštićene privatnosti"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"U postavkama uređaja možete vidjeti teme oglasa i blokirati one koje ne želite dijeliti s aplikacijama. Android također automatski redovno briše teme oglasa."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Možete se bilo kada predomisliti i promijeniti postavke privatnosti."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Više o temama oglasa"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"U našim pravilima privatnosti saznajte više o tome kako Android štiti vaše podatke."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Saznajte više o tome kako Android štiti vaše podatke u našim "<a href="https://policies.google.com/privacy">"Pravilima privatnosti"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Isprobajte"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Koji podaci se koriste"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Vaše teme oglasa se zasnivaju na aplikacijama koje ste nedavno koristili na ovom uređaju i na tome koliko ih često koristite."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Sada su dostupne nove funkcije privatnosti pri izloženosti oglasima"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Dobijte više izbora u pogledu oglasa koji vam se prikazuju uz zaštitu identiteta"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Sada su dostupne nove funkcije privatnosti pri izloženosti oglasima"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Uz oglase koje predlažu aplikacije nove funkcije privatnosti pomažu u zaštiti identiteta i informacija o korištenju aplikacija dok omogućavaju aplikacijama da vam prikazuju relevantne oglase. Na osnovu vaše aktivnosti aplikacija koju koristite može predlagati srodne oglase u drugim aplikacijama. U postavkama privatnosti možete vidjeti listu aplikacija i blokirati da ne daju prijedloge."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Uz mjerenje oglasa ograničene vrste podataka se dijele između aplikacija radi uvida u performanse njihovih oglasa, kao što je doba dana kada vam je oglas prikazan."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Uključite drugu funkciju privatnosti pri izloženosti oglasima"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android nudi i novu funkciju privatnosti koja vam daje više izbora u pogledu oglasa koji vam se prikazuju."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Teme oglasa pomažu u prikazivanju relevantnih oglasa dok štite vaš identitet i informacije o korištenju aplikacija. Android može zapamtiti teme koje vas zanimaju na osnovu nedavno korištenih aplikacija. Kasnije aplikacija koju koristite može zatražiti od Androida relevantne teme da vam prikazuje relevantnije oglase."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Omogući mjerenje oglasa"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikacije i oglašivači mogu zatražiti informacije od Androida koje pomažu u mjerenju performansi oglasa.\n\nPodaci o mjerenju oglasa se redovno brišu s vašeg uređaja."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Poništi podatke o mjerenju"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android štiti vašu privatnost ograničavanjem informacija koje aplikacije mogu dijeliti međusobno. Izvještaji se šalju s kašnjenjem radi zaštite vašeg identiteta.\n\nVaš preglednik može imati sličnu postavku. Ako je mjerenje oglasa uključeno i za Android i za preglednik, kompanija će možda moći mjeriti efikasnost oglasa između aplikacija koje koristite i web lokacija koje posjećujete. Historija pregledanja se održava privatnom na vašem uređaju.\n\nU našim Pravilima privatnosti saznajte više o tome kako Android štiti vaše podatke."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android štiti vašu privatnost ograničavanjem informacija koje aplikacije mogu dijeliti međusobno. Izvještaji se šalju s kašnjenjem radi zaštite vašeg identiteta.\n\nVaš preglednik može imati sličnu postavku. Ako je mjerenje oglasa uključeno i za Android i za preglednik, kompanija će možda moći mjeriti efektivnost oglasa između aplikacija koje koristite i web lokacija koje posjećujete. Historija pregledanja se održava privatnom na vašem uređaju.\n\nSaznajte više o tome kako Android štiti vaše podatke u našim "<a href="https://policies.google.com/privacy">"Pravilima privatnosti"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Podaci o mjerenju oglasa su poništeni"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Otkaži"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Isključiti Okruženje zaštićene privatnosti?"</string>
