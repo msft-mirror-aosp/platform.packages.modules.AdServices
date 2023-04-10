@@ -36,6 +36,7 @@
                 android:orientation="vertical"
                 android:focusableInTouchMode="true" >
                 <TextView
+                    android:id="@+id/above_pic_paragraph"
                     android:layout_marginTop="8dp"
                     android:text="@string/settingsUI_main_view_subtitle"
                     style="@style/MainStyle.Body2" />
@@ -52,7 +53,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:src="@drawable/ic_main_view_ga_image"
-                    tools:ignore="ContentDescription"
+                    android:contentDescription="@string/ic_main_view_ga_image_description"
                     android:visibility="gone"/>
             </LinearLayout>
 
@@ -69,36 +70,28 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical" >
                 <LinearLayout
-                    android:layout_height="fill_parent"
-                    android:layout_width="fill_parent"
                     android:id="@+id/topics_preference"
-                    android:orientation="vertical"
+                    style="@style/PreferenceStyle"
                     >
                     <TextView
                         android:id="@+id/topics_preference_title"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:layout_marginTop="0dp"
-                        android:padding="20dp"
                         android:text="@string/settingsUI_topics_title"
+                        android:layout_marginTop="0dp"
                         style="@style/MainStyle.H5" />
                     <TextView
                         android:id="@+id/topics_preference_subtitle"
                         android:visibility="gone"
-                        style="@style/MainStyle.Subtitle"/>
+                        style="@style/MainStyle.Subtitle" />
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_height="fill_parent"
-                    android:layout_width="fill_parent"
                     android:id="@+id/apps_preference"
-                    android:orientation="vertical"
+                    style="@style/PreferenceStyle"
                     >
                     <TextView
                         android:id="@+id/apps_preference_title"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:layout_marginTop="0dp"
-                        android:padding="20dp"
                         android:text="@string/settingsUI_apps_title"
+                        android:layout_marginTop="0dp"
                         style="@style/MainStyle.H5" />
                     <TextView
                         android:id="@+id/apps_preference_subtitle"
@@ -107,18 +100,14 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:layout_height="fill_parent"
-                    android:layout_width="fill_parent"
                     android:id="@+id/measurement_preference"
-                    android:orientation="vertical"
+                    style="@style/PreferenceStyle"
                     android:visibility="gone"
                     >
                     <TextView
                         android:id="@+id/measurement_preference_title"
-                        android:background="?android:attr/selectableItemBackground"
-                        android:layout_marginTop="0dp"
-                        android:padding="20dp"
                         android:text="@string/settingsUI_measurement_view_title"
+                        android:layout_marginTop="0dp"
                         style="@style/MainStyle.H5" />
                     <TextView
                         android:id="@+id/measurement_preference_subtitle"
@@ -128,6 +117,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/main_view_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingHorizontal="24dp"
@@ -141,7 +131,6 @@
                     android:layout_marginStart="2dp"
                     android:src="@drawable/ic_info_icon"
                     tools:ignore="ContentDescription" />
-
                 <TextView
                     android:layout_marginTop="18dp"
                     android:layout_marginStart="0dp"
@@ -176,6 +165,44 @@
                 <TextView
                     android:layout_marginTop="18dp"
                     android:text="@string/settingsUI_main_view_info_text9"
+                    style="@style/MainStyle.Body2" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/main_view_ga_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="24dp"
+                android:paddingBottom="48dp"
+                android:orientation="vertical"
+                android:focusableInTouchMode="true"
+                android:visibility="gone">
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:src="@drawable/ic_info_icon"
+                    tools:ignore="ContentDescription" />
+                <TextView
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_topics_ga_title"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:text="@string/settingsUI_main_view_ad_topics_info"
+                    style="@style/MainStyle.Body2" />
+                <TextView
+                    android:layout_marginStart="0dp"
+                    android:text="@string/settingsUI_apps_ga_title"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:text="@string/settingsUI_main_view_apps_info"
+                    style="@style/MainStyle.Body2" />
+                <TextView
+                    android:text="@string/settingsUI_measurement_ga_title"
+                    android:layout_marginStart="0dp"
+                    style="@style/MainStyle.Body2BoldBullet" />
+                <TextView
+                    android:text="@string/settingsU_main_view_measurement_info"
                     style="@style/MainStyle.Body2" />
             </LinearLayout>
         </LinearLayout>

@@ -20,17 +20,21 @@ import static android.adservices.common.AdServicesStatusUtils.ILLEGAL_STATE_EXCE
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
+import android.adservices.common.SandboxedSdkContextUtils;
 import android.annotation.CallbackExecutor;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.TestApi;
 import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
+import android.os.Build;
 import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
 import android.text.TextUtils;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
@@ -48,6 +52,8 @@ import java.util.concurrent.Executor;
  * <p>The instance of the {@link TopicsManager} can be obtained using {@link
  * Context#getSystemService} and {@link TopicsManager} class.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
     /**
      * Constant that represents the service name for {@link TopicsManager} to be used in {@link
@@ -67,11 +73,33 @@ public final class TopicsManager {
     private ServiceBinder<ITopicsService> mServiceBinder;
 
     /**
+     * Factory method for creating an instance of TopicsManager.
+     *
+     * @param context The {@link Context} to use
+     * @return A {@link TopicsManager} instance
+     */
+    @NonNull
+    public static TopicsManager get(@NonNull Context context) {
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+        }
+        // On TM+, context.getSystemService() does more than just call constructor.
+        return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                ? context.getSystemService(TopicsManager.class)
+                : new TopicsManager(context);
+    }
+
+    /**
      * Create TopicsManager
      *
      * @hide
      */
     public TopicsManager(Context context) {
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+        }
         // In case the TopicsManager is initiated from inside a sdk_sandbox process the fields
         // will be immediately rewritten by the initialize method below.
         initialize(context);
@@ -134,9 +162,10 @@ public final class TopicsManager {
         String appPackageName = "";
         String sdkPackageName = "";
         // First check if context is SandboxedSdkContext or not
-        if (mContext instanceof SandboxedSdkContext) {
+        SandboxedSdkContext sandboxedSdkContext =
+                SandboxedSdkContextUtils.getAsSandboxedSdkContext(mContext);
+        if (sandboxedSdkContext != null) {
             // This is the case with the Sandbox.
-            SandboxedSdkContext sandboxedSdkContext = ((SandboxedSdkContext) mContext);
             sdkPackageName = sandboxedSdkContext.getSdkPackageName();
             appPackageName = sandboxedSdkContext.getClientPackageName();
 

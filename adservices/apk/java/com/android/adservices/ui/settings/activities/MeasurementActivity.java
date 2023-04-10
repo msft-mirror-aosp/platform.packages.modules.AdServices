@@ -15,16 +15,21 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.delegates.MeasurementActionDelegate;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 
 /** Android application activity provides functionality to control measurement data and consent. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActivity extends AdServicesBaseActivity {
     private MeasurementActionDelegate mActionDelegate;
 
@@ -36,6 +41,7 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        UiStatsLogger.logManageMeasurement(getApplicationContext());
         setContentView(R.layout.adservices_settings_main_activity);
         getSupportFragmentManager()
                 .beginTransaction()

@@ -20,16 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
-import android.app.Instrumentation;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -69,12 +67,14 @@ public class SandboxedTopicsManagerTest {
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
-        // Skip the test if it runs on Automotive, or Wear.
-        Assume.assumeTrue(isHardwareSupported());
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
@@ -140,7 +140,7 @@ public class SandboxedTopicsManagerTest {
 
         // This verifies that the Sdk1 in the Sandbox gets back the correct topic.
         // If the Sdk1 did not get correct topic, it will trigger the callback.onLoadSdkError
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -160,13 +160,5 @@ public class SandboxedTopicsManagerTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
-    }
-
-    // Adservices doesn't support non-phone device. Return false if the target is not supported.
-    private static boolean isHardwareSupported() {
-        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
-        PackageManager pm = inst.getContext().getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE);
     }
 }

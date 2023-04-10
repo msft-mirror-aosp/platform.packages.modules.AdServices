@@ -16,7 +16,6 @@
 
 package com.android.tests.sandbox.appsetid;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -25,9 +24,11 @@ import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -64,6 +65,9 @@ public class SandboxedAppSetIdManagerTest {
 
     @Test
     public void loadSdkAndRunAppSetIdApi() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
@@ -73,14 +77,8 @@ public class SandboxedAppSetIdManagerTest {
 
         // This verifies that the appsetidsdk in the Sandbox gets back the correct appsetid.
         // If the appsetidsdk did not get correct appsetid, it will trigger the
-        // callback.onLoadSdkError
-        // callback.isLoadSdkSuccessful returns true if there were no errors.
-        assertWithMessage(
-                        callback.isLoadSdkSuccessful()
-                                ? "Callback was successful"
-                                : "Callback failed with message " + callback.getLoadSdkErrorMsg())
-                .that(callback.isLoadSdkSuccessful())
-                .isTrue();
+        // callback.onLoadSdkError.
+        callback.assertLoadSdkIsSuccessful();
     }
 
     private void overridingBeforeTest() {

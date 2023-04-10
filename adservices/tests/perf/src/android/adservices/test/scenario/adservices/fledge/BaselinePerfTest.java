@@ -20,6 +20,8 @@ import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.customaudience.CustomAudience;
 
+import com.android.compatibility.common.util.ShellUtils;
+
 import com.google.common.collect.ImmutableList;
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
@@ -41,11 +43,9 @@ public class BaselinePerfTest extends AbstractPerfTest {
         CustomAudience ca =
                 createCustomAudience(
                         BUYER_1, CUSTOM_AUDIENCE_SHOES, Collections.singletonList(1.0));
-        addDelayToAvoidThrottle();
         mCustomAudienceClient
                 .joinCustomAudience(ca)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        addDelayToAvoidThrottle();
         mCustomAudienceClient
                 .leaveCustomAudience(ca.getBuyer(), ca.getName())
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -53,6 +53,54 @@ public class BaselinePerfTest extends AbstractPerfTest {
 
     @Test
     public void testAdSelectionAndReporting_normalFlow_success() throws Exception {
+        List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
+        List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
+        CustomAudience customAudience1 =
+                createCustomAudience(BUYER_1, CUSTOM_AUDIENCE_SHOES, bidsForBuyer1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(BUYER_1, CUSTOM_AUDIENCE_SHIRT, bidsForBuyer2);
+        List<CustomAudience> customAudienceList = Arrays.asList(customAudience1, customAudience2);
+
+        mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
+
+        for (CustomAudience ca : customAudienceList) {
+            mCustomAudienceClient
+                    .joinCustomAudience(ca)
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+
+        // Running ad selection and asserting that the outcome is returned in < 10 seconds
+        AdSelectionOutcome outcome =
+                mAdSelectionClient
+                        .selectAds(createAdSelectionConfig())
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // The winning ad should be ad3 from CA shirt
+        Assert.assertEquals(
+                "Ad selection outcome is not expected",
+                createExpectedWinningUri(BUYER_1, CUSTOM_AUDIENCE_SHIRT, 3),
+                outcome.getRenderUri());
+
+        ReportImpressionRequest reportImpressionRequest =
+                new ReportImpressionRequest(outcome.getAdSelectionId(), createAdSelectionConfig());
+
+        // Performing reporting, and asserting that no exception is thrown
+        mAdSelectionClient
+                .reportImpression(reportImpressionRequest)
+                .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+        // Cleanup
+        for (CustomAudience ca : customAudienceList) {
+            mCustomAudienceClient
+                    .leaveCustomAudience(ca.getBuyer(), ca.getName())
+                    .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        }
+    }
+
+    @Test
+    public void testAdSelectionAndReporting_normalFlowWithThrottling_success() throws Exception {
+        ShellUtils.runShellCommand("device_config put adservices sdk_request_permits_per_second 1");
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
         CustomAudience customAudience1 =
@@ -95,11 +143,13 @@ public class BaselinePerfTest extends AbstractPerfTest {
 
         // Cleanup
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle(DELAY_TO_AVOID_THROTTLE_MS);
+            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
+        ShellUtils.runShellCommand(
+                "device_config put adservices sdk_request_permits_per_second 1000");
     }
 
     @Test
@@ -151,14 +201,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
         mMockWebServerRule.startMockWebServer(dispatcher);
 
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .joinCustomAudience(ca)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        addDelayToAvoidThrottle();
         AdSelectionOutcome outcome =
                 mAdSelectionClient
                         .selectAds(createAdSelectionConfig())
@@ -174,14 +222,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
                 new ReportImpressionRequest(outcome.getAdSelectionId(), createAdSelectionConfig());
 
         // Performing reporting, and asserting that no exception is thrown
-        addDelayToAvoidThrottle();
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Cleanup
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle(DELAY_TO_AVOID_THROTTLE_MS);
             mCustomAudienceClient
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -237,14 +283,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
         mMockWebServerRule.startMockWebServer(dispatcher);
 
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .joinCustomAudience(ca)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        addDelayToAvoidThrottle();
         AdSelectionOutcome outcome =
                 mAdSelectionClient
                         .selectAds(createAdSelectionConfig())
@@ -260,14 +304,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
                 new ReportImpressionRequest(outcome.getAdSelectionId(), createAdSelectionConfig());
 
         // Performing reporting, and asserting that no exception is thrown
-        addDelayToAvoidThrottle();
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Cleanup
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle(DELAY_TO_AVOID_THROTTLE_MS);
             mCustomAudienceClient
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -296,14 +338,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
         mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
 
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle();
             mCustomAudienceClient
                     .joinCustomAudience(ca)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
 
         // Running ad selection and asserting that the outcome is returned in < 10 seconds
-        addDelayToAvoidThrottle();
         AdSelectionOutcome outcome =
                 mAdSelectionClient
                         .selectAds(createAdSelectionConfig())
@@ -319,14 +359,12 @@ public class BaselinePerfTest extends AbstractPerfTest {
                 new ReportImpressionRequest(outcome.getAdSelectionId(), createAdSelectionConfig());
 
         // Performing reporting, and asserting that no exception is thrown
-        addDelayToAvoidThrottle();
         mAdSelectionClient
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         // Cleanup
         for (CustomAudience ca : customAudienceList) {
-            addDelayToAvoidThrottle(DELAY_TO_AVOID_THROTTLE_MS);
             mCustomAudienceClient
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);

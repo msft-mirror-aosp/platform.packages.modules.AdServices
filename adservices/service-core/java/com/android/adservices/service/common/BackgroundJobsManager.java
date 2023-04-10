@@ -19,16 +19,19 @@ package com.android.adservices.service.common;
 import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
-import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
@@ -38,6 +41,8 @@ import com.android.adservices.service.topics.EpochJobService;
 import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundJobsManager {
     /**
      * Tries to schedule all the relevant background jobs.
@@ -210,7 +215,7 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         jobScheduler.cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
-        jobScheduler.cancel(AdServicesConfig.ASYNC_REGISTRATION_QUEUE_JOB_ID);
+        jobScheduler.cancel(AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
     }
 
     /**

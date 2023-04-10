@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
+
 import com.android.modules.utils.build.testing.DeviceSdkLevel;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
@@ -34,6 +36,7 @@ import org.junit.runner.RunWith;
 public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     private static final String APP_PACKAGE = "com.android.sdksandbox.app";
+    private static final String APP_APK = "SdkSandboxTestApp.apk";
     private static final String APP_2_PACKAGE = "com.android.sdksandbox.app2";
 
     private static final String APP_SHARED_PACKAGE = "com.android.sdksandbox.shared.app1";
@@ -60,17 +63,10 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     private static final String SANDBOX_SHARED_2_PROCESS_NAME =
             APP_SHARED_2_PACKAGE + "_sdk_sandbox";
 
+    private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
+
     private boolean mWasRoot;
     private DeviceSdkLevel mDeviceSdkLevel;
-
-    private void startActivity(String pkg, String activity) throws Exception {
-        getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
-    }
-
-    private void killApp(String pkg) throws Exception {
-        getDevice().executeShellCommand(String.format("am force-stop %s", pkg));
-        waitForProcessDeath(pkg + '\n');
-    }
 
     @Before
     public void setUp() throws Exception {
@@ -85,6 +81,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
     @After
     public void tearDown() throws Exception {
+        mUserUtils.removeSecondaryUserIfNecessary();
         cleanUpAppAndSandboxProcesses();
 
         if (!mWasRoot) {
@@ -135,6 +132,40 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSandboxIsCreatedPerUser() throws Exception {
+        assumeTrue(getDevice().isMultiUserSupported());
+
+        int initialUserId = getDevice().getCurrentUser();
+        int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
+        installPackageAsUser(APP_APK, false, secondaryUserId);
+
+        // Start app for the primary user
+        startActivityAsUser(APP_PACKAGE, APP_ACTIVITY, initialUserId);
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE + '\n');
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        getDevice().switchUser(secondaryUserId);
+
+        // Should still see an app/sdk sandbox running.
+        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+        assertThat(processDump).contains(APP_PACKAGE + '\n');
+        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+
+        // Start the app for the secondary user.
+        startActivityAsUser(APP_PACKAGE, APP_ACTIVITY, secondaryUserId);
+        // There should be two instances of app and sandbox processes - one for each user.
+        assertThat(getProcessOccurrenceCount(APP_PACKAGE + '\n')).isEqualTo(2);
+        assertThat(getProcessOccurrenceCount(SANDBOX_1_PROCESS_NAME)).isEqualTo(2);
+
+        // Kill the app process for the secondary user.
+        killApp(APP_PACKAGE + '\n');
+        // There should be one instance of app and sandbox process after kill
+        assertThat(getProcessOccurrenceCount(APP_PACKAGE + '\n')).isEqualTo(1);
+        assertThat(getProcessOccurrenceCount(SANDBOX_1_PROCESS_NAME)).isEqualTo(1);
+    }
+
+    @Test
     public void testAppAndSdkSandboxAreKilledOnLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
@@ -182,21 +213,27 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testAppsWithSharedUid_AllSandboxesDieWhenOneAppDies() throws Exception {
+    public void testAppsWithSharedUid_OneAppDies() throws Exception {
         startActivity(APP_SHARED_PACKAGE, APP_SHARED_ACTIVITY);
         assertThat(runDeviceTests(APP_SHARED_2_PACKAGE,
                 "com.android.sdksandbox.shared.app2.SdkSandboxTestSharedApp2",
                 "testLoadSdkIsSuccessful")).isTrue();
 
-        // APP_SHARED_2_PACKAGE dies after running device-side tests, and sandbox for
-        // APP_SHARED_PACKAGE should also die since they share the same uid
-        waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
+        // APP_SHARED_2_PACKAGE dies after running device-side tests.
         waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            // For U+, the other sandbox should still be alive.
+            String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            assertThat(processDump).contains(SANDBOX_SHARED_1_PROCESS_NAME);
+        } else {
+            // For T, the sandbox for APP_SHARED_PACKAGE should also die since we kill by uid.
+            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
 
-        // Neither of the sandboxes should be respawned later
-        Thread.sleep(5000);
-        waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
-        waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
+            // Neither of the sandboxes should be respawned later
+            Thread.sleep(5000);
+            waitForProcessDeath(SANDBOX_SHARED_1_PROCESS_NAME);
+            waitForProcessDeath(SANDBOX_SHARED_2_PROCESS_NAME);
+        }
     }
 
     @Test
@@ -292,7 +329,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
-    public void testSandboxReconnectsAfterDeath() throws Exception {
+    public void testSandboxReconnectionAfterDeath() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
         // Should see app/sdk sandbox running
@@ -305,30 +342,64 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
 
         Thread.sleep(5000);
 
-        // The sandbox gets restarted, so it should still be running
         processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
         assertThat(processDump).contains(APP_PACKAGE + '\n');
-        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+        if (mDeviceSdkLevel.isDeviceAtLeastU()) {
+            // The sandbox should not restart in U+.
+            assertThat(processDump).doesNotContain(SANDBOX_1_PROCESS_NAME);
+        } else {
+            // The sandbox gets restarted, so it should still be running
+            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        String finalSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
-        assertThat(initialSandboxPid).isNotEqualTo(finalSandboxPid);
+            String finalSandboxPid = getDevice().getProcessPid(SANDBOX_1_PROCESS_NAME);
+            assertThat(initialSandboxPid).isNotEqualTo(finalSandboxPid);
 
-        int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+            int initialSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
 
-        // Navigate to home screen to send both apps to the background.
-        getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
+            // Navigate to home screen to send both apps to the background.
+            getDevice().executeShellCommand("input keyevent KEYCODE_HOME");
 
-        // Wait for app to be backgrounded and unbinding of sandbox to complete.
-        Thread.sleep(2000);
+            // Wait for app to be backgrounded and unbinding of sandbox to complete.
+            Thread.sleep(2000);
 
-        // Should see app/sdk sandbox running
-        processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
-        assertThat(processDump).contains(APP_PACKAGE + '\n');
-        assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
+            // Should see app/sdk sandbox running
+            processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+            assertThat(processDump).contains(APP_PACKAGE + '\n');
+            assertThat(processDump).contains(SANDBOX_1_PROCESS_NAME);
 
-        int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
-        // The higher the oom adj score, the lower the priority of the process.
-        assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
+            // Verify that unbinding in the background still works for a restarted sandbox.
+            int finalSandboxOomScoreAdj = getOomScoreAdj(SANDBOX_1_PROCESS_NAME);
+            // The higher the oom adj score, the lower the priority of the process.
+            assertThat(finalSandboxOomScoreAdj).isGreaterThan(initialSandboxOomScoreAdj);
+        }
+    }
+
+    private void startActivity(String pkg, String activity) throws Exception {
+        getDevice().executeShellCommand(String.format("am start -W -n %s/.%s", pkg, activity));
+    }
+
+    private void startActivityAsUser(String pkg, String activity, int userId) throws Exception {
+        getDevice()
+                .executeShellCommand(
+                        String.format("am start -W -n %s/.%s --user %d", pkg, activity, userId));
+    }
+
+    private void killApp(String pkg) throws Exception {
+        getDevice().executeShellCommand(String.format("am force-stop --user current %s", pkg));
+        waitForProcessDeath(pkg + '\n');
+    }
+
+    // Get the number of running processes with the given process name.
+    private int getProcessOccurrenceCount(String processName) throws Exception {
+        String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
+
+        int count = 0;
+        int processOccurrenceIndex = processDump.indexOf(processName);
+        while (processOccurrenceIndex >= 0) {
+            count++;
+            processOccurrenceIndex = processDump.indexOf(processName, processOccurrenceIndex + 1);
+        }
+        return count;
     }
 
     private void cleanUpAppAndSandboxProcesses() throws Exception {

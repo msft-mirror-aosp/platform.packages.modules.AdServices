@@ -9,10 +9,10 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test/s1",
-            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 8640000001,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
@@ -22,13 +22,25 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test/s1",
-            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 33203622330000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "old1",
+            "destination": "android-app://example2.test/d1",
+            "destinationType": 0
+          },
+          {
+            "sourceId": "young1",
+            "destination": "android-app://example2.test/d1",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -42,13 +54,20 @@
             "eventId": 1,
             "sourceType": "navigation",
             "publisher": "android-app://example1.test/s1",
-            "appDestination": "android-app://example2.test/d1",
             "enrollmentId": "enrollment-id-3",
             "eventTime": 33203622330000,
             "expiryTime": 8640000030,
+            "eventReportWindow": 8640000030,
             "priority": 100,
             "status": 0,
             "registrant": "android-app://com.example.abc"
+          }
+        ],
+        "source_destinations": [
+          {
+            "sourceId": "young1",
+            "destination": "android-app://example2.test/d1",
+            "destinationType": 0
           }
         ],
         "triggers": [],
@@ -60,6 +79,8 @@
       "name": "1 expired Trigger and 1 non-expired Trigger",
       "input": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [
           {
             "id": "old1",
@@ -105,6 +126,8 @@
       },
       "output": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [
           {
             "id": "young1",
@@ -134,6 +157,8 @@
       "name": "1 delivered EventReport and 1 non-expired EventReport",
       "input": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [],
         "event_reports": [
           {
@@ -165,6 +190,8 @@
       },
       "output": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [],
         "event_reports": [
           {
@@ -238,6 +265,8 @@
       "name": "1 expired Attribution and 1 non-expired Attribution",
       "input": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [],
         "event_reports": [],
         "attributions": [
@@ -265,6 +294,8 @@
       },
       "output": {
         "sources": [],
+        "source_destinations": [
+        ],
         "triggers": [],
         "event_reports": [],
         "attributions": [

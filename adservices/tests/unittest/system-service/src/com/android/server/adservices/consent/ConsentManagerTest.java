@@ -19,6 +19,7 @@ package com.android.server.adservices.consent;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
+import static com.android.server.adservices.consent.ConsentManager.VERSION_KEY;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,12 +30,19 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** Tests for {@link ConsentManager} */
 public class ConsentManagerTest {
@@ -49,7 +57,8 @@ public class ConsentManagerTest {
                 new BooleanFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
-                        STORAGE_VERSION);
+                        STORAGE_VERSION,
+                        VERSION_KEY);
     }
 
     @After
@@ -277,24 +286,133 @@ public class ConsentManagerTest {
     }
 
     @Test
-    public void testTopicsConsentPageDisplayed() throws IOException {
+    public void testDeleteConsentDataStoreDir() throws IOException {
+        int userIdentifier = 0;
         ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the topics consent page displayed is false.
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isFalse();
-        consentManager.recordTopicsConsentPageDisplayed();
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+        assertThat(Files.exists(packageDir)).isTrue();
+        String userDirectoryPath = BASE_DIR + "/" + userIdentifier;
+        assertThat(consentManager.deleteUserDirectory(new File(userDirectoryPath))).isTrue();
 
-        assertThat(consentManager.wasTopicsConsentPageDisplayed()).isTrue();
+        assertThat(Files.exists(packageDir)).isFalse();
     }
 
     @Test
-    public void testFledgeAndMsmtConsentPageDisplayed() throws IOException {
+    public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        // First, the fledge consent page displayed is false.
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isFalse();
-        consentManager.recordFledgeAndMsmtConsentPageDisplayed();
 
-        assertThat(consentManager.wasFledgeAndMsmtConsentPageDisplayed()).isTrue();
+        consentManager.recordUserManualInteractionWithConsent(1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(-1);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(-1);
+    }
+
+    @Test
+    public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        consentManager.recordUserManualInteractionWithConsent(0);
+
+        assertThat(consentManager.getUserManualInteractionWithConsent()).isEqualTo(0);
+    }
+
+    @Test
+    public void testSetCurrentPrivacySandboxFeature() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(false);
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isEqualTo(true);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isEqualTo(false);
+        assertThat(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isEqualTo(false);
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDirUserIdentifierNotPresent() throws IOException {
+        int userIdentifier = 0;
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
+        String consentDataStoreDir =
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
+                        BASE_DIR, userIdentifier);
+        Path packageDir = Paths.get(consentDataStoreDir);
+
+        int userIdentifierNotPresent = 3;
+        // Try deleting with non-existent user id. Nothing should happen and ensure userIdentifier
+        // is present.
+        assertThat(
+                        consentManager.deleteUserDirectory(
+                                new File(BASE_DIR + userIdentifierNotPresent)))
+                .isFalse();
+        assertThat(Files.exists(packageDir)).isTrue();
     }
 }

@@ -18,6 +18,10 @@ package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
+import android.platform.test.annotations.LargeTest;
+
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
@@ -36,6 +40,7 @@ public final class SdkSandboxMultiUserHostTest extends BaseHostJUnit4Test {
 
     private static final String TEST_APP_PACKAGE_NAME = "com.android.sdksandbox.cts.app";
     private static final String TEST_APP_APK_NAME = "CtsSdkSandboxHostTestApp.apk";
+
     private int mSecondaryUserId;
     private int mInitialUserId;
 
@@ -58,6 +63,7 @@ public final class SdkSandboxMultiUserHostTest extends BaseHostJUnit4Test {
     public void setUp() throws Exception {
         uninstallPackage(TEST_APP_PACKAGE_NAME);
         mInitialUserId = getDevice().getCurrentUser();
+        assumeTrue("Multiple user not supported", getDevice().isMultiUserSupported());
         mSecondaryUserId =
                 getDevice().createUser(String.format("user-%d", System.currentTimeMillis()));
         getDevice().switchUser(mSecondaryUserId);
@@ -72,6 +78,7 @@ public final class SdkSandboxMultiUserHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @LargeTest
     public void testAppCanLoadSdkWhenInstalledOnlyForSecondaryUser() throws Exception {
         installPackageAsUser(TEST_APP_APK_NAME, /* grantPermission */ false, mSecondaryUserId);
         runPhase("testAppCanLoadSdk");

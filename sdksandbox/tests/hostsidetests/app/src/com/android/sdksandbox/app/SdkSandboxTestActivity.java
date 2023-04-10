@@ -30,6 +30,10 @@ public class SdkSandboxTestActivity extends Activity {
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
+        if (icicle != null) {
+            // Only load SDKs when Activity created, not restored.
+            return;
+        }
 
         SdkSandboxManager sdkSandboxManager =
                 getApplicationContext().getSystemService(SdkSandboxManager.class);
@@ -44,17 +48,7 @@ public class SdkSandboxTestActivity extends Activity {
         FakeLoadSdkCallback callback2 = new FakeLoadSdkCallback();
         sdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
         sdkSandboxManager.loadSdk(SDK_NAME_2, params, Runnable::run, callback2);
-        if (!callback.isLoadSdkSuccessful()) {
-            throw new AssertionError(
-                    "Failed to load " + SDK_NAME + ": "
-                            + callback.getLoadSdkErrorCode() + "["
-                            + callback.getLoadSdkErrorMsg() + "]");
-        }
-        if (!callback2.isLoadSdkSuccessful()) {
-            throw new AssertionError(
-                    "Failed to load " + SDK_NAME_2 + ": "
-                            + callback.getLoadSdkErrorCode() + "["
-                            + callback.getLoadSdkErrorMsg() + "]");
-        }
+        callback.assertLoadSdkIsSuccessful();
+        callback2.assertLoadSdkIsSuccessful();
     }
 }

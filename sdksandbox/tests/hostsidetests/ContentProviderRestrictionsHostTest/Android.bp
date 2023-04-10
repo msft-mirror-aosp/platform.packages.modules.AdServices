@@ -43,6 +43,7 @@ android_test_helper_app {
             ":sdksandbox-sources",
             "sdkprovider/src/**/*.aidl",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     static_libs: [
             "androidx.core_core",
             "androidx.test.ext.junit",
@@ -60,7 +61,10 @@ android_test_helper_app {
     name: "ContentProviderRestrictionsTestSdkProvider",
     certificate: ":cts-keyset-test-b",
     manifest: "sdkprovider/ContentProviderRestrictionsTestSdkProvider.xml",
-    defaults: ["platform_app_defaults"],
+    defaults: [
+        "platform_app_defaults",
+        "framework-sdksandbox-jarjar-defaults",
+    ],
     srcs: [
        "sdkprovider/src/**/*.java",
        ":framework-sdksandbox-sources",

@@ -14,10 +14,16 @@
 
 package com.android.ctssdkprovider;
 
+import com.android.ctssdkprovider.IActivityStarter;
+
 interface ICtsSdkProviderApi {
     void checkClassloaders();
     void checkResourcesAndAssets();
     boolean isPermissionGranted (String permissionName, boolean useApplicationContext);
     int getContextHashCode(boolean useApplicationContext);
     void testStoragePaths();
+    int getProcessImportance();
+    void startActivity(IActivityStarter callback);
+    String getOpPackageName();
+    void startActivityAfterUnregisterHandler(IActivityStarter callback);
 }

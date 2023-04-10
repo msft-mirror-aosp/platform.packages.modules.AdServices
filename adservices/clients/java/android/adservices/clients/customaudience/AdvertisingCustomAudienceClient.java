@@ -23,6 +23,7 @@ import android.adservices.customaudience.JoinCustomAudienceRequest;
 import android.adservices.customaudience.LeaveCustomAudienceRequest;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
@@ -46,8 +47,10 @@ public class AdvertisingCustomAudienceClient {
     private AdvertisingCustomAudienceClient(@NonNull Context context, @NonNull Executor executor) {
         mContext = context;
         mExecutor = executor;
-        mCustomAudienceManager = mContext.getSystemService(CustomAudienceManager.class);
-
+        mCustomAudienceManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? mContext.getSystemService(CustomAudienceManager.class)
+                        : CustomAudienceManager.get(context);
     }
 
     /** Gets the context. */

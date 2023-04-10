@@ -18,7 +18,12 @@ package com.android.adservices.service.stats;
 
 import com.google.auto.value.AutoValue;
 
-/** Class for AdServicesGetTopicsReported atom. */
+/**
+ * Class for AdServicesGetTopicsReported atom (for T+ logging) and
+ * AdServicesBackCompatGetTopicsReported atom (for R+ logging).
+ *
+ * <p>See go/rbc-ww-logging for more details.
+ */
 @AutoValue
 public abstract class GetTopicsReportedStats {
     /** @return number of topic ids filtered due to duplication. */

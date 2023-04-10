@@ -25,12 +25,14 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -40,6 +42,13 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+/**
+ * Run GetTopics API with following steps.
+ * <li>Bind AdvertisingTopicsClient to allow background MDD jobs.
+ * <li>Override MDD URI and trigger download.
+ * <li>Unbind and re-bind AdvertisingTopicsClient to pick new downloaded assets.
+ * <li>Verify topics are from the downloaded assets.
+ */
 @RunWith(JUnit4.class)
 public class TopicsManagerMddTest {
     private static final String TAG = "TopicsManagerMddTest";
@@ -51,36 +60,18 @@ public class TopicsManagerMddTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 3000;
     // Waiting time for assets to be downloaded after triggering MDD job.
-    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 20000;
+    private static final long TEST_MDD_DOWNLOAD_WAIT_TIME_MS = 45000;
+    // Waiting time for the AdvertisingTopicsClient to unbind.
+    private static final long TEST_UNBIND_WAIT_TIME = 3000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
-    // Classifier test constants.
-    private static final int TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS = 5;
-    // Each app is given topics with a confidence score between 0.0 to 1.0 float value. This
-    // denotes how confident are you that a particular topic t1 is related to the app x that is
-    // classified.
-    // Threshold value for classifier confidence set to 0 to allow all topics and avoid filtering.
-    private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
-    // classifier_type flag for ON_DEVICE_CLASSIFIER.
-    private static final int ON_DEVICE_CLASSIFIER = 1;
     // Manifest file that points to CTS test assets:
     // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     // These assets are have asset version set to 0 for verification in tests.
     private static final String TEST_MDD_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1118"
-                    + "/3c792e5fb7f3e8352e16ec05521dbd8240fae218";
-
-    // Classifier default constants.
-    private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
-    // Threshold value for classifier confidence set back to the default.
-    private static final float DEFAULT_CLASSIFIER_THRESHOLD = 0.1f;
-    // PRECOMPUTED_THEN_ON_DEVICE_CLASSIFIER
-    private static final int DEFAULT_CLASSIFIER_TYPE = 3;
-    private static final String DEFAULT_MDD_MANIFEST_FILE_URL =
-            "https://dl.google.com/mdi-serving/adservices/topics_classifier/manifest_configs/2"
-                    + "/manifest_config_1661376643699.binaryproto";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1640/2eda2f0d34820761569a04349311984a295acfae";
 
     // Use 0 percent for random topic in the test so that we can verify the returned topic.
     private static final int TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC = 0;
@@ -90,10 +81,24 @@ public class TopicsManagerMddTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
+
+    private String mDefaultMddManifestFileUrl;
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+
+        // Kill AdServices process.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -101,21 +106,26 @@ public class TopicsManagerMddTest {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+
+        // Store current default value before override.
+        mDefaultMddManifestFileUrl = getDefaultMddManifestFileUrl();
+        // Override manifest URL for Mdd.
+        overrideMddManifestFileUrl(TEST_MDD_MANIFEST_FILE_URL);
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // Reset Mdd manifest file url to the default value.
+        overrideMddManifestFileUrl(mDefaultMddManifestFileUrl);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
-    // TODO(b/261611866): Enable the test again after resolving flakiness.
     @Test
-    @Ignore
-    public void testTopicsManager_downloadModelViaMdd_runOnDeviceClassifier() throws Exception {
-        // Set up test flags for on-device classification.
-        setupFlagsForOnDeviceClassifier();
-
+    public void testTopicsManager_downloadModelViaMdd_runPrecomputedClassifier() throws Exception {
         // The Test App has 1 SDK: sdk1
         // sdk1 calls the Topics API.
         AdvertisingTopicsClient advertisingTopicsClient1 =
@@ -125,26 +135,24 @@ public class TopicsManagerMddTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        // Override manifest URL for Mdd.
-        overrideMddManifestFileURL(TEST_MDD_MANIFEST_FILE_URL);
-
         // Call Topics API to bind TOPICS_SERVICE.
         GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isEmpty();
 
-        // Force to trigger the pending downloads in background.
-        triggerMddToDownload();
+        // Force epoch computation to pick up the model if download is complete. If not, trigger
+        // pending download.
+        forceEpochComputationJob();
 
-        // Wait for TEST_MDD_DOWNLOAD_WAIT_TIME_MS seconds for the assets to be downloaded.
-        Thread.sleep(TEST_MDD_DOWNLOAD_WAIT_TIME_MS);
+        // Force to trigger the pending downloads in background.
+        triggerAndWaitForMddToFinishDownload();
 
         // Kill AdServices API to unbind TOPICS_SERVICE.
-        killAd();
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
-        // Wait for the service to die.
-        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+        // Wait for AdvertisingTopicsClient to unbind.
+        Thread.sleep(TEST_UNBIND_WAIT_TIME);
 
-        // Create a new AdvertisingTopicsClient to pick up the downloaded assets.
+        // Create a new AdvertisingTopicsClient to bind TOPICS_SERVICE again.
         advertisingTopicsClient1 =
                 new AdvertisingTopicsClient.Builder()
                         .setContext(sContext)
@@ -164,7 +172,7 @@ public class TopicsManagerMddTest {
         // go/rb-topics-epoch-scheduling
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
 
-        // Since the sdk3 called the Topics API in the previous Epoch, it should receive some topic.
+        // Since the sdk1 called the Topics API in the previous Epoch, it should receive some topic.
         sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
@@ -173,11 +181,8 @@ public class TopicsManagerMddTest {
         assertThat(sdk1Result.getTopics()).hasSize(1);
         Topic topic = sdk1Result.getTopics().get(0);
 
-        // Top 5 classifications for empty string with v1 model are [10230, 10253, 10227, 10250,
-        // 10257]. This is
-        // computed by running the model on the device for empty string.
-        // topic is one of the 5 classification topics of the Test App.
-        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10253, 10227, 10250, 10257);
+        // Top 5 classifications for  with v1 model are [10301, 10302, 10303, 10304, 10305].
+        List<Integer> expectedTopTopicIds = Arrays.asList(10301, 10302, 10303, 10304, 10305);
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
 
         // Verify assets are from the downloaded assets. These assets have asset version set to 0
@@ -186,62 +191,17 @@ public class TopicsManagerMddTest {
         // http://google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
         assertThat(topic.getModelVersion()).isEqualTo(0L);
         assertThat(topic.getTaxonomyVersion()).isEqualTo(0L);
-
-        // Clean up test flags setup for on-device classification.
-        cleanupFlagsForOnDeviceClassifier();
-
-        // Reset Mdd manifest file url to default
-        overrideMddManifestFileURL(DEFAULT_MDD_MANIFEST_FILE_URL);
     }
 
-    // Setup test flag values for on-device classifier.
-    private void setupFlagsForOnDeviceClassifier() {
-        // Set classifier flag to use on-device classifier.
-        overrideClassifierType(ON_DEVICE_CLASSIFIER);
-
-        // Set number of top labels returned by the on-device classifier to 5.
-        overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
-        // Remove classifier threshold by setting it to 0.
-        overrideClassifierThreshold(TEST_CLASSIFIER_THRESHOLD);
-    }
-
-    // Force stop AdServices API.
-    public void killAd() {
-        // adb shell am force-stop com.google.android.adservices.api
-        ShellUtils.runShellCommand("am force-stop" + " " + ADSERVICES_PACKAGE_NAME);
-    }
-
-    // Reset test flags used for on-device classifier.
-    private void cleanupFlagsForOnDeviceClassifier() {
-        // Set classifier flag back to default.
-        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
-
-        // Set number of top labels returned by the on-device classifier back to default.
-        overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
-        // Set classifier threshold back to default.
-        overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+    private String getDefaultMddManifestFileUrl() {
+        return ShellUtils.runShellCommand(
+                "device_config get adservices mdd_topics_classifier_manifest_file_url");
     }
 
     // Override the flag to set manifest url for Mdd.
-    private void overrideMddManifestFileURL(String val) {
+    private void overrideMddManifestFileUrl(String val) {
         ShellUtils.runShellCommand(
                 "device_config put adservices mdd_topics_classifier_manifest_file_url " + val);
-    }
-
-    // Override the flag to select classifier type.
-    private void overrideClassifierType(int val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_type " + val);
-    }
-
-    // Override the flag to change the number of top labels returned by on-device classifier type.
-    private void overrideClassifierNumberOfTopLabels(int val) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices classifier_number_of_top_labels " + val);
-    }
-
-    // Override the flag to change the threshold for the classifier.
-    private void overrideClassifierThreshold(float val) {
-        ShellUtils.runShellCommand("device_config put adservices classifier_threshold " + val);
     }
 
     // Override the Epoch Period to shorten the Epoch Length in the test.
@@ -257,7 +217,7 @@ public class TopicsManagerMddTest {
                         + overridePercentage);
     }
 
-    private void triggerMddToDownload() {
+    private void triggerAndWaitForMddToFinishDownload() throws InterruptedException {
         // Forces JobScheduler to run Mdd.
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f"
@@ -265,6 +225,9 @@ public class TopicsManagerMddTest {
                         + ADSERVICES_PACKAGE_NAME
                         + " "
                         + MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+
+        // Wait for TEST_MDD_DOWNLOAD_WAIT_TIME_MS seconds for the assets to be downloaded.
+        Thread.sleep(TEST_MDD_DOWNLOAD_WAIT_TIME_MS);
     }
 
     /** Forces JobScheduler to run the Epoch Computation job */

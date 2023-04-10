@@ -22,11 +22,15 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.util.DebugKey;
+import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+
+import com.google.common.collect.ImmutableMultiset;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -39,7 +43,7 @@ public class EventReport {
     private long mReportTime;
     private long mTriggerTime;
     private long mTriggerPriority;
-    private Uri mAttributionDestination;
+    private List<Uri> mAttributionDestinations;
     private String mEnrollmentId;
     private UnsignedLong mTriggerData;
     private UnsignedLong mTriggerDedupKey;
@@ -86,7 +90,9 @@ public class EventReport {
         return mStatus == eventReport.mStatus
                 && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
-                && Objects.equals(mAttributionDestination, eventReport.mAttributionDestination)
+                && Objects.equals(mAttributionDestinations, eventReport.mAttributionDestinations)
+                && ImmutableMultiset.copyOf(mAttributionDestinations).equals(
+                        ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)
@@ -107,7 +113,7 @@ public class EventReport {
                 mStatus,
                 mDebugReportStatus,
                 mReportTime,
-                mAttributionDestination,
+                mAttributionDestinations,
                 mEnrollmentId,
                 mTriggerTime,
                 mTriggerData,
@@ -154,10 +160,10 @@ public class EventReport {
     }
 
     /**
-     * AttributionDestination of the {@link Source} and {@link Trigger}.
+     * AttributionDestinations of the {@link Source} and {@link Trigger}.
      */
-    public Uri getAttributionDestination() {
-        return mAttributionDestination;
+    public List<Uri> getAttributionDestinations() {
+        return mAttributionDestinations;
     }
 
     /**
@@ -261,8 +267,8 @@ public class EventReport {
         /**
          * See {@link EventReport#getAttributionDestination()}
          */
-        public Builder setAttributionDestination(Uri attributionDestination) {
-            mBuilding.mAttributionDestination = attributionDestination;
+        public Builder setAttributionDestinations(List<Uri> attributionDestinations) {
+            mBuilding.mAttributionDestinations = attributionDestinations;
             return this;
         }
 
@@ -369,18 +375,21 @@ public class EventReport {
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestination = trigger.getAttributionDestinationBaseUri();
+            mBuilding.mAttributionDestinations =
+                    source.getAttributionDestinations(trigger.getDestinationType());
             mBuilding.mReportTime =
                     source.getReportingTime(
                             trigger.getTriggerTime(),
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair = DebugKey.getDebugKeys(source, trigger);
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                    new DebugKeyAccessor().getDebugKeys(source, trigger);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
-            if (mBuilding.mSourceDebugKey != null || mBuilding.mTriggerDebugKey != null) {
+            if (Debug.isAttributionDebugReportPermitted(source, trigger,
+                    mBuilding.mSourceDebugKey, mBuilding.mTriggerDebugKey)) {
                 mBuilding.mDebugReportStatus = DebugReportStatus.PENDING;
             }
             mBuilding.mSourceId = source.getId();

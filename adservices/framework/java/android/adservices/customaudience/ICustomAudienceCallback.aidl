@@ -19,12 +19,12 @@ package android.adservices.customaudience;
 import android.adservices.common.FledgeErrorResponse;
 
 /**
-  * This interface defines callback functions for joinCustomAudience() or leaveCustomAudience(),
-  * which contain a function to be called upon success that accepts a void argument, as well
-  * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
-  *
-  * {@hide}
-  */
+ * This interface defines callback functions for joinCustomAudience() or leaveCustomAudience(),
+ * which contain a function to be called upon success that accepts a void argument, as well
+ * as a function to be called upon failure that accepts an FledgeErrorResponse argument.
+ *
+ * {@hide}
+ */
 oneway interface ICustomAudienceCallback {
     /**
      * Sends back a void indicating success.

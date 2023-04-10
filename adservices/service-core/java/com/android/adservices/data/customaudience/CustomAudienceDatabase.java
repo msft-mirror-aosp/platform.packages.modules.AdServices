@@ -28,6 +28,8 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 
 import java.util.Objects;
 
@@ -40,13 +42,14 @@ import java.util.Objects;
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
-            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class)
+            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
+            @AutoMigration(from = 2, to = 3),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "customaudience.db";
 
@@ -78,9 +81,16 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                DBCustomAudience.Converters converters =
+                        new DBCustomAudience.Converters(
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAdSelectionFilteringEnabled()));
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
                                 .fallbackToDestructiveMigration()
+                                .addTypeConverter(converters)
                                 .build();
             }
             return sSingleton;

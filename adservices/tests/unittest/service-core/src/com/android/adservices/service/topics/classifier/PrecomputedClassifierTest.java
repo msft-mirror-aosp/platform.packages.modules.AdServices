@@ -16,11 +16,6 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS;
-
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -137,14 +132,17 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
-                                .setBuildId(1388)
+                                .setBuildId(1467)
                                 .setAssetVersion("3")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_SUCCESS)
                                 .build());
     }
 
@@ -164,14 +162,17 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of())
-                                .setBuildId(1388)
+                                .setBuildId(1467)
                                 .setAssetVersion("3")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__PRECOMPUTED_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .PRECOMPUTED_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_FAILURE)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_FAILURE)
                                 .build());
     }
 

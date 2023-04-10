@@ -26,6 +26,7 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
+import android.app.sdksandbox.hosttestutils.AwaitUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
@@ -64,8 +65,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     // Needs to be at least 20s since that's how long we delay reconcile on SdkSandboxManagerService
     private static final long WAIT_FOR_RECONCILE_MS = 30000;
-    // Time to wait after installing a package to process package_added broadcast
-    private static final long WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST = 2000;
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
@@ -139,6 +138,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
      */
     @Test
     public void testSdkDataRootDirectory_IsCreatedOnUserCreate() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         {
             // Verify root directory exists for primary user
             final String cePath = getSdkDataRootPath(0, true);
@@ -159,6 +160,8 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkDataRootDirectory_IsDestroyedOnUserDeletion() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         // delete the new user
         final int newUser = mUserUtils.createAndStartSecondaryUser();
         mUserUtils.removeSecondaryUserIfNecessary(/*waitForUserDataDeletion=*/ true);
@@ -253,6 +256,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
         // Install the app
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify directory is created
         assertThat(getDevice().isDirectory(cePath)).isTrue();
@@ -664,11 +668,11 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     public void testSdkDataPackageDirectory_IsUserSpecific() throws Exception {
+        assumeTrue("Multiple user not supported", mUserUtils.isMultiUserSupported());
+
         // Install first before creating the user
         installPackage(TEST_APP_STORAGE_APK, "--user all");
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         int secondaryUserId = mUserUtils.createAndStartSecondaryUser();
 
@@ -688,9 +692,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // Install the app on new user
         installPackage(TEST_APP_STORAGE_APK);
 
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
-
         assertThat(getDevice().isDirectory(ceAppPath)).isTrue();
         assertThat(getDevice().isDirectory(deAppPath)).isTrue();
         assertThat(getDevice().isDirectory(cePath)).isTrue();
@@ -702,9 +703,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify that shared storage exist
         final String sharedCePath =
@@ -730,9 +729,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirEmpty()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Now delete the sdk data sub-dirs so that package directory is empty
         final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
@@ -768,9 +765,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_CreateMissingSdkSubDirsWhenPackageDirMissing()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         final String cePackagePath =
                 getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
@@ -822,9 +817,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     public void testSdkDataPackageDirectory_ReuseExistingRandomSuffixInReconcile()
             throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         final String cePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, true);
         final String dePackagePath = getSdkDataPackagePath(0, TEST_APP_STORAGE_PACKAGE, false);
@@ -929,9 +922,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     @Test
     public void testSdkDataSubDirectory_PerSdkStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
-
-        // Allow some extra time for broadcast to propagate and sdk data to be created
-        Thread.sleep(WAIT_TO_PROCESS_PACKAGE_ADDED_BROADCAST);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Verify that per-sdk storage exist
         final String perSdkStorage =
@@ -1003,6 +994,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Create a new adoptable storage where we will be moving our installed package
         try {
@@ -1070,6 +1062,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assumeTrue(mAdoptableUtils.isAdoptableStorageSupported());
 
         installPackage(TEST_APP_STORAGE_APK);
+        waitForSdkDirectoryCreatedForUser(0);
 
         // Create a new adoptable storage where we will be moving our installed package
         try {
@@ -1313,6 +1306,16 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         assertWithMessage(path + " exists when expected not to")
                 .that(getDevice().doesFileExist(path))
                 .isFalse();
+    }
+
+    private void waitForSdkDirectoryCreatedForUser(int userId) throws Exception {
+        final String sharedDir =
+                getSdkDataInternalPath(userId, TEST_APP_STORAGE_PACKAGE, SHARED_DIR, true);
+        waitForDirectoryCreated(sharedDir);
+    }
+
+    private void waitForDirectoryCreated(String path) throws Exception {
+        AwaitUtils.waitFor(() -> getDevice().isDirectory(path), path + " wasn't created");
     }
 
     private static class DeviceLockUtils {

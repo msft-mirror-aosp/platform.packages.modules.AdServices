@@ -15,6 +15,7 @@
  */
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,12 +23,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.delegates.AppsActionDelegate;
@@ -37,6 +40,8 @@ import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import java.util.function.Function;
 
 /** Fragment for the apps view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsAppsFragment extends Fragment {
 
     @Override
@@ -118,13 +123,18 @@ public class AdServicesSettingsAppsFragment extends Fragment {
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.disabled_button_alpha));
                                 blockedAppsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_apps_view_no_blocked_apps_text);
+                                        FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                                                ? R.string.settingsUI_no_blocked_apps_ga_text
+                                                : R.string
+                                                        .settingsUI_apps_view_no_blocked_apps_text);
                             } else {
                                 blockedAppsWhenEmptyStateButton.setEnabled(true);
                                 blockedAppsWhenEmptyStateButton.setAlpha(
                                         getResources().getFloat(R.dimen.enabled_button_alpha));
                                 blockedAppsWhenEmptyStateButton.setText(
-                                        R.string.settingsUI_blocked_apps_title);
+                                        FlagsFactory.getFlags().getGaUxFeatureEnabled()
+                                                ? R.string.settingsUI_view_blocked_apps_title
+                                                : R.string.settingsUI_blocked_apps_title);
                             }
                         });
     }

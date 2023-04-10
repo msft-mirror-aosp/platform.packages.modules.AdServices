@@ -63,17 +63,37 @@ public class AdSelectionDatabaseMigrationTest {
 
     @Test
     public void testMigrate2To3() throws IOException {
-        String registeredAdEventsTable = "registered_ad_events";
+        String registeredAdInteractionsTable = "registered_ad_interactions";
 
         SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2);
-        Cursor c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdEventsTable));
+        Cursor c =
+                db.query(
+                        String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdInteractionsTable));
         assertEquals(0, c.getCount());
 
         // Re-open the database with version 3 and provide MIGRATION_2_3 as the migration process.
         db = helper.runMigrationsAndValidate(TEST_DB, 3, true);
-        c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdEventsTable));
+        c = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, registeredAdInteractionsTable));
         assertEquals(1, c.getCount());
         c.moveToFirst();
-        assertEquals(registeredAdEventsTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+        assertEquals(
+                registeredAdInteractionsTable, c.getString(c.getColumnIndex(COLUMN_NAME_NAME)));
+    }
+
+    @Test
+    public void testMigrate3To4() throws IOException {
+        String adSelectionTable = "ad_selection";
+
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3);
+        Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, adSelectionTable));
+        // The ad selection table should already exist
+        assertEquals(1, cursor.getCount());
+
+        // Re-open the database with version 4 and provide MIGRATION_3_4 as the migration process.
+        db = helper.runMigrationsAndValidate(TEST_DB, 4, true);
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, adSelectionTable));
+        assertEquals(1, cursor.getCount());
+        cursor.moveToFirst();
+        assertEquals(adSelectionTable, cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
     }
 }

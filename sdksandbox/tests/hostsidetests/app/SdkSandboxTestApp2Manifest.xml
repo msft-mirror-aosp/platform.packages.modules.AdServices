@@ -23,7 +23,10 @@
 
     <application android:process="com.android.sdksandbox.processname">
         <activity android:name=".SdkSandboxTestActivity2"
-                  android:exported="true">
+                  android:exported="true"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -31,7 +34,10 @@
         </activity>
         <activity android:name=".SdkSandboxEmptyActivity"
                   android:exported="true"
-                  android:process=":com.android.sdksandbox.emptyactivity">
+                  android:process=":com.android.sdksandbox.emptyactivity"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

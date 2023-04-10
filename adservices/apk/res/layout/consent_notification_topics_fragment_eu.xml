@@ -81,7 +81,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
-                    android:src="@drawable/ic_consent_notification_ga_image" />
+                    android:src="@drawable/ic_consent_notification_ga_image"
+                    android:contentDescription="@string/ic_consent_notification_ga_image_description"/>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -92,7 +93,7 @@
                 <TextView
                     android:id="@+id/how_it_works_expander"
                     android:drawableEnd="@drawable/ic_expand"
-                    android:layout_marginTop="15dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/notificationUI_container1_control_ga_text_eu"
                     style="@style/MainStyle.Body1" />
                 <LinearLayout
@@ -120,16 +121,17 @@
                         android:text="@string/notificationUI_how_it_works_topics_expanded_text8"
                         style="@style/MainStyle.Body1BulletSubtext" />
                     <TextView
+                        android:id="@+id/learn_more_from_privacy_policy"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginTop="16dp"
                         android:text="@string/notificationUI_learn_more_from_privacy_policy"
                         style="@style/MainStyle.Body1" />
                 </LinearLayout>
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:text="@string/notificationUI_change_any_time_in_privacy_settings_eu"
                     style="@style/MainStyle.Body1" />
             </LinearLayout>
@@ -139,8 +141,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/nav_buttons"
         android:layout_width="match_parent"
-        android:layout_height="96dp"
-        android:orientation="horizontal"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" >
@@ -151,17 +152,24 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/leftControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:text="@string/notificationUI_left_control_button_text_eu"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/rightControlButton"
-            style="@style/MainStyle.PrimaryButton"
-            android:text="@string/notificationUI_right_control_button_ga_text_eu"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            style="@style/NotificationButtonContainer"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintStart_toStartOf="parent">
+            <Button
+                android:id="@+id/leftControlButton"
+                style="@style/MainStyle.PrimaryButtonVariant"
+                android:text="@string/notificationUI_left_control_button_text_eu"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+            <Button
+                android:id="@+id/rightControlButton"
+                style="@style/MainStyle.PrimaryButton"
+                android:layout_marginStart="12dp"
+                android:text="@string/notificationUI_right_control_button_ga_text_eu"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -42,6 +42,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -89,6 +90,7 @@ public class EpochJobServiceTest {
                         .spyStatic(EpochJobService.class)
                         .spyStatic(TopicsWorker.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .startMocking();
 
         // Mock JobScheduler invocation in EpochJobService
@@ -110,6 +112,12 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_killSwitchOff() throws InterruptedException {
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -146,6 +154,12 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_killSwitchOn() {
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -177,6 +191,12 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_globalKillSwitchOverridesAll() throws InterruptedException {
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
         // Add a countDownLatch to ensure background thread gets executed
         CountDownLatch countDownLatch = new CountDownLatch(1);
 
@@ -196,6 +216,38 @@ public class EpochJobServiceTest {
                 .isFalse();
 
         // When the kill switch is on, the EpochJobService exits early and do nothing.
+    }
+
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        doNothing().when(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                TOPICS_EPOCH_JOB_ID,
+                                new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyEpochJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
+
+        verify(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
+        verifyNoMoreInteractions(staticMockMarker(FlagsFactory.class));
     }
 
     @Test

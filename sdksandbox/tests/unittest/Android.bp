@@ -26,6 +26,7 @@ java_defaults {
     ],
     static_libs: [
         "androidx.test.runner",
+        "compatibility-device-util-axt-minus-dexmaker",
         "mockito-target-extended-minus-junit4",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
@@ -81,6 +82,7 @@ android_test {
     static_libs: [
         "service-sdksandbox.impl",
         "services.core",
+        "modules-utils-build",
     ],
     data: [
       ":SampleCodeProviderApp",

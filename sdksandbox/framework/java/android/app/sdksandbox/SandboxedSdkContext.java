@@ -39,10 +39,8 @@ import java.io.File;
  * <p>An instance of the {@link SandboxedSdkContext} will be created by the SDK sandbox, and then
  * attached to the {@link SandboxedSdkProvider} after the SDK is loaded.
  *
- * <p>Each sdk will get their own private storage directory and the file storage API on this object
- * will utilize those area.
- *
- * <p>Note: All APIs defined in this class are not stable and subject to change.
+ * <p>Each sdk will get their own private storage directories and the file storage API on this
+ * object will utilize those areas.
  *
  * @hide
  */
@@ -114,7 +112,6 @@ public final class SandboxedSdkContext extends ContextWrapper {
 
         mSdkSandboxSystemServiceRegistry = sdkSandboxSystemServiceRegistry;
         mClassLoader = classLoader;
-        // On legacy context, we manually create classloader which is different from baseContext's.
         mCustomizedSdkContextEnabled = isCustomizedSdkContextEnabled;
     }
 

@@ -47,7 +47,10 @@ public abstract class DBAdSelectionFromOutcomesOverride {
     @NonNull
     public abstract String getAppPackageName();
 
-    /** @return The override javascript result */
+    /**
+     * @return The override javascript result to use for outcome selection in {@link
+     *     com.android.adservices.service.adselection.AdOutcomeSelectorImpl}
+     */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "selection_logic_js")
     @NonNull

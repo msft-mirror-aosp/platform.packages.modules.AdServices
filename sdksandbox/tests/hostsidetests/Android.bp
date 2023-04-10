@@ -28,6 +28,7 @@ java_test_host {
     static_libs: [
         "cts-install-lib-host",
         "modules-utils-build-testing",
+        "SdkSandboxHostTestUtils",
     ],
     data: [
         ":TestCodeProvider",
@@ -117,6 +118,7 @@ android_test_helper_app {
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     test_suites: ["general-tests"],
     static_libs: [
         "androidx.core_core",
@@ -138,6 +140,7 @@ android_test_helper_app {
         ":sdksandbox_aidl",
         ":sdksandbox-sources",
     ],
+    defaults: ["framework-sdksandbox-jarjar-defaults"],
     test_suites: ["general-tests"],
     static_libs: [
         "androidx.core_core",

@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
@@ -465,5 +466,27 @@ public class AdServicesLoggerImplTest {
         assertEquals(
                 argumentCaptor.getValue().getAction(),
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED);
+    }
+
+    @Test
+    public void testLogMsmtDebugKeyMatchStats() {
+        final String enrollmentId = "EnrollmentId";
+        long hashedValue = 5000L;
+        long hashLimit = 10000L;
+        MsmtDebugKeysMatchStats stats =
+                MsmtDebugKeysMatchStats.builder()
+                        .setAdTechEnrollmentId(enrollmentId)
+                        .setMatched(true)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setDebugJoinKeyHashedValue(hashedValue)
+                        .setDebugJoinKeyHashLimit(hashLimit)
+                        .build();
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementDebugKeysMatch(stats);
+        ArgumentCaptor<MsmtDebugKeysMatchStats> argumentCaptor =
+                ArgumentCaptor.forClass(MsmtDebugKeysMatchStats.class);
+        verify(mStatsdLoggerMock).logMeasurementDebugKeysMatch(argumentCaptor.capture());
+        assertEquals(stats, argumentCaptor.getValue());
     }
 }

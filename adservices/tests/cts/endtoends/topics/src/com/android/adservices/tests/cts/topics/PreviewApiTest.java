@@ -19,22 +19,27 @@ package com.android.adservices.tests.cts.topics;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
+import android.adservices.topics.GetTopicsRequest;
 import android.adservices.topics.GetTopicsResponse;
 import android.adservices.topics.Topic;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -46,7 +51,7 @@ public class PreviewApiTest {
     private static final int EPOCH_JOB_ID = 2;
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 5_000;
 
     // Default Epoch Period.
     private static final long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
@@ -59,10 +64,15 @@ public class PreviewApiTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private static final String ADSERVICES_PACKAGE_NAME =
-            AdservicesCtsHelper.getAdServicesPackageName(sContext, TAG);
+            AdservicesTestHelper.getAdServicesPackageName(sContext, TAG);
 
     @Before
     public void setup() throws Exception {
+        // Skip the test if it runs on unsupported platforms.
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+
         // We need to skip 3 epochs so that if there is any usage from other test runs, it will
         // not be used for epoch retrieval.
         Thread.sleep(3 * TEST_EPOCH_JOB_PERIOD_MS);
@@ -70,12 +80,19 @@ public class PreviewApiTest {
         overrideEpochPeriod(TEST_EPOCH_JOB_PERIOD_MS);
         // We need to turn off random topic so that we can verify the returned topic.
         overridePercentageForRandomTopic(TEST_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        // TODO(b/263297331): Handle rollback support for R and S.
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void teardown() {
         overrideEpochPeriod(TOPICS_EPOCH_JOB_PERIOD_MS);
         overridePercentageForRandomTopic(TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
@@ -138,6 +155,27 @@ public class PreviewApiTest {
         assertThat(sdk2Result.getTopics()).isEmpty();
     }
 
+    // This test is to add test/line coverage for Topics API. There is no specific logic to test.
+    @Test
+    public void testForTopicsAPITestCoverage() {
+        String sdkName = "sdk1";
+        boolean shouldRecordObservation = false; // default value is true
+        GetTopicsRequest.Builder builder = new GetTopicsRequest.Builder();
+        builder.setAdsSdkName(sdkName);
+        builder.setShouldRecordObservation(shouldRecordObservation);
+
+        GetTopicsRequest request = builder.build();
+        assertThat(request.getAdsSdkName()).isEqualTo(sdkName);
+        assertThat(request.shouldRecordObservation()).isEqualTo(shouldRecordObservation);
+
+        // Below are for test coverage purpose. There is no assertion against them.
+        Topic mockedTopic =
+                new Topic(/* taxonomyVersion */ 1L, /* modelVersion*/ 1L, /* topicId */ 1);
+        GetTopicsResponse.Builder mockedBuilder =
+                new GetTopicsResponse.Builder(List.of(mockedTopic));
+        mockedBuilder.build();
+    }
+
     // Override the Epoch Period to shorten the Epoch Length in the test.
     private void overrideEpochPeriod(long overrideEpochPeriod) {
         ShellUtils.runShellCommand(
@@ -155,5 +193,9 @@ public class PreviewApiTest {
     private void forceEpochComputationJob() {
         ShellUtils.runShellCommand(
                 "cmd jobscheduler run -f" + " " + ADSERVICES_PACKAGE_NAME + " " + EPOCH_JOB_ID);
+    }
+
+    private void overrideConsentSourceOfTruth(Integer value) {
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }

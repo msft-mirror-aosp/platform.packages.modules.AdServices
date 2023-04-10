@@ -18,9 +18,10 @@
 <network-security-config>
     <base-config cleartextTrafficPermitted="false">
     </base-config>
-    <!-- Allow cleartext traffic for localhost connections, which are only limited to
-         tests after go/cronet-for-u is implemented. -->
+    <!-- Allow cleartext traffic for localhost & 127.0.0.1 connections, 
+         which are only limited to tests after go/cronet-for-u is implemented. -->
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
     </domain-config>
 </network-security-config>

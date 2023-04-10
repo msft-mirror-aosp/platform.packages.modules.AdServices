@@ -16,18 +16,17 @@
 
 package android.adservices.adselection;
 
-import android.adservices.common.FledgeErrorResponse;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.common.FledgeErrorResponse;
 
 /**
-  * Defines a callback for the runAdAuction API, which contains both an onSuccess
-  * and an onFailure function. The success function accepts a {@link AdSelectionResponse}, while the
-  * failure function accepts an {@link FledgeErrorResponse}
-  *
-  * {@hide}
-  */
-oneway interface AdSelectionCallback{
-
-  void onSuccess(in AdSelectionResponse outcomeParcel);
-  void onFailure(in FledgeErrorResponse responseParcel);
+ * Defines a callback for the runAdAuction API, which contains both an onSuccess
+ * and an onFailure function. The success function accepts a {@link AdSelectionResponse}, while the
+ * failure function accepts an {@link FledgeErrorResponse}
+ *
+ * {@hide}
+ */
+oneway interface AdSelectionCallback {
+    void onSuccess(in AdSelectionResponse outcomeParcel);
+    void onFailure(in FledgeErrorResponse responseParcel);
 }

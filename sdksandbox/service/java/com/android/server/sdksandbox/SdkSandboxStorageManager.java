@@ -53,8 +53,10 @@ import java.util.UUID;
 
 /**
  * Helper class to handle all logics related to sdk data
+ *
+ * @hide
  */
-class SdkSandboxStorageManager {
+public class SdkSandboxStorageManager {
     private static final String TAG = "SdkSandboxManager";
 
     private final Context mContext;
@@ -469,8 +471,8 @@ class SdkSandboxStorageManager {
             + "/sdksandbox";
     }
 
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    String getSdkDataPackageDirectory(
+    /** Fetches the SDK data package directory based on the arguments */
+    public String getSdkDataPackageDirectory(
             @Nullable String volumeUuid, int userId, String packageName, boolean isCeData) {
         return getSdkDataRootDirectory(volumeUuid, userId, isCeData) + "/" + packageName;
     }
@@ -489,12 +491,13 @@ class SdkSandboxStorageManager {
      *
      * <p>This class helps in organizing the sdk-subdirectories in groups so that they are easier to
      * process.
+     *
+     * @hide
      */
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static class SubDirectories {
+    public static class SubDirectories {
 
-        static final String SHARED_DIR = "shared";
-        static final String SANDBOX_DIR = "sandbox";
+        public static final String SHARED_DIR = "shared";
+        public static final String SANDBOX_DIR = "sandbox";
         static final ArraySet<String> INTERNAL_SUBDIRS =
                 new ArraySet(Arrays.asList(SHARED_DIR, SANDBOX_DIR));
 
@@ -760,21 +763,25 @@ class SdkSandboxStorageManager {
      *
      * <p>Every sdk sub-directory has two data directories. One is credentially encrypted storage
      * and another is device encrypted.
+     *
+     * @hide
      */
-    static class StorageDirInfo {
+    public static class StorageDirInfo {
         @Nullable final String mCeData;
         @Nullable final String mDeData;
 
-        StorageDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
+        public StorageDirInfo(@Nullable String ceDataPath, @Nullable String deDataPath) {
             mCeData = ceDataPath;
             mDeData = deDataPath;
         }
 
-        @Nullable String getCeDataDir() {
+        @Nullable
+        public String getCeDataDir() {
             return mCeData;
         }
 
-        @Nullable String getDeDataDir() {
+        @Nullable
+        public String getDeDataDir() {
             return mDeData;
         }
 

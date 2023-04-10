@@ -17,10 +17,6 @@
 package com.android.adservices.service.topics.classifier;
 
 import static com.android.adservices.service.Flags.CLASSIFIER_NUMBER_OF_TOP_LABELS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -30,17 +26,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.provider.DeviceConfig;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.AppInfo;
 import com.android.adservices.service.topics.CacheManager;
 import com.android.adservices.service.topics.PackageManagerUtil;
-import com.android.modules.utils.testing.TestableDeviceConfig;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
@@ -48,12 +45,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -71,10 +70,14 @@ public class OnDeviceClassifierTest {
             "classifier/classifier_test_assets_metadata.json";
     private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
 
-    // (b/244313803): Refactor tests to remove DeviceConfig and use Flags.
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
+    private static final int DEFAULT_NUMBER_OF_TOP_LABELS = 3;
+    private static final float DEFAULT_THRESHOLD = 0.1f;
+    private static final int DEFAULT_DESCRIPTION_MAX_LENGTH = 2500;
+    private static final int DEFAULT_DESCRIPTION_MAX_WORDS = 500;
+
+    private MockitoSession mStaticMockSession;
+
+    @Mock private Flags mFlags;
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static Preprocessor sPreprocessor;
@@ -90,6 +93,30 @@ public class OnDeviceClassifierTest {
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
+
+        // Test applications don't have the required permissions to read config P/H flags, and
+        // injecting mocked flags everywhere is annoying and non-trivial for static methods
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+
+        // Mock default flag values.
+        ExtendedMockito.doReturn(DEFAULT_NUMBER_OF_TOP_LABELS)
+                .when(mFlags)
+                .getClassifierNumberOfTopLabels();
+        ExtendedMockito.doReturn(DEFAULT_THRESHOLD).when(mFlags).getClassifierThreshold();
+        ExtendedMockito.doReturn(DEFAULT_DESCRIPTION_MAX_LENGTH)
+                .when(mFlags)
+                .getClassifierDescriptionMaxLength();
+        ExtendedMockito.doReturn(DEFAULT_DESCRIPTION_MAX_WORDS)
+                .when(mFlags)
+                .getClassifierDescriptionMaxWords();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+
         mModelManager =
                 new ModelManager(
                         sContext,
@@ -110,6 +137,13 @@ public class OnDeviceClassifierTest {
                         mCacheManager,
                         mLogger);
         when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
+    }
+
+    @After
+    public void tearDown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test
@@ -172,11 +206,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -211,7 +248,7 @@ public class OnDeviceClassifierTest {
                 .containsAtLeastElementsIn(createRealTopics(Arrays.asList(10253)));
 
         // Set max classifier description length to 0. This should make description an empty string.
-        setClassifierDescriptionLength(0);
+        ExtendedMockito.doReturn(0).when(mFlags).getClassifierDescriptionMaxLength();
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
 
         // Run classification again for the same package.
@@ -277,11 +314,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
         // Log for appPackage2.
         assertThat(argument.getAllValues().get(1))
@@ -291,11 +331,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_SUCCESS)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -393,7 +436,9 @@ public class OnDeviceClassifierTest {
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
         // Override classifierNumberOfTopLabels.
         int overrideNumberOfTopLabels = 0;
-        setClassifierNumberOfTopLabels(overrideNumberOfTopLabels);
+        ExtendedMockito.doReturn(overrideNumberOfTopLabels)
+                .when(mFlags)
+                .getClassifierNumberOfTopLabels();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);
@@ -411,11 +456,14 @@ public class OnDeviceClassifierTest {
                                 .setBuildId(8)
                                 .setAssetVersion("2")
                                 .setClassifierType(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__CLASSIFIER_TYPE__ON_DEVICE_CLASSIFIER)
+                                        EpochComputationClassifierStats.ClassifierType
+                                                .ON_DEVICE_CLASSIFIER)
                                 .setOnDeviceClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__ON_DEVICE_CLASSIFIER_STATUS__ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
+                                        EpochComputationClassifierStats.OnDeviceClassifierStatus
+                                                .ON_DEVICE_CLASSIFIER_STATUS_FAILURE)
                                 .setPrecomputedClassifierStatus(
-                                        AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED__PRECOMPUTED_CLASSIFIER_STATUS__PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
+                                        EpochComputationClassifierStats.PrecomputedClassifierStatus
+                                                .PRECOMPUTED_CLASSIFIER_STATUS_NOT_INVOKED)
                                 .build());
     }
 
@@ -431,7 +479,7 @@ public class OnDeviceClassifierTest {
         when(mPackageManagerUtil.getAppInformation(eq(appPackages))).thenReturn(appInfoMap);
         // Override classifierThreshold.
         float overrideThreshold = 0.1f;
-        setClassifierThreshold(overrideThreshold);
+        ExtendedMockito.doReturn(overrideThreshold).when(mFlags).getClassifierThreshold();
 
         ImmutableMap<String, List<Topic>> classifications =
                 mOnDeviceClassifier.classify(appPackages);
@@ -609,29 +657,5 @@ public class OnDeviceClassifierTest {
 
     private List<Topic> createRealTopics(List<Integer> topicIds) {
         return topicIds.stream().map(this::createRealTopic).collect(Collectors.toList());
-    }
-
-    private void setClassifierNumberOfTopLabels(int overrideValue) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "classifier_number_of_top_labels",
-                Integer.toString(overrideValue),
-                /* makeDefault */ false);
-    }
-
-    private void setClassifierThreshold(float overrideValue) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "classifier_threshold",
-                Float.toString(overrideValue),
-                /* makeDefault */ false);
-    }
-
-    private void setClassifierDescriptionLength(int overrideValue) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "classifier_description_max_length",
-                Integer.toString(overrideValue),
-                /* makeDefault */ false);
     }
 }

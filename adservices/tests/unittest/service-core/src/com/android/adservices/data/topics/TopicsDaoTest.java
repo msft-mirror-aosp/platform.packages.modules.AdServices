@@ -31,7 +31,6 @@ import com.android.adservices.data.DbTestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -1131,14 +1130,14 @@ public final class TopicsDaoTest {
     }
 
     @Test
-    public void testSupportsTopicContributorsTable() {
-        DbHelper dbHelper = Mockito.mock(DbHelper.class);
-        TopicsDao topicsDao = new TopicsDao(dbHelper);
+    public void testDeleteAllEntriesFromTable() {
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
 
-        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
-        assertThat(topicsDao.supportsTopicContributorsTable()).isFalse();
+        mTopicsDao.recordBlockedTopic(topic1);
+        mTopicsDao.recordBlockedTopic(topic2);
 
-        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        assertThat(topicsDao.supportsTopicContributorsTable()).isTrue();
+        mTopicsDao.deleteAllEntriesFromTable(TopicsTables.BlockedTopicsContract.TABLE);
+        assertThat(mTopicsDao.retrieveAllBlockedTopics()).isEmpty();
     }
 }

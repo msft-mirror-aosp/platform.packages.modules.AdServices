@@ -19,6 +19,7 @@ package com.android.adservices.data.adselection;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
@@ -32,14 +33,18 @@ import java.util.Objects;
 @Database(
         entities = {
             DBAppInstallPermissions.class,
+            DBHistogramEventData.class,
+            DBHistogramIdentifier.class,
         },
-        version = SharedStorageDatabase.DATABASE_VERSION)
+        version = SharedStorageDatabase.DATABASE_VERSION,
+        autoMigrations = {@AutoMigration(from = 1, to = 2)})
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class SharedStorageDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 1;
+    public static final int DATABASE_VERSION = 2;
     public static final String DATABASE_NAME = "sharedstorage.db";
+    static final Long FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE = null;
 
     private static volatile SharedStorageDatabase sSingleton = null;
 
@@ -64,4 +69,7 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
 
     /** @return a Dao to run queries for app install */
     public abstract AppInstallDao appInstallDao();
+
+    /** @return a DAO for interfacing with ad event histograms and their overrides */
+    public abstract FrequencyCapDao frequencyCapDao();
 }

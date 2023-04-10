@@ -239,6 +239,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "801386000",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
@@ -250,6 +251,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "801386000",
           "source_event_id": "2",
           "trigger_data": "1",
           "source_type": "event",
@@ -261,6 +263,7 @@
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "payload": {
           "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "802250000",
           "source_event_id": "6",
           "trigger_data": "1",
           "source_type": "event",

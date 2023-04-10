@@ -16,11 +16,20 @@
 
 package com.android.apiimplementation;
 
+import android.app.Activity;
+import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.IBinder;
 import android.os.RemoteException;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+import com.android.modules.utils.build.SdkLevel;
+
+import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,8 +46,20 @@ public class SdkApi extends ISdkApi.Stub {
 
     @Override
     public String createFile(int sizeInMb) throws RemoteException {
+        Path path;
+        if (SdkLevel.isAtLeastU()) {
+            // U device should be have customized sdk context that allows all storage APIs on
+            // context to utlize per-sdk storage
+            path = Paths.get(mContext.getFilesDir().getPath(), "file.txt");
+            // Verify per-sdk storage is being used
+            if (!path.startsWith(mContext.getDataDir().getPath())) {
+                throw new IllegalStateException("Customized Sdk Context is not being used");
+            }
+        } else {
+            path = Paths.get(mContext.getDataDir().getPath(), "file.txt");
+        }
+
         try {
-            final Path path = Paths.get(mContext.getDataDir().getPath(), "file.txt");
             Files.deleteIfExists(path);
             Files.createFile(path);
             final byte[] buffer = new byte[sizeInMb * 1024 * 1024];
@@ -60,6 +81,34 @@ public class SdkApi extends ISdkApi.Stub {
     @Override
     public String getSyncedSharedPreferencesString(String key) {
         return getClientSharedPreferences().getString(key, "");
+    }
+
+    @Override
+    public void startActivity(IActivityStarter iActivityStarter) throws RemoteException {
+        if (!SdkLevel.isAtLeastU()) {
+            throw new IllegalStateException("Starting activity requires Android U or above!");
+        }
+        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        IBinder token =
+                controller.registerSdkSandboxActivityHandler(activity -> populateView(activity));
+        iActivityStarter.startActivity(token);
+    }
+
+    private void populateView(Activity activity) {
+        // creating LinearLayout
+        LinearLayout linLayout = new LinearLayout(activity);
+        // specifying vertical orientation
+        linLayout.setOrientation(LinearLayout.VERTICAL);
+        // creating LayoutParams
+        LinearLayout.LayoutParams linLayoutParam =
+                new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+        TextView textView = new TextView(activity);
+        textView.setText("This is an Activity running inside the sandbox process!");
+        linLayout.addView(textView);
+        // set LinearLayout as a root element of the screen
+        activity.setContentView(linLayout, linLayoutParam);
     }
 
     private SharedPreferences getClientSharedPreferences() {

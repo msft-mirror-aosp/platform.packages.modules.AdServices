@@ -28,14 +28,15 @@ import java.util.Objects;
  * selection process.
  *
  * <p>The ads and their bids are fed into an ad scoring process which will inform the final ad
- * selection.
+ * selection. The currency unit for the bid is expected to be the same requested by the seller when
+ * initiating the selection process and not specified in this class. The seller can provide the
+ * currency via AdSelectionSignals. The currency is opaque to FLEDGE for now.
  *
  * @hide
  */
 public final class AdWithBid implements Parcelable {
     @NonNull
     private final AdData mAdData;
-    // TODO(b/224873874): Define units used in bid generation
     private final double mBid;
 
     @NonNull
@@ -55,8 +56,6 @@ public final class AdWithBid implements Parcelable {
             };
 
     /**
-     * TODO(b/224873874): Define units used in bid generation
-     *
      * @param adData An {@link AdData} object defining an ad's render URI and buyer metadata
      * @param bid The amount of money a buyer has bid to show an ad; note that while the bid is
      *     expected to be non-negative, this is only enforced during the ad selection process
@@ -83,13 +82,17 @@ public final class AdWithBid implements Parcelable {
     }
 
     /**
-     * TODO(b/224873874): Define units used in bid generation
      * The bid is the amount of money an advertiser has bid during the ad selection process to show
-     * an ad.  The bid could be any non-negative {@code double}, such as 0.00, 0.17, 1.10, or
+     * an ad. The bid could be any non-negative {@code double}, such as 0.00, 0.17, 1.10, or
      * 1000.00.
      *
+     * <p>The currency for a bid would be controlled by Seller and will remain consistent across a
+     * run of Ad selection. This could be achieved by leveraging bidding signals during
+     * "generateBid()" phase and using the same currency during the creation of contextual ads.
+     * Having currency unit as a dedicated field could be supported in future releases.
+     *
      * @return the bid value to be passed to the scoring function when scoring the ad returned by
-     * {@link #getAdData()}
+     *     {@link #getAdData()}
      */
     public double getBid() {
         return mBid;

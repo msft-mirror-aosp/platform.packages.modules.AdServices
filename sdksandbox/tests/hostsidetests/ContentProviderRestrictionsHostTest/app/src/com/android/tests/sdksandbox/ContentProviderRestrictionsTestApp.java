@@ -77,7 +77,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -99,7 +99,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -122,7 +122,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -144,7 +144,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -162,7 +162,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();
@@ -180,7 +180,7 @@ public class ContentProviderRestrictionsTestApp {
 
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
         SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
 
         IBinder binder = sandboxedSdk.getInterface();

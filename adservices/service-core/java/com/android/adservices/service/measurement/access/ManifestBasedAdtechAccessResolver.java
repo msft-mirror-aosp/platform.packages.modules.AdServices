@@ -22,7 +22,10 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.text.TextUtils;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -30,6 +33,8 @@ import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 /** Resolves whether the app developer has included the adtech in the app manifest. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ManifestBasedAdtechAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Caller is not authorized.";
     private final EnrollmentDao mEnrollmentDao;

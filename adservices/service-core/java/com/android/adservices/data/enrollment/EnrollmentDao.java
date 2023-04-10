@@ -31,6 +31,8 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
@@ -48,13 +50,15 @@ public class EnrollmentDao implements IEnrollmentDao {
     private static EnrollmentDao sSingleton;
     private final DbHelper mDbHelper;
     private final Context mContext;
+    private final Flags mFlags;
     @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
 
     @VisibleForTesting
-    public EnrollmentDao(Context context, DbHelper dbHelper) {
+    public EnrollmentDao(Context context, DbHelper dbHelper, Flags flags) {
         mContext = context;
         mDbHelper = dbHelper;
+        mFlags = flags;
         // TODO: move this to be called when the enrollment download job is scheduled.
         seed();
     }
@@ -64,7 +68,9 @@ public class EnrollmentDao implements IEnrollmentDao {
     public static EnrollmentDao getInstance(@NonNull Context context) {
         synchronized (EnrollmentDao.class) {
             if (sSingleton == null) {
-                sSingleton = new EnrollmentDao(context, DbHelper.getInstance(context));
+                sSingleton =
+                        new EnrollmentDao(
+                                context, DbHelper.getInstance(context), FlagsFactory.getFlags());
             }
             return sSingleton;
         }
@@ -132,7 +138,9 @@ public class EnrollmentDao implements IEnrollmentDao {
     @Override
     @Nullable
     public EnrollmentData getEnrollmentDataFromMeasurementUrl(Uri url) {
-        Optional<Uri> registrationBaseUri = Web.topPrivateDomainSchemeAndPath(url);
+        boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
+        Optional<Uri> registrationBaseUri =
+                originMatch ? Web.originAndScheme(url) : Web.topPrivateDomainAndScheme(url);
         SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (!registrationBaseUri.isPresent() || db == null) {
             return null;
@@ -142,12 +150,14 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_SOURCE_REGISTRATION_URL,
-                                registrationBaseUri.get())
+                                registrationBaseUri.get(),
+                                /* isSiteMatch = */ !originMatch)
                         + " OR "
                         + getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
-                                registrationBaseUri.get());
+                                registrationBaseUri.get(),
+                                /* isSiteMatch = */ !originMatch);
 
         try (Cursor cursor =
                 db.query(
@@ -167,9 +177,13 @@ public class EnrollmentDao implements IEnrollmentDao {
             while (cursor.moveToNext()) {
                 EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
                 if (validateAttributionUrl(
-                                data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
+                                data.getAttributionSourceRegistrationUrl(),
+                                registrationBaseUri,
+                                originMatch)
                         || validateAttributionUrl(
-                                data.getAttributionTriggerRegistrationUrl(), registrationBaseUri)) {
+                                data.getAttributionTriggerRegistrationUrl(),
+                                registrationBaseUri,
+                                originMatch)) {
                     return data;
                 }
             }
@@ -177,10 +191,22 @@ public class EnrollmentDao implements IEnrollmentDao {
         }
     }
 
+    /**
+     * Validates enrollment urls returned by selection query by matching its scheme + first
+     * subdomain to that of registration uri.
+     *
+     * @param enrolledUris : urls returned by selection query
+     * @param registrationBaseUri : registration base url
+     * @return : true if validation is success
+     */
     private boolean validateAttributionUrl(
-            List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
+            List<String> enrolledUris, Optional<Uri> registrationBaseUri, boolean originMatch) {
+        // This match is needed to avoid matching .co in registration url to .com in enrolled url
         for (String uri : enrolledUris) {
-            Optional<Uri> enrolledBaseUri = Web.topPrivateDomainSchemeAndPath(Uri.parse(uri));
+            Optional<Uri> enrolledBaseUri =
+                    originMatch
+                            ? Web.originAndScheme(Uri.parse(uri))
+                            : Web.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -188,18 +214,29 @@ public class EnrollmentDao implements IEnrollmentDao {
         return false;
     }
 
-    private String getAttributionUrlSelection(String field, Uri baseUri) {
-        return String.format(
-                Locale.ENGLISH,
-                "(%1$s LIKE %2$s OR %1$s LIKE %3$s)",
-                field,
-                DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"),
-                DatabaseUtils.sqlEscapeString(
-                        baseUri.getScheme()
-                                + "://%."
-                                + baseUri.getEncodedAuthority()
-                                + baseUri.getPath()
-                                + "%"));
+    private String getAttributionUrlSelection(String field, Uri baseUri, boolean isSiteMatch) {
+        String selectionQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "(%1$s LIKE %2$s)",
+                        field,
+                        DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"));
+
+        if (isSiteMatch) {
+            // site match needs to also match https://%.host.com
+            selectionQuery +=
+                    String.format(
+                            Locale.ENGLISH,
+                            "OR (%1$s LIKE %2$s)",
+                            field,
+                            DatabaseUtils.sqlEscapeString(
+                                    "%"
+                                            + baseUri.getScheme()
+                                            + "://%."
+                                            + baseUri.getEncodedAuthority()
+                                            + "%"));
+        }
+        return selectionQuery;
     }
 
     @Override

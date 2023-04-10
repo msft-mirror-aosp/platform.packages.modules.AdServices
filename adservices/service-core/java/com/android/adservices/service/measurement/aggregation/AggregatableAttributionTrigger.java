@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import com.android.adservices.service.measurement.FilterMap;
+import com.android.adservices.service.measurement.util.Filter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,6 +73,29 @@ public class AggregatableAttributionTrigger {
     /** Returns De-deuplication keys for Aggregate Report Creation. */
     public Optional<List<AggregateDeduplicationKey>> getAggregateDeduplicationKeys() {
         return mAggregateDeduplicationKeys;
+    }
+
+    /**
+     * Extract an {@link AggregateDeduplicationKey} from the aggregateDeduplicationKeys.
+     *
+     * @param sourceFilterMap the source filter map of the AggregatableAttributionSource.
+     */
+    public Optional<AggregateDeduplicationKey> maybeExtractDedupKey(FilterMap sourceFilterMap) {
+        if (getAggregateDeduplicationKeys().isEmpty()) return Optional.empty();
+
+        for (AggregateDeduplicationKey key : getAggregateDeduplicationKeys().get()) {
+            if (key.getFilterSet().isPresent()
+                    && !Filter.isFilterMatch(sourceFilterMap, key.getFilterSet().get(), true)) {
+                continue;
+            }
+
+            if (key.getNotFilterSet().isPresent()
+                    && !Filter.isFilterMatch(sourceFilterMap, key.getNotFilterSet().get(), false)) {
+                continue;
+            }
+            return Optional.of(key);
+        }
+        return Optional.empty();
     }
 
     /**

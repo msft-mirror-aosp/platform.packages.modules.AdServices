@@ -58,13 +58,22 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
 
     private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "TopicsApiLogActivity";
+    private static final String SDK_NAME = "AdservicesCtsSdk";
+    private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
+    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
     private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
-    private static final String SDK_NAME = "AdservicesCtsSdk";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
+            "com.google.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
+            "com.android.ext.adservices.api";
 
     @Rule public TestMetrics mMetrics = new TestMetrics();
 
     private ITestDevice mDevice;
+    private int mApiLevel;
+    private String mTargetPackage;
+    private String mTargetPackageAosp;
 
     @Override
     public void setDevice(ITestDevice device) {
@@ -87,6 +96,17 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         overrideConsentManagerDebugMode();
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck("1");
+        mApiLevel = getDevice().getApiLevel();
+
+        // Set flags for test to run on devices with api level lower than 33 (S-)
+        if (mApiLevel < 33) {
+            mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
+            mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
+            setFlags();
+        } else {
+            mTargetPackage = TARGET_PACKAGE;
+            mTargetPackageAosp = TARGET_PACKAGE_AOSP;
+        }
     }
 
     @After
@@ -94,6 +114,11 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
         disableMddBackgroundTasks(false);
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
+
+        // Reset flags to default
+        if (mApiLevel < 33) {
+            resetFlagsToDefault();
+        }
     }
 
     // TODO(b/245400146): Get package Name for Topics API instead of running the test twice.
@@ -101,18 +126,22 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
+        boolean enforceForegroundStatus = getEnforceForeground();
+        setEnforceForeground(false);
 
-        callTopicsAPI(TARGET_PACKAGE, device);
+        callTopicsAPI(mTargetPackage, device);
 
         // Fetch a list of happened log events and their data
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
+
+        setEnforceForeground(enforceForegroundStatus);
 
         // Topics API Name is different in aosp and non-aosp devices. Attempt again with the other
         // package Name if it fails at the first time;
         if (data.isEmpty()) {
             ConfigUtils.removeConfig(getDevice());
             ReportUtils.clearReports(getDevice());
-            callTopicsAPI(TARGET_PACKAGE_AOSP, device);
+            callTopicsAPI(mTargetPackageAosp, device);
             data = ReportUtils.getEventMetricDataList(device);
         }
 
@@ -178,5 +207,69 @@ public class TopicsApiLoggingHostTest implements IDeviceTest {
     // Disable topics_kill_switch to ignore the effect of actual PH values.
     private void disableTopicsAPIKillSwitch() throws DeviceNotAvailableException {
         getDevice().executeShellCommand("device_config put adservices topics_kill_switch false");
+    }
+
+    // Set enforce foreground execution.
+    private void setEnforceForeground(boolean enableForegound) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices topics_enforce_foreground_status "
+                                + enableForegound);
+    }
+
+    private boolean getEnforceForeground() throws DeviceNotAvailableException {
+        String enforceForegroundStatus =
+                getDevice()
+                        .executeShellCommand(
+                                "device_config get adservices topics_enforce_foreground_status");
+        return enforceForegroundStatus.equals("true\n");
+    }
+
+    // TODO(b/275652298): Figure out how to import adservices-test-utility and use
+    // CompatAdServicesTestUtils to set flags.
+    /**
+     * Common flags that need to be set to avoid invoking system server related code on S- before
+     * running various PPAPI related tests.
+     */
+    private void setFlags() throws DeviceNotAvailableException {
+        setBlockedTopicsSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
+        setConsentSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
+        // Measurement rollback check requires loading AdServicesManagerService's Binder from the
+        // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
+        // measurement rollback, we omit invoking that code.
+        disableMeasurementRollbackDelete();
+    }
+
+    /** Reset system-server related flags to their default values after test execution. */
+    private void resetFlagsToDefault() throws DeviceNotAvailableException {
+        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
+        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
+        enableMeasurementRollbackDelete();
+    }
+
+    private void setConsentSourceOfTruth(int source) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices consent_source_of_truth " + source);
+    }
+
+    private void setBlockedTopicsSourceOfTruth(int source) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices blocked_topics_source_of_truth " + source);
+    }
+
+    private void disableMeasurementRollbackDelete() throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices measurement_rollback_deletion_kill_switch"
+                                + " true");
+    }
+
+    private void enableMeasurementRollbackDelete() throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices measurement_rollback_deletion_kill_switch"
+                                + " false");
     }
 }

@@ -15,14 +15,16 @@
  */
 package com.android.adservices.ui.settings.delegates;
 
+import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
-import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -32,6 +34,8 @@ import com.android.settingslib.widget.MainSwitchBar;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActionDelegate extends BaseActionDelegate {
     private final MeasurementActivity mMeasurementActivity;
     private final MeasurementViewModel mMeasurementViewModel;
@@ -56,21 +60,16 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
                                 mMeasurementViewModel.setMeasurementConsent(true);
                                 break;
                             case SWITCH_OFF_MEASUREMENT:
-                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showMeasurementOptOutDialog(
-                                            mMeasurementActivity, mMeasurementViewModel);
-                                } else {
-                                    mMeasurementViewModel.setMeasurementConsent(false);
-                                }
+                                mMeasurementViewModel.setMeasurementConsent(false);
                                 break;
                             case RESET_MEASUREMENT:
                                 logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetMeasurementDialog(
-                                            mMeasurementActivity, mMeasurementViewModel);
-                                } else {
-                                    mMeasurementViewModel.resetMeasurement();
-                                }
+                                mMeasurementViewModel.resetMeasurement();
+                                Toast.makeText(
+                                                mMeasurementActivity,
+                                                R.string.settingsUI_measurement_are_reset,
+                                                Toast.LENGTH_SHORT)
+                                        .show();
                                 break;
                         }
                     } finally {
@@ -88,6 +87,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         mMeasurementActivity.setTitle(R.string.settingsUI_measurement_view_title);
         configureMeasurementConsentSwitch(fragment);
         configureResetMeasurementButton(fragment);
+        configurePrivacyPolicyLink();
     }
 
     private void configureResetMeasurementButton(AdServicesSettingsMeasurementFragment fragment) {
@@ -107,5 +107,10 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         measurementSwitchBar.setOnClickListener(
                 switchBar ->
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
+    }
+
+    private void configurePrivacyPolicyLink() {
+        TextView measurementFooter = mMeasurementActivity.findViewById(R.id.measurement_footer);
+        measurementFooter.setMovementMethod(LinkMovementMethod.getInstance());
     }
 }

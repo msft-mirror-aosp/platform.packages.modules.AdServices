@@ -122,7 +122,7 @@ public class SdkSandboxMetricsTestApp {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         mSdk = ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
         mSdk.triggerCrash();
