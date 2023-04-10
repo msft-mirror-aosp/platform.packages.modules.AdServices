@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"حسنًا"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"أنت تشارك في تجربة الإصدار التجريبي."</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"يتم تفعيل \"مبادرة حماية الخصوصية\" على جهازك، ويمكن للتطبيقات تجربة هذه الطرق الجديدة التي توفر المزيد من الخصوصية لعرض إعلاناتك. يمكنك إيقاف الإصدار التجريبي في أي وقت من إعدادات الخصوصية لديك."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"حسنًا"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"‏توفّر \"مبادرة حماية الخصوصية\" من Android ميزات جديدة يمكن أن تستخدمها التطبيقات لعرض إعلانات قد تعجبك. لا تستخدِم هذه التقنيات معرّفات الأجهزة.\n\nيمكن لنظام Android والتطبيقات المثبّتة لديك أن تُحدّد أنواع الإعلانات التي قد تهتم بمشاهدتها، وحفظ فئات الاهتمام على جهازك مؤقّتًا. يتيح هذا الأمر للتطبيقات عرض الإعلانات التي قد تعجبك، بدون أن يتم تتبُّع نشاطك بواسطة المواقع الإلكترونية والتطبيقات التابعة لمطورين آخرين ."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"تخصيص الإعلانات باستخدام \"مبادرة حماية الخصوصية\""</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"‏يمكنك الاطّلاع على مواضيع الإعلانات من خلال إعدادات جهازك، وحظر المواضيع التي لا تريد مشاركتها مع التطبيقات. ويحذف Android تلقائيًا مواضيع الإعلانات بشكل منتظم."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"يمكنك تغيير رأيك في أي وقت من إعدادات الخصوصية."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"مزيد من المعلومات حول مواضيع الإعلانات"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"‏يمكنك الاطّلاع على \"سياسة الخصوصية\" لمعرفة مزيد من المعلومات حول كيفية حماية Android لبياناتك."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"‏يمكنك التعرّف على مزيد من المعلومات حول كيفية حماية Android لبياناتك في "<a href="https://policies.google.com/privacy">"سياسة الخصوصية"</a>" التي نتّبعها."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"تجربتها الآن"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  البيانات التي يتم استخدامها"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"تستند مواضيع الإعلانات إلى التطبيقات التي استخدمتها مؤخرًا على هذا الجهاز ومعدّل استخدامك لها."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"تتوفّر الآن ميزات جديدة للخصوصية في عرض الإعلانات"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"يمكنك الحصول على المزيد من خيارات التحكّم في الإعلانات التي تظهر لك مع حماية هويتك."</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"تتوفّر الآن ميزات جديدة للخصوصية في عرض الإعلانات"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  من خلال الإعلانات المقترَحة من التطبيقات، تساعد ميزات الخصوصية الجديدة في حماية هويتك والمعلومات المتعلقة باستخدامك للتطبيقات مع السماح للتطبيقات بعرض الإعلانات ذات الصلة. بناءً على نشاطك، يمكن للتطبيق الذي تستخدمه اقتراح عرض إعلانات ذات صلة في تطبيقات أخرى. في إعدادات الخصوصية، يمكنك الاطّلاع على قائمة بالتطبيقات ومنعها من تقديم اقتراحات."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  من خلال قياس أداء الإعلانات، تتم مشاركة أنواع محدودة من البيانات بين التطبيقات للتعرّف على أداء إعلاناتها، مثلاً الوقت الذي تم فيه عرض الإعلان لك."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"تفعيل ميزة أخرى للخصوصية في عرض الإعلانات"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"‏يوفّر Android أيضًا ميزة خصوصية جديدة تمنحك المزيد من التحكّم في الإعلانات التي تظهر لك."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"‏تساعد مواضيع الإعلانات التطبيقات في عرض إعلانات ملائمة لك مع حماية هويتك والمعلومات المتعلقة باستخدامك للتطبيق. يمكن أن يسجِّل نظام Android المواضيع التي تهمك بناءً على التطبيقات التي استخدمتها مؤخرًا. لاحقًا، يمكن أن يطلب أحد التطبيقات التي تستخدمها المواضيع الملائمة من Android لعرض إعلانات تناسب اهتماماتك بشكل أفضل."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"السماح بقياس أداء الإعلانات"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"‏يمكن للتطبيقات والمُعلنين طلب معلومات من Android تساعدهم في قياس أداء إعلاناتهم.\n\nيتم بانتظام حذف بيانات قياس أداء الإعلانات من جهازك."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"إعادة ضبط بيانات قياس الأداء"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"‏يحمي Android خصوصيتك من خلال تحديد المعلومات التي يمكن أن تشاركها التطبيقات مع بعضها. يتم تأخير إرسال التقارير لحماية هويتك.\n\nقد يحتوي متصفّحك على إعدادات مشابهة. إذا كانت إعدادات قياس أداء الإعلانات مفعَّلة في كل من Android ومتصفّحك، قد تتمكن شركة من قياس فعالية أحد الإعلانات بين التطبيقات التي تستخدمها أنت والمواقع الإلكترونية التي تزورها. يتم الحفاظ على خصوصية سجلّ التصفّح على جهازك.\n\nيمكنك التعرّف على مزيد من المعلومات حول كيفية حماية Android لبياناتك في سياسة الخصوصية التي نتّبعها."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"‏يحمي Android خصوصيتك من خلال تحديد المعلومات التي يمكن أن تشاركها التطبيقات مع بعضها. يتم تأخير إرسال التقارير لحماية هويتك.\n\nقد يحتوي متصفّحك على إعدادات مشابهة. إذا كانت إعدادات قياس أداء الإعلانات مفعَّلة في كل من Android ومتصفّحك، قد تتمكن شركة من قياس فعالية أحد الإعلانات بين التطبيقات التي تستخدمها أنت والمواقع الإلكترونية التي تزورها. يتم الحفاظ على خصوصية سجلّ التصفّح على جهازك.\n\nيمكنك التعرّف على مزيد من المعلومات حول كيفية حماية Android لبياناتك في "<a href="https://policies.google.com/privacy">"سياسة الخصوصية"</a>" التي نتّبعها."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"تمت إعادة ضبط بيانات قياس أداء الإعلانات."</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"إلغاء"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"هل تريد إيقاف \"مبادرة حماية الخصوصية\"؟"</string>
