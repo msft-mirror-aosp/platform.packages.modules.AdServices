@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
-
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -319,7 +317,7 @@ public class AsyncRegistrationQueueRunner {
             return false;
         }
 
-        return triggerInsertedPerDestination < MAX_TRIGGER_REGISTERS_PER_DESTINATION;
+        return triggerInsertedPerDestination < SystemHealthParams.getMaxTriggersPerDestination();
     }
 
     private static AsyncRegistration createAsyncRegistrationFromRedirect(
