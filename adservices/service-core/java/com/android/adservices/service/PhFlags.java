@@ -444,6 +444,18 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
+    static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
+            "measurement_max_sources_per_publisher";
+
+    static final String KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION =
+            "measurement_max_triggers_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION =
+            "measurement_max_aggregate_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
+            "measurement_max_event_reports_per_destination";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -2254,6 +2266,42 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxSourcesPerPublisher() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER,
+                /* defaultValue */ MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
+    }
+
+    @Override
+    public int getMeasurementMaxTriggersPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxEventReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2550,7 +2598,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementAttributionFallbackJobPeriodMs());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER
+                        + " = "
+                        + getMeasurementMaxSourcesPerPublisher());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxTriggersPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxEventReportsPerDestination());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());

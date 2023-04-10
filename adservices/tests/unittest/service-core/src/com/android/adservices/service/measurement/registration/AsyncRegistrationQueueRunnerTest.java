@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.measurement.SystemHealthParams.MAX_TRIGGER_REGISTERS_PER_DESTINATION;
 import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
 
 import static org.junit.Assert.assertEquals;
@@ -219,6 +218,10 @@ public class AsyncRegistrationQueueRunnerTest {
         when(mFlags.getMeasurementMaxRegistrationsPerJobInvocation()).thenReturn(1);
         when(mFlags.getMeasurementMaxRetriesPerRegistrationRequest()).thenReturn(5);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()).thenReturn("");
+        when(mFlags.getMeasurementMaxSourcesPerPublisher())
+                .thenReturn(Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
+        when(mFlags.getMeasurementMaxTriggersPerDestination())
+                .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
     }
 
     @Test
@@ -2041,9 +2044,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
     @Test
     public void testRegisterTrigger_atSystemHealthLimits_success() throws Exception {
-        // Setup
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
-                .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION - 1L);
+                .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION - 1L);
 
         Truth.assertThat(
                         AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
@@ -2053,18 +2055,8 @@ public class AsyncRegistrationQueueRunnerTest {
 
     @Test
     public void testRegisterTrigger_overSystemHealthLimits_failure() throws Exception {
-        // Setup
-        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                spy(
-                        new AsyncRegistrationQueueRunner(
-                                mContentResolver,
-                                mAsyncSourceFetcher,
-                                mAsyncTriggerFetcher,
-                                new FakeDatastoreManager(),
-                                mDebugReportApi));
-
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
-                .thenReturn(MAX_TRIGGER_REGISTERS_PER_DESTINATION);
+                .thenReturn((long) Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
 
         Truth.assertThat(
                         AsyncRegistrationQueueRunner.isTriggerAllowedToInsert(
