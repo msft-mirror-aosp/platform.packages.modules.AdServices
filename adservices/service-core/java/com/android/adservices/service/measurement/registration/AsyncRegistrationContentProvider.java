@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.attribution;
+package com.android.adservices.service.measurement.registration;
 
 import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.Trigger;
 import com.android.modules.utils.build.SdkLevel;
 
-/**
- * ContentProvider for monitoring changes to {@link Trigger}.
- */
-public class TriggerContentProvider extends ContentProvider {
+/** ContentProvider for monitoring changes to {@link AsyncRegistration}. */
+public class AsyncRegistrationContentProvider extends ContentProvider {
     public static final String AUTHORITY =
             SdkLevel.isAtLeastT()
-                    ? "com.android.adservices.provider.trigger"
-                    : "com.android.ext.adservices.provider.trigger";
+                    ? "com.android.adservices.provider.asyncregistration"
+                    : "com.android.ext.adservices.provider.asyncregistration";
     public static final Uri TRIGGER_URI = Uri.parse("content://" + AUTHORITY);
 
     @Override
@@ -40,7 +37,11 @@ public class TriggerContentProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
+    public Cursor query(
+            Uri uri,
+            String[] projection,
+            String selection,
+            String[] selectionArgs,
             String sortOrder) {
         throw new UnsupportedOperationException();
     }
@@ -52,15 +53,14 @@ public class TriggerContentProvider extends ContentProvider {
 
     @Override
     public Uri insert(Uri uri, ContentValues values) {
-        // TODO: Choose an integration option after Trigger datastore changes are available.
         // 1) Call ContentProvider after insert in DAO
         // Sample Code:
         // ContentProviderClient contentProviderClient = ctx.getContentResolver()
-        //        .acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI)
+        //        .acquireContentProviderClient(AsyncRegistrationContentProvider.TRIGGER_URI)
         //        .insert(TRIGGER_URI, null);
         // 2) Call ContentProvider for inserting during registration and call DAO from here.
         // Sample Code:
-        // MeasurementDAO.getInstance(getContext()).insertTrigger(triggerObject);
+        // MeasurementDAO.getInstance(getContext()).insertAsyncRegistration(asyncReg);
         getContext().getContentResolver().notifyChange(TRIGGER_URI, null);
         return TRIGGER_URI;
     }
