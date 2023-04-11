@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"გასაგებია"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"თქვენ ბეტას მონაწილე ხართ"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox ჩართულია თქვენს მოწყობილობაზე და აპებს შეუძლია თქვენთვის რეკლამების ჩვენების უფრო მეტი გზების გამოცდა. ბეტას გამორთვა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებში."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"კონფიდენციალურობის პარამეტრების მართვა"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"გასაგებია"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-ის Privacy Sandbox უზრუნველყოფს ისეთ ახალ ფუნქციებს, რომლებსაც აპები იყენებს თქვენთვის საინტერესო რეკლამების საჩვენებლად. ეს ტექნოლოგია არ იყენებს მოწყობილობის იდენტიფიკატორებს.\n\nAndroid და თქვენი აპები აფასებს, როგორი რეკლამები გაინტერესებთ და ამ ინფორმაციას დროებით თქვენს მოწყობილობაში ინახავს. ეს აპებს საშუალებას აძლევს, გაჩვენოს თქვენთვის საინტერესო რეკლამები ვებსა და აპებში თქვენი აქტივობის თვალყურის დევნების გარეშე."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"რეკლამის პერსონალიზება და Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"აპებს შეუძლია თქვენი ინტერესების შეფასება და დროებით მათი Android-ში შენახვა. მაგალითად, აპი, რომელსაც სარბენი ფეხსაცმლის საყიდლად იყენებთ, თქვენს ინტერესს შეაფასებს, როგორც „მარათონზე სირბილი“.\n\nმოგვიანებით, ამ ინტერესის საფუძველზე, სხვა აპი გაჩვენებთ მარათონთან დაკავშირებულ რეკლამებს.\n\nთქვენ კონფიდენციალურობის პარამეტრებში შეგიძლიათ იმ აპების სიის მართვა, რომლებიც თქვენს ინტერესებს ინახავს."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"სარეკლამო თემები და მართვის ახალი საშუალებები რეკლამებთან დაკავშირებით დამატებითი არჩევანის საშუალებას გაძლევთ"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android ინიშნავს საინტერესო თემებს თქვენ მიერ ბოლო დროს გამოყენებული აპების საფუძველზე. ასევე, აპებს, რომლებსაც იყენებთ, შეუძლიათ განსაზღვრონ, თუ რა მოგწონთ. მოგვიანებით, თქვენთვის პერსონალიზებული რეკლამის საჩვენებლად, აპებს შეუძლიათ ამ ინფორმაციის მოთხოვნა. თქვენ შეგიძლიათ აირჩიოთ, რომელი თემები და აპები იქნება გამოყენებული თქვენთვის რეკლამის საჩვენებლად."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"რეკლამის ეფექტურობის გაზომვის მიზნით, აპებს შორის მონაცემების შეზღუდული ტიპები ზიარდება."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"ვრცლად Android-ზე რეკლამების შესახებ"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android ავტომატურად მუდმივად წაშლის თემებსა და აპების მიერ შემოთავაზებულ მონაცემებს. ასევე, შეგიძლიათ დაბლოკოთ კონკრეტული თემები და აპები, რომელთაგანაც შეთავაზებების მიღება არ გსურთ."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"რეკლამის ეფექტურობის გაზომვა"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"თქვენ მიერ გამოყენებულ აპებს შეუძლიათ სთხოვონ Android-ს გარკვეული ინფორმაცია, რაც მათ რეკლამების ეფექტურობის განსაზღვრაში დაეხმარება. Android საშუალებას აძლევს აპებს, შეაგროვონ შეზღუდული ტიპის ისეთი მონაცემები, როგორიცაა, მაგალითად, ის, თუ დღის რომელ მონაკვეთში იყო ნაჩვენები რეკლამა თქვენთვის."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"ცადეთ რეკლამების კონფიდენც. ახალი ფუნქციები"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"რეკლამის თემები რეკლამებთან დაკავშირებით დამატებითი არჩევანის საშუალებას გაძლევთ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"დეტალების ნახვა"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"რეკლამების გაძლიერებული კონფიდენციალურობა Android-ზე"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"ცადეთ რეკლამების კონფიდენციალურობის ახალი ფუნქციები"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android გამოუშვებს კონფიდენციალურობის ახალ ფუნქციებს, რომლებიც რეკლამებთან დაკავშირებით დამატებითი არჩევანის საშუალებას მოგცემთ."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"სარეკლამო თემები ეხმარება აპებს გაჩვენოთ თქვენთვის შესაბამისი რეკლამები ისე, რომ დაცული იყოს თქვენი ვინაობა და ინფორმაცია აპის გამოყენების შესახებ. Android-ს შეუძლია შენიშნოს საინტერესო თემები იმ აპლიკაციების მიხედვით, რომლებსაც ახლახან იყენებდით. მოგვიანებით, აპს, რომელსაც იყენებთ, შეუძლია სთხოვოს Android-ს შესაბამისი თემები, რათა მოახდინოთ თქვენი ხილული რეკლამის პერსონალიზება."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"თქვენი მოწყობილობის პარამეტრებში შეგიძლიათ სარეკლამო თემების ნახვა და იმ თემების დაბლოკვა, რომელთა აპებთან გაზიარებაც არ გსურთ. Android, ასევე, მუდმივად შლის ავტომატურად სარეკლამო თემებს."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"გადაწყვეტილების შეცვლა ნებისმიერ დროს შეგიძლიათ კონფიდენციალურობის პარამეტრებიდან."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"ვრცლად რეკლამების თემების შესახებ"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"კონფიდენციალურობის დებულებაში გაეცანით, თუ როგორ იცავს Android თქვენს მონაცემებს."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"თანახმა ვარ"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"გამოცადეთ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  გამოყენებული მონაცემების ტიპები"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"თქვენი სარეკლამო თემები ეფუძნება ამ მოწყობილობაზე თქვენ მიერ გამოყენებულ აპებსა და მათით სარგებლობის სიხშირეს."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  ამ მონაცემების გამოყენების წესი"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  როგორ უნდა მართოთ თქვენი მონაცემები"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android პერიოდულად ავტომატურად წაშლის თემებს. აპების გამოყენების პარალელურად ესა თუ ის თემა შესაძლოა ხელახლა გამოჩნდეს სიაში. ამასთანავე, კონფიდენციალურობის პარამეტრებიდან ნებისმიერ დროს შეგიძლიათ დაბლოკოთ თემები, რომლებიც არ გსურთ, რომ Android-მა აპებს გაუზიაროს, და გამორთოთ სარეკლამო თემები."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"ცვლილებების შეტანა კონფიდენციალურობის პარამეტრებში შეგიძლიათ."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"სხვა ფუნქციები რეკლამის მეტი კონფიდენციალურობისთვის"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android შეიმუშავებს ახალ გზებს, რომ აპებს შეეზღუდოთ თქვენ შესახებ ინფორმაციის მიღება, როცა ისინი პერსონალიზებულ რეკლამებს გაჩვენებენ."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის სხვა ფუნქციები"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android აგრეთვე გთავაზობთ ახალ გზებს, რომ შეუზღუდოს აპებს ინფორმაცია თქვენ შესახებ, როცა ისინი პერსონალიზებულ რეკლამებს გაჩვენებთ."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  აპის შემოთავაზებული რეკლამები გამოიყენება თქვენთვის შესაბამისი რეკლამების საჩვენებლად და ის ხელს უწყობს, როგორც თქვენი ვინაობის, ისე თქვენ მიერ აპის გამოყენების შესახებ ინფორმაციის დაცვას. თქვენი აქტივობის საფუძველზე, თქვენ მიერ გამოყენებულ აპს შეუძლია, სხვა აპებს შესთავაზოს შესაბამისი რეკლამების ჩვენება. კონფიდენციალურობის პარამეტრებში შეგიძლიათ ნახოთ აპების სია და დაბლოკოთ მათი შემოთავაზებები."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  რეკლამის გაზომვით მონაცემთა შეზღუდული ტიპები ზიარდება აპებს შორის მათი რეკლამების ეფექტურობის გასაზომად - მაგალითად, დღის მონაკვეთი, როდესაც რეკლამა ნაჩვენები იყო თქვენთვის."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"ვრცლად აპის მიერ შემოთავაზებული რეკლამებისა და რეკლამის ეფექტურობის გაზომვის შესახებ"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android ავტომატურად მუდმივად წაშლის აპების მიერ შემოთავაზებულ მონაცემებს. თქვენ მიერ გამოყენებული აპი შეიძლება კვლავ გამოჩნდეს სიაში."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"ამასთანავე, კონფიდენციალურობის პარამეტრებიდან ნებისმიერ დროს შეგიძლიათ, დაბლოკოთ აპის მიერ თქვენთვის რეკლამების შემოთავაზება, ასევე გადააყენოთ რეკლამის შემოთავაზების მონაცემები ან გამორთოთ აპის მიერ შემოთავაზებული რეკლამები."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"თქვენ მიერ გამოყენებულ აპებს შეუძლიათ სთხოვონ Android-ს გარკვეული ინფორმაცია, რაც მათ რეკლამების ეფექტურობის გაზომვაში დაეხმარება. Android იცავს თქვენს კონფიდენციალურობას იმ ინფორმაციის შეზღუდვით, რომლის გაზიარებაც სხვადასხვა აპებს შეუძლია ერთმანეთთან."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"მიიღეთ იმ რეკლამების მეტი არჩევანი, რომლებსაც ხედავთ, დაიცავთ რა საკუთარ იდენტურობას"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  აპის შემოთავაზებული რეკლამებით კონფიდენციალურობის ახალი ფუნქციები გეხმარებათ ვინაობისა და თქვენ მიერ აპის გამოყენების შესახებ ინფორმაციის დაცვაში, იმავდროულად კი აპები იღებს საშუალებას, შესაბამისი რეკლამები გიჩვენოთ. თქვენი აქტივობის საფუძველზე, თქვენ მიერ გამოყენებულ აპს შეუძლია სხვა აპებს შესთავაზოს დაკავშირებული რეკლამების ჩვენება. კონფიდენციალურობის პარამეტრებში შეგიძლიათ, ნახოთ აპების სია და დაბლოკოთ მათგან შემოთავაზებები."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  რეკლამის გაზომვით მონაცემთა შეზღუდული ტიპები ზიარდება აპებს შორის მათი რეკლამების ეფექტურობის დასადგენად, როგორიცაა დღის ის მონაკვეთი, როდესაც რეკლამა გიჩვენეს."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"ჩართეთ რეკლამის კონფიდენციალურობის სხვა ფუნქცია"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android აგრეთვე გთავაზობთ კონფიდენციალურობის ახალ ფუნქციას, რომელიც იმ რეკლამების მეტ არჩევანს გაძლევთ, რომლებსაც ხედავთ."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"სარეკლამო თემები ეხმარება აპებს გაჩვენოთ შესაბამისი რეკლამები და დაიცვას თქვენი ვინაობა და ინფორმაცია თქვენი აპის გამოყენების შესახებ. Android-ს შეუძლია შენიშნოს საინტერესო თემები იმ აპლიკაციების მიხედვით, რომლებსაც ახლახან იყენებდით. მოგვიანებით, აპმა, რომელსაც იყენებთ, შესაძლოა თხოვოს Android-ს შესაბამისი თემები, რათა უფრო შესაბამისი რეკლამები გიჩვენოთ."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"თქვენი კონფიდენციალურობის პარამეტრებში შეგიძლიათ რეკლამების თემების ნახვა და იმ თემების დაბლოკვა, რომელთა გაზიარებაც აპებთან არ გსურთ. Android, ასევე, ავტომატურად მუდმივად შლის რეკლამების თემებს."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"ჩართვა"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"ახლა იმ რეკლამების მეტი არჩევანია, რომლებსაც ხედავთ, იცავთ რა საკუთარ იდენტურობას"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"უკვე ხელმისაწვდომია რეკლამის კონფიდენციალურობის ახალი ფუნქციები"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android ახლა გთავაზობთ კონფიდენციალურობის ახალ ფუნქციებს, რომლებიც იმ რეკლამების მეტ არჩევანს გაძლევთ, რომლებსაც ხედავთ."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"შემდეგ"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"მიიღეთ მონაწილეობა Android-ის რეკლამების კონფიდენციალურობაში (ბეტა)"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"რეკლამის კონფიდენციალურობა"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"რეკლამის თემები"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"აპლიკაციის მიერ შემოთავაზებული რეკლამები"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android დაიმახსოვრებს თქვენთვის საინტერესო თემებს თქვენ მიერ გამოყენებული აპებისა და მათით სარგებლობის სიხშირის მიხედვით."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"აპებს, რომლებსაც იყენებთ, ასევე შეუძლიათ განსაზღვრონ, რა მოგწონთ იმის მიხედვით, თუ როგორ იყენებთ მათ."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"თქვენ მიერ გამოყენებულ აპებს შეუძლიათ სთხოვონ Android-ს ინფორმაცია, რაც მათ რეკლამების ეფექტურობის განსაზღვრაში დაეხმარება. Android საშუალებას აძლევს აპებს, შეაგროვონ შეზღუდული ტიპის მონაცემები."</string>

@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Tôi hiểu"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Bạn là một phần của bản beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Hộp cát về quyền riêng tư đã được bật cho thiết bị của bạn, nhờ vậy, các ứng dụng có thể thử nghiệm những cách mới, riêng tư hơn để hiển thị quảng cáo cho bạn. Bạn có thể tắt bản beta bất kỳ lúc nào trong chế độ cài đặt quyền riêng tư."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Quản lý chế độ cài đặt bảo mật"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Đã hiểu"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Hộp cát về quyền riêng tư của Android cung cấp các tính năng mới mà các ứng dụng có thể dùng để hiển thị những quảng cáo bạn có thể thích. Những công nghệ này không sử dụng số nhận dạng thiết bị.\n\nAndroid và ứng dụng có thể ước tính các loại quảng cáo mà bạn có thể quan tâm và tạm thời lưu những sở thích này trên thiết bị của bạn. Điều này cho phép các ứng dụng hiển thị những quảng cáo bạn có thể thích mà không cần theo dõi hoạt động của bạn trên các trang web cũng như ứng dụng từ các nhà phát triển khác."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Cá nhân hóa quảng cáo với Hộp cát về quyền riêng tư"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Các ứng dụng có thể ước tính sở thích của bạn và tạm thời lưu những sở thích này trong Android. Chẳng hạn như một ứng dụng bạn dùng để mua giày chạy bộ có thể ước tính sở thích của bạn là \"chạy marathon\".\n\nSau đó, dựa trên sở thích này, một ứng dụng khác có thể hiển thị cho bạn một quảng cáo liên quan đến chạy marathon.\n\nBạn có thể quản lý danh sách các ứng dụng đã lưu sở thích trong mục cài đặt quyền riêng tư."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Các tính năng mới về quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Với các chủ đề quảng cáo và quyền kiểm soát mới, bạn sẽ có thêm nhiều lựa chọn về quảng cáo mà mình thấy"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Hiện có các tính năng mới liên quan đến quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android lưu ý các chủ đề bạn quan tâm dựa trên những ứng dụng bạn dùng gần đây. Ngoài ra, ứng dụng bạn dùng có thể xác định sở thích của bạn. Sau đó, ứng dụng có thể yêu cầu hệ thống cung cấp thông tin này để hiển thị cho bạn quảng cáo được cá nhân hoá. Bạn có thể chọn chủ đề và ứng dụng dùng để hiển thị quảng cáo cho bạn."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Để đo lường hiệu suất của quảng cáo, chỉ một số loại dữ liệu được chia sẻ giữa các ứng dụng."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Tìm hiểu thêm về quảng cáo trên Android"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android thường xuyên tự động xoá các chủ đề và dữ liệu do ứng dụng đề xuất. Bạn cũng có thể chặn những ứng dụng và chủ đề cụ thể bạn không muốn đưa ra đề xuất."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Đo lường hiệu suất quảng cáo"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Các ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin giúp đo lường hiệu suất quảng cáo của những ứng dụng đó. Android cho phép các ứng dụng thu thập một số loại dữ liệu có giới hạn, chẳng hạn như thời gian trong ngày bạn thấy quảng cáo."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Dùng thử các tính năng mới về quyền riêng tư trong quảng cáo"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Các chủ đề quảng cáo mang đến cho bạn nhiều sự lựa chọn hơn đối với các quảng cáo bạn nhìn thấy"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Xem thông tin chi tiết"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Quyền riêng tư nâng cao trong quảng cáo trên Android"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android sắp ra mắt các tính năng mới liên quan đến quyền riêng tư, giúp bạn có thêm nhiều lựa chọn về quảng cáo bạn thấy."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Nhờ vào chủ đề quảng cáo, các ứng dụng sẽ hiển thị cho bạn quảng cáo phù hợp, đồng thời bảo vệ danh tính của bạn và thông tin về việc bạn dùng ứng dụng. Android có thể lưu ý các chủ đề bạn quan tâm dựa trên những ứng dụng bạn dùng gần đây. Sau đó, ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin về các chủ đề có liên quan để cá nhân hoá quảng cáo bạn thấy."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Bạn có thể xem các chủ đề quảng cáo trong phần cài đặt trên thiết bị, cũng như chặn những chủ đề bạn không muốn chia sẻ với ứng dụng. Android cũng thường xuyên tự động xoá các chủ đề quảng cáo."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Nếu đổi ý, bất cứ lúc nào bạn cũng có thể chỉnh sửa trong phần cài đặt quyền riêng tư."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Tìm hiểu thêm về chủ đề quảng cáo"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Tìm hiểu thêm về cách Android đảm bảo an toàn cho dữ liệu của bạn trong Chính sách quyền riêng tư của chúng tôi."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Có, tôi đồng ý"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Dùng thử"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Những dữ liệu được sử dụng"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Chủ đề quảng cáo được xác định dựa trên dựa trên các ứng dụng bạn dùng gần đây trên thiết bị này cũng như tần suất bạn dùng các ứng dụng đó."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Cách chúng tôi sử dụng dữ liệu này"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Cách bạn có thể quản lý dữ liệu của mình"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android thường xuyên tự động xoá các chủ đề. Khi bạn tiếp tục dùng ứng dụng, một chủ đề có thể xuất hiện lại trên danh sách. Bất cứ lúc nào bạn cũng có thể chặn những chủ đề bạn không muốn Android chia sẻ với các ứng dụng, cũng như tắt các chủ đề quảng cáo trong phần cài đặt quyền riêng tư."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Bạn có thể thực hiện thay đổi trong chế độ cài đặt quyền riêng tư."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Các tính năng khác giúp quảng cáo phù hợp với cá nhân hơn"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android sắp ra mắt những cách mới để hạn chế những gì ứng dụng có thể tìm hiểu về bạn khi cho bạn xem quảng cáo được cá nhân hoá."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Hiện có các tính năng khác liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android cũng ra mắt những cách mới để hạn chế những gì ứng dụng có thể tìm hiểu về bạn khi cho bạn xem quảng cáo được cá nhân hoá."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Quảng cáo do ứng dụng đề xuất giúp bảo vệ danh tính của bạn và thông tin về cách bạn dùng ứng dụng, đồng thời cho phép ứng dụng cho bạn xem quảng cáo có liên quan. Dựa trên hoạt động của bạn, ứng dụng bạn dùng có thể đề xuất quảng cáo có liên quan cho các ứng dụng khác. Trong phần cài đặt quyền riêng tư, bạn có thể xem danh sách các ứng dụng và chặn không cho ứng dụng đề xuất quảng cáo."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Với khả năng đo lường quảng cáo, chỉ có một số loại dữ liệu được chia sẻ giữa các ứng dụng để đo lường hiệu suất quảng cáo của những dữ liệu đó, chẳng hạn như thời gian trong ngày mà bạn thấy một quảng cáo."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Tìm hiểu thêm về quảng cáo do ứng dụng đề xuất và hoạt động đo lường quảng cáo"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android thường xuyên tự động xoá dữ liệu do ứng dụng đề xuất. Ứng dụng bạn sử dụng lại có thể xuất hiện lại trong danh sách."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Bạn cũng có thể chặn không cho một ứng dụng đề xuất quảng cáo cho mình, đặt lại mọi dữ liệu đề xuất quảng cáo hoặc tắt quảng cáo do ứng dụng đề xuất bất cứ lúc nào trong phần cài đặt quyền riêng tư."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Các ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin giúp đo lường hiệu suất quảng cáo của những ứng dụng đó. Android bảo vệ quyền riêng tư của bạn bằng cách giới hạn thông tin các ứng dụng có thể chia sẻ với nhau."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Hiện có các tính năng mới liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Thêm nhiều lựa chọn đối với quảng cáo mà bạn thấy, trong khi vẫn bảo vệ được danh tính của bạn"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Hiện có các tính năng mới liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Nhờ tính năng quảng cáo do ứng dụng gợi ý cũng như các tính năng mới liên quan đến quyền riêng tư, danh tính và thông tin về việc sử dụng ứng dụng của bạn sẽ được bảo vệ trong khi vẫn giúp được ứng dụng cho bạn xem quảng cáo phù hợp. Dựa trên hoạt động của bạn, ứng dụng mà bạn dùng có thể đề xuất quảng cáo có liên quan trên các ứng dụng khác. Trong phần chế độ cài đặt quyền riêng tư, bạn có thể xem danh sách ứng dụng và chặn không cho ứng dụng đề xuất quảng cáo."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Với tính năng đo lường quảng cáo, chỉ có một số loại dữ liệu được chia sẻ giữa các ứng dụng để tìm hiểu hiệu suất quảng cáo tương ứng, chẳng hạn như thời gian trong ngày mà bạn thấy một quảng cáo."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Bật một tính năng khác liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android cũng ra mắt một tính năng mới liên quan đến quyền riêng tư, giúp bạn có thêm nhiều lựa chọn về quảng cáo mà mình thấy."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Nhờ vào chủ đề quảng cáo, các ứng dụng sẽ cho bạn thấy quảng cáo phù hợp trong khi vẫn bảo vệ được danh tính của bạn và thông tin về việc bạn dùng ứng dụng. Android có thể lưu ý các chủ đề bạn quan tâm dựa trên những ứng dụng bạn dùng gần đây. Sau đó, ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin về các chủ đề có liên quan để cho bạn thấy những quảng cáo phù hợp hơn."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Bạn có thể xem các chủ đề quảng cáo trong phần chế độ cài đặt quyền riêng tư, cũng như chặn những chủ đề mà mình không muốn chia sẻ với ứng dụng. Android cũng thường xuyên tự động xoá các chủ đề quảng cáo."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Bật"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Hiện có các tính năng mới liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Giờ đây, bạn có thêm nhiều lựa chọn đối với quảng cáo mà bạn thấy, trong khi vẫn bảo vệ được danh tính của bạn"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Hiện có các tính năng mới liên quan đến quyền riêng tư trong quảng cáo"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android nay ra mắt các tính năng mới liên quan đến quyền riêng tư, giúp bạn có thêm nhiều lựa chọn về quảng cáo mà mình thấy."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Tiếp theo"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Hộp cát về quyền riêng tư"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Tham gia vào phiên bản beta về quyền riêng tư trong quảng cáo của Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Hộp cát về quyền riêng tư"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Quyền riêng tư trong quảng cáo"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Chủ đề quảng cáo"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Quảng cáo do ứng dụng đề xuất"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android lưu ý các chủ đề bạn quan tâm dựa trên những ứng dụng bạn dùng gần đây và tần suất bạn dùng các ứng dụng đó."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Các ứng dụng bạn dùng cũng có thể xác định sở thích của bạn dựa trên cách bạn dùng những ứng dụng đó."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Các ứng dụng bạn dùng có thể yêu cầu Android cung cấp thông tin để giúp những ứng dụng đó đo lường hiệu suất của quảng cáo của họ. Android cho phép các ứng dụng thu thập một số loại dữ liệu có giới hạn."</string>

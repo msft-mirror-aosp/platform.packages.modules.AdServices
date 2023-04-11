@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Du er en del af betaprogrammet"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox er aktiveret på din enhed, og apps kan teste disse nye og mere private måder at vise dig annoncer på. Du kan altid deaktivere betaversionen i privatlivsindstillingerne."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Administrer privatlivsindstillinger"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Androids Privacy Sandbox giver nye funktioner, som apps kan bruge til at vise dig annoncer, der muligvis er relevante for dig. Disse teknologier anvender ikke enheds-id\'er.\n\nAndroid og dine apps kan anslå, hvilke typer annoncer du muligvis er interesseret i, og gemme disse oplysninger midlertidigt på din enhed. Dette giver apps mulighed for at vise dig annoncer, der muligvis er relevante for dig, uden at spore din aktivitet på websites og i apps fra andre udviklere."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Annoncetilpasning med Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Apps kan anslå, hvilke interesser du muligvis har, og ved hjælp af Android gemme disse oplysninger. En app, du bruger til at købe løbesko, kan f.eks. anslå din interesse til at være \"maratonløb\".\n\nBaseret på denne interesse kan en anden app senere vise dig en annonce, der er relateret til maratonløb.\n\nDu kan administrere listen over apps, der har gemt dine interesser, i privatlivsindstillingerne."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nye privatlivfunktioner til annoncer"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Annonceemner og nye indstillinger giver dig flere valgmuligheder for de annoncer, du får vist"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Nye annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android registrerer emner, du kan være interesseret i, baseret på de apps, du har brugt for nylig. De apps, du bruger, kan også fastslå, hvad du kan lide. Derefter kan dine apps anmode om disse oplysninger for at vise dig tilpassede annoncer. Du kan vælge, hvilke emner og apps der skal bruges til at vise dig annoncer."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"For at måle effektiviteten af en annonce deles der begrænsede typer af data mellem apps."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Mere om annoncer i Android"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android sletter automatisk data om annonceemner og foreslåede annoncer fra apps med jævne mellemrum. Du kan også blokere bestemte emner og apps, så de ikke kan foreslå annoncer til dig."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Måling af en annonces effektivitet"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Apps, du bruger, kan anmode Android  om oplysninger for at hjælpe dem med at måle effektiviteten af deres annoncer. Android giver websites mulighed for at indsamle begrænsede typer data, f.eks. det tidspunkt på dagen, hvor der blev vist en annonce til dig."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prøv nye privatlivfunktioner til annoncer"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Annonceemner giver dig større valgfrihed i forhold til, hvilke annoncer du får vist"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Vis oplysninger"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Forbedret privatliv ved annoncering i Android"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prøv nye privatlivsfunktioner til annoncer"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android introducerer nye privatlivsfunktioner, der giver dig flere valgmuligheder for de annoncer, du får vist."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Annonceemner hjælper apps med at vise dig relevante annoncer, samtidig med at din identitet og oplysninger om din appbrug beskyttes. Android kan registrere emner, du muligvis er interesseret i, baseret på de apps, du har brugt for nylig. Senere kan en app, du bruger, bede Android om relevante emner for at tilpasse de annoncer, du får vist."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Du kan se annonceemner i dine enhedsindstillinger og blokere dem, der ikke skal deles med apps. Android sletter også automatisk annonceemner med jævne mellemrum."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Du kan til enhver tid ændre mening i privatlivsindstillingerne."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Mere om annonceemner"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Få flere oplysninger om, hvordan Android beskytter dine data, i vores privatlivspolitik."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ja tak"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Prøv det"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Hvilke data bruger vi?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Dine annonceemner er baseret på de apps, du har brugt for nylig på denne enhed, og hvor ofte du bruger dem."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"• Sådan bruger vi dataene"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"• Sådan kan du administrere dine data"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android sletter automatisk emner med jævne mellemrum. Mens du bruger appen, kan et emne dukke op på listen igen. Du kan også blokere de emner, som Android ikke skal dele med apps, og slå annonceemner fra i privatlivsindstillingerne når som helst."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Du kan foretage ændringer i privatlivsindstillingerne."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Andre funktioner, der gør annoncer mere private"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android lancerer nye metoder til at begrænse, hvad apps kan lære om dig, når de viser dig tilpassede annoncer."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Andre annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android tilbyder også nye metoder til at begrænse, hvad apps kan lære om dig, når de viser dig tilpassede annoncer."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"• Foreslåede annoncer fra apps hjælper med at beskytte din identitet og oplysninger om din appbrug og muliggør samtidig, at annoncer kan vise dig relevante annoncer. Når du bruger en app, kan den foreslå relaterede annoncer i andre apps baseret på din aktivitet. I privatlivsindstillingerne kan du se en liste over apps og blokere dem, så de ikke kan foreslå annoncer til dig."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"• Med annoncemåling deles begrænsede typer data mellem apps for at måle effektiviteten af deres annoncer, f.eks. det tidspunkt på dagen, hvor en annonce blev vist til dig."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Flere oplysninger om foreslåede annoncer fra apps og annoncemåling"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android foretager regelmæssigt en automatisk sletning af foreslåede appdata. Når du bruger en app igen, kan den dukke op på listen igen."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"I privatlivsindstillingerne kan du også til enhver tid blokere en app, så den ikke kan foreslå dig annoncer, nulstille alle data for foreslåede annoncer eller deaktivere foreslåede annoncer fra apps."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apps, du bruger, kan anmode Android om oplysninger, som hjælper den pågældende app med at måle effektiviteten af annoncer i appen. Android beskytter dine personlige oplysninger ved at begrænse de oplysninger, som apps kan dele med hinanden."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nye annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Få mere valgfrihed i forhold til de annoncer, du ser, samtidig med at din identitet beskyttes"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nye annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Takket være annoncer foreslået af apps hjælper de nye privatlivsfunktioner med at beskytte din identitet og oplysninger om din brug af apps, samtidigt med at apps kan vise dig relevante annoncer. Når du bruger en app, kan den foreslå relaterede annoncer i andre apps baseret på din aktivitet. I privatlivsindstillingerne kan du se en liste over apps og blokere dem, så de ikke kan foreslå annoncer til dig."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Med annoncemåling deles begrænsede typer data mellem apps for at forstå effektiviteten af deres annoncer, f.eks. det tidspunkt på dagen, hvor en annonce blev vist til dig."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktivér den annoncerelaterede privatlivsfunktion"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android tilbyder også en ny privatlivsfunktion, der giver dig mere valgfrihed i forhold til de annoncer, du ser."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Annonceemner hjælper apps med at vise dig relevante annoncer, samtidig med at din identitet og oplysninger om din appbrug beskyttes. Android kan fastslå emner, der interesserer dig, baseret på de apps, du har brugt for nylig. Når du derefter bruger en app, kan den anmode Android om relevante emner for at vise dig mere relevante annoncer."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Du kan se annonceemner i dine privatlivsindstillinger og blokere dem, der ikke skal deles med apps. Android sletter også automatisk annonceemner med jævne mellemrum."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Aktivér"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nye annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Nu får du mere valgfrihed i forhold til de annoncer, du ser, samtidig med at din identitet beskyttes"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nye annoncerelaterede privatlivsfunktioner er nu tilgængelige"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android tilbyder nu nye privatlivsfunktioner, der giver dig mere valgfrihed i forhold til de annoncer, du ser."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Næste"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Deltag i betatesten af Privatliv ved annoncering i Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Privatliv ved annoncering"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Annonceemner"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Annoncer foreslået af apps"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android registrerer emner, du kan være interesseret i, baseret på de apps, du har brugt for nylig, og hvor ofte du bruger dem."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apps, du bruger, kan også fastslå dine interesser, ud fra hvordan du bruger dem."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"De apps, du bruger, kan anmode Android om oplysninger for at hjælpe dem med at måle effektiviteten af deres annoncer. Android tillader, at apps kan indsamle visse typer data."</string>

@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
@@ -62,7 +63,7 @@ public class CustomAudienceDevOverridesHelper {
      * DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public String getBiddingLogicOverride(
+    public DecisionLogic getBiddingLogicOverride(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
@@ -75,7 +76,7 @@ public class CustomAudienceDevOverridesHelper {
 
         String appPackageName = mDevContext.getCallingAppPackageName();
 
-        String result =
+        DecisionLogic result =
                 mCustomAudienceDao.getBiddingLogicUriOverride(owner, buyer, name, appPackageName);
 
         sLogger.v(
@@ -127,6 +128,7 @@ public class CustomAudienceDevOverridesHelper {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
@@ -158,6 +160,7 @@ public class CustomAudienceDevOverridesHelper {
                             .setBuyer(buyer)
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
+                            .setBiddingLogicJsVersion(biddingLogicJsVersion)
                             .setTrustedBiddingData(trustedBiddingSignals.toString())
                             .setAppPackageName(appPackageName)
                             .build());

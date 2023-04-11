@@ -40,9 +40,9 @@ public class AddCustomAudienceOverrideRequestTest {
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
-        assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
-        assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
+        assertEquals(BUYER, request.getBuyer());
+        assertEquals(NAME, request.getName());
+        assertEquals(BIDDING_LOGIC_JS, request.getBiddingLogicJs());
+        assertEquals(TRUSTED_BIDDING_DATA, request.getTrustedBiddingSignals());
     }
 }

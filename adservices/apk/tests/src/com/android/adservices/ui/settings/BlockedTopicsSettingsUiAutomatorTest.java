@@ -25,6 +25,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.FlakyTest;
@@ -41,9 +42,11 @@ import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
@@ -66,7 +69,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
     private static final String TOPICS_SERVICE_NAME = "android.adservices.TOPICS_SERVICE";
     private static final String ADSERVICES_PACKAGE_NAME = getAdServicesPackageName();
-    private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final int EPOCH_JOB_ID = 2;
     // Time out to start UI launcher.
     private static final int LAUNCHER_LAUNCH_TIMEOUT = 3000;
@@ -105,7 +107,9 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Override needful PH Flags.
         overridePrerequisiteFlags();
 
-        ApkTestUtil.setCompatActivitiesAndFlags(CONTEXT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
@@ -120,17 +124,21 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Reset PH Flags to default values.
         resetFlagsToDefault();
 
-        ApkTestUtil.resetCompatActivitiesAndFlags(CONTEXT);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     @Test
     @FlakyTest(bugId = 272511638)
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
+        // TODO(274978520) turn on block topics test on S
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable Beta UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(false);
 
         // Launch main view of Privacy Sandbox Settings.
-        launchSettingView();
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Enable user consent. If it has been enabled due to stale test failures, disable it and
         // enable it again. This is to ensure no stale data or pending jobs.
@@ -197,7 +205,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // restart the app since scrollToBeginning does not work.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
         Thread.sleep(3000);
-        launchSettingView();
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Disable user consent.
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
@@ -210,11 +218,13 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     @Test
     @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
+        // TODO(274978520) turn on block topics test on S
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable GA UX view for Privacy Sandbox Settings.
         shouldEnableGaUx(true);
 
         // Launch main view of Privacy Sandbox Settings.
-        launchSettingView();
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
         // Enter Topics Consent view.
         enterGaTopicsConsentView();
@@ -284,17 +294,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Disable user consent.
         consentSwitch.click();
         assertThat(consentSwitch.isChecked()).isFalse();
-    }
-
-    // Launch Privacy Sandbox Setting View.
-    private void launchSettingView() {
-        // Launch the setting view.
-        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        CONTEXT.startActivity(intent);
-
-        // Wait for the view to appear
-        sDevice.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), LAUNCHER_LAUNCH_TIMEOUT);
     }
 
     // Enter Topics Consent view when GA UX is enabled.

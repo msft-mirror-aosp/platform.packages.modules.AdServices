@@ -1034,7 +1034,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "")));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
+                                new IntentFilter(Intent.ACTION_SEND),
                                 /*flags= */ 0,
                                 /*onlyProtectedBroadcasts= */ false))
                 .isTrue();
@@ -1050,7 +1050,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "false")));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
+                                new IntentFilter(Intent.ACTION_SEND),
                                 /*flags= */ 0,
                                 /*onlyProtectedBroadcasts= */ false))
                 .isTrue();
@@ -1066,7 +1066,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
+                                new IntentFilter(Intent.ACTION_SEND),
                                 /*flags= */ 0,
                                 /*onlyProtectedBroadcasts= */ false))
                 .isFalse();
@@ -1077,10 +1077,22 @@ public class SdkSandboxManagerServiceUnitTest {
     public void testCanRegisterBroadcastReceiver_notSandboxProcess() {
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
+                                new IntentFilter(Intent.ACTION_SEND),
                                 /*flags= */ 0,
                                 /*onlyProtectedBroadcasts= */ false))
                 .isTrue();
+    }
+
+    /** Tests expected behavior when IntentFilter is blank. */
+    @Test
+    public void testCanRegisterBroadcastReceiver_blankIntentFilter() {
+        ExtendedMockito.when(Process.isSdkSandboxUid(Mockito.anyInt())).thenReturn(true);
+        assertThat(
+                        sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
+                                new IntentFilter(),
+                                /*flags= */ 0,
+                                /*onlyProtectedBroadcasts= */ false))
+                .isFalse();
     }
 
     /**
@@ -1095,7 +1107,7 @@ public class SdkSandboxManagerServiceUnitTest {
                         Map.of(PROPERTY_ENFORCE_BROADCAST_RECEIVER_RESTRICTIONS, "true")));
         assertThat(
                         sSdkSandboxManagerLocal.canRegisterBroadcastReceiver(
-                                new IntentFilter(),
+                                new IntentFilter(Intent.ACTION_SEND),
                                 /*flags= */ Context.RECEIVER_NOT_EXPORTED,
                                 /*onlyProtectedBroadcasts= */ false))
                 .isTrue();

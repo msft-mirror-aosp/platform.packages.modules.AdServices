@@ -19,6 +19,7 @@
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user"/>
     <!-- disable device config sync during test -->
     <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
+    <option name="run-command" value="device_config put adservices enable_back_compat true"/>
     <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
 
     <!-- Prevent test from running on Android T+ -->

@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Rozumím"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Jste zapojeni do testování beta verze"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Technologie Privacy Sandbox je ve vašem zařízení zapnutá a aplikace mohou testovat tyto nové způsoby zobrazování reklam zajišťující vyšší ochranu soukromí. V nastavení ochrany soukromí můžete testování beta verze kdykoli vypnout."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Spravovat nastavení ochrany soukromí"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Rozumím"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox v Androidu přináší nové funkce, pomocí nichž vám aplikace mohou zobrazovat reklamy, které se vám budou líbit. Tyto technologie nevyužívají identifikátory zařízení.\n\nSystém Android a vaše aplikace mohou odhadovat, jaké druhy reklam by vás mohly zajímat, a vaše zájmy dočasně ukládat do zařízení. Aplikace vám tak budou moci zobrazovat reklamy, které by se vám měly líbit, aniž by sledovaly vaši aktivitu na webech a v aplikacích ostatních vývojářů."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalizace reklam pomocí Privacy Sandboxu"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Aplikace mohou odhadovat vaše zájmy a dočasně je ukládat do systému Android. Například aplikace, pomocí které jste si koupili běžecké boty, může váš zájem odhadnout na „běhání maratonů“.\n\nPozději vám může jiná aplikace na základě tohoto zájmu zobrazit reklamu související s maratony.\n\nSeznam aplikací, které mají uložené zájmy, můžete spravovat v nastavení ochrany soukromí."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nové funkce ochrany soukromí v reklamách"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Témata reklam a nové ovládací prvky vám dávají větší možnosti výběru ohledně reklam, které se vám zobrazují"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Jsou k dispozici nové funkce ochrany soukromí v reklamách"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android zaznamenává témata, která vás podle nedávno použitých aplikací zajímají. Aplikace, které používáte, také mohou určit, co se vám líbí. Později mohou aplikace o tyto informace požádat, aby vám mohly zobrazit personalizované reklamy. Můžete si vybrat, která témata a aplikace se budou používat k zobrazování reklam."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Aby bylo možné měřit výkon reklam, sdílí se mezi aplikacemi určité typy dat."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Další informace o reklamách v Androidu"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android témata a data navrhovaná aplikacemi pravidelně automaticky maže. Případně můžete zablokovat konkrétní témata a aplikace, u kterých nechcete, aby návrhy vytvářely."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Měření výkonu reklam"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Aplikace, které používáte, mohou Android požádat o informace k měření výkonu reklam. Android aplikacím umožňuje shromažďovat omezené typy dat, například denní dobu, kdy se vám zobrazila reklama."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Vyzkoušejte nové funkce ochrany soukromí v reklamách"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Témata reklam vám dávají větší možnosti výběru ohledně reklam, které se vám zobrazují"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Zobrazit podrobnosti"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Vylepšená ochrana soukromí v reklamách v systému Android"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Vyzkoušejte nové funkce ochrany soukromí v reklamách"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android zavádí nové funkce ochrany soukromí, které vám dávají více možností výběru nad zobrazovanými reklamami."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Témata reklam pomáhají aplikacím zobrazovat relevantní reklamy a zároveň chrání vaši identitu a informace o používání aplikací. Android může zaznamenávat témata, která vás na základě vaší nedávno použitých aplikací zajímají. Později může použitá aplikace požádat Android o sdělení relevantních témat, aby vám mohla přizpůsobit zobrazované reklamy."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"V nastavení zařízení můžete zobrazit témata reklam a zablokovat ta, která s aplikacemi nechcete sdílet. Android také témata reklam pravidelně automaticky maže."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"V nastavení ochrany soukromí můžete své rozhodnutí kdykoliv změnit."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Další informace o tématech reklam"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Další informace o tom, jak Android chrání vaše údaje, naleznete v našich Zásadách ochrany soukromí."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ano"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Vyzkoušet"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Jaké údaje používáme"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Témata reklam vycházejí z toho, které aplikace jste na tomto zařízení v poslední době používali a jak často je používáte."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Jak tyto údaje používáme"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Jak svá data můžete spravovat"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android témata pravidelně maže. S dalším používáním aplikací se téma v seznamu může opět objevit. Můžete také zablokovat témata, která Android s aplikacemi nemá sdílet, a témata reklam můžete v nastavení Androidu také kdykoliv vypnout."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"V nastavení ochrany soukromí můžete provést změny."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Další funkce, které zlepšují ochranu soukromí při zobrazování reklam"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android zavádí nové způsoby omezení informací, které o vás aplikace mohou zjistit při zobrazování personalizovaných reklam."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Jsou k dispozici další funkce ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android nabízí také nové způsoby omezení informací, které o vás aplikace mohou zjistit při zobrazování personalizovaných reklam."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Reklamy navrhované aplikacemi pomáhají chránit vaši identitu a informace o používání aplikací a zároveň aplikacím umožňují zobrazovat relevantní reklamy. Na základě vaší aktivity mohou aplikace, které používáte, navrhovat související reklamy k zobrazení v jiných aplikacích. V nastavení ochrany soukromí můžete zobrazit seznam aplikací a zablokovat jim předkládání návrhů."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Při měření reklam jsou mezi aplikacemi sdíleny omezené typy dat za účelem měření výkonu reklam, například denní doby, kdy se vám reklama zobrazila."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Další informace o reklamách navrhovaných aplikacemi a o měření reklam"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android data navrhovaná aplikacemi pravidelně automaticky maže. Aplikace, kterou znovu použijete, se na seznamu může opět objevit."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"V nastavení ochrany soukromí také kdykoli můžete aplikaci zakázat, aby vám navrhovala reklamy, resetovat všechna data používaná k navrhování reklam nebo reklamy navrhované aplikacemi vypnout."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Použité aplikace mohou požádat Android o informace, které jim pomohou měřit výkon reklam. Android chrání vaše soukromí tím, že omezuje informace, které mohou aplikace navzájem sdílet."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Jsou k dispozici nové funkce ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Získejte více možností výběru ohledně zobrazovaných reklam a zároveň chraňte svoji identitu"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Jsou k dispozici nové funkce ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Při použití reklam navrhovaných aplikacemi vám nové funkce ochrany soukromí pomáhají chránit identitu a informace o používání aplikací a zároveň aplikacím umožňují zobrazovat vám relevantní reklamy. Aplikace, které používáte, mohou na základě vaší aktivity navrhovat související reklamy k zobrazení v jiných aplikacích. V nastavení ochrany soukromí můžete zobrazit seznam aplikací a zablokovat jim předkládání návrhů."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Při měření reklam jsou mezi aplikacemi sdíleny omezené typy dat za účelem zjištění výkonu reklam, například denní doby, kdy se vám reklama zobrazila."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Zapněte další funkci ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android nabízí také novou funkci ochrany soukromí, která vám poskytuje více možností výběru ohledně zobrazování reklam."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Témata reklam pomáhají aplikacím zobrazovat vám relevantní reklamy a zároveň chrání vaši identitu a informace o používání aplikací. Android může podle nedávno použitých aplikací zaznamenávat, která témata vás zajímají. Aplikace, kterou použijete později, může Android požádat o relevantní témata, aby vám mohla zobrazovat relevantnější reklamy."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"V nastavení ochrany soukromí můžete zobrazit témata reklam a zablokovat ta, která nechcete sdílet s aplikacemi. Android také témata reklam pravidelně automaticky odstraňuje."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Zapnout"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Jsou k dispozici nové funkce ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Teď máte k dispozici více možností výběru ohledně zobrazovaných reklam při současné ochraně vaší identity"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Jsou k dispozici nové funkce ochrany soukromí v reklamách"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android nyní nabízí nové funkce ochrany soukromí, které vám poskytují více možností výběru ohledně zobrazování reklam."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Další"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Zapojte se do beta verze ochrany soukromí v reklamách na Androidu"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Ochrana soukromí v reklamách"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Témata reklam"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Reklamy navrhované aplikacemi"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android zaznamenává témata, která vás podle nedávno použitých aplikací a frekvence používání zajímají."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Aplikace mohou také určit, co se vám líbí, podle toho, jak je používáte."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Aplikace, které používáte, mohou Android požádat o informace, které jim pomohou měřit výkon reklam. Android aplikacím umožňuje shromažďovat omezené typy dat."</string>

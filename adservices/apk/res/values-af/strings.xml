@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Het dit"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Jy is deel van die beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Die Privacy Sandbox is aan vir jou toestel, en programme kan hierdie nuwe, meer private maniere toets om vir jou advertensies te wys. Jy kan die beta enige tyd in jou privaatheidinstellings afskakel."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Bestuur privaatheidinstellings"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Het dit"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android se Privacy Sandbox bied nuwe kenmerke wat programme kan gebruik om vir jou advertensies te wys waarvan jy dalk sal hou. Hierdie tegnologieë gebruik nie toestelidentifiseerders nie.\n\nAndroid en jou programme kan die soorte advertensies skat waarin jy dalk belang sal stel, en stoor die belangstellings tydelik op jou toestel. Dit maak dit vir programme moontlik om vir jou advertesies te wys waarvan jy dalk sal hou sonder om jou aktiwiteit op webwerwe en programme van ander ontwikkelaars na te spoor."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Advertensiepersonalisering met Privacy Sandbox"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Programme kan jou belangstellings skat en hulle tydelik met Android stoor. Byvoorbeeld, ’n program wat jy gebruik om drafskoene te koop, kan jou belangstelling skat as \"draf maratonne\".\n\nLater kan ’n ander program vir jou op grond van hierdie belangstelling ’n advertensie wys wat met maratonne verband hou.\n\nJy kan in jou privaatheidinstellings die lys programme bestuur wat gestoorde belangstellings het."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Nuwe advertensieprivaatheidkenmerke"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Advertensie-onderwerpe gee vir jou meer van ’n keuse oor watter advertensies jy sien"</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Nuwe advertensieprivaatheidkenmerke is nou beskikbaar"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het. Apps wat jy gebruik, kan ook bepaal waarvan jy hou. Apps kan later vir hierdie inligting vra om vir jou gepersonaliseerde advertensies te wys. Jy kan kies watter onderwerpe en apps gebruik word om vir jou advertensies te wys."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Om die werkverrigting van ’n advertensie te meet word beperkte soorte data tussen apps gedeel ."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Meer oor advertensies op Android"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android vee onderwerpe en appvoorgestelde data gereeld outomaties uit. Jy kan ook spesifieke onderwerpe en apps wat jy nie wil hê voorstelle moet maak nie, blokkeer."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Meet hoe goed ’n advertensie vaar"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Apps wat jy gebruik, kan Android vra vir inligting wat hulle help om die werkverrigting van hul advertensies te meet. Android laat apps toe om beperkte soorte data in te samel, soos die tyd van die dag waarop ’n advertensie vir jou gewys is."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Probeer nuwe advertensieprivaatheidkenmerke"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Advertensie-onderwerpe gee vir jou meer keuse oor watter advertensies jy sien"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Bekyk besonderhede"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Verbeterde adver- tensieprivaatheid op Android"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Probeer nuwe advertensieprivaatheidkenmerke"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android stel nuwe privaatheidkenmerke bekend wat vir jou meer van ’n keuse gee oor die advertensies wat jy sien."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Advertensie-onderwerpe help apps om vir jou relevante advertensies te wys terwyl dit jou identiteit en inligting oor jou appgebruik beskerm. Android kan kennis neem van onderwerpe waarin jy belangstel gegrond op die apps wat jy onlangs gebruik het. ’n App wat jy gebruik, kan later vir Android vir relevante onderwerpe vra om die advertensies wat jy sien, te personaliseer."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Jy kan advertensie-onderwerpe in jou toestelinstellings sien en dié onderwerpe blokkeer wat jy nie wil hê met apps gedeel moet word nie. Android vee ook advertensie-onderwerpe gereeld outomaties uit."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Jy kan enige tyd in privaatheidsinstellings van plan verander."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Meer oor advertensie-onderwerpe"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Kom in ons privaatheidsbeleid meer te wete oor hoe Android jou data beskerm."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Ja, ek’s in"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Probeer dit"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Watter data gebruik word"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Jou advertensie-onderwerpe word gegrond op die apps wat jy onlangs op hierdie toestel gebruik het en hoe dikwels jy hulle gebruik."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Hoe ons hierdie data gebruik"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Hoe jy jou data kan bestuur"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android vee onderwerpe gereeld outomaties uit. ’n Onderwerp kan weer op die lys verskyn soos jy aanhou om apps te gebruik. Jy kan ook onderwerpe blokkeer wat jy nie wil hê Android met apps moet deel nie, en advertensie-onderwerpe enige tyd in privaatheidinstellings afskakel."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Jy kan veranderinge in privaatheidinstellings maak."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Ander kenmerke wat advertensies meer privaat maak"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Android stel tans nuwe maniere bekend om te beperk wat apps oor jou kan uitvind wanneer hulle vir jou gepersonaliseerde advertensies wys."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Ander advertensieprivaatheidkenmerke is nou beskikbaar"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android bied ook nuwe maniere aan om te beperk wat apps oor jou kan uitvind wanneer hulle vir jou gepersonaliseerde advertensies wys."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Appvoorgestelde advertensies help om jou identiteit en inligting oor jou appgebruik te beskerm terwyl apps vir jou relevante advertensies kan wys.’n App wat jy gebruik kan op grond van jou aktiwiteit verwante advertensies in ander apps voorstel. Jy kan in privaatheidinstellings ’n lys van apps sien en hulle keer om voorstelle te maak."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Met advertensiemeting word beperkte soorte data tussen apps gedeel om die werkverrigting van hul advertensies te meet, soos die tyd van die dag waarop ’n advertensie vir jou gewys is."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Meer oor appvoorgestelde advertensies en advertensiemeting"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android vee appvoorgestelde data gereeld outomaties uit. ’n App wat jy weer gebruik, kan weer op die lys verskyn."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Jy kan ook enige tyd in privaatheidinstellings ’n app keer om vir jou advertensies voor te stel, alle advertensievoorsteldata terugstel, of appvoorgestelde advertensies afskakel."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Apps wat jy gebruik kan Android vra vir inligting wat hulle help om die werkverrigting van hul advertensies te meet. Android beskerm jou privaatheid deur die inligting wat apps met mekaar kan deel, te beperk."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nuwe advertensieprivaatheidkenmerke is nou beskikbaar"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Kry groter keuse oor die advertensies wat jy sien terwyl jou identiteit beskerm word"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nuwe advertensieprivaatheidkenmerke is nou beskikbaar"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Met appvoorgestelde advertensies help nuwe privaatheidkenmerke om jou identiteit en inligting oor jou appgebruik te beskerm terwyl dit apps in staat stel om vir jou relevante advertensies te wys. ’n App wat jy gebruik, kan op grond van jou aktiwiteit verwante advertensies in ander apps voorstel. Jy kan in privaatheidinstellings ’n lys apps sien en hulle keer om voorstelle te maak."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Met advertensiemeting word beperkte soorte data tussen apps gedeel om die prestasie van hul advertensies te verstaan, soos die tyd van die dag waarop ’n advertensie vir jou gewys is."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Skakel nog ’n advertensieprivaatheidkenmerk aan"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android bied ook ’n nuwe privaatheidkenmerk aan wat jou groter keuse gee oor die advertensies wat jy sien."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Advertensie-onderwerpe help apps om vir jou relevante advertensies te wys terwyl dit jou identiteit en inligting oor jou appgebruik beskerm. Android kan kennis neem van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het. Later kan ’n app wat jy gebruik Android vir relevante onderwerpe vra om vir jou meer relevante advertensies te wys."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Jy kan advertensie-onderwerpe in jou privaatheidinstellings sien en dié blokkeer wat jy nie wil hê met apps gedeel moet word nie. Android vee advertensie-onderwerpe ook gereeld outomaties uit."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Skakel dit aan"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Nuwe advertensieprivaatheidkenmerke is nou beskikbaar"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Jy het nou groter keuse oor die advertensies wat jy sien terwyl jou identiteit beskerm word"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Nuwe advertensieprivaatheidkenmerke is nou beskikbaar"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android bied nou nuwe privaatheidkenmerke aan wat jou groter keuse gee oor die advertensies wat jy sien."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Volgende"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Neem deel aan Android se advertensieprivaatheidbeta"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Advertensieprivaatheid"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Advertensie-onderwerpe"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Appvoorgestelde advertensies"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android neem kennis van onderwerpe waarin jy belangstel gegrond op apps wat jy onlangs gebruik het en hoe dikwels jy hulle gebruik."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Apps wat jy gebruik, kan ook bepaal waarvan jy hou gegrond op hoe jy hulle gebruik."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Apps wat jy gebruik, kan Android vir inligting vra om hulle te help om die werkverrigting van hul advertensies te meet. Android laat apps toe om beperkte soorte data in te samel."</string>

@@ -323,17 +323,19 @@ public class Trigger {
      */
     private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
             throws JSONException, NumberFormatException {
-        if (this.mAggregateTriggerData == null || this.mAggregateValues == null) {
+        if (this.mAggregateValues == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateTriggerData);
+        JSONArray triggerDataArray = this.mAggregateTriggerData == null
+                ? new JSONArray()
+                : new JSONArray(this.mAggregateTriggerData);
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
+        for (int i = 0; i < triggerDataArray.length(); i++) {
+            JSONObject triggerDatum = triggerDataArray.getJSONObject(i);
             // Remove "0x" prefix.
-            String hexString = jsonObject.getString("key_piece").substring(2);
+            String hexString = triggerDatum.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
+            JSONArray sourceKeys = triggerDatum.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
             for (int j = 0; j < sourceKeys.length(); j++) {
                 sourceKeySet.add(sourceKeys.getString(j));
@@ -342,19 +344,19 @@ public class Trigger {
                     new AggregateTriggerData.Builder()
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
-            if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
+            if (triggerDatum.has("filters") && !triggerDatum.isNull("filters")) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("filters"));
+                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
                 builder.setFilterSet(filterSet);
             }
-            if (jsonObject.has("not_filters")
-                    && !jsonObject.isNull("not_filters")) {
+            if (triggerDatum.has("not_filters")
+                    && !triggerDatum.isNull("not_filters")) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("not_filters"));
+                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
-            if (!jsonObject.isNull("x_network_data")) {
-                JSONObject xNetworkDataJson = jsonObject.getJSONObject("x_network_data");
+            if (!triggerDatum.isNull("x_network_data")) {
+                JSONObject xNetworkDataJson = triggerDatum.getJSONObject("x_network_data");
                 XNetworkData xNetworkData = new XNetworkData.Builder(xNetworkDataJson).build();
                 builder.setXNetworkData(xNetworkData);
             }

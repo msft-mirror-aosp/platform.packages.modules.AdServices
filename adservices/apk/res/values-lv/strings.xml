@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Labi"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Jūs piedalāties beta programmā"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Konfidencialitātes smilškaste ir ieslēgta jūsu ierīcei, un lietotnes var testēt šos jaunos reklāmu rādīšanas veidus, kas nodrošina lielāku konfidencialitāti. Savos konfidencialitātes iestatījumos varat jebkurā laikā izslēgt beta versiju."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Pārvaldīt konfidencialitātes iestatījumus"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Labi"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android konfidencialitātes smilškaste ietver jaunas funkcijas, ko lietotnes var izmantot, lai rādītu reklāmas, kas jums varētu interesēt. Šīs tehnoloģijas neizmanto ierīču identifikatorus.\n\nOperētājsistēma Android un jūsu lietotnes var aptuveni noteikt, kādas reklāmas varētu jūs interesēt, un šīs intereses īslaicīgi var saglabāt jūsu ierīcē. Tādējādi lietotnes var rādīt reklāmas, kas jums varētu interesēt, neizsekojot jūsu darbības tīmekļa vietnēs un citu izstrādātāju lietotnēs."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Reklāmu personalizācija, izmantojot konfidencialitātes smilškasti"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Lietotnēs var tikt aptuveni noteiktas jūsu intereses, un tās īslaicīgi var tikt saglabātas Android ierīcē. Piemēram, lietotne, kurā iegādājāties skriešanas apavus, var secināt, ka interesējaties par skriešanu maratonos.\n\nVēlāk, pamatojoties uz noteikto interesi, citā lietotnē jums var tikt parādīta ar maratoniem saistīta reklāma.\n\nSavos konfidencialitātes iestatījumos varat pārvaldīt to lietotņu sarakstu, kurā tiek saglabātas intereses."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Jaunas reklāmu konfidencialitātes funkcijas"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Reklāmu tēmas un jaunas vadīklas sniedz lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām."</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Tagad ir pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android nosaka, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes. Arī jūsu izmantotās lietotnes var noteikt, kas jums patīk. Vēlāk lietotnes var pieprasīt šo informāciju, lai rādītu jums personalizētas reklāmas. Varat izvēlēties, kuras tēmas un lietotnes tiek izmantotas, lai rādītu jums reklāmas."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Lai novērtētu reklāmas veiktspēju, lietotnes kopīgo noteikta veida datus."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Plašāka informācija par reklāmām operētājsistēmā Android"</string>
@@ -82,19 +84,17 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Operētājsistēmā Android tēmas un lietotņu ieteiktie dati regulāri tiek automātiski dzēsti. Varat arī bloķēt konkrētas tēmas un lietotnes, lai nesaņemtu to ieteikumus."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Reklāmas veiktspējas izvērtēšana"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android ļauj lietotnēm vākt tikai noteiktu veidu datus, piemēram, par diennakts laiku, kad reklāma tika jums parādīta."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Izmēģiniet jaunas reklāmu konfidencialitātes funkcijas"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Reklāmu tēmas sniedz lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Skatīt detalizētu informāciju"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Uzlabota reklāmu konfidencialitāte operētājsistēmā Android"</string>
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Izmēģiniet jaunas reklāmu konfidencialitātes funkcijas"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android izlaiž jaunas konfidencialitātes funkcijas, kas sniedz lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Reklāmu tēmas palīdz lietotnēm rādīt jums atbilstošas reklāmas, vienlaikus aizsargājot jūsu identitāti un informāciju par lietotņu izmantojumu. Android var noteikt, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes. Vēlāk, lai personalizētu jums rādītās reklāmas, kāda jūsu izmantotā lietotne var pieprasīt no operētājsistēmas Android atbilstošās tēmas."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Varat skatīt reklāmu tēmas ierīces iestatījumos un bloķēt tēmas, ko nevēlaties atļaut kopīgot ar lietotnēm. Android arī regulāri dzēš reklāmu tēmas automātiski."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Savu izvēli varat jebkurā laikā mainīt konfidencialitātes iestatījumos."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Plašāka informācija par reklāmu tēmām"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Lai uzzinātu vairāk par to, kā operētājsistēmā Android tiek aizsargāti jūsu dati, skatiet mūsu konfidencialitātes politiku."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Labi"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Izmēģināt"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Kādi dati tiek izmantoti"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"reklāmu tēmas tiek noteiktas, pamatojoties uz lietotnēm, ko nesen esat izmantojis šajā ierīcē, un to, cik bieži izmantojat šīs lietotnes."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Kā mēs izmantojam šos datus"</string>
@@ -102,8 +102,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Datu pārvaldības iespējas"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Operētājsistēmā Android tiek automātiski regulāri dzēstas tēmas. Turpinot izmantot lietotnes, tēma var tikt atkārtoti iekļauta sarakstā. Konfidencialitātes iestatījumos jebkurā brīdī varat bloķēt tēmas, ko nevēlaties kopīgot ar lietotnēm, un izslēgt reklāmu tēmas."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Varat veikt izmaiņas konfidencialitātes iestatījumos."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Citas funkcijas, kas nodrošina lielāku reklāmu konfidencialitāti"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Ieviešam operētājsistēmā Android jaunas iespējas ierobežot, kādu informāciju par jums lietotnes var iegūt, rādot jums personalizētas reklāmas."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Tagad ir pieejamas citas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Android piedāvā arī jaunas iespējas ierobežot, kādu informāciju par jums lietotnes var iegūt, rādot jums personalizētas reklāmas."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Izmantojot lietotņu ieteiktas reklāmas, lietotnēs var rādīt jums atbilstošas reklāmas un vienlaikus aizsargāt jūsu identitāti un informāciju par lietotņu izmantojumu. Lietotne, ko izmantojat, var ieteikt ar jūsu darbībām saistītas reklāmas rādīšanai citās lietotnēs. Konfidencialitātes iestatījumos varat skatīt lietotņu sarakstu un bloķēt konkrētas lietotnes, lai tās nevarētu ieteikt reklāmas."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Izmantojot reklāmu izvērtēšanu, starp lietotnēm tiek kopīgoti noteiktu veidu dati, lai izvērtētu šo lietotņu reklāmu veiktspēju, piemēram, diennakts laiku, kad reklāma tika parādīta jums."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Plašāka informācija par lietotnēs ieteiktajām reklāmām un reklāmu izvērtēšanu"</string>
@@ -116,6 +116,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Operētājsistēmā Android tiek automātiski regulāri dzēsti lietotņu ieteiktie dati.  Ja kādu lietotni lietosiet atkārtoti, tā var atkal tikt iekļauta sarakstā."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Jebkurā brīdī konfidencialitātes iestatījumos varat bloķēt lietotni, lai tā vairs neieteiktu reklāmas, kā arī varat atiestatīt visus reklāmu ieteikumu datus  vai izslēgt lietotņu ieteiktās reklāmas."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Jūsu izmantotās lietotnes var lūgt operētājsistēmas Android informāciju, kas var palīdzēt novērtēt reklāmu veiktspēju. Android tiek aizsargāta jūsu konfidencialitāte, ierobežojot informāciju, ko lietotnes var kopīgot cita ar citu."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Tagad ir pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Iegūstiet lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām, vienlaikus aizsargājot savu identitāti"</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Tagad ir pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"• Izmantojot lietotņu ieteiktas reklāmas, jaunas konfidencialitātes funkcijas palīdz aizsargāt jūsu identitāti un informāciju par lietotņu izmantojumu, vienlaikus nodrošinot atbilstošu reklāmu rādīšanu lietotnēs. Lietotne, ko izmantojat, var ieteikt ar jūsu darbībām saistītas reklāmas rādīšanai citās lietotnēs. Konfidencialitātes iestatījumos varat skatīt lietotņu sarakstu un bloķēt konkrētas lietotnes, lai tās nevarētu ieteikt reklāmas."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"• Izmantojot reklāmu izvērtēšanu, lai izprastu lietotnēs rādīto reklāmu veiktspēju, starp lietotnēm tiek kopīgoti noteiktu veidu dati, piemēram, diennakts laiks, kad reklāma jums tika parādīta."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Ieslēdziet vēl vienu reklāmu konfidencialitātes funkciju"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android piedāvā arī jaunu konfidencialitātes funkciju, kas sniedz lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Reklāmu tēmas palīdz lietotnēm rādīt jums atbilstošas reklāmas, vienlaikus aizsargājot jūsu identitāti un informāciju par lietotņu izmantojumu. Android var noteikt, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes. Vēlāk, lai rādītu jums atbilstošākas reklāmas, kāda jūsu izmantotā lietotne var pieprasīt no operētājsistēmas Android atbilstošās tēmas."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Varat skatīt reklāmu tēmas konfidencialitātes iestatījumos un bloķēt tēmas, ko nevēlaties atļaut kopīgot ar lietotnēm. Android arī regulāri dzēš reklāmu tēmas automātiski."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Ieslēgt"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Tagad ir pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Tagad ir pieejamas lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām, un vienlaikus tiek aizsargāta jūsu identitāte"</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Tagad ir pieejamas jaunas reklāmu konfidencialitātes funkcijas"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Android tagad piedāvā jaunas konfidencialitātes funkcijas, kas sniedz lielākas izvēles iespējas attiecībā uz jums rādītajām reklāmām."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Tālāk"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Konfidencialitātes smilškaste"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Piedalieties Android reklāmu konfidencialitātes beta programmā"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Konfidencialitātes smilškaste"</string>
@@ -177,8 +192,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Reklāmu konfidencialitāte"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Reklāmu tēmas"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Lietotnēs ieteiktās reklāmas"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android nosaka, kādas tēmas jūs interesē, ņemot vērā nesen izmantotās lietotnes un to, cik bieži izmantojat šīs lietotnes."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Jūsu izmantotās lietotnes var arī noteikt, kas jums patīk, ņemot vērā to, kā jūs izmantojat šīs lietotnes."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Jūsu izmantotās lietotnes var pieprasīt informāciju no operētājsistēmas Android, lai varētu efektīvāk novērtēt reklāmu veiktspēju šajās lietotnēs. Android ļauj lietotnēm vākt tikai noteiktu veidu datus."</string>

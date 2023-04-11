@@ -52,6 +52,7 @@ import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.UninstallApp;
+import com.android.adservices.service.measurement.actions.UriConfig;
 
 import com.google.common.collect.ImmutableList;
 
@@ -184,6 +185,7 @@ public abstract class E2ETest {
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
+        String ENROLL = "enroll";
     }
 
     private interface ApiConfigKeys {
@@ -403,6 +405,21 @@ public abstract class E2ETest {
         return uriToResponseHeadersMap;
     }
 
+    public static Map<String, UriConfig> getUriConfigMap(JSONObject obj) throws JSONException {
+        JSONArray uriToResArray =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY);
+        Map<String, UriConfig> uriConfigMap = new HashMap<>();
+
+        for (int i = 0; i < uriToResArray.length(); i++) {
+            JSONObject urlToResponse = uriToResArray.getJSONObject(i);
+            String uri =
+                    urlToResponse.getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
+            uriConfigMap.put(uri, new UriConfig(urlToResponse));
+        }
+
+        return uriConfigMap;
+    }
+
     // 'uid', the parameter passed to Builder(), is unimportant for this test; we only need the
     // package name.
     public static AttributionSource getAttributionSource(String source) {
@@ -530,15 +547,28 @@ public abstract class E2ETest {
 
     private static int hashForEventReportObject(OutputType outputType, JSONObject obj) {
         int n = EventReportPayloadKeys.STRINGS.size();
-        Object[] objArray = new Object[n + 2];
+        int numValuesExcludingN = 3;
+        Object[] objArray = new Object[n + numValuesExcludingN];
         // We cannot use report time due to fuzzy matching between actual and expected output.
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
         objArray[0] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.EVENT, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         objArray[1] = normaliseDouble(payload.optDouble(EventReportPayloadKeys.DOUBLE, 0));
+        // Try string then JSONArray in order so as to override the string if the array parsing is
+        // successful.
+        objArray[2] = null;
+        String maybeString = payload.optString(EventReportPayloadKeys.STRING_OR_ARRAY);
+        if (maybeString != null) {
+            objArray[2] = maybeString;
+        }
+        JSONArray maybeArray = payload.optJSONArray(EventReportPayloadKeys.STRING_OR_ARRAY);
+        if (maybeArray != null) {
+            objArray[2] = maybeArray;
+        }
         for (int i = 0; i < n; i++) {
-            objArray[i + 2] = payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
+            objArray[i + numValuesExcludingN] =
+                    payload.optString(EventReportPayloadKeys.STRINGS.get(i), "");
         }
         return Arrays.hashCode(objArray);
     }
@@ -848,6 +878,15 @@ public abstract class E2ETest {
                 .append("\n");
         JSONObject payload1 = obj1.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = obj2.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        try {
+            result.append(EventReportPayloadKeys.STRING_OR_ARRAY + ": ")
+                    .append(payload1.get(EventReportPayloadKeys.STRING_OR_ARRAY).toString())
+                    .append(" ::: ")
+                    .append(payload2.get(EventReportPayloadKeys.STRING_OR_ARRAY).toString() + "\n");
+        } catch (JSONException e) {
+            result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
+                    + e + "\n");
+        }
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key)
                     .append(": ")
@@ -870,6 +909,14 @@ public abstract class E2ETest {
                 .append(obj.optString(TestFormatJsonMapping.REPORT_TIME_KEY))
                 .append("\n");
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
+        try {
+            result.append(EventReportPayloadKeys.STRING_OR_ARRAY + ": ")
+                    .append(pad)
+                    .append(payload.get(EventReportPayloadKeys.STRING_OR_ARRAY).toString() + "\n");
+        } catch (JSONException e) {
+            result.append("JSONObject::get failed for EventReportPayloadKeys.STRING_OR_ARRAY "
+                    + e + "\n");
+        }
         for (String key : EventReportPayloadKeys.STRINGS) {
             result.append(key).append(": ").append(pad).append(payload.optString(key)).append("\n");
         }
@@ -933,6 +980,9 @@ public abstract class E2ETest {
 
         for (List<Map<String, List<String>>> responseHeaders : responseHeadersCollection) {
             for (Map<String, List<String>> headersMap : responseHeaders) {
+                if (!headersMap.containsKey("Attribution-Reporting-Register-Source")) {
+                    continue;
+                }
                 String sourceStr = headersMap.get("Attribution-Reporting-Register-Source").get(0);
                 JSONObject sourceJson = new JSONObject(sourceStr);
                 if (sourceJson.has("expiry")) {

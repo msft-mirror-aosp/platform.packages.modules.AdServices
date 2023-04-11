@@ -701,7 +701,7 @@ public class MobileDataDownloadTest {
 
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
-        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper);
+        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
 
         ExtendedMockito.doReturn(enrollmentDao)
                 .when(() -> EnrollmentDao.getInstance(any(Context.class)));

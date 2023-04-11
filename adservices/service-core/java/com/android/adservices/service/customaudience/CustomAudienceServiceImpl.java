@@ -343,7 +343,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 shouldLog = true;
 
                 // Fail silently for revoked user consent
-                if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
+                boolean isConsentRevoked;
+                if (mFlags.getFledgePerAppConsentEnabled()) {
+                    isConsentRevoked =
+                            mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                                    ownerPackageName);
+                } else {
+                    isConsentRevoked =
+                            mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName);
+                }
+                if (!isConsentRevoked) {
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
@@ -387,6 +396,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -429,7 +439,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         mAppImportanceFilter,
                         mFlags);
 
-        overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals, callback);
+        overrider.addOverride(
+                owner,
+                buyer,
+                name,
+                biddingLogicJS,
+                biddingLogicJsVersion,
+                trustedBiddingSignals,
+                callback);
     }
 
     /**

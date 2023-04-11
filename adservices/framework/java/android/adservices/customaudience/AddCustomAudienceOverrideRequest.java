@@ -38,6 +38,7 @@ public class AddCustomAudienceOverrideRequest {
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final String mName;
     @NonNull private final String mBiddingLogicJs;
+    private final long mBiddingLogicJsVersion;
     @NonNull private final AdSelectionSignals mTrustedBiddingSignals;
 
     public AddCustomAudienceOverrideRequest(
@@ -45,9 +46,19 @@ public class AddCustomAudienceOverrideRequest {
             @NonNull String name,
             @NonNull String biddingLogicJs,
             @NonNull AdSelectionSignals trustedBiddingSignals) {
+        this(buyer, name, biddingLogicJs, 0L, trustedBiddingSignals);
+    }
+
+    private AddCustomAudienceOverrideRequest(
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name,
+            @NonNull String biddingLogicJs,
+            long biddingLogicJsVersion,
+            @NonNull AdSelectionSignals trustedBiddingSignals) {
         mBuyer = buyer;
         mName = name;
         mBiddingLogicJs = biddingLogicJs;
+        mBiddingLogicJsVersion = biddingLogicJsVersion;
         mTrustedBiddingSignals = trustedBiddingSignals;
     }
 
@@ -69,6 +80,17 @@ public class AddCustomAudienceOverrideRequest {
         return mBiddingLogicJs;
     }
 
+    /**
+     * Returns the override bidding logic JavaScript version.
+     *
+     * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
+     *
+     * @hide
+     */
+    public long getBiddingLogicJsVersion() {
+        return mBiddingLogicJsVersion;
+    }
+
     /** @return the override trusted bidding signals that should be served during ad selection */
     @NonNull
     public AdSelectionSignals getTrustedBiddingSignals() {
@@ -80,6 +102,7 @@ public class AddCustomAudienceOverrideRequest {
         @Nullable private AdTechIdentifier mBuyer;
         @Nullable private String mName;
         @Nullable private String mBiddingLogicJs;
+        private long mBiddingLogicJsVersion;
         @Nullable private AdSelectionSignals mTrustedBiddingSignals;
 
         public Builder() {}
@@ -122,6 +145,20 @@ public class AddCustomAudienceOverrideRequest {
             return this;
         }
 
+        /**
+         * Sets the bidding logic JavaScript version.
+         *
+         * <p>Default to be {@code 0L}, which will fall back to use default version(V1 or V2).
+         *
+         * @hide
+         */
+        @NonNull
+        public AddCustomAudienceOverrideRequest.Builder setBiddingLogicJsVersion(
+                long biddingLogicJsVersion) {
+            this.mBiddingLogicJsVersion = biddingLogicJsVersion;
+            return this;
+        }
+
         /** Builds a {@link AddCustomAudienceOverrideRequest} instance. */
         @NonNull
         public AddCustomAudienceOverrideRequest build() {
@@ -131,7 +168,7 @@ public class AddCustomAudienceOverrideRequest {
             Objects.requireNonNull(mTrustedBiddingSignals);
 
             return new AddCustomAudienceOverrideRequest(
-                    mBuyer, mName, mBiddingLogicJs, mTrustedBiddingSignals);
+                    mBuyer, mName, mBiddingLogicJs, mBiddingLogicJsVersion, mTrustedBiddingSignals);
         }
     }
 }

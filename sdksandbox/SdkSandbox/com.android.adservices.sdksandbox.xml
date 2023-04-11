@@ -14,7 +14,7 @@
   ~ limitations under the License.
   -->
 
-<!-- This is a temporary feature indicating that this build supports SDK on work profile -->
+<!-- This is a feature indicating that this build supports SDK on work profile -->
 <permissions>
     <feature name="android.software.sdksandbox.sdk_install_work_profile" />
 </permissions>

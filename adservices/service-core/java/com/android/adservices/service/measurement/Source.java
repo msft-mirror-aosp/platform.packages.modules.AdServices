@@ -399,7 +399,7 @@ public class Source {
                 destinationType == EventSurfaceType.APP && mIsInstallAttributed;
         List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
         for (Long window: reportingWindows) {
-            if (triggerTime < window) {
+            if (triggerTime <= window) {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
@@ -407,7 +407,7 @@ public class Source {
     }
 
     @VisibleForTesting
-    void setAttributionMode(@AttributionMode int attributionMode) {
+    public void setAttributionMode(@AttributionMode int attributionMode) {
         mAttributionMode = attributionMode;
     }
 
@@ -1022,7 +1022,7 @@ public class Source {
         /** See {@link Source#getAggregateReportDedupKeys()}. */
         @NonNull
         public Builder setAggregateReportDedupKeys(
-                @Nullable List<UnsignedLong> mAggregateReportDedupKeys) {
+                @NonNull List<UnsignedLong> mAggregateReportDedupKeys) {
             mBuilding.mAggregateReportDedupKeys = mAggregateReportDedupKeys;
             return this;
         }
@@ -1141,7 +1141,9 @@ public class Source {
                     mBuilding.mPublisher,
                     mBuilding.mEnrollmentId,
                     mBuilding.mRegistrant,
-                    mBuilding.mSourceType);
+                    mBuilding.mSourceType,
+                    mBuilding.mAggregateReportDedupKeys,
+                    mBuilding.mEventReportDedupKeys);
 
             //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
             //    throw new IllegalArgumentException("At least one destination is required");

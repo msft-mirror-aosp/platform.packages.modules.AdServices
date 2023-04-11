@@ -61,7 +61,8 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Түсінікті"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Бета нұсқасын пайдаланатын қатысушысыз"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Құрылғыңызда Privacy Sandbox қосулы. Енді қолданбалар жарнама көрсетудің осы жаңа әрі жеке жолдарын сынап көре алады. Бета нұсқасын кез келген уақытта құпиялық параметрлерінен өшіруге болады."</string>
-    <string name="notificationUI_left_control_button_text" msgid="6591519663037500665">"Құпиялық параметрлерін басқару"</string>
+    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
+    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Түсінікті"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android-тың Privacy Sandbox технологиялар жинағы қолданбалар сізге ұнайды деген жарнамаларды көрсету үшін пайдалана алатын жаңа функцияларды ұсынады. Бұл технологиялар құрылғы идентификаторларын пайдаланбайды.\n\nAndroid пен қолданбалар сізді қызықтыруы мүмкін жарнама түрлерін бағалап, қызығушылықтарды құрылғыңызда уақытша сақтай алады. Соның нәтижесінде қолданбалар басқа әзірлеушілердің веб-сайттары мен қолданбаларында жасаған әрекеттеріңізді бақыламай, сізге ұнауы мүмкін жарнамаларды көрсете алады."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Privacy Sandbox-та жарнамаларды жекелендіру"</string>
@@ -71,6 +72,7 @@
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"Қолданбалар қызығушылықтарыңызды бағалап, оларды уақытша Android-та сақтай алады. Мысалы, сіз кроссовка сатып алу үшін пайдаланатын қолданба қызығушылығыңызды \"марафондарда жүгіру\" деп бағалауы мүмкін.\n\nСодан кейін осы қызығушылыққа қарай басқа қолданба сізге марафондарға қатысты жарнама көрсете алады.\n\nҚұпиялық параметрлерінде қызығушылықтарды сақтаған қолданбалар тізімін басқара аласыз."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"Жарнамадағы құпиялықтың жаңа функциялары"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"Жарнама тақырыптары және жаңа басқару элементтері көрсетілетін жарнамаларды таңдауға мүмкіндік береді."</string>
+    <string name="notificationUI_header_ga_title" msgid="3557937325021173836">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
     <string name="notificationUI_container2_ga_introduction" msgid="2201578950159210581">"Android сіз жақында пайдаланған қолданбалар бойынша қызықты тақырыптарды көрсетеді. Пайдаланатын қолданбаларыңыз да сізге ұнайтын нәрсені анықтай алады. Содан кейін қолданбалар осы ақпаратты сұрап, сізге жекелендірілген жарнамаларды көрсетуі мүмкін. Жарнамалар көрсетуге пайдаланылатын тақырыптар мен қолданбаларды таңдай аласыз."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="4247237824558927582">"Жарнаманың өнімділігін өлшеу үшін шектеулі дерек түрлері қолданбаларға беріледі."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2711321174550177509">"Android-тағы жарнамалар туралы толық ақпарат"</string>
@@ -82,19 +84,18 @@
     <string name="notificationUI_how_it_works_row_body5" msgid="4524382869577899661">"Android жүйесі тақырыптарды және қолданба ұсынған деректерді автоматты түрде жойып отырады. Сондай-ақ ұсыныстар бергенін қаламайтын нақты тақырыптар мен қолданбаларды бөгей аласыз."</string>
     <string name="notificationUI_how_it_works_subtitle2" msgid="2203542887026049927">"Жарнама өнімділігін өлшеу"</string>
     <string name="notificationUI_how_it_works_row_body6" msgid="5368364880910986588">"Сіз пайдаланатын қолданбалар жарнамалар өнімділігін өлшеуге көмектесу үшін Android жүйесінен ақпарат сұрай алады. Android қолданбалардың жарнама көрсетілген күн уақыты сияқты шектеулі дерек түрлерін жинауына мүмкіндік береді."</string>
-    <!-- no translation found for notificationUI_how_it_works_row_body7 (8158317350415462142) -->
-    <skip />
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Жарнамадағы құпиялықтың жаңа функцияларын пайдаланып көріңіз"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Жарнама тақырыптары сіз көретін жарнамаларды таңдауға мүмкіндік береді."</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Мәліметтерді көру"</string>
-    <string name="notificationUI_header_ga_title_eu" msgid="4461095539795574989">"Android жарнамаларындағы құпиялықтың күшейтілуі"</string>
+    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
+    <skip />
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android көрсетілетін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын іске қосып жатыр."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, сізге қолданбалардың қатысты жарнамаларды көрсетуіне көмектеседі. Android өзіңіз жақында пайдаланған қолданбалар бойынша қызық тақырыптарды көрсете алады. Кейін пайдаланатын қолданбаңыз көрсетілетін жарнамаларды жекелендіру үшін Android-тан қатысты тақырыптар сұрауы мүмкін."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Құрылғы параметрлерінен жарнама тақырыптарын көре аласыз және қолданбалармен бөліскіңіз келмейтінін бөгеуіңізге болады. Сондай-ақ Android жарнама тақырыптарын автоматты түрде жойып отырады."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Құпиялық параметрлерінен шешіміңізді кез келген уақытта өзгерте аласыз."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Жарнама тақырыптары туралы толық ақпарат"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Құпиялық саясатымыздан Android-тың деректерді қалай қорғайтыны туралы толық ақпарат алыңыз."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="2022252072760042013">"Жарайды"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Байқап көру"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Пайдаланылатын деректер"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Жарнама тақырыптары сіз жақында осы құрылғыда пайдаланған қолданбаларға және оларды пайдалану жиілігіне негізделген."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="5976468008939416198">"•  Бұл деректерді пайдалану жолдары"</string>
@@ -102,8 +103,8 @@
     <string name="notificationUI_how_it_works_topics_expanded_text7" msgid="4275126336833782389">"•  Деректеріңізді қалай басқара аласыз?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text8" msgid="2797007387412839612">"Android тақырыптарды автоматты түрде жояды. Қолданбаларды пайдалануыңызға байланысты тақырып тізімде қайта шығуы мүмкін. Сонымен қатар Android қолданбалармен бөліспейтін тақырыптарды бөгей және құпиялық параметрлерінен жарнама тақырыптарын кез келген уақытта өшіре аласыз."</string>
     <string name="notificationUI_you_can_change_in_privacy_settings" msgid="4781410091509838647">"Кез келген уақытта құпиялық параметрлерінде өзгерістер енгізе аласыз."</string>
-    <string name="notificationUI_fledge_measurement_title" msgid="5279119450359078459">"Жарнамалардың құпиялық деңгейін арттыратын басқа функциялар"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="6943787406043534689">"Қолданбаларда жекелендірілген жарнамалар көрсетілгенде, Android сіз туралы не білуге болатынын шектейтін жаңа жолдарды іске қосып жатыр."</string>
+    <string name="notificationUI_fledge_measurement_title" msgid="1721724915714192994">"Жарнамадағы құпиялыққа қатысты басқа функциялар қолжетімді"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1" msgid="2217529852483952185">"Қолданбалар жекелендірілген жарнамалар көрсеткенде, Android жүйесі олардың жеке деректерді пайдалануын шектейтін жаңа әдістерді де ұсынады."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2" msgid="601600895880486962">"•  Қолданба ұсынған жарнамалар қолданбалардың қатысты жарнамаларды көрсетуіне мүмкіндік бере отырып, жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғауға көмектеседі. Әрекетіңізге байланысты сіз пайдаланатын қолданба басқа қолданбаларда сәйкес жарнамалар ұсына алады. Құпиялық параметрлерінен қолданбалар тізімін қарауға және оларды ұсыныс жасаудан бөгеуге болады."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3" msgid="956235653060248351">"•  Жарнама көрсеткіштерін өлшеу кезінде шектеулі дерек түрлері қолданбалар арасында беріліп, олардағы жарнамалардың өнімділігі, соның ішінде жарнама сізге көрсетілген уақыт анықталады."</string>
     <string name="notificationUI_fledge_measurement_control_ga_text_eu" msgid="2346851728118443500">"Қолданба ұсынған жарнамалар және жарнама көрсеткіштерін өлшеу туралы қосымша ақпарат"</string>
@@ -116,6 +117,21 @@
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text6" msgid="495908587748380196">"Android жүйесі қолданба ұсынған деректерді автоматты түрде жойып отырады. Қайта пайдаланатын қолданбаңыз тізімде қайта шығуы мүмкін."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text7" msgid="8995912218837619600">"Кез келген уақытта құпиялық параметрлерінен қолданбаның сізге жарнамалар ұсынуын бөгеуге, барлық жарнама ұсыну дерегін қайтаруға не қолданба ұсынған жарнамаларды өшіруге болады."</string>
     <string name="notificationUI_how_it_works_fledge_measurement_expanded_text9" msgid="5709134827192739362">"Сіз пайдаланатын қолданбалар Android жүйесінен жарнамаларының өнімділігін өлшеуше көмектесетін ақпаратты сұрай алады. Android қолданбалар өзара бөлісетін ақпаратты шектеу арқылы құпиялығыңызды қорғайды."</string>
+    <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
+    <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Жеке басыңызды қорғай отырып, өзіңіз көретін жарнамаларды таңдау мүмкіндігіне ие болыңыз."</string>
+    <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Қолданба ұсынған жарнамалар бойынша жаңа құпиялық функциялары қолданбалардың сәйкес жарнамалар көрсетуіне мүмкіндік бере отырып, жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғауға көмектеседі. Әрекеттеріңізге байланысты сіз пайдаланатын қолданба басқа қолданбаларда сәйкес жарнамалар ұсына алады. Құпиялық параметрлерінен қолданбалар тізімін көріп, олардың ұсыныстар беруін бөгеуіңізге болады."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Жарнама көрсеткіштерін өлшеу кезінде шектеулі дерек түрлерін қолданбалар өзара бөлісіп, ондағы жарнамалардың өнімділігі, соның ішінде жарнама сізге көрсетілген уақыт анықталады."</string>
+    <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Жарнамадағы құпиялыққа қатысты кезекті функцияны қосыңыз"</string>
+    <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android жүйесі өзіңіз көретін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функциясын да ұсынады."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Жарнама тақырыптары жеке басыңызды және қолданбаның пайдаланылуы туралы мәліметті қорғай отырып, қолданбаларға сәйкес жарнамаларды көрсетуге көмектеседі. Android сіз жақында пайдаланған қолданбаларға негізделген қызық тақырыптарды көрсете алады. Кейін сіз пайдаланатын қолданба сәйкес жарнамалар көрсету үшін Android-тан қатысы бар тақырыптарды сұрай алады."</string>
+    <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"Құпиялық параметрлерінен жарнама тақырыптарын көріп, қолданбалармен бөліскіңіз келмейтінін бөгеуіңізге болады. Сондай-ақ Android тақырыптарды автоматты түрде жойып отырады."</string>
+    <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"Қосу"</string>
+    <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
+    <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Жеке басыңызды қорғай отырып, өзіңіз көретін жарнамаларды таңдау мүмкіндігіне ие боласыз."</string>
+    <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Жарнамадағы құпиялыққа қатысты жаңа функциялар қолжетімді"</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Қазір Android жүйесі өзіңіз көретін жарнамаларды таңдауға мүмкіндік беретін жаңа құпиялық функцияларын ұсынады."</string>
+    <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Келесі"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android-тың жарнама құпиялығына (бета нұсқасы) арналған бағдарламасына қатысыңыз."</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"Privacy Sandbox"</string>
@@ -177,8 +193,6 @@
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"Жарнамадағы құпиялық"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"Жарнама тақырыптары"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"Қолданба ұсынатын жарнамалар"</string>
-    <!-- no translation found for settingsUI_measurement_ga_title (2255921375701745943) -->
-    <skip />
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android сіз жақында пайдаланған қолданбаларға және олардың пайдаланылған жиілігіне негізделген қызықты тақырыптарды көрсетеді."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Қолданбаларды қалай пайдаланатыныңызға байланысты олар сізге не ұнайтынын анықтай алады."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Сіз пайдаланатын қолданбалар жарнамалардың тиімділігін бағалау үшін Android-тан мәліметтер сұрауы мүмкін. Android қолданбаларға деректердің белгілі бір түрін ғана жинауға мүмкіндік береді."</string>

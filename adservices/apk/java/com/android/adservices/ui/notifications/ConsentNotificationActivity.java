@@ -87,10 +87,16 @@ public class ConsentNotificationActivity extends FragmentActivity {
         if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
         }
-        setContentView(
-                FlagsFactory.getFlags().getGaUxFeatureEnabled()
-                        ? R.layout.consent_notification_ga_activity
-                        : R.layout.consent_notification_activity);
+
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            if (FlagsFactory.getFlags().getEuNotifFlowChangeEnabled()) {
+                setContentView(R.layout.consent_notification_ga_v2_activity);
+            } else {
+                setContentView(R.layout.consent_notification_ga_activity);
+            }
+        } else {
+            setContentView(R.layout.consent_notification_activity);
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement.noising;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.measurement.PrivacyParams;
 
+import com.google.common.math.DoubleMath;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -294,5 +296,35 @@ public class Combinatorics {
                         >= Math.min(totalCap, Arrays.stream(perTypeCapList).sum())
                 && perTypeNumWindowList.length
                         <= PrivacyParams.getMaxFlexibleEventTriggerDataCardinality();
+    }
+
+    /**
+     * @param numOfStates
+     * @return the probability to use fake reports
+     */
+    public static double getFlipProbability(int numOfStates) {
+        int epsilon = PrivacyParams.getPrivacyEpsilon();
+        return numOfStates / (numOfStates + Math.exp(epsilon) - 1);
+    }
+
+    private static double getBinaryEntropy(double x) {
+        if (DoubleMath.fuzzyEquals(x, 0.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)
+                || DoubleMath.fuzzyEquals(x, 1.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)) {
+            return 0;
+        }
+        return (-1.0) * x * DoubleMath.log2(x) - (1 - x) * DoubleMath.log2(1 - x);
+    }
+
+    /**
+     * @param numOfStates
+     * @param flipProbability
+     * @return the information gain
+     */
+    public static double getInformationGain(int numOfStates, double flipProbability) {
+        double log2Q = DoubleMath.log2(numOfStates);
+        double fakeProbability = flipProbability * (numOfStates - 1) / numOfStates;
+        return log2Q
+                - getBinaryEntropy(fakeProbability)
+                - fakeProbability * DoubleMath.log2(numOfStates - 1);
     }
 }

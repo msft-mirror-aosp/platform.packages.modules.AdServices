@@ -47,6 +47,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -98,9 +99,17 @@ public class BackgroundFetchJobServiceTest {
                         .mockStatic(ConsentManager.class)
                         .spyStatic(BackgroundFetchJobService.class)
                         .spyStatic(BackgroundFetchWorker.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .initMocks(this)
                         .startMocking();
+
+        // Mock static method ServiceCompatUtils.shouldDisableJob to allow execution of job.
+        ExtendedMockito.doReturn(false)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
 
         Assume.assumeNotNull(JOB_SCHEDULER);
         assertNull(
@@ -448,6 +457,36 @@ public class BackgroundFetchJobServiceTest {
         BackgroundFetchJobService.schedule(CONTEXT, mFlagsWithDisabledBgF);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+    }
+
+    @Test
+    public void testOnStartJobShouldDisableJobTrue()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+        doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
+        doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                FLEDGE_BACKGROUND_FETCH_JOB_ID,
+                                new ComponentName(CONTEXT, BackgroundFetchJobService.class))
+                        .setMinimumLatency(MINIMUM_SCHEDULING_DELAY_MS)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+
+        assertFalse(mBgFJobServiceSpy.onStartJob(mJobParametersMock));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        verify(mBgFWorkerMock, never()).runBackgroundFetch();
+        verify(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
+        verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
+        verifyNoMoreInteractions(staticMockMarker(FlagsFactory.class));
     }
 
     private static class FlagsWithEnabledBgFGaUxDisabled implements Flags {

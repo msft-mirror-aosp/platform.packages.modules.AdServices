@@ -228,7 +228,7 @@ public class MainActivity extends Activity {
                                                                 sdkApi.createFile(sizeInMb);
                                                         Log.i(TAG, response);
                                                         makeToast(response);
-                                                    } catch (RemoteException e) {
+                                                    } catch (Exception e) {
                                                         Log.e(
                                                                 TAG,
                                                                 "Failed to createFile: "

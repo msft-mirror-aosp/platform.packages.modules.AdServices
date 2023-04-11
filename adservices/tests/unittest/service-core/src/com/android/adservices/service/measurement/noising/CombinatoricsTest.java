@@ -21,6 +21,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.service.measurement.PrivacyParams;
+
+import com.google.common.math.DoubleMath;
+
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -166,7 +170,7 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void getNumStatesArithmeticNoOverflow() {
+    public void testNumStatesArithmeticNoOverflow() {
         // Test Case: {numBucketIncrements, numTriggerData, numWindows}, {expected number of states}
         int[][][] testCases = {
             {{3, 8, 3}, {2925}},
@@ -185,7 +189,7 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void getNumStatesArithmeticOverflow() {
+    public void testNumStatesArithmeticOverflow() {
         // Test Case: {numBucketIncrements, numTriggerData, numWindows}
         int[][] testCasesOverflow = {
             {3, Integer.MAX_VALUE - 1, 3},
@@ -204,7 +208,7 @@ public class CombinatoricsTest {
     }
 
     @Test
-    public void getNumStatesFlexAPI() {
+    public void testNumStatesFlexAPI() {
         // Test Case: {numBucketIncrements, perTypeNumWindows, perTypeCap}, {expected number of
         // states}
         int[][][][] testCases = {
@@ -234,5 +238,53 @@ public class CombinatoricsTest {
                                                 testCase[0][0][0],
                                                 testCase[0][1],
                                                 testCase[0][2])));
+    }
+
+    @Test
+    public void testFlipProbability() {
+        // Test Case: {number of states}, {expected flip probability multiply 100}
+        double[][] testCases = {
+            {2925.0, 0.24263221679834088d},
+            {3.0, 0.0002494582008677539d},
+            {455.0, 0.037820279032938435d},
+            {2.0, 0.0001663056055328264d}
+        };
+
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) -> {
+                            double result =
+                                    100 * Combinatorics.getFlipProbability((int) testCase[0]);
+                            assertTrue(
+                                    DoubleMath.fuzzyEquals(
+                                            testCase[1],
+                                            result,
+                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                        });
+    }
+
+    @Test
+    public void testInformationGain() {
+        // Test Case: {number of states}, {expected flip probability multiply 100}
+        double[][] testCases = {
+            {2925.0, 11.461727965384876d},
+            {3.0, 1.5849265115082312d},
+            {455.0, 8.821556150827456d},
+            {2.0, 0.9999820053790732d}
+        };
+
+        Arrays.stream(testCases)
+                .forEach(
+                        (testCase) -> {
+                            double result =
+                                    Combinatorics.getInformationGain(
+                                            (int) testCase[0],
+                                            Combinatorics.getFlipProbability((int) testCase[0]));
+                            assertTrue(
+                                    DoubleMath.fuzzyEquals(
+                                            testCase[1],
+                                            result,
+                                            PrivacyParams.NUMBER_EQUAL_THRESHOLD));
+                        });
     }
 }

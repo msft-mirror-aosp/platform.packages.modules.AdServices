@@ -16,6 +16,8 @@
   -->
 <configuration description="Config for Ad Services Framework unit test cases in ExtServices">
     <option name="test-tag" value="AdExtServicesFrameworkUnitTests"/>
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex" />
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"

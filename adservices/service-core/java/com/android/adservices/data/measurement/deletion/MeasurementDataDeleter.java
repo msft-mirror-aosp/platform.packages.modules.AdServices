@@ -80,10 +80,15 @@ public class MeasurementDataDeleter {
                     List<AggregateReport> aggregateReports =
                             dao.fetchMatchingAggregateReports(sourceIds, triggerIds);
                     resetAggregateContributions(dao, aggregateReports);
+                    resetAggregateReportDedupKeys(dao, aggregateReports);
 
                     List<EventReport> eventReports =
                             dao.fetchMatchingEventReports(sourceIds, triggerIds);
                     resetDedupKeys(dao, eventReports);
+
+                    // Delete Async Registration Table Data
+                    dao.deleteAsyncRegistrationsProvidedRegistrant(
+                            deletionParam.getAppPackageName());
 
                     // Delete sources and triggers, that'll take care of deleting related reports
                     // and attributions
@@ -116,7 +121,7 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (AggregateReport report : aggregateReports) {
             if (report.getSourceId() == null) {
-                LogUtil.e("SourceId is null on event report.");
+                LogUtil.d("SourceId is null on event report.");
                 return;
             }
 
@@ -144,13 +149,31 @@ public class MeasurementDataDeleter {
             throws DatastoreException {
         for (EventReport report : eventReports) {
             if (report.getSourceId() == null) {
-                LogUtil.e("SourceId on the event report is null.");
-                return;
+                LogUtil.d("SourceId on the event report is null.");
+                continue;
             }
 
             Source source = dao.getSource(report.getSourceId());
             source.getEventReportDedupKeys().remove(report.getTriggerDedupKey());
             dao.updateSourceEventReportDedupKeys(source);
+        }
+    }
+
+    void resetAggregateReportDedupKeys(
+            @NonNull IMeasurementDao dao, @NonNull List<AggregateReport> aggregateReports)
+            throws DatastoreException {
+        for (AggregateReport report : aggregateReports) {
+            if (report.getSourceId() == null) {
+                LogUtil.d("SourceId on the aggregate report is null.");
+                continue;
+            }
+
+            Source source = dao.getSource(report.getSourceId());
+            if (report.getDedupKey() == null) {
+                continue;
+            }
+            source.getAggregateReportDedupKeys().remove(report.getDedupKey());
+            dao.updateSourceAggregateReportDedupKeys(source);
         }
     }
 

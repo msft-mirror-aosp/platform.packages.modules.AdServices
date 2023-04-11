@@ -23,6 +23,7 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,5 +79,13 @@ public class ContextualAdsFixture {
 
     public static ContextualAds aContextualAd(AdTechIdentifier buyer) {
         return aContextualAdBuilder().setBuyer(buyer).build();
+    }
+
+    public static ImmutableMap<AdTechIdentifier, ContextualAds> getBuyerContextualAdsMap() {
+        return ImmutableMap.of(
+                CommonFixture.VALID_BUYER_1,
+                aContextualAd(CommonFixture.VALID_BUYER_1),
+                CommonFixture.VALID_BUYER_2,
+                aContextualAd(CommonFixture.VALID_BUYER_2));
     }
 }

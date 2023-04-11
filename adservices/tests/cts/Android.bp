@@ -163,7 +163,6 @@ android_test {
         "mts-extservices",
         "general-tests",
     ],
-    test_mainline_modules: ["com.google.android.extservices.apex"],
     static_libs: [
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
