@@ -388,11 +388,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
-            CompatAdServicesTestUtils.resetFlagsToDefault();
-        }
-
         mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
@@ -408,6 +403,11 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         // Re-set disable enrollment test seed to true
         ShellUtils.runShellCommand(
                 "device_config put adservices enable_enrollment_test_seed false");
+
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
 
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
