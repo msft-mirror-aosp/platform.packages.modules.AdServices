@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Entesos"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Participes en la versió beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"S\'ha activat Privacy Sandbox per al teu dispositiu i les aplicacions poden provar aquestes noves maneres més privades de mostrar-te anuncis. Pots desactivar la versió beta en qualsevol moment a la configuració de privadesa."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Entesos"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox d\'Android ofereix noves funcions que les aplicacions poden utilitzar per mostrar-te anuncis que et poden agradar. Aquestes tecnologies no fan servir identificadors de dispositiu.\n\nAndroid i les teves aplicacions poden estimar els tipus d\'anuncis que et poden interessar i desar aquests interessos temporalment al teu dispositiu. Això permet que les aplicacions et mostrin anuncis que et poden agradar sense fer un seguiment de la teva activitat en llocs web i aplicacions d\'altres desenvolupadors."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalització d\'anuncis amb Privacy Sandbox"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Prova noves funcions de privadesa d\'anuncis"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Els temes d\'anuncis t\'ofereixen més opcions sobre els anuncis que veus"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Mostra els detalls"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Prova noves funcions de privadesa d\'anuncis"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android llançarà noves funcions de privadesa que t\'oferiran més opcions sobre els anuncis que veus."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Els temes d\'anuncis ajuden les aplicacions a mostrar-te anuncis rellevants, alhora que es protegeix la teva identitat i informació sobre l\'ús d\'aplicacions. Android pot prendre nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Més tard, una aplicació que utilitzes pot demanar temes rellevants a Android per personalitzar els anuncis que veus."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Pots veure els temes d\'anuncis a la configuració del dispositiu i bloquejar els que no vols que es comparteixin amb les aplicacions. De manera regular, Android també suprimeix automàticament els temes d\'anuncis."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Pots canviar d\'idea en qualsevol moment a la configuració de privadesa."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Més informació sobre els temes d\'anuncis"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Per obtenir més informació sobre com Android protegeix les teves dades, consulta la nostra política de privadesa."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Obtén més informació sobre com Android protegeix les teves dades a la nostra "<a href="https://policies.google.com/privacy">"política de privadesa"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Prova-ho"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Quines dades s\'utilitzen"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Els temes d\'anuncis es basen en les aplicacions que has utilitzat recentment en aquest dispositiu i amb quina freqüència les utilitzes."</string>
@@ -120,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Noves funcions de privadesa d\'anuncis disponibles"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Obtén més opcions sobre els anuncis que veus, alhora que es protegeix la teva identitat"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Noves funcions de privadesa d\'anuncis disponibles"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Amb els anuncis suggerits per aplicacions, les noves funcions de privadesa ajuden a protegir la teva identitat i informació sobre l\'ús de les aplicacions i, alhora, permeten que les aplicacions et mostrin anuncis rellevants. En funció de la teva activitat, una aplicació que utilitzes pot suggerir anuncis relacionats en altres aplicacions. A la configuració de privadesa, pots veure una llista de les aplicacions i bloquejar-les perquè no facin suggeriments."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Amb el mesurament d\'anuncis, els tipus de dades limitats es comparteixen entre les aplicacions per entendre el rendiment dels seus anuncis, com ara l\'hora del dia en què se t\'ha mostrat un anunci."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Activa una altra funció de privadesa d\'anuncis"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android també ofereix una nova funció de privadesa que et proporciona més opcions sobre els anuncis que veus."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Els temes d\'anuncis ajuden les aplicacions a mostrar-te anuncis rellevants, alhora que es protegeix la teva identitat i informació sobre l\'ús d\'aplicacions. Android pot prendre nota dels temes d\'interès segons les aplicacions que has utilitzat recentment. Més tard, una aplicació que utilitzes pot demanar temes rellevants a Android per mostrar-te anuncis més rellevants."</string>
@@ -130,7 +131,7 @@
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"Noves funcions de privadesa d\'anuncis disponibles"</string>
     <string name="notificationUI_notification_ga_content_v2" msgid="4673081782304081905">"Ara tens més opcions sobre els anuncis que veus, alhora que es protegeix la teva identitat"</string>
     <string name="notificationUI_header_ga_title_v2" msgid="2079990149331373941">"Noves funcions de privadesa d\'anuncis disponibles"</string>
-    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Ara Android ofereix noves funcions de privadesa que et proporcionaran més opcions sobre els anuncis que veus."</string>
+    <string name="notificationUI_container1_ga_introduction_v2" msgid="3820258766801905248">"Ara Android ofereix noves funcions de privadesa que et proporcionen més opcions sobre els anuncis que veus."</string>
     <string name="notificationUI_next_button_text" msgid="5564270455474313663">"Següent"</string>
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"Privacy Sandbox"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Participa en la versió beta de la privadesa d\'anuncis d\'Android"</string>
@@ -166,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Permet el mesurament d\'anuncis"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Les aplicacions i els anunciants poden sol·licitar informació a Android que els ajuda a mesurar el rendiment dels seus anuncis.\n\nLes dades de mesurament d\'anuncis se suprimeixen del dispositiu regularment."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Restableix les dades de mesurament"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android protegeix la teva privadesa limitant la informació que les aplicacions poden compartir entre elles. Els informes s\'envien amb retard per protegir la teva identitat.\n\nEl teu navegador pot tenir una opció de configuració similar. Si el mesurament d\'anuncis està activat per a Android i el navegador, una empresa podrà mesurar l\'efectivitat d\'un anunci entre les aplicacions que utilitzis i els llocs web que visitis. L\'historial de navegació es manté privat al dispositiu.\n\nConsulta la nostra política de privadesa per obtenir més informació sobre com Android protegeix les teves dades."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android protegeix la teva privadesa limitant la informació que les aplicacions poden compartir entre elles. Els informes s\'envien amb retard per protegir la teva identitat.\n\nEl teu navegador pot tenir una opció de configuració similar. Si el mesurament d\'anuncis està activat per a Android i el navegador, una empresa podrà mesurar l\'efectivitat d\'un anunci entre les aplicacions que utilitzis i els llocs web que visitis. L\'historial de navegació es manté privat al dispositiu.\n\nObtén més informació sobre com Android protegeix les teves dades a la nostra "<a href="https://policies.google.com/privacy">"política de privadesa"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Les dades de mesurament d\'anuncis s\'han restablert"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Cancel·la"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Vols desactivar Privacy Sandbox?"</string>
