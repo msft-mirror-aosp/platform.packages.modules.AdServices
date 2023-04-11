@@ -99,6 +99,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -4266,6 +4267,63 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testDeleteDebugReport() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        measurementDao.deleteDebugReport(debugReport.getId())));
+
+        count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(0, count);
+    }
+
+    @Test
+    public void testGetDebugReportIds() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        DebugReport debugReport = createDebugReport();
+
+        ContentValues values = new ContentValues();
+        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
+        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
+        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
+        values.put(
+                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
+
+        long count =
+                DatabaseUtils.queryNumEntries(
+                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
+        assertEquals(1, count);
+
+        assertTrue(
+                DatastoreManagerFactory.getDatastoreManager(sContext)
+                        .runInTransaction(
+                                measurementDao ->
+                                        assertEquals(
+                                                List.of(debugReport.getId()),
+                                                measurementDao.getDebugReportIds())));
+    }
+
+    @Test
     public void testDeleteExpiredRecordsForAsyncRegistrations() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
 
@@ -4360,63 +4418,6 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testDeleteDebugReport() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        DebugReport debugReport = createDebugReport();
-
-        ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
-        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
-        values.put(
-                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
-        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
-
-        long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        assertTrue(
-                DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
-                                measurementDao ->
-                                        measurementDao.deleteDebugReport(debugReport.getId())));
-
-        count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
-        assertEquals(0, count);
-    }
-
-    @Test
-    public void testGetDebugReportIds() {
-        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
-        DebugReport debugReport = createDebugReport();
-
-        ContentValues values = new ContentValues();
-        values.put(MeasurementTables.DebugReportContract.ID, debugReport.getId());
-        values.put(MeasurementTables.DebugReportContract.TYPE, debugReport.getType());
-        values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
-        values.put(
-                MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
-        db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
-
-        long count =
-                DatabaseUtils.queryNumEntries(
-                        db, MeasurementTables.DebugReportContract.TABLE, /* selection */ null);
-        assertEquals(1, count);
-
-        assertTrue(
-                DatastoreManagerFactory.getDatastoreManager(sContext)
-                        .runInTransaction(
-                                measurementDao ->
-                                        assertEquals(
-                                                List.of(debugReport.getId()),
-                                                measurementDao.getDebugReportIds())));
-    }
-
-    @Test
     public void deleteExpiredRecords_registrationRedirectCount() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
         List<Pair<String, String>> regIdCounts =
@@ -4492,6 +4493,162 @@ public class MeasurementDaoTest {
                 cursor.getString(
                         cursor.getColumnIndex(MeasurementTables.KeyValueDataContract.VALUE)));
         cursor.close();
+    }
+
+    @Test
+    public void deleteExpiredRecords_skipDeliveredEventReportsOutsideWindow() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        ContentValues sourceValid = new ContentValues();
+        sourceValid.put(SourceContract.ID, "s1");
+        sourceValid.put(SourceContract.EVENT_TIME, System.currentTimeMillis());
+
+        ContentValues sourceExpired = new ContentValues();
+        sourceExpired.put(SourceContract.ID, "s2");
+        sourceExpired.put(
+                SourceContract.EVENT_TIME, System.currentTimeMillis() - TimeUnit.DAYS.toMillis(20));
+
+        ContentValues triggerValid = new ContentValues();
+        triggerValid.put(TriggerContract.ID, "t1");
+        triggerValid.put(TriggerContract.TRIGGER_TIME, System.currentTimeMillis());
+
+        ContentValues triggerExpired = new ContentValues();
+        triggerExpired.put(TriggerContract.ID, "t2");
+        triggerExpired.put(
+                TriggerContract.TRIGGER_TIME,
+                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(20));
+
+        db.insert(SourceContract.TABLE, null, sourceValid);
+        db.insert(SourceContract.TABLE, null, sourceExpired);
+        db.insert(TriggerContract.TABLE, null, triggerValid);
+        db.insert(TriggerContract.TABLE, null, triggerExpired);
+
+        ContentValues eventReport_NotDelivered_WithinWindow = new ContentValues();
+        eventReport_NotDelivered_WithinWindow.put(EventReportContract.ID, "e1");
+        eventReport_NotDelivered_WithinWindow.put(
+                EventReportContract.REPORT_TIME, System.currentTimeMillis());
+        eventReport_NotDelivered_WithinWindow.put(
+                EventReportContract.STATUS, EventReport.Status.PENDING);
+        eventReport_NotDelivered_WithinWindow.put(
+                EventReportContract.SOURCE_ID, sourceValid.getAsString(SourceContract.ID));
+        eventReport_NotDelivered_WithinWindow.put(
+                EventReportContract.TRIGGER_ID, triggerValid.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_NotDelivered_WithinWindow);
+
+        ContentValues eventReport_Delivered_WithinWindow = new ContentValues();
+        eventReport_Delivered_WithinWindow.put(EventReportContract.ID, "e2");
+        eventReport_Delivered_WithinWindow.put(
+                EventReportContract.REPORT_TIME, System.currentTimeMillis());
+        eventReport_Delivered_WithinWindow.put(
+                EventReportContract.STATUS, EventReport.Status.DELIVERED);
+        eventReport_Delivered_WithinWindow.put(
+                EventReportContract.SOURCE_ID, sourceValid.getAsString(SourceContract.ID));
+        eventReport_Delivered_WithinWindow.put(
+                EventReportContract.TRIGGER_ID, triggerValid.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_Delivered_WithinWindow);
+
+        ContentValues eventReport_Delivered_OutsideWindow = new ContentValues();
+        eventReport_Delivered_OutsideWindow.put(EventReportContract.ID, "e3");
+        eventReport_Delivered_OutsideWindow.put(
+                EventReportContract.REPORT_TIME,
+                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(20));
+        eventReport_Delivered_OutsideWindow.put(
+                EventReportContract.STATUS, EventReport.Status.DELIVERED);
+        eventReport_Delivered_OutsideWindow.put(
+                EventReportContract.SOURCE_ID, sourceValid.getAsString(SourceContract.ID));
+        eventReport_Delivered_OutsideWindow.put(
+                EventReportContract.TRIGGER_ID, triggerValid.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_Delivered_OutsideWindow);
+
+        ContentValues eventReport_NotDelivered_OutsideWindow = new ContentValues();
+        eventReport_NotDelivered_OutsideWindow.put(EventReportContract.ID, "e4");
+        eventReport_NotDelivered_OutsideWindow.put(
+                EventReportContract.REPORT_TIME,
+                System.currentTimeMillis() - TimeUnit.DAYS.toMillis(20));
+        eventReport_NotDelivered_OutsideWindow.put(
+                EventReportContract.STATUS, EventReport.Status.PENDING);
+        eventReport_NotDelivered_OutsideWindow.put(
+                EventReportContract.SOURCE_ID, sourceValid.getAsString(SourceContract.ID));
+        eventReport_NotDelivered_OutsideWindow.put(
+                EventReportContract.TRIGGER_ID, triggerValid.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_NotDelivered_OutsideWindow);
+
+        ContentValues eventReport_expiredSource = new ContentValues();
+        eventReport_expiredSource.put(EventReportContract.ID, "e5");
+        eventReport_expiredSource.put(EventReportContract.REPORT_TIME, System.currentTimeMillis());
+        eventReport_expiredSource.put(EventReportContract.STATUS, EventReport.Status.PENDING);
+        eventReport_expiredSource.put(
+                EventReportContract.SOURCE_ID, sourceExpired.getAsString(SourceContract.ID));
+        eventReport_expiredSource.put(
+                EventReportContract.TRIGGER_ID, triggerValid.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_expiredSource);
+
+        ContentValues eventReport_expiredTrigger = new ContentValues();
+        eventReport_expiredTrigger.put(EventReportContract.ID, "e6");
+        eventReport_expiredTrigger.put(EventReportContract.REPORT_TIME, System.currentTimeMillis());
+        eventReport_expiredTrigger.put(EventReportContract.STATUS, EventReport.Status.PENDING);
+        eventReport_expiredTrigger.put(
+                EventReportContract.SOURCE_ID, sourceValid.getAsString(SourceContract.ID));
+        eventReport_expiredTrigger.put(
+                EventReportContract.TRIGGER_ID, triggerExpired.getAsString(TriggerContract.ID));
+        db.insert(EventReportContract.TABLE, null, eventReport_expiredTrigger);
+
+        DatastoreManagerFactory.getDatastoreManager(sContext)
+                .runInTransaction(
+                        measurementDao -> {
+                            measurementDao.deleteExpiredRecords(TimeUnit.DAYS.toMillis(10));
+                        });
+
+        List<ContentValues> deletedReports =
+                List.of(eventReport_expiredSource, eventReport_expiredTrigger);
+
+        List<ContentValues> notDeletedReports =
+                List.of(
+                        eventReport_Delivered_OutsideWindow,
+                        eventReport_Delivered_WithinWindow,
+                        eventReport_NotDelivered_OutsideWindow,
+                        eventReport_NotDelivered_WithinWindow);
+
+        assertEquals(
+                notDeletedReports.size(),
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + EventReportContract.ID
+                                + ") FROM "
+                                + EventReportContract.TABLE
+                                + " WHERE "
+                                + EventReportContract.ID
+                                + " IN ("
+                                + notDeletedReports.stream()
+                                        .map(
+                                                (eR) -> {
+                                                    return DatabaseUtils.sqlEscapeString(
+                                                            eR.getAsString(EventReportContract.ID));
+                                                })
+                                        .collect(Collectors.joining(","))
+                                + ")",
+                        null));
+
+        assertEquals(
+                0,
+                DatabaseUtils.longForQuery(
+                        db,
+                        "SELECT COUNT("
+                                + EventReportContract.ID
+                                + ") FROM "
+                                + EventReportContract.TABLE
+                                + " WHERE "
+                                + EventReportContract.ID
+                                + " IN ("
+                                + deletedReports.stream()
+                                        .map(
+                                                (eR) -> {
+                                                    return DatabaseUtils.sqlEscapeString(
+                                                            eR.getAsString(EventReportContract.ID));
+                                                })
+                                        .collect(Collectors.joining(","))
+                                + ")",
+                        null));
     }
 
     @Test

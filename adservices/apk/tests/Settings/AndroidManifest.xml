@@ -94,15 +94,6 @@
             </intent-filter>
         </activity>
 
-        <activity
-                android:name="com.android.adservices.ui.notifications.ConsentNotificationActivity"
-                android:exported="true"
-                android:theme="@style/AdServices.NotificationTheme">
-            <intent-filter>
-                <action android:name="android.test.adservices.ui.NOTIFICATIONS" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
-        </activity>
     </application>
 
     <instrumentation
