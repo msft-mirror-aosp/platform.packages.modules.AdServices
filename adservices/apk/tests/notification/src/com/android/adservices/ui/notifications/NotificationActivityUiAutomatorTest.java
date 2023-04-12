@@ -49,7 +49,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -68,6 +67,8 @@ public class NotificationActivityUiAutomatorTest {
     private static final UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     private MockitoSession mStaticMockSession;
+    private String mTestName;
+
     @Mock private ConsentManager mConsentManager;
     @Spy private Context mContext;
 
@@ -113,12 +114,17 @@ public class NotificationActivityUiAutomatorTest {
     public void teardown() throws Exception {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(mContext);
+
         mStaticMockSession.finishMocking();
     }
 
     @Test
     public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         startActivity(true);
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_left_control_button_text_eu);
@@ -141,6 +147,8 @@ public class NotificationActivityUiAutomatorTest {
     @Test
     public void acceptedConfirmationScreenTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
@@ -168,6 +176,8 @@ public class NotificationActivityUiAutomatorTest {
 
     @Test
     public void notificationEuGaTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
@@ -186,6 +196,8 @@ public class NotificationActivityUiAutomatorTest {
 
     @Test
     public void notificationRowGaTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(false);
@@ -199,8 +211,9 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
-    @Ignore
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // TODO(277094594) fix broken Link Test on S
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
@@ -221,17 +234,23 @@ public class NotificationActivityUiAutomatorTest {
                         sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
         if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
                 packageNameOfDefaultBrowser, sentence, 20)) {
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
             return;
         }
         if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
             return;
         }
+
+        ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
         Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     @Test
     public void acceptedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
@@ -262,6 +281,8 @@ public class NotificationActivityUiAutomatorTest {
     @Test
     public void declinedConfirmationScreenGaTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivity(true);
