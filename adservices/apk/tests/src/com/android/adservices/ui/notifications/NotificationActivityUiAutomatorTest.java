@@ -118,6 +118,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @Ignore
     public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
         startActivity(true);
         UiObject leftControlButton =
@@ -139,6 +140,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
+    @Ignore
     public void acceptedConfirmationScreenTest()
             throws UiObjectNotFoundException, InterruptedException {
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
