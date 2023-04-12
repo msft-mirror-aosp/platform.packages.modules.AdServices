@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Vaikuta paremmin näkemiisi mainoksiin paljastamatta henkilöllisyyttäsi"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Uusia mainosyksityisyysominaisuuksia nyt saatavilla"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android lanseeraa uusia tapoja, joilla voit rajoittaa sovellusten keräämiä tietoja, kun sinulle näytetään personoituja mainoksia."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Sovellusten ehdottamissa mainoksissa uudet yksityisyysominaisuudet auttavat suojaamaan henkilöllisyyttäsi ja sovelluksen käyttöön liittyviä tietojasi. Ehdotusten avulla sovellukset voivat näyttää sinulle osuvia mainoksia. Käyttämäsi sovellus voi ehdottaa sinulle toimintasi perusteella aiheeseen liittyviä mainoksia muissa sovelluksissa. Yksityisyysasetuksista voit tarkistaa sovellukset ja estää niitä tekemästä ehdotuksia."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Jos mainosten mittaus on käytössä, sovellusten välillä jaetaan rajoitetusti tietyntyyppistä dataa (esim. kellonaika, jolloin mainos näkyi) mainostulosten tulkitsemiseksi."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Toimintaasi tällä laitteella olevassa sovelluksessa voidaan käyttää mainosten ehdottamiseen."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Laita päälle toinen mainosyksityisyysominaisuus"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Androidissa on myös uusi yksityisyysominaisuus, jonka avulla voit vaikuttaa näkemiisi mainoksiin paremmin."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Mainosten aiheiden avulla sovellukset voivat näyttää sinulle osuvia mainoksia niin, että henkilöllisyytesi ja tiedot sovellusten käytöstä pysyvät suojattuina. Android voi muistaa äskettäin käyttämiesi sovellusten perusteella sinua kiinnostavia aiheita. Myöhemmin käyttämäsi sovellus voi pyytää sopivia aiheita Androidilta näyttääkseen sinulle osuvampia mainoksia."</string>
