@@ -21,9 +21,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 
+import com.android.modules.utils.build.SdkLevel;
+
 /** ContentProvider for monitoring changes to {@link AsyncRegistration}. */
 public class AsyncRegistrationContentProvider extends ContentProvider {
-    public static final String AUTHORITY = "com.android.adservices.provider.asyncregistration";
+    public static final String AUTHORITY =
+            SdkLevel.isAtLeastT()
+                    ? "com.android.adservices.provider.asyncregistration"
+                    : "com.android.ext.adservices.provider.asyncregistration";
     public static final Uri TRIGGER_URI = Uri.parse("content://" + AUTHORITY);
 
     @Override
