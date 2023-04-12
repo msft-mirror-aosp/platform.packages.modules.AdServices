@@ -150,11 +150,17 @@ public abstract class E2EMockTest extends E2ETest {
         mAsyncSourceFetcher =
                 spy(
                         new AsyncSourceFetcher(
-                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                AdServicesLoggerImpl.getInstance()));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
-                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                AdServicesLoggerImpl.getInstance()));
         mDebugReportApi = new DebugReportApi(sContext, mFlags);
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
