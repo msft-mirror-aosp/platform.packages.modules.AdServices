@@ -44,14 +44,13 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.mockitoSession;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.staticMockMarker;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -1001,8 +1000,6 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_OWNER,
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                         null);
-        verify(mConsentManagerMock, never())
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verifyErrorResponseCustomAudienceOverrideCallback(
                 AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
@@ -1057,9 +1054,7 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CustomAudienceFixture.VALID_OWNER);
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .persistCustomAudienceOverride(
                         DBCustomAudienceOverride.builder()
@@ -1104,8 +1099,6 @@ public class CustomAudienceServiceImplTest {
         verify(mCustomAudienceImpl).getCustomAudienceDao();
         verify(mAppImportanceFilter)
                 .assertCallerIsInForeground(CustomAudienceFixture.VALID_OWNER, apiName, null);
-        verify(mConsentManagerMock, never())
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
         verifyLoggerMock(apiName, STATUS_BACKGROUND_CALLER);
@@ -1152,13 +1145,11 @@ public class CustomAudienceServiceImplTest {
         verify(mFledgeAuthorizationFilter).assertAppDeclaredPermission(CONTEXT, apiName);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .removeCustomAudienceOverrideByPrimaryKeyAndPackageName(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1,
                         CustomAudienceFixture.VALID_NAME, CustomAudienceFixture.VALID_OWNER);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallback).onSuccess();
         verifyLoggerMock(apiName, STATUS_SUCCESS);
     }
@@ -1183,8 +1174,6 @@ public class CustomAudienceServiceImplTest {
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
         verify(mAppImportanceFilter).assertCallerIsInForeground(Process.myUid(), apiName, null);
-        verify(mConsentManagerMock, never())
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
         verifyLoggerMock(apiName, STATUS_BACKGROUND_CALLER);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
@@ -1229,11 +1218,9 @@ public class CustomAudienceServiceImplTest {
                         AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES);
         verify(mDevContextFilter).createDevContext();
         verify(mCustomAudienceImpl).getCustomAudienceDao();
+        verify(mConsentManagerMock).isFledgeConsentRevokedForApp(CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceDao)
                 .removeCustomAudienceOverridesByPackageName(CustomAudienceFixture.VALID_OWNER);
-        verify(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                        CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallback).onSuccess();
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
