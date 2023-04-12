@@ -70,16 +70,20 @@ public class AsyncTriggerFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     public AsyncTriggerFetcher(Context context) {
         this(
+                context,
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public AsyncTriggerFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncTriggerFetcher(
+            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+        mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
@@ -307,11 +311,15 @@ public class AsyncTriggerFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.maybeGetEnrollmentId(
-                        asyncRegistration.getRegistrationUri(), mEnrollmentDao);
+                Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
-                    "fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    "fetchTrigger: Valid enrollment id not found. Registration URI: %s",
                     asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
             return Optional.empty();
