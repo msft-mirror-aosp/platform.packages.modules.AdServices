@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"Oke"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Anda berpartisipasi dalam program beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"Privacy Sandbox aktif untuk perangkat Anda, dan aplikasi dapat menguji cara baru yang lebih pribadi ini untuk menampilkan iklan kepada Anda. Anda dapat menonaktifkan program beta kapan saja di setelan privasi."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Oke"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Privacy Sandbox Android memberikan fitur baru yang dapat digunakan aplikasi untuk menampilkan iklan yang mungkin Anda sukai. Teknologi ini tidak menggunakan ID perangkat.\n\nAndroid dan aplikasi dapat memperkirakan jenis iklan yang mungkin menarik bagi Anda, dan menyimpan minat untuk sementara di perangkat Anda. Hal ini memungkinkan aplikasi menampilkan iklan yang mungkin Anda sukai, tanpa melacak aktivitas Anda di seluruh situs dan aplikasi dari developer lainnya."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Personalisasi iklan dengan Privacy Sandbox"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Anda dapat melihat topik iklan di setelan perangkat dan memblokir topik yang tidak ingin Anda bagikan kepada aplikasi. Selain itu, Android juga menghapus otomatis topik iklan secara rutin."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Anda dapat mengubahnya kapan saja di setelan privasi."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Selengkapnya tentang topik iklan"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Pelajari lebih lanjut cara Android melindungi data Anda dalam Kebijakan Privasi kami."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Pelajari lebih lanjut cara Android melindungi data Anda di "<a href="https://policies.google.com/privacy">"Kebijakan Privasi"</a>" kami."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Cobalah"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Data yang digunakan"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Topik iklan didasarkan pada aplikasi yang Anda gunakan baru-baru ini di perangkat ini dan seberapa sering Anda menggunakannya."</string>
@@ -119,8 +117,12 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Fitur privasi iklan baru kini tersedia"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Dapatkan lebih banyak pilihan atas iklan yang Anda lihat sekaligus melindungi identitas Anda"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Fitur privasi iklan baru kini tersedia"</string>
+    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
+    <skip />
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Dengan iklan yang disarankan aplikasi, fitur privasi baru membantu melindungi identitas dan informasi Anda terkait penggunaan aplikasi Anda sekaligus memungkinkan aplikasi menampilkan iklan yang relevan kepada Anda. Berdasarkan aktivitas Anda, aplikasi yang Anda gunakan dapat menyarankan iklan terkait di aplikasi lain. Anda dapat melihat daftar aplikasi dan memblokirnya agar tidak memberikan saran di setelan privasi."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Dengan pengukuran iklan, jenis data terbatas dibagikan antar-aplikasi untuk memahami performa iklan mereka, seperti waktu iklan ditampilkan kepada Anda."</string>
+    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
+    <skip />
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktifkan fitur privasi iklan lainnya"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android juga menawarkan fitur privasi baru yang memberi Anda lebih banyak pilihan atas iklan yang Anda lihat."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Topik iklan membantu aplikasi menampilkan iklan yang relevan kepada Anda sekaligus melindungi identitas dan informasi Anda terkait penggunaan aplikasi Anda. Android dapat mencatat topik minat berdasarkan aplikasi yang Anda gunakan baru-baru ini. Kemudian, aplikasi yang Anda gunakan dapat meminta topik yang relevan ke Android untuk menampilkan iklan yang lebih relevan kepada Anda."</string>
@@ -165,7 +167,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Izinkan pengukuran iklan"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Aplikasi dan pengiklan dapat meminta informasi dari Android yang membantu mereka mengukur performa iklan mereka.\n\nData pengukuran iklan dihapus secara rutin dari perangkat Anda."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Reset data pengukuran"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android melindungi privasi Anda dengan membatasi informasi yang dapat dibagikan aplikasi kepada satu sama lain. Demi melindungi identitas Anda, laporan tidak dikirim secara realtime.\n\nBrowser Anda mungkin memiliki setelan yang mirip. Jika pengukuran iklan diaktifkan untuk Android dan browser, suatu perusahaan mungkin dapat mengukur efektivitas iklan di antara aplikasi yang Anda gunakan dan situs yang Anda buka. Privasi histori penjelajahan Anda tetap dijaga di perangkat Anda.\n\nPelajari lebih lanjut cara Android melindungi data Anda di Kebijakan Privasi kami."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android melindungi privasi Anda dengan membatasi informasi yang dapat dibagikan antar-aplikasi. Laporan dikirim dengan penundaan untuk melindungi identitas Anda.\n\nBrowser Anda mungkin memiliki setelan serupa. Jika pengukuran iklan diaktifkan untuk Android dan browser, suatu perusahaan mungkin dapat mengukur efektivitas iklan antara aplikasi yang Anda gunakan dan situs yang Anda buka. Histori penjelajahan Anda tetap bersifat pribadi di perangkat Anda.\n\nPelajari lebih lanjut cara Android melindungi data Anda di "<a href="https://policies.google.com/privacy">"Kebijakan Privasi"</a>" kami."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Data pengukuran iklan telah direset"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Batal"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Nonaktifkan Privacy Sandbox?"</string>
