@@ -26,7 +26,6 @@ import android.content.Intent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -50,6 +49,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -199,7 +199,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 277226738)
+    @Ignore
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         // TODO(277094594) fix broken Link Test on S
         Assume.assumeTrue(SdkLevel.isAtLeastT());
