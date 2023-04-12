@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nú eru nýir persónuverndareiginleikar auglýsinga í boði"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Fáðu meira val um auglýsingarnar sem birtast þér á sama tíma og þú verndar auðkenni þitt"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nú eru nýir persónuverndareiginleikar auglýsinga í boði"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android kynnir nýjar leiðir til að takmarka upplýsingarnar sem forrit geta fengið um þig þegar þau birta þér sérsniðnar auglýsingar."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Með auglýsingatillögum forrita hjálpa nýju persónuverndareiginleikarnir til við að vernda auðkenni þitt og upplýsingar um forritanotkun þína á sama tíma og þeir gera forritum kleift að birta þér viðeigandi auglýsingar. Forrit sem þú notar getur stungið upp á tengdum auglýsingum í öðrum forritum í samræmi við virkni þína. Þú getur séð lista yfir forrit og lokað á að þau komi með tillögur í persónuverndarstillingunum."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Við auglýsingamælingar er tilteknum gerðum gagna deilt á milli forrita til að meta árangur auglýsinga þeirra, t.d. um tíma dags þegar auglýsing birtist þér."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Hægt er að nota virkni þína í forriti í þessu tæki til að stinga upp á auglýsingum."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Kveiktu á öðrum persónuverndareiginleika auglýsinga"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android býður einnig upp á nýjan persónuverndareiginleika sem veitir þér meira val um auglýsingarnar sem birtast þér."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Umfjöllunarefni auglýsinga hjálpa forritum að birta þér viðeigandi auglýsingar á sama tíma og auðkenni þitt er verndað sem og upplýsingar um forritanotkun þína. Android getur skráð áhugasvið umfjöllunarefna í samræmi við forritin sem þú hefur notað nýlega. Seinna getur forrit sem þú notar beðið Android um viðeigandi umfjöllunarefni til að birta þér auglýsingar sem eiga betur við þig."</string>

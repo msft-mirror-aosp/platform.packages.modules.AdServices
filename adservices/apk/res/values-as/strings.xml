@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"এতিয়া বিজ্ঞাপনৰ গোপনীয়তাৰ নতুন সুবিধা উপলব্ধ"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"আপোনাৰ পৰিচয় সুৰক্ষিত ৰাখি আপুনি দেখা পোৱা বিজ্ঞাপনৰ বিষয়ে অধিক বিকল্প লাভ কৰক"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"এতিয়া বিজ্ঞাপনৰ গোপনীয়তাৰ নতুন সুবিধা উপলব্ধ"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"এপ্‌সমূহে আপোনাক ব্যক্তিগতকৃত বিজ্ঞাপন দেখুৱালে সেইসমূহে আপোনাৰ বিষয়ে কি জানিব পাৰে সেয়া সীমিত কৰাৰ বাবে Androidএ নতুন পদ্ধতি লঞ্চ কৰিছে।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  এপে পৰামৰ্শ দিয়া বিজ্ঞাপনৰ জৰিয়তে, নতুন গোপনীয়তা সম্পৰ্কীয় সুবিধাসমূহে আপোনাৰ পৰিচয় আৰু আপোনাৰ এপ্‌ ব্যৱহাৰৰ বিষয়ে তথ্য সুৰক্ষিত কৰাত সহায় কৰাৰ লগতে আপোনাক প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ এপ্‌সমূহক সুবিধা প্ৰদান কৰে। আপোনাৰ কাৰ্যকলাপৰ ওপৰত ভিত্তি কৰি আপুনি ব্যৱহাৰ কৰা এটা এপে অন্য এপ্‌সমূহত প্ৰাসংগিক বিজ্ঞাপনৰ পৰামৰ্শ দিব পাৰে। আপুনি এপ্‌সমূহৰ সূচী চাব পাৰে আৰু গোপনীয়তাৰ ছেটিঙলৈ গৈ সেইসমূহক পৰামৰ্শ দিয়াৰ পৰা অৱৰোধ কৰিব পাৰে।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  বিজ্ঞাপনৰ জোখ-মাখৰ ক্ষেত্ৰত, এপ্‌সমূহৰ মাজত সেইবিলাকে দেখুওৱা বিজ্ঞাপনৰ পাৰদৰ্শিতাৰ বুজ ল’বলৈ সীমিত ধৰণৰ ডেটা শ্বেয়াৰ কৰা হয়, যেনে- আপোনাক কোনো বিজ্ঞাপন দিনটোৰ কি সময়ত দেখুওৱা হৈছিল।"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"এই ডিভাইচটোৰ কোনো এপত আপুনি কৰা কাৰ্যকলাপ বিজ্ঞাপনৰ পৰামৰ্শ দিবলৈ ব্যৱহাৰ কৰিব পাৰি।"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"বিজ্ঞাপনৰ গোপনীয়তাৰ অন্য এটা সুবিধা অন কৰক"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Androidএ লগতে এটা নতুন গোপনীয়তা সম্পৰ্কীয় সুবিধা আগবঢ়ায়, যিটোৱে আপুনি দেখা বিজ্ঞাপনৰ বিষয়ে আপোনাক অধিক বিকল্প প্ৰদান কৰে।"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"বিজ্ঞাপনৰ বিষয়বস্তুৱে এপ্‌সমূহক আপোনাৰ পৰিচয় আৰু আপোনাৰ এপ্‌ ব্যৱহাৰৰ বিষয়ে তথ্য সুৰক্ষিত ৰাখি আপোনাক প্ৰাসংগিক বিজ্ঞাপন দেখুওৱাত সহায় কৰে। আপুনি শেহতীয়াকৈ ব্যৱহাৰ কৰা এপৰ ওপৰত ভিত্তি কৰি Androidএ আগ্ৰহৰ বিষয়বস্তুৰ লক্ষ্য ৰাখিব পাৰে। পাছত, আপুনি ব্যৱহাৰ কৰা কোনো এপে আপোনাক অধিক প্ৰাসংগিক বিজ্ঞাপন দেখুৱাবলৈ Androidক প্ৰাসংগিক বিষয়বস্তুবোৰ বিচাৰিব পাৰে।"</string>
