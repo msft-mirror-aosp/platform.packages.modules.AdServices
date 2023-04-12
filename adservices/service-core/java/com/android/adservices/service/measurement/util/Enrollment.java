@@ -16,9 +16,14 @@
 
 package com.android.adservices.service.measurement.util;
 
+import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
 import java.util.Optional;
@@ -32,18 +37,48 @@ public final class Enrollment {
      * Returns an {@code Optional<String>} of the ad-tech enrollment record ID.
      *
      * @param registrationUri the ad-tech URL used to register a source or trigger.
+     * @param packageName Package mame of the registrant
      * @param enrollmentDao an instance of {@code EnrollmentDao}.
+     * @param context a valid {@code Context} object
+     * @param flags a valid {@code Flags} object
+     * @return enrollmentId if enrollment id exists and all validations pass otherwise empty
      */
-    public static Optional<String> maybeGetEnrollmentId(Uri registrationUri,
-            EnrollmentDao enrollmentDao) {
+    public static Optional<String> getValidEnrollmentId(
+            Uri registrationUri,
+            String packageName,
+            EnrollmentDao enrollmentDao,
+            Context context,
+            Flags flags) {
         Uri uriWithoutParams = registrationUri.buildUpon().clearQuery().fragment(null).build();
 
         EnrollmentData enrollmentData =
                 enrollmentDao.getEnrollmentDataFromMeasurementUrl(uriWithoutParams);
-        if (enrollmentData != null && enrollmentData.getEnrollmentId() != null) {
-            return Optional.of(enrollmentData.getEnrollmentId());
+        if (enrollmentData == null) {
+            LogUtil.w(
+                    "Enrollment check failed, Reason: Enrollment Id Not Found, "
+                            + "Registration URI: %s",
+                    registrationUri);
+            return Optional.empty();
         }
-        return Optional.empty();
+        if (flags.isEnrollmentBlocklisted(enrollmentData.getEnrollmentId())) {
+            LogUtil.w(
+                    "Enrollment check failed, Reason: Enrollment Id in blocklist, "
+                            + "Registration URI: %s, Enrollment Id: %s",
+                    registrationUri, enrollmentData.getEnrollmentId());
+            return Optional.empty();
+        }
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                && !AppManifestConfigHelper.isAllowedAttributionAccess(
+                        context, packageName, enrollmentData.getEnrollmentId())) {
+            LogUtil.w(
+                    "Enrollment check failed, Reason: Enrollment Id missing from "
+                            + "App Manifest AdTech allowlist, "
+                            + "Registration URI: %s, Enrollment Id: %s",
+                    registrationUri, enrollmentData.getEnrollmentId());
+            return Optional.empty();
+        }
+        return Optional.of(enrollmentData.getEnrollmentId());
     }
 
     /**
