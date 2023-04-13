@@ -146,6 +146,11 @@ public final class AsyncSourceFetcherTest {
 
     private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
 
+    private static final int UNKNOWN_SOURCE_TYPE = 0;
+    private static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    private static final int UNKNOWN_STATUS = 0;
+    private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+
     AsyncSourceFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -237,7 +242,12 @@ public final class AsyncSourceFetcherTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                253)
+                                                253,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
@@ -3868,7 +3878,12 @@ public final class AsyncSourceFetcherTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                115)
+                                                115,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
     }
