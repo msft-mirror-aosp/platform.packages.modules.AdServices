@@ -84,7 +84,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
         AdServicesStatsLog.write(
                 measurementReportsStats.getCode(),
                 measurementReportsStats.getType(),
-                measurementReportsStats.getResultCode());
+                measurementReportsStats.getResultCode(),
+                measurementReportsStats.getFailureType(),
+                measurementReportsStats.getUploadMethod(),
+                measurementReportsStats.getReportingDelay());
     }
 
     /** log method for API call stats. */
@@ -123,7 +126,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getCode(),
                 stats.getRegistrationType(),
                 stats.getResponseSize(),
-                stats.getAdTechDomain());
+                stats.getAdTechDomain(),
+                stats.getInteractionType(),
+                stats.getSurfaceType(),
+                stats.getRegistrationStatus(),
+                stats.getFailureType(),
+                stats.getRegistrationDelay());
     }
 
     @Override

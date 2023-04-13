@@ -66,6 +66,10 @@ import java.util.stream.IntStream;
 public final class FetcherUtilTest {
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
+    private static final int UNKNOWN_SOURCE_TYPE = 0;
+    private static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    private static final int UNKNOWN_STATUS = 0;
+    private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 
@@ -364,7 +368,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -391,7 +400,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -421,7 +435,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }

@@ -152,6 +152,11 @@ public final class AsyncTriggerFetcherTest {
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
+    private static final int UNKNOWN_SOURCE_TYPE = 0;
+    private static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    private static final int UNKNOWN_STATUS = 0;
+    private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+
     AsyncTriggerFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -196,7 +201,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223)
+                                223,
+                                UNKNOWN_SOURCE_TYPE,
+                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                UNKNOWN_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -234,7 +244,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                436)
+                                436,
+                                UNKNOWN_SOURCE_TYPE,
+                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                UNKNOWN_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -3511,7 +3526,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223)
+                                223,
+                                UNKNOWN_SOURCE_TYPE,
+                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                UNKNOWN_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(TRIGGER_URI)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
