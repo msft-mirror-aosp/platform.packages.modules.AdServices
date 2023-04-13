@@ -656,6 +656,7 @@ public class MeasurementManager {
                     @Override
                     public void onResult(AdId adId) {
                         isAdIdEnabled.set(isAdIdPermissionEnabled(adId));
+                        LogUtil.d("AdId permission enabled %b", isAdIdEnabled.get());
                         countDownLatch.countDown();
                     }
 
