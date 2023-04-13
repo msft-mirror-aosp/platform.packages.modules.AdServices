@@ -78,6 +78,12 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
