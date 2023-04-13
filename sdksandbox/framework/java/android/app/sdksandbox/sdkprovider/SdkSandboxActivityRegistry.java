@@ -130,11 +130,7 @@ public class SdkSandboxActivityRegistry {
                 throw new IllegalArgumentException(
                         "There is no registered SdkSandboxActivityHandler to notify");
             }
-            if (handlerInfo.isActivityCreated()) {
-                throw new IllegalArgumentException("Activity is already created for this handler");
-            }
             handlerInfo.getHandler().onActivityCreated(activity);
-            handlerInfo.setActivityCreated(true);
         }
     }
 
@@ -148,7 +144,6 @@ public class SdkSandboxActivityRegistry {
         private final SdkSandboxActivityHandler mHandler;
         private final IBinder mToken;
 
-        private volatile boolean mIsActivityCreated;
 
         HandlerInfo(String sdkName, SdkSandboxActivityHandler handler, IBinder token) {
             this.mSdkName = sdkName;
@@ -169,14 +164,6 @@ public class SdkSandboxActivityRegistry {
         @NonNull
         public IBinder getToken() {
             return mToken;
-        }
-
-        public boolean isActivityCreated() {
-            return mIsActivityCreated;
-        }
-
-        public void setActivityCreated(boolean activityCreated) {
-            mIsActivityCreated = activityCreated;
         }
     }
 }
