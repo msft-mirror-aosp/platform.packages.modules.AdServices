@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Fitur privasi iklan baru kini tersedia"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Dapatkan lebih banyak pilihan atas iklan yang Anda lihat sekaligus melindungi identitas Anda"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Fitur privasi iklan baru kini tersedia"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android meluncurkan cara baru untuk membatasi informasi yang dapat dipelajari aplikasi tentang Anda saat menampilkan iklan yang dipersonalisasi."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Dengan iklan yang disarankan aplikasi, fitur privasi baru membantu melindungi identitas dan informasi Anda terkait penggunaan aplikasi Anda sekaligus memungkinkan aplikasi menampilkan iklan yang relevan kepada Anda. Berdasarkan aktivitas Anda, aplikasi yang Anda gunakan dapat menyarankan iklan terkait di aplikasi lain. Anda dapat melihat daftar aplikasi dan memblokirnya agar tidak memberikan saran di setelan privasi."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Dengan pengukuran iklan, jenis data terbatas dibagikan antar-aplikasi untuk memahami performa iklan mereka, seperti waktu iklan ditampilkan kepada Anda."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Aktivitas Anda di aplikasi pada perangkat ini dapat digunakan untuk menyarankan iklan."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktifkan fitur privasi iklan lainnya"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android juga menawarkan fitur privasi baru yang memberi Anda lebih banyak pilihan atas iklan yang Anda lihat."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Topik iklan membantu aplikasi menampilkan iklan yang relevan kepada Anda sekaligus melindungi identitas dan informasi Anda terkait penggunaan aplikasi Anda. Android dapat mencatat topik minat berdasarkan aplikasi yang Anda gunakan baru-baru ini. Kemudian, aplikasi yang Anda gunakan dapat meminta topik yang relevan ke Android untuk menampilkan iklan yang lebih relevan kepada Anda."</string>

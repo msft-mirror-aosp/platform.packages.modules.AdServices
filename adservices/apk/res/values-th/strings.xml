@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"ฟีเจอร์ใหม่ๆ ด้านความเป็นส่วนตัวเกี่ยวกับโฆษณาพร้อมใช้งานแล้ว"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"รับทางเลือกมากขึ้นเกี่ยวกับโฆษณาที่เห็นอีกทั้งยังปกป้องข้อมูลประจำตัวของคุณไปพร้อมกันด้วย"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"ฟีเจอร์ใหม่ๆ ด้านความเป็นส่วนตัวเกี่ยวกับโฆษณาพร้อมใช้งานแล้ว"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android กำลังจะเปิดตัววิธีใหม่ๆ ในการจำกัดข้อมูลที่แอปสามารถเรียนรู้เกี่ยวกับคุณเมื่อแสดงโฆษณาที่ปรับตามโปรไฟล์ของผู้ใช้"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  เมื่อใช้โฆษณาที่แอปแนะนำ ฟีเจอร์ด้านความเป็นส่วนตัวใหม่ๆ จะช่วยปกป้องข้อมูลประจำตัวและข้อมูลเกี่ยวกับการใช้งานแอปไปพร้อมกับช่วยให้แอปแสดงโฆษณาที่เกี่ยวข้องได้ แอปที่คุณใช้ช่วยแนะนำโฆษณาที่เกี่ยวข้องในแอปอื่นได้โดยอิงตามกิจกรรมของคุณ คุณสามารถดูรายการแอปและบล็อกแอปไม่ให้ส่งคำแนะนำได้ในการตั้งค่าความเป็นส่วนตัว"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  เมื่อเปิดใช้การวัดผลโฆษณา ระบบจะแชร์เฉพาะข้อมูลบางประเภทระหว่างแอปเพื่อให้ทราบถึงประสิทธิภาพของโฆษณา เช่น ช่วงเวลาของวันที่มีการแสดงโฆษณาแก่คุณ"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"ระบบอาจใช้กิจกรรมของคุณในแอปบนอุปกรณ์นี้เพื่อแนะนำโฆษณา"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"เปิดฟีเจอร์ความเป็นส่วนตัวเกี่ยวกับโฆษณาอื่น"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android ยังมีฟีเจอร์ด้านความเป็นส่วนตัวใหม่ที่จะช่วยให้คุณมีทางเลือกมากขึ้นเกี่ยวกับโฆษณาที่เห็น"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"หัวข้อโฆษณาช่วยให้แอปแสดงโฆษณาที่เกี่ยวข้องอีกทั้งยังปกป้องข้อมูลประจำตัวและข้อมูลเกี่ยวกับการใช้งานแอปไปพร้อมกันด้วย Android จะบันทึกหัวข้อที่คุณสนใจตามแอปที่ใช้ล่าสุดได้ จากนั้น แอปที่คุณใช้จะสามารถขอหัวข้อที่เกี่ยวข้องจาก Android เพื่อแสดงโฆษณาที่เกี่ยวข้องมากขึ้น"</string>
