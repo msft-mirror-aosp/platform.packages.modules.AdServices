@@ -75,6 +75,7 @@ public class CustomAudienceManagerTest {
         PhFlagsFixture.overrideSdkRequestPermitsPerSecond(Integer.MAX_VALUE);
         // This test is running in background
         PhFlagsFixture.overrideForegroundStatusForFledgeCustomAudience(false);
+        PhFlagsFixture.overrideEnableEnrollmentSeed(true);
     }
 
     @After
@@ -83,6 +84,7 @@ public class CustomAudienceManagerTest {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        PhFlagsFixture.overrideEnableEnrollmentSeed(false);
     }
 
     private void measureJoinCustomAudience(String label) throws Exception {

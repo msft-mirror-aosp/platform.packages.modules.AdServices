@@ -330,6 +330,8 @@ public final class PhFlags implements Flags {
     static final String KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK =
             "disable_measurement_enrollment_check";
 
+    static final String KEY_ENABLE_ENROLLMENT_TEST_SEED = "enable_enrollment_test_seed";
+
     // SystemProperty prefix. We can use SystemProperty to override the AdService Configs.
     private static final String SYSTEM_PROPERTY_PREFIX = "debug.adservices.";
 
@@ -1810,6 +1812,14 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isEnableEnrollmentTestSeed() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_ENROLLMENT_TEST_SEED,
+                /* defaultValue */ ENABLE_ENROLLMENT_TEST_SEED);
+    }
+
+    @Override
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
@@ -2089,11 +2099,13 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean isBackCompatActivityFeatureEnabled() {
+        // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
-                /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
+        return getEnableBackCompat()
+                && DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                        /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
     }
 
     @Override
@@ -2165,6 +2177,9 @@ public final class PhFlags implements Flags {
                         + KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK
                         + " = "
                         + isDisableMeasurementEnrollmentCheck());
+
+        writer.println(
+                "\t" + KEY_ENABLE_ENROLLMENT_TEST_SEED + " = " + isEnableEnrollmentTestSeed());
 
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
@@ -2777,20 +2792,25 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getEnableBackCompat() {
+        // If SDK is T+, the value should always be false
+        // Check the flag value for S Minus
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_BACK_COMPAT,
-                /* defaultValue */ ENABLE_BACK_COMPAT);
+        return !SdkLevel.isAtLeastT()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENABLE_BACK_COMPAT,
+                        /* defaultValue */ ENABLE_BACK_COMPAT);
     }
 
     @Override
     public boolean getEnableAppsearchConsentData() {
+        // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
-                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
+        return getEnableBackCompat()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                        /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override
