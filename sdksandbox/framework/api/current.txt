@@ -6,7 +6,7 @@ package android.app.sdksandbox {
     method public int describeContents();
     method @NonNull public android.os.IBinder getInterface();
     method @NonNull public String getName();
-    method @NonNull public long getVersion();
+    method public long getVersion();
     method public void writeToParcel(@NonNull android.os.Parcel, int);
     field @NonNull public static final android.os.Parcelable.Creator<android.app.sdksandbox.AppOwnedSdkSandboxInterface> CREATOR;
   }
