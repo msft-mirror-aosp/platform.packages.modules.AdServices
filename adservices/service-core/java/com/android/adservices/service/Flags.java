@@ -606,6 +606,22 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT = 1000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT = 950;
+
+    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
+    default int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
+     * there are too many entries.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
+    }
+
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
