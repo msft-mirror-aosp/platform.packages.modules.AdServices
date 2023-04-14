@@ -283,11 +283,20 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
             assertThat(processDump).contains(APP_2_PROCESS_NAME_2 + '\n');
             assertThat(processDump).contains(SANDBOX_2_PROCESS_NAME);
 
+            final String initialAppProcessPid = getDevice().getProcessPid(APP_2_PROCESS_NAME);
+
             // Kill the sandbox.
             getDevice()
                     .executeShellCommand("device_config put adservices disable_sdk_sandbox true");
             waitForProcessDeath(SANDBOX_2_PROCESS_NAME);
-            waitForProcessDeath(APP_2_PROCESS_NAME + '\n');
+            try {
+                waitForProcessDeath(APP_2_PROCESS_NAME + '\n');
+            } catch (Exception e) {
+                // If the app process has not died, it could have restarted as it was the top
+                // activity. Verify that it is not the same process by checking the PID.
+                final String finalAppProcessPid = getDevice().getProcessPid(APP_2_PROCESS_NAME);
+                assertThat(finalAppProcessPid).isNotEqualTo(initialAppProcessPid);
+            }
 
             // Only the app process which loaded the SDK should die. The other app process should
             // still be alive.
