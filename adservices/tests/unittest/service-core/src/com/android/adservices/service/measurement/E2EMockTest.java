@@ -66,6 +66,13 @@ import com.android.adservices.service.measurement.reporting.DebugReportingJobHan
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -89,13 +96,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
-
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -150,11 +150,17 @@ public abstract class E2EMockTest extends E2ETest {
         mAsyncSourceFetcher =
                 spy(
                         new AsyncSourceFetcher(
-                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                AdServicesLoggerImpl.getInstance()));
         mAsyncTriggerFetcher =
                 spy(
                         new AsyncTriggerFetcher(
-                                mEnrollmentDao, mFlags, AdServicesLoggerImpl.getInstance()));
+                                sContext,
+                                mEnrollmentDao,
+                                mFlags,
+                                AdServicesLoggerImpl.getInstance()));
         mDebugReportApi = new DebugReportApi(sContext, mFlags);
         mMockContentResolver = mock(ContentResolver.class);
         mMockContentProviderClient = mock(ContentProviderClient.class);
