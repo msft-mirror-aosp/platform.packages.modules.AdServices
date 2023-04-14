@@ -40,6 +40,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -63,6 +64,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,6 +74,8 @@ public class SettingsActivityUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+
+    private String mTestName;
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
@@ -184,7 +188,10 @@ public class SettingsActivityUiAutomatorTest {
     public void teardown() {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
-        // ApkTestUtil.killApp();
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
+        AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
+
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
         }
@@ -192,6 +199,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void optOutDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         assertThat(mainSwitch.exists()).isTrue();
@@ -222,6 +230,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void blockTopicDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
         UiObject blockTopicText =
@@ -260,6 +269,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void unblockTopicDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
 
@@ -289,6 +299,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         startActivityFromHomeAndCheckMainSwitch();
@@ -306,6 +317,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void resetTopicDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open topics view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
 
@@ -339,6 +351,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void blockAppDialogTest() throws UiObjectNotFoundException, IOException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
         UiObject blockAppText =
@@ -375,6 +388,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void unblockAppDialogTest() throws UiObjectNotFoundException, IOException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
@@ -403,6 +417,7 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void resetAppDialogTest() throws UiObjectNotFoundException, IOException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
@@ -434,6 +449,8 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void disableMeasurementTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // start the activity again to reflect the GaUxFeature flag change
         startActivityFromHomeAndCheckMainSwitch();
@@ -445,6 +462,8 @@ public class SettingsActivityUiAutomatorTest {
 
     @Test
     public void disableDialogFeatureTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
@@ -498,6 +517,8 @@ public class SettingsActivityUiAutomatorTest {
      */
     @Test
     public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // Return an empty topics list
         doReturn(ImmutableList.of()).when(mConsentManager).getKnownTopicsWithConsent();
         // Return a non-empty blocked topics list

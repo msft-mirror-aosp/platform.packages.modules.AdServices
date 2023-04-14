@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -34,6 +35,13 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
+import com.android.compatibility.common.util.ShellUtils;
+
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Date;
+import java.util.Locale;
 
 /** Util class for APK tests. */
 public class ApkTestUtil {
@@ -137,5 +145,30 @@ public class ApkTestUtil {
         context.startActivity(browserIntent);
         device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
         return device.getCurrentPackageName();
+    }
+
+    /** Kills the default browser of the device after test. */
+    public static void killDefaultBrowserPkgName(UiDevice device, Context context) {
+        ShellUtils.runShellCommand("am force-stop " + getDefaultBrowserPkgName(device, context));
+    }
+
+    /** Takes the screenshot at the end of each test for debugging. */
+    public static void takeScreenshot(UiDevice device, String methodName) {
+        try {
+            String uiDocumentsDir = "/Documents/AdServicesUiTests_Screenshots_";
+            String timeStamp =
+                    new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+                            .format(Date.from(Instant.now()));
+
+            File screenshotFile =
+                    new File(
+                            Environment.getExternalStorageDirectory()
+                                    + uiDocumentsDir
+                                    + methodName
+                                    + timeStamp);
+            device.takeScreenshot(screenshotFile);
+        } catch (RuntimeException e) {
+            LogUtil.e("Failed to take screenshot: " + e.getMessage());
+        }
     }
 }
