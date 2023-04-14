@@ -161,10 +161,30 @@ public class ConsentSettingsUiAutomatorTest {
     @Test
     public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(3).when(mMockFlags).getConsentSourceOfTruth();
+            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+            consentTest(true);
+        } else {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_appsearch_consent_data true");
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+            consentTest(true);
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_appsearch_consent_data null");
+        }
+    }
+
+    @Test
+    public void consentAppSearchOnlyDialogsOnTest() throws UiObjectNotFoundException {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
             doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
             consentTest(true);
         } else {
+            ShellUtils.runShellCommand(
+                    "device_config put adservices enable_appsearch_consent_data true");
             ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
             ShellUtils.runShellCommand(
                     "device_config put adservices ui_dialogs_feature_enabled true");
@@ -174,7 +194,6 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
-
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
