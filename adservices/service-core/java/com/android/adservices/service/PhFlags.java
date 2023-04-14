@@ -115,6 +115,24 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS =
             "measurement_max_registration_redirects";
 
+    static final String KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION =
+            "measurement_max_registration_per_job_invocation";
+
+    static final String KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST =
+            "measurement_max_retries_per_registration_request";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS =
+            "measurement_registration_job_trigger_delay_ms";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS =
+            "measurement_registration_job_trigger_max_delay_ms";
+
+    static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_attribution_fallback_job_kill_switch";
+
+    static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS =
+            "measurement_attribution_fallback_job_period_ms";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -285,6 +303,9 @@ public final class PhFlags implements Flags {
             "measurement_receiver_delete_packages_kill_switch";
     static final String KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH =
             "measurement_job_registration_job_queue_kill_switch";
+
+    static final String KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH =
+            "measurement_job_registration_fallback_job_kill_switch";
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
@@ -422,6 +443,18 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
+
+    static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
+            "measurement_max_sources_per_publisher";
+
+    static final String KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION =
+            "measurement_max_triggers_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION =
+            "measurement_max_aggregate_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
+            "measurement_max_event_reports_per_destination";
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
@@ -792,6 +825,62 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS,
                 /* defaultValue */ MEASUREMENT_MAX_REGISTRATION_REDIRECTS);
+    }
+
+    @Override
+    public int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION,
+                /* defaultValue */ MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION);
+    }
+
+    @Override
+    public int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST,
+                /* defaultValue */ MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST);
+    }
+
+    @Override
+    public long getMeasurementRegistrationJobTriggerDelayMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS,
+                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS);
+    }
+
+    @Override
+    public long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS,
+                /* defaultValue */ MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS);
+    }
+
+    @Override
+    public boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        final boolean defaultValue = MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public long getMeasurementAttributionFallbackJobPeriodMs() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS,
+                /* defaultValue */ MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS);
     }
 
     @Override
@@ -1453,6 +1542,23 @@ public final class PhFlags implements Flags {
                         getSystemPropertyName(flagName),
                         /* defaultValue */ DeviceConfig.getBoolean(
                                 NAMESPACE_ADSERVICES, flagName, defaultValue));
+    }
+
+    @Override
+    public boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first then Measurement Killswitch.
+        // As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        final String flagName = KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || SystemProperties.getBoolean(
+                        getSystemPropertyName(flagName),
+                        /* defaultValue */ DeviceConfig.getBoolean(
+                                NAMESPACE_ADSERVICES,
+                                flagName,
+                                MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -2160,6 +2266,42 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxSourcesPerPublisher() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER,
+                /* defaultValue */ MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
+    }
+
+    @Override
+    public int getMeasurementMaxTriggersPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxEventReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2417,7 +2559,65 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS
                         + " = "
                         + getMeasurementMaxRegistrationRedirects());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION
+                        + " = "
+                        + getMeasurementMaxRegistrationsPerJobInvocation());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST
+                        + " = "
+                        + getMeasurementMaxRetriesPerRegistrationRequest());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS
+                        + " = "
+                        + getMeasurementRegistrationJobTriggerDelayMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS
+                        + " = "
+                        + getMeasurementRegistrationJobTriggerMaxDelayMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH
+                        + " = "
+                        + getAsyncRegistrationJobQueueKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getAsyncRegistrationFallbackJobKillSwitch());        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getMeasurementAttributionFallbackJobKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementAttributionFallbackJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER
+                        + " = "
+                        + getMeasurementMaxSourcesPerPublisher());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxTriggersPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxEventReportsPerDestination());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());

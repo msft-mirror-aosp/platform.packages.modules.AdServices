@@ -80,16 +80,20 @@ public class AsyncSourceFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     public AsyncSourceFetcher(Context context) {
         this(
+                context,
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncSourceFetcher(
+            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+        mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
@@ -422,11 +426,15 @@ public class AsyncSourceFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.maybeGetEnrollmentId(
-                        asyncRegistration.getRegistrationUri(), mEnrollmentDao);
+                Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
-                    "fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    "fetchSource: Valid enrollment id not found. Registration URI: %s",
                     asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
             return Optional.empty();

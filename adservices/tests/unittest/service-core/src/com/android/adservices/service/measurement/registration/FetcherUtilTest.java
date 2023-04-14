@@ -89,6 +89,9 @@ public final class FetcherUtilTest {
     @Test
     public void testIsSuccess() {
         assertTrue(FetcherUtil.isSuccess(200));
+        assertTrue(FetcherUtil.isSuccess(201));
+        assertTrue(FetcherUtil.isSuccess(202));
+        assertTrue(FetcherUtil.isSuccess(204));
         assertFalse(FetcherUtil.isSuccess(404));
         assertFalse(FetcherUtil.isSuccess(500));
         assertFalse(FetcherUtil.isSuccess(0));

@@ -333,6 +333,56 @@ public interface Flags {
         return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
     }
 
+    int MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION = 100;
+
+    /** Returns the number of maximum registration per job invocation. */
+    default int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
+    }
+
+    int MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST = 5;
+
+    /** Returns the number of maximum retires per registration request. */
+    default int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /** Returns the kill switch for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for Attribution Fallback Job . */
+    default long getMeasurementAttributionFallbackJobPeriodMs() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -1853,7 +1903,7 @@ public interface Flags {
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * Returns the kill switch value for Registration Job Queue. The job will be disabled if either
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
@@ -1862,6 +1912,20 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Fallback Job. The Job will be disabled if
+     * either the Global Kill Switch, Measurement Kill Switch, or the Registration Fallback Job Kill
+     * Switch value is true.
+     */
+    default boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1927,10 +1991,43 @@ public interface Flags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Default value for flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
+    /** Returns whether to enable flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default maximum sources per publisher */
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    /** Returns maximum sources per publisher */
+    default int getMeasurementMaxSourcesPerPublisher() {
+        return MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
+    }
+
+    /** Default maximum triggers per destination */
+    int MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION = 1024;
+
+    /** Returns maximum triggers per destination */
+    default int getMeasurementMaxTriggersPerDestination() {
+        return MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+    }
+
+    /** Default maximum Aggregate Reports per destination */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Aggregate Reports per publisher */
+    default int getMeasurementMaxAggregateReportsPerDestination() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default maximum Event Reports per destination */
+    int MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Event Reports per destination */
+    default int getMeasurementMaxEventReportsPerDestination() {
+        return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 }
