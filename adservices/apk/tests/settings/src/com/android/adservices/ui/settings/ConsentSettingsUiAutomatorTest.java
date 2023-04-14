@@ -61,6 +61,8 @@ public class ConsentSettingsUiAutomatorTest {
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+
+    private String mTestName;
     private MockitoSession mStaticMockSession;
     private PhFlags mPhFlags;
     @Mock Flags mMockFlags;
@@ -92,6 +94,8 @@ public class ConsentSettingsUiAutomatorTest {
     public void teardown() {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         if (mStaticMockSession != null) {
@@ -101,6 +105,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerOnlyTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         Assume.assumeTrue(SdkLevel.isAtLeastT());
 
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
@@ -110,6 +116,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentPpApiOnlyTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
             doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
@@ -123,6 +131,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerAndPpApiTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
@@ -131,6 +141,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerOnlyDialogsOnTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
@@ -139,6 +151,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentPpApiOnlyDialogsOnTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
             doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
@@ -152,6 +166,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentSystemServerAndPpApiDialogsOnTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
@@ -160,6 +176,8 @@ public class ConsentSettingsUiAutomatorTest {
 
     @Test
     public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
             doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
