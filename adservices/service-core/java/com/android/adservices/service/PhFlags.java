@@ -3053,13 +3053,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getEnableAppsearchConsentData() {
-        // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return getEnableBackCompat()
-                && DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
-                        /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override

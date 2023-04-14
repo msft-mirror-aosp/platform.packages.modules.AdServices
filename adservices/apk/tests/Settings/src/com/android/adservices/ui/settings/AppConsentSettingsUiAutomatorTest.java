@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +38,7 @@ import androidx.test.uiautomator.Until;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.Flags;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -61,8 +63,6 @@ public class AppConsentSettingsUiAutomatorTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
-    private static final String ADEXTSERVICES_PACKAGE_NAME =
-            "com.google.android.ext.adservices.api";
 
     @Before
     public void setup() throws UiObjectNotFoundException {
@@ -122,6 +122,27 @@ public class AppConsentSettingsUiAutomatorTest {
         // System server is not available on S-, skip this test for S-
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, false);
+    }
+
+    @Test
+    @Ignore("Flaky test. (b/268351419)")
+    public void consentAppSearchOnlyTest() throws UiObjectNotFoundException, InterruptedException {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_appsearch_consent_data true");
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+        appConsentTest(Flags.APPSEARCH_ONLY, false);
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
+    }
+
+    @Test
+    @Ignore("Flaky test. (b/268351419)")
+    public void consentAppSearchOnlyDialogsOnTest()
+            throws UiObjectNotFoundException, InterruptedException {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_appsearch_consent_data true");
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
+        appConsentTest(Flags.APPSEARCH_ONLY, true);
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
     }
 
     @Test
@@ -291,6 +312,8 @@ public class AppConsentSettingsUiAutomatorTest {
         ShellUtils.runShellCommand(
                 "device_config put adservices"
                         + " fledge_custom_audience_service_kill_switch false");
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_fledge_enrollment_check true");
 
         ShellUtils.runShellCommand("device_config put adservices ppapi_app_allow_list *");
 
@@ -306,5 +329,7 @@ public class AppConsentSettingsUiAutomatorTest {
         ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests none");
         ShellUtils.runShellCommand(
                 "am force-stop com.example.adservices.samples.ui.consenttestapp");
+        ShellUtils.runShellCommand(
+                "device_config put adservices disable_fledge_enrollment_check null");
     }
 }

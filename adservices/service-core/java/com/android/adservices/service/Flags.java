@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -897,11 +898,21 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
-    /** Write consent data to AppSearch only. */
+    /**
+     * Write consent data to AppSearch only. To store consent data in AppSearch the flag
+     * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
+     * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
+     * running on S- for all consent requests and on T+ once after OTA.
+     */
     int APPSEARCH_ONLY = 3;
 
-    /* Consent source of truth intended to be used by default. */
-    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+    /**
+     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
+     * code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
