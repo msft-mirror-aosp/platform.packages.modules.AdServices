@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package com.android.adservices.errorlogging;
 
 /**
  * Enum representing an error/exception. These errors can be common to all PPAPIs or specific to a
