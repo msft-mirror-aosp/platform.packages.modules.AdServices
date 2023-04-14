@@ -27,6 +27,7 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnScrollChangeListener;
@@ -100,6 +101,9 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
                 });
+
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                .setMovementMethod(LinkMovementMethod.getInstance());
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton_screen_2);
         leftControlButton.setOnClickListener(
