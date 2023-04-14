@@ -105,7 +105,6 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         } else {
@@ -605,8 +604,9 @@ public class SettingsGaUiAutomatorTest {
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
 
         // Back compat only support the following flags
-        doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
         doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
     }
 }

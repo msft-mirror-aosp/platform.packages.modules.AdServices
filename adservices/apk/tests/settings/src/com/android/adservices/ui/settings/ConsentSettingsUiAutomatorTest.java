@@ -177,38 +177,21 @@ public class ConsentSettingsUiAutomatorTest {
     @Test
     public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
-            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
-            consentTest(true);
-        } else {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data true");
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-            consentTest(true);
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data null");
-        }
+        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+        consentTest(false);
     }
 
     @Test
     public void consentAppSearchOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
-            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
-            doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-            consentTest(true);
-        } else {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data true");
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled true");
-            consentTest(true);
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-        }
+        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
+        consentTest(true);
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
