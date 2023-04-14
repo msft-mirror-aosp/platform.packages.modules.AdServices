@@ -39,8 +39,6 @@ import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.errorlogging.AdServicesErrorStats;
-import com.android.adservices.service.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
