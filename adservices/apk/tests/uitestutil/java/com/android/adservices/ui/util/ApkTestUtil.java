@@ -33,14 +33,16 @@ import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.LogUtil;
+
 /** Util class for APK tests. */
 public class ApkTestUtil {
 
     public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
     private static final String PRIVACY_SANDBOX_TEST_UI = "android.test.adservices.ui.MAIN";
-    public static final int WINDOW_LAUNCH_TIMEOUT = 1000;
-
+    private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
+    private static final int SCROLL_TIMEOUT = 500;
     /**
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
@@ -84,6 +86,11 @@ public class ApkTestUtil {
 
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
         scrollView.scrollIntoView(obj);
+        try {
+            Thread.sleep(SCROLL_TIMEOUT);
+        } catch (InterruptedException e) {
+            LogUtil.e("InterruptedException:", e.getMessage());
+        }
         return obj;
     }
 
