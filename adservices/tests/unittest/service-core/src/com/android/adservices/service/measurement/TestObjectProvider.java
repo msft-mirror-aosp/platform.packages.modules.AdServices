@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import android.annotation.IntDef;
+import android.content.ContentResolver;
 import android.test.mock.MockContentResolver;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -47,10 +48,11 @@ import java.util.concurrent.TimeUnit;
 class TestObjectProvider {
     private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
 
-    @IntDef(value = {
-            Type.DENOISED,
-            Type.NOISY,
-    })
+    @IntDef(
+            value = {
+                Type.DENOISED,
+                Type.NOISY,
+            })
     @Retention(RetentionPolicy.SOURCE)
     @interface Type {
         int DENOISED = 1;
@@ -68,9 +70,15 @@ class TestObjectProvider {
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
-            MeasurementDataDeleter measurementDataDeleter) {
+            MeasurementDataDeleter measurementDataDeleter,
+            ContentResolver contentResolver) {
         return spy(
-                new MeasurementImpl(null, datastoreManager, clickVerifier, measurementDataDeleter));
+                new MeasurementImpl(
+                        null,
+                        datastoreManager,
+                        clickVerifier,
+                        measurementDataDeleter,
+                        contentResolver));
     }
 
     static AsyncRegistrationQueueRunner getAsyncRegistrationQueueRunner(

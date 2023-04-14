@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.measurement.registration;
+package com.android.adservices.service.measurement.attribution;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
+import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -36,35 +38,43 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
+import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
-public class AsyncRegistrationQueueJobServiceTest {
+/**
+ * Unit test for {@link AttributionFallbackJobService
+ */
+public class AttributionFallbackJobServiceTest {
 
-    private static final long WAIT_IN_MILLIS = 1_000L;
-    private JobScheduler mMockJobScheduler;
-    private AsyncRegistrationQueueJobService mSpyService;
     private DatastoreManager mMockDatastoreManager;
+    private JobScheduler mMockJobScheduler;
+
+    private AttributionFallbackJobService mSpyService;
+    private Flags mFlags;
 
     @Before
     public void setUp() {
-        mSpyService = spy(new AsyncRegistrationQueueJobService());
+        mSpyService = spy(new AttributionFallbackJobService());
+        mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
+        mFlags = mock(Flags.class);
     }
 
     @Test
@@ -73,17 +83,24 @@ public class AsyncRegistrationQueueJobServiceTest {
                 () -> {
                     // Setup
                     enableKillSwitch();
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    doAnswer(invocation -> {
+                        countDownLatch.countDown();
+                        return null;
+                    }).when(mSpyService).jobFinished(any(), anyBoolean());
 
                     // Execute
-                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     // Validate
                     assertFalse(result);
+
                     // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
+                    countDownLatch.await();
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
                     verify(mSpyService, times(1)).jobFinished(any(), eq(false));
                     verify(mMockJobScheduler, times(1))
-                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
@@ -93,22 +110,61 @@ public class AsyncRegistrationQueueJobServiceTest {
                 () -> {
                     // Setup
                     disableKillSwitch();
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    doAnswer(invocation -> {
+                        countDownLatch.countDown();
+                        return null;
+                    }).when(mSpyService).jobFinished(any(), anyBoolean());
+
                     ExtendedMockito.doNothing()
                             .when(
                                     () ->
-                                            AsyncRegistrationQueueJobService.scheduleIfNeeded(
+                                            AttributionFallbackJobService.scheduleIfNeeded(
                                                     any(), anyBoolean()));
 
                     // Execute
-                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
 
                     // Validate
                     assertTrue(result);
                     // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    ExtendedMockito.verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+                    countDownLatch.await();
+                    verify(mMockDatastoreManager, times(1)).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
-                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
+                });
+    }
+
+    @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+                    CountDownLatch countDownLatch = new CountDownLatch(1);
+                    doAnswer(invocation -> {
+                        countDownLatch.countDown();
+                        return null;
+                    }).when(mSpyService).jobFinished(any(), anyBoolean());
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    countDownLatch.await();
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
+                    ExtendedMockito.verifyZeroInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }
 
@@ -126,17 +182,17 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                    AttributionFallbackJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
+                            () -> AttributionFallbackJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
@@ -155,17 +211,17 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ false);
+                    AttributionFallbackJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()), never());
+                            () -> AttributionFallbackJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
@@ -184,18 +240,17 @@ public class AsyncRegistrationQueueJobServiceTest {
                     final JobInfo mockJobInfo = mock(JobInfo.class);
                     doReturn(mockJobInfo)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                            mockContext, /* forceSchedule= */ true);
+                    AttributionFallbackJobService.scheduleIfNeeded(
+                            mockContext, /* forceSchedule = */ true);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            times(1));
+                            () -> AttributionFallbackJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
@@ -211,61 +266,54 @@ public class AsyncRegistrationQueueJobServiceTest {
                     doReturn(mMockJobScheduler)
                             .when(mockContext)
                             .getSystemService(JobScheduler.class);
-                    doReturn(/* noJobInfo= */ null)
+                    doReturn(/* noJobInfo = */ null)
                             .when(mMockJobScheduler)
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
 
                     // Execute
-                    AsyncRegistrationQueueJobService.scheduleIfNeeded(mockContext, false);
+                    AttributionFallbackJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            times(1));
+                            () -> AttributionFallbackJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
-                            .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                            .getPendingJob(eq(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID));
                 });
     }
 
     @Test
-    public void onStartJob_shouldDisableJobTrue() throws Exception {
+    public void testSchedule_jobInfoIsPersisted() throws Exception {
         runWithMocks(
                 () -> {
                     // Setup
-                    ExtendedMockito.doReturn(true)
-                            .when(
-                                    () ->
-                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                                    any(Context.class)));
+                    final JobScheduler jobScheduler = mock(JobScheduler.class);
+                    final ArgumentCaptor<JobInfo> captor = ArgumentCaptor.forClass(JobInfo.class);
 
                     // Execute
-                    boolean result = mSpyService.onStartJob(mock(JobParameters.class));
+                    ExtendedMockito.doCallRealMethod()
+                            .when(() -> AttributionFallbackJobService.schedule(any(), any()));
+                    AttributionFallbackJobService.schedule(mock(Context.class), jobScheduler);
 
                     // Validate
-                    assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1))
-                            .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
-                    ExtendedMockito.verifyZeroInteractions(
-                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
+                    verify(jobScheduler, times(1)).schedule(captor.capture());
+                    assertNotNull(captor.getValue());
+                    assertTrue(captor.getValue().isPersisted());
                 });
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(AsyncRegistrationQueueJobService.class)
-                        .spyStatic(AdServicesLoggerImpl.class)
+                        .spyStatic(AdServicesConfig.class)
                         .spyStatic(DatastoreManagerFactory.class)
-                        .spyStatic(EnrollmentDao.class)
+                        .spyStatic(AttributionFallbackJobService.class)
                         .spyStatic(FlagsFactory.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
             // Setup mock everything in job
+            ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
             mMockDatastoreManager = mock(DatastoreManager.class);
             doReturn(Optional.empty())
                     .when(mMockDatastoreManager)
@@ -273,19 +321,19 @@ public class AsyncRegistrationQueueJobServiceTest {
             doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
             doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
             doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-            ExtendedMockito.doReturn(mock(EnrollmentDao.class))
-                    .when(() -> EnrollmentDao.getInstance(any()));
-            ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
-                    .when(AdServicesLoggerImpl::getInstance);
-            ExtendedMockito.doNothing()
-                    .when(() -> AsyncRegistrationQueueJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+            ExtendedMockito.doNothing()
+                    .when(() -> AttributionFallbackJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(false)
                     .when(
                             () ->
                                     ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                             any(Context.class)));
+            ExtendedMockito.doReturn(TimeUnit.HOURS.toMillis(1))
+                    .when(mFlags)
+                    .getMeasurementAttributionFallbackJobPeriodMs();
+
             // Execute
             execute.run();
         } finally {
@@ -302,8 +350,8 @@ public class AsyncRegistrationQueueJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        Flags mockFlags = Mockito.mock(Flags.class);
-        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getAsyncRegistrationJobQueueKillSwitch();
+        ExtendedMockito.doReturn(value)
+                .when(mFlags)
+                .getMeasurementAttributionFallbackJobKillSwitch();
     }
 }
