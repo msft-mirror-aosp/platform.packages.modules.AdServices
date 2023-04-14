@@ -29,17 +29,19 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/** This class represents the data access object for the consent data written to AppSearch. */
+/** This class represents the data access object for the app consent data written to AppSearch. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @Document
-class AppSearchConsentDao extends AppSearchDao {
+class AppSearchAppConsentDao extends AppSearchDao {
     /**
      * Identifier of the Consent Document; must be unique within the Document's `namespace`. This is
-     * the row ID for consent data. It is a combination of user ID and api type.
+     * the row ID for consent data. It is a combination of user ID and consent type.
      */
     @Document.Id private final String mId;
 
@@ -50,20 +52,23 @@ class AppSearchConsentDao extends AppSearchDao {
     @Document.Namespace private final String mNamespace;
 
     /**
-     * API type for this consent. Possible values are a) CONSENT, CONSENT-FLEDGE,
-     * CONSENT-MEASUREMENT, CONSENT-TOPICS, b) DEFAULT_CONSENT, TOPICS_DEFAULT_CONSENT,
-     * FLEDGE_DEFAULT_CONSENT, MEASUREMENT_DEFAULT_CONSENT and c) DEFAULT_AD_ID_STATE.
+     * Consent type for this table. Possible values are: APPS_WITH_CONSENT,
+     * APPS_WITH_REVOKED_CONSENT, APPS_WITH_FLEDGE_CONSENT and APPS_WITH_FLEDGE_REVOKED_CONSENT.
      */
     @Document.StringProperty(indexingType = StringPropertyConfig.INDEXING_TYPE_EXACT_TERMS)
-    private final String mApiType;
+    private final String mConsentType;
 
-    /** Consent bit for this user for this API type. */
-    @Document.StringProperty private final String mConsent;
+    /** List of apps. */
+    @Document.StringProperty private List<String> mApps;
 
     // Column names used for preparing the query string, are not part of the @Document.
     private static final String USER_ID_COLNAME = "userId";
-    private static final String API_TYPE_COLNAME = "apiType";
-    public static final String NAMESPACE = "consent";
+    private static final String CONSENT_TYPE_COLNAME = "consentType";
+    public static final String NAMESPACE = "appConsent";
+
+    // Consent types we store with this DAO.
+    public static final String APPS_WITH_CONSENT = "APPS_WITH_CONSENT";
+    public static final String APPS_WITH_REVOKED_CONSENT = "APPS_WITH_REVOKED_CONSENT";
 
     /**
      * Create an AppSearchConsentDao instance.
@@ -71,16 +76,16 @@ class AppSearchConsentDao extends AppSearchDao {
      * @param id is a combination of the user ID and apiType
      * @param userId is the user ID for this user
      * @param namespace (required by AppSearch)
-     * @param apiType is the apiType for which we are storing consent data
-     * @param consent whether consent is granted
+     * @param consentType is the consentType for which we are storing consent data
+     * @param apps list of apps
      */
-    AppSearchConsentDao(
-            String id, String userId, String namespace, String apiType, String consent) {
+    AppSearchAppConsentDao(
+            String id, String userId, String namespace, String consentType, List<String> apps) {
         this.mId = id;
         this.mUserId = userId;
         this.mNamespace = namespace;
-        this.mApiType = apiType;
-        this.mConsent = consent;
+        this.mConsentType = consentType;
+        this.mApps = apps;
     }
 
     /**
@@ -115,27 +120,29 @@ class AppSearchConsentDao extends AppSearchDao {
      *
      * @return apiType
      */
-    public String getApiType() {
-        return mApiType;
+    public String getConsentType() {
+        return mConsentType;
     }
 
     /**
-     * Get whether consent is granted for this row.
+     * Gets the list of apps.
      *
-     * @return consented
+     * @return List of app package names.
      */
-    public String getConsent() {
-        return mConsent;
+    public List<String> getApps() {
+        return mApps;
     }
 
-    /** @return whether consent is granted for this row. */
-    public boolean isConsented() {
-        return mConsent.equals("true");
+    /** Sets the apps. */
+    public void setApps(List<String> apps) {
+        mApps = apps;
     }
 
     /** Returns the row ID that should be unique for the consent namespace. */
-    public static String getRowId(@NonNull String uid, @NonNull String apiType) {
-        return uid + "_" + apiType;
+    public static String getRowId(@NonNull String uid, @NonNull String consentType) {
+        Objects.requireNonNull(uid);
+        Objects.requireNonNull(consentType);
+        return uid + "_" + consentType;
     }
 
     /**
@@ -148,29 +155,29 @@ class AppSearchConsentDao extends AppSearchDao {
                 + mId
                 + "; userId="
                 + mUserId
-                + "; apiType="
-                + mApiType
+                + "; consentType="
+                + mConsentType
                 + "; namespace="
                 + mNamespace
-                + "; consent="
-                + mConsent;
+                + "; apps="
+                + (mApps == null ? "null" : Arrays.toString(mApps.toArray()));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mId, mUserId, mNamespace, mConsent, mApiType);
+        return Objects.hash(mId, mUserId, mNamespace, mApps, mConsentType);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AppSearchConsentDao)) return false;
-        AppSearchConsentDao obj = (AppSearchConsentDao) o;
+        if (!(o instanceof AppSearchAppConsentDao)) return false;
+        AppSearchAppConsentDao obj = (AppSearchAppConsentDao) o;
         return (Objects.equals(this.mId, obj.mId))
                 && (Objects.equals(this.mUserId, obj.mUserId))
-                && (Objects.equals(this.mApiType, obj.mApiType))
+                && (Objects.equals(this.mConsentType, obj.mConsentType))
                 && (Objects.equals(this.mNamespace, obj.mNamespace))
-                && (Objects.equals(this.mConsent, obj.mConsent));
+                && (Objects.equals(this.mApps, obj.mApps));
     }
 
     /**
@@ -182,7 +189,7 @@ class AppSearchConsentDao extends AppSearchDao {
      * @param apiType the API type for the query.
      * @return whether the row is consented for this user ID and apiType.
      */
-    static boolean readConsentData(
+    static AppSearchAppConsentDao readConsentData(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
             @NonNull Executor executor,
             @NonNull String userId,
@@ -193,20 +200,17 @@ class AppSearchConsentDao extends AppSearchDao {
         Objects.requireNonNull(apiType);
 
         String query = getQuery(userId, apiType);
-        AppSearchConsentDao dao =
+        AppSearchAppConsentDao dao =
                 AppSearchDao.readConsentData(
-                        AppSearchConsentDao.class, searchSession, executor, NAMESPACE, query);
+                        AppSearchAppConsentDao.class, searchSession, executor, NAMESPACE, query);
         LogUtil.d("AppSearch app consent data read: " + dao + " [ query: " + query + "]");
-        if (dao == null) {
-            return false;
-        }
-        return dao.isConsented();
+        return dao;
     }
 
     // Get the search query for AppSearch. Format specified at http://shortn/_RwVKmB74f3.
     // Note: AND as an operator is not supported by AppSearch on S or T.
     @VisibleForTesting
-    static String getQuery(String userId, String apiType) {
-        return USER_ID_COLNAME + ":" + userId + " " + API_TYPE_COLNAME + ":" + apiType;
+    static String getQuery(String userId, String consentType) {
+        return USER_ID_COLNAME + ":" + userId + " " + CONSENT_TYPE_COLNAME + ":" + consentType;
     }
 }
