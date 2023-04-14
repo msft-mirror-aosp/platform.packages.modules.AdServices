@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.android.adservices.service.FlagsFactory;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,13 +29,23 @@ public class SystemHealthParams {
     private SystemHealthParams() {}
 
     /** Max number of triggers a destination can register. */
-    public static final long MAX_TRIGGER_REGISTERS_PER_DESTINATION = 1024L;
+    public static int getMaxTriggersPerDestination() {
+        return FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
+    }
 
     /** Max number of sources per publisher. */
-    private static final int MAX_SOURCES_PER_PUBLISHER = 1024;
-
     public static int getMaxSourcesPerPublisher() {
-        return MAX_SOURCES_PER_PUBLISHER;
+        return FlagsFactory.getFlags().getMeasurementMaxSourcesPerPublisher();
+    }
+
+    /** Max number of aggregate reports in storage per destination */
+    public static int getMaxAggregateReportsPerDestination() {
+        return FlagsFactory.getFlags().getMeasurementMaxAggregateReportsPerDestination();
+    }
+
+    /** Max number of event reports in storage per destination */
+    public static int getMaxEventReportsPerDestination() {
+        return FlagsFactory.getFlags().getMeasurementMaxEventReportsPerDestination();
     }
 
     /** Delay for attribution job triggering. */
@@ -48,20 +60,6 @@ public class SystemHealthParams {
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
     public static final int MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
-
-    /** Max number of aggregate reports in storage per destination */
-    private static final int MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
-
-    public static int getMaxAggregateReportsPerDestination() {
-        return MAX_AGGREGATE_REPORTS_PER_DESTINATION;
-    }
-
-    /** Max number of event reports in storage per destination */
-    private static final int MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
-
-    public static int getMaxEventReportsPerDestination() {
-        return MAX_EVENT_REPORTS_PER_DESTINATION;
-    }
 
     /** Maximum event report upload retry window. */
     public static final long MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS = TimeUnit.DAYS.toMillis(28);
