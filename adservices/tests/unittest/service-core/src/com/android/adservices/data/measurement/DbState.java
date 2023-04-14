@@ -257,7 +257,7 @@ public class DbState {
                         .thenComparing(EventReport::getTriggerTime));
 
         mAttrRateLimitList.sort(
-                Comparator.comparing(Attribution::getTriggerTime));
+                Comparator.comparing(Attribution::getTriggerId));
 
         mAggregateEncryptionKeyList.sort(
                 Comparator.comparing(AggregateEncryptionKey::getKeyId));
