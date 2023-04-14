@@ -137,7 +137,14 @@ public class E2EInteropMockTest extends E2EMockTest {
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -171,7 +178,14 @@ public class E2EInteropMockTest extends E2EMockTest {
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())
