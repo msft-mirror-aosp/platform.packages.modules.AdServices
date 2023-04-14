@@ -26,6 +26,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -46,6 +47,7 @@ import com.android.compatibility.common.util.ShellUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -53,6 +55,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
+import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
@@ -66,6 +69,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     private static final int SCROLL_WAIT_TIME = 2000;
     private static UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+    @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private MockitoSession mStaticMockSession;
     @Mock Flags mMockFlags;
 
@@ -210,6 +214,33 @@ public class NotificationActivityGAV2UiAutomatorTest {
         assertThat(appsTitle.exists()).isTrue();
     }
 
+    @Test
+    @FlakyTest
+    public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
+        String packageNameOfDefaultBrowser =
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
+        sDevice.pressHome();
+
+        /* isEUActivity false: Rest of World Notification landing page */
+        startActivity(false);
+        /* find the expander and click to expand to get the content */
+        UiObject moreExpander =
+                ApkTestUtil.scrollTo(sDevice, R.string.notificationUI_ga_container1_control_text);
+        moreExpander.click();
+
+        UiObject sentence =
+                ApkTestUtil.scrollTo(
+                        sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
+        if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+                packageNameOfDefaultBrowser, sentence, 20)) {
+            return;
+        }
+        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            return;
+        }
+        Assert.fail("Web browser not found after several clicks on the last line");
+    }
+
     private void startActivity(boolean isEUActivity) {
         String notificationPackage =
                 Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
@@ -253,5 +284,20 @@ public class NotificationActivityGAV2UiAutomatorTest {
         doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
         doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+    }
+
+    private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
+            String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
+            throws UiObjectNotFoundException {
+        int right = sentence.getBounds().right,
+                bottom = sentence.getBounds().bottom,
+                left = sentence.getBounds().left;
+        for (int x = left; x < right; x += (right - left) / countOfClicks) {
+            sDevice.click(x, bottom - 2);
+            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
