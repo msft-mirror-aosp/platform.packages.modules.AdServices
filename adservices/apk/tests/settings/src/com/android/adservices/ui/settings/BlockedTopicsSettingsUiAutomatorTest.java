@@ -85,6 +85,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
     private static UiDevice sDevice;
 
+    private String mTestName;
+
     @Before
     public void setup() {
         // Skip the test if it runs on unsupported platforms.
@@ -116,14 +118,14 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     public void teardown() throws UiObjectNotFoundException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 
         // Reset epoch length.
         overrideEpochPeriod(FlagsFactory.getFlagsForTest().getTopicsEpochJobPeriodMs());
-
         // Reset PH Flags to default values.
         resetFlagsToDefault();
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
@@ -132,6 +134,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     @Test
     @FlakyTest(bugId = 272511638)
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // TODO(274978520) turn on block topics test on S
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable Beta UX view for Privacy Sandbox Settings.
@@ -218,6 +222,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     @Test
     @FlakyTest(bugId = 274022483)
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // TODO(274978520) turn on block topics test on S
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         // Enable GA UX view for Privacy Sandbox Settings.
