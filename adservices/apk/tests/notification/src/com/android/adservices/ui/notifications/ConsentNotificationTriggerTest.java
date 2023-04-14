@@ -72,16 +72,17 @@ public class ConsentNotificationTriggerTest {
     private static final String NOTIFICATION_CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
+
     private AdServicesManager mAdServicesManager;
+    private NotificationManager mNotificationManager;
+    private MockitoSession mStaticMockSession = null;
+    private String mTestName;
+
     @Mock private AdServicesLoggerImpl mAdServicesLoggerImpl;
     @Mock private NotificationManagerCompat mNotificationManagerCompat;
     @Mock private ConsentManager mConsentManager;
-    private NotificationManager mNotificationManager;
-    @Spy private Context mContext;
-
-    private MockitoSession mStaticMockSession = null;
-
     @Mock Flags mMockFlags;
+    @Spy private Context mContext;
 
     @Before
     public void setUp() {
@@ -122,12 +123,16 @@ public class ConsentNotificationTriggerTest {
     public void tearDown() throws IOException {
         if (!ApkTestUtil.isDeviceSupported()) return;
 
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(mContext);
         mStaticMockSession.finishMocking();
     }
 
     @Test
     public void testEuNotification() throws InterruptedException, UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
@@ -183,6 +188,8 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotification_gaUxFlagEnabled()
             throws InterruptedException, UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
@@ -246,6 +253,8 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testNonEuNotifications() throws InterruptedException, UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
@@ -301,6 +310,8 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testNonEuNotifications_gaUxEnabled() throws InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
@@ -346,6 +357,8 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotifications_gaUxEnabled_nonDismissable()
             throws InterruptedException, UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
@@ -411,6 +424,8 @@ public class ConsentNotificationTriggerTest {
     @Test
     public void testEuNotifications_gaUxEnabled_nonDismissable_dismissedOnConfirmationPage()
             throws InterruptedException, UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(true).when(mMockFlags).isEeaDevice();
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         doReturn(false).when(mMockFlags).getNotificationDismissedOnClick();
@@ -488,6 +503,8 @@ public class ConsentNotificationTriggerTest {
 
     @Test
     public void testNotificationsDisabled() {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
 
         ExtendedMockito.doReturn(mNotificationManagerCompat)
