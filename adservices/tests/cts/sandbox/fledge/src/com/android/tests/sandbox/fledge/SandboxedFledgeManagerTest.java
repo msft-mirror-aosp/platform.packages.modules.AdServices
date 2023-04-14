@@ -82,7 +82,7 @@ public class SandboxedFledgeManagerTest {
      * Sandbox checks
      */
     private void makeTestProcessForeground() throws TimeoutException {
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(500));
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofSeconds(1));
     }
 
     @After
