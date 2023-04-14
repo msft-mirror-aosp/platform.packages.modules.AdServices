@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -110,17 +111,36 @@ import java.util.concurrent.TimeUnit;
 public class FrequencyCapFilteringE2ETest {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
-    private static final long AD_SELECTION_ID = 20;
+    private static final long AD_SELECTION_ID_BUYER_1 = 20;
+    private static final long AD_SELECTION_ID_BUYER_2 = 21;
 
-    private static final DBAdSelection EXISTING_PREVIOUS_AD_SELECTION =
+    private static final DBAdSelection EXISTING_PREVIOUS_AD_SELECTION_BUYER_1 =
             new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID)
+                    .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
                     .setCustomAudienceSignals(CustomAudienceSignalsFixture.aCustomAudienceSignals())
                     .setContextualSignals(AdSelectionSignals.EMPTY.toString())
                     .setBiddingLogicUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/bidding"))
                     .setWinningAdRenderUri(
                             CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/ad1"))
+                    .setWinningAdBid(0.5)
+                    .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                    .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .build();
+
+    private static final DBAdSelection EXISTING_PREVIOUS_AD_SELECTION_BUYER_2 =
+            new DBAdSelection.Builder()
+                    .setAdSelectionId(AD_SELECTION_ID_BUYER_2)
+                    .setCustomAudienceSignals(
+                            CustomAudienceSignalsFixture.aCustomAudienceSignalsBuilder()
+                                    .setBuyer(CommonFixture.VALID_BUYER_2)
+                                    .build())
+                    .setContextualSignals(AdSelectionSignals.EMPTY.toString())
+                    .setBiddingLogicUri(
+                            CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/bidding"))
+                    .setWinningAdRenderUri(
+                            CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/ad1"))
                     .setWinningAdBid(0.5)
                     .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                     .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -244,7 +264,7 @@ public class FrequencyCapFilteringE2ETest {
 
         mInputParams =
                 new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setCallerAdTech(CommonFixture.VALID_BUYER_1)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
@@ -310,14 +330,14 @@ public class FrequencyCapFilteringE2ETest {
 
     @Test
     public void testUpdateHistogramForAdSelectionAddsHistogramEvents() throws InterruptedException {
-        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
         assertWithMessage("Callback failed, was: %s", callback).that(callback.mIsSuccess).isTrue();
 
         verify(mFrequencyCapDaoSpy, times(AdDataFixture.getAdCounterKeys().size()))
-                .insertHistogramEvent(any());
+                .insertHistogramEvent(any(), anyInt(), anyInt());
 
         for (String key : AdDataFixture.getAdCounterKeys()) {
             assertThat(
@@ -333,12 +353,12 @@ public class FrequencyCapFilteringE2ETest {
     @Test
     public void testUpdateHistogramForAdSelectionFromOtherAppDoesNotAddHistogramEvents()
             throws InterruptedException {
-        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         // Caller does not match previous ad selection
         UpdateAdCounterHistogramInput inputParamsOtherPackage =
                 new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
                         .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
                         .setCallerAdTech(CommonFixture.VALID_BUYER_1)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
@@ -522,7 +542,7 @@ public class FrequencyCapFilteringE2ETest {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Persist histogram events
-        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         UpdateAdCounterHistogramTestCallback updateHistogramCallback =
                 callUpdateAdCounterHistogram(mInputParams);
@@ -563,7 +583,7 @@ public class FrequencyCapFilteringE2ETest {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Persist histogram events
-        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         UpdateAdCounterHistogramTestCallback updateHistogramCallback =
                 callUpdateAdCounterHistogram(mInputParams);
@@ -602,7 +622,7 @@ public class FrequencyCapFilteringE2ETest {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
         // Persist histogram events for BUYER_1
-        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         UpdateAdCounterHistogramTestCallback updateHistogramCallback =
                 callUpdateAdCounterHistogram(mInputParams);
@@ -621,6 +641,112 @@ public class FrequencyCapFilteringE2ETest {
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
         assertWithMessage("Callback failed, was: %s", adSelectionCallback)
+                .that(adSelectionCallback.mIsSuccess)
+                .isTrue();
+        assertWithMessage(
+                        "Unexpected winning ad, ad selection responded with: %s",
+                        adSelectionCallback.mAdSelectionResponse)
+                .that(adSelectionCallback.mAdSelectionResponse.getRenderUri())
+                .isEqualTo(AD_WITH_FILTER.getRenderUri());
+    }
+
+    @Test
+    public void testUpdateHistogramBeyondMaxEventCountDoesNotFilterAds()
+            throws InterruptedException {
+        // The JS Sandbox availability depends on an external component (the system webview) being
+        // higher than a certain minimum version.
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        class FlagsWithLowEventCounts implements Flags {
+            @Override
+            public boolean getEnforceIsolateMaxHeapSize() {
+                return false;
+            }
+
+            @Override
+            public boolean getFledgeAdSelectionFilteringEnabled() {
+                return true;
+            }
+
+            @Override
+            public int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+                return 5;
+            }
+
+            @Override
+            public int getFledgeAdCounterHistogramLowerMaxEventCount() {
+                return 1;
+            }
+        }
+
+        mAdSelectionServiceImpl =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDaoSpy,
+                        mAdServicesHttpsClientMock,
+                        mDevContextFilterMock,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mContextSpy,
+                        mAdServicesLoggerMock,
+                        new FlagsWithLowEventCounts(),
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilter,
+                        mServiceFilterMock,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        // Persist ad selections
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
+        mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_2);
+
+        // Update for BUYER_1 and verify ads are filtered
+        // T0 - BUYER_1 events (4 events entered)
+        UpdateAdCounterHistogramTestCallback updateHistogramCallback =
+                callUpdateAdCounterHistogram(mInputParams);
+
+        assertWithMessage("Callback failed, was: %s", updateHistogramCallback)
+                .that(updateHistogramCallback.mIsSuccess)
+                .isTrue();
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
+                        .setAds(Arrays.asList(AD_WITH_FILTER))
+                        .build(),
+                CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"));
+
+        AdSelectionTestCallback adSelectionCallback = callSelectAds();
+
+        assertWithMessage("Callback succeeded unexpectedly")
+                .that(adSelectionCallback.mIsSuccess)
+                .isFalse();
+
+        // Sleep for ensured separation of timestamps
+        Thread.sleep(200);
+
+        // Update events for BUYER_2 to fill the event table and evict the first entries for BUYER_1
+        // T1 - BUYER_2 events trigger table eviction of the oldest events (which are for BUYER_1)
+        UpdateAdCounterHistogramInput inputParamsForBuyer2 =
+                new UpdateAdCounterHistogramInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID_BUYER_2)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                        .setCallerAdTech(CommonFixture.VALID_BUYER_2)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        updateHistogramCallback = callUpdateAdCounterHistogram(inputParamsForBuyer2);
+
+        assertWithMessage("Callback failed, was: %s", updateHistogramCallback)
+                .that(updateHistogramCallback.mIsSuccess)
+                .isTrue();
+
+        // Verify that the events for BUYER_1 were evicted and the ad for BUYER_1 should now win
+        adSelectionCallback = callSelectAds();
+
+        assertWithMessage("Ad selection callback failed, was: %s", adSelectionCallback)
                 .that(adSelectionCallback.mIsSuccess)
                 .isTrue();
         assertWithMessage(

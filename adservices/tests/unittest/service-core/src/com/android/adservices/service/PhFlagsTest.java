@@ -51,6 +51,8 @@ import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLE
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.Flags.ENFORCE_ISOLATE_MAX_HEAP_SIZE;
+import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.Flags.FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -216,6 +218,8 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
 import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -1721,7 +1725,7 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void getFledgeHttpCachingEnabled() {
+    public void testGetFledgeHttpCachingEnabled() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getFledgeHttpCachingEnabled())
                 .isEqualTo(FLEDGE_HTTP_CACHE_ENABLE);
@@ -1739,7 +1743,7 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void getFledgeJsCachingEnabled() {
+    public void testGetFledgeJsCachingEnabled() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getFledgeHttpJsCachingEnabled())
                 .isEqualTo(FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING);
@@ -1757,7 +1761,7 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void getFledgeHttpCacheMaxEntries() {
+    public void testGetFledgeHttpCacheMaxEntries() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getFledgeHttpCacheMaxEntries())
                 .isEqualTo(FLEDGE_HTTP_CACHE_MAX_ENTRIES);
@@ -1775,7 +1779,7 @@ public class PhFlagsTest {
     }
 
     @Test
-    public void getFledgeHttpCacheMaxAgeSeconds() {
+    public void testGetFledgeHttpCacheMaxAgeSeconds() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getFledgeHttpCacheMaxAgeSeconds())
                 .isEqualTo(FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
@@ -1790,6 +1794,44 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeHttpCacheMaxAgeSeconds()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeAdCounterHistogramAbsoluteMaxEventCount())
+                .isEqualTo(FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT);
+
+        final int phOverridingValue = FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT + 1;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAdCounterHistogramAbsoluteMaxEventCount())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetFledgeAdCounterHistogramLowerMaxEventCount() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getFledgeAdCounterHistogramLowerMaxEventCount())
+                .isEqualTo(FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT);
+
+        final int phOverridingValue = FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT + 1;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT,
+                Integer.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeAdCounterHistogramLowerMaxEventCount())
+                .isEqualTo(phOverridingValue);
     }
 
     @Test
