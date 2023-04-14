@@ -2015,10 +2015,43 @@ public interface Flags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Default value for flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
+    /** Returns whether to enable flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default maximum sources per publisher */
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    /** Returns maximum sources per publisher */
+    default int getMeasurementMaxSourcesPerPublisher() {
+        return MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
+    }
+
+    /** Default maximum triggers per destination */
+    int MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION = 1024;
+
+    /** Returns maximum triggers per destination */
+    default int getMeasurementMaxTriggersPerDestination() {
+        return MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+    }
+
+    /** Default maximum Aggregate Reports per destination */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Aggregate Reports per publisher */
+    default int getMeasurementMaxAggregateReportsPerDestination() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default maximum Event Reports per destination */
+    int MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Event Reports per destination */
+    default int getMeasurementMaxEventReportsPerDestination() {
+        return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 }
