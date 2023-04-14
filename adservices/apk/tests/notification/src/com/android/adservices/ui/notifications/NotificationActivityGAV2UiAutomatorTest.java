@@ -71,6 +71,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private MockitoSession mStaticMockSession;
+    private String mTestName;
+
     @Mock Flags mMockFlags;
 
     @BeforeClass
@@ -101,6 +103,9 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @After
     public void teardown() throws Exception {
         if (!ApkTestUtil.isDeviceSupported()) return;
+
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
         if (mStaticMockSession != null) {
             mStaticMockSession.finishMocking();
@@ -109,6 +114,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void moreButtonTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         startActivity(true);
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
@@ -129,6 +136,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void euAcceptFlowTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         startActivity(true);
         UiObject leftControlButton =
                 getElement(R.string.notificationUI_confirmation_left_control_button_text);
@@ -167,6 +176,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void rowClickGotItTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);
@@ -191,6 +202,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     @Test
     public void rowClickSettingsTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         startActivity(false);
         UiObject leftControlButton = getElement(R.string.notificationUI_left_control_button_text);
         UiObject rightControlButton = getElement(R.string.notificationUI_right_control_button_text);

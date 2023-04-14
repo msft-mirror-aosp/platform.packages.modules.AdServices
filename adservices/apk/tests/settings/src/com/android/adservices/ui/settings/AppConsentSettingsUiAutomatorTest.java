@@ -39,6 +39,7 @@ import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.Flags;
+import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -64,6 +65,8 @@ public class AppConsentSettingsUiAutomatorTest {
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
 
+    private String mTestName;
+
     @Before
     public void setup() throws UiObjectNotFoundException {
         String installMessage = ShellUtils.runShellCommand("pm install -r " + TEST_APP_APK_PATH);
@@ -82,6 +85,8 @@ public class AppConsentSettingsUiAutomatorTest {
 
     @After
     public void teardown() {
+        ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
+
         AdservicesTestHelper.killAdservicesProcess(CONTEXT);
 
         // Note aosp_x86 requires --user 0 to uninstall though arm doesn't.
@@ -95,6 +100,8 @@ public class AppConsentSettingsUiAutomatorTest {
     // TODO: Remove this blank test along with the other @Ignore. b/268351419
     @Test
     public void placeholderTest() {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // As this class is the only test class in the test module and need to be @Ignore for the
         // moment, add a blank test to help presubmit to pass.
         assertThat(true).isTrue();
@@ -104,6 +111,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // System server is not available on S-, skip this test for S-
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, false);
@@ -112,6 +121,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Test
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyTest() throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         appConsentTest(1, false);
     }
 
@@ -119,6 +130,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // System server is not available on S-, skip this test for S-
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, false);
@@ -149,6 +162,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerOnlyDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // System server is not available on S-, skip this test for S-
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(0, true);
@@ -158,6 +173,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentPpApiOnlyDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         appConsentTest(1, true);
     }
 
@@ -165,6 +182,8 @@ public class AppConsentSettingsUiAutomatorTest {
     @Ignore("Flaky test. (b/268351419)")
     public void consentSystemServerAndPpApiDialogsOnTest()
             throws UiObjectNotFoundException, InterruptedException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
         // System server is not available on S-, skip this test for S-
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         appConsentTest(2, true);
