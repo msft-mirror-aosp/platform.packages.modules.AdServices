@@ -340,6 +340,10 @@ public class UpdateAdCounterHistogramWorkerTest {
             mCountDownLatch.countDown();
         }
 
+        public boolean isSuccess() {
+            return mIsSuccess;
+        }
+
         @Override
         public String toString() {
             return "UpdateAdCounterHistogramTestCallback{"
