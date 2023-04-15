@@ -791,7 +791,8 @@ class AttributionJobHandler {
                 .setDestinationSite(destinationTopPrivateDomain.get().toString())
                 .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
                 .setEnrollmentId(trigger.getEnrollmentId())
-                .setTriggerTime(trigger.getTriggerTime())
+                // TODO: b/276638412 rename to Attribution::setSourceTime
+                .setTriggerTime(source.getEventTime())
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

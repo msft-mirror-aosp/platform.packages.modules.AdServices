@@ -191,6 +191,7 @@ public final class MeasurementTables {
         String SOURCE_ORIGIN = "source_origin";
         String DESTINATION_SITE = "attribution_destination_site";
         String DESTINATION_ORIGIN = "destination_origin";
+        // TODO: b/276638412 rename to source time
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
         String ENROLLMENT_ID = "enrollment_id";

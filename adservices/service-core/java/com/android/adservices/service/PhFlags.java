@@ -218,6 +218,12 @@ public final class PhFlags implements Flags {
             "fledge_http_cache_default_max_age_seconds";
     static final String KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES = "fledge_http_cache_max_entries";
 
+    // FLEDGE Ad Counter Histogram keys
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT =
+            "fledge_ad_counter_histogram_absolute_max_event_count";
+    static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT =
+            "fledge_ad_counter_histogram_lower_max_event_count";
+
     // FLEDGE Off device ad selection keys
     static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS =
             "fledge_ad_selection_off_device_overall_timeout_ms";
@@ -446,6 +452,18 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
+
+    static final String KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER =
+            "measurement_max_sources_per_publisher";
+
+    static final String KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION =
+            "measurement_max_triggers_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION =
+            "measurement_max_aggregate_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
+            "measurement_max_event_reports_per_destination";
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
@@ -1239,6 +1257,22 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS,
                 /* defaultValue */ FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS);
+    }
+
+    @Override
+    public int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT);
+    }
+
+    @Override
+    public int getFledgeAdCounterHistogramLowerMaxEventCount() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT,
+                /* defaultValue */ FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT);
     }
 
     // MDD related flags.
@@ -2204,11 +2238,13 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean isBackCompatActivityFeatureEnabled() {
+        // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
-                /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
+        return getEnableBackCompat()
+                && DeviceConfig.getBoolean(
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                        /* defaultValue */ IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
     }
 
     @Override
@@ -2260,6 +2296,42 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
                 /* defaultValue */ MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
+    }
+
+    @Override
+    public int getMeasurementMaxSourcesPerPublisher() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER,
+                /* defaultValue */ MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
+    }
+
+    @Override
+    public int getMeasurementMaxTriggersPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxAggregateReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION);
+    }
+
+    @Override
+    public int getMeasurementMaxEventReportsPerDestination() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION,
+                /* defaultValue */ MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION);
     }
 
     @Override
@@ -2559,7 +2631,26 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS
                         + " = "
                         + getMeasurementAttributionFallbackJobPeriodMs());
-
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_SOURCES_PER_PUBLISHER
+                        + " = "
+                        + getMeasurementMaxSourcesPerPublisher());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxTriggersPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxAggregateReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
+                        + " = "
+                        + getMeasurementMaxEventReportsPerDestination());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -2651,6 +2742,16 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS
                         + " = "
                         + getFledgeHttpCacheMaxAgeSeconds());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT
+                        + " = "
+                        + getFledgeAdCounterHistogramAbsoluteMaxEventCount());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT
+                        + " = "
+                        + getFledgeAdCounterHistogramLowerMaxEventCount());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_BACKGROUND_FETCH_ENABLED
@@ -2940,11 +3041,14 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getEnableBackCompat() {
+        // If SDK is T+, the value should always be false
+        // Check the flag value for S Minus
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ENABLE_BACK_COMPAT,
-                /* defaultValue */ ENABLE_BACK_COMPAT);
+        return !SdkLevel.isAtLeastT()
+                && DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_ENABLE_BACK_COMPAT,
+                        /* defaultValue */ ENABLE_BACK_COMPAT);
     }
 
     @Override
