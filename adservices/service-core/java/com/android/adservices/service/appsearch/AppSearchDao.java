@@ -16,8 +16,10 @@
 
 package com.android.adservices.service.appsearch;
 
+import android.annotation.NonNull;
 import android.os.Build;
 
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appsearch.app.AppSearchBatchResult;
 import androidx.appsearch.app.AppSearchSession;
@@ -25,6 +27,7 @@ import androidx.appsearch.app.GenericDocument;
 import androidx.appsearch.app.GlobalSearchSession;
 import androidx.appsearch.app.PackageIdentifier;
 import androidx.appsearch.app.PutDocumentsRequest;
+import androidx.appsearch.app.RemoveByDocumentIdRequest;
 import androidx.appsearch.app.SearchResults;
 import androidx.appsearch.app.SearchSpec;
 import androidx.appsearch.app.SetSchemaRequest;
@@ -38,6 +41,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -49,9 +53,9 @@ import java.util.concurrent.TimeoutException;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class AppSearchDao {
+class AppSearchDao {
     // Timeout for AppSearch search query in milliseconds.
-    private static final int TIMEOUT = 500;
+    private static final int TIMEOUT_MS = 500;
 
     /**
      * Iterate over the search results returned for the search query by AppSearch.
@@ -92,31 +96,40 @@ public class AppSearchDao {
      *
      * @return the instance of subclass type that was read from AppSearch.
      */
+    @Nullable
     protected static <T> T readConsentData(
-            Class<T> cls,
-            ListenableFuture<GlobalSearchSession> searchSession,
-            Executor executor,
-            String query) {
-        // Query cannot be empty.
-        if (query == null || query.isEmpty()) {
+            @NonNull Class<T> cls,
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String namespace,
+            @NonNull String query) {
+        Objects.requireNonNull(cls);
+        Objects.requireNonNull(searchSession);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(namespace);
+
+        // Namespace and Query cannot be empty.
+        if (query == null || query.isEmpty() || namespace.isEmpty()) {
             return null;
         }
 
-        SearchSpec searchSpec = new SearchSpec.Builder().build();
-        ListenableFuture<SearchResults> searchFuture =
-                Futures.transform(
-                        searchSession, session -> session.search(query, searchSpec), executor);
-        FluentFuture<T> future =
-                FluentFuture.from(searchFuture)
-                        .transformAsync(
-                                results -> iterateSearchResults(cls, results, executor), executor)
-                        .transform(result -> ((T) result), executor);
         try {
-            return future.get(TIMEOUT, TimeUnit.MILLISECONDS);
+            SearchSpec searchSpec = new SearchSpec.Builder().addFilterNamespaces(namespace).build();
+            ListenableFuture<SearchResults> searchFuture =
+                    Futures.transform(
+                            searchSession, session -> session.search(query, searchSpec), executor);
+            FluentFuture<T> future =
+                    FluentFuture.from(searchFuture)
+                            .transformAsync(
+                                    results -> iterateSearchResults(cls, results, executor),
+                                    executor)
+                            .transform(result -> ((T) result), executor);
+            T result = future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            return result;
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             LogUtil.e("getConsent() Appsearch lookup failed with: ", e);
-            return null;
         }
+        return null;
     }
 
     /**
@@ -127,10 +140,14 @@ public class AppSearchDao {
      *
      * @return the result of the write.
      */
-    public FluentFuture<AppSearchBatchResult<String, Void>> writeConsentData(
-            ListenableFuture<AppSearchSession> appSearchSession,
-            PackageIdentifier packageIdentifier,
-            Executor executor) {
+    FluentFuture<AppSearchBatchResult<String, Void>> writeConsentData(
+            @NonNull ListenableFuture<AppSearchSession> appSearchSession,
+            @NonNull PackageIdentifier packageIdentifier,
+            @NonNull Executor executor) {
+        Objects.requireNonNull(appSearchSession);
+        Objects.requireNonNull(packageIdentifier);
+        Objects.requireNonNull(executor);
+
         try {
             SetSchemaRequest setSchemaRequest =
                     new SetSchemaRequest.Builder()
@@ -167,6 +184,63 @@ public class AppSearchDao {
                                     },
                                     executor);
             return putFuture;
+        } catch (AppSearchException e) {
+            LogUtil.e("Cannot instantiate AppSearch database: " + e.getMessage());
+        }
+        return FluentFuture.from(
+                Futures.immediateFailedFuture(
+                        new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE)));
+    }
+
+    /**
+     * Delete a row from the database.
+     *
+     * @return the result of the delete.
+     */
+    protected static <T> FluentFuture<AppSearchBatchResult<String, Void>> deleteConsentData(
+            @NonNull Class<T> cls,
+            @NonNull ListenableFuture<AppSearchSession> appSearchSession,
+            @NonNull Executor executor,
+            @NonNull String rowId,
+            @NonNull String namespace) {
+        Objects.requireNonNull(cls);
+        Objects.requireNonNull(appSearchSession);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(rowId);
+        Objects.requireNonNull(namespace);
+
+        try {
+            SetSchemaRequest setSchemaRequest =
+                    new SetSchemaRequest.Builder().addDocumentClasses(cls).build();
+            RemoveByDocumentIdRequest deleteRequest =
+                    new RemoveByDocumentIdRequest.Builder(namespace).addIds(rowId).build();
+            FluentFuture<AppSearchBatchResult<String, Void>> deleteFuture =
+                    FluentFuture.from(appSearchSession)
+                            .transformAsync(
+                                    session -> session.setSchemaAsync(setSchemaRequest), executor)
+                            .transformAsync(
+                                    setSchemaResponse -> {
+                                        // If we get failures in schemaResponse then we cannot try
+                                        // to write.
+                                        if (!setSchemaResponse.getMigrationFailures().isEmpty()) {
+                                            LogUtil.e(
+                                                    "SetSchemaResponse migration failure: "
+                                                            + setSchemaResponse
+                                                                    .getMigrationFailures()
+                                                                    .get(0));
+                                            throw new RuntimeException(
+                                                    ConsentConstants
+                                                            .ERROR_MESSAGE_APPSEARCH_FAILURE);
+                                        }
+                                        // The database knows about this schemaType and write can
+                                        // occur.
+                                        return Futures.transformAsync(
+                                                appSearchSession,
+                                                session -> session.removeAsync(deleteRequest),
+                                                executor);
+                                    },
+                                    executor);
+            return deleteFuture;
         } catch (AppSearchException e) {
             LogUtil.e("Cannot instantiate AppSearch database: " + e.getMessage());
         }

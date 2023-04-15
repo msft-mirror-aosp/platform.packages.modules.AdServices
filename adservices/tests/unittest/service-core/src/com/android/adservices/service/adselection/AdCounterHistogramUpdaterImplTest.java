@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -42,6 +43,8 @@ import org.mockito.junit.MockitoRule;
 
 public class AdCounterHistogramUpdaterImplTest {
     private static final long AD_SELECTION_ID = 10;
+    private static final int ABSOLUTE_MAX_EVENT_COUNT = 20;
+    private static final int LOWER_MAX_EVENT_COUNT = 15;
     private static final String SERIALIZED_AD_COUNTER_KEYS =
             FledgeRoomConverters.serializeStringSet(AdDataFixture.getAdCounterKeys());
 
@@ -54,21 +57,87 @@ public class AdCounterHistogramUpdaterImplTest {
     @Before
     public void setup() {
         mAdCounterHistogramUpdater =
-                new AdCounterHistogramUpdaterImpl(mAdSelectionEntryDaoMock, mFrequencyCapDaoMock);
+                new AdCounterHistogramUpdaterImpl(
+                        mAdSelectionEntryDaoMock,
+                        mFrequencyCapDaoMock,
+                        ABSOLUTE_MAX_EVENT_COUNT,
+                        LOWER_MAX_EVENT_COUNT);
     }
 
     @Test
     public void testNewUpdater_nullAdSelectionDaoThrows() {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdCounterHistogramUpdaterImpl(null, mFrequencyCapDaoMock));
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                null,
+                                mFrequencyCapDaoMock,
+                                ABSOLUTE_MAX_EVENT_COUNT,
+                                LOWER_MAX_EVENT_COUNT));
     }
 
     @Test
     public void testNewUpdater_nullFrequencyCapDaoThrows() {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdCounterHistogramUpdaterImpl(mAdSelectionEntryDaoMock, null));
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                null,
+                                ABSOLUTE_MAX_EVENT_COUNT,
+                                LOWER_MAX_EVENT_COUNT));
+    }
+
+    @Test
+    public void testNewUpdater_invalidAbsoluteMaxEventCountThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                mFrequencyCapDaoMock,
+                                0,
+                                LOWER_MAX_EVENT_COUNT));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                mFrequencyCapDaoMock,
+                                -1,
+                                LOWER_MAX_EVENT_COUNT));
+    }
+
+    @Test
+    public void testNewUpdater_invalidLowerMaxEventCountThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                mFrequencyCapDaoMock,
+                                ABSOLUTE_MAX_EVENT_COUNT,
+                                0));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                mFrequencyCapDaoMock,
+                                ABSOLUTE_MAX_EVENT_COUNT,
+                                -1));
+    }
+
+    @Test
+    public void testNewUpdater_invalidAbsoluteAndLowerMaxEventCountThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDaoMock,
+                                mFrequencyCapDaoMock,
+                                LOWER_MAX_EVENT_COUNT,
+                                ABSOLUTE_MAX_EVENT_COUNT));
     }
 
     @Test
@@ -169,7 +238,10 @@ public class AdCounterHistogramUpdaterImplTest {
 
         for (String key : AdDataFixture.getAdCounterKeys()) {
             verify(mFrequencyCapDaoMock)
-                    .insertHistogramEvent(eq(expectedEventBuilder.setAdCounterKey(key).build()));
+                    .insertHistogramEvent(
+                            eq(expectedEventBuilder.setAdCounterKey(key).build()),
+                            anyInt(),
+                            anyInt());
         }
     }
 }
