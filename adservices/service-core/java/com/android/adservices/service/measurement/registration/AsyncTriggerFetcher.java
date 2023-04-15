@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -110,6 +111,16 @@ public class AsyncTriggerFetcher {
         builder.setDestinationType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         builder.setTriggerTime(asyncRegistration.getRequestTime());
+        Optional<Uri> registrationUriOrigin =
+                Web.originAndScheme(asyncRegistration.getRegistrationUri());
+        if (!registrationUriOrigin.isPresent()) {
+            LogUtil.d(
+                    "AsyncTriggerFetcher: "
+                            + "Invalid or empty registration uri - "
+                            + asyncRegistration.getRegistrationUri());
+            return Optional.empty();
+        }
+        builder.setRegistrationOrigin(registrationUriOrigin.get());
         List<String> field =
                 headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
         if (field == null || field.size() != 1) {
