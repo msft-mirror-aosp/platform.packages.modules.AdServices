@@ -31,6 +31,7 @@ import java.util.Objects;
 /** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final int WEB_SOURCE_PARAMS_MAX_COUNT = 20;
 
     /** Creator for Paracelable (via reflection). */
     @NonNull
@@ -256,8 +257,10 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         public Builder(@NonNull List<WebSourceParams> webSourceParams, @NonNull Uri topOriginUri) {
             Objects.requireNonNull(webSourceParams);
             Objects.requireNonNull(topOriginUri);
-            if (webSourceParams.isEmpty()) {
-                throw new IllegalArgumentException("web source params list is empty");
+            if (webSourceParams.isEmpty() || webSourceParams.size() > WEB_SOURCE_PARAMS_MAX_COUNT) {
+                throw new IllegalArgumentException(
+                        "web source params size is not within bounds, size: "
+                                + webSourceParams.size());
             }
             mWebSourceParams = webSourceParams;
             mTopOriginUri = topOriginUri;

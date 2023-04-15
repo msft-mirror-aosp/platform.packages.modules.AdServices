@@ -343,16 +343,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 shouldLog = true;
 
                 // Fail silently for revoked user consent
-                boolean isConsentRevoked;
-                if (mFlags.getFledgePerAppConsentEnabled()) {
-                    isConsentRevoked =
-                            mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                    ownerPackageName);
-                } else {
-                    isConsentRevoked =
-                            mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName);
-                }
-                if (!isConsentRevoked) {
+                if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
