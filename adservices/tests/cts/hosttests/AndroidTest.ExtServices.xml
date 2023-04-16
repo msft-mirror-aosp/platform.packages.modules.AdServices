@@ -32,7 +32,7 @@
     </target_preparer>
 
     <test class="com.android.compatibility.common.tradefed.testtype.JarHostTest" >
-        <option name="jar" value="CtsExtAdServicesHostTests.jar" />
+        <option name="jar" value="CtsAdExtServicesHostTests.jar" />
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">

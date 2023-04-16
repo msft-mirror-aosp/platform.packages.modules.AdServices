@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"You’re part of the beta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"The Privacy Sandbox is on for your device, and apps can test these new, more private ways to show you ads. You can turn off the beta at any time in your privacy settings."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"Got it"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android’s Privacy Sandbox provides new features that apps can use to show you ads that you might like. These technologies don’t use device identifiers.\n\nAndroid and your apps can estimate the kind of ads that you might be interested in, and save the interests temporarily on your device. This allows apps to show you ads that you might like, without tracking your activity across websites and apps from other developers."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Ad Personalisation with Privacy Sandbox"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"You can see ad topics in your device settings and block the ones that you don’t want shared with apps. Android also auto-deletes ad topics regularly."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"You can change your mind at any time in privacy settings."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"More about ad topics"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Learn more about how Android protects your data in our privacy policy."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Learn more about how Android protects your data in our "<a href="https://policies.google.com/privacy">"privacy policy"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Try it out"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  What data is used"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Your ad topics are based on the apps that you’ve used recently on this device and how frequently you use them."</string>
@@ -119,8 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"New ads privacy features now available"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Have more choice over the ads that you see while still protecting your identity"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"New ads privacy features now available"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android is launching new ways to limit what apps can learn about you when they show you personalised ads."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  With app-suggested ads, new privacy features help to protect your identity and information about your app usage, while enabling apps to show you relevant ads. Based on your activity, an app that you use can suggest related ads on other apps. You can see a list of apps and block them from making suggestions in privacy settings."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  With ad measurement, limited types of data are shared between apps to understand the performance of their ads, such as the time of day that an ad was shown to you."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Your activity in an app on this device may be used to suggest ads."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Turn on another ads privacy feature"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android also offers a new privacy feature that gives you more choice over the ads you see."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Ad topics help apps show you relevant ads while protecting your identity and information about your app usage. Android can note topics of interest based on the apps that you\'ve used recently. Later, an app that you use can ask Android for relevant topics to show you more relevant ads."</string>
@@ -165,7 +165,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Allow ad measurement"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apps and advertisers can request information from Android that helps them measure the performance of their ads.\n\nAd measurement data is deleted regularly from your device."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Reset measurement data"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android protects your privacy by limiting the information that apps can share with one another. Reports are sent with a delay to protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps that you use and sites that you visit. Your browsing history is kept private on your device.\n\nLearn more about how Android protects your data in our privacy policy."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android protects your privacy by limiting the information that apps can share with one another. Reports are sent with a delay to protect your identity.\n\nYour browser may have a similar setting. If ads measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps that you use and sites that you visit. Your browsing history is kept private on your device.\n\nLearn more about how Android protects your data in our "<a href="https://policies.google.com/privacy">"privacy policy"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Ad measurement data was reset"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Cancel"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Turn off Privacy Sandbox?"</string>

@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"ベータ版にご参加いただきありがとうございます"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"プライバシー サンドボックスはこのデバイスで ON になっているため、プライバシー保護を強化した広告表示の新しい方法をアプリがテストできます。ベータ版はプライバシー設定でいつでも OFF にできます。"</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android のプライバシー サンドボックスは、アプリがユーザーにおすすめの広告を表示する場合に役立つ新しい機能を提供しています。これらの技術でデバイス識別子が使用されることはありません。\n\nAndroid とアプリにより、ユーザーが興味や関心を持ちそうな広告の種類が推測され、その興味や関心がデバイスに一時的に保存されます。そのためアプリは、他のデベロッパーのウェブサイトやアプリでユーザーのアクティビティを追跡することなく、ユーザーにおすすめの広告を表示することができます。"</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"プライバシー サンドボックスによる広告のカスタマイズ"</string>
@@ -93,7 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"デバイスの設定で広告のトピックを確認して、アプリと共有したくないトピックをブロックできます。Android では、定期的に広告のトピックも自動削除されます。"</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"プライバシー設定でいつでも変更できます。"</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"広告のトピックの詳細"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"Android によるユーザーデータの保護について詳しくは、プライバシー ポリシーをご覧ください。"</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android がユーザーデータを保護する仕組みについては、"<a href="https://policies.google.com/privacy">"プライバシー ポリシー"</a>"をご覧ください。"</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"試してみる"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  使用されるデータ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"広告のトピックは、このデバイスで最近使用されたアプリとアプリの使用頻度に基づきます。"</string>
@@ -119,8 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"新しい広告のプライバシー機能がリリースされました"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"個人情報を保護しつつ、表示される広告をご自身でより細かく選択できます"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"新しい広告のプライバシー機能がリリースされました"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android は、パーソナライズド広告の表示にあたってユーザーの情報を収集できるアプリを制限する新しい機能をリリースします。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  新しいプライバシー機能の「アプリによる広告の提案」では、個人情報とアプリの使用に関する情報を保護しながら、ユーザーに関連性の高い広告をアプリで表示できるようにします。ユーザーのアクティビティに基づいて、ユーザーが使用しているアプリから他のアプリに対して、表示する関連広告を提案することができます。プライバシー設定で、アプリのリストを確認したり、アプリによる提案をブロックしたりできます。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  広告の測定では、限られた種類のデータ（広告が表示された時間帯など）が、広告パフォーマンスの把握のためにアプリ間で共有されます。"</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"このデバイスにある 1 つのアプリでのアクティビティが、広告の選定に使用されることがあります。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"その他の広告のプライバシー機能を ON にする"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android は、表示される広告をご自身でより細かく選択できる新しいプライバシー機能もリリースします。"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"広告のトピックによって、関連性の高い広告をアプリが表示できるようになるとともに、ユーザーの個人情報やアプリの使い方に関する情報も保護できます。Android は、最近使用されたアプリをもとにユーザーが興味のあるトピックを記録できます。トピックが記録されたら、今度はアプリが Android からその情報を得てユーザーに関連性の高い広告を表示することができます。"</string>
@@ -165,7 +165,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"広告の測定を許可"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"アプリと広告主は、広告のパフォーマンスの測定に役立つ情報を Android からリクエストする場合があります。\n\n広告の測定データはデバイスから定期的に削除されます。"</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"測定データをリセット"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護します。レポートは個人情報を保護するため遅れて送信されます。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。\n\nAndroid がユーザーデータを保護する仕組みについては、プライバシー ポリシーをご覧ください。"</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android は、アプリ間で共有される情報を限定することで、ユーザーのプライバシーを保護します。レポートは個人情報を保護するため遅れて送信されます。\n\nブラウザにも同様の設定がある場合があります。Android とブラウザの両方で広告の測定が ON の場合、広告主はユーザーが使用しているアプリとアクセスしているサイトの間で広告の効果を測定できることがあります。閲覧履歴は非公開で、デバイスから外部に送信されることはありません。\n\nAndroid がユーザーデータを保護する仕組みについては、"<a href="https://policies.google.com/privacy">"プライバシー ポリシー"</a>"をご覧ください。"</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"広告の測定データがリセットされました"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"キャンセル"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"プライバシー サンドボックスを OFF にしますか？"</string>
