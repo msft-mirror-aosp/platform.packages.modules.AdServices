@@ -18,6 +18,7 @@ package android.adservices.common;
 
 import android.net.Uri;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -38,6 +39,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CommonFixture {
+    private static final String LOG_TAG = "adservices";
+
     public static final String TEST_PACKAGE_NAME = processName();
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final String TEST_PACKAGE_NAME_2 = "android.adservices.tests2";
@@ -83,11 +86,11 @@ public class CommonFixture {
     }
 
     public static void doSleep(long timeout) {
-        LogUtil.i("Starting to sleep for %d ms", timeout);
+        Log.i(LOG_TAG, "Starting to sleep for " + timeout + " ms");
         long currentTime = System.currentTimeMillis();
         long wakeupTime = currentTime + timeout;
         while (wakeupTime - currentTime > 0) {
-            LogUtil.i("Time left to sleep: %d ms", wakeupTime - currentTime);
+            Log.i(LOG_TAG, "Time left to sleep: " + (wakeupTime - currentTime) + " ms");
             try {
                 Thread.sleep(wakeupTime - currentTime);
             } catch (InterruptedException ignored) {
@@ -95,7 +98,7 @@ public class CommonFixture {
             }
             currentTime = System.currentTimeMillis();
         }
-        LogUtil.i("Done sleeping");
+        Log.i(LOG_TAG, "Done sleeping");
     }
 
     private static String processName() {
