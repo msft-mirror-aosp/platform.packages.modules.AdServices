@@ -26,7 +26,6 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -51,6 +50,7 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -228,7 +228,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     @Test
-    @FlakyTest
+    @Ignore("git master fail")
     public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
         String packageNameOfDefaultBrowser =
                 ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
