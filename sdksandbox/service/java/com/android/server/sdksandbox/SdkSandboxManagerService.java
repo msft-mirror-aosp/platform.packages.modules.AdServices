@@ -537,7 +537,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     CallingInfo.fromBinderWithApplicationThread(
                             mContext, callingPackageName, callingAppProcessToken);
             enforceCallerHasNetworkAccess(callingPackageName);
-            enforceCallerRunsInForeground(callingInfo);
+            enforceCallerOrItsSandboxRunInForeground(callingInfo);
             synchronized (mLock) {
                 if (mRunningInstrumentations.contains(callingInfo)) {
                     throw new SecurityException(
@@ -745,7 +745,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         final int callingUid = Binder.getCallingUid();
         final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-        enforceCallerRunsInForeground(callingInfo);
+        enforceCallerOrItsSandboxRunInForeground(callingInfo);
 
         SdkSandboxStatsLog.write(
                 SdkSandboxStatsLog.SANDBOX_API_CALLED,
@@ -819,11 +819,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void enforceCallerRunsInForeground(CallingInfo callingInfo) {
+    private void enforceCallerOrItsSandboxRunInForeground(CallingInfo callingInfo) {
         String callingPackage = callingInfo.getPackageName();
         final long token = Binder.clearCallingIdentity();
         try {
-            int importance = mActivityManager.getUidImportance(callingInfo.getUid());
+            int importance =
+                    Math.min(
+                            mActivityManager.getUidImportance(callingInfo.getUid()),
+                            mActivityManager.getUidImportance(
+                                    Process.toSdkSandboxUid(callingInfo.getUid())));
             if (importance > IMPORTANCE_FOREGROUND) {
                 throw new SecurityException(callingPackage + " does not run in the foreground");
             }
@@ -876,7 +880,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
             final int callingUid = Binder.getCallingUid();
             final CallingInfo callingInfo = CallingInfo.fromBinder(mContext, callingPackageName);
-            enforceCallerRunsInForeground(callingInfo);
+            enforceCallerOrItsSandboxRunInForeground(callingInfo);
 
             SdkSandboxStatsLog.write(
                     SdkSandboxStatsLog.SANDBOX_API_CALLED,
