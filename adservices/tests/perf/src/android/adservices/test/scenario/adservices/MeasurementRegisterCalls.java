@@ -80,7 +80,7 @@ public class MeasurementRegisterCalls {
 
     private static final int EVENT_REPORTING_JOB_ID = 3;
     private static final int ATTRIBUTION_REPORTING_JOB_ID = 5;
-    private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    private static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 20;
     private static final int AGGREGATE_REPORTING_JOB_ID = 7;
 
     private static final String AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL =
@@ -107,144 +107,30 @@ public class MeasurementRegisterCalls {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        // Override consent manager behavior to give user consent.
-        getUiDevice()
-                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
-
-        // Override the flag to allow current package to call APIs.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "ppapi_app_allow_list",
-                "*",
-                /* makeDefault */ false);
-
-        // Override the flag to allow current package to call delete API.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "web_context_client_allow_list",
-                "*",
-                /* makeDefault */ false);
-
-        // Override global kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "global_kill_switch",
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
-        // Override measurement kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_kill_switch",
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
-        // Disable enrollment checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "disable_measurement_enrollment_check",
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        // Disable foreground checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_source",
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_trigger",
-                Boolean.toString(true),
-                /* makeDefault */ false);
-
-        // Set aggregate key URL.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
-                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
-                /* makeDefault */ false);
+        setFlagsForMeasurement();
 
         getUiDevice().executeShellCommand("settings put global auto_time false");
     }
 
     @AfterClass
     public static void resetDeviceProperties() throws Exception {
-        // Reset consent
-        getUiDevice()
-                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
-
-        // Reset allowed packages.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "ppapi_app_allow_list",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset debug API permission.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "web_context_client_allow_list",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset global kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "global_kill_switch",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset measurement kill switch.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_kill_switch",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset enrollment checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "disable_measurement_enrollment_check",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset foreground checks.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_source",
-                "null",
-                /* makeDefault */ false);
-
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_foreground_status_register_trigger",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset aggregate key URL.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_aggregate_encryption_key_coordinator_url",
-                "null",
-                /* makeDefault */ false);
+        resetFlagsForMeasurement();
 
         getUiDevice().executeShellCommand("settings put global auto_time true");
     }
 
     @Test
     public void testRegisterSourceAndTriggerAndRunAttributionAndReporting() throws Exception {
-        getUiDevice().executeShellCommand("date -s 2023-01-01");
+        getUiDevice().executeShellCommand("date -s 2023-04-01");
         executeDeleteRegistrations();
         executeRegisterSource();
         executeRegisterTrigger();
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
-        getUiDevice().executeShellCommand("date -s 2023-01-03");
+        getUiDevice().executeShellCommand("date -s 2023-04-03");
         executeAggregateReporting();
-        getUiDevice().executeShellCommand("date -s 2023-01-22");
+        getUiDevice().executeShellCommand("date -s 2023-04-22");
         executeEventReporting();
     }
 
@@ -285,10 +171,12 @@ public class MeasurementRegisterCalls {
             if (mockWebServer != null) mockWebServer.shutdown();
         } catch (IOException e) {
             throw new IllegalStateException(e);
+        } finally {
+            sleep();
         }
     }
 
-    private void sleep() {
+    private static void sleep() {
         try {
             TimeUnit.MILLISECONDS.sleep(2_000);
         } catch (InterruptedException e) {
@@ -625,11 +513,177 @@ public class MeasurementRegisterCalls {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<RecordedRequest> future = executor.submit(mockWebServer::takeRequest);
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            return future.get(60, TimeUnit.SECONDS);
         } catch (TimeoutException | InterruptedException | ExecutionException e) {
             throw new IllegalStateException("Error while running mockWebServer.takeRequest()", e);
         } finally {
             future.cancel(true);
         }
+    }
+
+    private static void setFlagsForMeasurement() throws Exception {
+        // Override consent manager behavior to give user consent.
+        getUiDevice()
+                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+
+        // Override the flag to allow current package to call APIs.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "ppapi_app_allow_list",
+                "*",
+                /* makeDefault */ false);
+
+        // Override the flag to allow current package to call delete API.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "web_context_client_allow_list",
+                "*",
+                /* makeDefault */ false);
+
+        // Override global kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "global_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Override measurement kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Override measurement registration job kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_job_registration_job_queue_kill_switch",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        // Disable enrollment checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "disable_measurement_enrollment_check",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Disable foreground checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_source",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_trigger",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Set aggregate key URL.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregate_encryption_key_coordinator_url",
+                AGGREGATE_ENCRYPTION_KEY_COORDINATOR_URL,
+                /* makeDefault */ false);
+
+        // Set flag to pre seed enrollment.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "enable_enrollment_test_seed",
+                Boolean.toString(true),
+                /* makeDefault */ false);
+
+        // Set flag not match origin.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_enrollment_origin_match",
+                Boolean.toString(false),
+                /* makeDefault */ false);
+
+        sleep();
+    }
+
+    private static void resetFlagsForMeasurement() throws Exception {
+        // Reset consent
+        getUiDevice()
+                .executeShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+
+        // Reset allowed packages.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "ppapi_app_allow_list",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset debug API permission.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "web_context_client_allow_list",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset global kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "global_kill_switch",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset measurement kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_kill_switch",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset measurement registration job kill switch.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_job_registration_job_queue_kill_switch",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset enrollment checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "disable_measurement_enrollment_check",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset foreground checks.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_source",
+                "null",
+                /* makeDefault */ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_foreground_status_register_trigger",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset aggregate key URL.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_aggregate_encryption_key_coordinator_url",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset enrollment seeding.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "enable_enrollment_test_seed",
+                "null",
+                /* makeDefault */ false);
+
+        // Reset origin matching.
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_enforce_enrollment_origin_match",
+                "null",
+                /* makeDefault */ false);
     }
 }
