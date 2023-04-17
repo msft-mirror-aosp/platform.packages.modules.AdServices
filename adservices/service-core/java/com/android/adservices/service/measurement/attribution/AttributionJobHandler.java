@@ -725,8 +725,9 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private static boolean isEnrollmentWithinPrivacyBounds(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean isEnrollmentWithinPrivacyBounds(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
@@ -738,6 +739,16 @@ class AttributionJobHandler {
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
+            if (count
+                    >= PrivacyParams
+                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution()) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(count),
+                        measurementDao,
+                        Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
+            }
 
             return count < PrivacyParams
                     .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
