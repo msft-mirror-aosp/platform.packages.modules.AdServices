@@ -394,7 +394,7 @@ public class Combinatorics {
                 // The triggers to be appended.
                 List<AtomReportState> toAppend = new ArrayList<>();
                 for (int k = 0; k < i; k++) {
-                    toAppend.add(new AtomReportState(triggerTypeIndex, winVal));
+                    toAppend.add(new AtomReportState(triggerTypeIndex, winVal - 1));
                 }
                 List<AtomReportState> otherReports =
                         getReportSetBasedOnRankRecursive(
@@ -418,13 +418,23 @@ public class Combinatorics {
 
     /** A single report including triggerDataType and window index for the fake report generation */
     public static class AtomReportState {
-        public int triggerDataType;
-        public int windowIndex;
+        private final int mTriggerDataType;
+        private final int mWindowIndex;
 
         public AtomReportState(int triggerDataType, int windowIndex) {
-            this.triggerDataType = triggerDataType;
-            this.windowIndex = windowIndex;
+            this.mTriggerDataType = triggerDataType;
+            this.mWindowIndex = windowIndex;
         }
+
+        public int getTriggerDataType() {
+            return mTriggerDataType;
+        }
+        ;
+
+        public final int getWindowIndex() {
+            return mWindowIndex;
+        }
+        ;
 
         @Override
         public boolean equals(Object obj) {
@@ -432,12 +442,12 @@ public class Combinatorics {
                 return false;
             }
             AtomReportState t = (AtomReportState) obj;
-            return triggerDataType == t.triggerDataType && windowIndex == t.windowIndex;
+            return mTriggerDataType == t.mTriggerDataType && mWindowIndex == t.mWindowIndex;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(windowIndex, triggerDataType);
+            return Objects.hash(mWindowIndex, mTriggerDataType);
         }
     }
 }
