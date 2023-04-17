@@ -29,8 +29,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.adselection.AdSelectionDatabase;
-import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -98,7 +96,6 @@ public class ConsentManager {
     private final EnrollmentDao mEnrollmentDao;
     private final MeasurementImpl mMeasurementImpl;
     private final CustomAudienceDao mCustomAudienceDao;
-    private final AdSelectionEntryDao mAdSelectionEntryDao;
     private final AppInstallDao mAppInstallDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
@@ -113,7 +110,6 @@ public class ConsentManager {
             @NonNull EnrollmentDao enrollmentDao,
             @NonNull MeasurementImpl measurementImpl,
             @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AppInstallDao appInstallDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
@@ -125,7 +121,6 @@ public class ConsentManager {
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
         Objects.requireNonNull(customAudienceDao);
-        Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(booleanFileDatastore);
 
@@ -146,7 +141,6 @@ public class ConsentManager {
         mEnrollmentDao = enrollmentDao;
         mMeasurementImpl = measurementImpl;
         mCustomAudienceDao = customAudienceDao;
-        mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
 
         mAppSearchConsentManager = appSearchConsentManager;
@@ -193,7 +187,6 @@ public class ConsentManager {
                                     EnrollmentDao.getInstance(context),
                                     MeasurementImpl.getInstance(context),
                                     CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                                    AdSelectionDatabase.getInstance(context).adSelectionEntryDao(),
                                     SharedStorageDatabase.getInstance(context).appInstallDao(),
                                     adServicesManager,
                                     datastore,
@@ -600,12 +593,6 @@ public class ConsentManager {
         }
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
-        if (mFlags.getFledgePerAppConsentEnabled()) {
-            asyncExecute(
-                    () ->
-                            mAdSelectionEntryDao.removeAdSelectionDataByPackageName(
-                                    app.getPackageName()));
-        }
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(() -> mAppInstallDao.deleteByPackageName(app.getPackageName()));
         }
@@ -685,9 +672,6 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgePerAppConsentEnabled()) {
-            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
-        }
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
@@ -727,9 +711,6 @@ public class ConsentManager {
             }
         }
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
-        if (mFlags.getFledgePerAppConsentEnabled()) {
-            asyncExecute(mAdSelectionEntryDao::removeAllAdSelectionData);
-        }
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
         }
