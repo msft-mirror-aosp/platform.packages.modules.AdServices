@@ -380,12 +380,25 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private void registerSandboxActivityInterceptor() {
         final ActivityInterceptorCallback mActivityInterceptorCallback =
                 info -> {
-                    Intent intent = info.getIntent();
-                    // Only intercept starting sandbox activity
+                    final Intent intent = info.getIntent();
+                    final String sdkSandboxPackageName =
+                            mContext.getPackageManager().getSdkSandboxPackageName();
+                    // Only intercept if action and package are both defined and refer to the
+                    // sandbox activity.
                     if (intent == null
+                            || intent.getPackage() == null
+                            || !intent.getPackage().equals(sdkSandboxPackageName)
                             || intent.getAction() == null
                             || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
                         return null;
+                    }
+
+                    // If component is set, it should refer to the sandbox package to intercept.
+                    if (intent.getComponent() != null) {
+                        final String componentPackageName = intent.getComponent().getPackageName();
+                        if (!componentPackageName.equals(sdkSandboxPackageName)) {
+                            return null;
+                        }
                     }
 
                     final String sandboxProcessName =
@@ -2232,15 +2245,40 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 @NonNull Intent intent, int clientAppUid, @NonNull String clientAppPackageName) {
             if (Process.isSdkSandboxUid(clientAppUid)) {
                 throw new SecurityException(
-                        "Sandbox process is not allowed to start SandboxedActivity");
+                        "Sandbox process is not allowed to start sandbox activities.");
+            }
+            if (intent == null) {
+                throw new SecurityException("Intent to start sandbox activity is null.");
+            }
+            if (intent.getAction() == null
+                    || !intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
+                throw new SecurityException(
+                        "Sandbox activity intent must have an action ("
+                                + ACTION_START_SANDBOXED_ACTIVITY
+                                + ").");
+            }
+            String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
+            if (intent.getPackage() == null || !intent.getPackage().equals(sandboxPackageName)) {
+                throw new SecurityException(
+                        "Sandbox activity intent's package must be set to the sandbox package");
+            }
+            if (intent.getComponent() != null) {
+                final String componentPackageName = intent.getComponent().getPackageName();
+                if (!componentPackageName.equals(sandboxPackageName)) {
+                    throw new SecurityException(
+                            "Sandbox activity intent's component must refer to the sandbox"
+                                    + " package");
+                }
             }
             final CallingInfo callingInfo = new CallingInfo(clientAppUid, clientAppPackageName);
             if (mServiceProvider.getSdkSandboxServiceForApp(callingInfo) == null) {
                 throw new SecurityException(
                         "There is no sandbox process running for the caller uid"
                                 + ": "
-                                + clientAppUid);
+                                + clientAppUid
+                                + ".");
             }
+
             Bundle extras = intent.getExtras();
             if (extras == null || extras.getBinder(getSandboxedActivityHandlerKey()) == null) {
                 throw new IllegalArgumentException(
