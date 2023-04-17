@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package com.android.adservices.errorlogging;
 
 import android.annotation.NonNull;
 
@@ -82,7 +82,7 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
      * logs AdServices error/exceptions if flag enabled.
      */
     public void logErrorWithExceptionInfo(
-            AdServicesErrorCode errorCode, int ppapiName, @NonNull Throwable tr) {
+            @NonNull Throwable tr, AdServicesErrorCode errorCode, int ppapiName) {
         if (!mFlags.getAdServicesErrorLoggingEnabled()) {
             return;
         }
@@ -115,7 +115,7 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
     // Gets the last element of the String based on the delimiter.
     // Example ("com.adservices.Topics", '.')  => "Topics"
     // Example ("Topics", '.')  => "Topics"
-    // // Example ("", '.')  => ""
+    // Example ("", '.')  => ""
     private String getLastElement(String str, int delimiter) {
         if (str.isEmpty()) {
             return str;
