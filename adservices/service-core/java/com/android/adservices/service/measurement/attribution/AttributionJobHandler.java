@@ -447,6 +447,8 @@ class AttributionJobHandler {
         }
 
         if (trigger.getTriggerTime() > source.getEventReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
