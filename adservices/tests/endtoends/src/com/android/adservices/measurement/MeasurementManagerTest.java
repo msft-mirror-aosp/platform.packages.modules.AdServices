@@ -19,12 +19,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,7 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -193,6 +196,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -267,6 +271,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -524,6 +529,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -596,6 +602,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -753,6 +760,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -825,6 +833,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -965,6 +974,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -1033,6 +1043,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
