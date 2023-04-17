@@ -535,7 +535,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testStartSdkSandboxedActivity() {
+    public void testStartSdkSandboxedActivities() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         // Load SDK in sandbox
@@ -543,13 +543,27 @@ public class SdkSandboxManagerTest {
 
         mRule.getScenario()
                 .onActivity(
-                        activity -> {
-                            ActivityStarter activityStarter = new ActivityStarter(activity);
+                        clientActivity -> {
+                            ActivityStarter activityStarter1 = new ActivityStarter(clientActivity);
                             try {
-                                sdk.startActivity(activityStarter);
+                                sdk.startActivity(activityStarter1);
                                 // Wait for the activity to start and send confirmation back
                                 Thread.sleep(1000);
-                                assertThat(activityStarter.isActivityStarted()).isTrue();
+                                assertThat(activityStarter1.isActivityStarted()).isTrue();
+                            } catch (Exception e) {
+                                fail(
+                                        "Exception is thrown while starting activity: "
+                                                + e.getMessage());
+                            }
+
+                            // Start another sandbox activity is important, to make sure that the
+                            // system is not restarting the sandbox activities after test is done.
+                            ActivityStarter activityStarter2 = new ActivityStarter(clientActivity);
+                            try {
+                                sdk.startActivity(activityStarter2);
+                                // Wait for the activity to start and send confirmation back
+                                Thread.sleep(1000);
+                                assertThat(activityStarter2.isActivityStarted()).isTrue();
                             } catch (Exception e) {
                                 fail(
                                         "Exception is thrown while starting activity: "
