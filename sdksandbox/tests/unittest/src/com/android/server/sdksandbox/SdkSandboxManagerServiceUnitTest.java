@@ -35,6 +35,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -44,6 +45,7 @@ import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
@@ -147,6 +149,9 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Before
     public void setup() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(SdkSandboxStatsLog.class)
