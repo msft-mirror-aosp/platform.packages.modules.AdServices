@@ -320,6 +320,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     public void setup() throws InterruptedException {
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
+            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         } else {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
@@ -375,8 +376,6 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         mAdSelectionClient.setAppInstallAdvertisers(
                 new SetAppInstallAdvertisersRequest(Collections.EMPTY_SET));
 
-        // Set consent source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
         // Set disable seed enrollment to false
         ShellUtils.runShellCommand("device_config put adservices enable_enrollment_test_seed true");
         // Make sure the flags are picked up cold

@@ -98,6 +98,8 @@ public class AsyncTriggerFetcher {
             String enrollmentId,
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
+        boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
+        LogUtil.d("Trigger ArDebug permission enabled %b", arDebugPermission);
         Trigger.Builder builder = new Trigger.Builder();
         builder.setEnrollmentId(enrollmentId);
         builder.setAttributionDestination(
@@ -105,7 +107,7 @@ public class AsyncTriggerFetcher {
                         asyncRegistration.getTopOrigin(), asyncRegistration.getType()));
         builder.setRegistrant(asyncRegistration.getRegistrant());
         builder.setAdIdPermission(asyncRegistration.hasAdIdPermission());
-        builder.setArDebugPermission(asyncRegistration.getDebugKeyAllowed());
+        builder.setArDebugPermission(arDebugPermission);
         builder.setDestinationType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         builder.setTriggerTime(asyncRegistration.getRequestTime());
