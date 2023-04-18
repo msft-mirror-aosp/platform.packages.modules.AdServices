@@ -50,6 +50,7 @@ public class DebugReportApi {
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
+        String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
         String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
         String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
         String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
