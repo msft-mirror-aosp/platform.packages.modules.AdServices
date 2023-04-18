@@ -64,6 +64,21 @@ public class ApkTestUtil {
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
 
+    public static UiObject getConsentSwitch(UiDevice device) throws UiObjectNotFoundException {
+        UiObject consentSwitch =
+                device.findObject(new UiSelector().className("android.widget.Switch"));
+
+        // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
+        // devices.
+        device.swipe(
+                consentSwitch.getVisibleBounds().centerX(),
+                500,
+                consentSwitch.getVisibleBounds().centerX(),
+                0,
+                1000);
+
+        return consentSwitch;
+    }
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));
