@@ -50,12 +50,15 @@ public class DebugReportApi {
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
+        String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
         String TRIGGER_EVENT_EXCESSIVE_REPORTS = "trigger-event-excessive-reports";
         String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
         String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
                 "trigger-event-no-matching-configurations";
+        String TRIGGER_EVENT_REPORT_WINDOW_PASSED = "trigger-event-report-window-passed";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
         String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
+        String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
     }
 
     private interface Body {

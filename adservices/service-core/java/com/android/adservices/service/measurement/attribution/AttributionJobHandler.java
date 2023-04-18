@@ -447,6 +447,8 @@ class AttributionJobHandler {
         }
 
         if (trigger.getTriggerTime() > source.getEventReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -466,6 +468,12 @@ class AttributionJobHandler {
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
                 && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    /* limit = */ null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_DEDUPLICATED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -606,8 +614,7 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        long attributionCount =
-                measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
         if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
@@ -723,8 +730,9 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private static boolean isEnrollmentWithinPrivacyBounds(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean isEnrollmentWithinPrivacyBounds(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
@@ -736,6 +744,16 @@ class AttributionJobHandler {
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
+            if (count
+                    >= PrivacyParams
+                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution()) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(count),
+                        measurementDao,
+                        Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
+            }
 
             return count < PrivacyParams
                     .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
