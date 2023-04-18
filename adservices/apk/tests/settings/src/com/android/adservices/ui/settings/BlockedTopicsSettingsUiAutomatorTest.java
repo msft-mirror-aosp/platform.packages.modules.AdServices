@@ -28,7 +28,6 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -51,6 +50,7 @@ import com.android.modules.utils.build.SdkLevel;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -132,7 +132,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 272511638)
+    @Ignore("b/272511638")
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -146,7 +146,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Enable user consent. If it has been enabled due to stale test failures, disable it and
         // enable it again. This is to ensure no stale data or pending jobs.
-        UiObject consentSwitch = getConsentSwitch();
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (consentSwitch.isChecked()) {
             disableUserConsentWithDialog(consentSwitch);
@@ -220,7 +220,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 274022483)
+    @Ignore("b/272511638")
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -239,7 +239,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // enable it again. This is to ensure no stale data or pending jobs.
         //
         // Note there is no dialog when the user opts out in GA.
-        UiObject consentSwitch = getConsentSwitch();
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (consentSwitch.isChecked()) {
             consentSwitch.click();
@@ -405,11 +405,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Move to the next epoch because the computed result takes effect from the next epoch.
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
-    }
-
-    // Get the switch in a view.
-    private UiObject getConsentSwitch() {
-        return sDevice.findObject(new UiSelector().className("android.widget.Switch"));
     }
 
     // Scroll to a UI object.
