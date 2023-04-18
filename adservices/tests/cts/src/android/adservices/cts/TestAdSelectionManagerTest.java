@@ -37,6 +37,7 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
@@ -89,6 +90,9 @@ public class TestAdSelectionManagerTest extends ForegroundCtsTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
