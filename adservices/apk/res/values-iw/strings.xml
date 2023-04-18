@@ -64,9 +64,9 @@
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"הבנתי"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"‏ארגז החול של Android לפרטיות מספק תכונות חדשות שמאפשרות לאפליקציות להציג לך מודעות שעשויות להיות רלוונטיות עבורך. בטכנולוגיות האלה לא נעשה שימוש במזהי המכשיר.\n\nמערכת Android והאפליקציות יכולות להעריך אילו סוגי מודעות עשויים לעניין אותך, ולשמור את תחומי העניין האלה באופן זמני במכשיר. באופן הזה, האפליקציות יכולות להראות לך מודעות רלוונטיות בלי לעקוב אחרי הפעילות שלך באתרים ובאפליקציות של מפתחים אחרים."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"התאמה אישית של מודעות באמצעות ארגז החול לפרטיות"</string>
-    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"‏•  תחומי עניין שהוערכו על ידי Android"</string>
+    <string name="notificationUI_how_it_works_expanded_text3" msgid="603165966360369018">"‏•  תחומי עניין שזוהו על ידי Android"</string>
     <string name="notificationUI_how_it_works_expanded_text4" msgid="3910573920883580609">"‏מערכת Android מעריכה מדי פעם את תחומי העניין שלך על סמך האפליקציות שבהן השתמשת, לדוגמה, \'ספורט\' או \'טיולים\'.\n\nבהמשך, אחת האפליקציות יכולה לבקש מ-Android להשתמש בתחומי העניין האלה כדי להציג לך מודעות רלוונטיות יותר.\n\nבהגדרות הפרטיות אפשר לראות את הרשימה הנוכחית של תחומי העניין, ולחסום תחומי עניין לא רצויים."</string>
-    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  תחומי עניין שהוערכו על ידי האפליקציות"</string>
+    <string name="notificationUI_how_it_works_expanded_text5" msgid="7257714040472055781">"•  תחומי עניין שזוהו על ידי האפליקציות"</string>
     <string name="notificationUI_how_it_works_expanded_text6" msgid="2949292580123453023">"‏האפליקציות יכולות להעריך את תחומי העניין שלך ולשמור אותם באופן זמני באמצעות Android. לדוגמה, אפליקציה שבה השתמשת כדי לקנות נעלי ריצה עשויה להעריך שאחד מתחומי העניין שלך הוא \'ריצת מרתונים\'.\n\nבהמשך, על סמך תחום העניין הזה, אפליקציה אחרת יכולה להציג לך מודעה שקשורה למרתונים.\n\nבהגדרות הפרטיות אפשר לנהל את רשימת האפליקציות ששמרו את תחומי העניין."</string>
     <string name="notificationUI_notification_ga_title" msgid="7090667803616048587">"תכונות חדשות של פרטיות בפרסום"</string>
     <string name="notificationUI_notification_ga_content" msgid="3483979694272908942">"נושאי המודעות ואמצעי בקרה חדשים מאפשרים לך לבחור טוב יותר את המודעות שמוצגות לך"</string>
@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"משתמשים נהנים מיותר השפעה על המודעות שיוצגו להם, ונתוני הזהות שלהם נשארים מוגנים"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"תכונות חדשות לשמירה על פרטיות בפרסום זמינות עכשיו"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"‏ב-Android מושקות דרכים חדשות שיאפשרו להגביל את מה שהאפליקציות יכולות לגלות עליך כשהן מציגות לך מודעות בהתאמה אישית."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  התכונה \'מודעות שאפליקציות מציעות\' מעניקה לך פרטיות רבה יותר – אפליקציות יכולות להציג לך מודעות רלוונטיות, ויחד עם זאת, הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. על סמך הפעילות שלך, אפליקציה יכולה להציע לך מודעות קשורות באפליקציות אחרות. בהגדרות הפרטיות ניתן לראות את רשימת האפליקציות ולחסום את האפשרות שלהן להציע מודעות."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  במסגרת מדידת הנתונים של המודעות, סוגים מסוימים של נתונים ישותפו בין אפליקציות כדי לבדוק את הביצועים של המודעות שלהן, למשל השעה ביום שבה הוצגה לך מודעה מסוימת."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"הפעילות שלך באפליקציה במכשיר הזה יכולה לשמש כדי להציע לך מודעות."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"הפעלת תכונה נוספת לשמירה על פרטיות בפרסום"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"‏ב-Android יש גם תכונת פרטיות חדשה שנותנת לך יותר שליטה על המודעות שמוצגות לך."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"‏כשאפליקציות מציגות לך מודעות לפי נושאי המודעות שלך, המודעות שמוצגות לך רלוונטיות ובכל זאת הזהות שלך והמידע לגבי השימוש שלך באפליקציות נשארים מוגנים. ב-Android יכולה להופיע רשימה של נושאים שמעניינים אותך על סמך האפליקציות שבהן השתמשת לאחרונה. לאחר מכן, אפליקציה שבה השתמשת יכולה לשלוח ל-Android בקשה לקבלת מידע על חלק מהנושאים כדי להציג לך מודעות רלוונטיות יותר."</string>
@@ -136,8 +134,8 @@
     <string name="settingsUI_main_view_title" msgid="1663691082473230496">"ארגז חול לפרטיות"</string>
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"‏השתתפות בתוכנית הבטא של פרטיות בפרסום ב-Android"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"ארגז חול לפרטיות"</string>
-    <string name="settingsUI_topics_title" msgid="5996189869721397937">"‏תחומי העניין שהוערכו על ידי Android"</string>
-    <string name="settingsUI_apps_title" msgid="2772289096915264175">"אפליקציות שמעריכות תחומי עניין"</string>
+    <string name="settingsUI_topics_title" msgid="5996189869721397937">"‏תחומי עניין שזוהו על ידי Android"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"אפליקציות שמזהות תחומי עניין"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"מדידת המודעות"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"‏האפליקציות יכולות להשתמש בארגז החול לפרטיות כדי למדוד את היעילות של המודעות שלהן. כדי לעשות זאת, המפרסמים יכולים לשמור באופן זמני נתונים ב-Android לגבי האינטראקציות שלך עם המודעות והאפליקציות שלהם. כמות הנתונים שהם יכולים לשמור היא מוגבלת, והנתונים יימחקו באופן סדיר.\n\nיש לך אפשרות למחוק את הנתונים האלה בכל שלב באמצעות השבתה של ארגז החול לפרטיות."</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"‏מערכת Android מעריכה מדי פעם את תחומי העניין המובילים שלך על סמך האפליקציות שבהן השתמשת. האפליקציות יכולות לבקש מ-Android להשתמש בתחומי העניין האלה כדי להציג לך מודעות רלוונטיות יותר.\n\nאם בחרת לחסום תחום עניין, הוא לא יתווסף לרשימה הזו אלא אם החסימה תבוטל. יכול להיות שעדיין יוצגו לך כמה מודעות קשורות."</string>

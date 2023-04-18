@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"全新广告隐私功能现已上线"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"更好地掌控自己看到的广告，同时保护您的身份信息"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"全新广告隐私功能现已上线"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android 将推出新的方式，限制应用在向您展示个性化广告时可以了解关于您的哪些信息。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  应用建议的广告采用新的隐私功能，可以更好地保护您的身份和应用使用情况相关信息，同时让应用向您展示更符合您喜好的广告。您使用的应用可以根据您的活动记录，在其他应用上建议相关广告。您可以在隐私设置中查看应用列表，以及阻止应用提供建议。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  广告衡量功能使应用能够相互分享有限类型的数据（例如一天当中向您展示广告的时间），以便了解广告效果。"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"您在此设备上的应用活动记录可以用来建议广告。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"开启其他广告隐私功能"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android 还提供新的隐私功能，使您能更好地掌控自己看到的广告。"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"广告主题有助于应用向您展示相关广告，同时保护您的身份和应用使用情况相关信息。Android 可根据您最近使用过的应用了解您感兴趣的主题。之后，您使用的应用可请求 Android 提供相关主题信息，以便向您展示更符合您喜好的广告。"</string>
