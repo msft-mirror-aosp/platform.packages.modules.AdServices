@@ -114,13 +114,13 @@ public class MobileDataDownloadTest {
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
     private static final String OEM_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1304/acd369267b5d25e377bc78a258a4e5e749b91e72";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1760/1460e6aea598fe7a153100d6e2749f45313ef905";
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
     private static final int PRODUCTION_ENROLLMENT_ENTRIES = 5;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
-    private static final int OEM_ENROLLMENT_ENTRIES = 33;
+    private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
     private static final int PRODUCTION_FILEGROUP_VERSION = 1;
     private static final int PTB_FILEGROUP_VERSION = 0;
