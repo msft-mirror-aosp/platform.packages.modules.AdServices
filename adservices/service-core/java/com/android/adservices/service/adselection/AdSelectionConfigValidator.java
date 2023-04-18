@@ -98,9 +98,9 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         }
         violations.addAll(validateSeller(adSelectionConfig.getSeller()));
         if (mPrebuiltLogicGenerator.isPrebuiltUri(adSelectionConfig.getDecisionLogicUri())) {
-            sLogger.v("AdSelectionConfig validation is skipped bc prebuilt uri is detected!");
+            sLogger.v("Decision logic uri validation is skipped bc prebuilt uri is detected!");
         } else {
-            sLogger.v("AdSelectionConfig validation is not skipped!");
+            sLogger.v("Validating decision logic URI");
             violations.addAll(
                     validateSellerDecisionUris(
                             adSelectionConfig.getSeller(),
