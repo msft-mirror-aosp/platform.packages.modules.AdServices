@@ -1193,8 +1193,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
         sandboxLifecycleCallbacks.finishBroadcast();
-
-        mSandboxLifecycleCallbacks.remove(callingInfo);
     }
 
     @Override
