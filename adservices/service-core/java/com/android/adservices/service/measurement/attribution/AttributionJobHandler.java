@@ -468,6 +468,12 @@ class AttributionJobHandler {
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
                 && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    /* limit = */ null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_DEDUPLICATED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -608,8 +614,7 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        long attributionCount =
-                measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
         if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,

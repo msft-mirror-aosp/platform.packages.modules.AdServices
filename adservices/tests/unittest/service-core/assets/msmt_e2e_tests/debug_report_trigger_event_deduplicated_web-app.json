@@ -1,5 +1,5 @@
 {
-  "description": "W2A test for trigger-event-low-priority debug report.",
+  "description": "W2A test for trigger-event-deduplicated debug report.",
   "phflags_override": {
     "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
   },
@@ -34,7 +34,6 @@
       }
     ],
     "triggers": [
-      // Will result in an event-level report.
       {
         "timestamp": "1643235575000",
         "registration_request": {
@@ -49,7 +48,7 @@
               "event_trigger_data": [
                 {
                   "trigger_data": "1",
-                  "priority": "1"
+                  "deduplication_key": "1"
                 }
               ],
               "debug_reporting": true,
@@ -59,7 +58,6 @@
           }
         }]
       },
-      // Will result in an event-level report.
       {
         "timestamp": "1643235576000",
         "registration_request": {
@@ -74,61 +72,11 @@
               "event_trigger_data": [
                 {
                   "trigger_data": "2",
-                  "priority": "1"
+                  "deduplication_key": "1"
                 }
               ],
               "debug_reporting": true,
               "debug_key": "8971346782",
-              "debug_join_key": "sample-debug-join-key"
-            }
-          }
-        }]
-      },
-      // Will result in an event-level report.
-      {
-        "timestamp": "1643235577000",
-        "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
-          "registrant": "com.example.2d1"
-        },
-        "responses": [{
-          "url": "https://www.ad-tech1.test",
-          "has_ad_id_permission": true,
-          "response": {
-            "Attribution-Reporting-Register-Trigger": {
-              "event_trigger_data": [
-                {
-                  "trigger_data": "3",
-                  "priority": "1"
-                }
-              ],
-              "debug_reporting": true,
-              "debug_key": "8971346783",
-              "debug_join_key": "sample-debug-join-key"
-            }
-          }
-        }]
-      },
-      // Will not result in an event-level report as the priority is not higher.
-      {
-        "timestamp": "1643235578000",
-        "registration_request": {
-          "attribution_src_url": "https://www.ad-tech1.test",
-          "registrant": "com.example.2d1"
-        },
-        "responses": [{
-          "url": "https://www.ad-tech1.test",
-          "has_ad_id_permission": true,
-          "response": {
-            "Attribution-Reporting-Register-Trigger": {
-              "event_trigger_data": [
-                {
-                  "trigger_data": "4",
-                  "priority": "1"
-                }
-              ],
-              "debug_reporting": true,
-              "debug_key": "8971346784",
               "debug_join_key": "sample-debug-join-key"
             }
           }
@@ -151,34 +99,6 @@
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
         "report_time": "1643411975000"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://com.example.2d1",
-          "randomized_trigger_rate": 0.017022,
-          "scheduled_report_time": "1643411973",
-          "source_event_id": "1",
-          "source_type": "navigation",
-          "trigger_data": "2",
-          "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346782"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411976000"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://com.example.2d1",
-          "randomized_trigger_rate": 0.017022,
-          "scheduled_report_time": "1643411973",
-          "source_event_id": "1",
-          "source_type": "navigation",
-          "trigger_data": "3",
-          "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346783"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
-        "report_time": "1643411977000"
       }
     ],
     "debug_event_level_results": [
@@ -195,49 +115,19 @@
         },
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
         "report_time": "1643235575000"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://com.example.2d1",
-          "randomized_trigger_rate": 0.017022,
-          "scheduled_report_time": "1643411973",
-          "source_event_id": "1",
-          "source_type": "navigation",
-          "trigger_data": "2",
-          "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346782"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
-        "report_time": "1643235576000"
-      },
-      {
-        "payload": {
-          "attribution_destination": "android-app://com.example.2d1",
-          "randomized_trigger_rate": 0.017022,
-          "scheduled_report_time": "1643411973",
-          "source_event_id": "1",
-          "source_type": "navigation",
-          "trigger_data": "3",
-          "source_debug_key" : "347982378",
-          "trigger_debug_key" : "8971346783"
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
-        "report_time": "1643235577000"
       }
     ],
     "debug_report_results": [
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": {
-          "type":"trigger-event-low-priority",
+          "type":"trigger-event-deduplicated",
           "body": {
             "attribution_destination": "android-app://com.example.2d1",
-            "scheduled_report_time": "1643411973000",
-            "source_event_id": "1",
-            "source_type": "navigation",
-            "randomized_trigger_rate": 0.017022,
+            "trigger_debug_key": "8971346782",
             "source_debug_key": "347982378",
-            "trigger_debug_key": "8971346784"
+            "source_event_id": "1",
+            "source_site": "android-app://example.1s1.test"
           }
         }
       }, {
