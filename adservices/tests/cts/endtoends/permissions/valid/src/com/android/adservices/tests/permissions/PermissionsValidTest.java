@@ -35,6 +35,7 @@ import android.net.Uri;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.compatibility.common.util.ShellUtils;
@@ -62,6 +63,9 @@ public class PermissionsValidTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
