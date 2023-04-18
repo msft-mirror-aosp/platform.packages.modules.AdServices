@@ -54,8 +54,10 @@ public class DebugReportApi {
         String TRIGGER_EVENT_LOW_PRIORITY = "trigger-event-low-priority";
         String TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS =
                 "trigger-event-no-matching-configurations";
+        String TRIGGER_EVENT_REPORT_WINDOW_PASSED = "trigger-event-report-window-passed";
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
         String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
+        String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
     }
 
     private interface Body {
