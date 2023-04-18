@@ -35,6 +35,10 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.modules.utils.build.SdkLevel;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -121,16 +125,16 @@ public class MeasurementRegisterCalls {
 
     @Test
     public void testRegisterSourceAndTriggerAndRunAttributionAndReporting() throws Exception {
-        getUiDevice().executeShellCommand("date -s 2023-04-01");
+        getUiDevice().executeShellCommand("date 2023-04-01");
         executeDeleteRegistrations();
         executeRegisterSource();
         executeRegisterTrigger();
         executeRegisterWebSource();
         executeRegisterWebTrigger();
         executeAttribution();
-        getUiDevice().executeShellCommand("date -s 2023-04-03");
+        getUiDevice().executeShellCommand("date 2023-04-03");
         executeAggregateReporting();
-        getUiDevice().executeShellCommand("date -s 2023-04-22");
+        getUiDevice().executeShellCommand("date 2023-04-22");
         executeEventReporting();
     }
 
@@ -318,7 +322,8 @@ public class MeasurementRegisterCalls {
     }
 
     private void executeJob(int jobId) {
-        final String cmd = "cmd jobscheduler run -f com.google.android.adservices.api " + jobId;
+        final String packageName = AdservicesTestHelper.getAdServicesPackageName(sContext);
+        final String cmd = "cmd jobscheduler run -f " + packageName + " " + jobId;
         try {
             getUiDevice().executeShellCommand(cmd);
         } catch (IOException e) {
@@ -602,6 +607,11 @@ public class MeasurementRegisterCalls {
                 Boolean.toString(false),
                 /* makeDefault */ false);
 
+        // Set flags for back-compat AdServices functionality for Android S-.
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+
         sleep();
     }
 
@@ -685,5 +695,10 @@ public class MeasurementRegisterCalls {
                 "measurement_enforce_enrollment_origin_match",
                 "null",
                 /* makeDefault */ false);
+
+        // Reset back-compat related flags.
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 }
