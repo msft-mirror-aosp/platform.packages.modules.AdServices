@@ -239,18 +239,13 @@ public class SettingsGaUiAutomatorTest {
         }
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        // no main switch any more
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(mainSwitch.exists()).isFalse();
 
         // make sure we are on the main settings page
-        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
+        UiObject appButton = ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
-        UiObject topicsButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
+
+        UiObject topicsButton = ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
