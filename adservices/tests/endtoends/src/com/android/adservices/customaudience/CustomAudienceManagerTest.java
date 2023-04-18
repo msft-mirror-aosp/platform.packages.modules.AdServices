@@ -31,12 +31,14 @@ import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,6 +64,9 @@ public class CustomAudienceManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (!SdkLevel.isAtLeastT()) {
             mPreviousAppAllowList =
                     CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(

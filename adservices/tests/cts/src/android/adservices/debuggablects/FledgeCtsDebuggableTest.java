@@ -318,6 +318,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
             ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
