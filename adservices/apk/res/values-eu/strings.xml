@@ -91,8 +91,7 @@
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Gailuaren ezarpenetan, iragarkien gaiak ikus ditzakezu, eta aplikazioekin partekatzea nahi ez duzunak blokeatu. Era berean, Android-ek iragarkien gaiak erregulartasunez ezabatzen ditu automatikoki."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Iritziz aldatzen bazara, joan pribatutasun-ezarpenetara."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Iragarkien gaiei buruzko informazio gehiago"</string>
-    <!-- no translation found for notificationUI_learn_more_from_privacy_policy (7809111628979410445) -->
-    <skip />
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"Android-ek zure datuak babesteko dauzkan moduei buruzko informazio gehiago lortzeko, irakurri gure "<a href="https://policies.google.com/privacy">"Pribatutasun-gidalerroak"</a>"."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Probatu"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  Zer datu erabiltzen dira?"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Gailu honetan berriki erabili dituzun aplikazioetan eta haiek erabiltzeko maiztasunean daude oinarrituta iragarkien gaiak."</string>
@@ -118,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Izan ikusten dituzun iragarkien gaineko kontrol handiagoa zure identitatea babesten duzun bitartean"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Orain, iragarkien pribatutasunarekin erlazionatutako eginbide berriak daude"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Aplikazioek, iragarki pertsonalizatuak erakusten dizkizutenean, zuri buruz ikas dezaketena mugatzeko modu berriak kaleratuko ditu Android-ek."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Aplikazioek iradokitako iragarkiei esker, pribatutasun-eginbide berriek zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten dituzte, eta aplikazioei iragarki egokiak erakusteko aukera ematen. Zure jardueretan oinarrituta, baliteke erabiltzen dituzun aplikazioek erlazionatutako iragarkiak iradokitzea beste aplikazio batzuetan. Pribatutasun-ezarpenetan, aplikazioen zerrenda bat ikus dezakezu, eta haiei iradokizunak egiteko aukera blokeatu."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Iragarkien neurketarekin, datu mota mugatuak partekatzen dira aplikazioen artean bertako iragarkien errendimendua ulertzeko; esate baterako, iragarkiak eguneko zer ordutan agertu zaizkizun."</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Iragarkiak iradokitzeko erabil daitezke gailu honetan darabilzun aplikazio bateko jarduerak."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Aktibatu iragarkien pribatutasunarekin erlazionatutako beste eginbide bat"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Ikusten dituzun iragarkien gaineko kontrol handiagoa ematen dizun pribatutasun-eginbide berri bat ere eskaintzen du Android-ek."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Iragarkien gaiei esker, aplikazioek iragarki egokiak erakusten dizkizute, eta zure identitatea eta aplikazioen erabilerari buruzko informazioa babesten. Berriki erabili dituzun aplikazioetan oinarrituta har ditzake kontuan Android-ek interesatzen zaizkizun gaiak. Geroago, erabiltzen dituzun aplikazioek gai egokiak zein diren galde diezaiokete Android-i, iragarki egokiagoak erakusteko."</string>
@@ -168,8 +165,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Eman iragarkien neurketa aktibatzeko baimena"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Iragarkien errendimendua hobetzen laguntzen dien informazioa eska diezaiokete aplikazioek eta iragarleek Android-i.\n\nIragarkien neurketari buruzko datuak erregulartasunez ezabatzen dira gailutik."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Berrezarri neurketei buruzko datuak"</string>
-    <!-- no translation found for settingsUI_measurement_view_footer_text (5978750159738729308) -->
-    <skip />
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Aplikazioek haien artean parteka dezaketen informazioa mugatuta babesten du zure pribatutasuna Android-ek. Zure identitatea babeste aldera, txostenak atzeratuta bidaltzen dira.\n\nBaliteke darabilzun arakatzaileak antzeko ezarpen bat izatea. Iragarkien neurketa Android-en eta darabilzun arakatzailean aktibatuta badago, agian enpresek iragarkien eraginkortasuna neurtu ahalko dute erabiltzen dituzun aplikazioen eta bisitatzen dituzun webguneen artean. Arakatze-historia pribatu mantentzen da gailuan.\n\nAndroid-ek zure datuak babesteko dauzkan moduei buruzko informazio gehiago lortzeko, irakurri gure "<a href="https://policies.google.com/privacy">"Pribatutasun-gidalerroak"</a>"."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Berrezarri dira iragarkien neurketen datuak"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Utzi"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox-a desaktibatu nahi duzu?"</string>
