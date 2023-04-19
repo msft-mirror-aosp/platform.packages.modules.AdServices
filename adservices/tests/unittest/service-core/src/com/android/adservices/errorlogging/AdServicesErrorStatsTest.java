@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package com.android.adservices.errorlogging;
 
 import static org.junit.Assert.assertEquals;
 
