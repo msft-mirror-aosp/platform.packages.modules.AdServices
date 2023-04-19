@@ -442,6 +442,8 @@ class AttributionJobHandler {
 
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_NOISE);
             return TriggeringStatus.DROPPED;
         }
 
