@@ -32,7 +32,6 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
@@ -215,26 +214,22 @@ public class ConsentSettingsUiAutomatorTest {
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
-
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         setConsentToFalse(dialogsOn);
 
         // click switch
-        performSwitchClick(dialogsOn, mainSwitch);
-        assertThat(mainSwitch.isChecked()).isTrue();
+        performSwitchClick(dialogsOn, consentSwitch);
+        assertThat(consentSwitch.isChecked()).isTrue();
 
         // click switch
-        performSwitchClick(dialogsOn, mainSwitch);
-        assertThat(mainSwitch.isChecked()).isFalse();
+        performSwitchClick(dialogsOn, consentSwitch);
+        assertThat(consentSwitch.isChecked()).isFalse();
     }
 
     private void setConsentToFalse(boolean dialogsOn) throws UiObjectNotFoundException {
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (mainSwitch.isChecked()) {
-            performSwitchClick(dialogsOn, mainSwitch);
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        if (consentSwitch.isChecked()) {
+            performSwitchClick(dialogsOn, consentSwitch);
         }
     }
 
