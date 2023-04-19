@@ -91,6 +91,10 @@ public class SandboxedFledgeManagerTest {
 
     @After
     public void shutDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         SimpleActivity.stopSimpleActivity(sContext);
     }
 

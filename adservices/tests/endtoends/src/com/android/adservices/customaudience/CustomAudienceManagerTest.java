@@ -85,6 +85,10 @@ public class CustomAudienceManagerTest {
 
     @After
     public void tearDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();

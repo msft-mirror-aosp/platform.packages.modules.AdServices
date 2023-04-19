@@ -77,6 +77,10 @@ public class PermissionsAppOptOutTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         if (!SdkLevel.isAtLeastT()) {
             setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
