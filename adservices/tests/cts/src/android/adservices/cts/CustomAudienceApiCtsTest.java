@@ -112,6 +112,10 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @After
     public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
 
