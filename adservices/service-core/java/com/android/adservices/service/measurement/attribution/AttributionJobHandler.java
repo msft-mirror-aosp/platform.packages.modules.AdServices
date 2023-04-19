@@ -203,8 +203,9 @@ class AttributionJobHandler {
         return false;
     }
 
-    private static TriggeringStatus maybeGenerateAggregateReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private TriggeringStatus maybeGenerateAggregateReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
 
         if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
             return TriggeringStatus.DROPPED;
@@ -234,14 +235,12 @@ class AttributionJobHandler {
                                     aggregateDeduplicationKeyOptional
                                             .get()
                                             .getDeduplicationKey())) {
-                return TriggeringStatus.DROPPED;
-            }
-            if (aggregateDeduplicationKeyOptional.isPresent()
-                    && source.getAggregateReportDedupKeys()
-                            .contains(
-                                    aggregateDeduplicationKeyOptional
-                                            .get()
-                                            .getDeduplicationKey())) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_AGGREGATE_DEDUPLICATED);
                 return TriggeringStatus.DROPPED;
             }
             Optional<List<AggregateHistogramContribution>> contributions =
@@ -468,6 +467,12 @@ class AttributionJobHandler {
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
                 && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    /* limit = */ null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_DEDUPLICATED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -608,8 +613,7 @@ class AttributionJobHandler {
     private boolean hasAttributionQuota(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
-        long attributionCount =
-                measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
         if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,

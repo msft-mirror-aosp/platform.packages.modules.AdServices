@@ -36,7 +36,6 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
@@ -200,12 +199,12 @@ public class SettingsActivityUiAutomatorTest {
     @Test
     public void optOutDialogTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
+
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(consentSwitch.exists()).isTrue();
 
         // click switch
-        mainSwitch.click();
+        consentSwitch.click();
         UiObject dialogTitle =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
         UiObject positiveText =
@@ -217,7 +216,7 @@ public class SettingsActivityUiAutomatorTest {
         positiveText.click();
 
         // click switch
-        mainSwitch.click();
+        consentSwitch.click();
         dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
         UiObject negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
@@ -465,12 +464,12 @@ public class SettingsActivityUiAutomatorTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
+
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(consentSwitch.exists()).isTrue();
 
         // click switch
-        mainSwitch.click();
+        consentSwitch.click();
         UiObject dialogTitle =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
         assertThat(dialogTitle.exists()).isFalse();
