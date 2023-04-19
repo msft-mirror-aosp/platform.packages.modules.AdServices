@@ -1786,4 +1786,130 @@ public final class DebugReportApiTest {
                 source, trigger, LIMIT, mMeasurementDao, Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_sourceNotOpIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(false)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_triggerNotOpIn_dontSchedule()
+            throws Exception {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(false)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_success() throws Exception {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_debugFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerEventNoiseDebugReport_triggerFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventId(SOURCE_EVENT_ID)
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerDebugReport(
+                source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
 }
