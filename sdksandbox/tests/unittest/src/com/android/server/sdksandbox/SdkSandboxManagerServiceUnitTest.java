@@ -212,9 +212,10 @@ public class SdkSandboxManagerServiceUnitTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.ACCESS_SHARED_LIBRARIES,
-                                Manifest.permission.INSTALL_PACKAGES,
+                        Manifest.permission.INSTALL_PACKAGES,
                         Manifest.permission.READ_DEVICE_CONFIG,
-                                Manifest.permission.WRITE_DEVICE_CONFIG);
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.INTERACT_ACROSS_USERS_FULL);
         mSdkSandboxService = Mockito.spy(FakeSdkSandboxService.class);
         mSdkSandboxService.setTimeValues(
                 TIME_SYSTEM_SERVER_CALLED_SANDBOX,
