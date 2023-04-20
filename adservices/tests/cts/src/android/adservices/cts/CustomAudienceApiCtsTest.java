@@ -38,6 +38,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
@@ -75,6 +76,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
@@ -108,6 +112,10 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @After
     public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
 
