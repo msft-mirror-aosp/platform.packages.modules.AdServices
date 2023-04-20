@@ -42,6 +42,10 @@ public class ConsentConstants {
 
     public static final String CONSENT_KEY = "CONSENT";
 
+    // When persisting data to AppSearch, the key cannot be a proper subset of other keys since
+    // Search does not support full match.
+    public static final String CONSENT_KEY_FOR_ALL = "CONSENT-ALL";
+
     // Internal datastore version
     static final int STORAGE_VERSION = 1;
 
@@ -55,11 +59,12 @@ public class ConsentConstants {
     static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
 
     // Shared preferences to mark whether consent data from AppSearch has migrated to AdServices.
-    static final String SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED =
+    public static final String SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED =
             "CONSENT_HAS_MIGRATED_FROM_APPSEARCH";
 
     // Shared preferences to mark whether PPAPI consent has been migrated to system server
-    static final String SHARED_PREFS_KEY_HAS_MIGRATED = "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
+    public static final String SHARED_PREFS_KEY_HAS_MIGRATED =
+            "CONSENT_HAS_MIGRATED_TO_SYSTEM_SERVER";
 
     // Shared preferences to mark whether PPAPI consent has been cleared.
     static final String SHARED_PREFS_KEY_PPAPI_HAS_CLEARED = "CONSENT_HAS_CLEARED_IN_PPAPI";

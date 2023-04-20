@@ -29,7 +29,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -150,7 +149,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -313,7 +312,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerTrigger(
@@ -327,7 +326,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebSource(
@@ -341,7 +340,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebTrigger(
