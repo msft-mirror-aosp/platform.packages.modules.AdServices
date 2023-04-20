@@ -681,7 +681,7 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -698,7 +698,7 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -711,7 +711,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
         killSandbox();
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
 
         restartAndSetSandboxService();
 
@@ -720,9 +720,9 @@ public class SdkSandboxManagerServiceUnitTest {
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isFalse();
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(0);
         killSandbox();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -745,8 +745,8 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -773,8 +773,8 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(0);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test(expected = SecurityException.class)
