@@ -318,6 +318,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
             ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
@@ -387,6 +390,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         mTestAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
         mTestCustomAudienceClient.resetAllCustomAudienceOverrides();
         // Clear the buyer list with an empty call to setAppInstallAdvertisers

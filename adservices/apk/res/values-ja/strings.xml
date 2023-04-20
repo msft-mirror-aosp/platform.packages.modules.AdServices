@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"新しい広告のプライバシー機能がリリースされました"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"個人情報を保護しつつ、表示される広告をご自身でより細かく選択できます"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"新しい広告のプライバシー機能がリリースされました"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android は、パーソナライズド広告の表示にあたってユーザーの情報を収集できるアプリを制限する新しい機能をリリースします。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  新しいプライバシー機能の「アプリによる広告の提案」では、個人情報とアプリの使用に関する情報を保護しながら、ユーザーに関連性の高い広告をアプリで表示できるようにします。ユーザーのアクティビティに基づいて、ユーザーが使用しているアプリから他のアプリに対して、表示する関連広告を提案することができます。プライバシー設定で、アプリのリストを確認したり、アプリによる提案をブロックしたりできます。"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  広告の測定では、限られた種類のデータ（広告が表示された時間帯など）が、広告パフォーマンスの把握のためにアプリ間で共有されます。"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"このデバイスにある 1 つのアプリでのアクティビティが、広告の選定に使用されることがあります。"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"その他の広告のプライバシー機能を ON にする"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android は、表示される広告をご自身でより細かく選択できる新しいプライバシー機能もリリースします。"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"広告のトピックによって、関連性の高い広告をアプリが表示できるようになるとともに、ユーザーの個人情報やアプリの使い方に関する情報も保護できます。Android は、最近使用されたアプリをもとにユーザーが興味のあるトピックを記録できます。トピックが記録されたら、今度はアプリが Android からその情報を得てユーザーに関連性の高い広告を表示することができます。"</string>
