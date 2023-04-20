@@ -25,7 +25,6 @@ import static com.android.adservices.service.measurement.PrivacyParams.MIN_REPOR
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.util.BaseUriExtractor.getBaseUri;
 import static com.android.adservices.service.measurement.util.MathUtils.extractValidNumberInRange;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE;
 
 import static java.lang.Math.min;
 
@@ -390,12 +389,7 @@ public class AsyncSourceFetcher {
                     asyncRegistration.getSourceType().toString());
             urlConnection.setInstanceFollowRedirects(false);
             headers = urlConnection.getHeaderFields();
-            FetcherUtil.emitHeaderMetrics(
-                    mFlags,
-                    mLogger,
-                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                    headers,
-                    asyncRegistration.getRegistrationUri());
+            asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
@@ -442,7 +436,9 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
 
-        return parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+        Optional<Source> parsedSource =
+                parseSource(asyncRegistration, enrollmentId.get(), headers, asyncFetchStatus);
+        return parsedSource;
     }
 
     private boolean isSourceHeaderPresent(Map<String, List<String>> headers) {
