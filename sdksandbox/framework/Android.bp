@@ -18,12 +18,12 @@ package {
 
 filegroup {
     name: "framework-sdksandbox-sources",
+    defaults: ["framework-sources-module-defaults"],
     srcs: [
       "java/**/*.aidl",
       "java/**/*.java"
     ],
     visibility: [
-        "//frameworks/base",
         "//packages/modules/AdServices:__subpackages__",
         // TODO(b/222118402): remove after code is moved
         "//packages/modules/SupplementalProcess:__subpackages__",
