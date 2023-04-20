@@ -5507,7 +5507,7 @@ public class PhFlagsTest {
     @Test
     public void testGetFlexibleEventReportingAPIEnabled() {
         // Without any overriding, the value is the hard coded constant.
-        assertThat(FlagsFactory.getFlags().getMeasurementFlexibleEventReportingAPIEnabled())
+        assertThat(FlagsFactory.getFlags().getMeasurementFlexibleEventReportingApiEnabled())
                 .isEqualTo(MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED);
 
         final boolean phOverridingValue = false;
@@ -5518,7 +5518,7 @@ public class PhFlagsTest {
                 /* makeDefault */ true);
 
         Flags phFlags = FlagsFactory.getFlags();
-        assertThat(phFlags.getMeasurementFlexibleEventReportingAPIEnabled()).isFalse();
+        assertThat(phFlags.getMeasurementFlexibleEventReportingApiEnabled()).isFalse();
     }
 
     @Test

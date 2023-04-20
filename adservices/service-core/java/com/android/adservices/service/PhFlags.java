@@ -2581,7 +2581,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+    public boolean getMeasurementFlexibleEventReportingApiEnabled() {
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2954,7 +2954,7 @@ public final class PhFlags implements Flags {
                 "\t"
                         + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
                         + " = "
-                        + getMeasurementFlexibleEventReportingAPIEnabled());
+                        + getMeasurementFlexibleEventReportingApiEnabled());
         writer.println(
                 "\t"
                         + KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST

@@ -30,7 +30,6 @@ import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
-import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -92,7 +91,7 @@ public class SourceNoiseHandlerTest {
     }
 
     @Test
-    public void fakeReports_flexEventReport_generatesFromStaticReportStates() throws JSONException {
+    public void fakeReports_flexEventReport_generatesFromStaticReportStates() {
         Source source = SourceFixture.getValidSourceWithFlexEventReport();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
