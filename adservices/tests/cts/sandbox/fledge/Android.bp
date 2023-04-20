@@ -23,12 +23,13 @@ android_test {
     ],
     static_libs: [
         "adservices-clients",
-        "compatibility-device-util-axt",
-        "androidx.test.runner",
-        "truth-prebuilt",
-        "SdkSandboxTestUtils",
         "adservices-service-core",
         "adservices-test-fixtures",
+        "adservices-test-utility",
+        "androidx.test.runner",
+        "compatibility-device-util-axt",
+        "SdkSandboxTestUtils",
+        "truth-prebuilt",
     ],
     libs: [
         "android.test.base",

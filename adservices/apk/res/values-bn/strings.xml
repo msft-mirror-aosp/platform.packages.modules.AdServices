@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"নতুন বিজ্ঞাপন সম্পর্কিত \'গোপনীয়তা\' ফিচার এখন উপলভ্য"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"নিজের পরিচয় সুরক্ষিত রেখে বিজ্ঞাপন সংক্রান্ত আরও বেশি বিকল্প পান"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"নতুন বিজ্ঞাপন সম্পর্কিত \'গোপনীয়তা\' ফিচার এখন উপলভ্য"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"পছন্দমতো বিজ্ঞাপন দেখানোর সময়, আপনার সম্পর্কে অ্যাপের সংগ্রহ করা তথ্য সীমিত করতে Android কিছু নতুন উপায় চালু করছে।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  অ্যাপের সাজেস্ট করা বিজ্ঞাপনের মাধ্যমে, প্রাসঙ্গিক বিজ্ঞাপন দেখার জন্য অ্যাপ চালু করলে, নতুন \'গোপনীয়তা\' ফিচার আপনার পরিচয় এবং অ্যাপের ব্যবহার সম্পর্কিত তথ্য গোপন করতে সাহায্য করে। আপনার অ্যাক্টিভিটির ভিত্তিতে, আপনার ব্যবহার করা অ্যাপ অন্যান্য অ্যাপে প্রাসঙ্গিক বিজ্ঞাপন সাজেস্ট করতে পারবে। আপনি \'গোপনীয়তা\' সেটিংসে অ্যাপের তালিকা দেখে সাজেশন দেওয়া থেকে সেগুলিকে ব্লক করতে পারবেন।"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  বিজ্ঞাপনের পরিমাপ ব্যবহার করে, বিভিন্ন অ্যাপের মধ্যে সীমিত ধরনের ডেটা শেয়ার করা হয় যাতে সেগুলিতে বিজ্ঞাপনের পারফর্ম্যান্স বোঝা যায়, যেমন দিনের কোন সময় আপনাকে বিজ্ঞাপন দেখানো হয়েছিল।"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"এই ডিভাইসে কোনও অ্যাপে আপনার করা অ্যাক্টিভিটি দেখেই আপনার জন্য বিজ্ঞাপন সাজেস্ট করা হতে পারে।"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"বিজ্ঞাপন সম্পর্কিত অন্য \'গোপনীয়তা\' ফিচার চালু করুন"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"এছাড়াও, Android নতুন \'গোপনীয়তা\' ফিচার অফার করে, যা আপনি কী ধরনের বিজ্ঞাপন দেখবেন তা বেছে নেওয়ার আরও বেশি বিকল্প দেয়।"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"বিজ্ঞাপনের বিষয়, আপনার পরিচয় ও অ্যাপ ব্যবহার সংক্রান্ত তথ্য সুরক্ষিত রেখে অ্যাপকে প্রাসঙ্গিক বিজ্ঞাপন দেখাতে সাহায্য করে। সম্প্রতি ব্যবহার করা অ্যাপের উপর ভিত্তি করে Android আপনার আগ্রহের বিষয় মনে রাখতে পারে। পরে, আপনাকে আরও বেশি প্রাসঙ্গিক বিজ্ঞাপন দেখানোর জন্য আপনার ব্যবহার করা অ্যাপ, Android-এর কাছে প্রাসঙ্গিক বিষয় সম্পর্কে জানতে চাইতে পারবে।"</string>
