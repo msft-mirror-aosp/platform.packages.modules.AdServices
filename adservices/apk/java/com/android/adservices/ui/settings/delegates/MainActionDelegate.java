@@ -27,6 +27,7 @@ import androidx.lifecycle.Observer;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
@@ -45,16 +46,14 @@ import java.util.Map;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class MainActionDelegate extends BaseActionDelegate {
+public class MainActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;
 
     public MainActionDelegate(
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
-        super(mainSettingsActivity);
         mAdServicesSettingsMainActivity = mainSettingsActivity;
         mMainViewModel = mainViewModel;
-
         listenToMainViewModelUiEvents();
     }
 
@@ -78,21 +77,24 @@ public class MainActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_APPS_SELECTED);
+                                UiStatsLogger.logManageAppsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_TOPICS_SELECTED);
+                                UiStatsLogger.logManageTopicsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_MEASUREMENT_SELECTED);
+                                UiStatsLogger.logManageMeasurementSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
