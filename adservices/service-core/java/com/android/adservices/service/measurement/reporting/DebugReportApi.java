@@ -61,6 +61,7 @@ public class DebugReportApi {
         String TRIGGER_NO_MATCHING_FILTER_DATA = "trigger-no-matching-filter-data";
         String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
         String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
+        String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
     }
 
     private interface Body {
