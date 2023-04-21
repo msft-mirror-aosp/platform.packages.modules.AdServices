@@ -173,7 +173,7 @@ public class EventReportingJobHandler {
                 .setReportId(eventReport.getId())
                 .setSourceEventId(eventReport.getSourceEventId())
                 .setAttributionDestination(
-                        eventReport.getAttributionDestinations().get(0).toString())
+                        eventReport.getAttributionDestinations())
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(

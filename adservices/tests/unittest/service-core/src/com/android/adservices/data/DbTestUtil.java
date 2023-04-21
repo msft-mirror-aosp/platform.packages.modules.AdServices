@@ -16,6 +16,9 @@
 
 package com.android.adservices.data;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -23,16 +26,22 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.measurement.MeasurementDbHelper;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public final class DbTestUtil {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String DATABASE_NAME_FOR_TEST = "adservices_test.db";
+    private static final String MSMT_DATABASE_NAME_FOR_TEST = "adservices_msmt_test.db";
 
     private static DbHelper sSingleton;
+    private static MeasurementDbHelper sMsmtSingleton;
 
     /** Erases all data from the table rows */
     public static void deleteTable(String tableName) {
@@ -41,7 +50,7 @@ public final class DbTestUtil {
             return;
         }
 
-        db.delete(tableName, /* whereClause = */ null, /* whereArgs = */ null);
+        db.delete(tableName, /* whereClause= */ null, /* whereArgs= */ null);
     }
 
     /**
@@ -53,12 +62,23 @@ public final class DbTestUtil {
         synchronized (DbHelper.class) {
             if (sSingleton == null) {
                 sSingleton =
-                        new DbHelper(
-                                sContext,
-                                DATABASE_NAME_FOR_TEST,
-                                DbHelper.CURRENT_DATABASE_VERSION);
+                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION);
             }
             return sSingleton;
+        }
+    }
+
+    public static MeasurementDbHelper getMeasurementDbHelperForTest() {
+        synchronized (MeasurementDbHelper.class) {
+            if (sMsmtSingleton == null) {
+                sMsmtSingleton =
+                        new MeasurementDbHelper(
+                                sContext,
+                                MSMT_DATABASE_NAME_FOR_TEST,
+                                MeasurementDbHelper.CURRENT_DATABASE_VERSION,
+                                getDbHelperForTest());
+            }
+            return sMsmtSingleton;
         }
     }
 
@@ -99,8 +119,143 @@ public final class DbTestUtil {
         return cursor != null && cursor.getCount() > 0;
     }
 
+    public static boolean doesTableExist(SQLiteDatabase db, String table) {
+        String query = "SELECT * FROM sqlite_master WHERE type='table' and name='" + table + "'";
+        Cursor cursor = db.rawQuery(query, null);
+        return cursor != null && cursor.getCount() > 0;
+    }
+
     /** Return test database name */
     public static String getDatabaseNameForTest() {
         return DATABASE_NAME_FOR_TEST;
+    }
+
+    public static void assertDatabasesEqual(SQLiteDatabase expectedDb, SQLiteDatabase actualDb) {
+        List<String> expectedTables = getTables(expectedDb);
+        List<String> actualTables = getTables(actualDb);
+        assertArrayEquals(expectedTables.toArray(), actualTables.toArray());
+        assertTableSchemaEqual(expectedDb, actualDb, expectedTables);
+        assertIndexesEqual(expectedDb, actualDb, expectedTables);
+    }
+
+    private static void assertTableSchemaEqual(
+            SQLiteDatabase expectedDb, SQLiteDatabase actualDb, List<String> tableNames) {
+        for (String tableName : tableNames) {
+            Cursor columnsCursorExpected =
+                    expectedDb.rawQuery("PRAGMA TABLE_INFO(" + tableName + ")", null);
+            Cursor columnsCursorActual =
+                    actualDb.rawQuery("PRAGMA TABLE_INFO(" + tableName + ")", null);
+            assertEquals(
+                    "Table columns mismatch for " + tableName,
+                    columnsCursorExpected.getCount(),
+                    columnsCursorActual.getCount());
+
+            // Checks the columns in order. Newly created columns should be inserted as the end.
+            while (columnsCursorExpected.moveToNext() && columnsCursorActual.moveToNext()) {
+                assertEquals(
+                        "Column mismatch for " + tableName,
+                        columnsCursorExpected.getString(
+                                columnsCursorExpected.getColumnIndex("name")),
+                        columnsCursorActual.getString(columnsCursorActual.getColumnIndex("name")));
+                assertEquals(
+                        "Column mismatch for " + tableName,
+                        columnsCursorExpected.getString(
+                                columnsCursorExpected.getColumnIndex("type")),
+                        columnsCursorActual.getString(columnsCursorActual.getColumnIndex("type")));
+                assertEquals(
+                        "Column mismatch for " + tableName,
+                        columnsCursorExpected.getInt(
+                                columnsCursorExpected.getColumnIndex("notnull")),
+                        columnsCursorActual.getInt(columnsCursorActual.getColumnIndex("notnull")));
+                assertEquals(
+                        "Column mismatch for " + tableName,
+                        columnsCursorExpected.getString(
+                                columnsCursorExpected.getColumnIndex("dflt_value")),
+                        columnsCursorActual.getString(
+                                columnsCursorActual.getColumnIndex("dflt_value")));
+                assertEquals(
+                        "Column mismatch for " + tableName,
+                        columnsCursorExpected.getInt(columnsCursorExpected.getColumnIndex("pk")),
+                        columnsCursorActual.getInt(columnsCursorActual.getColumnIndex("pk")));
+            }
+
+            columnsCursorExpected.close();
+            columnsCursorActual.close();
+        }
+    }
+
+    private static List<String> getTables(SQLiteDatabase db) {
+        String listTableQuery = "SELECT name FROM sqlite_master where type = 'table'";
+        List<String> tables = new ArrayList<>();
+        try (Cursor cursor = db.rawQuery(listTableQuery, null)) {
+            while (cursor.moveToNext()) {
+                tables.add(cursor.getString(cursor.getColumnIndex("name")));
+            }
+        }
+        Collections.sort(tables);
+        return tables;
+    }
+
+    private static void assertIndexesEqual(
+            SQLiteDatabase expectedDb, SQLiteDatabase actualDb, List<String> tables) {
+        for (String tableName : tables) {
+            String indexListQuery =
+                    "SELECT name FROM sqlite_master where type = 'index' AND tbl_name = '"
+                            + tableName
+                            + "' ORDER BY name ASC";
+            Cursor indexListCursorExpected = expectedDb.rawQuery(indexListQuery, null);
+            Cursor indexListCursorActual = actualDb.rawQuery(indexListQuery, null);
+            assertEquals(
+                    "Table indexes mismatch for " + tableName,
+                    indexListCursorExpected.getCount(),
+                    indexListCursorActual.getCount());
+
+            while (indexListCursorExpected.moveToNext() && indexListCursorActual.moveToNext()) {
+                String expectedIndexName =
+                        indexListCursorExpected.getString(
+                                indexListCursorExpected.getColumnIndex("name"));
+                assertEquals(
+                        "Index mismatch for " + tableName,
+                        expectedIndexName,
+                        indexListCursorActual.getString(
+                                indexListCursorActual.getColumnIndex("name")));
+
+                assertIndexInfoEqual(expectedDb, actualDb, expectedIndexName);
+            }
+
+            indexListCursorExpected.close();
+            indexListCursorActual.close();
+        }
+    }
+
+    private static void assertIndexInfoEqual(
+            SQLiteDatabase expectedDb, SQLiteDatabase actualDb, String indexName) {
+        Cursor indexInfoCursorExpected =
+                expectedDb.rawQuery("PRAGMA main.INDEX_INFO (" + indexName + ")", null);
+        Cursor indexInfoCursorActual =
+                actualDb.rawQuery("PRAGMA main.INDEX_INFO (" + indexName + ")", null);
+        assertEquals(
+                "Index columns count mismatch for " + indexName,
+                indexInfoCursorExpected.getCount(),
+                indexInfoCursorActual.getCount());
+
+        while (indexInfoCursorExpected.moveToNext() && indexInfoCursorActual.moveToNext()) {
+            assertEquals(
+                    "Index info mismatch for " + indexName,
+                    indexInfoCursorExpected.getInt(indexInfoCursorExpected.getColumnIndex("seqno")),
+                    indexInfoCursorActual.getInt(indexInfoCursorActual.getColumnIndex("seqno")));
+            assertEquals(
+                    "Index info mismatch for " + indexName,
+                    indexInfoCursorExpected.getInt(indexInfoCursorExpected.getColumnIndex("cid")),
+                    indexInfoCursorActual.getInt(indexInfoCursorActual.getColumnIndex("cid")));
+            assertEquals(
+                    "Index info mismatch for " + indexName,
+                    indexInfoCursorExpected.getString(
+                            indexInfoCursorExpected.getColumnIndex("name")),
+                    indexInfoCursorActual.getString(indexInfoCursorActual.getColumnIndex("name")));
+        }
+
+        indexInfoCursorExpected.close();
+        indexInfoCursorActual.close();
     }
 }

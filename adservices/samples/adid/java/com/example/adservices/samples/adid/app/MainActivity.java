@@ -17,10 +17,10 @@ package com.example.adservices.samples.adid.app;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -35,13 +35,10 @@ import java.util.concurrent.Executors;
  * screen. If there is an error, it displays the error.
  */
 public class MainActivity extends AppCompatActivity {
-
-    private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
-    private static final String TAG = "AdIdSampleApp";
     private Button mAdIdButton;
     private TextView mAdIdTextView;
     private AdIdManager mAdIdManager;
-    private Executor mExecutor = Executors.newCachedThreadPool();
+    private final Executor mExecutor = Executors.newCachedThreadPool();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,12 +46,15 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mAdIdTextView = findViewById(R.id.adIdTextView);
         mAdIdButton = findViewById(R.id.adIdButton);
-        mAdIdManager = getSystemService(AdIdManager.class);
+        mAdIdManager =
+                (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        ? this.getSystemService(AdIdManager.class)
+                        : AdIdManager.get(this);
         registerAdIdButton();
     }
 
     private void registerAdIdButton() {
-        OutcomeReceiver adIdCallback =
+        OutcomeReceiver<AdId, Exception> adIdCallback =
                 new OutcomeReceiver<AdId, Exception>() {
                     @Override
                     public void onResult(@NonNull AdId adId) {
@@ -67,29 +67,27 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
 
-        mAdIdButton.setOnClickListener(
-                new OnClickListener() {
-                    public void onClick(View v) {
-                        mAdIdManager.getAdId(mExecutor, adIdCallback);
-                    }
-                });
+        mAdIdButton.setOnClickListener(v -> getAdId(mExecutor, adIdCallback));
+    }
+
+    @TargetApi(Build.VERSION_CODES.S)
+    @SuppressWarnings("NewApi")
+    private void getAdId(Executor executor, OutcomeReceiver<AdId, Exception> callback) {
+        // getService() in AdIdManager throws on main thread and doesn't offload the error to the
+        // callback. Catch it to avoid app to crash.
+        try {
+            mAdIdManager.getAdId(executor, callback);
+        } catch (IllegalStateException e) {
+            callback.onError(e);
+        }
     }
 
     private void setAdIdText(String text) {
-        runOnUiThread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        mAdIdTextView.setText(text);
-                    }
-                });
+        runOnUiThread(() -> mAdIdTextView.setText(text));
     }
 
+    @SuppressWarnings("NewApi")
     private String getAdIdDisplayString(AdId adId) {
-        return "AdId: "
-                + adId.getAdId()
-                + "\n"
-                + "LAT: "
-                + String.valueOf(adId.isLimitAdTrackingEnabled());
+        return "AdId: " + adId.getAdId() + "\n" + "LAT: " + adId.isLimitAdTrackingEnabled();
     }
 }

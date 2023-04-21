@@ -32,17 +32,20 @@ import android.os.LimitExceededException;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
-/**
- * CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences.
- */
+/** CustomAudienceManager provides APIs for app and ad-SDKs to join / leave custom audiences. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Constant that represents the service name for {@link CustomAudienceManager} to be used in
      * {@link android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -179,7 +182,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }
@@ -238,7 +241,7 @@ public class CustomAudienceManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Internal Error!", e));
         }
     }

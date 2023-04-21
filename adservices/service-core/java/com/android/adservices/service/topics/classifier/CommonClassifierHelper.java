@@ -21,7 +21,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.JsonReader;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 
 /** Helper methods for shared implementations of {@link Classifier}. */
 public class CommonClassifierHelper {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
     // The key name of asset element in classifier_assets_metadata.json
@@ -82,12 +83,12 @@ public class CommonClassifierHelper {
                             Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
                 }
             } catch (IOException e) {
-                LogUtil.e(e, "Unable to read classifier asset file");
+                sLogger.e(e, "Unable to read classifier asset file");
                 // When catching IOException -> return empty string.
                 return "";
             }
         } catch (NoSuchAlgorithmException e) {
-            LogUtil.e(e, "Unable to find correct message digest algorithm.");
+            sLogger.e(e, "Unable to find correct message digest algorithm.");
             // When catching NoSuchAlgorithmException -> return empty string.
             return "";
         }
@@ -129,13 +130,13 @@ public class CommonClassifierHelper {
 
         // If there are no topic in the appTopics list, an empty topic list will be returned.
         if (topicsToAppTopicCount.isEmpty()) {
-            LogUtil.w("Unable to retrieve any topics from device.");
+            sLogger.w("Unable to retrieve any topics from device.");
             // Log atom for getTopTopics call.
             logger.logEpochComputationGetTopTopicsStats(
                     EpochComputationGetTopTopicsStats.builder()
                             .setTopTopicCount(0)
                             .setPaddedRandomTopicsCount(0)
-                            .setAppsConsideredCount(-1)
+                            .setAppsConsideredCount(appTopics.size())
                             .setSdksConsideredCount(-1)
                             .build());
             return new ArrayList<>();
@@ -159,7 +160,7 @@ public class CommonClassifierHelper {
                 EpochComputationGetTopTopicsStats.builder()
                         .setTopTopicCount(numberOfTopTopics)
                         .setPaddedRandomTopicsCount(numberOfRandomPaddingTopics)
-                        .setAppsConsideredCount(-1)
+                        .setAppsConsideredCount(appTopics.size())
                         .setSdksConsideredCount(-1)
                         .build());
 

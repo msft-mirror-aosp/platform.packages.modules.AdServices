@@ -24,7 +24,6 @@ import android.net.Uri;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
@@ -69,6 +68,7 @@ public class Trigger {
     private boolean mArDebugPermission;
     @Nullable private String mAttributionConfig;
     @Nullable private String mAdtechKeyMapping;
+    @Nullable private String mDebugJoinKey;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -112,7 +112,8 @@ public class Trigger {
                 && Objects.equals(mNotFilters, trigger.mNotFilters)
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
                 && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
-                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys);
+                && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
+                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey);
     }
 
     @Override
@@ -135,7 +136,8 @@ public class Trigger {
                 mArDebugPermission,
                 mAttributionConfig,
                 mAdtechKeyMapping,
-                mAggregateDeduplicationKeys);
+                mAggregateDeduplicationKeys,
+                mDebugJoinKey);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -307,22 +309,33 @@ public class Trigger {
     }
 
     /**
+     * Returns join key that should be matched with source's join key at the time of generating
+     * reports.
+     */
+    @Nullable
+    public String getDebugJoinKey() {
+        return mDebugJoinKey;
+    }
+
+    /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
     private Optional<AggregatableAttributionTrigger> parseAggregateTrigger()
             throws JSONException, NumberFormatException {
-        if (this.mAggregateTriggerData == null || this.mAggregateValues == null) {
+        if (this.mAggregateValues == null) {
             return Optional.empty();
         }
-        JSONArray jsonArray = new JSONArray(this.mAggregateTriggerData);
+        JSONArray triggerDataArray = this.mAggregateTriggerData == null
+                ? new JSONArray()
+                : new JSONArray(this.mAggregateTriggerData);
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
-        for (int i = 0; i < jsonArray.length(); i++) {
-            JSONObject jsonObject = jsonArray.getJSONObject(i);
+        for (int i = 0; i < triggerDataArray.length(); i++) {
+            JSONObject triggerDatum = triggerDataArray.getJSONObject(i);
             // Remove "0x" prefix.
-            String hexString = jsonObject.getString("key_piece").substring(2);
+            String hexString = triggerDatum.getString("key_piece").substring(2);
             BigInteger bigInteger = new BigInteger(hexString, 16);
-            JSONArray sourceKeys = jsonObject.getJSONArray("source_keys");
+            JSONArray sourceKeys = triggerDatum.getJSONArray("source_keys");
             Set<String> sourceKeySet = new HashSet<>();
             for (int j = 0; j < sourceKeys.length(); j++) {
                 sourceKeySet.add(sourceKeys.getString(j));
@@ -331,19 +344,19 @@ public class Trigger {
                     new AggregateTriggerData.Builder()
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
-            if (jsonObject.has("filters") && !jsonObject.isNull("filters")) {
+            if (triggerDatum.has("filters") && !triggerDatum.isNull("filters")) {
                 List<FilterMap> filterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("filters"));
+                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
                 builder.setFilterSet(filterSet);
             }
-            if (jsonObject.has("not_filters")
-                    && !jsonObject.isNull("not_filters")) {
+            if (triggerDatum.has("not_filters")
+                    && !triggerDatum.isNull("not_filters")) {
                 List<FilterMap> notFilterSet =
-                        Filter.deserializeFilterSet(jsonObject.getJSONArray("not_filters"));
+                        Filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
             }
-            if (!jsonObject.isNull("x_network_data")) {
-                JSONObject xNetworkDataJson = jsonObject.getJSONObject("x_network_data");
+            if (!triggerDatum.isNull("x_network_data")) {
+                JSONObject xNetworkDataJson = triggerDatum.getJSONObject("x_network_data");
                 XNetworkData xNetworkData = new XNetworkData.Builder(xNetworkDataJson).build();
                 builder.setXNetworkData(xNetworkData);
             }
@@ -359,10 +372,12 @@ public class Trigger {
             JSONArray dedupKeyObjects = new JSONArray(this.getAggregateDeduplicationKeys());
             for (int i = 0; i < dedupKeyObjects.length(); i++) {
                 JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
-                UnsignedLong dedupKey =
-                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
-                AggregateDeduplicationKey.Builder builder =
-                        new AggregateDeduplicationKey.Builder(dedupKey);
+                AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder();
+                if (dedupKeyObject.has("deduplication_key")
+                        && !dedupKeyObject.isNull("deduplication_key")) {
+                    builder.setDeduplicationKey(
+                            new UnsignedLong(dedupKeyObject.getString("deduplication_key")));
+                }
                 if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
                     List<FilterMap> filterSet =
                             Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
@@ -465,7 +480,7 @@ public class Trigger {
     @Nullable
     public Uri getAttributionDestinationBaseUri() {
         if (mDestinationType == EventSurfaceType.APP) {
-            return BaseUriExtractor.getBaseUri(mAttributionDestination);
+            return mAttributionDestination;
         } else {
             Optional<Uri> uri = Web.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
@@ -617,6 +632,13 @@ public class Trigger {
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {
             mBuilding.mAggregatableAttributionTrigger =
                     Optional.ofNullable(aggregatableAttributionTrigger);
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugJoinKey()} */
+        @NonNull
+        public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
+            mBuilding.mDebugJoinKey = debugJoinKey;
             return this;
         }
 

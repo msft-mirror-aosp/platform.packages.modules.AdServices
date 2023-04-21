@@ -38,11 +38,15 @@ import android.provider.DeviceConfig;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -64,7 +68,6 @@ import java.util.concurrent.Executors;
 @RunWith(JUnit4.class)
 public class AbstractPerfTest {
 
-    private static final String PPAPI_PACKAGE = "com.google.android.adservices.api";
     public static final Duration CUSTOM_AUDIENCE_EXPIRE_IN = Duration.ofDays(1);
     public static final Instant VALID_ACTIVATION_TIME = Instant.now();
     public static final Instant VALID_EXPIRATION_TIME =
@@ -162,8 +165,12 @@ public class AbstractPerfTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new KillAppsRule(PPAPI_PACKAGE))
-                    .around(new CleanPackageRule(PPAPI_PACKAGE))
+            RuleChain.outerRule(
+                            new KillAppsRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(mContext)))
+                    .around(
+                            new CleanPackageRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(mContext)))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
@@ -177,6 +184,18 @@ public class AbstractPerfTest {
                 "fledge_js_isolate_enforce_max_heap_size",
                 "false",
                 true);
+        // Extra flags need to be set when test is executed on S- for service to run (e.g.
+        // to avoid invoking system-server related code).
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setFlags();
+        }
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
     }
 
     public static Uri getUri(String name, String path) {

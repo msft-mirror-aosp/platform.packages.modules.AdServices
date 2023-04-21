@@ -13,25 +13,37 @@
 // limitations under the License.
 
 package {
-    default_applicable_licenses: ["Android-Apache-2.0"],
+    default_applicable_licenses: [
+        "Android-Apache-2.0",
+    ],
 }
 
-java_defaults {
-    name: "adservices-test-scenarios-defaults",
-
+java_library {
+    name: "adservices-test-scenarios",
+    platform_apis: true,
     static_libs: [
+        "adservices-clients",
         "mockwebserver",
-        "modules-utils-testable-device-config",
-        "androidx.test.uiautomator_uiautomator",
+        "platform-test-annotations",
+        "adservices-test-utility",
+    ],
+    libs: [
+        "framework-adservices-lib",
+        "androidx.test.rules",
+        "androidx.test.runner",
         "app-helpers-handheld-interfaces",
+        "guava",
+        "platform-test-rules",
+        "health-testing-utils",
+        "microbenchmark-device-lib",
+        "ub-uiautomator",
         "common-platform-scenarios",
         "launcher-aosp-tapl",
-        "microbenchmark-device-lib",
         "platform-test-options",
-        "platform-test-rules",
-        "platform-test-annotations",
-        "system-helpers",
-        "ub-uiautomator",
-        "junit",
+        "hamcrest-library",
+        "androidx.media_media",
+        "modules-utils-testable-device-config",
     ],
+
+    srcs: ["src/**/*.java"],
 }

@@ -31,7 +31,6 @@ import com.android.adservices.data.DbTestUtil;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.util.Arrays;
@@ -1128,18 +1127,6 @@ public final class TopicsDaoTest {
         mTopicsDao.persistTopicContributors(epochId, Map.of());
 
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId)).isEmpty();
-    }
-
-    @Test
-    public void testSupportsTopicContributorsTable() {
-        DbHelper dbHelper = Mockito.mock(DbHelper.class);
-        TopicsDao topicsDao = new TopicsDao(dbHelper);
-
-        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(false);
-        assertThat(topicsDao.supportsTopicContributorsTable()).isFalse();
-
-        Mockito.when(dbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        assertThat(topicsDao.supportsTopicContributorsTable()).isTrue();
     }
 
     @Test

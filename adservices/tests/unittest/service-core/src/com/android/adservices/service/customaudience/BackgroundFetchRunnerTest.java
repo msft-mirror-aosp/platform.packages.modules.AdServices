@@ -33,9 +33,10 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
+import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -66,12 +67,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 public class BackgroundFetchRunnerTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final Flags mFlags = FlagsFactory.getFlagsForTest();
     private final String mFetchPath = "/fetch";
 
     private MockitoSession mStaticMockSession = null;
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private PackageManager mPackageManagerMock;
     @Mock private EnrollmentDao mEnrollmentDaoMock;
 
@@ -95,6 +98,7 @@ public class BackgroundFetchRunnerTest {
                 ExtendedMockito.spy(
                         new BackgroundFetchRunner(
                                 mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
                                 mFlags));
@@ -133,6 +137,15 @@ public class BackgroundFetchRunnerTest {
     }
 
     @Test
+    public void deleteDisallowedPackageAppInstallEntries() {
+        doReturn(2).when(mAppInstallDaoMock).deleteAllDisallowedPackageEntries(any(), any());
+
+        mBackgroundFetchRunnerSpy.deleteDisallowedPackageAppInstallEntries();
+
+        verify(mAppInstallDaoMock).deleteAllDisallowedPackageEntries(mPackageManagerMock, mFlags);
+    }
+
+    @Test
     public void testDeleteDisallowedBuyerCustomAudiences() {
         doReturn(
                         CustomAudienceStats.builder()
@@ -154,22 +167,44 @@ public class BackgroundFetchRunnerTest {
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchRunner(
-                                null, mPackageManagerMock, mEnrollmentDaoMock, mFlags));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new BackgroundFetchRunner(
-                                mCustomAudienceDaoMock, null, mEnrollmentDaoMock, mFlags));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new BackgroundFetchRunner(
-                                mCustomAudienceDaoMock, mPackageManagerMock, null, mFlags));
+                                null,
+                                mAppInstallDaoMock,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags));
         assertThrows(
                 NullPointerException.class,
                 () ->
                         new BackgroundFetchRunner(
                                 mCustomAudienceDaoMock,
+                                null,
+                                mPackageManagerMock,
+                                mEnrollmentDaoMock,
+                                mFlags));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
+                                null,
+                                mEnrollmentDaoMock,
+                                mFlags));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
+                                mPackageManagerMock,
+                                null,
+                                mFlags));
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new BackgroundFetchRunner(
+                                mCustomAudienceDaoMock,
+                                mAppInstallDaoMock,
                                 mPackageManagerMock,
                                 mEnrollmentDaoMock,
                                 null));
@@ -311,6 +346,7 @@ public class BackgroundFetchRunnerTest {
         BackgroundFetchRunner runnerWithSmallLimits =
                 new BackgroundFetchRunner(
                         mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
                         new FlagsWithSmallLimits());
@@ -329,7 +365,7 @@ public class BackgroundFetchRunnerTest {
                                                     CustomAudienceUpdatableDataFixture
                                                             .getFullSuccessfulJsonResponseString());
                                 } catch (JSONException exception) {
-                                    LogUtil.e(exception, "Failed to create JSON full response");
+                                    sLogger.e(exception, "Failed to create JSON full response");
                                     return null;
                                 } finally {
                                     responseLatch.countDown();
@@ -396,6 +432,7 @@ public class BackgroundFetchRunnerTest {
         BackgroundFetchRunner runnerWithSmallLimits =
                 new BackgroundFetchRunner(
                         mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
                         new FlagsWithSmallLimits());

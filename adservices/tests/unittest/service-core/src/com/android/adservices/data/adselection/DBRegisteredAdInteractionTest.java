@@ -41,13 +41,13 @@ public class DBRegisteredAdInteractionTest {
                 DBRegisteredAdInteraction.builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setInteractionKey(INTERACTION_KEY_CLICK)
-                        .setReportingDestination(DESTINATION_SELLER)
+                        .setDestination(DESTINATION_SELLER)
                         .setInteractionReportingUri(EVENT_REPORTING_URI)
                         .build();
 
         assertEquals(AD_SELECTION_ID, dbRegisteredAdInteraction.getAdSelectionId());
         assertEquals(INTERACTION_KEY_CLICK, dbRegisteredAdInteraction.getInteractionKey());
-        assertEquals(DESTINATION_SELLER, dbRegisteredAdInteraction.getReportingDestination());
+        assertEquals(DESTINATION_SELLER, dbRegisteredAdInteraction.getDestination());
         assertEquals(EVENT_REPORTING_URI, dbRegisteredAdInteraction.getInteractionReportingUri());
     }
 
@@ -58,7 +58,7 @@ public class DBRegisteredAdInteractionTest {
                 () -> {
                     DBRegisteredAdInteraction.builder()
                             .setInteractionKey(INTERACTION_KEY_CLICK)
-                            .setReportingDestination(DESTINATION_SELLER)
+                            .setDestination(DESTINATION_SELLER)
                             .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
@@ -71,7 +71,7 @@ public class DBRegisteredAdInteractionTest {
                 () -> {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
-                            .setReportingDestination(DESTINATION_SELLER)
+                            .setDestination(DESTINATION_SELLER)
                             .setInteractionReportingUri(EVENT_REPORTING_URI)
                             .build();
                 });
@@ -98,7 +98,7 @@ public class DBRegisteredAdInteractionTest {
                     DBRegisteredAdInteraction.builder()
                             .setAdSelectionId(AD_SELECTION_ID)
                             .setInteractionKey(INTERACTION_KEY_CLICK)
-                            .setReportingDestination(DESTINATION_SELLER)
+                            .setDestination(DESTINATION_SELLER)
                             .build();
                 });
     }

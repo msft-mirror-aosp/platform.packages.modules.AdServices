@@ -675,4 +675,54 @@
     <public type="string" name="ic_main_view_ga_image_description" id="0x7f017d6e" />
     <public type="string" name="settingsUI_topics_subtitle_plural" id="0x7f017d6d" />
     <public type="string" name="settingsUI_apps_subtitle_plural" id="0x7f017d6c" />
+    <public type="string" name="notificationUI_notification_ga_title_eu_v2" id="0x7f017d6b" />
+    <public type="string" name="notificationUI_notification_ga_content_eu_v2" id="0x7f017d6a" />
+    <public type="string" name="notificationUI_fledge_measurement_title_v2" id="0x7f017d69" />
+    <public type="string" name="notificationUI_fledge_measurement_introduction_text1_v2" id="0x7f017d68" />
+    <public type="string" name="notificationUI_fledge_measurement_introduction_text2_v2" id="0x7f017d67" />
+    <public type="string" name="notificationUI_fledge_measurement_introduction_text3_v2" id="0x7f017d66" />
+    <public type="string" name="notificationUI_fledge_measurement_control_ga_text_eu_v2" id="0x7f017d65" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text0_v2" id="0x7f017d64" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text1_v2" id="0x7f017d63" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" id="0x7f017d62" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text3_v2" id="0x7f017d61" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text4_v2" id="0x7f017d60" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text5_v2" id="0x7f017d5f" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text6_v2" id="0x7f017d5e" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text7_v2" id="0x7f017d5d" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text8_v2" id="0x7f017d5c" />
+    <public type="string" name="notificationUI_how_it_works_fledge_measurement_expanded_text9_v2" id="0x7f017d5b" />
+    <public type="string" name="notificationUI_header_ga_title_eu_v2" id="0x7f017d5a" />
+    <public type="string" name="notificationUI_container1_body_ga_text_eu_v2" id="0x7f017d59" />
+    <public type="string" name="notificationUI_container2_body_ga_text_eu_v2" id="0x7f017d58" />
+    <public type="string" name="notificationUI_container3_body_ga_text_eu_v2" id="0x7f017d57" />
+    <public type="string" name="notificationUI_change_any_time_in_privacy_settings_eu_v2" id="0x7f017d56" />
+    <public type="string" name="notificationUI_container1_control_ga_text_eu_v2" id="0x7f017d55" />
+    <public type="string" name="notificationUI_learn_more_from_privacy_policy_v2" id="0x7f017d54" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text3_v2" id="0x7f017d53" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text4_v2" id="0x7f017d52" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text5_v2" id="0x7f017d51" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text6_v2" id="0x7f017d50" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text7_v2" id="0x7f017d4f" />
+    <public type="string" name="notificationUI_how_it_works_topics_expanded_text8_v2" id="0x7f017d4e" />
+    <public type="string" name="notificationUI_you_can_change_in_privacy_settings_v2" id="0x7f017d4d" />
+    <public type="string" name="notificationUI_left_control_button_text_eu_v2" id="0x7f017d4c" />
+    <public type="string" name="notificationUI_right_control_button_ga_text_eu_v2" id="0x7f017d4b" />
+    <public type="string" name="notificationUI_notification_ga_title_v2" id="0x7f017d4a" />
+    <public type="string" name="notificationUI_notification_ga_content_v2" id="0x7f017d49" />
+    <public type="string" name="notificationUI_header_ga_title_v2" id="0x7f017d48" />
+    <public type="string" name="notificationUI_container1_ga_introduction_v2" id="0x7f017d47" />
+    <public type="string" name="notificationUI_container2_ga_introduction_v2" id="0x7f017d46" />
+    <public type="string" name="notificationUI_container3_ga_introduction_v2" id="0x7f017d45" />
+    <public type="string" name="notificationUI_ga_container1_control_text_v2" id="0x7f017d44" />
+    <public type="string" name="notificationUI_how_it_works_row_subtitle1_v2" id="0x7f017d43" />
+    <public type="string" name="notificationUI_how_it_works_row_body1_v2" id="0x7f017d42" />
+    <public type="string" name="notificationUI_how_it_works_row_body2_v2" id="0x7f017d41" />
+    <public type="string" name="notificationUI_how_it_works_row_body3_v2" id="0x7f017d40" />
+    <public type="string" name="notificationUI_how_it_works_row_body4_v2" id="0x7f017d3f" />
+    <public type="string" name="notificationUI_how_it_works_row_body5_v2" id="0x7f017d3e" />
+    <public type="string" name="notificationUI_how_it_works_subtitle2_v2" id="0x7f017d3d" />
+    <public type="string" name="notificationUI_how_it_works_row_body6_v2" id="0x7f017d3c" />
+    <public type="string" name="notificationUI_how_it_works_row_body7_v2" id="0x7f017d3b" />
+    <public type="string" name="notificationUI_next_button_text" id="0x7f017d3a" />
 </resources>

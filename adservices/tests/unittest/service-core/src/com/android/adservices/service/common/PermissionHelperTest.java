@@ -83,7 +83,6 @@ public class PermissionHelperTest {
                 .isTrue();
         assertThat(PermissionHelper.hasAttributionPermission(mMockContextGrant)).isTrue();
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextGrant)).isTrue();
-        assertThat(PermissionHelper.hasAppInstallPermission(mMockContextGrant)).isTrue();
     }
 
     @Test
@@ -98,7 +97,6 @@ public class PermissionHelperTest {
                 .isFalse();
         assertThat(PermissionHelper.hasAttributionPermission(mMockContextDeny)).isFalse();
         assertThat(PermissionHelper.hasCustomAudiencesPermission(mMockContextDeny)).isFalse();
-        assertThat(PermissionHelper.hasAppInstallPermission(mMockContextDeny)).isFalse();
     }
 
     @Test

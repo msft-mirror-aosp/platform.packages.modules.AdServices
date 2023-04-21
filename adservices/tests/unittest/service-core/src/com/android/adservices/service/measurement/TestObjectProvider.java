@@ -22,14 +22,17 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import android.annotation.IntDef;
+import android.content.ContentResolver;
 import android.test.mock.MockContentResolver;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -45,10 +48,11 @@ import java.util.concurrent.TimeUnit;
 class TestObjectProvider {
     private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
 
-    @IntDef(value = {
-            Type.DENOISED,
-            Type.NOISY,
-    })
+    @IntDef(
+            value = {
+                Type.DENOISED,
+                Type.NOISY,
+            })
     @Retention(RetentionPolicy.SOURCE)
     @interface Type {
         int DENOISED = 1;
@@ -57,21 +61,24 @@ class TestObjectProvider {
 
     static AttributionJobHandlerWrapper getAttributionJobHandler(
             DatastoreManager datastoreManager, Flags flags) {
-        return new AttributionJobHandlerWrapper(datastoreManager, flags);
+        return new AttributionJobHandlerWrapper(
+                datastoreManager,
+                flags,
+                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags));
     }
 
     static MeasurementImpl getMeasurementImpl(
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
-            EnrollmentDao enrollmentDao) {
+            ContentResolver contentResolver) {
         return spy(
                 new MeasurementImpl(
                         null,
                         datastoreManager,
                         clickVerifier,
                         measurementDataDeleter,
-                        enrollmentDao));
+                        contentResolver));
     }
 
     static AsyncRegistrationQueueRunner getAsyncRegistrationQueueRunner(
@@ -79,7 +86,6 @@ class TestObjectProvider {
             DatastoreManager datastoreManager,
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
-            EnrollmentDao enrollmentDao,
             DebugReportApi debugReportApi) {
         if (type == Type.DENOISED) {
             AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
@@ -88,7 +94,6 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
-                                    enrollmentDao,
                                     datastoreManager,
                                     debugReportApi));
             // Disable Impression Noise
@@ -103,7 +108,6 @@ class TestObjectProvider {
                                     new MockContentResolver(),
                                     asyncSourceFetcher,
                                     asyncTriggerFetcher,
-                                    enrollmentDao,
                                     datastoreManager,
                                     debugReportApi));
             // Create impression noise with 100% probability
@@ -135,7 +139,6 @@ class TestObjectProvider {
                 new MockContentResolver(),
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
-                enrollmentDao,
                 datastoreManager,
                 debugReportApi);
     }

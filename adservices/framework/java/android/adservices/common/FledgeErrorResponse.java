@@ -70,6 +70,16 @@ public final class FledgeErrorResponse extends AdServicesResponse {
         dest.writeString(mErrorMessage);
     }
 
+    @Override
+    public String toString() {
+        return "FledgeErrorResponse{"
+                + "mStatusCode="
+                + mStatusCode
+                + ", mErrorMessage='"
+                + mErrorMessage
+                + "'}";
+    }
+
     /**
      * Builder for {@link FledgeErrorResponse} objects.
      *

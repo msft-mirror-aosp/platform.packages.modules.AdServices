@@ -143,7 +143,10 @@ public class SdkSandboxServiceImpl extends Service {
         cleanUpSyncedSharedPreferencesData();
 
         mInitialized = true;
-        LogUtil.d(TAG, "Sandbox initialized");
+        LogUtil.d(
+                TAG,
+                "Sandbox initialized. isCustomizedSdkContextEnabled: "
+                        + isCustomizedSdkContextEnabled);
     }
 
     /** Computes the storage of the shared and SDK storage for an app */
@@ -180,35 +183,28 @@ public class SdkSandboxServiceImpl extends Service {
             ILoadSdkInSandboxCallback callback,
             SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            loadSdkInternal(
-                    callingPackageName,
-                    applicationInfo,
-                    sdkName,
-                    sdkProviderClassName,
-                    sdkCeDataDir,
-                    sdkDeDataDir,
-                    params,
-                    callback,
-                    sandboxLatencyInfo);
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+
+        loadSdkInternal(
+                callingPackageName,
+                applicationInfo,
+                sdkName,
+                sdkProviderClassName,
+                sdkCeDataDir,
+                sdkDeDataDir,
+                params,
+                callback,
+                sandboxLatencyInfo);
     }
 
     /** Unloads SDK. */
     public void unloadSdk(
             String sdkName, IUnloadSdkCallback callback, SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
-        final long token = Binder.clearCallingIdentity();
-        try {
-            sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
-            unloadSdkInternal(sdkName);
-            sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
-        } finally {
-            Binder.restoreCallingIdentity(token);
-        }
+
+        sandboxLatencyInfo.setTimeSandboxCalledSdk(mInjector.getCurrentTime());
+        unloadSdkInternal(sdkName);
+        sandboxLatencyInfo.setTimeSdkCallCompleted(mInjector.getCurrentTime());
+
         sandboxLatencyInfo.setTimeSandboxCalledSystemServer(mInjector.getCurrentTime());
         try {
             callback.onUnloadSdk(sandboxLatencyInfo);

@@ -42,6 +42,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -111,6 +112,33 @@ public class DeleteExpiredJobServiceTest {
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
                             .cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+                });
+    }
+
+    @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransaction(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+                    ExtendedMockito.verifyZeroInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }
 
@@ -249,6 +277,7 @@ public class DeleteExpiredJobServiceTest {
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {

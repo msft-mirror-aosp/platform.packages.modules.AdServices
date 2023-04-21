@@ -36,7 +36,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoSession;
-import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
@@ -49,7 +48,6 @@ public class RollbackHandlingManagerTest {
     private static final int DATASTORE_VERSION = 339900900;
 
     private BooleanFileDatastore mDatastore;
-    @Spy private BooleanFileDatastore mSpyDatastore;
 
     @Before
     public void setup() {

@@ -17,23 +17,30 @@
 package com.android.adservices.service.adselection;
 
 import android.adservices.adselection.AdSelectionConfig;
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
+import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.net.Uri;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.Validator;
+import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
 
+import java.util.Map;
 import java.util.Objects;
 
 /** This class runs the validation of the {@link AdSelectionConfig} subfields. */
 public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
     static final String SELLER_SHOULD_NOT_BE_NULL_OR_EMPTY =
@@ -66,9 +73,21 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
     static final String URI_IS_NOT_ABSOLUTE = "The AdSelection %s URI should be absolute";
 
     @VisibleForTesting
-    static final String URI_IS_NOT_HTTPS = "The AdSelection %s URI is not secured by https";
+    static final String URI_IS_NOT_HTTPS = "The AdSelection %s URI is not secured by https: '%s'";
+
+    @VisibleForTesting
+    static final String CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME =
+            "Contextual ads decision logic uri";
 
     private static final String HTTPS_SCHEME = "https";
+
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+
+    public AdSelectionConfigValidator(@NonNull PrebuiltLogicGenerator prebuiltLogicGenerator) {
+        Objects.requireNonNull(prebuiltLogicGenerator);
+
+        mPrebuiltLogicGenerator = prebuiltLogicGenerator;
+    }
 
     @Override
     public void addValidation(
@@ -78,13 +97,22 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
             violations.add("The adSelectionConfig should not be null.");
         }
         violations.addAll(validateSeller(adSelectionConfig.getSeller()));
-        violations.addAll(
-                validateSellerDecisionUris(
-                        adSelectionConfig.getSeller(), adSelectionConfig.getDecisionLogicUri()));
-        violations.addAll(
-                validateTrustedSignalsUri(
-                        adSelectionConfig.getSeller(),
-                        adSelectionConfig.getTrustedScoringSignalsUri()));
+        if (mPrebuiltLogicGenerator.isPrebuiltUri(adSelectionConfig.getDecisionLogicUri())) {
+            sLogger.v("AdSelectionConfig validation is skipped bc prebuilt uri is detected!");
+        } else {
+            sLogger.v("AdSelectionConfig validation is not skipped!");
+            violations.addAll(
+                    validateSellerDecisionUris(
+                            adSelectionConfig.getSeller(),
+                            adSelectionConfig.getDecisionLogicUri()));
+        }
+        if (!adSelectionConfig.getTrustedScoringSignalsUri().equals(Uri.EMPTY)) {
+            violations.addAll(
+                    validateTrustedSignalsUri(
+                            adSelectionConfig.getSeller(),
+                            adSelectionConfig.getTrustedScoringSignalsUri()));
+        }
+        violations.addAll(validateContextualAds(adSelectionConfig.getBuyerContextualAds()));
     }
 
     /**
@@ -137,7 +165,7 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
         if (!uri.isAbsolute()) {
             violations.add(String.format(URI_IS_NOT_ABSOLUTE, uriType));
         } else if (!uri.getScheme().equals(HTTPS_SCHEME)) {
-            violations.add(String.format(URI_IS_NOT_HTTPS, uriType));
+            violations.add(String.format(URI_IS_NOT_HTTPS, uriType, uri));
         }
 
         String sellerHost = Uri.parse("https://" + seller).getHost();
@@ -157,5 +185,32 @@ public class AdSelectionConfigValidator implements Validator<AdSelectionConfig> 
 
     private boolean isStringNullOrEmpty(@Nullable String str) {
         return Objects.isNull(str) || str.isEmpty();
+    }
+
+    private ImmutableList<String> validateContextualAds(
+            Map<AdTechIdentifier, ContextualAds> contextualAdsMap) {
+        ImmutableList.Builder<String> violations = new ImmutableList.Builder<>();
+
+        for (Map.Entry<AdTechIdentifier, ContextualAds> entry : contextualAdsMap.entrySet()) {
+
+            // Validate that the buyer decision logic for Contextual Ads satisfies buyer ETLd+1
+            AdTechUriValidator buyerUriValidator =
+                    new AdTechUriValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString(),
+                            ContextualAds.class.getName(),
+                            CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME);
+            buyerUriValidator.addValidation(entry.getValue().getDecisionLogicUri(), violations);
+
+            // Validate that the ad render uri for Contextual Ads satisfies buyer ETLd+1
+            AdDataValidator adDataValidator =
+                    new AdDataValidator(
+                            ValidatorUtil.AD_TECH_ROLE_BUYER,
+                            entry.getValue().getBuyer().toString());
+            for (AdWithBid ad : entry.getValue().getAdsWithBid()) {
+                adDataValidator.addValidation(ad.getAdData(), violations);
+            }
+        }
+        return violations.build();
     }
 }

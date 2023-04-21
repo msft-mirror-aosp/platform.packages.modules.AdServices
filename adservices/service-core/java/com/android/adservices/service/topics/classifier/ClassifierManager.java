@@ -21,7 +21,11 @@ import static java.util.stream.Collectors.toSet;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
@@ -45,7 +49,10 @@ import java.util.stream.Stream;
  * Manager class to control the classifier behaviour between available types of classifier based on
  * classifier flags.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static ClassifierManager sSingleton;
 
     private Supplier<OnDeviceClassifier> mOnDeviceClassifier;
@@ -95,6 +102,7 @@ public class ClassifierManager implements Classifier {
     @Override
     public Map<String, List<Topic>> classify(Set<String> apps) {
         @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
+        sLogger.v("Classifying with ClassifierType: " + classifierTypeFlag);
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
             return mPrecomputedClassifier.get().classify(apps);
         } else if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {

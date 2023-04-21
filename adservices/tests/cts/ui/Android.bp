@@ -30,6 +30,7 @@ android_test {
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "androidx.test.uiautomator_uiautomator",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",

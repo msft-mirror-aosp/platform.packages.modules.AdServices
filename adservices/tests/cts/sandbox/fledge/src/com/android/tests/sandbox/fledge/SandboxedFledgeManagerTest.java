@@ -26,6 +26,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -55,6 +56,9 @@ public class SandboxedFledgeManagerTest {
 
     @Before
     public void setup() throws TimeoutException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
         mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
         boolean isDebuggable =
@@ -82,11 +86,15 @@ public class SandboxedFledgeManagerTest {
      * Sandbox checks
      */
     private void makeTestProcessForeground() throws TimeoutException {
-        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(500));
+        SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofSeconds(1));
     }
 
     @After
     public void shutDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         SimpleActivity.stopSimpleActivity(sContext);
     }
 

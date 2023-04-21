@@ -18,10 +18,13 @@ package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assume.assumeTrue;
+
 import android.os.Process;
 
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,6 +58,8 @@ public class SdkRuntimeUtilTest {
 
     @Test
     public void testCallingUidIsSdkSandbox_returnAppUid() {
+        assumeTrue(SdkLevel.isAtLeastT());
+
         int sdkUid = 400;
         int appUid = 200;
         ExtendedMockito.doReturn(true).when(() -> ProcessCompatUtils.isSdkSandboxUid(sdkUid));

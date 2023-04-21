@@ -16,22 +16,60 @@
 
 package com.android.adservices.service.common.compat;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 /** Utility class for compatibility of PackageManager APIs with Android S and earlier. */
 public final class PackageManagerCompatUtils {
+
     private PackageManagerCompatUtils() {
         // Prevent instantiation
     }
+
+    // This list is the same as the list declared in the AdExtServicesManifest, where the
+    // activities are disabled so that there are no dups on T+ devices.
+    // TODO(b/263904312): Remove after max_sdk_version is implemented.
+    // TODO(b/272737642) scan activities instead of hardcode
+    public static final ImmutableList<String> CONSENT_ACTIVITIES_CLASSES =
+            ImmutableList.copyOf(
+                    Arrays.asList(
+                            "com.android.adservices.ui.settings.activities."
+                                    + "AdServicesSettingsMainActivity",
+                            "com.android.adservices.ui.settings.activities.TopicsActivity",
+                            "com.android.adservices.ui.settings.activities.BlockedTopicsActivity",
+                            "com.android.adservices.ui.settings.activities.AppsActivity",
+                            "com.android.adservices.ui.settings.activities.BlockedAppsActivity",
+                            "com.android.adservices.ui.settings.activities.MeasurementActivity",
+                            "com.android.adservices.ui.notifications.ConsentNotificationActivity"));
+
+    // This list is the same as the list declared in the AdExtServicesManifest, where the
+    // services with intent filters need to be disabled so that there are no dups on T+ devices.
+    // TODO(b/263904312): Remove after max_sdk_version is implemented.
+    // TODO(b/272737642) scan services instead of hardcode
+    public static final ImmutableList<String> SERVICE_CLASSES =
+            ImmutableList.copyOf(
+                    Arrays.asList(
+                            "com.android.adservices.adselection.AdSelectionService",
+                            "com.android.adservices.customaudience.CustomAudienceService",
+                            "com.android.adservices.topics.TopicsService",
+                            "com.android.adservices.adid.AdIdService",
+                            "com.android.adservices.appsetid.AppSetIdService",
+                            "com.android.adservices.measurement.MeasurementService",
+                            "com.android.adservices.common.AdServicesCommonService"));
 
     /**
      * Invokes the appropriate overload of {@code getInstalledPackages} on {@link PackageManager}
@@ -124,5 +162,33 @@ public final class PackageManagerCompatUtils {
                 ? packageManager.getPackageUid(
                         packageName, PackageManager.PackageInfoFlags.of(flags))
                 : packageManager.getPackageUid(packageName, flags);
+    }
+
+    /**
+     * Activities for user consent and control are disabled by default. Check whether the activities
+     * are enabled
+     *
+     * @param context the context
+     * @return true if AdServices activities are enabled, otherwise false
+     */
+    @NonNull
+    public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
+            for (String activity : CONSENT_ACTIVITIES_CLASSES) {
+                int componentEnabledState =
+                        packageManager.getComponentEnabledSetting(
+                                new ComponentName(packageInfo.packageName, activity));
+                if (componentEnabledState != PackageManager.COMPONENT_ENABLED_STATE_ENABLED) {
+                    return false;
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            LogUtil.e("Error when checking if activities are enabled: " + e.getMessage());
+            return false;
+        }
+        return true;
     }
 }

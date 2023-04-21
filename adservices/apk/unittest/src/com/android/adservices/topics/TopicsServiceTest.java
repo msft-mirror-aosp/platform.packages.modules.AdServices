@@ -104,7 +104,7 @@ public class TopicsServiceTest {
             doReturn(mMockAdServicesApiConsent).when(mMockConsentManager).getConsent();
 
             ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
             ExtendedMockito.doReturn(true)
                     .when(
                             () ->
@@ -195,7 +195,7 @@ public class TopicsServiceTest {
                     .getConsent(AdServicesApiType.TOPICS);
 
             ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
             ExtendedMockito.doReturn(true)
                     .when(
                             () ->
@@ -228,7 +228,8 @@ public class TopicsServiceTest {
     }
 
     private void verifyMethodExecutionOnUserConsentGiven() {
-        ExtendedMockito.verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+        ExtendedMockito.verify(
+                () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         ExtendedMockito.verify(
                 () -> MaintenanceJobService.scheduleIfNeeded(any(Context.class), eq(false)));
         ExtendedMockito.verify(

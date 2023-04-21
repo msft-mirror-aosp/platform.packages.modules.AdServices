@@ -16,16 +16,19 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.os.Build;
 import android.util.Pair;
 import android.view.View;
 import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
@@ -37,12 +40,13 @@ import com.android.settingslib.widget.MainSwitchBar;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-public class TopicsActionDelegate extends BaseActionDelegate {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class TopicsActionDelegate {
     private final TopicsActivity mTopicsActivity;
     private final TopicsViewModel mTopicsViewModel;
 
     public TopicsActionDelegate(TopicsActivity topicsActivity, TopicsViewModel topicsViewModel) {
-        super(topicsActivity);
         mTopicsActivity = topicsActivity;
         mTopicsViewModel = topicsViewModel;
         listenToTopicsViewModelUiEvents();
@@ -70,7 +74,7 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                                 mTopicsViewModel.refresh();
                                 break;
                             case BLOCK_TOPIC:
-                                logUIAction(ActionEnum.BLOCK_TOPIC_SELECTED);
+                                UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
                                     DialogManager.showBlockTopicDialog(
                                             mTopicsActivity, mTopicsViewModel, topic);
@@ -79,7 +83,7 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                                 }
                                 break;
                             case RESET_TOPICS:
-                                logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
+                                UiStatsLogger.logResetTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
                                     DialogManager.showResetTopicDialog(
                                             mTopicsActivity, mTopicsViewModel);

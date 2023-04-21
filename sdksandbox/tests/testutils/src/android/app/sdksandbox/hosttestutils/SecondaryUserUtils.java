@@ -36,6 +36,10 @@ public class SecondaryUserUtils {
         mTest = test;
     }
 
+    public boolean isMultiUserSupported() throws Exception {
+        return mTest.getDevice().isMultiUserSupported();
+    }
+
     public int createAndStartSecondaryUser() throws Exception {
         if (mSecondaryUserId != -1) {
             throw new IllegalStateException("Cannot create secondary user, it already exists");

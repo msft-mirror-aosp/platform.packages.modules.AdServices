@@ -16,22 +16,12 @@
 
 package com.android.adservices.service.stats;
 
-import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_JS_SANDBOX_UNAVAILABLE;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import android.os.LimitExceededException;
-
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -43,27 +33,16 @@ public class AdServicesLoggerUtil {
 
     /** @return the resultCode corresponding to the type of exception to be used in logging. */
     public static int getResultCodeFromException(Throwable t) {
-        int resultCode;
-        if (t instanceof AppImportanceFilter.WrongCallingApplicationStateException) {
-            resultCode = STATUS_BACKGROUND_CALLER;
+        if (t instanceof FilterException) {
+            return FilterException.getResultCode(t);
         } else if (t instanceof UncheckedTimeoutException) {
-            resultCode = STATUS_TIMEOUT;
-        } else if (t instanceof FledgeAuthorizationFilter.AdTechNotAllowedException
-                || t instanceof FledgeAllowListsFilter.AppNotAllowedException) {
-            resultCode = STATUS_CALLER_NOT_ALLOWED;
-        } else if (t instanceof FledgeAuthorizationFilter.CallerMismatchException) {
-            resultCode = STATUS_UNAUTHORIZED;
+            return STATUS_TIMEOUT;
         } else if (t instanceof JSSandboxIsNotAvailableException) {
-            resultCode = STATUS_JS_SANDBOX_UNAVAILABLE;
+            return STATUS_JS_SANDBOX_UNAVAILABLE;
         } else if (t instanceof IllegalArgumentException) {
-            resultCode = STATUS_INVALID_ARGUMENT;
-        } else if (t instanceof LimitExceededException) {
-            resultCode = STATUS_RATE_LIMIT_REACHED;
-        } else if (t instanceof ConsentManager.RevokedConsentException) {
-            resultCode = STATUS_USER_CONSENT_REVOKED;
+            return STATUS_INVALID_ARGUMENT;
         } else {
-            resultCode = STATUS_INTERNAL_ERROR;
+            return STATUS_INTERNAL_ERROR;
         }
-        return resultCode;
     }
 }

@@ -69,7 +69,6 @@ java_library {
     name: "adservices-grpclib-lite",
     min_sdk_version: "30",
     apex_available: ["com.android.adservices", "com.android.extservices"],
-    host_supported: true,
     srcs: [
         ":seller-frontend-service-stub-lite",
         ":adservices-proto",

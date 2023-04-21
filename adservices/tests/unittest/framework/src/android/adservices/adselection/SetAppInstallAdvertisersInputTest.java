@@ -73,7 +73,7 @@ public final class SetAppInstallAdvertisersInputTest {
     }
 
     @Test
-    public void testFailsToBuildWithNullAdSelectionConfig() {
+    public void testFailsToBuildWithNullAdvertisers() {
         assertThrows(
                 NullPointerException.class,
                 () -> {

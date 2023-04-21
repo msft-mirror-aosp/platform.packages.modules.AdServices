@@ -24,7 +24,7 @@ android_app {
        "java/**/*.java",
     ],
     libs: [
-        "framework-adservices",
+        "android.ext.adservices",
     ],
     static_libs: [
         "adservices-clients",

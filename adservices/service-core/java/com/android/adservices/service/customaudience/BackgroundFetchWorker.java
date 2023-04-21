@@ -19,8 +19,10 @@ package com.android.adservices.service.customaudience;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
@@ -47,6 +49,7 @@ import java.util.function.Supplier;
 
 /** Worker instance for updating custom audiences in the background. */
 public class BackgroundFetchWorker {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "FLEDGE background fetch";
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile BackgroundFetchWorker sBackgroundFetchWorker;
@@ -88,6 +91,8 @@ public class BackgroundFetchWorker {
                 if (sBackgroundFetchWorker == null) {
                     CustomAudienceDao customAudienceDao =
                             CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                    AppInstallDao appInstallDao =
+                            SharedStorageDatabase.getInstance(context).appInstallDao();
                     Flags flags = FlagsFactory.getFlags();
                     sBackgroundFetchWorker =
                             new BackgroundFetchWorker(
@@ -95,6 +100,7 @@ public class BackgroundFetchWorker {
                                     flags,
                                     new BackgroundFetchRunner(
                                             customAudienceDao,
+                                            appInstallDao,
                                             context.getPackageManager(),
                                             EnrollmentDao.getInstance(context),
                                             flags),
@@ -113,7 +119,7 @@ public class BackgroundFetchWorker {
      * @return A future to be used to check when the task has completed.
      */
     public FluentFuture<Void> runBackgroundFetch() {
-        LogUtil.d("Starting %s", JOB_DESCRIPTION);
+        sLogger.d("Starting %s", JOB_DESCRIPTION);
         return mSingletonRunner.runSingleInstance();
     }
 
@@ -124,7 +130,7 @@ public class BackgroundFetchWorker {
 
     private FluentFuture<Void> doRun(@NonNull Supplier<Boolean> shouldStop) {
         Instant jobStartTime = mClock.instant();
-        return cleanupCustomAudiences(jobStartTime)
+        return cleanupFledgeData(jobStartTime)
                 .transform(
                         ignored -> getFetchDataList(shouldStop, jobStartTime),
                         AdServicesExecutors.getBackgroundExecutor())
@@ -142,11 +148,11 @@ public class BackgroundFetchWorker {
             @NonNull Supplier<Boolean> shouldStop,
             @NonNull Instant jobStartTime) {
         if (fetchDataList.isEmpty()) {
-            LogUtil.d("No custom audiences found to update");
+            sLogger.d("No custom audiences found to update");
             return FluentFuture.from(Futures.immediateVoidFuture());
         }
 
-        LogUtil.d("Updating %d custom audiences", fetchDataList.size());
+        sLogger.d("Updating %d custom audiences", fetchDataList.size());
         // Divide the gathered CAs among worker threads
         int numWorkers =
                 Math.min(
@@ -181,7 +187,7 @@ public class BackgroundFetchWorker {
     private List<DBCustomAudienceBackgroundFetchData> getFetchDataList(
             @NonNull Supplier<Boolean> shouldStop, @NonNull Instant jobStartTime) {
         if (shouldStop.get()) {
-            LogUtil.d("Stopping " + JOB_DESCRIPTION);
+            sLogger.d("Stopping " + JOB_DESCRIPTION);
             return ImmutableList.of();
         }
 
@@ -190,7 +196,7 @@ public class BackgroundFetchWorker {
                 jobStartTime, mFlags.getFledgeBackgroundFetchMaxNumUpdated());
     }
 
-    private FluentFuture<?> cleanupCustomAudiences(Instant jobStartTime) {
+    private FluentFuture<?> cleanupFledgeData(Instant jobStartTime) {
         return FluentFuture.from(
                 AdServicesExecutors.getBackgroundExecutor()
                         .submit(
@@ -201,6 +207,10 @@ public class BackgroundFetchWorker {
                                             jobStartTime);
                                     mBackgroundFetchRunner.deleteDisallowedOwnerCustomAudiences();
                                     mBackgroundFetchRunner.deleteDisallowedBuyerCustomAudiences();
+                                    if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
+                                        mBackgroundFetchRunner
+                                                .deleteDisallowedPackageAppInstallEntries();
+                                    }
                                 }));
     }
 }

@@ -54,14 +54,17 @@ import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -74,6 +77,7 @@ import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -121,11 +125,14 @@ public class JSScriptEngineTest {
     public static void initJavaScriptSandbox() {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
-        sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+        if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+        }
     }
 
     @Before
     public void setup() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         MockitoAnnotations.initMocks(this);
 
         reset(sMockProfiler);
@@ -897,6 +904,9 @@ public class JSScriptEngineTest {
     }
 
     private byte[] readBinaryAsset(@NonNull String assetName) throws IOException {
-        return sContext.getAssets().open(assetName).readAllBytes();
+        InputStream inputStream = sContext.getAssets().open(assetName);
+        return SdkLevel.isAtLeastT()
+                ? inputStream.readAllBytes()
+                : ByteStreams.toByteArray(inputStream);
     }
 }
