@@ -49,6 +49,7 @@ public class DebugReportApi {
         String SOURCE_SUCCESS = "source-success";
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
+        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
         String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
