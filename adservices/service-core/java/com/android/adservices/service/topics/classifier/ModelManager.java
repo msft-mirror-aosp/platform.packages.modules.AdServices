@@ -28,7 +28,7 @@ import android.util.JsonReader;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
@@ -70,6 +70,7 @@ import java.util.concurrent.ExecutionException;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ModelManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     public static final String BUNDLED_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     public static final String BUNDLED_TOP_APP_FILE_PATH = "classifier/precomputed_app_list.csv";
     public static final String BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH =
@@ -160,11 +161,11 @@ public class ModelManager {
     static @Nullable Map<String, ClientFile> getDownloadedFiles(@NonNull Context context) {
         ClientFileGroup fileGroup = getClientFileGroup(context);
         if (fileGroup == null) {
-            LogUtil.d("ClientFileGroup is null.");
+            sLogger.d("ClientFileGroup is null.");
             return null;
         }
         Map<String, ClientFile> downloadedFiles = new ArrayMap<>();
-        LogUtil.v("Populating downloadFiles map.");
+        sLogger.v("Populating downloadFiles map.");
         fileGroup.getFileList().stream()
                 .forEach(file -> downloadedFiles.put(file.getFileId(), file));
         return downloadedFiles;
@@ -183,7 +184,7 @@ public class ModelManager {
             // TODO(b/242908564). Remove get()
             fileGroup = mobileDataDownload.getFileGroup(getFileGroupRequest).get();
         } catch (ExecutionException | InterruptedException e) {
-            LogUtil.e(e, "Unable to load MDD file group.");
+            sLogger.e(e, "Unable to load MDD file group.");
             return null;
         }
         return fileGroup;
@@ -205,13 +206,13 @@ public class ModelManager {
     @VisibleForTesting
     boolean useDownloadedFiles() {
         if (FlagsFactory.getFlags().getClassifierForceUseBundledFiles()) {
-            LogUtil.d(
+            sLogger.d(
                     "ModelManager uses bundled model because flag"
                             + " classifier_force_use_bundled_files is enabled");
             return false;
         } else if (mDownloadedFiles == null || mDownloadedFiles.size() == 0) {
             // Use bundled model if no downloaded files available.
-            LogUtil.d(
+            sLogger.d(
                     "ModelManager uses bundled model because there is no downloaded files"
                             + " available");
             return false;
@@ -223,13 +224,13 @@ public class ModelManager {
                         mContext, mClassifierAssetsMetadataPath);
         if (downloadedModelBuildId <= bundledModelBuildId) {
             // Mdd has not downloaded new version of model. Use bundled model.
-            LogUtil.d(
+            sLogger.d(
                     "ModelManager uses bundled model build id = %d because downloaded model build"
                             + " id = %d is not the latest version",
                     bundledModelBuildId, downloadedModelBuildId);
             return false;
         }
-        LogUtil.d("ModelManager uses downloaded model build id = %d", downloadedModelBuildId);
+        sLogger.d("ModelManager uses downloaded model build id = %d", downloadedModelBuildId);
         return true;
     }
 
@@ -244,7 +245,7 @@ public class ModelManager {
             ClientFile downloadedFile = mDownloadedFiles.get(DOWNLOADED_MODEL_FILE_ID);
             MappedByteBuffer buffer = null;
             if (downloadedFile == null) {
-                LogUtil.e("Failed to find downloaded model file");
+                sLogger.e("Failed to find downloaded model file");
                 return ByteBuffer.allocate(0);
             } else {
                 buffer =
@@ -265,7 +266,7 @@ public class ModelManager {
                 long declaredLength = fileDescriptor.getDeclaredLength();
                 return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
             } catch (IOException | NullPointerException e) {
-                LogUtil.e(e, "Error loading the bundled classifier model");
+                sLogger.e(e, "Error loading the bundled classifier model");
                 return ByteBuffer.allocate(0);
             }
         }
@@ -281,7 +282,7 @@ public class ModelManager {
             try {
                 return mAssetManager.openFd(mModelFilePath).getLength() > 0;
             } catch (IOException e) {
-                LogUtil.e(e, "[ML] No classifier model available.");
+                sLogger.e(e, "[ML] No classifier model available.");
                 return false;
             }
         }
@@ -304,7 +305,7 @@ public class ModelManager {
             try {
                 inputStream = mAssetManager.open(mLabelsFilePath);
             } catch (IOException e) {
-                LogUtil.e(e, "Failed to read labels file");
+                sLogger.e(e, "Failed to read labels file");
             }
         }
         return inputStream == null ? labels.build() : getLabelsList(labels, inputStream);
@@ -324,7 +325,7 @@ public class ModelManager {
                 }
             }
         } catch (IOException e) {
-            LogUtil.e(e, "Unable to read precomputed labels");
+            sLogger.e(e, "Unable to read precomputed labels");
             // When catching IOException -> return empty immutable list
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
@@ -354,7 +355,7 @@ public class ModelManager {
             try {
                 inputStream = mAssetManager.open(mTopAppsFilePath);
             } catch (IOException e) {
-                LogUtil.e(e, "Failed to read top apps file");
+                sLogger.e(e, "Failed to read top apps file");
             }
         }
         return inputStream == null
@@ -398,7 +399,7 @@ public class ModelManager {
                     // The topic will not save to the app topics map
                     // if it is not a valid topic in labels file
                     if (!validTopics.contains(Integer.parseInt(appTopic))) {
-                        LogUtil.e(
+                        sLogger.e(
                                 "Unable to load topicID \"%s\" in app \"%s\", "
                                         + "because it is not a valid topic in labels file.",
                                 appTopic, app);
@@ -412,7 +413,7 @@ public class ModelManager {
                 appTopicsMap.put(app, ImmutableList.copyOf(allowedAppTopics));
             }
         } catch (IOException e) {
-            LogUtil.e(e, "Unable to read precomputed app topics list");
+            sLogger.e(e, "Unable to read precomputed app topics list");
             // When catching IOException -> return empty hash map
             // TODO(b/226944089): A strategy to handle exceptions
             //  in Classifier and PrecomputedLoader
@@ -442,7 +443,7 @@ public class ModelManager {
             try {
                 inputStream = mAssetManager.open(mClassifierAssetsMetadataPath);
             } catch (IOException e) {
-                LogUtil.e(e, "Failed to read bundled metadata file");
+                sLogger.e(e, "Failed to read bundled metadata file");
             }
         }
         return inputStream == null
@@ -485,7 +486,7 @@ public class ModelManager {
                                 // Skip the redundant metadata name if it can't be found
                                 // in the ASSETS_PROPERTY_ATTRIBUTIONS.
                                 reader.skipValue();
-                                LogUtil.e(
+                                sLogger.e(
                                         attribution,
                                         " is a redundant metadata attribution of "
                                                 + "metadata property.");
@@ -503,7 +504,7 @@ public class ModelManager {
                                 // Skip the redundant metadata name if it can't be found
                                 // in the ASSET_NORMAL_ATTRIBUTIONS.
                                 reader.skipValue();
-                                LogUtil.e(
+                                sLogger.e(
                                         attribution,
                                         " is a redundant metadata attribution of asset.");
                             }
@@ -513,7 +514,7 @@ public class ModelManager {
                         while (reader.hasNext()) {
                             reader.skipValue();
                         }
-                        LogUtil.e(
+                        sLogger.e(
                                 "Can't load this json element, "
                                         + "because \"property\" or \"asset_name\" "
                                         + "can't be found in the json element.");
@@ -529,7 +530,7 @@ public class ModelManager {
             }
             reader.endArray();
         } catch (IOException e) {
-            LogUtil.e(e, "Unable to read classifier assets metadata file");
+            sLogger.e(e, "Unable to read classifier assets metadata file");
             // When catching IOException -> return empty immutable map
             return ImmutableMap.of();
         }
@@ -543,7 +544,7 @@ public class ModelManager {
         InputStream inputStream = null;
         ClientFile downloadedFile = mDownloadedFiles.get(fileId);
         if (downloadedFile == null) {
-            LogUtil.e("Failed to find downloaded %s file", fileId);
+            sLogger.e("Failed to find downloaded %s file", fileId);
             return inputStream;
         }
         try {
@@ -551,7 +552,7 @@ public class ModelManager {
                     mFileStorage.open(
                             Uri.parse(downloadedFile.getFileUri()), ReadStreamOpener.create());
         } catch (IOException e) {
-            LogUtil.e(e, "Failed to load fileId = %s", fileId);
+            sLogger.e(e, "Failed to load fileId = %s", fileId);
         }
         return inputStream;
     }
