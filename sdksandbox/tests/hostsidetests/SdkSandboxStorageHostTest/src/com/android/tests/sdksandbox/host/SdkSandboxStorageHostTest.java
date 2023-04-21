@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
 import android.app.sdksandbox.hosttestutils.AwaitUtils;
+import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
@@ -54,7 +55,6 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     private boolean mWasRoot;
 
-    private static final String CODE_PROVIDER_APK = "StorageTestCodeProvider.apk";
     private static final String TEST_APP_STORAGE_PACKAGE = "com.android.tests.sdksandbox";
     private static final String TEST_APP_STORAGE_APK = "SdkSandboxStorageTestApp.apk";
     private static final String TEST_APP_STORAGE_V2_NO_SDK =
@@ -70,6 +70,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
     private final DeviceLockUtils mDeviceLockUtils = new DeviceLockUtils(this);
+    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device.
@@ -92,6 +93,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
         // sdk sandbox is added.
         mWasRoot = getDevice().isAdbRoot();
         getDevice().enableAdbRoot();
+        assumeTrue(mDeviceSupportUtils.isSdkSandboxSupported());
         uninstallPackage(TEST_APP_STORAGE_PACKAGE);
     }
 
