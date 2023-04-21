@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import androidx.test.filters.SmallTest;
 
@@ -43,11 +44,15 @@ public class AggregateDeduplicationKeyTest {
         filterValues.add("xyz");
         filter.put("filter1", filterValues);
         sFilterSet.add(new FilterMap.Builder().setAttributionFilterMap(filter).build());
-        return new AggregateDeduplicationKey.Builder(DEDUP_KEY).setFilterSet(sFilterSet).build();
+        return new AggregateDeduplicationKey.Builder()
+                .setDeduplicationKey(DEDUP_KEY)
+                .setFilterSet(sFilterSet)
+                .build();
     }
 
     void verifyExample(AggregateDeduplicationKey aggregateDeduplicationKey) {
-        assertEquals(DEDUP_KEY, aggregateDeduplicationKey.getDeduplicationKey());
+        assertTrue(aggregateDeduplicationKey.getDeduplicationKey().isPresent());
+        assertEquals(DEDUP_KEY, aggregateDeduplicationKey.getDeduplicationKey().get());
         assertEquals(sFilterSet, aggregateDeduplicationKey.getFilterSet().get());
     }
 
