@@ -180,6 +180,7 @@ public class ConsentSettingsUiAutomatorTest {
         Assume.assumeTrue(!SdkLevel.isAtLeastT());
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+        doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
         consentTest(false);
     }
 
