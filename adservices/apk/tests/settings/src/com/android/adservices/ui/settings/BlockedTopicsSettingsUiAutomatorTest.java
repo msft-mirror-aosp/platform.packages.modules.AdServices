@@ -38,7 +38,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
@@ -63,6 +63,7 @@ import java.util.concurrent.Executors;
  * for Beta UX view or GA UX view respectively.
  */
 public class BlockedTopicsSettingsUiAutomatorTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String LOG_TAG = "adservices";
@@ -490,7 +491,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         final ServiceInfo serviceInfo =
                 AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
-            LogUtil.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
+            sLogger.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 

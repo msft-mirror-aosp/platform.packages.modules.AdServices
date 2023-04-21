@@ -20,7 +20,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.res.AssetManager;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -28,10 +28,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-/**
- * Util class that retrieves topicId to topicName {@link ImmutableMap}.
- */
+/** Util class that retrieves topicId to topicName {@link ImmutableMap}. */
 public class TopicIdNameUtil {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // Use "\t" as a delimiter to read the topicId to topicName file
     private static final String DELIMITER = "\t";
     private static final String TOPIC_ID_TO_TOPIC_NAME_FILE_PATH =
@@ -44,8 +43,8 @@ public class TopicIdNameUtil {
     }
 
     /**
-     * Retrieves the topicId to topicName map.
-     * An empty map will be return when catching an IOException.
+     * Retrieves the topicId to topicName map. An empty map will be return when catching an
+     * IOException.
      *
      * @return The map from topicId to the topicName.
      */
@@ -56,7 +55,7 @@ public class TopicIdNameUtil {
         String line;
 
         try (InputStreamReader inputStreamReader =
-                     new InputStreamReader(mAssetManager.open(TOPIC_ID_TO_TOPIC_NAME_FILE_PATH))) {
+                new InputStreamReader(mAssetManager.open(TOPIC_ID_TO_TOPIC_NAME_FILE_PATH))) {
             BufferedReader reader = new BufferedReader(inputStreamReader);
 
             // Skip first line (columns name)
@@ -65,16 +64,16 @@ public class TopicIdNameUtil {
             while ((line = reader.readLine()) != null) {
                 String[] columns = line.split(DELIMITER);
 
-                //The first column is topicId
+                // The first column is topicId
                 Integer topicId = Integer.parseInt(columns[0]);
 
-                //The second column is topicName
+                // The second column is topicName
                 String topicName = columns[1];
 
                 topicIdToNameMap.put(topicId, topicName);
             }
         } catch (IOException e) {
-            LogUtil.e(e, "Unable to read topicId to topicName list");
+            sLogger.e(e, "Unable to read topicId to topicName list");
             return ImmutableMap.<Integer, String>builder().build();
         }
 
