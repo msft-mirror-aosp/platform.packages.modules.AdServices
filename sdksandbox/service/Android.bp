@@ -89,6 +89,9 @@ java_sdk_library {
         "framework-system-server-module-optimize-defaults",
         "sdksandbox-java-defaults",
     ],
+    java_resources: [
+        ":platform_api_allowlist_per_target_sdk_version_current.binarypb",
+        ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
     ],

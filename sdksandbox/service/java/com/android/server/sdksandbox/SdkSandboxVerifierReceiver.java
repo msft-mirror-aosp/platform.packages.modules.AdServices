@@ -24,6 +24,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 
+import com.android.server.sdksandbox.verifier.SdkDexVerifier;
+
 /**
  * Broadcast Receiver for receiving new Sdk install requests and verifying Sdk code before running
  * it in Sandbox.
@@ -32,9 +34,8 @@ import android.util.Log;
  */
 public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
 
-    private static final String TAG = "SdkSandboxManager";
+    private static final String TAG = "SdkSandboxVerifier";
     private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
-
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -45,12 +46,21 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
         Log.d(TAG, "Received sdk sandbox verification intent " + intent.toString());
         Log.d(TAG, "Extras " + intent.getExtras());
 
-        MAIN_HANDLER.post(() -> verifySdkHandler(context, intent));
+        verifySdkHandler(context, intent);
     }
 
     private void verifySdkHandler(Context context, Intent intent) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
+
+        MAIN_HANDLER.post(
+                () ->
+                        SdkDexVerifier.getInstance()
+                                .startDexVerification(intent.getData().getPath()));
+
+        // Verification will continue to run on background, return VERIFICATION_ALLOW to
+        // unblock install
         context.getPackageManager()
                 .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_ALLOW);
+        Log.d(TAG, "Sent VERIFICATION_ALLOW");
     }
 }
