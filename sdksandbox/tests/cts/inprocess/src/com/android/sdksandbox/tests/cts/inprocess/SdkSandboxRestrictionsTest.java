@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.NotificationManager;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -42,6 +43,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +63,13 @@ import java.util.UUID;
  */
 @RunWith(JUnit4.class)
 public class SdkSandboxRestrictionsTest {
+
+    @Before
+    public void setUp() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
+    }
 
     /** Tests that the SDK sandbox cannot send notifications. */
     @Test
