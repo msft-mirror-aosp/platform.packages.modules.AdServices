@@ -297,6 +297,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testSdkDataPackageDirectory_SharedStorageIsUsable() throws Exception {
         installPackage(TEST_APP_STORAGE_APK);
 

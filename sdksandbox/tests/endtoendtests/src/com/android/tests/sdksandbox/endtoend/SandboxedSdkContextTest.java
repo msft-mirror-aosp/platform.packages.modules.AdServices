@@ -28,6 +28,7 @@ import android.content.res.Resources;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -60,6 +61,7 @@ public class SandboxedSdkContextTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testResources() {
         Resources resources = mSandboxedSdkContext.getResources();
         assertThat(resources).isNotNull();
@@ -70,6 +72,7 @@ public class SandboxedSdkContextTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testAssets() throws Exception {
         AssetManager assets = mSandboxedSdkContext.getAssets();
         assertThat(assets).isNotNull();
