@@ -178,7 +178,9 @@ public class AppSearchDaoTest {
         AppSearchConsentDao dao = new AppSearchConsentDao(ID, ID, NAMESPACE, API_TYPE, CONSENT);
         FluentFuture<AppSearchBatchResult<String, Void>> result =
                 dao.writeConsentData(
-                        Futures.immediateFuture(mockSession), PACKAGE_IDENTIFIER, mExecutor);
+                        Futures.immediateFuture(mockSession),
+                        List.of(PACKAGE_IDENTIFIER),
+                        mExecutor);
         ExecutionException e = assertThrows(ExecutionException.class, () -> result.get());
         assertThat(e.getMessage())
                 .isEqualTo(
@@ -206,7 +208,9 @@ public class AppSearchDaoTest {
         // Verify that no exception is thrown.
         FluentFuture future =
                 dao.writeConsentData(
-                        Futures.immediateFuture(mockSession), PACKAGE_IDENTIFIER, mExecutor);
+                        Futures.immediateFuture(mockSession),
+                        List.of(PACKAGE_IDENTIFIER),
+                        mExecutor);
         assertThat(future.get()).isNotNull();
     }
 

@@ -41,6 +41,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
@@ -142,19 +143,20 @@ class AppSearchDao {
      */
     FluentFuture<AppSearchBatchResult<String, Void>> writeConsentData(
             @NonNull ListenableFuture<AppSearchSession> appSearchSession,
-            @NonNull PackageIdentifier packageIdentifier,
+            @NonNull List<PackageIdentifier> packageIdentifiers,
             @NonNull Executor executor) {
         Objects.requireNonNull(appSearchSession);
-        Objects.requireNonNull(packageIdentifier);
+        Objects.requireNonNull(packageIdentifiers);
         Objects.requireNonNull(executor);
 
         try {
-            SetSchemaRequest setSchemaRequest =
-                    new SetSchemaRequest.Builder()
-                            .addDocumentClasses(getClass())
-                            .setSchemaTypeVisibilityForPackage(
-                                    getClass().getSimpleName(), true, packageIdentifier)
-                            .build();
+            SetSchemaRequest.Builder setSchemaRequestBuilder = new SetSchemaRequest.Builder();
+            setSchemaRequestBuilder.addDocumentClasses(getClass());
+            for (PackageIdentifier packageIdentifier : packageIdentifiers) {
+                setSchemaRequestBuilder.setSchemaTypeVisibilityForPackage(
+                        getClass().getSimpleName(), true, packageIdentifier);
+            }
+            SetSchemaRequest setSchemaRequest = setSchemaRequestBuilder.build();
             PutDocumentsRequest putRequest =
                     new PutDocumentsRequest.Builder().addDocuments(this).build();
             FluentFuture<AppSearchBatchResult<String, Void>> putFuture =

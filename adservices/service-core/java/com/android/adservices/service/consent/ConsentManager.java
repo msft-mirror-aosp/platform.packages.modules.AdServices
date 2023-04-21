@@ -171,8 +171,6 @@ public class ConsentManager {
                 BooleanFileDatastore datastore = createAndInitializeDataStore(context);
                 AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
                 AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
-                handleConsentMigrationIfNeeded(
-                        context, datastore, adServicesManager, consentSourceOfTruth);
 
                 // It is possible that the old value of the flag lingers after OTA until the first
                 // PH sync. In that case, we should not use the stale value, but use the default
@@ -192,6 +190,10 @@ public class ConsentManager {
                             appSearchConsentManager,
                             adServicesManager);
                 }
+
+                // Attempt to migrate consent data from PPAPI to System server if needed.
+                handleConsentMigrationIfNeeded(
+                        context, datastore, adServicesManager, consentSourceOfTruth);
 
                 if (sConsentManager == null) {
                     sConsentManager =
@@ -1729,8 +1731,8 @@ public class ConsentManager {
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(datastore);
-        if (consentSourceOfTruth != Flags.PPAPI_ONLY
-                && consentSourceOfTruth != Flags.APPSEARCH_ONLY) {
+        if (consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER
+                || consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY) {
             Objects.requireNonNull(adServicesManager);
         }
 
