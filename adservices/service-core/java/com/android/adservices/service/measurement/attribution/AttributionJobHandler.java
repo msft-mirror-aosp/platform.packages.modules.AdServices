@@ -208,6 +208,12 @@ class AttributionJobHandler {
             throws DatastoreException {
 
         if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
