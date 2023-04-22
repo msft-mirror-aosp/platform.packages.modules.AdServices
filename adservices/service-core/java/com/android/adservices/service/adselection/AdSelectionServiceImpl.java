@@ -446,7 +446,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         InteractionReporter interactionReporter =
                 new InteractionReporter(
-                        mContext,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutor,

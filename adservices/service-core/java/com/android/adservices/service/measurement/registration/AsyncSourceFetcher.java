@@ -299,6 +299,8 @@ public class AsyncSourceFetcher {
             String enrollmentId,
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
+        boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
+        LogUtil.d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
@@ -308,7 +310,7 @@ public class AsyncSourceFetcher {
         builder.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
         builder.setEventTime(asyncRegistration.getRequestTime());
         builder.setAdIdPermission(asyncRegistration.hasAdIdPermission());
-        builder.setArDebugPermission(asyncRegistration.getDebugKeyAllowed());
+        builder.setArDebugPermission(arDebugPermission);
         builder.setPublisherType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         List<String> field =

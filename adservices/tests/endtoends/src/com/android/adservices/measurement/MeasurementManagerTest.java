@@ -19,15 +19,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -51,6 +52,7 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -107,14 +109,21 @@ public class MeasurementManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
-        mPreviousAppAllowList =
-                CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                        sContext.getPackageName());
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void tearDown() {
-        CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+
         resetOverrideConsentManagerDebugMode();
     }
 
@@ -147,7 +156,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -193,6 +202,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -267,6 +277,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -308,7 +319,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerTrigger(
@@ -322,7 +333,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebSource(
@@ -336,7 +347,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebTrigger(
@@ -524,6 +535,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -596,6 +608,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -753,6 +766,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -825,6 +839,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -965,6 +980,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -1033,6 +1049,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test

@@ -1,7 +1,7 @@
 {
   "description": "W2A test for trigger-event-low-priority debug report.",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.com"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
   },
   "input": {
     "web_sources": [
@@ -19,7 +19,7 @@
         },
         "responses": [{
           "url": "https://www.ad-tech1.test",
-          "debug_permission" : true,
+          "debug_permission": true,
           "response": {
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "1",
