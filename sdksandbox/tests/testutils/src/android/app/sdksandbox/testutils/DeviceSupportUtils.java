@@ -14,10 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package android.app.sdksandbox.testutils;
 
-/** Interface for Statsd Adservices logger to implement error logging in statsd. */
-public interface StatsdAdServicesErrorLogger {
-    /** Logs AdServices error/exceptions. */
-    void logAdServicesError(AdServicesErrorStats stats);
+import android.content.Context;
+import android.content.pm.PackageManager;
+
+/** Utility class to control which devices SDK sandbox tests run on. */
+public class DeviceSupportUtils {
+
+    public static boolean isSdkSandboxSupported(Context context) {
+        return !isWatch(context);
+    }
+
+    private static boolean isWatch(Context context) {
+        return context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+    }
 }

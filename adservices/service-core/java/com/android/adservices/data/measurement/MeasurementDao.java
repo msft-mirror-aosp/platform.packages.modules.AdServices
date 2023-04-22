@@ -1880,6 +1880,8 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.DebugReportContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
+        LogUtil.d("MeasurementDao: insertDebugReport: rowId=" + rowId);
+
         if (rowId == -1) {
             throw new DatastoreException("Debug report payload insertion failed.");
         }

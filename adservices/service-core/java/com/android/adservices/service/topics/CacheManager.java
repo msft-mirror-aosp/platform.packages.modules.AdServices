@@ -23,7 +23,7 @@ import android.util.Pair;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
@@ -60,6 +60,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 public class CacheManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
     private static final Object SINGLETON_LOCK = new Object();
@@ -136,7 +137,7 @@ public class CacheManager {
                         .map(Topic::getTopic)
                         .collect(Collectors.toCollection(HashSet::new));
 
-        LogUtil.v(
+        sLogger.v(
                 "CacheManager.loadCache(). CachedTopics mapping size is "
                         + cacheFromDb.size()
                         + ", CachedBlockedTopics mapping size is "

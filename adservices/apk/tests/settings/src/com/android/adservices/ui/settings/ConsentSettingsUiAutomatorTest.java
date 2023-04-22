@@ -32,7 +32,6 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
-import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
@@ -177,64 +176,44 @@ public class ConsentSettingsUiAutomatorTest {
     @Test
     public void consentAppSearchOnlyTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
-            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
-            consentTest(true);
-        } else {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data true");
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-            consentTest(true);
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data null");
-        }
+        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+        doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
+        consentTest(false);
     }
 
     @Test
     public void consentAppSearchOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
-            doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
-            doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-            consentTest(true);
-        } else {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_appsearch_consent_data true");
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled true");
-            consentTest(true);
-            ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth null");
-        }
+        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
+        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
+        consentTest(true);
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        assertThat(mainSwitch.exists()).isTrue();
-
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         setConsentToFalse(dialogsOn);
 
         // click switch
-        performSwitchClick(dialogsOn, mainSwitch);
-        assertThat(mainSwitch.isChecked()).isTrue();
+        performSwitchClick(dialogsOn, consentSwitch);
+        assertThat(consentSwitch.isChecked()).isTrue();
 
         // click switch
-        performSwitchClick(dialogsOn, mainSwitch);
-        assertThat(mainSwitch.isChecked()).isFalse();
+        performSwitchClick(dialogsOn, consentSwitch);
+        assertThat(consentSwitch.isChecked()).isFalse();
     }
 
     private void setConsentToFalse(boolean dialogsOn) throws UiObjectNotFoundException {
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        if (mainSwitch.isChecked()) {
-            performSwitchClick(dialogsOn, mainSwitch);
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        if (consentSwitch.isChecked()) {
+            performSwitchClick(dialogsOn, consentSwitch);
         }
     }
 

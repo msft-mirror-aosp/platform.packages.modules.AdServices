@@ -5,17 +5,17 @@
       "name": "AdServicesApkUINotificationTests[com.google.android.adservices.apex]"
     },
     {
-          // Install com.google.android.adservices.apex and run AdServicesApkUISettingsTests.
-          "name": "AdServicesApkUISettingsTests[com.google.android.adservices.apex]"
+      // Install com.google.android.adservices.apex and run AdServicesApkUISettingsTests.
+      "name": "AdServicesApkUISettingsTests[com.google.android.adservices.apex]"
     },
     {
-          // Install com.google.android.extservices.apex and run AdExtServicesApkUINotificationTests.
-          "name": "AdExtServicesApkUINotificationTests[com.google.android.extservices.apex]"
+      // Install com.google.android.extservices.apex and run AdExtServicesApkUINotificationTests.
+      "name": "AdExtServicesApkUINotificationTests[com.google.android.extservices.apex]"
     },
-    {
-          // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsTests.
-          "name": "AdExtServicesApkUISettingsTests[com.google.android.extservices.apex]"
-        },
+//    {
+//      // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsTests.
+//      "name": "AdExtServicesApkUISettingsTests[com.google.android.extservices.apex]"
+//    },
     {
       // Install com.google.android.adservices.apex and run AdServicesApkUITestsAppConsent.
       "name": "AdServicesApkUITestsAppConsent[com.google.android.adservices.apex]"

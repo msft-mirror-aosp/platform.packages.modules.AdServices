@@ -442,6 +442,11 @@ public final class FetcherUtilTest {
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("0"));
     }
 
+    @Test
+    public void isValidAggregateDeduplicationKey_nullValue_success() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
+    }
+
     private Map<String, List<String>> createHeadersMap() {
         return new ImmutableMap.Builder<String, List<String>>()
                 .put("key1", Arrays.asList("val11", "val12"))

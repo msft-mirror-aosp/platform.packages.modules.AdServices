@@ -99,6 +99,10 @@ public class ContentValueFixtures {
         public static final String SHARED_AGGREGATION_KEY = "shared_aggregation_key";
         public static final long INSTALL_TIME = 8660000000L;
         public static final String DEBUG_JOIN_KEY = "sample_debug_join_key";
+
+        // Added in V12
+        public static final String TRIGGER_SPECS = "sample_trigger_specs";
+        public static final int MAX_BUCKET_INCREMENTS = 3;
     }
 
     public static class SourceDestinationValues {
@@ -355,6 +359,16 @@ public class ContentValueFixtures {
         return generateAsyncRegistrationContentValuesV9();
     }
 
+    public static ContentValues generateAsyncRegistrationContentValuesV11() {
+        ContentValues asyncRegistration = generateAsyncRegistrationContentValuesV10();
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID);
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE);
+        asyncRegistration.remove(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT);
+        asyncRegistration.remove(
+                MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME);
+        return asyncRegistration;
+    }
+
     public static ContentValues generateSourceContentValuesV1() {
         ContentValues source = new ContentValues();
 
@@ -466,6 +480,23 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV10() {
+        return generateSourceContentValuesV9();
+    }
+
+    public static ContentValues generateSourceContentValuesV11() {
+        return generateSourceContentValuesV10();
+    }
+
+    public static ContentValues generateSourceContentValuesV12() {
+        ContentValues values = generateSourceContentValuesV11();
+        values.put(MeasurementTables.SourceContract.TRIGGER_SPECS, SourceValues.TRIGGER_SPECS);
+        values.put(
+                MeasurementTables.SourceContract.MAX_BUCKET_INCREMENTS,
+                SourceValues.MAX_BUCKET_INCREMENTS);
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -476,6 +507,14 @@ public class ContentValueFixtures {
                 SourceDestinationValues.DESTINATION_TYPE);
 
         return sourceDestination;
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV10() {
+        return generateSourceDestinationContentValuesV9();
+    }
+
+    public static ContentValues generateSourceDestinationContentValuesV11() {
+        return generateSourceDestinationContentValuesV10();
     }
 
     public static ContentValues generateTriggerContentValuesV1() {
@@ -559,6 +598,18 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateTriggerContentValuesV9() {
+        return generateTriggerContentValuesV8();
+    }
+
+    public static ContentValues generateTriggerContentValuesV10() {
+        return generateTriggerContentValuesV9();
+    }
+
+    public static ContentValues generateTriggerContentValuesV11() {
+        return generateTriggerContentValuesV10();
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -612,6 +663,18 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAttributionContentValuesV8() {
         return generateAttributionContentValuesV7();
+    }
+
+    public static ContentValues generateAttributionContentValuesV9() {
+        return generateAttributionContentValuesV7();
+    }
+
+    public static ContentValues generateAttributionContentValuesV10() {
+        return generateAttributionContentValuesV9();
+    }
+
+    public static ContentValues generateAttributionContentValuesV11() {
+        return generateAttributionContentValuesV10();
     }
 
     public static ContentValues generateEventReportContentValuesV1() {
@@ -692,6 +755,18 @@ public class ContentValueFixtures {
 
     public static ContentValues generateEventReportContentValuesV8() {
         return generateEventReportContentValuesV7();
+    }
+
+    public static ContentValues generateEventReportContentValuesV9() {
+        return generateEventReportContentValuesV8();
+    }
+
+    public static ContentValues generateEventReportContentValuesV10() {
+        return generateEventReportContentValuesV9();
+    }
+
+    public static ContentValues generateEventReportContentValuesV11() {
+        return generateEventReportContentValuesV10();
     }
 
     public static ContentValues generateAggregateReportContentValuesV1() {
@@ -777,6 +852,10 @@ public class ContentValueFixtures {
         return aggregateReport;
     }
 
+    public static ContentValues generateAggregateReportContentValuesV11() {
+        return generateAggregateReportContentValuesV10();
+    }
+
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {
         ContentValues aggregateEncryptionKey = new ContentValues();
 
@@ -817,6 +896,18 @@ public class ContentValueFixtures {
         return generateAggregateEncryptionKeyContentValuesV7();
     }
 
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV9() {
+        return generateAggregateEncryptionKeyContentValuesV7();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV10() {
+        return generateAggregateEncryptionKeyContentValuesV9();
+    }
+
+    public static ContentValues generateAggregateEncryptionKeyContentValuesV11() {
+        return generateAggregateEncryptionKeyContentValuesV10();
+    }
+
     public static ContentValues generateDebugReportContentValuesV3() {
         ContentValues debugReport = new ContentValues();
 
@@ -842,6 +933,18 @@ public class ContentValueFixtures {
         return generateDebugReportContentValuesV7();
     }
 
+    public static ContentValues generateDebugReportContentValuesV9() {
+        return generateDebugReportContentValuesV8();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV10() {
+        return generateDebugReportContentValuesV9();
+    }
+
+    public static ContentValues generateDebugReportContentValuesV11() {
+        return generateDebugReportContentValuesV10();
+    }
+
     public static ContentValues generateXnaIgnoredSourcesContentValuesV6() {
         ContentValues values = new ContentValues();
         values.put(
@@ -860,5 +963,17 @@ public class ContentValueFixtures {
 
     public static ContentValues generateXnaIgnoredSourcesContentValuesV8() {
         return generateXnaIgnoredSourcesContentValuesV7();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV9() {
+        return generateXnaIgnoredSourcesContentValuesV8();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV10() {
+        return generateXnaIgnoredSourcesContentValuesV9();
+    }
+
+    public static ContentValues generateXnaIgnoredSourcesContentValuesV11() {
+        return generateXnaIgnoredSourcesContentValuesV10();
     }
 }

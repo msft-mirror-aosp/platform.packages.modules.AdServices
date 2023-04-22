@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package com.android.adservices.errorlogging;
 
 import android.annotation.NonNull;
 
@@ -36,5 +36,5 @@ public interface AdServicesErrorLogger {
      * logs AdServices error/exceptions if flag enabled.
      */
     void logErrorWithExceptionInfo(
-            AdServicesErrorCode errorCode, int ppapiName, @NonNull Throwable tr);
+            @NonNull Throwable tr, AdServicesErrorCode errorCode, int ppapiName);
 }
