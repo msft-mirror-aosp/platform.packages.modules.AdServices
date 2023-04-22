@@ -208,6 +208,12 @@ class AttributionJobHandler {
             throws DatastoreException {
 
         if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -490,6 +496,12 @@ class AttributionJobHandler {
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
                             SystemHealthParams.getMaxEventReportsPerDestination()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReports),
+                    measurementDao,
+                    Type.TRIGGER_EVENT_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
         }
 
