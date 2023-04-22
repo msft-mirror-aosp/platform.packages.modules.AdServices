@@ -76,6 +76,7 @@ import java.util.stream.Collectors;
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
 // TODO(b/269798827): Enable for R.
+// TODO(b/279042385): move UI logs to UI.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentManager {
     private static volatile ConsentManager sConsentManager;
@@ -946,7 +947,6 @@ public class ConsentManager {
 
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
-        UiStatsLogger.logResetMeasurement(mContext);
         mMeasurementImpl.deleteAllMeasurementData(List.of());
     }
 

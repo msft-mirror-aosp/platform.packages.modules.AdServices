@@ -109,14 +109,21 @@ public class MeasurementManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
-        mPreviousAppAllowList =
-                CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                        sContext.getPackageName());
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void tearDown() {
-        CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+
         resetOverrideConsentManagerDebugMode();
     }
 
