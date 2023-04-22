@@ -79,6 +79,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     public void setup() throws UiObjectNotFoundException, IOException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             startMockCompatFlags();
+            doReturn("686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2").when(mMockFlags).getAdservicesApkShaCertificate();
             doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
             doReturn(true).when(mMockFlags).getEuNotifFlowChangeEnabled();
         } else {
