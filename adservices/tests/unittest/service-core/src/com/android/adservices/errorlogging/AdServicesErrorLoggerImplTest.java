@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.errorlogging;
+package com.android.adservices.errorlogging;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -83,7 +83,7 @@ public class AdServicesErrorLoggerImplTest {
         doReturn(false).when(mFlags).getAdServicesErrorLoggingEnabled();
 
         mErrorLogger.logErrorWithExceptionInfo(
-                AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME, new Exception());
+                new Exception(), AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
 
         verify(mStatsdLoggerMock, never()).logAdServicesError(any());
     }
@@ -96,7 +96,7 @@ public class AdServicesErrorLoggerImplTest {
         Exception exception = createSQLiteException(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
-                AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME, exception);
+                exception, AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
@@ -118,7 +118,7 @@ public class AdServicesErrorLoggerImplTest {
         String fullClassName = "com.android.adservices.topics.TopicsService";
         Exception exception = createSQLiteException(fullClassName, METHOD_NAME, LINE_NUMBER);
 
-        mErrorLogger.logErrorWithExceptionInfo(errorCode, PPAPI_NAME, exception);
+        mErrorLogger.logErrorWithExceptionInfo(exception, errorCode, PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
@@ -140,7 +140,7 @@ public class AdServicesErrorLoggerImplTest {
         Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLogger.logErrorWithExceptionInfo(
-                AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME, exception);
+                exception, AdServicesErrorCode.DATABASE_READ_EXCEPTION, PPAPI_NAME);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()

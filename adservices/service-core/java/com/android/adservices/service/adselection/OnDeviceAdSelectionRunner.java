@@ -371,13 +371,6 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                 (scoringOutcome.isBiddingLogicJsDownloaded())
                         ? scoringOutcome.getBiddingLogicJs()
                         : "";
-        //
-        //        final AdServicesHttpClientRequest downloadRequest =
-        //                AdServicesHttpClientRequest.builder()
-        //                        .setUri(scoringOutcome.getBiddingLogicUri())
-        //                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
-        //                        .build();
-
         return FluentFuture.from(Futures.immediateFuture(biddingLogicJs));
     }
 

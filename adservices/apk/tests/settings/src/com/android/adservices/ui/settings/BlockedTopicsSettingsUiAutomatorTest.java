@@ -28,7 +28,6 @@ import android.content.pm.ServiceInfo;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
@@ -39,7 +38,7 @@ import androidx.test.uiautomator.UiSelector;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
@@ -51,6 +50,7 @@ import com.android.modules.utils.build.SdkLevel;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -63,6 +63,7 @@ import java.util.concurrent.Executors;
  * for Beta UX view or GA UX view respectively.
  */
 public class BlockedTopicsSettingsUiAutomatorTest {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String LOG_TAG = "adservices";
@@ -132,7 +133,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 272511638)
+    @Ignore("b/272511638")
     public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -146,7 +147,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Enable user consent. If it has been enabled due to stale test failures, disable it and
         // enable it again. This is to ensure no stale data or pending jobs.
-        UiObject consentSwitch = getConsentSwitch();
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (consentSwitch.isChecked()) {
             disableUserConsentWithDialog(consentSwitch);
@@ -220,7 +221,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
-    @FlakyTest(bugId = 274022483)
+    @Ignore("b/272511638")
     public void topicBlockUnblockResetTest_gaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
@@ -239,7 +240,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // enable it again. This is to ensure no stale data or pending jobs.
         //
         // Note there is no dialog when the user opts out in GA.
-        UiObject consentSwitch = getConsentSwitch();
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (consentSwitch.isChecked()) {
             consentSwitch.click();
@@ -407,11 +408,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
     }
 
-    // Get the switch in a view.
-    private UiObject getConsentSwitch() {
-        return sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-    }
-
     // Scroll to a UI object.
     private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
@@ -495,7 +491,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         final ServiceInfo serviceInfo =
                 AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
         if (serviceInfo == null) {
-            LogUtil.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
+            sLogger.e(LOG_TAG, "Failed to find serviceInfo for adServices service");
             return null;
         }
 

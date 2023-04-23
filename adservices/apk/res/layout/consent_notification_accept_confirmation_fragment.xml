@@ -48,7 +48,7 @@
                         android:text="@string/notificationUI_confirmation_accept_subtitle"
                         style="@style/MainStyle.H6" />
                 <ImageView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="16dp"
                         android:src="@drawable/ic_confirmation_accept_image" />

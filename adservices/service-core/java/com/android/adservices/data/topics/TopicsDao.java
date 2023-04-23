@@ -24,7 +24,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -40,6 +40,7 @@ import java.util.Set;
 
 /** Data Access Object for the Topics API. */
 public class TopicsDao {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static TopicsDao sSingleton;
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -117,7 +118,7 @@ public class TopicsDao {
                             /* nullColumnHack */ null,
                             values);
                 } catch (SQLException e) {
-                    LogUtil.e("Failed to persist classified Topics. Exception : " + e.getMessage());
+                    sLogger.e("Failed to persist classified Topics. Exception : " + e.getMessage());
                 }
             }
         }
@@ -223,7 +224,7 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.TopTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to persist Top Topics. Exception : " + e.getMessage());
+            sLogger.e("Failed to persist Top Topics. Exception : " + e.getMessage());
         }
     }
 
@@ -336,7 +337,7 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.UsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record App-Sdk usage history." + e.getMessage());
+            sLogger.e("Failed to record App-Sdk usage history." + e.getMessage());
         }
     }
 
@@ -363,7 +364,7 @@ public class TopicsDao {
             db.insert(
                     TopicsTables.AppUsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record App Only usage history." + e.getMessage());
+            sLogger.e("Failed to record App Only usage history." + e.getMessage());
         }
     }
 
@@ -390,7 +391,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.UsageHistoryContract.TABLE,
                         projection,
                         selection,
@@ -545,7 +546,7 @@ public class TopicsDao {
                             /* nullColumnHack */ null,
                             values);
                 } catch (SQLException e) {
-                    LogUtil.e(e, "Failed to record can learn topic.");
+                    sLogger.e(e, "Failed to record can learn topic.");
                 }
             }
         }
@@ -594,7 +595,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.CallerCanLearnTopicsContract.TABLE,
                         projection,
                         selection,
@@ -670,7 +671,7 @@ public class TopicsDao {
                         /* nullColumnHack */ null,
                         values);
             } catch (SQLException e) {
-                LogUtil.e(e, "Failed to record returned topic.");
+                sLogger.e(e, "Failed to record returned topic.");
             }
         }
     }
@@ -783,7 +784,7 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.BlockedTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record blocked topic." + e.getMessage());
+            sLogger.e("Failed to record blocked topic." + e.getMessage());
         }
     }
 
@@ -828,7 +829,7 @@ public class TopicsDao {
         try {
             db.delete(TopicsTables.BlockedTopicsContract.TABLE, whereClause, whereArgs);
         } catch (SQLException e) {
-            LogUtil.e("Failed to record blocked topic." + e.getMessage());
+            sLogger.e("Failed to record blocked topic." + e.getMessage());
         }
     }
 
@@ -847,7 +848,7 @@ public class TopicsDao {
 
         try (Cursor cursor =
                 db.query(
-                        /* distinct = */ true,
+                        /* distinct= */ true,
                         TopicsTables.BlockedTopicsContract.TABLE, // The table to query
                         null, // Get all columns (null for all)
                         null, // Select all columns (null for all)
@@ -900,7 +901,7 @@ public class TopicsDao {
         try {
             db.delete(tableName, deletion, deletionArgs);
         } catch (SQLException e) {
-            LogUtil.e(e, "Failed to delete old epochs' data.");
+            sLogger.e(e, "Failed to delete old epochs' data.");
         }
     }
 
@@ -921,7 +922,7 @@ public class TopicsDao {
         try {
             for (String table : ALL_TOPICS_TABLES) {
                 if (!tablesToExclude.contains(table)) {
-                    db.delete(table, /* whereClause = */ null, /* whereArgs = */ null);
+                    db.delete(table, /* whereClause= */ null, /* whereArgs= */ null);
                 }
             }
 
@@ -971,7 +972,7 @@ public class TopicsDao {
             try {
                 db.delete(tableName, whereClause, whereArgs);
             } catch (SQLException e) {
-                LogUtil.e(
+                sLogger.e(
                         e,
                         String.format(
                                 "Failed to delete %s in table %s.", valuesToDelete, tableName));
@@ -1043,7 +1044,7 @@ public class TopicsDao {
             try {
                 db.delete(tableName, whereClause, valuesToDelete.toArray(new String[0]));
             } catch (SQLException e) {
-                LogUtil.e(
+                sLogger.e(
                         e,
                         String.format(
                                 "Failed to delete %s in table %s.", valuesToDelete, tableName));
@@ -1068,7 +1069,7 @@ public class TopicsDao {
         try {
             db.insert(TopicsTables.EpochOriginContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
-            LogUtil.e("Failed to persist epoch origin." + e.getMessage());
+            sLogger.e("Failed to persist epoch origin." + e.getMessage());
         }
     }
 
@@ -1146,7 +1147,7 @@ public class TopicsDao {
                             /* nullColumnHack */ null,
                             values);
                 } catch (SQLException e) {
-                    LogUtil.e(e, "Failed to persist topic contributors.");
+                    sLogger.e(e, "Failed to persist topic contributors.");
                 }
             }
         }
@@ -1222,7 +1223,7 @@ public class TopicsDao {
         try {
             db.delete(tableName, /* whereClause */ "", /* whereArgs */ new String[0]);
         } catch (SQLException e) {
-            LogUtil.e(
+            sLogger.e(
                     "Failed to delete all entries from table %s. Error: %s",
                     tableName, e.getMessage());
         }
