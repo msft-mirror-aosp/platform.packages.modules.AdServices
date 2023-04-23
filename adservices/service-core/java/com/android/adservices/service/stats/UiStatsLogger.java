@@ -366,24 +366,6 @@ public class UiStatsLogger {
         sLogger.logUIStats(uiStats);
     }
 
-    /** Logs that a user has reset the measurement feature. */
-    public static void logResetMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
-    /** Logs that a user has opened the measurement page. */
-    public static void logManageMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
     /** Logs user opt-in action for PP API. */
     public static void logOptInSelected(@NonNull Context context) {
         UIStats uiStats = getBaseUiStats(context);

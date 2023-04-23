@@ -98,6 +98,8 @@ public class AsyncTriggerFetcher {
             String enrollmentId,
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
+        boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
+        LogUtil.d("Trigger ArDebug permission enabled %b", arDebugPermission);
         Trigger.Builder builder = new Trigger.Builder();
         builder.setEnrollmentId(enrollmentId);
         builder.setAttributionDestination(
@@ -105,7 +107,7 @@ public class AsyncTriggerFetcher {
                         asyncRegistration.getTopOrigin(), asyncRegistration.getType()));
         builder.setRegistrant(asyncRegistration.getRegistrant());
         builder.setAdIdPermission(asyncRegistration.hasAdIdPermission());
-        builder.setArDebugPermission(asyncRegistration.getDebugKeyAllowed());
+        builder.setArDebugPermission(arDebugPermission);
         builder.setDestinationType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         builder.setTriggerTime(asyncRegistration.getRequestTime());
@@ -486,11 +488,12 @@ public class AsyncTriggerFetcher {
         for (int i = 0; i < aggregateDeduplicationKeys.length(); i++) {
             JSONObject aggregateDedupKey = new JSONObject();
             JSONObject deduplication_key = aggregateDeduplicationKeys.getJSONObject(i);
+
             String deduplicationKey = deduplication_key.optString("deduplication_key");
-            if (!FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
-                return Optional.empty();
+            if (!deduplication_key.isNull("deduplication_key")
+                    && FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
+                aggregateDedupKey.put("deduplication_key", deduplicationKey);
             }
-            aggregateDedupKey.put("deduplication_key", deduplicationKey);
             if (!deduplication_key.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(deduplication_key, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {

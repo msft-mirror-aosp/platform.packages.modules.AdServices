@@ -105,7 +105,6 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         } else {
@@ -239,18 +238,13 @@ public class SettingsGaUiAutomatorTest {
         }
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        // no main switch any more
-        UiObject mainSwitch =
-                sDevice.findObject(new UiSelector().className("android.widget.Switch"));
-        mainSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        assertThat(mainSwitch.exists()).isFalse();
 
         // make sure we are on the main settings page
-        UiObject appButton = ApkTestUtil.getElement(sDevice, R.string.settingsUI_apps_ga_title);
+        UiObject appButton = ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_apps_ga_title);
         appButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(appButton.exists()).isTrue();
-        UiObject topicsButton =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_topics_ga_title);
+
+        UiObject topicsButton = ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_topics_ga_title);
         topicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsButton.exists()).isTrue();
 
@@ -605,8 +599,9 @@ public class SettingsGaUiAutomatorTest {
         ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
 
         // Back compat only support the following flags
-        doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
         doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
+        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
     }
 }
