@@ -17,10 +17,6 @@ package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-
 import android.content.Context;
 import android.os.Build;
 
@@ -37,14 +33,9 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
-import com.android.adservices.service.common.BackgroundJobsManager;
-import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -53,9 +44,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 @RunWith(AndroidJUnit4.class)
 public class SettingsGaUiAutomatorTest {
@@ -65,9 +53,6 @@ public class SettingsGaUiAutomatorTest {
     private static UiDevice sDevice;
 
     private String mTestName;
-    private MockitoSession mStaticMockSession;
-    private PhFlags mPhFlags;
-    @Mock Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -85,7 +70,7 @@ public class SettingsGaUiAutomatorTest {
         sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            startMockCompatFlags();
+            CompatAdServicesTestUtils.setFlags();
         }
     }
 
@@ -97,19 +82,15 @@ public class SettingsGaUiAutomatorTest {
 
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 
     @Test
     public void mainPageGaUxFlagEnableToDisableFlipTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // beta switch shouldn't exist
@@ -137,11 +118,7 @@ public class SettingsGaUiAutomatorTest {
         assertThat(measurementButton.exists()).isTrue();
 
         sDevice.pressHome();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // beta switch should exist
@@ -167,12 +144,7 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void mainPageGaUxFlagDisableToEnableFlipTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // beta switch should exist
@@ -197,11 +169,7 @@ public class SettingsGaUiAutomatorTest {
         assertThat(measurementButton.exists()).isFalse();
 
         sDevice.pressHome();
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // beta switch shouldn't exist
@@ -230,12 +198,7 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
 
@@ -267,15 +230,8 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void measurementDialogTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // open measurement view
@@ -299,12 +255,7 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void topicsToggleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Topics API is enabled
@@ -344,12 +295,7 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void fledgeToggleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
@@ -389,12 +335,7 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void measurementToggleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
         // 1) disable Measurement API is enabled
@@ -434,15 +375,9 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void topicsSubTitleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled false");
-        }
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
@@ -452,15 +387,9 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void appsSubTitleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled false");
-        }
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
@@ -470,15 +399,9 @@ public class SettingsGaUiAutomatorTest {
     @Test
     public void measurementSubTitleTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices ui_dialogs_feature_enabled false");
-        }
         ApkTestUtil.launchSettingView(
                 ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
         checkSubtitleMatchesToggle(
@@ -490,13 +413,7 @@ public class SettingsGaUiAutomatorTest {
     @Ignore("git master fail")
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        // TODO(277094594) fix broken Link Test on S
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
         // First get the package name of device's default browser
         String packageNameOfDefaultBrowser =
@@ -573,35 +490,5 @@ public class SettingsGaUiAutomatorTest {
         UiObject element = ApkTestUtil.getPageElement(sDevice, resId);
         scrollView.scrollIntoView(element);
         return element;
-    }
-
-    private void startMockCompatFlags() {
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doNothing()
-                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                BackgroundJobsManager.scheduleJobsPerApi(
-                                        any(Context.class), any(AdServicesApiType.class)));
-
-        mPhFlags = spy(PhFlags.getInstance());
-        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
-
-        // Back compat only support the following flags
-        doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
-        doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
-        doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
-        doReturn(Flags.APPSEARCH_ONLY).when(mMockFlags).getConsentSourceOfTruth();
     }
 }

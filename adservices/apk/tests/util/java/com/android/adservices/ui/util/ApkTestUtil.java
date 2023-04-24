@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -48,7 +47,6 @@ public class ApkTestUtil {
 
     public static final String ADEXTSERVICES_PACKAGE_NAME = "com.google.android.ext.adservices.api";
     private static final String PRIVACY_SANDBOX_UI = "android.adservices.ui.SETTINGS";
-    private static final String PRIVACY_SANDBOX_TEST_UI = "android.test.adservices.ui.MAIN";
     private static final int WINDOW_LAUNCH_TIMEOUT = 1000;
     private static final int SCROLL_TIMEOUT = 500;
     /**
@@ -135,21 +133,13 @@ public class ApkTestUtil {
 
     /** Launch Privacy Sandbox Setting View. */
     public static void launchSettingView(Context context, UiDevice device, int launchTimeout) {
-        // Uses test package on S- since AdServices Activities in PRIVACY_SANDBOX_PACKAGE are
-        // disabled by default on S-
-        String privacySandboxUi;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            privacySandboxUi = PRIVACY_SANDBOX_TEST_UI;
-        } else {
-            privacySandboxUi = PRIVACY_SANDBOX_UI;
-        }
         // Launch the setting view.
-        Intent intent = new Intent(privacySandboxUi);
+        Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         context.startActivity(intent);
 
         // Wait for the view to appear
-        device.wait(Until.hasObject(By.pkg(privacySandboxUi).depth(0)), launchTimeout);
+        device.wait(Until.hasObject(By.pkg(PRIVACY_SANDBOX_UI).depth(0)), launchTimeout);
     }
 
     /** Returns the package name of the default browser of the device. */
