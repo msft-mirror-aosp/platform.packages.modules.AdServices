@@ -115,7 +115,7 @@ public class TopicsWorkerTest {
                         mLogger,
                         mBlockedTopicsManager,
                         new GlobalBlockedTopicsManager(
-                                /* globalBlockedTopicsManager = */ new HashSet<>()));
+                                /* globalBlockedTopicsManager= */ new HashSet<>()));
         AppUpdateManager appUpdateManager =
                 new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
 
@@ -442,7 +442,8 @@ public class TopicsWorkerTest {
         assertThat(knownTopicsWithConsent).containsExactly(topic2, topic3);
 
         // Verify IPC calls
-        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+        // loadCache() + retrieveAllBlockedTopics()
+        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -521,7 +522,8 @@ public class TopicsWorkerTest {
                 .containsExactly(blockedTopic1, blockedTopic2, blockedTopic3);
 
         // Verify IPC calls
-        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+        // loadCache() + retrieveAllBlockedTopics()
+        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -549,8 +551,8 @@ public class TopicsWorkerTest {
         ImmutableList<Topic> topicsWithRevokedConsent = mTopicsWorker.getTopicsWithRevokedConsent();
 
         assertThat(topicsWithRevokedConsent).isEmpty();
-        // Verify IPC calls
-        verify(mMockAdServicesManager).retrieveAllBlockedTopics();
+        // Verify IPC calls. loadCache() + retrieveAllBlockedTopics().
+        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -571,8 +573,8 @@ public class TopicsWorkerTest {
 
         // Verify IPC calls
         verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
-        // revokeConsentForTopic() + loadCache()
-        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
+        // revokeConsentForTopic() + loadCache() + retrieveAllBlockedTopics()
+        verify(mMockAdServicesManager, times(3)).retrieveAllBlockedTopics();
     }
 
     @Test
@@ -593,8 +595,8 @@ public class TopicsWorkerTest {
 
         // Verify IPC calls
         verify(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcel1));
-        // revokeConsentForTopic() + loadCache()
-        verify(mMockAdServicesManager, times(2)).retrieveAllBlockedTopics();
+        // revokeConsentForTopic() + loadCache() + retrieveAllBlockedTopics()
+        verify(mMockAdServicesManager, times(3)).retrieveAllBlockedTopics();
 
         // Mock IPC calls
         doNothing().when(mMockAdServicesManager).removeBlockedTopic(topicParcel1);
@@ -607,8 +609,8 @@ public class TopicsWorkerTest {
 
         // Verify IPC calls
         verify(mMockAdServicesManager).removeBlockedTopic(topicParcel1);
-        // revokeConsentForTopic() + loadCache() + restoreConsentForTopic()
-        verify(mMockAdServicesManager, times(3)).retrieveAllBlockedTopics();
+        // revokeConsentForTopic() * 2 + loadCache() + retrieveAllBlockedTopics() * 2
+        verify(mMockAdServicesManager, times(5)).retrieveAllBlockedTopics();
     }
 
     @Test
