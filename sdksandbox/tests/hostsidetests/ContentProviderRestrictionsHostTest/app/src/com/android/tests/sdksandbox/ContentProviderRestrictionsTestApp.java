@@ -28,6 +28,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.DeviceConfig;
+import android.webkit.WebViewUpdateService;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -35,6 +36,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.tests.sdkprovider.restrictions.contentproviders.IContentProvidersSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,6 +57,8 @@ public class ContentProviderRestrictionsTestApp {
     public final ActivityScenarioRule mRule =
             new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
 
+    private String mInitialContentProviderRestrictionValue;
+
     @Before
     public void setup() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -63,6 +67,18 @@ public class ContentProviderRestrictionsTestApp {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+        mInitialContentProviderRestrictionValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+    }
+
+    @After
+    public void teardown() {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                mInitialContentProviderRestrictionValue,
+                false);
     }
 
     @Test
@@ -108,6 +124,32 @@ public class ContentProviderRestrictionsTestApp {
 
         assertThrows(
                 SecurityException.class, () -> contentProvidersSdkApi.registerContentObserver());
+    }
+
+    @Test(expected = Test.None.class /* no exception expected */)
+    public void testGetWebViewContentProvider_restrictionsApplied() throws Exception {
+        mRule.getScenario();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                "true",
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IContentProvidersSdkApi contentProvidersSdkApi =
+                IContentProvidersSdkApi.Stub.asInterface(binder);
+
+        contentProvidersSdkApi.getContentProviderByAuthority(
+                WebViewUpdateService.getCurrentWebViewPackageName()
+                        + ".DeveloperModeContentProvider");
+        contentProvidersSdkApi.getContentProviderByAuthority(
+                WebViewUpdateService.getCurrentWebViewPackageName() + ".SafeModeContentProvider");
     }
 
     @Test(expected = Test.None.class /* no exception expected */)
