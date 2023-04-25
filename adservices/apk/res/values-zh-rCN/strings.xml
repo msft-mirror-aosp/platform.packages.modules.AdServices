@@ -137,7 +137,7 @@
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android 推测出的兴趣"</string>
     <string name="settingsUI_apps_title" msgid="2772289096915264175">"会推测兴趣的应用"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"广告衡量"</string>
-    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"应用可以使用 Privacy Sandbox 衡量广告效果。为此，广告客户可将您与其广告/应用之间的互动数据暂时存储在 Android 上。他们可保存的数据量受限并会被定期删除。\n\n您随时可通过关闭 Privacy Sandbox 删除此类数据。"</string>
+    <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"应用可以使用 Privacy Sandbox 衡量广告效果。为此，广告客户可将您与其广告/应用之间的互动数据暂时存储在 Android 上。广告客户可保存的数据量有限，并会被定期删除。\n\n您随时可通过关闭 Privacy Sandbox 删除此类数据。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android 会定期根据您使用的应用推测您的主要兴趣。应用可以请求 Android 基于这些兴趣向您展示与您更相关的广告。\n\n如果您屏蔽了某项兴趣，它将不再添加到列表中，除非您取消屏蔽它。您可能仍会看到一些与这项兴趣相关的广告。"</string>
     <string name="settingsUI_block_topic_title" msgid="1883542291264768402">"屏蔽"</string>
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"取消屏蔽"</string>
