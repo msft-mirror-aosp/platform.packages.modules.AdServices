@@ -27,6 +27,7 @@ import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
@@ -50,6 +51,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.BinderFlagReader;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -111,6 +113,7 @@ public class ImpressionReporter {
     @NonNull private final JsFetcher mJsFetcher;
     private int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public ImpressionReporter(
             @NonNull Context context,
@@ -124,6 +127,7 @@ public class ImpressionReporter {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
+            @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             final int callerUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(lightweightExecutor);
@@ -185,6 +189,7 @@ public class ImpressionReporter {
                         mAdServicesHttpsClient,
                         mFlags);
         mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+        mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -384,6 +389,7 @@ public class ImpressionReporter {
                         REPORTING_URI_FIELD_NAME);
         try {
             sellerValidator.validate(reportingUris.sellerReportingUri);
+            // We don't need to verify enrollment since that is done during request filtering
             // Perform reporting if no exception was thrown
             sellerFuture =
                     mAdServicesHttpsClient.getAndReadNothing(reportingUris.sellerReportingUri);
@@ -407,10 +413,14 @@ public class ImpressionReporter {
                             REPORTING_URI_FIELD_NAME);
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
+                mFledgeAuthorizationFilter.assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
                 // Perform reporting if no exception was thrown
                 buyerFuture =
                         mAdServicesHttpsClient.getAndReadNothing(reportingUris.buyerReportingUri);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException
+                    | FledgeAuthorizationFilter.AdTechNotAllowedException e) {
                 sLogger.v("Buyer reporting URI validation failed!");
                 buyerFuture = Futures.immediateFuture(null);
             }
