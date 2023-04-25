@@ -17,9 +17,6 @@ package com.android.adservices.ui.notifications;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -36,14 +33,9 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
-import com.android.adservices.service.common.BackgroundJobsManager;
-import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -53,27 +45,19 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoSession;
 import org.mockito.Spy;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
 @RunWith(AndroidJUnit4.class)
 public class NotificationActivityGAV2UiAutomatorTest {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
-    private static final String NOTIFICATION_TEST_PACKAGE =
-            "android.test.adservices.ui.NOTIFICATIONS";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static final int SCROLL_WAIT_TIME = 2000;
     private static UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
-    private MockitoSession mStaticMockSession;
     private String mTestName;
-
-    @Mock Flags mMockFlags;
 
     @BeforeClass
     public static void classSetup() {
@@ -84,14 +68,12 @@ public class NotificationActivityGAV2UiAutomatorTest {
     @Before
     public void setup() throws UiObjectNotFoundException, IOException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            startMockCompatFlags();
-            doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-            doReturn(true).when(mMockFlags).getEuNotifFlowChangeEnabled();
-        } else {
-            ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-            ShellUtils.runShellCommand(
-                    "device_config put adservices eu_notif_flow_change_enabled true");
+            CompatAdServicesTestUtils.setFlags();
         }
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand(
+                "device_config put adservices eu_notif_flow_change_enabled true");
+
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
         sDevice.pressHome();
@@ -107,8 +89,8 @@ public class NotificationActivityGAV2UiAutomatorTest {
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
         AdservicesTestHelper.killAdservicesProcess(ApplicationProvider.getApplicationContext());
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 
@@ -255,10 +237,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     private void startActivity(boolean isEUActivity) {
-        String notificationPackage =
-                Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
-                        ? NOTIFICATION_TEST_PACKAGE
-                        : NOTIFICATION_PACKAGE;
+        String notificationPackage = NOTIFICATION_PACKAGE;
         Intent intent = new Intent(notificationPackage);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
@@ -272,31 +251,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     private UiObject getElement(int resId) {
         return sDevice.findObject(new UiSelector().text(getString(resId)));
-    }
-
-    private void startMockCompatFlags() {
-        // Static mocking
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(BackgroundJobsManager.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doNothing()
-                .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        ExtendedMockito.doNothing()
-                .when(
-                        () ->
-                                BackgroundJobsManager.scheduleJobsPerApi(
-                                        any(Context.class), any(AdServicesApiType.class)));
-        // Back compat only supports the following flags
-        doReturn(1).when(mMockFlags).getConsentSourceOfTruth();
-        doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
-        doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
     }
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(

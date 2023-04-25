@@ -169,8 +169,14 @@ public class AbstractPerfTest {
                             new KillAppsRule(
                                     AdservicesTestHelper.getAdServicesPackageName(mContext)))
                     .around(
+                            // CleanPackageRule should not execute after each test method because
+                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
+                            // at the end of the test, impacting collection of memory metrics for
+                            // AdServices process.
                             new CleanPackageRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(mContext)))
+                                    AdservicesTestHelper.getAdServicesPackageName(mContext),
+                                    /* clearOnStarting = */ true,
+                                    /* clearOnFinished = */ false))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
@@ -184,11 +190,6 @@ public class AbstractPerfTest {
                 "fledge_js_isolate_enforce_max_heap_size",
                 "false",
                 true);
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatAdServicesTestUtils.setFlags();
-        }
     }
 
     @AfterClass
