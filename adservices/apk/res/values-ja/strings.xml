@@ -135,7 +135,7 @@
     <string name="settingsUI_main_view_subtitle" msgid="2059496555507319371">"Android の広告のプライバシー（ベータ版）にご参加ください"</string>
     <string name="settingsUI_privacy_sandbox_beta_switch_title" msgid="5264782269528129670">"プライバシー サンドボックス"</string>
     <string name="settingsUI_topics_title" msgid="5996189869721397937">"Android が推定した興味 / 関心"</string>
-    <string name="settingsUI_apps_title" msgid="2772289096915264175">"興味 / 関心を推定しているアプリ"</string>
+    <string name="settingsUI_apps_title" msgid="2772289096915264175">"興味 / 関心を推定できるアプリ"</string>
     <string name="settingsUI_main_view_info_text8" msgid="2262800588014737545">"広告の測定"</string>
     <string name="settingsUI_main_view_info_text9" msgid="5431131706102562540">"アプリはプライバシー サンドボックスを使用して広告の効果を測定することができます。この測定のため、広告主は広告とアプリ間のインタラクションについて、Android でデータを一時的に保存できます。保存できるデータの容量は制限され、データは定期的に削除されます。\n\nこのデータは、プライバシー サンドボックスを OFF にすることでいつでも削除できます。"</string>
     <string name="settingsUI_topics_view_subtitle" msgid="6608135144119617292">"Android は、ユーザーが使用しているアプリに基づいて、ユーザーが最も興味 / 関心を持っているものを定期的に推測します。アプリは Android に対して、より関連性の高い広告を表示するためにこれらの興味 / 関心の使用を求めることができます。\n\nブロックした興味 / 関心は、ブロックを解除しない限り、リストに再び追加されることはありません。なお、一部の関連する広告は引き続き表示される可能性もあります。"</string>
