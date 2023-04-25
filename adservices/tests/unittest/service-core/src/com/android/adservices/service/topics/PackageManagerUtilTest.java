@@ -15,10 +15,14 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
@@ -27,14 +31,20 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 /**
  * Unit tests for {@link com.android.adservices.service.topics.PackageManagerUtil}.
@@ -54,16 +64,29 @@ public class PackageManagerUtilTest {
     @Mock
     private Context mContext;
 
+    private MockitoSession mStaticMockSession;
+
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(ErrorLogUtil.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
         doReturn(mPackageManager).when(mContext).getPackageManager();
         mPackageManagerUtil = new PackageManagerUtil(mContext);
+    }
+
+    @After
+    public void teardown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
     public void testGetAppInformationWithNameNotFoundException()
             throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         // Simulate throwing NameNotFoundException when PackageManager calls getApplicationInfo.
         doThrow(new NameNotFoundException()).when(mPackageManager)
                 .getApplicationInfo(any(String.class), anyInt());
@@ -78,6 +101,13 @@ public class PackageManagerUtilTest {
         AppInfo appInfo = Iterables.getOnlyElement(appInfoMap.values());
         assertThat(appInfo.getAppDescription()).isEmpty();
         assertThat(appInfo.getAppName()).isEmpty();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)));
     }
 
     @Test
