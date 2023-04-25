@@ -221,6 +221,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final boolean DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS = false;
 
+    private static final String WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER =
+            "DeveloperModeContentProvider";
+
+    private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
+
     static class Injector {
         private final Context mContext;
         private SdkSandboxManagerLocal mLocalManager;
@@ -2179,6 +2184,19 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
+    private static ArraySet<String> getContentProviderAllowlist() {
+        final String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
+        final ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
+        for (String webViewAuthority :
+                new String[] {
+                    WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER, WEBVIEW_SAFE_MODE_CONTENT_PROVIDER
+                }) {
+            contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
+        }
+
+        return contentProviderAuthoritiesAllowlist;
+    }
+
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
         public void registerAdServicesManagerService(IBinder iBinder) {
@@ -2268,7 +2286,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             final long token = Binder.clearCallingIdentity();
 
             try {
-                return !mSdkSandboxSettingsListener.areContentProviderRestrictionsEnforced();
+                return !mSdkSandboxSettingsListener.areContentProviderRestrictionsEnforced()
+                        || getContentProviderAllowlist().contains(providerInfo.authority);
             } finally {
                 Binder.restoreCallingIdentity(token);
             }
