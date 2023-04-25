@@ -139,7 +139,7 @@ public class TopicsWorker {
         sLogger.v("TopicsWorker.getTopicsWithRevokedConsent");
         mReadWriteLock.readLock().lock();
         try {
-            return mCacheManager.getTopicsWithRevokedConsent();
+            return ImmutableList.copyOf(mBlockedTopicsManager.retrieveAllBlockedTopics());
         } finally {
             mReadWriteLock.readLock().unlock();
         }
