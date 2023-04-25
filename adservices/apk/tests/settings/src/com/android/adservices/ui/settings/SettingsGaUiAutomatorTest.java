@@ -19,6 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -253,7 +254,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void topicsToggleTest() throws UiObjectNotFoundException {
+    public void topicsToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
@@ -285,7 +286,9 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Topics API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
         sDevice.waitForIdle();
-
+        // rotate device to test rotating as well
+        sDevice.setOrientationLeft();
+        sDevice.setOrientationNatural();
         topicsToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         topicsToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(topicsToggle.isChecked()).isTrue();
@@ -293,7 +296,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void fledgeToggleTest() throws UiObjectNotFoundException {
+    public void fledgeToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
@@ -325,7 +328,9 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Fledge API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_ga_title);
         sDevice.waitForIdle();
-
+        // rotate device to test rotating as well
+        sDevice.setOrientationLeft();
+        sDevice.setOrientationNatural();
         fledgeToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         fledgeToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(fledgeToggle.isChecked()).isTrue();
@@ -333,7 +338,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void measurementToggleTest() throws UiObjectNotFoundException {
+    public void measurementToggleTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
@@ -365,7 +370,9 @@ public class SettingsGaUiAutomatorTest {
         // 3) check if Measurement API is enabled
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
         sDevice.waitForIdle();
-
+        // rotate device to test rotating as well
+        sDevice.setOrientationLeft();
+        sDevice.setOrientationNatural();
         measurementToggle = sDevice.findObject(new UiSelector().className("android.widget.Switch"));
         measurementToggle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(measurementToggle.isChecked()).isTrue();
