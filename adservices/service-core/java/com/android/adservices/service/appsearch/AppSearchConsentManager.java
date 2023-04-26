@@ -19,6 +19,7 @@ package com.android.adservices.service.appsearch;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -28,12 +29,14 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
+import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -307,6 +310,26 @@ public class AppSearchConsentManager {
         mAppSearchConsentWorker.recordUserManualInteractionWithConsent(interaction);
     }
 
+    /** Record a blocked topic in AppSearch. */
+    public void blockTopic(Topic topic) {
+        mAppSearchConsentWorker.recordBlockedTopic(topic);
+    }
+
+    /** Remove a previously record of a blocked topic in AppSearch. */
+    public void unblockTopic(Topic topic) {
+        mAppSearchConsentWorker.recordUnblockedTopic(topic);
+    }
+
+    /** Clear all blocked topics in AppSearch. */
+    public void clearAllBlockedTopics() {
+        mAppSearchConsentWorker.clearBlockedTopics();
+    }
+
+    /** Retrieve all blocked topics in AppSearch. */
+    public List<Topic> retrieveAllBlockedTopics() {
+        return mAppSearchConsentWorker.getBlockedTopics();
+    }
+
     /**
      * Checks whether migration of consent data from AppSearch to PPAPI/System server should occur.
      * The migration should only happen once after OTA from S to T.
@@ -319,7 +342,6 @@ public class AppSearchConsentManager {
             SharedPreferences sharedPreferences,
             BooleanFileDatastore datastore,
             AdServicesManager adServicesManager) {
-        // S- consent data migration is handled in migrateAppSearchConsentToPpApi().
         if (!SdkLevel.isAtLeastT() || !FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
             return false;
         }
@@ -362,11 +384,13 @@ public class AppSearchConsentManager {
      * Migrate consent data to PPAPI and system server. This includes the following:
      *
      * <p>a) notification data. Set notification displayed only when value is TRUE. FALSE and null
-     * are regarded as not displayed.
+     * are regarded as not displayed,
      *
-     * <p>b) app consent data. All apps recorded as consented or revoked are migrated.
+     * <p>b) app consent data. All apps recorded as consented or revoked are migrated,
      *
-     * <p>c) current Privacy Sandbox feature type.
+     * <p>c) current Privacy Sandbox feature type and
+     *
+     * <p>d) blocked topics.
      *
      * @return whether or not we performed a migration
      */
@@ -394,10 +418,12 @@ public class AppSearchConsentManager {
         if (wasNotificationDisplayed()) {
             datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordNotificationDisplayed();
-        } else if (wasGaUxNotificationDisplayed()) {
+        }
+        if (wasGaUxNotificationDisplayed()) {
             datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordGaUxNotificationDisplayed();
-        } else {
+        }
+        if (!wasGaUxNotificationDisplayed() && !wasNotificationDisplayed()) {
             // This shouldn't happen since we checked that either of these notifications is
             // displayed per AppSearch before entering.
             LogUtil.e("AppSearch has not recorded notification displayed. Aborting migration");
@@ -436,8 +462,26 @@ public class AppSearchConsentManager {
                 datastore.put(featureType.name(), false);
             }
         }
-
         adServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name());
+
+        // Migrate the blocked topics data.
+        List<TopicParcel> topics = new ArrayList<>();
+        for (Topic topic : mAppSearchConsentWorker.getBlockedTopics()) {
+            topics.add(topic.convertTopicToTopicParcel());
+        }
+        if (!topics.isEmpty()) {
+            adServicesManager.recordBlockedTopic(topics);
+        }
+        // Save migration has happened into shared preferences.
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED, true);
+        if (editor.commit()) {
+            LogUtil.d("Finished migrating blocked topics from AppSearch to System Service");
+        } else {
+            LogUtil.e(
+                    "Finished migrating blocked topics from AppSearch to System Service but shared"
+                            + " preference is not updated.");
+        }
         return true;
     }
 
