@@ -136,6 +136,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private final Object mLock = new Object();
 
+    private static final String PACKAGE_MIME_TYPE = "application/vnd.android.package-archive";
+
     /**
      * For each app, keep a mapping from SDK name to it's corresponding LoadSdkSession. This can
      * contain all SDKs that are pending load, have been loaded, unloaded etc. Therefore, it is
@@ -318,22 +320,51 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     private void registerBroadcastReceivers() {
+        registerPackageUpdateBroadcastReceiver();
+        registerVerifierBroadcastReceiver();
+    }
+
+    private void registerPackageUpdateBroadcastReceiver() {
         // Register for package addition and update
         final IntentFilter packageAddedIntentFilter = new IntentFilter();
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
         packageAddedIntentFilter.addDataScheme("package");
-        BroadcastReceiver packageAddedIntentReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                final String packageName = intent.getData().getSchemeSpecificPart();
-                final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
-                final CallingInfo callingInfo = new CallingInfo(uid, packageName);
-                mHandler.post(() -> mSdkSandboxStorageManager.onPackageAddedOrUpdated(callingInfo));
-            }
-        };
-        mContext.registerReceiver(packageAddedIntentReceiver, packageAddedIntentFilter,
-                /*broadcastPermission=*/null, mHandler);
+        BroadcastReceiver packageAddedIntentReceiver =
+                new BroadcastReceiver() {
+                    @Override
+                    public void onReceive(Context context, Intent intent) {
+                        final String packageName = intent.getData().getSchemeSpecificPart();
+                        final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                        final CallingInfo callingInfo = new CallingInfo(uid, packageName);
+                        mHandler.post(
+                                () ->
+                                        mSdkSandboxStorageManager.onPackageAddedOrUpdated(
+                                                callingInfo));
+                    }
+                };
+        mContext.registerReceiver(
+                packageAddedIntentReceiver,
+                packageAddedIntentFilter,
+                /*broadcastPermission=*/ null,
+                mHandler);
+    }
+
+    private void registerVerifierBroadcastReceiver() {
+        final IntentFilter packageNeedsVerificationIntentFilter = new IntentFilter();
+        try {
+            packageNeedsVerificationIntentFilter.addDataType(PACKAGE_MIME_TYPE);
+            packageNeedsVerificationIntentFilter.addAction(
+                    Intent.ACTION_PACKAGE_NEEDS_VERIFICATION);
+            mContext.registerReceiverForAllUsers(
+                    new SdkSandboxVerifierReceiver(),
+                    packageNeedsVerificationIntentFilter,
+                    /*broadcastPermission=*/ null,
+                    /*scheduler=*/ null,
+                    Context.RECEIVER_EXPORTED);
+        } catch (IntentFilter.MalformedMimeTypeException e) {
+            Log.w(TAG, "Could not register verifier");
+        }
     }
 
     @Override
