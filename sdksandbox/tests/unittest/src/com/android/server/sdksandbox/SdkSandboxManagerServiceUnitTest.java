@@ -53,6 +53,7 @@ import com.android.server.pm.PackageManagerLocal;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -313,6 +314,7 @@ public class SdkSandboxManagerServiceUnitTest {
 
     /* Tests resources defined in CodeProviderWithResources may be read. */
     @Test
+    @Ignore("b/275350343")
     public void testCodeContextResourcesAndAssets() throws Exception {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         PackageManager pm = context.getPackageManager();

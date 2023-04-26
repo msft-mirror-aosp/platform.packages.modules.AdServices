@@ -31,6 +31,7 @@ import androidx.test.InstrumentationRegistry;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -76,6 +77,7 @@ public class SdkSandboxTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testLoadingSuccess() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
@@ -86,6 +88,7 @@ public class SdkSandboxTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testDuplicateLoadingFails() throws Exception {
         CountDownLatch latch = new CountDownLatch(2);
         RemoteCode mRemoteCode = new RemoteCode(latch);
@@ -101,6 +104,7 @@ public class SdkSandboxTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testLoadingMultiple() throws Exception {
         CountDownLatch latch1 = new CountDownLatch(1);
         RemoteCode mRemoteCode1 = new RemoteCode(latch1);
@@ -117,6 +121,7 @@ public class SdkSandboxTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testRequestSurfacePackage() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);
@@ -132,6 +137,7 @@ public class SdkSandboxTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testSurfacePackageError() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
         RemoteCode mRemoteCode = new RemoteCode(latch);

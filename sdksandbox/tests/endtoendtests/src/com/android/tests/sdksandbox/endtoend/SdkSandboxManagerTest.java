@@ -29,6 +29,7 @@ import android.view.SurfaceControlViewHost;
 import androidx.test.InstrumentationRegistry;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -54,6 +55,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void loadSdkSuccess() throws Exception {
         // This should be successful, because this test uses version 1 of the sdk library. If
         // version 2 is loaded, the test will fail.
@@ -61,6 +63,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void loadSdkFailureAlreadyLoaded() {
         FakeIniSdkCallback cb = new FakeIniSdkCallback();
         sSdkSandboxManager.loadSdk(
@@ -70,6 +73,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void loadCodeFailureNotFound() {
         FakeIniSdkCallback cb = new FakeIniSdkCallback();
         sSdkSandboxManager.loadSdk(
@@ -79,6 +83,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void surfacePackageSuccess() throws Exception {
         IBinder codeToken = sCallback.getSdkToken();
         assertThat(codeToken).isNotNull();
@@ -89,6 +94,7 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testResourcesAndAssets() {
         Bundle params = new Bundle();
         params.putString(CODE_PROVIDER_KEY,

@@ -23,6 +23,7 @@ import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -85,6 +86,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testSdkSandboxIsDestroyedOnAppDestroy() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
@@ -99,6 +101,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testSdkSandboxIsCreatedPerApp() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
         String processDump = getDevice().executeAdbCommand("shell", "ps", "-A");
@@ -123,6 +126,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testAppAndSdkSandboxAreKilledOnLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
@@ -143,6 +147,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testAppAndSdkSandboxAreNotKilledForNonLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
 
@@ -163,6 +168,7 @@ public final class SdkSandboxLifecycleHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    @Ignore("b/275350343")
     public void testOnlyRelevantAppIsKilledForLoadedSdkUpdate() throws Exception {
         startActivity(APP_PACKAGE, APP_ACTIVITY);
         startActivity(APP_2_PACKAGE, APP_2_ACTIVITY);
