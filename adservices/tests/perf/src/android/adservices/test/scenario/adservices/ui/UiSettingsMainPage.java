@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -48,7 +49,8 @@ import org.junit.runners.JUnit4;
 @Scenario
 @RunWith(JUnit4.class)
 public class UiSettingsMainPage {
-    private static final String TAG = "UiMainSettingsPage";
+    private static final String TAG = "UiTestLabel";
+    private static final String UI_SETTINGS_LATENCY_METRIC = "UI_SETTINGS_LATENCY_METRIC";
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final int LAUNCH_TIMEOUT = 8000;
@@ -85,6 +87,7 @@ public class UiSettingsMainPage {
         } else {
             privacySandboxUi = PRIVACY_SANDBOX_UI;
         }
+        final long start = System.currentTimeMillis();
         // Launch the setting view.
         Intent intent = new Intent(privacySandboxUi);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -96,6 +99,8 @@ public class UiSettingsMainPage {
         scrollAndClickButton(R.string.settingsUI_topics_ga_title);
         scrollAndClickButton(R.string.settingsUI_apps_ga_title);
         scrollAndClickButton(R.string.settingsUI_measurement_view_title);
+        final long duration = System.currentTimeMillis() - start;
+        Log.i(TAG, "(" + UI_SETTINGS_LATENCY_METRIC + ": " + duration + ")");
     }
 
     public void scrollAndClickButton(int resId) throws Exception {
