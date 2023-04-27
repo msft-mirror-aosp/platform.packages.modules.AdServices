@@ -20,6 +20,9 @@ import static com.android.adservices.data.DbHelper.DATABASE_VERSION;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -42,7 +45,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
-import com.android.adservices.errorlogging.AdServicesErrorCode;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -180,7 +182,7 @@ public class DbHelperTest {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getReadableDatabase();
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), any(), anyInt()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         SQLiteDatabase db = dbHelper.safeGetReadableDatabase();
 
@@ -189,8 +191,8 @@ public class DbHelperTest {
                 () ->
                         ErrorLogUtil.e(
                                 tr,
-                                AdServicesErrorCode.DATABASE_READ_EXCEPTION,
-                                /* ppapiName Unknown = */ 0));
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
     }
 
     @Test
@@ -198,7 +200,7 @@ public class DbHelperTest {
         DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getWritableDatabase();
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), any(), anyInt()));
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         SQLiteDatabase db = dbHelper.safeGetWritableDatabase();
 
@@ -207,8 +209,8 @@ public class DbHelperTest {
                 () ->
                         ErrorLogUtil.e(
                                 tr,
-                                AdServicesErrorCode.DATABASE_WRITE_EXCEPTION,
-                                /* ppapiName Unknown = */ 0));
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
     }
 
     @Test

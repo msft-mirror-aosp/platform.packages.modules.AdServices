@@ -60,16 +60,13 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
      * flag enabled.
      */
     public void logError(
-            AdServicesErrorCode errorCode,
-            int ppapiName,
-            @NonNull String className,
-            @NonNull String methodName) {
+            int errorCode, int ppapiName, @NonNull String className, @NonNull String methodName) {
         if (!mFlags.getAdServicesErrorLoggingEnabled()) {
             return;
         }
         AdServicesErrorStats errorData =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
+                        .setErrorCode(errorCode)
                         .setPpapiName(ppapiName)
                         .setClassName(className)
                         .setMethodName(methodName)
@@ -81,15 +78,12 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
      * Creates value {@link AdServicesErrorStats} object that contains exception information and
      * logs AdServices error/exceptions if flag enabled.
      */
-    public void logErrorWithExceptionInfo(
-            @NonNull Throwable tr, AdServicesErrorCode errorCode, int ppapiName) {
+    public void logErrorWithExceptionInfo(@NonNull Throwable tr, int errorCode, int ppapiName) {
         if (!mFlags.getAdServicesErrorLoggingEnabled()) {
             return;
         }
         AdServicesErrorStats.Builder builder =
-                AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode.getErrorCode())
-                        .setPpapiName(ppapiName);
+                AdServicesErrorStats.builder().setErrorCode(errorCode).setPpapiName(ppapiName);
         populateExceptionInfo(tr, builder);
 
         mStatsdAdServicesErrorLogger.logAdServicesError(builder.build());
