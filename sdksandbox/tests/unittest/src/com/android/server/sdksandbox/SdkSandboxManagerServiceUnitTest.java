@@ -470,6 +470,24 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdk_sandboxInitializationFails() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+        disableKillUid();
+
+        mSdkSandboxService.failInitialization = true;
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        // If initialization failed, the sandbox should have died and a reference to the sandbox
+        // service should not have been set.
+        final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
+    }
+
+    @Test
     public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
         loadSdk(SDK_NAME);
         loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
