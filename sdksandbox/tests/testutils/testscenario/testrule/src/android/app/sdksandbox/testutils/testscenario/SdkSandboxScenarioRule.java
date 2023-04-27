@@ -44,7 +44,6 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.rules.TestRule;
@@ -58,11 +57,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * This rule is used to invoke tests inside SDKs. It loads a given Sdk, calls for a test to be
- * executed inside given Sdk and unloads the Sdk once the execution is finished. When used as
- * a @ClassRule, this rule will cause the sdksandbox to persist across tests by loading the sdk in
- * the beginning of the class and unloading at the end. assertSdkTestRunPasses() contains the logic
- * to trigger an in-SDK test and retrieve its results, while {@link SdkSandboxTestScenarioRunner}
- * handles the Sdk-side logic for test execution.
+ * executed inside given Sdk and unloads the Sdk once the execution is finished.
+ * assertSdkTestRunPasses() contains the logic to trigger an in-SDK test and retrieve its results,
+ * while {@link SdkSandboxTestScenarioRunner} handles the Sdk-side logic for test execution.
  */
 public class SdkSandboxScenarioRule implements TestRule {
     // This flag is used internally for behaviors that are
@@ -85,7 +82,6 @@ public class SdkSandboxScenarioRule implements TestRule {
     private final Bundle mTestInstanceSetupParams;
     private @Nullable IBinder mBinder;
     private final int mFlags;
-    private SdkSandboxManager mSdkSandboxManager;
 
     public SdkSandboxScenarioRule(String sdkName) {
         this(sdkName, null, null, ENABLE_ALWAYS);
@@ -112,6 +108,7 @@ public class SdkSandboxScenarioRule implements TestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
+        // This statement would wrap around every test, similar to @Before and @After
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
@@ -119,76 +116,71 @@ public class SdkSandboxScenarioRule implements TestRule {
                         ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
                     final Context context =
                             InstrumentationRegistry.getInstrumentation().getContext();
-                    mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
-                    final IBinder textExecutor = loadTestSdk();
-                    mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
-                }
-                try {
-                    base.evaluate();
-                } finally {
-                    try (ActivityScenario scenario =
-                            ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-                        mSdkSandboxManager.unloadSdk(mSdkName);
+                    SdkSandboxManager sdkSandboxManager =
+                            context.getSystemService(SdkSandboxManager.class);
+
+                    try {
+                        final SandboxedSdk sdk = getLoadedSdk(sdkSandboxManager);
+                        assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
+                        setView(scenario, sdkSandboxManager);
+                        mTestExecutor =
+                                ISdkSandboxTestExecutor.Stub.asInterface(sdk.getInterface());
+
+                        Throwable testFailure =
+                                tryDoWhen(
+                                        ENABLE_LIFE_CYCLE_ANNOTATIONS,
+                                        () -> {
+                                            final List<String> beforeMethods =
+                                                    mTestExecutor.retrieveAnnotatedMethods(
+                                                            Before.class.getCanonicalName());
+                                            for (final String before : beforeMethods) {
+                                                runSdkMethod(before, new Bundle());
+                                            }
+                                        });
+
+                        // If the before methods failed, we should not run our tests.
+                        if (testFailure == null) {
+                            testFailure =
+                                    tryDoWhen(
+                                            ENABLE_ALWAYS,
+                                            () -> {
+                                                base.evaluate();
+                                            });
+                        }
+
+                        // Even if "before methods" or tests fail, we are still expected to
+                        // run "after methods" for clean up.
+                        Throwable afterFailure =
+                                tryDoWhen(
+                                        ENABLE_LIFE_CYCLE_ANNOTATIONS,
+                                        () -> {
+                                            final List<String> afterMethods =
+                                                    mTestExecutor.retrieveAnnotatedMethods(
+                                                            After.class.getCanonicalName());
+                                            for (final String after : afterMethods) {
+                                                runSdkMethod(after, new Bundle());
+                                            }
+                                        });
+
+                        if (testFailure != null) {
+                            throw testFailure;
+                        } else if (afterFailure != null) {
+                            throw afterFailure;
+                        }
+                    } finally {
+                        sdkSandboxManager.unloadSdk(mSdkName);
                     }
                 }
             }
         };
     }
 
-    public void assertSdkTestRunPasses(String testMethodName) throws Throwable {
+    public void assertSdkTestRunPasses(String testMethodName) throws Exception {
         assertSdkTestRunPasses(testMethodName, new Bundle());
     }
 
-    public void assertSdkTestRunPasses(String testMethodName, Bundle params) throws Throwable {
-        try (ActivityScenario scenario = ActivityScenario.launch(SdkSandboxCtsActivity.class)) {
-
-            if (mSdkSandboxManager.getSandboxedSdks().isEmpty()) {
-                final IBinder textExecutor = loadTestSdk();
-                mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
-            }
-            assertThat(scenario.getState()).isEqualTo(Lifecycle.State.RESUMED);
-            setView(scenario);
-
-            Throwable testFailure = runBeforeTestMethods();
-
-            if (testFailure == null) {
-                runSdkMethod(testMethodName, params);
-            }
-
-            // Even if "before methods" or tests fail, we are still expected to
-            // run "after methods" for clean up.
-            Throwable afterFailure = runAfterTestMethods();
-
-            if (testFailure != null) {
-                throw testFailure;
-            } else if (afterFailure != null) {
-                throw afterFailure;
-            }
-        }
-    }
-
-    private Throwable runBeforeTestMethods() {
-        return tryDoWhen(
-                ENABLE_LIFE_CYCLE_ANNOTATIONS,
-                () -> {
-                    final List<String> beforeMethods =
-                            mTestExecutor.retrieveAnnotatedMethods(Before.class.getCanonicalName());
-                    for (final String before : beforeMethods) {
-                        runSdkMethod(before, new Bundle());
-                    }
-                });
-    }
-
-    private Throwable runAfterTestMethods() {
-        return tryDoWhen(
-                ENABLE_LIFE_CYCLE_ANNOTATIONS,
-                () -> {
-                    final List<String> afterMethods =
-                            mTestExecutor.retrieveAnnotatedMethods(After.class.getCanonicalName());
-                    for (final String after : afterMethods) {
-                        runSdkMethod(after, new Bundle());
-                    }
-                });
+    public void assertSdkTestRunPasses(String testMethodName, Bundle params) throws Exception {
+        runSdkMethod(testMethodName, params);
     }
 
     private void runSdkMethod(String methodName, Bundle params) throws Exception {
@@ -239,12 +231,12 @@ public class SdkSandboxScenarioRule implements TestRule {
         }
     }
 
-    private IBinder loadTestSdk() throws Exception {
+    private SandboxedSdk getLoadedSdk(SdkSandboxManager sdkSandboxManager) throws Exception {
         final Bundle loadParams = new Bundle(2);
         loadParams.putBundle(ISdkSandboxTestExecutor.TEST_SETUP_PARAMS, mTestInstanceSetupParams);
         loadParams.putBinder(ISdkSandboxTestExecutor.TEST_AUTHOR_DEFINED_BINDER, mBinder);
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
-        mSdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
+        sdkSandboxManager.loadSdk(mSdkName, loadParams, Runnable::run, callback);
         try {
             callback.assertLoadSdkIsSuccessful();
         } catch (Exception e) {
@@ -254,12 +246,11 @@ public class SdkSandboxScenarioRule implements TestRule {
                             != SdkSandboxManager.LOAD_SDK_SDK_SANDBOX_DISABLED);
             throw e;
         }
-        final SandboxedSdk testSdk = callback.getSandboxedSdk();
-        Assert.assertNotNull(testSdk.getInterface());
-        return testSdk.getInterface();
+        return callback.getSandboxedSdk();
     }
 
-    private void setView(ActivityScenario scenario) throws Exception {
+    private void setView(ActivityScenario scenario, SdkSandboxManager sdkSandboxManager)
+            throws Exception {
         AtomicReference<RequestSurfacePackageException> surfacePackageException =
                 new AtomicReference<>(null);
         scenario.onActivity(
@@ -274,7 +265,7 @@ public class SdkSandboxScenarioRule implements TestRule {
                     params.putInt(EXTRA_DISPLAY_ID, activity.getDisplay().getDisplayId());
                     params.putBinder(EXTRA_HOST_TOKEN, renderedView.getHostToken());
 
-                    mSdkSandboxManager.requestSurfacePackage(
+                    sdkSandboxManager.requestSurfacePackage(
                             mSdkName, params, Runnable::run, surfacePackageCallback);
 
                     if (!surfacePackageCallback.isRequestSurfacePackageSuccessful()) {

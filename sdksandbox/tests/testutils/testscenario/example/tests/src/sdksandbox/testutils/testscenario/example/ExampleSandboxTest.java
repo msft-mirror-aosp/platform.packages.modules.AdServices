@@ -20,18 +20,18 @@ import android.app.sdksandbox.testutils.testscenario.SdkSandboxScenarioRule;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
 public class ExampleSandboxTest {
-    @ClassRule
-    public static final SdkSandboxScenarioRule sScenario =
+    @Rule
+    public final SdkSandboxScenarioRule scenario =
             new SdkSandboxScenarioRule("sdksandbox.testutils.testscenario.example.sdk");
 
     @Test
-    public void testExample() throws Throwable {
-        sScenario.assertSdkTestRunPasses("testExample");
+    public void testExample() throws Exception {
+        scenario.assertSdkTestRunPasses("testExample");
     }
 }
