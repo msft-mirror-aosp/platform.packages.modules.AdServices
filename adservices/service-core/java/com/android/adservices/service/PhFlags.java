@@ -330,6 +330,9 @@ public final class PhFlags implements Flags {
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
+    // AdServices APK sha certs.
+    static final String KEY_ADSERVICES_APK_SHA_CERTS = "adservices_apk_sha_certs";
+
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
     static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
@@ -1748,6 +1751,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_PPAPI_APP_ALLOW_LIST,
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
+    }
+
+    // AdServices APK SHA certs.
+    @Override
+    public String getAdservicesApkShaCertificate() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_APK_SHA_CERTS,
+                /* defaultValue */ ADSERVICES_APK_SHA_CERTIFICATE);
     }
 
     // PPAPI Signature allow-list.
