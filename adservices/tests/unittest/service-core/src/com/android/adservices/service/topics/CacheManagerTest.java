@@ -38,6 +38,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetTopicsReportedStats;
 
@@ -78,6 +79,7 @@ public final class CacheManagerTest {
     @Mock Flags mMockFlags;
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
+    @Mock AppSearchConsentManager mAppSearchConsentManager;
 
     @Before
     public void setup() {
@@ -100,7 +102,11 @@ public final class CacheManagerTest {
                 new GlobalBlockedTopicsManager(/* globalBlockedTopicIds = */ new HashSet<>());
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
-                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+                        mTopicsDao,
+                        mMockAdServicesManager,
+                        mAppSearchConsentManager,
+                        Flags.PPAPI_AND_SYSTEM_SERVER,
+                        /* enableAppSearchConsent= */ false);
         mCacheManager =
                 new CacheManager(
                         mTopicsDao,

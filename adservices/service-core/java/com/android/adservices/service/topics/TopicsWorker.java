@@ -296,7 +296,7 @@ public class TopicsWorker {
 
             // If clearing all Topics data, clear preserved blocked topics in system server.
             if (!tablesToExclude.contains(TopicsTables.BlockedTopicsContract.TABLE)) {
-                mBlockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+                mBlockedTopicsManager.clearAllBlockedTopics();
             }
 
             loadCache();
