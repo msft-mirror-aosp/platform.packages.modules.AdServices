@@ -42,6 +42,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -266,21 +267,21 @@ public abstract class E2ETest {
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
                 mMaxSourcesPerPublisher = json.getInt(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN);
             } else {
-                mMaxSourcesPerPublisher = SystemHealthParams.getMaxSourcesPerPublisher();
+                mMaxSourcesPerPublisher = Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
             }
             if (!json.isNull(ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION)) {
                 mMaxEventReportsPerDestination = json.getInt(
                         ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION);
             } else {
                 mMaxEventReportsPerDestination =
-                        SystemHealthParams.getMaxEventReportsPerDestination();
+                        Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
             }
             if (!json.isNull(ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION)) {
                 mMaxAggregateReportsPerDestination = json.getInt(
                         ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION);
             } else {
                 mMaxAggregateReportsPerDestination =
-                        SystemHealthParams.getMaxAggregateReportsPerDestination();
+                        Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
             }
         }
 

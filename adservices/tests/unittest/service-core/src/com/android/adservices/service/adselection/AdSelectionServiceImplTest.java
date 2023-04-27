@@ -130,6 +130,7 @@ import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -3225,6 +3226,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -3268,7 +3270,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
     }
@@ -3276,9 +3278,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoWithRevokedUserConsentSuccess()
             throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -3323,7 +3323,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_USER_CONSENT_REVOKED), anyInt());
@@ -3331,6 +3331,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionConfigRemoteInfoFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -3371,6 +3372,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionConfigId(
                                 adSelectionConfig),
                         TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
@@ -3378,6 +3380,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -3431,7 +3434,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
@@ -3440,9 +3443,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideWithRevokedUserConsentSuccess()
             throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -3497,7 +3498,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE),
@@ -3507,6 +3508,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -3555,6 +3557,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_INTERNAL_ERROR), anyInt());
@@ -3563,6 +3566,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionConfigRemoteInfoOverrideDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -3618,7 +3622,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(incorrectPackageName);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_REMOVE_OVERRIDE), eq(STATUS_SUCCESS), anyInt());
@@ -3627,6 +3631,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesDoesNotDeleteWithIncorrectPackageName()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -3726,7 +3731,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(incorrectPackageName);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
@@ -3734,6 +3739,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -3831,7 +3837,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES), eq(STATUS_SUCCESS), anyInt());
@@ -3840,9 +3846,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesWithRevokedUserConsentSuccess()
             throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -3941,7 +3945,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
@@ -3951,6 +3955,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testResetAllAdSelectionConfigRemoteOverridesFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -4042,6 +4047,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         adSelectionConfigId3, TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(SHORT_API_NAME_RESET_ALL_OVERRIDES),
@@ -4076,6 +4082,36 @@ public class AdSelectionServiceImplTest {
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
+    }
+
+    @Test
+    public void testJSScriptEngineConnectionExceptionAtShutDown() {
+        JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
+        doThrow(JSSandboxIsNotAvailableException.class)
+                .when(() -> JSScriptEngine.getInstance(any()));
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterSpy,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        adSelectionService.destroy();
+        verify(jsScriptEngineMock, never()).shutdown();
     }
 
     @Test
@@ -4139,6 +4175,8 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionForegroundCheckEnabledFails_throwsException()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -4196,6 +4234,8 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionForegroundCheckDisabled_acceptBackgroundApp()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -4239,12 +4279,14 @@ public class AdSelectionServiceImplTest {
                         DUMMY_DECISION_LOGIC_JS,
                         DUMMY_TRUSTED_SCORING_SIGNALS,
                         BUYERS_DECISION_LOGIC);
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         assertTrue(callback.mIsSuccess);
     }
 
     @Test
     public void testRemoveOverrideForegroundCheckEnabledFails_throwsException() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -4288,7 +4330,6 @@ public class AdSelectionServiceImplTest {
         assertEquals(
                 AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                 callback.mFledgeErrorResponse.getStatusCode());
-        verify(mConsentManagerMock, never()).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
         assertEquals(
                 AdServicesStatusUtils.ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE,
                 callback.mFledgeErrorResponse.getErrorMessage());
@@ -4337,12 +4378,13 @@ public class AdSelectionServiceImplTest {
                 callRemoveOverride(adSelectionService, adSelectionConfig);
 
         assertTrue(callback.mIsSuccess);
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
     }
 
     @Test
     public void testResetAllOverridesForegroundCheckEnabledFails_throwsException()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -4380,7 +4422,6 @@ public class AdSelectionServiceImplTest {
 
         // The call fails because there is no ad selection with the given ID
         assertFalse(callback.mIsSuccess);
-        verify(mConsentManagerMock, never()).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
         assertEquals(
                 AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                 callback.mFledgeErrorResponse.getStatusCode());
@@ -4392,6 +4433,8 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllOverridesForegroundCheckDisabled_acceptBackgroundApp()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -4428,7 +4471,6 @@ public class AdSelectionServiceImplTest {
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
         assertTrue(callback.mIsSuccess);
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
     }
 
     @Test
@@ -4538,6 +4580,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testReportImpressionFailsWhenAppCannotUsePPApi() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5413,6 +5456,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testAddOverrideAdSelectionFromOutcomesConfigRemoteInfoSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -5456,7 +5500,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionFromOutcomesConfigId(
                                 config),
                         TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5467,9 +5511,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionFromOutcomesConfigRemoteInfoWithRevokedUserConsentSuccess()
             throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -5514,7 +5556,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionFromOutcomesConfigId(
                                 config),
                         TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5524,6 +5566,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testOverrideAdSelectionFromOutcomesConfigRemoteInfoFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -5564,6 +5607,7 @@ public class AdSelectionServiceImplTest {
                         AdSelectionDevOverridesHelper.calculateAdSelectionFromOutcomesConfigId(
                                 config),
                         TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5574,6 +5618,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionFromOutcomesConfigRemoteInfoOverrideSuccess()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -5628,7 +5673,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionOverrideExistForPackageName(
                         configId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5640,9 +5685,7 @@ public class AdSelectionServiceImplTest {
     public void
             testRemoveAdSelectionFromOutcomesConfigRemoteInfoOverrideWithRevokedUserConsentSuccess()
                     throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -5698,7 +5741,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5709,6 +5752,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void
             testRemoveAdSelectionFromOutcomesConfigRemoteInfoOverrideFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -5757,6 +5801,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5767,6 +5812,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testRemoveAdSelectionFromOutcomesConfigRemoteOverrideNotDeleteIncorrectPackageName()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -5823,7 +5869,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         adSelectionConfigId, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(incorrectPackageName);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5833,6 +5879,7 @@ public class AdSelectionServiceImplTest {
 
     @Test
     public void testResetAllAdSelectionFromOutcomesConfigRemoteOverridesSuccess() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -5933,7 +5980,7 @@ public class AdSelectionServiceImplTest {
         assertFalse(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -5945,9 +5992,7 @@ public class AdSelectionServiceImplTest {
     public void
             testResetAllAdSelectionFromOutcomesConfigRemoteOverridesWithRevokedUserConsentSuccess()
                     throws Exception {
-        doThrow(ConsentManager.RevokedConsentException.class)
-                .when(mConsentManagerMock)
-                .assertFledgeCallerHasUserConsent(any());
+        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
@@ -6049,7 +6094,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -6060,6 +6105,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void
             testResetAllAdSelectionFromOutcomesConfigRemoteOverridesFailsWithDevOptionsDisabled() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
 
@@ -6155,6 +6201,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -6165,6 +6212,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testResetAllAdSelectionFromOutcomesConfigRemoteOverrideNotDeleteIncorrectPkgName()
             throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         String incorrectPackageName = "com.google.ppapi.test.incorrect";
 
         when(mDevContextFilter.createDevContext())
@@ -6267,7 +6315,7 @@ public class AdSelectionServiceImplTest {
         assertTrue(
                 mAdSelectionEntryDao.doesAdSelectionFromOutcomesOverrideExistForPackageName(
                         configId3, TEST_PACKAGE_NAME));
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(incorrectPackageName);
+
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -6278,6 +6326,7 @@ public class AdSelectionServiceImplTest {
     @Test
     public void testOverrideAdSelectionConfigRemoteOverridesSuccess() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder()
@@ -6348,7 +6397,6 @@ public class AdSelectionServiceImplTest {
 
         assertTrue(selectionCallback.mIsSuccess);
         assertEquals(AD_SELECTION_ID_1, selectionCallback.mAdSelectionResponse.getAdSelectionId());
-        verify(mConsentManagerMock).assertFledgeCallerHasUserConsent(TEST_PACKAGE_NAME);
     }
 
     @Test
@@ -7488,16 +7536,6 @@ public class AdSelectionServiceImplTest {
         @Override
         public long getReportImpressionOverallTimeoutMs() {
             return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public boolean getFledgePerAppConsentEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
         }
     }
 }

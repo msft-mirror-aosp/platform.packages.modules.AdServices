@@ -126,6 +126,8 @@ public final class MeasurementTables {
         String SHARED_AGGREGATION_KEYS = "shared_aggregation_keys";
         String INSTALL_TIME = "install_time";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String TRIGGER_SPECS = "trigger_specs";
+        String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -191,6 +193,7 @@ public final class MeasurementTables {
         String SOURCE_ORIGIN = "source_origin";
         String DESTINATION_SITE = "attribution_destination_site";
         String DESTINATION_ORIGIN = "destination_origin";
+        // TODO: b/276638412 rename to source time
         String TRIGGER_TIME = "trigger_time";
         String REGISTRANT = "registrant";
         String ENROLLMENT_ID = "enrollment_id";
@@ -426,7 +429,11 @@ public final class MeasurementTables {
                     + SourceContract.INSTALL_TIME
                     + " INTEGER, "
                     + SourceContract.DEBUG_JOIN_KEY
-                    + " TEXT "
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + " INTEGER "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =

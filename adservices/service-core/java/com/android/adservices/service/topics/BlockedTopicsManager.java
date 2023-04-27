@@ -25,7 +25,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static BlockedTopicsManager sSingleton;
     @VisibleForTesting static final String SHARED_PREFS_BLOCKED_TOPICS = "PPAPI_Blocked_Topics";
 
@@ -106,7 +107,7 @@ public class BlockedTopicsManager {
      * @param topic {@link Topic} to block.
      */
     public void blockTopic(@NonNull Topic topic) {
-        LogUtil.v("BlockedTopicsManager.blockTopic");
+        sLogger.v("BlockedTopicsManager.blockTopic");
 
         synchronized (LOCK) {
             try {
@@ -141,7 +142,7 @@ public class BlockedTopicsManager {
      * @param topic {@link Topic} to restore consent for.
      */
     public void unblockTopic(@NonNull Topic topic) {
-        LogUtil.v("BlockedTopicsManager.unblockTopic");
+        sLogger.v("BlockedTopicsManager.unblockTopic");
 
         synchronized (LOCK) {
             try {
@@ -248,6 +249,13 @@ public class BlockedTopicsManager {
 
         switch (blockedTopicsSourceOfTruth) {
             case Flags.PPAPI_ONLY:
+                // Technically we only need to reset the SHARED_PREFS_KEY_HAS_MIGRATED bit once.
+                // What we need is clearIfSet operation which is not available in SP. So here we
+                // always reset the bit since otherwise we need to read the SP to read the value and
+                // the clear the value.
+                // The only flow we would do are:
+                // Case 1: DUAL-> PPAPI if there is a bug in System Server
+                // Case 2: DUAL -> SYSTEM_SERVER_ONLY: if everything goes smoothly.
                 resetSharedPreference(context, SHARED_PREFS_KEY_HAS_MIGRATED);
                 break;
             case Flags.PPAPI_AND_SYSTEM_SERVER:
@@ -275,9 +283,9 @@ public class BlockedTopicsManager {
         editor.remove(sharedPreferenceKey);
 
         if (editor.commit()) {
-            LogUtil.d("Finish resetting shared preference for " + sharedPreferenceKey);
+            sLogger.d("Finish resetting shared preference for " + sharedPreferenceKey);
         } else {
-            LogUtil.e("Failed to reset shared preference for " + sharedPreferenceKey);
+            sLogger.e("Failed to reset shared preference for " + sharedPreferenceKey);
         }
     }
 
@@ -295,12 +303,12 @@ public class BlockedTopicsManager {
         SharedPreferences sharedPreferences =
                 context.getSharedPreferences(SHARED_PREFS_BLOCKED_TOPICS, Context.MODE_PRIVATE);
         if (sharedPreferences.getBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, /* defValue */ false)) {
-            LogUtil.v(
+            sLogger.v(
                     "Blocked topics migration has happened to user %d, skip...",
                     context.getUser().getIdentifier());
             return;
         }
-        LogUtil.d("Start migrating blocked topics from PPAPI to System Service");
+        sLogger.d("Start migrating blocked topics from PPAPI to System Service");
 
         // Migrate blocked topics to System Service.
         List<TopicParcel> topicParcels = new ArrayList<>();
@@ -314,9 +322,9 @@ public class BlockedTopicsManager {
         editor.putBoolean(SHARED_PREFS_KEY_HAS_MIGRATED, true);
 
         if (editor.commit()) {
-            LogUtil.d("Finish migrating blocked topics from PPAPI to System Service");
+            sLogger.d("Finish migrating blocked topics from PPAPI to System Service");
         } else {
-            LogUtil.e(
+            sLogger.e(
                     "Finish migrating blocked topics from PPAPI to System Service but shared"
                             + " preference is not updated.");
         }
@@ -335,7 +343,7 @@ public class BlockedTopicsManager {
             return;
         }
 
-        LogUtil.d("Start clearing blocked topics in PPAPI.");
+        sLogger.d("Start clearing blocked topics in PPAPI.");
         topicsDao.deleteAllEntriesFromTable(TopicsTables.BlockedTopicsContract.TABLE);
 
         // Save that PPAPI blocked topics has cleared into shared preferences.
@@ -343,9 +351,9 @@ public class BlockedTopicsManager {
         editor.putBoolean(SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, true);
 
         if (editor.commit()) {
-            LogUtil.d("Finish clearing blocked topics in PPAPI.");
+            sLogger.d("Finish clearing blocked topics in PPAPI.");
         } else {
-            LogUtil.e(
+            sLogger.e(
                     "Finish clearing blocked topics in PPAPI but shared preference is not"
                             + " updated.");
         }

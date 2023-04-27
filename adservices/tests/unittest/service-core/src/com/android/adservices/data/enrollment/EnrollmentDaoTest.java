@@ -152,6 +152,7 @@ public class EnrollmentDaoTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         mDbHelper = DbTestUtil.getDbHelperForTest();
+        when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         mEnrollmentDao = new EnrollmentDao(sContext, mDbHelper, mMockFlags);
     }
 
@@ -235,6 +236,26 @@ public class EnrollmentDaoTest {
         mEnrollmentDao.insert(ENROLLMENT_DATA1);
         EnrollmentData e = mEnrollmentDao.getEnrollmentData("1");
         assertEquals(e, ENROLLMENT_DATA1);
+    }
+
+    @Test
+    public void initEnrollmentDao_ForEnrollmentSeedFlagOn_PerformsSeed() {
+        when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(true);
+        EnrollmentDao enrollmentDao = new EnrollmentDao(sContext, mDbHelper, mMockFlags);
+
+        for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
+            EnrollmentData e = enrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
+            assertEquals(enrollmentData, e);
+        }
+    }
+
+    @Test
+    public void initEnrollmentDao_ForEnrollmentSeedFlagOff_SkipsSeed() {
+        when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
+        for (EnrollmentData enrollmentData : PreEnrolledAdTechForTest.getList()) {
+            EnrollmentData e = mEnrollmentDao.getEnrollmentData(enrollmentData.getEnrollmentId());
+            assertNull(e);
+        }
     }
 
     @Test

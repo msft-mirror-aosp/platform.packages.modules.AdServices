@@ -89,6 +89,9 @@ public final class FetcherUtilTest {
     @Test
     public void testIsSuccess() {
         assertTrue(FetcherUtil.isSuccess(200));
+        assertTrue(FetcherUtil.isSuccess(201));
+        assertTrue(FetcherUtil.isSuccess(202));
+        assertTrue(FetcherUtil.isSuccess(204));
         assertFalse(FetcherUtil.isSuccess(404));
         assertFalse(FetcherUtil.isSuccess(500));
         assertFalse(FetcherUtil.isSuccess(0));
@@ -437,6 +440,11 @@ public final class FetcherUtilTest {
     public void isValidAggregateDeduplicationKey_success() {
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("18446744073709551615"));
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("0"));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_nullValue_success() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
     }
 
     private Map<String, List<String>> createHeadersMap() {

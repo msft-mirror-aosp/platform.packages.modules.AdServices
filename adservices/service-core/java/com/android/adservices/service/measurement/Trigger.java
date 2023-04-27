@@ -372,10 +372,12 @@ public class Trigger {
             JSONArray dedupKeyObjects = new JSONArray(this.getAggregateDeduplicationKeys());
             for (int i = 0; i < dedupKeyObjects.length(); i++) {
                 JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
-                UnsignedLong dedupKey =
-                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
-                AggregateDeduplicationKey.Builder builder =
-                        new AggregateDeduplicationKey.Builder(dedupKey);
+                AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder();
+                if (dedupKeyObject.has("deduplication_key")
+                        && !dedupKeyObject.isNull("deduplication_key")) {
+                    builder.setDeduplicationKey(
+                            new UnsignedLong(dedupKeyObject.getString("deduplication_key")));
+                }
                 if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
                     List<FilterMap> filterSet =
                             Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));

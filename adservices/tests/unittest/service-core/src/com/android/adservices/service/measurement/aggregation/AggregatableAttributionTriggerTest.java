@@ -139,7 +139,8 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap1.put("product", Arrays.asList("1234", "234"));
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(10L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -151,7 +152,8 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap2.put("product", Arrays.asList("1234", "234"));
         AggregateDeduplicationKey aggregateDeduplicationKey2 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(11L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(11L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -185,7 +187,8 @@ public final class AggregatableAttributionTriggerTest {
         notTriggerFilterMap1.put("product", Arrays.asList("856", "23"));
 
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(10L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -207,7 +210,8 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.ministore"));
         notTriggerFilterMap2.put("product", Arrays.asList("856", "23"));
         AggregateDeduplicationKey aggregateDeduplicationKey2 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(11L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(11L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -242,7 +246,8 @@ public final class AggregatableAttributionTriggerTest {
         notTriggerFilterMap1.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(10L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -264,7 +269,8 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.ministore"));
         notTriggerFilterMap2.put("product", Arrays.asList("856", "23"));
         AggregateDeduplicationKey aggregateDeduplicationKey2 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(11L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(11L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -294,13 +300,16 @@ public final class AggregatableAttributionTriggerTest {
     @Test
     public void testExtractDedupKey_noFiltersInFirstKey() {
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(10L)).build();
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
+                        .build();
         Map<String, List<String>> triggerFilterMap2 = new HashMap<>();
         triggerFilterMap2.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
         triggerFilterMap2.put("product", Arrays.asList("1234", "234"));
         AggregateDeduplicationKey aggregateDeduplicationKey2 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(11L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(11L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -329,7 +338,8 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.ministore"));
         triggerFilterMap1.put("product", Arrays.asList("4321", "432"));
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(10L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
@@ -341,11 +351,69 @@ public final class AggregatableAttributionTriggerTest {
                 "conversion_subdomain", Collections.singletonList("electronics.store"));
         triggerFilterMap2.put("product", Arrays.asList("9876", "654"));
         AggregateDeduplicationKey aggregateDeduplicationKey2 =
-                new AggregateDeduplicationKey.Builder(new UnsignedLong(11L))
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(11L))
                         .setFilterSet(
                                 Collections.singletonList(
                                         new FilterMap.Builder()
                                                 .setAttributionFilterMap(triggerFilterMap2)
+                                                .build()))
+                        .build();
+
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put(
+                "conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        sourceFilterMap.put("product", Arrays.asList("1234", "234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+
+        Optional<AggregateDeduplicationKey> aggregateDeduplicationKey =
+                createExample(Arrays.asList(aggregateDeduplicationKey1, aggregateDeduplicationKey2))
+                        .maybeExtractDedupKey(sourceFilter);
+        assertTrue(aggregateDeduplicationKey.isEmpty());
+    }
+
+    @Test
+    public void testExtractDedupKey_secondKeyMatches_nullDedupKey() {
+        Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
+        triggerFilterMap1.put("product", Arrays.asList("1234", "234"));
+        Map<String, List<String>> notTriggerFilterMap1 = new HashMap<>();
+        notTriggerFilterMap1.put(
+                "conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        AggregateDeduplicationKey aggregateDeduplicationKey1 =
+                new AggregateDeduplicationKey.Builder()
+                        .setDeduplicationKey(new UnsignedLong(10L))
+                        .setFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(triggerFilterMap1)
+                                                .build()))
+                        .setNotFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(notTriggerFilterMap1)
+                                                .build()))
+                        .build();
+
+        Map<String, List<String>> triggerFilterMap2 = new HashMap<>();
+        triggerFilterMap2.put(
+                "conversion_subdomain", Collections.singletonList("electronics.megastore"));
+        triggerFilterMap2.put("product", Arrays.asList("1234", "234"));
+        Map<String, List<String>> notTriggerFilterMap2 = new HashMap<>();
+        notTriggerFilterMap2.put(
+                "conversion_subdomain", Collections.singletonList("electronics.ministore"));
+        notTriggerFilterMap2.put("product", Arrays.asList("856", "23"));
+        AggregateDeduplicationKey aggregateDeduplicationKey2 =
+                new AggregateDeduplicationKey.Builder()
+                        .setFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(triggerFilterMap2)
+                                                .build()))
+                        .setNotFilterSet(
+                                Collections.singletonList(
+                                        new FilterMap.Builder()
+                                                .setAttributionFilterMap(notTriggerFilterMap2)
                                                 .build()))
                         .build();
 

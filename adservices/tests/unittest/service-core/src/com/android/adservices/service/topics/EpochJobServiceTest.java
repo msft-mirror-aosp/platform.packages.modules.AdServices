@@ -112,12 +112,6 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_killSwitchOff() throws InterruptedException {
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         final TopicsWorker topicsWorker =
                 new TopicsWorker(
                         mMockEpochManager,
@@ -154,12 +148,6 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_killSwitchOn() {
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -191,12 +179,6 @@ public class EpochJobServiceTest {
 
     @Test
     public void testOnStartJob_globalKillSwitchOverridesAll() throws InterruptedException {
-        ExtendedMockito.doReturn(false)
-                .when(
-                        () ->
-                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                        any(Context.class)));
-
         // Add a countDownLatch to ensure background thread gets executed
         CountDownLatch countDownLatch = new CountDownLatch(1);
 

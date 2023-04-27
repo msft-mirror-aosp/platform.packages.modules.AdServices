@@ -80,16 +80,20 @@ public class AsyncSourceFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     public AsyncSourceFetcher(Context context) {
         this(
+                context,
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public AsyncSourceFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncSourceFetcher(
+            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+        mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
@@ -295,6 +299,8 @@ public class AsyncSourceFetcher {
             String enrollmentId,
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
+        boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
+        LogUtil.d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
@@ -304,7 +310,7 @@ public class AsyncSourceFetcher {
         builder.setAttributionMode(Source.AttributionMode.TRUTHFULLY);
         builder.setEventTime(asyncRegistration.getRequestTime());
         builder.setAdIdPermission(asyncRegistration.hasAdIdPermission());
-        builder.setArDebugPermission(asyncRegistration.getDebugKeyAllowed());
+        builder.setArDebugPermission(arDebugPermission);
         builder.setPublisherType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         List<String> field =
@@ -422,11 +428,15 @@ public class AsyncSourceFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.maybeGetEnrollmentId(
-                        asyncRegistration.getRegistrationUri(), mEnrollmentDao);
+                Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
-                    "fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    "fetchSource: Valid enrollment id not found. Registration URI: %s",
                     asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
             return Optional.empty();
