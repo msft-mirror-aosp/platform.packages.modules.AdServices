@@ -33,6 +33,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.errorlogging.AdServicesErrorCode;
+import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
