@@ -420,6 +420,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         mFlags,
                         mAdSelectionServiceFilter,
+                        mFledgeAuthorizationFilter,
                         callingUid);
         reporter.reportImpression(requestParams, callback);
     }
