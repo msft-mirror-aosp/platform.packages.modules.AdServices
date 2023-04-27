@@ -32,6 +32,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.IAdServicesManager;
@@ -48,8 +49,11 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -73,6 +77,7 @@ public class BlockedTopicsManagerTest {
     private final TopicsDao mTopicsDao = new TopicsDao(mDBHelper);
 
     private AdServicesManager mAdServicesManager;
+    @Mock private AppSearchConsentManager mAppSearchConsentManager;
 
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Spy private final Context mContextSpy = ApplicationProvider.getApplicationContext();
@@ -93,7 +98,8 @@ public class BlockedTopicsManagerTest {
 
         // Block a topic
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
         blockedTopicsManager.blockTopic(TOPIC);
 
         // Verify the topic is blocked
@@ -112,7 +118,8 @@ public class BlockedTopicsManagerTest {
 
         // Block a topic
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
         blockedTopicsManager.blockTopic(TOPIC);
         verify(mMockIAdServicesManager).recordBlockedTopic(any());
 
@@ -134,7 +141,8 @@ public class BlockedTopicsManagerTest {
 
         // Block a topic
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
         blockedTopicsManager.blockTopic(TOPIC);
         verify(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
 
@@ -155,13 +163,39 @@ public class BlockedTopicsManagerTest {
     }
 
     @Test
+    public void testBlockUnblockRetrieveBlockedTopics_AppSearchOnly() throws RemoteException {
+        int blockedTopicsSourceOfTruth = Flags.APPSEARCH_ONLY;
+
+        // Block a topic.
+        BlockedTopicsManager blockedTopicsManager =
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ true);
+        blockedTopicsManager.blockTopic(TOPIC);
+        verify(mAppSearchConsentManager).blockTopic(TOPIC);
+
+        // Unblock a topic.
+        blockedTopicsManager.unblockTopic(TOPIC);
+        verify(mAppSearchConsentManager).unblockTopic(TOPIC);
+
+        // Get all blocked topics.
+        when(mAppSearchConsentManager.retrieveAllBlockedTopics()).thenReturn(List.of(TOPIC));
+        List result = blockedTopicsManager.retrieveAllBlockedTopics();
+        assertThat(result).isEqualTo(List.of(TOPIC));
+
+        // Clear all blocked topics.
+        blockedTopicsManager.clearAllBlockedTopics();
+        verify(mAppSearchConsentManager).clearAllBlockedTopics();
+    }
+
+    @Test
     public void testClearAllBlockedTopicsInSystemServiceIfNeeded_PpApiOnly()
             throws RemoteException {
         int blockedTopicsSourceOfTruth = Flags.PPAPI_ONLY;
 
         // Block a topic
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
         blockedTopicsManager.blockTopic(TOPIC);
 
         // Verify the topic is blocked
@@ -170,7 +204,7 @@ public class BlockedTopicsManagerTest {
         assertThat(expectedBlockedTopics.get(0)).isEqualTo(TOPIC);
 
         // Verify the topic in PPAPI is not unblocked
-        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+        blockedTopicsManager.clearAllBlockedTopics();
         expectedBlockedTopics = blockedTopicsManager.retrieveAllBlockedTopics();
         assertThat(expectedBlockedTopics).hasSize(1);
         assertThat(expectedBlockedTopics.get(0)).isEqualTo(TOPIC);
@@ -185,9 +219,10 @@ public class BlockedTopicsManagerTest {
         int blockedTopicsSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
 
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
 
-        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+        blockedTopicsManager.clearAllBlockedTopics();
 
         // Verify clearAllBlockedTopics() is invoked
         verify(mMockIAdServicesManager).clearAllBlockedTopics();
@@ -199,9 +234,10 @@ public class BlockedTopicsManagerTest {
         int blockedTopicsSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
 
         BlockedTopicsManager blockedTopicsManager =
-                getSpiedBlockedTopicsManager(blockedTopicsSourceOfTruth);
+                getSpiedBlockedTopicsManager(
+                        blockedTopicsSourceOfTruth, /* enableAppSearchConsent= */ false);
 
-        blockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+        blockedTopicsManager.clearAllBlockedTopics();
 
         // Verify clearAllBlockedTopics() is invoked
         verify(mMockIAdServicesManager).clearAllBlockedTopics();
@@ -274,6 +310,8 @@ public class BlockedTopicsManagerTest {
 
     @Test
     public void testHandleBlockedTopicsMigrationIfNeeded_PpApiOnly() {
+        // Handle migration tests are only valid for T+.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(BlockedTopicsManager.class)
@@ -308,6 +346,8 @@ public class BlockedTopicsManagerTest {
 
     @Test
     public void testHandleBlockedTopicsMigrationIfNeeded_SystemServerOnly() {
+        // Handle migration tests are only valid for T+.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(BlockedTopicsManager.class)
@@ -341,6 +381,8 @@ public class BlockedTopicsManagerTest {
 
     @Test
     public void testHandleBlockedTopicsMigrationIfNeeded_PpApiAndSystemServer() {
+        // Handle migration tests are only valid for T+.
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(BlockedTopicsManager.class)
@@ -372,11 +414,15 @@ public class BlockedTopicsManagerTest {
         session.finishMocking();
     }
 
-    private BlockedTopicsManager getSpiedBlockedTopicsManager(int blockedTopicsSourceOfTruth)
-            throws RemoteException {
+    private BlockedTopicsManager getSpiedBlockedTopicsManager(
+            int blockedTopicsSourceOfTruth, boolean enableAppSearchConsent) throws RemoteException {
         BlockedTopicsManager blockedTopicsManager =
                 new BlockedTopicsManager(
-                        mTopicsDao, mAdServicesManager, blockedTopicsSourceOfTruth);
+                        mTopicsDao,
+                        mAdServicesManager,
+                        mAppSearchConsentManager,
+                        blockedTopicsSourceOfTruth,
+                        enableAppSearchConsent);
 
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).recordBlockedTopic(List.of(TOPIC_PARCEL));
