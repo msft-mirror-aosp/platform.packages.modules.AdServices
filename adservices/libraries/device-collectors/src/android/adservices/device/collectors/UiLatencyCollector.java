@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package sdksandbox.testutils.testscenario.example;
+package android.adservices.device.collectors;
 
-import android.app.sdksandbox.testutils.testscenario.SdkSandboxScenarioRule;
+import android.device.collectors.BaseCollectionListener;
+import android.device.collectors.annotations.OptionClass;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.android.adservices.helpers.UiLatencyHelper;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+/** Collector which used to collect latency of the ui behaviors. */
+@OptionClass(alias = "ui-latency-collector")
+public class UiLatencyCollector extends BaseCollectionListener<Long> {
 
-@RunWith(AndroidJUnit4.class)
-public class ExampleSandboxTest {
-    @Rule
-    public final SdkSandboxScenarioRule scenario =
-            new SdkSandboxScenarioRule("sdksandbox.testutils.testscenario.example.sdk");
-
-    @Test
-    public void testExample() throws Exception {
-        scenario.assertSdkTestRunPasses("testExample");
+    public UiLatencyCollector() {
+        createHelperInstance(UiLatencyHelper.getLogcatCollector());
     }
 }
