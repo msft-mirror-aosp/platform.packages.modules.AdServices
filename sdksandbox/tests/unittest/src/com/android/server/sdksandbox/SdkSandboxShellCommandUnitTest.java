@@ -81,6 +81,7 @@ public class SdkSandboxShellCommandUnitTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
+                        // Required for Context#registerReceiverForAllUsers
                         Manifest.permission.INTERACT_ACROSS_USERS_FULL);
         mService = Mockito.spy(new FakeSdkSandboxManagerService(mSpyContext));
 
