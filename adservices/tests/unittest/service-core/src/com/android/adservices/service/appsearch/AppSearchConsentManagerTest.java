@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.AdServicesManager;
+import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
@@ -37,6 +38,7 @@ import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.common.BooleanFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
+import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -45,12 +47,14 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
@@ -68,12 +72,16 @@ public class AppSearchConsentManagerTest {
     @Mock private BooleanFileDatastore mDatastore;
     @Mock private SharedPreferences mSharedPrefs;
     @Mock private AppConsentDao mAppConsentDao;
+    @Mock private SharedPreferences.Editor mEditor;
 
     private AppSearchConsentManager mAppSearchConsentManager;
     private static final String API_TYPE = AdServicesApiType.TOPICS.toPpApiDatastoreKey();
     private static final String PACKAGE_NAME1 = "foo.bar.one";
     private static final String PACKAGE_NAME2 = "foo.bar.two";
     private static final String PACKAGE_NAME3 = "foo.bar.three";
+    private static final Topic TOPIC1 = Topic.create(1, 1, 1);
+    private static final Topic TOPIC2 = Topic.create(12, 12, 12);
+    private static final Topic TOPIC3 = Topic.create(123, 123, 123);
 
     @Before
     public void setup() {
@@ -217,10 +225,10 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.addAppWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME1))
                 .thenReturn(true);
-        assertThat(
-                        mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                PACKAGE_NAME1))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        PACKAGE_NAME1);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -228,10 +236,10 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.addAppWithConsent(
                         AppSearchAppConsentDao.APPS_WITH_CONSENT, PACKAGE_NAME2))
                 .thenReturn(false);
-        assertThat(
-                        mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                PACKAGE_NAME2))
-                .isTrue();
+        boolean result =
+                mAppSearchConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                        PACKAGE_NAME2);
+        assertThat(result).isTrue();
     }
 
     @Test
@@ -307,14 +315,44 @@ public class AppSearchConsentManagerTest {
     }
 
     @Test
+    public void testBlockTopic() {
+        mAppSearchConsentManager.blockTopic(TOPIC1);
+        verify(mAppSearchConsentWorker).recordBlockedTopic(eq(TOPIC1));
+    }
+
+    @Test
+    public void testUnblockTopic() {
+        mAppSearchConsentManager.unblockTopic(TOPIC2);
+        verify(mAppSearchConsentWorker).recordUnblockedTopic(eq(TOPIC2));
+    }
+
+    @Test
+    public void testClearAllBlockedTopics() {
+        mAppSearchConsentManager.clearAllBlockedTopics();
+        verify(mAppSearchConsentWorker).clearBlockedTopics();
+    }
+
+    @Test
+    public void testRetrieveAllBlockedTopics() {
+        when(mAppSearchConsentWorker.getBlockedTopics())
+                .thenReturn(List.of(TOPIC1, TOPIC2, TOPIC3));
+        List<Topic> result = mAppSearchConsentManager.retrieveAllBlockedTopics();
+        verify(mAppSearchConsentWorker).getBlockedTopics();
+        assertThat(result.size()).isEqualTo(3);
+        assertThat(result.contains(TOPIC1)).isTrue();
+        assertThat(result.contains(TOPIC2)).isTrue();
+        assertThat(result.contains(TOPIC3)).isTrue();
+    }
+
+    @Test
     public void testShouldInitConsentDataFromAppSearch_notT() {
         ExtendedMockito.doReturn(false).when(() -> SdkLevel.isAtLeastT());
         SharedPreferences mSharedPrefs = mock(SharedPreferences.class);
         AdServicesManager mAdServicesManager = mock(AdServicesManager.class);
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -322,10 +360,10 @@ public class AppSearchConsentManagerTest {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
         when(mFlags.getEnableAppsearchConsentData()).thenReturn(false);
 
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -334,10 +372,10 @@ public class AppSearchConsentManagerTest {
         when(mFlags.getEnableAppsearchConsentData()).thenReturn(true);
         when(mSharedPrefs.getBoolean(any(), eq(false))).thenReturn(true);
 
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -347,10 +385,10 @@ public class AppSearchConsentManagerTest {
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesManager.wasNotificationDisplayed()).thenReturn(true);
 
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -362,10 +400,10 @@ public class AppSearchConsentManagerTest {
         when(mAdServicesManager.wasGaUxNotificationDisplayed()).thenReturn(false);
         when(mDatastore.get(any())).thenReturn(true);
 
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -379,20 +417,19 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
 
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isFalse();
     }
 
     @Test
     public void testShouldInitConsentDataFromAppSearch() {
         initConsentDataFroMigration();
-
-        assertThat(
-                        mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
-                                mContext, mSharedPrefs, mDatastore, mAdServicesManager))
-                .isTrue();
+        boolean result =
+                mAppSearchConsentManager.shouldInitConsentDataFromAppSearch(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager);
+        assertThat(result).isTrue();
     }
 
     @Test
@@ -400,14 +437,10 @@ public class AppSearchConsentManagerTest {
         initConsentDataFroMigration();
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(false);
-        assertThat(
-                        mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                                mContext,
-                                mSharedPrefs,
-                                mDatastore,
-                                mAdServicesManager,
-                                mAppConsentDao))
-                .isFalse();
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -418,23 +451,23 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.getAppsWithConsent(any())).thenReturn(List.of());
         when(mAppSearchConsentWorker.getPrivacySandboxFeature())
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
-        assertThat(
-                        mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                                mContext,
-                                mSharedPrefs,
-                                mDatastore,
-                                mAdServicesManager,
-                                mAppConsentDao))
-                .isTrue();
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        assertThat(result).isTrue();
         verify(mDatastore).put(eq(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesManager).recordNotificationDisplayed();
         verify(mDatastore, atLeast(5)).put(any(), anyBoolean());
+        verify(mEditor)
+                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
+        verify(mEditor).commit();
     }
 
     @Test
     public void testMigrateConsentData() throws IOException {
         List appsWithConsent = List.of(PACKAGE_NAME1, PACKAGE_NAME2);
         List appsRevoked = List.of(PACKAGE_NAME3);
+        List<Topic> blockedTopics = List.of(TOPIC1, TOPIC2, TOPIC3);
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
         when(mAppSearchConsentWorker.getAppsWithConsent(
@@ -445,16 +478,13 @@ public class AppSearchConsentManagerTest {
                 .thenReturn(appsRevoked);
         when(mAppSearchConsentWorker.getPrivacySandboxFeature())
                 .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
+        when(mAppSearchConsentWorker.getBlockedTopics()).thenReturn(blockedTopics);
         initConsentDataFroMigration();
 
-        assertThat(
-                        mAppSearchConsentManager.migrateConsentDataIfNeeded(
-                                mContext,
-                                mSharedPrefs,
-                                mDatastore,
-                                mAdServicesManager,
-                                mAppConsentDao))
-                .isTrue();
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mContext, mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        assertThat(result).isTrue();
 
         verify(mDatastore).put(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
         verify(mAdServicesManager).recordGaUxNotificationDisplayed();
@@ -467,6 +497,29 @@ public class AppSearchConsentManagerTest {
         verify(mDatastore)
                 .put(eq(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()), eq(true));
         verify(mDatastore, atLeast(4)).put(any(), eq(false));
+        verify(mEditor)
+                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
+        verify(mEditor).commit();
+        // Verify blocked topics migration.
+        ArgumentCaptor<List<TopicParcel>> argument = ArgumentCaptor.forClass(List.class);
+        verify(mAdServicesManager).recordBlockedTopic(argument.capture());
+        assertThat(argument.getValue().size()).isEqualTo(blockedTopics.size());
+        for (TopicParcel topicParcel : argument.getValue()) {
+            assertThat(List.of(TOPIC1.getTopic(), TOPIC2.getTopic(), TOPIC3.getTopic()))
+                    .contains(topicParcel.getTopicId());
+            List taxonomies =
+                    List.of(
+                            TOPIC1.getTaxonomyVersion(),
+                            TOPIC2.getTaxonomyVersion(),
+                            TOPIC3.getTaxonomyVersion());
+            assertThat(taxonomies).contains(topicParcel.getTaxonomyVersion());
+            List models =
+                    List.of(
+                            TOPIC1.getModelVersion(),
+                            TOPIC2.getModelVersion(),
+                            TOPIC3.getModelVersion());
+            assertThat(models).contains(topicParcel.getModelVersion());
+        }
     }
 
     private void initConsentDataFroMigration() {
@@ -478,5 +531,6 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
         when(mDatastore.get(any())).thenReturn(false);
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
+        when(mSharedPrefs.edit()).thenReturn(mEditor);
     }
 }
