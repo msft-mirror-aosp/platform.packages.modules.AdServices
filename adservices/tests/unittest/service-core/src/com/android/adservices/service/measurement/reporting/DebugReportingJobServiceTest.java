@@ -473,11 +473,7 @@ public class DebugReportingJobServiceTest {
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing()
                     .when(() -> DebugReportingJobService.schedule(any(), any(), anyBoolean()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
+
             // Execute
             execute.run();
         } finally {

@@ -42,6 +42,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.AggregateReportingJob;
 import com.android.adservices.service.measurement.actions.EventReportingJob;
@@ -52,6 +53,7 @@ import com.android.adservices.service.measurement.actions.RegisterWebSource;
 import com.android.adservices.service.measurement.actions.RegisterWebTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.actions.UninstallApp;
+import com.android.adservices.service.measurement.actions.UriConfig;
 
 import com.google.common.collect.ImmutableList;
 
@@ -184,6 +186,7 @@ public abstract class E2ETest {
         String REPORT_TIME_KEY = "report_time";
         String REPORT_TO_KEY = "report_url";
         String PAYLOAD_KEY = "payload";
+        String ENROLL = "enroll";
     }
 
     private interface ApiConfigKeys {
@@ -264,21 +267,21 @@ public abstract class E2ETest {
             if (!json.isNull(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN)) {
                 mMaxSourcesPerPublisher = json.getInt(ApiConfigKeys.MAX_SOURCES_PER_ORIGIN);
             } else {
-                mMaxSourcesPerPublisher = SystemHealthParams.getMaxSourcesPerPublisher();
+                mMaxSourcesPerPublisher = Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
             }
             if (!json.isNull(ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION)) {
                 mMaxEventReportsPerDestination = json.getInt(
                         ApiConfigKeys.MAX_EVENT_LEVEL_REPORTS_PER_DESTINATION);
             } else {
                 mMaxEventReportsPerDestination =
-                        SystemHealthParams.getMaxEventReportsPerDestination();
+                        Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
             }
             if (!json.isNull(ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION)) {
                 mMaxAggregateReportsPerDestination = json.getInt(
                         ApiConfigKeys.MAX_AGGREGATABLE_REPORTS_PER_DESTINATION);
             } else {
                 mMaxAggregateReportsPerDestination =
-                        SystemHealthParams.getMaxAggregateReportsPerDestination();
+                        Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
             }
         }
 
@@ -401,6 +404,21 @@ public abstract class E2ETest {
         }
 
         return uriToResponseHeadersMap;
+    }
+
+    public static Map<String, UriConfig> getUriConfigMap(JSONObject obj) throws JSONException {
+        JSONArray uriToResArray =
+                obj.getJSONArray(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_KEY);
+        Map<String, UriConfig> uriConfigMap = new HashMap<>();
+
+        for (int i = 0; i < uriToResArray.length(); i++) {
+            JSONObject urlToResponse = uriToResArray.getJSONObject(i);
+            String uri =
+                    urlToResponse.getString(TestFormatJsonMapping.URI_TO_RESPONSE_HEADERS_URL_KEY);
+            uriConfigMap.put(uri, new UriConfig(urlToResponse));
+        }
+
+        return uriConfigMap;
     }
 
     // 'uid', the parameter passed to Builder(), is unimportant for this test; we only need the
@@ -963,6 +981,9 @@ public abstract class E2ETest {
 
         for (List<Map<String, List<String>>> responseHeaders : responseHeadersCollection) {
             for (Map<String, List<String>> headersMap : responseHeaders) {
+                if (!headersMap.containsKey("Attribution-Reporting-Register-Source")) {
+                    continue;
+                }
                 String sourceStr = headersMap.get("Attribution-Reporting-Register-Source").get(0);
                 JSONObject sourceJson = new JSONObject(sourceStr);
                 if (sourceJson.has("expiry")) {

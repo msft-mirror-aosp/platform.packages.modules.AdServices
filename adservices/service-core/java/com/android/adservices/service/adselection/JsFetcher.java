@@ -24,6 +24,8 @@ import android.net.Uri;
 import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.common.DecisionLogic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -34,11 +36,14 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Class to fetch JavaScript code both on and off device. */
 public class JsFetcher {
@@ -62,7 +67,8 @@ public class JsFetcher {
     public JsFetcher(
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull ListeningExecutorService lightweightExecutorService,
-            @NonNull AdServicesHttpsClient adServicesHttpsClient) {
+            @NonNull AdServicesHttpsClient adServicesHttpsClient,
+            @NonNull Flags flags) {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(adServicesHttpsClient);
@@ -70,7 +76,7 @@ public class JsFetcher {
         mBackgroundExecutorService = backgroundExecutorService;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = lightweightExecutorService;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
     }
 
     /**
@@ -108,7 +114,7 @@ public class JsFetcher {
             boolean useCaching) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
 
-        FluentFuture<String> jsOverrideFuture =
+        FluentFuture<DecisionLogic> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
                                 () ->
@@ -122,8 +128,7 @@ public class JsFetcher {
                         .build();
 
         return resolveJsScriptSource(jsOverrideFuture, biddingLogicRequest)
-                .transform(
-                        AdServicesHttpClientResponse::getResponseBody, mLightweightExecutorService)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
@@ -141,7 +146,7 @@ public class JsFetcher {
      *
      * @return buyer decision logic
      */
-    public FluentFuture<AdServicesHttpClientResponse> getBuyerDecisionLogicWithLogger(
+    public FluentFuture<DecisionLogic> getBuyerDecisionLogicWithLogger(
             @NonNull final AdServicesHttpClientRequest biddingLogicRequest,
             @NonNull final CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
             @NonNull String owner,
@@ -150,7 +155,7 @@ public class JsFetcher {
             @NonNull RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_BUYER_DECISION_LOGIC);
         runAdBiddingPerCAExecutionLogger.startGetBuyerDecisionLogic();
-        FluentFuture<String> jsOverrideFuture =
+        FluentFuture<DecisionLogic> jsOverrideFuture =
                 FluentFuture.from(
                         mBackgroundExecutorService.submit(
                                 () ->
@@ -161,7 +166,7 @@ public class JsFetcher {
                 .transform(
                         buyerDecisionLogicJs -> {
                             runAdBiddingPerCAExecutionLogger.endGetBuyerDecisionLogic(
-                                    buyerDecisionLogicJs.getResponseBody());
+                                    buyerDecisionLogicJs.getPayload());
                             return buyerDecisionLogicJs;
                         },
                         mLightweightExecutorService)
@@ -194,16 +199,17 @@ public class JsFetcher {
 
         adSelectionExecutionLogger.startGetAdSelectionLogic();
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_LOGIC);
-        FluentFuture<String> jsOverrideFuture =
+        FluentFuture<DecisionLogic> jsOverrideFuture =
                 FluentFuture.from(
-                        mBackgroundExecutorService.submit(
-                                () ->
-                                        adSelectionDevOverridesHelper.getDecisionLogicOverride(
-                                                adSelectionConfig)));
+                                mBackgroundExecutorService.submit(
+                                        () ->
+                                                adSelectionDevOverridesHelper
+                                                        .getDecisionLogicOverride(
+                                                                adSelectionConfig)))
+                        .transform(this::toDecisionLogic, mLightweightExecutorService);
 
         return resolveJsScriptSource(jsOverrideFuture, scoringLogicRequest)
-                .transform(
-                        AdServicesHttpClientResponse::getResponseBody, mLightweightExecutorService)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
                 .transform(
                         input -> {
                             Tracing.endAsyncSection(Tracing.GET_AD_SELECTION_LOGIC, traceCookie);
@@ -227,8 +233,8 @@ public class JsFetcher {
     }
 
     /**
-     * Fetch the buyer decision logic with telemetry logger. Check locally to see if an override is
-     * present, otherwise fetch from server. Make use of caching optional.
+     * Fetch the buyer decision logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
      *
      * @return buyer decision logic
      */
@@ -236,16 +242,17 @@ public class JsFetcher {
             @NonNull final AdServicesHttpClientRequest outcomeLogicRequest,
             @NonNull final AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
             @NonNull AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig) {
-        FluentFuture<String> jsOverrideFuture =
+        FluentFuture<DecisionLogic> jsOverrideFuture =
                 FluentFuture.from(
-                        mBackgroundExecutorService.submit(
-                                () ->
-                                        adSelectionDevOverridesHelper.getSelectionLogicOverride(
-                                                adSelectionFromOutcomesConfig)));
+                                mBackgroundExecutorService.submit(
+                                        () ->
+                                                adSelectionDevOverridesHelper
+                                                        .getSelectionLogicOverride(
+                                                                adSelectionFromOutcomesConfig)))
+                        .transform(this::toDecisionLogic, mLightweightExecutorService);
 
         return resolveJsScriptSource(jsOverrideFuture, outcomeLogicRequest)
-                .transform(
-                        AdServicesHttpClientResponse::getResponseBody, mLightweightExecutorService)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
@@ -258,6 +265,78 @@ public class JsFetcher {
     }
 
     /**
+     * Fetch the seller reporting logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getSellerReportingLogic(
+            @NonNull final AdServicesHttpClientRequest sellerReportingLogicRequest,
+            @NonNull final AdSelectionDevOverridesHelper adSelectionDevOverridesHelper,
+            @NonNull AdSelectionConfig adSelectionConfig) {
+        sLogger.v("Fetching Seller reporting logic");
+        FluentFuture<DecisionLogic> jsOverrideFuture =
+                FluentFuture.from(
+                                mBackgroundExecutorService.submit(
+                                        () ->
+                                                adSelectionDevOverridesHelper
+                                                        .getDecisionLogicOverride(
+                                                                adSelectionConfig)))
+                        .transform(this::toDecisionLogic, mLightweightExecutorService);
+
+        return resolveJsScriptSource(jsOverrideFuture, sellerReportingLogicRequest)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            sLogger.e(
+                                    e,
+                                    "Exception encountered when fetching outcome selection logic");
+                            throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    /**
+     * Fetch the seller reporting logic. Check locally to see if an override is present, otherwise
+     * fetch from server. Make use of caching optional.
+     *
+     * @return buyer decision logic
+     */
+    public FluentFuture<String> getBuyerReportingLogic(
+            @NonNull final AdServicesHttpClientRequest sellerReportingLogicRequest,
+            @NonNull final CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper,
+            @NonNull String owner,
+            @NonNull AdTechIdentifier buyer,
+            @NonNull String name) {
+        sLogger.v("Fetching Buyer reporting logic");
+        FluentFuture<DecisionLogic> jsOverrideFuture =
+                FluentFuture.from(
+                        mBackgroundExecutorService.submit(
+                                () ->
+                                        customAudienceDevOverridesHelper.getBiddingLogicOverride(
+                                                owner, buyer, name)));
+
+        return resolveJsScriptSource(jsOverrideFuture, sellerReportingLogicRequest)
+                .transform(DecisionLogic::getPayload, mLightweightExecutorService)
+                .catching(
+                        Exception.class,
+                        e -> {
+                            sLogger.e(
+                                    e,
+                                    "Exception encountered when fetching outcome selection logic");
+                            throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
+                        },
+                        mLightweightExecutorService);
+    }
+
+    private DecisionLogic toDecisionLogic(String js) {
+        return Optional.ofNullable(js)
+                .map(j -> DecisionLogic.create(j, ImmutableMap.of()))
+                .orElse(null);
+    }
+
+    /**
      * This method controls the order of the decision logic sources. Currently, the order is:
      *
      * <ol>
@@ -266,8 +345,9 @@ public class JsFetcher {
      *   <li>HTTPS fetching
      * </ol>
      */
-    private FluentFuture<AdServicesHttpClientResponse> resolveJsScriptSource(
-            FluentFuture<String> jsOverrideFuture, AdServicesHttpClientRequest jsFetchingRequest) {
+    private FluentFuture<DecisionLogic> resolveJsScriptSource(
+            FluentFuture<DecisionLogic> jsOverrideFuture,
+            AdServicesHttpClientRequest jsFetchingRequest) {
         return jsOverrideFuture.transformAsync(
                 jsOverride -> {
                     if (Objects.isNull(jsOverride)) {
@@ -276,29 +356,64 @@ public class JsFetcher {
                                     "Prebuilt URI is detected. Generating JS function from"
                                             + " prebuilt implementations");
                             return Futures.immediateFuture(
-                                    AdServicesHttpClientResponse.builder()
-                                            .setResponseBody(
-                                                    mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(
-                                                            jsFetchingRequest.getUri()))
-                                            .build());
+                                    DecisionLogic.create(
+                                            mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(
+                                                    jsFetchingRequest.getUri()),
+                                            ImmutableMap.of()));
                         } else {
                             sLogger.v(
                                     "Fetching decision logic from the server with cache enabled"
                                             + " is: "
                                             + jsFetchingRequest.getUseCache());
                             return FluentFuture.from(
-                                    mAdServicesHttpsClient.fetchPayload(jsFetchingRequest));
+                                            mAdServicesHttpsClient.fetchPayload(jsFetchingRequest))
+                                    .transform(
+                                            response -> {
+                                                String payload = response.getResponseBody();
+                                                ImmutableMap<Integer, Long> versionMap =
+                                                        getVersionMap(jsFetchingRequest, response);
+                                                return DecisionLogic.create(payload, versionMap);
+                                            },
+                                            mLightweightExecutorService);
                         }
                     } else {
                         sLogger.d(
                                 "Developer options enabled and an override JS is provided."
                                         + "Skipping the call to server.");
-                        return Futures.immediateFuture(
-                                AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(jsOverride)
-                                        .build());
+                        return Futures.immediateFuture(jsOverride);
                     }
                 },
                 mLightweightExecutorService);
+    }
+
+    @NonNull
+    @VisibleForTesting
+    ImmutableMap<Integer, Long> getVersionMap(
+            @NonNull AdServicesHttpClientRequest jsFetchingRequest,
+            @NonNull AdServicesHttpClientResponse response) {
+        ImmutableMap.Builder<Integer, Long> versionMap = new ImmutableMap.Builder<>();
+        for (String key : jsFetchingRequest.getResponseHeaderKeys()) {
+            if (response.getResponseHeaders().containsKey(key)) {
+                Integer jsPayloadType = JsVersionHelper.getJsPayloadType(key);
+                List<String> header = response.getResponseHeaders().get(key);
+                if (Objects.nonNull(jsPayloadType)) {
+                    if (header != null && header.size() == 1) {
+                        try {
+                            versionMap.put(jsPayloadType, Long.valueOf(header.get(0)));
+                        } catch (NumberFormatException e) {
+                            sLogger.w(
+                                    "Get non numeric version %s for js payload type %s, Skipping.",
+                                    header.get(0), key);
+                        }
+                    } else {
+                        sLogger.w(
+                                "Get null or List of version for js payload type %s, value are %s."
+                                        + " Skipping.",
+                                key, header);
+                    }
+                }
+            }
+        }
+        return versionMap.build();
     }
 }

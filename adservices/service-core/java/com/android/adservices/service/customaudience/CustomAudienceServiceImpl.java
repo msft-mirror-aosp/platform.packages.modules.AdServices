@@ -387,6 +387,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals,
             @NonNull CustomAudienceOverrideCallback callback) {
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -429,7 +430,14 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         mAppImportanceFilter,
                         mFlags);
 
-        overrider.addOverride(owner, buyer, name, biddingLogicJS, trustedBiddingSignals, callback);
+        overrider.addOverride(
+                owner,
+                buyer,
+                name,
+                biddingLogicJS,
+                biddingLogicJsVersion,
+                trustedBiddingSignals,
+                callback);
     }
 
     /**

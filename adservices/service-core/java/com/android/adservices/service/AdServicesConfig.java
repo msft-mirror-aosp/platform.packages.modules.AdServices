@@ -16,6 +16,8 @@
 
 package com.android.adservices.service;
 
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,8 +40,6 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.EventReportingJobService})
      */
     public static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID = 3;
-
-    public static long MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(4);
 
     public static long getMeasurementEventMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
@@ -73,17 +73,12 @@ public class AdServicesConfig {
      */
     public static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID = 6;
 
-    public static long MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(24);
-
     /** Returns the min time period (in millis) between each event fallback reporting job run. */
     public static long getMeasurementEventFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
     }
 
-    /**
-     * Returns the URL for fetching public encryption keys for aggregatable reports.
-     */
+    /** Returns the URL for fetching public encryption keys for aggregatable reports. */
     public static String getMeasurementAggregateEncryptionKeyCoordinatorUrl() {
         return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
     }
@@ -104,9 +99,6 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.AggregateFallbackReportingJobService})
      */
     public static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID = 8;
-
-    public static long MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
-            TimeUnit.HOURS.toMillis(24);
 
     /**
      * Returns the min time period (in millis) between each aggregate fallback reporting job run.
@@ -151,10 +143,12 @@ public class AdServicesConfig {
     public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
     /**
-     * Job ID for the Async Registration Queue JobService ({@link
-     * com.android.adservices.service.measurement.AsyncRegistrationQueueJobService})
+     * @deprecated
+     * Old Job ID for Async Registration Queue JobService
+     * DO NOT REUSE
      */
-    public static final int ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    @Deprecated
+    private static final int DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
 
     /**
      * Job ID for Measurement Delete Records From UninstalledApps Job ({@link
@@ -173,4 +167,21 @@ public class AdServicesConfig {
      * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
      */
     public static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID = 18;
+
+    /**
+     * Job ID for the Async Registration Fallback JobService ({@link
+     * AsyncRegistrationQueueJobService})
+     */
+    public static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID = 19;
+
+    /**
+     * Job ID for the Async Registration Queue JobService ({@link AsyncRegistrationQueueJobService})
+     */
+    public static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID = 20;
+
+    /**
+     * Job ID for Measurement Attribution Fallback JobService ({@link
+     * com.android.adservices.service.measurement.attribution.AttributionFallbackJobService})
+     */
+    public static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID = 21;
 }

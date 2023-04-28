@@ -23,6 +23,7 @@ import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -33,6 +34,9 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -47,6 +51,10 @@ import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
+import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
@@ -54,7 +62,9 @@ import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
+import android.adservices.adselection.UpdateAdCounterHistogramInput;
 import android.adservices.common.AdData;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdFilters;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
@@ -64,6 +74,9 @@ import android.adservices.common.CallerMetadata;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCap;
+import android.adservices.common.KeyedFrequencyCapFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
@@ -98,6 +111,7 @@ import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.adselection.InteractionReporter;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.adselection.JsVersionRegister;
+import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -133,21 +147,40 @@ import org.mockito.Spy;
 import org.mockito.quality.Strictness;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-// TODO(b/273811365) Refactor duplicate code/constants.
 public class FledgeE2ETest {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
+    public static final AppInstallFilters CURRENT_APP_FILTER =
+            new AppInstallFilters.Builder()
+                    .setPackageNames(new HashSet<>(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME)))
+                    .build();
+    public static final FrequencyCapFilters CLICK_ONCE_PER_DAY_KEY1 =
+            new FrequencyCapFilters.Builder()
+                    .setKeyedFrequencyCapsForClickEvents(
+                            Collections.singleton(
+                                    new KeyedFrequencyCap.Builder()
+                                            .setInterval(Duration.ofDays(1))
+                                            .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                                            .setMaxCount(0)
+                                            .build()))
+                    .build();
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri BUYER_DOMAIN_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER_1, "");
@@ -176,10 +209,14 @@ public class FledgeE2ETest {
                             + "\t\"render_uri_1\": \"signals_for_1\",\n"
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
+    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
+            new BuyersDecisionLogic(
+                    ImmutableMap.of(
+                            CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
+                            CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
 
     // Interaction reporting contestants
     private static final String CLICK_INTERACTION = "click";
-    private static final String HOVER_INTERACTION = "hover";
 
     private static final String CLICK_SELLER_PATH = "/click/seller";
     private static final String HOVER_SELLER_PATH = "/hover/seller";
@@ -197,6 +234,9 @@ public class FledgeE2ETest {
     private static final long BINDER_ELAPSED_TIMESTAMP = 100L;
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
+    // A list of empty ad counter keys to apply to ads for buyer when not doing fcap filtering.
+    private static final List<Set<String>> EMPTY_AD_COUNTER_KEYS_FOR_BUYER_2 =
+            Arrays.asList(new HashSet[BIDS_FOR_BUYER_2.size()]);
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -221,13 +261,15 @@ public class FledgeE2ETest {
     private static final Flags DEFAULT_FLAGS = new FledgeE2ETestFlags(false, true, true);
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherPrefixMatch;
     private Uri mLocalhostBuyerDomain;
-    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
+    private final Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
 
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
 
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLogger);
+
+    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
     @Mock private File mMockDBAdSelectionFile;
 
@@ -319,61 +361,12 @@ public class FledgeE2ETest {
         // Re init clients with registerAdBeacon false
         initClients(false, false);
 
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        setupConsentGivenStubs();
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        setupAdSelectionConfig();
 
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) { \n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
-                    + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        String decisionLogicJs = getDecisionLogicJs();
+        String biddingLogicJs = getBiddingLogicJs();
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -397,52 +390,13 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -458,96 +412,18 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
     }
 
     @Test
     public void testFledgeFlowSuccessWithDevOverridesRegisterAdBeaconEnabled() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        setupConsentGivenStubs();
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -571,52 +447,13 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -632,32 +469,9 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -674,72 +488,9 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -764,51 +515,15 @@ public class FledgeE2ETest {
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
         // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
 
         // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -824,32 +539,9 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -867,72 +559,9 @@ public class FledgeE2ETest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -953,50 +582,11 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
-
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -1013,32 +603,9 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -1059,72 +626,9 @@ public class FledgeE2ETest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -1145,50 +649,11 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
-
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -1205,32 +670,9 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -1238,11 +680,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithMismatchedPackageNamesReportImpression() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        setupConsentGivenStubs();
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "different_package";
 
@@ -1271,7 +709,7 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1351,52 +789,13 @@ public class FledgeE2ETest {
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -1430,27 +829,12 @@ public class FledgeE2ETest {
                 CALLER_PACKAGE_NAME_MISMATCH);
 
         // Run Report Interaction, should fail silently due to no registered beacons
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
     }
 
     @Test
-    public void testFledgeFlowFailsWithMismatchedPackageNamesReportInteraction() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+    public void testFledgeFlowFailsWithWrongPackageNameReportInteraction() throws Exception {
+        setupConsentGivenStubs();
 
         String otherPackageName = CommonFixture.TEST_PACKAGE_NAME + "different_package";
 
@@ -1479,13 +863,10 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
-
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1503,48 +884,8 @@ public class FledgeE2ETest {
                         .setTrustedScoringSignalsUri(
                                 mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
                         .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         mMockWebServerRule.startMockWebServer(request -> new MockResponse().setResponseCode(404));
 
@@ -1562,52 +903,13 @@ public class FledgeE2ETest {
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, BIDS_FOR_BUYER_2);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Add AdSelection Override
-        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
-                callAddAdSelectionOverride(
-                        mAdSelectionService,
-                        mAdSelectionConfig,
-                        decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
-
-        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
-
-        // Add Custom Audience Overrides
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience1.getBuyer(),
-                        customAudience1.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
-
-        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
-                callAddCustomAudienceOverride(
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        customAudience2.getBuyer(),
-                        customAudience2.getName(),
-                        biddingLogicJs,
-                        TRUSTED_BIDDING_SIGNALS,
-                        mCustomAudienceService);
-
-        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -1621,18 +923,7 @@ public class FledgeE2ETest {
                 CommonFixture.getUri(BUYER_DOMAIN_2.getHost(), AD_URI_PREFIX + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
         // Run Report Interaction with different package name
         ReportInteractionInput reportInteractionInput =
@@ -1653,81 +944,100 @@ public class FledgeE2ETest {
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
         assertEquals(
                 reportInteractionTestCallback.mFledgeErrorResponse.getErrorMessage(),
-                InteractionReporter.CALLER_PACKAGE_NAME_MISMATCH);
+                InteractionReporter.NO_MATCH_FOUND_IN_AD_SELECTION_DB);
     }
 
     @Test
     public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithDevOverrides() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        setupConsentGivenStubs();
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        request -> {
+                            // With overrides the server should not be called
+                            return new MockResponse().setResponseCode(404);
+                        });
 
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(
+                        DevContext.builder()
+                                .setDevOptionsEnabled(true)
+                                .setCallingAppPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                                .build());
 
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, INVALID_BIDS);
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
+
+        // Run Ad Selection
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        // Expect that ad from buyer 1 won since buyer 2 had negative bids
+        assertEquals(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
+        reportInteractionAndAssertSuccess(resultsCallback);
+
+        mMockWebServerRule.verifyMockServerRequests(
+                server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithOneCAWithNegativeBidsWithDevOverrides_v3BiddingLogic()
+            throws Exception {
+        setupConsentGivenStubs();
+
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
         String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
+                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                        + "    trusted_bidding_signals, contextual_signals) {\n"
+                        + "    const ads = custom_audience.ads;\n"
+                        + "    let result = null;\n"
+                        + "    for (const ad of ads) {\n"
+                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                        + "            result = ad;\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                        + "'render': result.render_uri };\n"
+                        + "}\n"
+                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                        + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', '"
+                        + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
+                        + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
                         + "');\n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
+                        + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
                         + "}";
 
@@ -1754,17 +1064,8 @@ public class FledgeE2ETest {
 
         CustomAudience customAudience2 =
                 createCustomAudience(mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, INVALID_BIDS);
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
@@ -1774,7 +1075,8 @@ public class FledgeE2ETest {
                         mAdSelectionService,
                         mAdSelectionConfig,
                         decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
+                        TRUSTED_SCORING_SIGNALS,
+                        BUYERS_DECISION_LOGIC);
 
         assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
 
@@ -1785,6 +1087,7 @@ public class FledgeE2ETest {
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
+                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                         TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
@@ -1796,6 +1099,7 @@ public class FledgeE2ETest {
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
+                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                         TRUSTED_BIDDING_SIGNALS,
                         mCustomAudienceService);
 
@@ -1816,32 +1120,9 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -1849,11 +1130,7 @@ public class FledgeE2ETest {
 
     @Test
     public void testFledgeFlowFailsWithBothCANegativeBidsWithDevOverrides() throws Exception {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
-        doReturn(false)
-                .when(mConsentManagerMock)
-                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+        setupConsentGivenStubs();
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
@@ -1915,17 +1192,8 @@ public class FledgeE2ETest {
 
         CustomAudience customAudience2 = createCustomAudience(BUYER_DOMAIN_2, INVALID_BIDS);
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         // Add AdSelection Override
         AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
@@ -1933,7 +1201,8 @@ public class FledgeE2ETest {
                         mAdSelectionService,
                         mAdSelectionConfig,
                         decisionLogicJs,
-                        TRUSTED_SCORING_SIGNALS);
+                        TRUSTED_SCORING_SIGNALS,
+                        BUYERS_DECISION_LOGIC);
 
         assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
 
@@ -1944,6 +1213,7 @@ public class FledgeE2ETest {
                         customAudience1.getBuyer(),
                         customAudience1.getName(),
                         biddingLogicJs,
+                        null,
                         AdSelectionSignals.EMPTY,
                         mCustomAudienceService);
 
@@ -1955,6 +1225,7 @@ public class FledgeE2ETest {
                         customAudience2.getBuyer(),
                         customAudience2.getName(),
                         biddingLogicJs,
+                        null,
                         AdSelectionSignals.EMPTY,
                         mCustomAudienceService);
 
@@ -2007,72 +1278,9 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         CustomAudience customAudience1 =
                 createCustomAudience(
@@ -2082,61 +1290,125 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Impression Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch impressionReportingResponseLatch = new CountDownLatch(2);
-
-        // Interaction Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch interactionReportingResponseLatch = new CountDownLatch(2);
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
 
         MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        request -> {
-                            switch (request.getPath()) {
-                                case SELLER_DECISION_LOGIC_URI_PATH:
-                                    return new MockResponse().setBody(decisionLogicJs);
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
-                                    return new MockResponse().setBody(biddingLogicJs);
-                                case CLICK_SELLER_PATH: // Intentional fallthrough
-                                case CLICK_BUYER_PATH:
-                                    interactionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                                case SELLER_REPORTING_PATH: // Intentional fallthrough
-                                case BUYER_REPORTING_PATH:
-                                    impressionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
-                            }
-                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
-                            }
-                            return new MockResponse().setResponseCode(404);
-                        });
+                getMockWebServer(
+                        decisionLogicJs,
+                        biddingLogicJs,
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        false);
 
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+        verifyStandardServerRequests(server);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_v3BiddingLogic() throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        true);
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        // Run Ad Selection
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+        verifyStandardServerRequests(server);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        true);
+
+        // Make buyer reporting fail enrollment check
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(
+                                mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
@@ -2154,38 +1426,25 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput reportImpressioninput =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultSelectionId);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, reportImpressioninput);
+        // Assert only seller reporting happened since buyer enrollment check fails
+        assertTrue(impressionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
+        assertTrue(interactionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                impressionReportingSemaphore.availablePermits());
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                interactionReportingSemaphore.availablePermits());
 
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
-
-        impressionReportingResponseLatch.await();
-        interactionReportingResponseLatch.await();
+        // Verify 2 less requests since buyer reporting should not happen
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                10,
+                8,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
                         BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
@@ -2196,7 +1455,117 @@ public class FledgeE2ETest {
     }
 
     @Test
-    public void testFledgeFlowSuccessWithMockServer_v3BiddingLogic() throws Exception {
+    public void testFledgeFlowSuccessWithMockServer_allFilters() throws Exception {
+        initClients(true, true);
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        // Using the same generic key across all ads in the CA
+        List<Set<String>> adCounterKeysForCa2 =
+                Arrays.asList(
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1),
+                        Collections.singleton(KeyedFrequencyCapFixture.KEY1));
+        /* The final ad with the highest bid has both fcap and app install filters, the second ad
+         * with the middle bid has only an app install filter and the first ad with the lowest bid
+         * in this ca has only a fcap filter.
+         */
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        new AdFilters.Builder()
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build(),
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build(),
+                        new AdFilters.Builder()
+                                .setAppInstallFilters(CURRENT_APP_FILTER)
+                                .setFrequencyCapFilters(CLICK_ONCE_PER_DAY_KEY1)
+                                .build());
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain,
+                        CUSTOM_AUDIENCE_SEQ_2,
+                        BIDS_FOR_BUYER_2,
+                        adCounterKeysForCa2,
+                        adFiltersForCa2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        true);
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        // Run Ad Selection no filters active
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // Run Ad Selection with app install filtering
+        registerForAppInstallFiltering();
+        long adSelectionId =
+                selectAdsAndReport(
+                        CommonFixture.getUri(
+                                mLocalhostBuyerDomain.getAuthority(),
+                                AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad1"),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore);
+
+        // Run Ad Selection with both filters
+        updateHistogramAndAssertSuccess(adSelectionId, FrequencyCapFilters.AD_EVENT_TYPE_CLICK);
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // Run Ad Selection with just fcap filtering
+        deregisterForAppInstallFiltering();
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad2"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+
+        // 30 requests for the 3 auctions with both CAs and 9 requests for the auctions with one CA
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                39,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_ContextualAdsFlow() throws Exception {
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
@@ -2207,10 +1576,8 @@ public class FledgeE2ETest {
 
         mAdSelectionConfig =
                 AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
+                        // Setting empty buyers
+                        .setCustomAudienceBuyers(ImmutableList.of())
                         .setSeller(
                                 AdTechIdentifier.fromString(
                                         mMockWebServerRule
@@ -2225,6 +1592,7 @@ public class FledgeE2ETest {
                                         AdTechIdentifier.fromString(
                                                 mLocalhostBuyerDomain.getHost()),
                                         AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
+                        .setBuyerContextualAds(createContextualAds())
                         .build();
 
         String decisionLogicJs =
@@ -2240,35 +1608,15 @@ public class FledgeE2ETest {
                         + sellerReportingUri
                         + "' } };\n"
                         + "}";
-        String biddingLogicJs =
-                "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
-                        + "    trusted_bidding_signals, contextual_signals) {\n"
-                        + "    const ads = custom_audience.ads;\n"
-                        + "    let result = null;\n"
-                        + "    for (const ad of ads) {\n"
-                        + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
-                        + "            result = ad;\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
-                        + "'render': result.render_uri };\n"
-                        + "}\n"
-                        + "function reportWin(ad_selection_signals, per_buyer_signals,"
+
+        String buyerDecisionLogic =
+                "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
                         + "}";
 
-        CustomAudience customAudience1 =
-                createCustomAudience(
-                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
-
-        CustomAudience customAudience2 =
-                createCustomAudience(
-                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
-
-        // Reporting should ping twice (once each for buyer/seller)
         CountDownLatch reportingResponseLatch = new CountDownLatch(2);
 
         MockWebServer server =
@@ -2282,16 +1630,8 @@ public class FledgeE2ETest {
                             switch (request.getPath()) {
                                 case SELLER_DECISION_LOGIC_URI_PATH:
                                     return new MockResponse().setBody(decisionLogicJs);
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
-                                    if (Objects.equals(
-                                            request.getHeader(versionHeaderName),
-                                            Long.toString(jsVersion))) {
-                                        return new MockResponse()
-                                                .setBody(biddingLogicJs)
-                                                .setHeader(versionHeaderName, jsVersion);
-                                    }
-                                    break;
+                                case BUYER_BIDDING_LOGIC_URI_PATH:
+                                    return new MockResponse().setBody(buyerDecisionLogic);
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
                                     reportingResponseLatch.countDown();
@@ -2317,20 +1657,6 @@ public class FledgeE2ETest {
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
-
-        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
-
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelection(
@@ -2340,9 +1666,14 @@ public class FledgeE2ETest {
         long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
         assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(
-                CommonFixture.getUri(
-                        mLocalhostBuyerDomain.getAuthority(),
-                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                AdDataFixture.getValidRenderUriByBuyer(
+                        AdTechIdentifier.fromString(
+                                mMockWebServerRule
+                                        .uriForPath(
+                                                BUYER_BIDDING_LOGIC_URI_PATH
+                                                        + CommonFixture.VALID_BUYER_1)
+                                        .getHost()),
+                        500),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
         // Run Report Impression
@@ -2360,72 +1691,26 @@ public class FledgeE2ETest {
         reportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
-                8,
+                6,
                 ImmutableList.of(
                         SELLER_DECISION_LOGIC_URI_PATH,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH,
+                        BUYER_REPORTING_PATH,
+                        SELLER_REPORTING_PATH,
                         SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
                 mRequestMatcherPrefixMatch);
     }
 
     @Test
     public void testFledgeFlowSuccessWithAppInstallWithMockServer() throws Exception {
+        initClients(true, true);
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
         doReturn(false)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
                         + " trusted_bidding_signals, contextual_signals, custom_audience_signals) "
@@ -2435,13 +1720,13 @@ public class FledgeE2ETest {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
                         + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
+                        + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
+                        + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
                         + "');\n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
+                        + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
                         + "}";
 
@@ -2449,155 +1734,49 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
-        AppInstallFilters appInstallFilters =
-                new AppInstallFilters.Builder()
-                        .setPackageNames(
-                                new HashSet(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME)))
-                        .build();
-
+        List<AdFilters> adFiltersForCa2 =
+                Arrays.asList(
+                        null,
+                        null,
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build());
         CustomAudience customAudience2 =
                 createCustomAudience(
                         mLocalhostBuyerDomain,
                         CUSTOM_AUDIENCE_SEQ_2,
                         BIDS_FOR_BUYER_2,
-                        Arrays.asList(
-                                null,
-                                null,
-                                new AdFilters.Builder()
-                                        .setAppInstallFilters(appInstallFilters)
-                                        .build()));
+                        EMPTY_AD_COUNTER_KEYS_FOR_BUYER_2,
+                        adFiltersForCa2);
 
-        // Impression Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch impressionReportingResponseLatch = new CountDownLatch(2);
-
-        // Interaction Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch interactionReportingResponseLatch = new CountDownLatch(2);
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
 
         MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        request -> {
-                            switch (request.getPath()) {
-                                case SELLER_DECISION_LOGIC_URI_PATH:
-                                    return new MockResponse().setBody(decisionLogicJs);
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
-                                    return new MockResponse().setBody(biddingLogicJs);
-                                case CLICK_SELLER_PATH: // Intentional fallthrough
-                                case CLICK_BUYER_PATH:
-                                    interactionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                                case SELLER_REPORTING_PATH: // Intentional fallthrough
-                                case BUYER_REPORTING_PATH:
-                                    impressionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
-                            }
-                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
-                            }
-                            return new MockResponse().setResponseCode(404);
-                        });
+                getMockWebServer(
+                        decisionLogicJs,
+                        biddingLogicJs,
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        false);
 
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        // Registers the test app for app install filtering
-        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
-                new SetAppInstallAdvertisersInput.Builder()
-                        .setAdvertisers(
-                                Collections.singleton(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-        CountDownLatch appInstallDone = new CountDownLatch(1);
-        AppInstallResultCapturingCallback appInstallCallback =
-                new AppInstallResultCapturingCallback(appInstallDone);
-        mAdSelectionService.setAppInstallAdvertisers(
-                setAppInstallAdvertisersInput, appInstallCallback);
-        appInstallDone.await(5, TimeUnit.SECONDS);
-        assertTrue(
-                "App Install call failed with: " + appInstallCallback.getException(),
-                appInstallCallback.isSuccess());
+        registerForAppInstallFiltering();
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
         // Run Ad Selection
-        AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
-
-        assertTrue(resultsCallback.mIsSuccess);
-        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        // CA 2's ad3 should be the highest scorer, but it will be filtered out so ad2 should win
-        assertEquals(
+        selectAdsAndReport(
                 CommonFixture.getUri(
                         mLocalhostBuyerDomain.getAuthority(),
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad2"),
-                resultsCallback.mAdSelectionResponse.getRenderUri());
-
-        // Run Report Impression
-        ReportImpressionInput reportImpressioninput =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, reportImpressioninput);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
-
-        impressionReportingResponseLatch.await();
-        interactionReportingResponseLatch.await();
-        mMockWebServerRule.verifyMockServerRequests(
-                server,
-                10,
-                ImmutableList.of(
-                        SELLER_DECISION_LOGIC_URI_PATH,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH,
-                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
-                mRequestMatcherPrefixMatch);
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+        verifyStandardServerRequests(server);
     }
 
     @Test
@@ -2608,55 +1787,8 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
         String biddingLogicJs =
                 "function generateBid(ad, auction_signals, per_buyer_signals,"
                         + " trusted_bidding_signals, contextual_signals, custom_audience_signals) "
@@ -2666,13 +1798,13 @@ public class FledgeE2ETest {
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
                         + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
+                        + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
                         + "');\n"
                         + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
+                        + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
                         + "');\n"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
+                        + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
                         + "}";
 
@@ -2680,155 +1812,50 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
-        AppInstallFilters appInstallFilters =
-                new AppInstallFilters.Builder()
-                        .setPackageNames(
-                                new HashSet(Arrays.asList(CommonFixture.TEST_PACKAGE_NAME)))
-                        .build();
-
+        List<AdFilters> filtersForCa2 =
+                Arrays.asList(
+                        null,
+                        null,
+                        new AdFilters.Builder().setAppInstallFilters(CURRENT_APP_FILTER).build());
         CustomAudience customAudience2 =
                 createCustomAudience(
                         mLocalhostBuyerDomain,
                         CUSTOM_AUDIENCE_SEQ_2,
                         BIDS_FOR_BUYER_2,
-                        Arrays.asList(
-                                null,
-                                null,
-                                new AdFilters.Builder()
-                                        .setAppInstallFilters(appInstallFilters)
-                                        .build()));
+                        EMPTY_AD_COUNTER_KEYS_FOR_BUYER_2,
+                        filtersForCa2);
 
-        // Impression Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch impressionReportingResponseLatch = new CountDownLatch(2);
-
-        // Interaction Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch interactionReportingResponseLatch = new CountDownLatch(2);
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
 
         MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        request -> {
-                            switch (request.getPath()) {
-                                case SELLER_DECISION_LOGIC_URI_PATH:
-                                    return new MockResponse().setBody(decisionLogicJs);
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
-                                    return new MockResponse().setBody(biddingLogicJs);
-                                case CLICK_SELLER_PATH: // Intentional fallthrough
-                                case CLICK_BUYER_PATH:
-                                    interactionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                                case SELLER_REPORTING_PATH: // Intentional fallthrough
-                                case BUYER_REPORTING_PATH:
-                                    impressionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
-                            }
-                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
-                            }
-                            return new MockResponse().setResponseCode(404);
-                        });
+                getMockWebServer(
+                        decisionLogicJs,
+                        biddingLogicJs,
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        false);
 
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
         // Registers the test app for app install filtering
-        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
-                new SetAppInstallAdvertisersInput.Builder()
-                        .setAdvertisers(
-                                Collections.singleton(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-        CountDownLatch appInstallDone = new CountDownLatch(1);
-        AppInstallResultCapturingCallback appInstallCallback =
-                new AppInstallResultCapturingCallback(appInstallDone);
-        mAdSelectionService.setAppInstallAdvertisers(
-                setAppInstallAdvertisersInput, appInstallCallback);
-        appInstallDone.await(5, TimeUnit.SECONDS);
-        assertTrue(
-                "App Install call failed with: " + appInstallCallback.getException(),
-                appInstallCallback.isSuccess());
+        registerForAppInstallFiltering();
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
-        // Run Ad Selection
-        AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
-
-        assertTrue(resultsCallback.mIsSuccess);
-        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         // CA 2's ad3 should win even though it tried to filter itself
-        assertEquals(
+        selectAdsAndReport(
                 CommonFixture.getUri(
                         mLocalhostBuyerDomain.getAuthority(),
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
-                resultsCallback.mAdSelectionResponse.getRenderUri());
-
-        // Run Report Impression
-        ReportImpressionInput reportImpressioninput =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, reportImpressioninput);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
-
-        impressionReportingResponseLatch.await();
-        interactionReportingResponseLatch.await();
-        mMockWebServerRule.verifyMockServerRequests(
-                server,
-                10,
-                ImmutableList.of(
-                        SELLER_DECISION_LOGIC_URI_PATH,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
-                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
-                        BUYER_TRUSTED_SIGNAL_URI_PATH,
-                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
-                mRequestMatcherPrefixMatch);
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+        verifyStandardServerRequests(server);
     }
 
     @Test
@@ -2839,72 +1866,9 @@ public class FledgeE2ETest {
                 .thenReturn(false)
                 .thenReturn(true);
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         CustomAudience customAudience1 =
                 createCustomAudience(
@@ -2914,11 +1878,9 @@ public class FledgeE2ETest {
                 createCustomAudience(
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
 
-        // Impression Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch impressionReportingResponseLatch = new CountDownLatch(2);
-
-        // Interaction Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch interactionReportingResponseLatch = new CountDownLatch(2);
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -2933,11 +1895,11 @@ public class FledgeE2ETest {
                                             "This should not be called without user consent");
                                 case CLICK_SELLER_PATH: // Intentional fallthrough
                                 case CLICK_BUYER_PATH:
-                                    interactionReportingResponseLatch.countDown();
+                                    interactionReportingSemaphore.release();
                                     return new MockResponse().setResponseCode(200);
                                 case SELLER_REPORTING_PATH: // Intentional fallthrough
                                 case BUYER_REPORTING_PATH:
-                                    impressionReportingResponseLatch.countDown();
+                                    impressionReportingSemaphore.release();
                                     return new MockResponse().setResponseCode(200);
                             }
 
@@ -2957,62 +1919,16 @@ public class FledgeE2ETest {
                             return new MockResponse().setResponseCode(404);
                         });
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         // Run Ad Selection
-        AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelection(
-                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
-
-        // Verify that CA1/ad2 won because CA2 was not joined due to user consent
-        assertTrue(resultsCallback.mIsSuccess);
-        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
-        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
-        assertEquals(
+        selectAdsAndReport(
                 CommonFixture.getUri(
                         mLocalhostBuyerDomain.getAuthority(),
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
-                resultsCallback.mAdSelectionResponse.getRenderUri());
-
-        // Run Report Impression
-        ReportImpressionInput reportImpressioninput =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, reportImpressioninput);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
-
-        impressionReportingResponseLatch.await();
-        interactionReportingResponseLatch.await();
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 9,
@@ -3035,27 +1951,7 @@ public class FledgeE2ETest {
                 .filterRequest(
                         any(), anyString(), anyBoolean(), anyBoolean(), anyInt(), anyInt(), any());
 
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
+        setupAdSelectionConfig();
 
         CustomAudience customAudience1 =
                 createCustomAudience(
@@ -3072,17 +1968,8 @@ public class FledgeE2ETest {
                                     "No calls should be made without user consent");
                         });
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -3094,32 +1981,8 @@ public class FledgeE2ETest {
         assertFalse(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
         assertEquals(Uri.EMPTY, resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput reportImpressioninput =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultSelectionId)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
-
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, reportImpressioninput);
-
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
-
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
+        reportImpressionAndAssertSuccess(resultSelectionId);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
         mMockWebServerRule.verifyMockServerRequests(
                 server, 0, ImmutableList.of(), mRequestMatcherPrefixMatch);
@@ -3132,72 +1995,9 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         CustomAudience customAudience1 =
                 createCustomAudience(
@@ -3206,61 +2006,23 @@ public class FledgeE2ETest {
         CustomAudience customAudience2 =
                 createCustomAudience(mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, INVALID_BIDS);
 
-        // Impression Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch impressionReportingResponseLatch = new CountDownLatch(2);
-
-        // Interaction Reporting should ping twice (once each for buyer/seller)
-        CountDownLatch interactionReportingResponseLatch = new CountDownLatch(2);
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
 
         MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        request -> {
-                            switch (request.getPath()) {
-                                case SELLER_DECISION_LOGIC_URI_PATH:
-                                    return new MockResponse().setBody(decisionLogicJs);
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
-                                case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
-                                    return new MockResponse().setBody(biddingLogicJs);
-                                case CLICK_SELLER_PATH: // Intentional fallthrough
-                                case CLICK_BUYER_PATH:
-                                    interactionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                                case SELLER_REPORTING_PATH: // Intentional fallthrough
-                                case BUYER_REPORTING_PATH:
-                                    impressionReportingResponseLatch.countDown();
-                                    return new MockResponse().setResponseCode(200);
-                            }
-
-                            // The seller params vary based on runtime, so we are returning trusted
-                            // signals based on correct path prefix
-                            if (request.getPath()
-                                    .startsWith(
-                                            SELLER_TRUSTED_SIGNAL_URI_PATH
-                                                    + SELLER_TRUSTED_SIGNAL_PARAMS)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_SCORING_SIGNALS.toString());
-                            }
-                            if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
-                                return new MockResponse()
-                                        .setBody(TRUSTED_BIDDING_SIGNALS.toString());
-                            }
-                            return new MockResponse().setResponseCode(404);
-                        });
+                getMockWebServer(
+                        decisionLogicJs,
+                        biddingLogicJs,
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        false);
 
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
 
-        // Join first custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
-
-        // Join second custom audience
-        ResultCapturingCallback joinCallback2 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience2, CommonFixture.TEST_PACKAGE_NAME, joinCallback2);
-        assertTrue(joinCallback2.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
 
         verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
 
@@ -3280,35 +2042,25 @@ public class FledgeE2ETest {
                         AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_1 + "/ad2"),
                 resultsCallback.mAdSelectionResponse.getRenderUri());
 
-        // Run Report Impression
-        ReportImpressionInput input =
-                new ReportImpressionInput.Builder()
-                        .setAdSelectionConfig(mAdSelectionConfig)
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .build();
+        reportImpressionAndAssertSuccess(resultsCallback.mAdSelectionResponse.getAdSelectionId());
 
-        ReportImpressionTestCallback reportImpressionTestCallback =
-                callReportImpression(mAdSelectionService, input);
+        reportInteractionAndAssertSuccess(resultsCallback);
 
-        assertTrue(reportImpressionTestCallback.mIsSuccess);
+        /* We add a permit on every call received by the MockWebServer and remove them in the
+         * tryAcquires below. If there are any left over it means that there were extra calls to the
+         * mockserver.
+         */
+        assertTrue(impressionReportingSemaphore.tryAcquire(2, 10, TimeUnit.SECONDS));
+        assertTrue(interactionReportingSemaphore.tryAcquire(2, 10, TimeUnit.SECONDS));
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                impressionReportingSemaphore.availablePermits());
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                interactionReportingSemaphore.availablePermits());
 
-        // Run Report Interaction
-        ReportInteractionInput reportInteractionInput =
-                new ReportInteractionInput.Builder()
-                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
-                        .setInteractionKey(CLICK_INTERACTION)
-                        .setInteractionData(INTERACTION_DATA)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
-                        .build();
-
-        ReportInteractionTestCallback reportInteractionTestCallback =
-                callReportInteraction(mAdSelectionService, reportInteractionInput);
-        assertTrue(reportInteractionTestCallback.mIsSuccess);
-
-        impressionReportingResponseLatch.await();
-        interactionReportingResponseLatch.await();
         mMockWebServerRule.verifyMockServerRequests(
                 server,
                 10,
@@ -3327,72 +2079,9 @@ public class FledgeE2ETest {
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Uri sellerReportingUri = mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH);
-        Uri buyerReportingUri = mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH);
-
-        mAdSelectionConfig =
-                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
-                        .setCustomAudienceBuyers(
-                                ImmutableList.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost())))
-                        .setSeller(
-                                AdTechIdentifier.fromString(
-                                        mMockWebServerRule
-                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
-                                                .getHost()))
-                        .setDecisionLogicUri(
-                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
-                        .setTrustedScoringSignalsUri(
-                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
-                        .setPerBuyerSignals(
-                                ImmutableMap.of(
-                                        AdTechIdentifier.fromString(
-                                                mLocalhostBuyerDomain.getHost()),
-                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
-                        .build();
-
-        Uri clickUriSeller = mMockWebServerRule.uriForPath(CLICK_SELLER_PATH);
-        Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
-        Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
-        Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        String decisionLogicJs =
-                "function scoreAd(ad, bid, auction_config, seller_signals,"
-                        + " trusted_scoring_signals, contextual_signal, user_signal,"
-                        + " custom_audience_signal) { \n"
-                        + "  return {'status': 0, 'score': bid };\n"
-                        + "}\n"
-                        + "function reportResult(ad_selection_config, render_uri, bid,"
-                        + " contextual_signals) {\n"
-                        + "    registerAdBeacon('click', '"
-                        + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriSeller
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'signals_for_buyer':"
-                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
-                        + sellerReportingUri
-                        + "' } };\n"
-                        + "}";
-        String biddingLogicJs =
-                "function generateBid(ad, auction_signals, per_buyer_signals,"
-                    + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
-                    + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
-                    + "}\n"
-                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
-                    + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                    + "    registerAdBeacon('click', '"
-                        + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
-                        + hoverUriBuyer
-                        + "');\n"
-                        + " return {'status': 0, 'results': {'reporting_uri': '"
-                        + buyerReportingUri
-                        + "' } };\n"
-                        + "}";
+        setupAdSelectionConfig();
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
 
         CustomAudience customAudience1 = createCustomAudience(mLocalhostBuyerDomain, INVALID_BIDS);
 
@@ -3423,10 +2112,7 @@ public class FledgeE2ETest {
                         });
 
         // Join custom audience
-        ResultCapturingCallback joinCallback1 = new ResultCapturingCallback();
-        mCustomAudienceService.joinCustomAudience(
-                customAudience1, CommonFixture.TEST_PACKAGE_NAME, joinCallback1);
-        assertTrue(joinCallback1.isSuccess());
+        joinCustomAudienceAndAssertSuccess(customAudience1);
 
         // Run Ad Selection
         AdSelectionTestCallback resultsCallback =
@@ -3470,6 +2156,376 @@ public class FledgeE2ETest {
                 mRequestMatcherPrefixMatch);
     }
 
+    private void updateHistogramAndAssertSuccess(long adSelectionId, int adEventType)
+            throws InterruptedException {
+        UpdateAdCounterHistogramInput inputParams =
+                new UpdateAdCounterHistogramInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdEventType(adEventType)
+                        .setCallerAdTech(
+                                AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        CountDownLatch callbackLatch = new CountDownLatch(1);
+        UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback callback =
+                new UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback(
+                        callbackLatch);
+
+        mAdSelectionService.updateAdCounterHistogram(inputParams, callback);
+
+        assertThat(callbackLatch.await(5, TimeUnit.SECONDS)).isTrue();
+
+        assertWithMessage("Callback failed, was: %s", callback).that(callback.isSuccess()).isTrue();
+    }
+
+    private long selectAdsAndReport(
+            Uri winningRenderUri,
+            Semaphore impressionReportingSemaphore,
+            Semaphore interactionReportingSemaphore)
+            throws Exception {
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(winningRenderUri, resultsCallback.mAdSelectionResponse.getRenderUri());
+
+        reportImpressionAndAssertSuccess(resultSelectionId);
+        reportInteractionAndAssertSuccess(resultsCallback);
+
+        /* We add a permit on every call received by the MockWebServer and remove them in the
+         * tryAcquires below. If there are any left over it means that there were extra calls to the
+         * mockserver.
+         */
+        assertTrue(impressionReportingSemaphore.tryAcquire(2, 10, TimeUnit.SECONDS));
+        assertTrue(interactionReportingSemaphore.tryAcquire(2, 10, TimeUnit.SECONDS));
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                impressionReportingSemaphore.availablePermits());
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                interactionReportingSemaphore.availablePermits());
+        return resultSelectionId;
+    }
+
+    void verifyStandardServerRequests(MockWebServer server) {
+        /*
+         * We expect ten requests:
+         * 2 bidding logic requests (one for each CA)
+         * 2 decision logic requests (scoring and reporting)
+         * 1 trusted bidding signals requests
+         * 1 trusted seller signals request
+         * 1 reportWin
+         * 1 reportResult
+         * 1 buyer click interaction report
+         * 1 seller click interaction report
+         */
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                10,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
+    }
+
+    private void registerForAppInstallFiltering() throws RemoteException, InterruptedException {
+        setAppInstallAdvertisers(
+                Collections.singleton(
+                        AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost())));
+    }
+
+    private void deregisterForAppInstallFiltering() throws RemoteException, InterruptedException {
+        setAppInstallAdvertisers(Collections.EMPTY_SET);
+    }
+
+    private void setAppInstallAdvertisers(Set<AdTechIdentifier> advertisers)
+            throws RemoteException, InterruptedException {
+        SetAppInstallAdvertisersInput setAppInstallAdvertisersInput =
+                new SetAppInstallAdvertisersInput.Builder()
+                        .setAdvertisers(advertisers)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+        CountDownLatch appInstallDone = new CountDownLatch(1);
+        AppInstallResultCapturingCallback appInstallCallback =
+                new AppInstallResultCapturingCallback(appInstallDone);
+        mAdSelectionService.setAppInstallAdvertisers(
+                setAppInstallAdvertisersInput, appInstallCallback);
+        assertTrue(appInstallDone.await(5, TimeUnit.SECONDS));
+        assertTrue(
+                "App Install call failed with: " + appInstallCallback.getException(),
+                appInstallCallback.isSuccess());
+    }
+
+    private String getV3BiddingLogicJs() {
+        return "function generateBid(custom_audience, auction_signals, per_buyer_signals,\n"
+                + "    trusted_bidding_signals, contextual_signals) {\n"
+                + "    const ads = custom_audience.ads;\n"
+                + "    let result = null;\n"
+                + "    for (const ad of ads) {\n"
+                + "        if (!result || ad.metadata.result > result.metadata.result) {\n"
+                + "            result = ad;\n"
+                + "        }\n"
+                + "    }\n"
+                + "    return { 'status': 0, 'ad': result, 'bid': result.metadata.result, "
+                + "'render': result.render_uri };\n"
+                + "}\n"
+                + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                + "    registerAdBeacon('click', '"
+                + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
+                + "');\n"
+                + "    registerAdBeacon('hover', '"
+                + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
+                + "');\n"
+                + " return {'status': 0, 'results': {'reporting_uri': '"
+                + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
+                + "' } };\n"
+                + "}";
+    }
+
+    private String getBiddingLogicJs() {
+        return "function generateBid(ad, auction_signals, per_buyer_signals,"
+                + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                + "}\n"
+                + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                + " return {'status': 0, 'results': {'reporting_uri': '"
+                + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
+                + "' } };\n"
+                + "}";
+    }
+
+    private String getDecisionLogicJs() {
+        return "function scoreAd(ad, bid, auction_config, seller_signals,"
+                + " trusted_scoring_signals, contextual_signal, user_signal,"
+                + " custom_audience_signal) { \n"
+                + "  return {'status': 0, 'score': bid };\n"
+                + "}\n"
+                + "function reportResult(ad_selection_config, render_uri, bid,"
+                + " contextual_signals) { \n"
+                + " return {'status': 0, 'results': {'signals_for_buyer':"
+                + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                + mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH)
+                + "' } };\n"
+                + "}";
+    }
+
+    private String getBiddingLogicWithBeacons() {
+        return "function generateBid(ad, auction_signals, per_buyer_signals,"
+                + " trusted_bidding_signals, contextual_signals, custom_audience_signals) { \n"
+                + "  return {'status': 0, 'ad': ad, 'bid': ad.metadata.result };\n"
+                + "}\n"
+                + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
+                + "    registerAdBeacon('click', '"
+                + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
+                + "');\n"
+                + "    registerAdBeacon('hover', '"
+                + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
+                + "');\n"
+                + " return {'status': 0, 'results': {'reporting_uri': '"
+                + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
+                + "' } };\n"
+                + "}";
+    }
+
+    private String getDecisionLogicWithBeacons() {
+        return "function scoreAd(ad, bid, auction_config, seller_signals,"
+                + " trusted_scoring_signals, contextual_signal, user_signal,"
+                + " custom_audience_signal) { \n"
+                + "  return {'status': 0, 'score': bid };\n"
+                + "}\n"
+                + "function reportResult(ad_selection_config, render_uri, bid,"
+                + " contextual_signals) {\n"
+                + "    registerAdBeacon('click', '"
+                + mMockWebServerRule.uriForPath(CLICK_SELLER_PATH)
+                + "');\n"
+                + "    registerAdBeacon('hover', '"
+                + mMockWebServerRule.uriForPath(HOVER_SELLER_PATH)
+                + "');\n"
+                + " return {'status': 0, 'results': {'signals_for_buyer':"
+                + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                + mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH)
+                + "' } };\n"
+                + "}";
+    }
+
+    private MockWebServer getMockWebServer(
+            String decisionLogicJs,
+            String biddingLogicJs,
+            Semaphore impressionReportingSemaphore,
+            Semaphore interactionReportingSemaphore,
+            boolean jsVersioning)
+            throws Exception {
+        String versionHeaderName =
+                JsVersionHelper.getVersionHeaderName(
+                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
+        long jsVersion = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
+        return mMockWebServerRule.startMockWebServer(
+                request -> {
+                    switch (request.getPath()) {
+                        case SELLER_DECISION_LOGIC_URI_PATH:
+                            return new MockResponse().setBody(decisionLogicJs);
+                        case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1:
+                        case BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2:
+                            if (jsVersioning) {
+                                if (Objects.equals(
+                                        request.getHeader(versionHeaderName),
+                                        Long.toString(jsVersion))) {
+                                    return new MockResponse()
+                                            .setBody(biddingLogicJs)
+                                            .setHeader(versionHeaderName, jsVersion);
+                                }
+                                break;
+                            } else {
+                                return new MockResponse().setBody(biddingLogicJs);
+                            }
+                        case CLICK_SELLER_PATH: // Intentional fallthrough
+                        case CLICK_BUYER_PATH:
+                            interactionReportingSemaphore.release();
+                            return new MockResponse().setResponseCode(200);
+                        case SELLER_REPORTING_PATH: // Intentional fallthrough
+                        case BUYER_REPORTING_PATH:
+                            impressionReportingSemaphore.release();
+                            return new MockResponse().setResponseCode(200);
+                    }
+
+                    // The seller params vary based on runtime, so we are returning trusted
+                    // signals based on correct path prefix
+                    if (request.getPath()
+                            .startsWith(
+                                    SELLER_TRUSTED_SIGNAL_URI_PATH
+                                            + SELLER_TRUSTED_SIGNAL_PARAMS)) {
+                        return new MockResponse().setBody(TRUSTED_SCORING_SIGNALS.toString());
+                    }
+                    if (request.getPath().startsWith(BUYER_TRUSTED_SIGNAL_URI_PATH)) {
+                        return new MockResponse().setBody(TRUSTED_BIDDING_SIGNALS.toString());
+                    }
+                    return new MockResponse().setResponseCode(404);
+                });
+    }
+
+    private void reportInteractionAndAssertSuccess(AdSelectionTestCallback resultsCallback)
+            throws Exception {
+        ReportInteractionInput reportInteractionInput =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(resultsCallback.mAdSelectionResponse.getAdSelectionId())
+                        .setInteractionKey(CLICK_INTERACTION)
+                        .setInteractionData(INTERACTION_DATA)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        ReportInteractionTestCallback reportInteractionTestCallback =
+                callReportInteraction(mAdSelectionService, reportInteractionInput);
+        assertTrue(reportInteractionTestCallback.mIsSuccess);
+    }
+
+    private void reportImpressionAndAssertSuccess(long adSelectionId) throws Exception {
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionConfig(mAdSelectionConfig)
+                        .setAdSelectionId(adSelectionId)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        ReportImpressionTestCallback reportImpressionTestCallback =
+                callReportImpression(mAdSelectionService, input);
+
+        assertTrue(reportImpressionTestCallback.mIsSuccess);
+    }
+
+    private void setupOverridesAndAssertSuccess(
+            CustomAudience customAudience1,
+            CustomAudience customAudience2,
+            String biddingLogicJs,
+            String decisionLogicJs)
+            throws Exception {
+        // Add AdSelection Override
+        AdSelectionOverrideTestCallback adSelectionOverrideTestCallback =
+                callAddAdSelectionOverride(
+                        mAdSelectionService,
+                        mAdSelectionConfig,
+                        decisionLogicJs,
+                        TRUSTED_SCORING_SIGNALS,
+                        BUYERS_DECISION_LOGIC);
+
+        assertTrue(adSelectionOverrideTestCallback.mIsSuccess);
+
+        // Add Custom Audience Overrides
+        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback1 =
+                callAddCustomAudienceOverride(
+                        CommonFixture.TEST_PACKAGE_NAME,
+                        customAudience1.getBuyer(),
+                        customAudience1.getName(),
+                        biddingLogicJs,
+                        null,
+                        TRUSTED_BIDDING_SIGNALS,
+                        mCustomAudienceService);
+
+        assertTrue(customAudienceOverrideTestCallback1.mIsSuccess);
+
+        CustomAudienceOverrideTestCallback customAudienceOverrideTestCallback2 =
+                callAddCustomAudienceOverride(
+                        CommonFixture.TEST_PACKAGE_NAME,
+                        customAudience2.getBuyer(),
+                        customAudience2.getName(),
+                        biddingLogicJs,
+                        null,
+                        TRUSTED_BIDDING_SIGNALS,
+                        mCustomAudienceService);
+
+        assertTrue(customAudienceOverrideTestCallback2.mIsSuccess);
+    }
+
+    private void setupAdSelectionConfig() {
+        mAdSelectionConfig =
+                AdSelectionConfigFixture.anAdSelectionConfigBuilder()
+                        .setCustomAudienceBuyers(
+                                ImmutableList.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost())))
+                        .setSeller(
+                                AdTechIdentifier.fromString(
+                                        mMockWebServerRule
+                                                .uriForPath(SELLER_DECISION_LOGIC_URI_PATH)
+                                                .getHost()))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(SELLER_DECISION_LOGIC_URI_PATH))
+                        .setTrustedScoringSignalsUri(
+                                mMockWebServerRule.uriForPath(SELLER_TRUSTED_SIGNAL_URI_PATH))
+                        .setPerBuyerSignals(
+                                ImmutableMap.of(
+                                        AdTechIdentifier.fromString(
+                                                mLocalhostBuyerDomain.getHost()),
+                                        AdSelectionSignals.fromString("{\"buyer_signals\":0}")))
+                        .build();
+    }
+
+    private void setupConsentGivenStubs() {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+    }
+
+    private void joinCustomAudienceAndAssertSuccess(CustomAudience ca) {
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mCustomAudienceService.joinCustomAudience(
+                ca, CommonFixture.TEST_PACKAGE_NAME, joinCallback);
+        assertTrue(joinCallback.isSuccess());
+    }
+
     private void initClients(boolean gaUXEnabled, boolean registerAdBeaconEnabled) {
         initClients(gaUXEnabled, registerAdBeaconEnabled, true);
     }
@@ -3490,7 +2546,7 @@ public class FledgeE2ETest {
                                         DEFAULT_FLAGS),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 DEFAULT_FLAGS),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
@@ -3503,7 +2559,7 @@ public class FledgeE2ETest {
                                 mConsentManagerMock,
                                 flags,
                                 mAppImportanceFilter,
-                                FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                                mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
                                 mThrottlerSupplier));
 
@@ -3528,7 +2584,7 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3562,14 +2618,19 @@ public class FledgeE2ETest {
             AdSelectionServiceImpl adSelectionService,
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
-            AdSelectionSignals trustedScoringSignals)
+            AdSelectionSignals trustedScoringSignals,
+            BuyersDecisionLogic buyerDecisionLogicMap)
             throws Exception {
         // Counted down in 1) callback
         CountDownLatch resultLatch = new CountDownLatch(1);
         AdSelectionOverrideTestCallback callback = new AdSelectionOverrideTestCallback(resultLatch);
 
         adSelectionService.overrideAdSelectionConfigRemoteInfo(
-                adSelectionConfig, decisionLogicJS, trustedScoringSignals, callback);
+                adSelectionConfig,
+                decisionLogicJS,
+                trustedScoringSignals,
+                buyerDecisionLogicMap,
+                callback);
         resultLatch.await();
         return callback;
     }
@@ -3579,6 +2640,7 @@ public class FledgeE2ETest {
             AdTechIdentifier buyer,
             String name,
             String biddingLogicJs,
+            Long biddingLogicJsVersion,
             AdSelectionSignals trustedBiddingData,
             CustomAudienceServiceImpl customAudienceService)
             throws Exception {
@@ -3587,7 +2649,13 @@ public class FledgeE2ETest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
+                owner,
+                buyer,
+                name,
+                biddingLogicJs,
+                Optional.ofNullable(biddingLogicJsVersion).orElse(0L),
+                trustedBiddingData,
+                callback);
         resultLatch.await();
         return callback;
     }
@@ -3623,8 +2691,7 @@ public class FledgeE2ETest {
 
     private CustomAudience createCustomAudience(
             final Uri buyerDomain, final String customAudienceSeq, List<Double> bids) {
-        return createCustomAudience(
-                buyerDomain, customAudienceSeq, bids, Arrays.asList(new AdFilters[bids.size()]));
+        return createCustomAudience(buyerDomain, customAudienceSeq, bids, null, null);
     }
 
     /**
@@ -3634,12 +2701,15 @@ public class FledgeE2ETest {
      *     creates ad with the provided value as bid
      * @param filtersForBids A parallel list to bids with the filter that should be added to each
      *     Ad. Can be left null.
+     * @param adCounterKeysForBids A parallel list to bids with the adCounterKeys that should be
+     *     added to each Ad. Can be left null.
      * @return a real Custom Audience object that can be persisted and used in bidding and scoring
      */
     private CustomAudience createCustomAudience(
             final Uri buyerDomain,
             final String customAudienceSeq,
             List<Double> bids,
+            List<Set<String>> adCounterKeysForBids,
             List<AdFilters> filtersForBids) {
 
         // Generate ads for with bids provided
@@ -3648,15 +2718,20 @@ public class FledgeE2ETest {
         // Create ads with the buyer name and bid number as the ad URI
         // Add the bid value to the metadata
         for (int i = 0; i < bids.size(); i++) {
-            ads.add(
+            AdData.Builder builder =
                     new AdData.Builder()
                             .setRenderUri(
                                     CommonFixture.getUri(
                                             buyerDomain.getAuthority(),
                                             AD_URI_PREFIX + customAudienceSeq + "/ad" + (i + 1)))
-                            .setMetadata("{\"result\":" + bids.get(i) + "}")
-                            .setAdFilters(filtersForBids.get(i))
-                            .build());
+                            .setMetadata("{\"result\":" + bids.get(i) + "}");
+            if (adCounterKeysForBids != null && adCounterKeysForBids.get(i) != null) {
+                builder.setAdCounterKeys(adCounterKeysForBids.get(i));
+            }
+            if (filtersForBids != null) {
+                builder.setAdFilters(filtersForBids.get(i));
+            }
+            ads.add(builder.build());
         }
 
         return new CustomAudience.Builder()
@@ -3721,7 +2796,7 @@ public class FledgeE2ETest {
             implements SetAppInstallAdvertisersCallback {
         private boolean mIsSuccess;
         private Exception mException;
-        private CountDownLatch mCountDownLatch;
+        private final CountDownLatch mCountDownLatch;
 
         public boolean isSuccess() {
             return mIsSuccess;
@@ -3871,6 +2946,24 @@ public class FledgeE2ETest {
         }
     }
 
+    private Map<AdTechIdentifier, ContextualAds> createContextualAds() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+
+        // In order to meet ETLd+1 requirements creating Contextual ads with MockWebserver's host
+        AdTechIdentifier buyer =
+                AdTechIdentifier.fromString(
+                        mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH).getHost());
+        ContextualAds contextualAds =
+                ContextualAdsFixture.generateContextualAds(
+                                buyer, ImmutableList.of(100.0, 200.0, 300.0, 400.0, 500.0))
+                        .setDecisionLogicUri(
+                                mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH))
+                        .build();
+        buyerContextualAds.put(buyer, contextualAds);
+
+        return buyerContextualAds;
+    }
+
     private static class FledgeE2ETestFlags implements Flags {
         private final boolean mIsGaUxEnabled;
         private final boolean mRegisterAdBeaconEnabled;
@@ -3927,6 +3020,16 @@ public class FledgeE2ETest {
         @Override
         public boolean getFledgeAdSelectionFilteringEnabled() {
             return mFiltersEnabled;
+        }
+
+        @Override
+        public boolean getFledgeAdSelectionContextualAdsEnabled() {
+            return true;
+        }
+
+        @Override
+        public long getFledgeAdSelectionBiddingLogicJsVersion() {
+            return JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
         }
     }
 }

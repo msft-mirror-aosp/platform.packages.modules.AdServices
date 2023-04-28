@@ -45,7 +45,7 @@ public class CustomAudienceOverrideRequestTest {
     }
 
     @Test
-    public void testBuildAddCustomAudienceOverrideRequestSuccess() {
+    public void testBuildAddCustomAudienceOverrideRequest_biddingLogicVersionNotSet_Success() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest.Builder()
                         .setBuyer(BUYER)

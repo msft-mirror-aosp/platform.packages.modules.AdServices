@@ -31,6 +31,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebTriggerRegistrationRequestTest {
@@ -87,6 +89,12 @@ public class WebTriggerRegistrationRequestTest {
                         new WebTriggerRegistrationRequest.Builder(
                                         Collections.emptyList(), TOP_ORIGIN_URI)
                                 .build());
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new WebTriggerRegistrationRequest.Builder(
+                                        generateWebTriggerParamsList(21), TOP_ORIGIN_URI)
+                                .build());
     }
 
     @Test
@@ -127,5 +135,15 @@ public class WebTriggerRegistrationRequestTest {
     private void verifyExampleRegistration(WebTriggerRegistrationRequest request) {
         assertEquals(TRIGGER_REGISTRATIONS, request.getTriggerParams());
         assertEquals(TOP_ORIGIN_URI, request.getDestination());
+    }
+
+    private static List<WebTriggerParams> generateWebTriggerParamsList(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(
+                        i ->
+                                new WebTriggerParams.Builder(REGISTRATION_URI_1)
+                                        .setDebugKeyAllowed(true)
+                                        .build())
+                .collect(Collectors.toList());
     }
 }

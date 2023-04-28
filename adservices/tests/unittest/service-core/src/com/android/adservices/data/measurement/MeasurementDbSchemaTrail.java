@@ -28,15 +28,13 @@ import static com.android.adservices.data.measurement.MeasurementTables.SourceDe
 import static com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import static com.android.adservices.data.measurement.MeasurementTables.XnaIgnoredSourcesContract;
 
+import com.android.adservices.data.measurement.MeasurementTables.KeyValueDataContract;
 import com.android.adservices.data.measurement.migration.MeasurementTablesDeprecated;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -251,6 +249,75 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_SOURCE_V12 =
+            "CREATE TABLE "
+                    + SourceContract.TABLE
+                    + " ("
+                    + SourceContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + SourceContract.EVENT_ID
+                    + " INTEGER, "
+                    + SourceContract.PUBLISHER
+                    + " TEXT, "
+                    + SourceContract.PUBLISHER_TYPE
+                    + " INTEGER, "
+                    + SourceContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + SourceContract.EVENT_TIME
+                    + " INTEGER, "
+                    + SourceContract.EXPIRY_TIME
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.AGGREGATABLE_REPORT_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.PRIORITY
+                    + " INTEGER, "
+                    + SourceContract.STATUS
+                    + " INTEGER, "
+                    + SourceContract.EVENT_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_REPORT_DEDUP_KEYS
+                    + " TEXT, "
+                    + SourceContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + SourceContract.REGISTRANT
+                    + " TEXT, "
+                    + SourceContract.ATTRIBUTION_MODE
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_ATTRIBUTION_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.INSTALL_COOLDOWN_WINDOW
+                    + " INTEGER, "
+                    + SourceContract.IS_INSTALL_ATTRIBUTED
+                    + " INTEGER, "
+                    + SourceContract.FILTER_DATA
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_SOURCE
+                    + " TEXT, "
+                    + SourceContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_KEY
+                    + " INTEGER , "
+                    + SourceContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + SourceContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + SourceContract.REGISTRATION_ID
+                    + " TEXT, "
+                    + SourceContract.SHARED_AGGREGATION_KEYS
+                    + " TEXT, "
+                    + SourceContract.INSTALL_TIME
+                    + " INTEGER, "
+                    + SourceContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + SourceContract.TRIGGER_SPECS
+                    + " TEXT, "
+                    + SourceContract.MAX_BUCKET_INCREMENTS
+                    + " INTEGER "
+                    + ")";
     public static final String CREATE_TABLE_SOURCE_DESTINATION_V9 =
             "CREATE TABLE "
                     + SourceDestination.TABLE
@@ -572,7 +639,7 @@ public class MeasurementDbSchemaTrail {
                     + " ("
                     + AsyncRegistrationContract.ID
                     + " TEXT PRIMARY KEY NOT NULL, "
-                    + AsyncRegistrationContract.ENROLLMENT_ID
+                    + MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID
                     + " TEXT, "
                     + AsyncRegistrationContract.REGISTRATION_URI
                     + " TEXT, "
@@ -584,9 +651,9 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + AsyncRegistrationContract.TOP_ORIGIN
                     + " TEXT, "
-                    + AsyncRegistrationContract.REDIRECT_TYPE
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_TYPE
                     + " INTEGER, "
-                    + AsyncRegistrationContract.REDIRECT_COUNT
+                    + MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT
                     + " INTEGER, "
                     + AsyncRegistrationContract.SOURCE_TYPE
                     + " INTEGER, "
@@ -596,7 +663,7 @@ public class MeasurementDbSchemaTrail {
                     + " INTEGER, "
                     + AsyncRegistrationContract.RETRY_COUNT
                     + " INTEGER, "
-                    + AsyncRegistrationContract.LAST_PROCESSING_TIME
+                    + MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME
                     + " INTEGER, "
                     + AsyncRegistrationContract.TYPE
                     + " INTEGER, "
@@ -606,6 +673,40 @@ public class MeasurementDbSchemaTrail {
                     + " INTEGER, "
                     + AsyncRegistrationContract.REGISTRATION_ID
                     + " TEXT "
+                    + ")";
+
+    public static final String CREATE_TABLE_ASYNC_REGISTRATION_V11 =
+            "CREATE TABLE "
+                    + AsyncRegistrationContract.TABLE
+                    + " ("
+                    + AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + AsyncRegistrationContract.REGISTRATION_ID
+                    + " TEXT NOT NULL"
                     + ")";
 
     private static final String CREATE_TABLE_DEBUG_REPORT_V6 =
@@ -639,6 +740,23 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    public static final String CREATE_TABLE_KEY_VALUE_DATA_V11 =
+            "CREATE TABLE "
+                    + KeyValueDataContract.TABLE
+                    + " ("
+                    + KeyValueDataContract.DATA_TYPE
+                    + " TEXT NOT NULL, "
+                    + KeyValueDataContract.KEY
+                    + " TEXT NOT NULL, "
+                    + KeyValueDataContract.VALUE
+                    + " TEXT, "
+                    + " CONSTRAINT type_key_primary_con PRIMARY KEY ( "
+                    + KeyValueDataContract.DATA_TYPE
+                    + ", "
+                    + KeyValueDataContract.KEY
+                    + " )"
+                    + " )";
+
     private static final Map<String, String> CREATE_STATEMENT_BY_TABLE_V6 =
             ImmutableMap.of(
                     SourceContract.TABLE, CREATE_TABLE_SOURCE_V6,
@@ -651,8 +769,9 @@ public class MeasurementDbSchemaTrail {
                     DebugReportContract.TABLE, CREATE_TABLE_DEBUG_REPORT_V6,
                     XnaIgnoredSourcesContract.TABLE, CREATE_TABLE_XNA_IGNORED_SOURCES_V6);
 
-    private static final List<String> CREATE_INDEXES_V6 =
-            ImmutableList.of(
+    private static final Map<String, String> CREATE_INDEXES_V6 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + SourceContract.TABLE + "_ad_ei_et ",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + SourceContract.TABLE
@@ -667,6 +786,7 @@ public class MeasurementDbSchemaTrail {
                             + SourceContract.EXPIRY_TIME
                             + " DESC "
                             + ")",
+                    INDEX_PREFIX + SourceContract.TABLE + "_et ",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + SourceContract.TABLE
@@ -676,6 +796,7 @@ public class MeasurementDbSchemaTrail {
                             + "("
                             + SourceContract.EXPIRY_TIME
                             + ")",
+                    INDEX_PREFIX + SourceContract.TABLE + "_p_ad_wd_s_et ",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + SourceContract.TABLE
@@ -693,6 +814,7 @@ public class MeasurementDbSchemaTrail {
                             + ", "
                             + SourceContract.EVENT_TIME
                             + ")",
+                    INDEX_PREFIX + TriggerContract.TABLE + "_ad_ei_tt ",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + TriggerContract.TABLE
@@ -706,6 +828,7 @@ public class MeasurementDbSchemaTrail {
                             + ", "
                             + TriggerContract.TRIGGER_TIME
                             + " ASC)",
+                    INDEX_PREFIX + TriggerContract.TABLE + "_tt ",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + TriggerContract.TABLE
@@ -715,6 +838,7 @@ public class MeasurementDbSchemaTrail {
                             + "("
                             + TriggerContract.TRIGGER_TIME
                             + ")",
+                    INDEX_PREFIX + AttributionContract.TABLE + "_ss_so_ds_do_ei_tt",
                     "CREATE INDEX "
                             + INDEX_PREFIX
                             + AttributionContract.TABLE
@@ -735,72 +859,78 @@ public class MeasurementDbSchemaTrail {
                             + AttributionContract.TRIGGER_TIME
                             + ")");
 
-    private static final String[] CREATE_INDEXES_V6_V7 = {
-        "CREATE INDEX "
-                + "idx_"
-                + MeasurementTables.SourceContract.TABLE
-                + "_ei "
-                + "ON "
-                + MeasurementTables.SourceContract.TABLE
-                + "("
-                + MeasurementTables.SourceContract.ENROLLMENT_ID
-                + ")",
-        "CREATE INDEX "
-                + "idx_"
-                + MeasurementTables.XnaIgnoredSourcesContract.TABLE
-                + "_ei "
-                + "ON "
-                + MeasurementTables.XnaIgnoredSourcesContract.TABLE
-                + "("
-                + MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID
-                + ")"
-    };
+    private static final Map<String, String> CREATE_INDEXES_V6_V7 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.SourceContract.TABLE + "_ei ",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceContract.TABLE
+                            + "_ei "
+                            + "ON "
+                            + MeasurementTables.SourceContract.TABLE
+                            + "("
+                            + MeasurementTables.SourceContract.ENROLLMENT_ID
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.XnaIgnoredSourcesContract.TABLE + "_ei ",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.XnaIgnoredSourcesContract.TABLE
+                            + "_ei "
+                            + "ON "
+                            + MeasurementTables.XnaIgnoredSourcesContract.TABLE
+                            + "("
+                            + MeasurementTables.XnaIgnoredSourcesContract.ENROLLMENT_ID
+                            + ")");
 
-    private static final String[] CREATE_INDEXES_V8_V9 = {
-        "CREATE INDEX "
-                + MeasurementTables.INDEX_PREFIX
-                + MeasurementTables.SourceContract.TABLE
-                + "_ei_et "
-                + "ON "
-                + MeasurementTables.SourceContract.TABLE
-                + "( "
-                + MeasurementTables.SourceContract.ENROLLMENT_ID
-                + ", "
-                + MeasurementTables.SourceContract.EXPIRY_TIME
-                + " DESC "
-                + ")",
-        "CREATE INDEX "
-                + MeasurementTables.INDEX_PREFIX
-                + MeasurementTables.SourceContract.TABLE
-                + "_p_s_et "
-                + "ON "
-                + MeasurementTables.SourceContract.TABLE
-                + "("
-                + MeasurementTables.SourceContract.PUBLISHER
-                + ", "
-                + MeasurementTables.SourceContract.STATUS
-                + ", "
-                + MeasurementTables.SourceContract.EVENT_TIME
-                + ")",
-        "CREATE INDEX "
-                + MeasurementTables.INDEX_PREFIX
-                + MeasurementTables.SourceDestination.TABLE
-                + "_d"
-                + " ON "
-                + MeasurementTables.SourceDestination.TABLE
-                + "("
-                + MeasurementTables.SourceDestination.DESTINATION
-                + ")",
-        "CREATE INDEX "
-                + MeasurementTables.INDEX_PREFIX
-                + MeasurementTables.SourceDestination.TABLE
-                + "_s"
-                + " ON "
-                + MeasurementTables.SourceDestination.TABLE
-                + "("
-                + MeasurementTables.SourceDestination.SOURCE_ID
-                + ")"
-    };
+    private static final Map<String, String> CREATE_INDEXES_V8_V9 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.SourceContract.TABLE + "_ei_et ",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceContract.TABLE
+                            + "_ei_et "
+                            + "ON "
+                            + MeasurementTables.SourceContract.TABLE
+                            + "( "
+                            + MeasurementTables.SourceContract.ENROLLMENT_ID
+                            + ", "
+                            + MeasurementTables.SourceContract.EXPIRY_TIME
+                            + " DESC "
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.SourceContract.TABLE + "_p_s_et ",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceContract.TABLE
+                            + "_p_s_et "
+                            + "ON "
+                            + MeasurementTables.SourceContract.TABLE
+                            + "("
+                            + MeasurementTables.SourceContract.PUBLISHER
+                            + ", "
+                            + MeasurementTables.SourceContract.STATUS
+                            + ", "
+                            + MeasurementTables.SourceContract.EVENT_TIME
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.SourceDestination.TABLE + "_d",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceDestination.TABLE
+                            + "_d"
+                            + " ON "
+                            + MeasurementTables.SourceDestination.TABLE
+                            + "("
+                            + MeasurementTables.SourceDestination.DESTINATION
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.SourceDestination.TABLE + "_s",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceDestination.TABLE
+                            + "_s"
+                            + " ON "
+                            + MeasurementTables.SourceDestination.TABLE
+                            + "("
+                            + MeasurementTables.SourceDestination.SOURCE_ID
+                            + ")");
 
     private static Map<String, String> getCreateStatementByTableV7() {
         return CREATE_STATEMENT_BY_TABLE_V6;
@@ -826,46 +956,70 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
-    private static List<String> getCreateIndexesV7() {
-        ArrayList<String> createIndexes = new ArrayList<>(CREATE_INDEXES_V6);
-        createIndexes.addAll(Arrays.asList(CREATE_INDEXES_V6_V7));
+    private static Map<String, String> getCreateStatementByTableV11() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV10());
+        createStatements.put(AsyncRegistrationContract.TABLE, CREATE_TABLE_ASYNC_REGISTRATION_V11);
+        createStatements.put(KeyValueDataContract.TABLE, CREATE_TABLE_KEY_VALUE_DATA_V11);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateStatementByTableV12() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV11());
+        createStatements.put(SourceContract.TABLE, CREATE_TABLE_SOURCE_V12);
+        return createStatements;
+    }
+
+    private static Map<String, String> getCreateIndexesV7() {
+        Map<String, String> createIndexes = new HashMap<>();
+        createIndexes.putAll(CREATE_INDEXES_V6);
+        createIndexes.putAll(CREATE_INDEXES_V6_V7);
         return createIndexes;
     }
 
-    private static List<String> getCreateIndexesV8() {
+    private static Map<String, String> getCreateIndexesV8() {
         return getCreateIndexesV7();
     }
 
-    private static List<String> getCreateIndexesV9() {
-        ArrayList<String> createIndexes = new ArrayList<>(getCreateIndexesV8());
-        // Remove dropped source indexes (in descending order of placement).
-        // TODO: b/274510442 refactor indices to maps for readability and to be less prone to error.
-        createIndexes.remove(2);
-        createIndexes.remove(0);
-        createIndexes.addAll(Arrays.asList(CREATE_INDEXES_V8_V9));
+    private static Map<String, String> getCreateIndexesV9() {
+        Map<String, String> createIndexes = getCreateIndexesV8();
+        createIndexes.remove(INDEX_PREFIX + SourceContract.TABLE + "_ad_ei_et ");
+        createIndexes.remove(INDEX_PREFIX + SourceContract.TABLE + "_p_ad_wd_s_et ");
+        createIndexes.putAll(CREATE_INDEXES_V8_V9);
         return createIndexes;
     }
 
-    private static List<String> getCreateIndexesV10() {
+    private static Map<String, String> getCreateIndexesV10() {
         return getCreateIndexesV9();
     }
 
-    private static final Map<Integer, Map<String, String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
-            new ImmutableMap.Builder<Integer, Map<String, String>>()
-                    .put(6, CREATE_STATEMENT_BY_TABLE_V6)
-                    .put(7, getCreateStatementByTableV7())
-                    .put(8, getCreateStatementByTableV8())
-                    .put(9, getCreateStatementByTableV9())
-                    .put(10, getCreateStatementByTableV10())
+    private static Map<String, String> getCreateIndexesV11() {
+        return getCreateIndexesV10();
+    }
+
+    private static Map<String, String> getCreateIndexesV12() {
+        return getCreateIndexesV11();
+    }
+
+    private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
+            new ImmutableMap.Builder<Integer, Collection<String>>()
+                    .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
+                    .put(7, getCreateStatementByTableV7().values())
+                    .put(8, getCreateStatementByTableV8().values())
+                    .put(9, getCreateStatementByTableV9().values())
+                    .put(10, getCreateStatementByTableV10().values())
+                    .put(11, getCreateStatementByTableV11().values())
+                    .put(12, getCreateStatementByTableV12().values())
                     .build();
 
-    private static final Map<Integer, List<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
-            new ImmutableMap.Builder<Integer, List<String>>()
-                    .put(6, CREATE_INDEXES_V6)
-                    .put(7, getCreateIndexesV7())
-                    .put(8, getCreateIndexesV8())
-                    .put(9, getCreateIndexesV9())
-                    .put(10, getCreateIndexesV10())
+    private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
+            new ImmutableMap.Builder<Integer, Collection<String>>()
+                    .put(6, CREATE_INDEXES_V6.values())
+                    .put(7, getCreateIndexesV7().values())
+                    .put(8, getCreateIndexesV8().values())
+                    .put(9, getCreateIndexesV9().values())
+                    .put(10, getCreateIndexesV10().values())
+                    .put(11, getCreateIndexesV11().values())
+                    .put(12, getCreateIndexesV12().values())
                     .build();
 
     /**
@@ -875,7 +1029,7 @@ public class MeasurementDbSchemaTrail {
      * @param version version for which create statements are requested
      * @return map of table to their create statement
      */
-    public static Map<String, String> getCreateTableStatementsByVersion(int version) {
+    public static Collection<String> getCreateTableStatementsByVersion(int version) {
         if (version < 6) {
             throw new IllegalArgumentException("Unsupported version " + version);
         }
@@ -889,7 +1043,7 @@ public class MeasurementDbSchemaTrail {
      * @param version version for which create index statements are requested
      * @return list of create index statements
      */
-    public static List<String> getCreateIndexStatementsByVersion(int version) {
+    public static Collection<String> getCreateIndexStatementsByVersion(int version) {
         if (version < 6) {
             throw new IllegalArgumentException("Unsupported version " + version);
         }

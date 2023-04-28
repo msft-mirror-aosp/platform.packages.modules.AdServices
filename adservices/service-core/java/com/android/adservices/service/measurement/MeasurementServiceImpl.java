@@ -64,7 +64,6 @@ import com.android.adservices.service.measurement.access.AppPackageAccessResolve
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
-import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -187,12 +186,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -249,14 +243,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getSourceRegistrationRequest()
-                                                    .getSourceParams()
-                                                    .get(0)
-                                                    .getRegistrationUri()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
                                             request.getAppPackageName())),
@@ -315,15 +301,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getTriggerRegistrationRequest()
-                                                    .getTriggerParams()
-                                                    .get(0)
-                                                    .getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -432,7 +410,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             return;
                         }
 
-                        callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
+                        callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
                         statusCode = STATUS_SUCCESS;
                     } catch (RemoteException e) {
                         LogUtil.e(e, CALLBACK_ERROR);
