@@ -49,6 +49,10 @@ import java.util.Map;
 class FetcherUtil {
     static final String REDIRECT_LIST_HEADER_KEY = "Attribution-Reporting-Redirect";
     static final String REDIRECT_LOCATION_HEADER_KEY = "Location";
+    static final int UNKNOWN_SOURCE_TYPE = 0;
+    static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    static final int UNKNOWN_STATUS = 0;
+    static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
 
     /**
      * Determine all redirects.
@@ -170,9 +174,17 @@ class FetcherUtil {
                     Web.topPrivateDomainAndScheme(registrationUri).map(Uri::toString).orElse(null);
         }
 
+        // TODO: replace unknown with real logging values b/278882599
         logger.logMeasurementRegistrationsResponseSize(
                 new MeasurementRegistrationResponseStats.Builder(
-                                AD_SERVICES_MEASUREMENT_REGISTRATIONS, registrationType, headerSize)
+                                AD_SERVICES_MEASUREMENT_REGISTRATIONS,
+                                registrationType,
+                                headerSize,
+                                UNKNOWN_SOURCE_TYPE,
+                                UNKNOWN_REGISTRATION_SURFACE_TYPE,
+                                UNKNOWN_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(adTechDomain)
                         .build());
     }
