@@ -123,7 +123,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                 Assert.assertEquals(
                         "Aggregate report failed.",
                         result,
-                        spyReportingService.performReport(id, AggregateCryptoFixture.getKey()));
+                        spyReportingService.performReport(
+                                id, AggregateCryptoFixture.getKey(), new ReportingStatus()));
                 break;
         }
     }
