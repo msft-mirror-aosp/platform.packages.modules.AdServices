@@ -65,17 +65,22 @@ public final class EventReportingJobService extends JobService {
         }
 
         LogUtil.d("EventReportingJobService.onStartJob: ");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new EventReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis()
-                                    - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis());
-            jobFinished(params, !success);
-        });
+        sBlockingExecutor.execute(
+                () -> {
+                    long maxEventReportUploadRetryWindowMs =
+                            SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    boolean success =
+                            new EventReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.REGULAR)
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                    jobFinished(params, !success);
+                });
         return true;
     }
 
