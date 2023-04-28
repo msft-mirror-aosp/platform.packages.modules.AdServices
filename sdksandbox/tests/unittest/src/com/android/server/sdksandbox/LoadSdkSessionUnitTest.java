@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
@@ -52,6 +53,11 @@ public class LoadSdkSessionUnitTest {
         mInjector = new SdkSandboxManagerService.Injector(mContext);
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+
+        // Required for using MATCH_ANY_USER when fetching installed SDK.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
     }
 
     @Test
