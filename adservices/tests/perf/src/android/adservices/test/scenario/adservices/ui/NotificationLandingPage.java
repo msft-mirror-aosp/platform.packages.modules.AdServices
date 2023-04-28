@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -48,7 +49,8 @@ import org.junit.runners.JUnit4;
 @Scenario
 @RunWith(JUnit4.class)
 public class NotificationLandingPage {
-    private static final String TAG = "UiNotificationLandingPage";
+    private static final String TAG = "UiTestLabel";
+    private static final String UI_NOTIFICATION_LATENCY_METRIC = "UI_NOTIFICATION_LATENCY_METRIC";
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final int LAUNCH_TIMEOUT = 8000;
@@ -89,6 +91,7 @@ public class NotificationLandingPage {
         } else {
             privacySandboxUi = PRIVACY_SANDBOX_UI;
         }
+        final long start = System.currentTimeMillis();
         // Launch the setting view.
         Intent intent = new Intent(privacySandboxUi);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -125,6 +128,8 @@ public class NotificationLandingPage {
         rightControlButton =
                 getElement(R.string.notificationUI_confirmation_right_control_button_text);
         rightControlButton.click();
+        final long duration = System.currentTimeMillis() - start;
+        Log.i(TAG, "(" + UI_NOTIFICATION_LATENCY_METRIC + ": " + duration + ")");
     }
 
     // Override global_kill_switch to ignore the effect of actual PH values.
