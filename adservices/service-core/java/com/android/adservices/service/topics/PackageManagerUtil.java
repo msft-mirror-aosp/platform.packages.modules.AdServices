@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -22,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -92,6 +96,10 @@ public class PackageManagerUtil {
             }
         } catch (NameNotFoundException e) {
             sLogger.e("NameNotFoundException thrown when fetching AppDescription");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
         return new AppInfo(resultAppName, resultAppDescription);
     }
