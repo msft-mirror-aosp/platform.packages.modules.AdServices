@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.registration;
 
+
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -42,6 +43,7 @@ import com.android.adservices.service.measurement.attribution.TriggerContentProv
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashSet;
@@ -132,20 +134,36 @@ public class AsyncRegistrationQueueRunner {
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRedirect asyncRedirect = new AsyncRedirect();
+        long startTime = asyncRegistration.getRequestTime();
         Optional<Source> resultSource =
                 mAsyncSourceFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        long endTime = System.currentTimeMillis();
+        asyncFetchStatus.setRegistrationDelay(endTime - startTime);
 
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    if (asyncFetchStatus.isRequestSuccess()) {
-                        if (resultSource.isPresent()) {
-                            storeSource(resultSource.get(), asyncRegistration, dao);
-                        }
-                        handleSuccess(asyncRegistration, asyncRedirect, dao);
-                    } else {
-                        handleFailure(asyncRegistration, asyncFetchStatus, failedOrigins, dao);
-                    }
-                });
+        boolean transactionResult =
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            if (asyncFetchStatus.isRequestSuccess()) {
+                                if (resultSource.isPresent()) {
+                                    storeSource(resultSource.get(), asyncRegistration, dao);
+                                }
+                                handleSuccess(
+                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                            } else {
+                                handleFailure(
+                                        asyncRegistration, asyncFetchStatus, failedOrigins, dao);
+                            }
+                        });
+
+        if (!transactionResult) {
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
+        }
+
+        FetcherUtil.emitHeaderMetrics(
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance(),
+                asyncRegistration,
+                asyncFetchStatus);
     }
 
     /** Visible only for testing. */
@@ -172,19 +190,36 @@ public class AsyncRegistrationQueueRunner {
             AsyncRegistration asyncRegistration, Set<Uri> failedOrigins) {
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         AsyncRedirect asyncRedirect = new AsyncRedirect();
+        long startTime = asyncRegistration.getRequestTime();
         Optional<Trigger> resultTrigger = mAsyncTriggerFetcher.fetchTrigger(
                 asyncRegistration, asyncFetchStatus, asyncRedirect);
-        mDatastoreManager.runInTransaction(
-                (dao) -> {
-                    if (asyncFetchStatus.isRequestSuccess()) {
-                        if (resultTrigger.isPresent()) {
-                            storeTrigger(resultTrigger.get(), dao);
-                        }
-                        handleSuccess(asyncRegistration, asyncRedirect, dao);
-                    } else {
-                        handleFailure(asyncRegistration, asyncFetchStatus, failedOrigins, dao);
-                    }
-                });
+        long endTime = System.currentTimeMillis();
+        asyncFetchStatus.setRegistrationDelay(endTime - startTime);
+
+        boolean transactionResult =
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            if (asyncFetchStatus.isRequestSuccess()) {
+                                if (resultTrigger.isPresent()) {
+                                    storeTrigger(resultTrigger.get(), dao);
+                                }
+                                handleSuccess(
+                                        asyncRegistration, asyncFetchStatus, asyncRedirect, dao);
+                            } else {
+                                handleFailure(
+                                        asyncRegistration, asyncFetchStatus, failedOrigins, dao);
+                            }
+                        });
+
+        if (!transactionResult) {
+            asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.STORAGE_ERROR);
+        }
+
+        FetcherUtil.emitHeaderMetrics(
+                FlagsFactory.getFlags(),
+                AdServicesLoggerImpl.getInstance(),
+                asyncRegistration,
+                asyncFetchStatus);
     }
 
     /** Visible only for testing. */
@@ -413,7 +448,10 @@ public class AsyncRegistrationQueueRunner {
     }
 
     private void handleSuccess(
-            AsyncRegistration asyncRegistration, AsyncRedirect asyncRedirect, IMeasurementDao dao)
+            AsyncRegistration asyncRegistration,
+            AsyncFetchStatus asyncFetchStatus,
+            AsyncRedirect asyncRedirect,
+            IMeasurementDao dao)
             throws DatastoreException {
         // deleteAsyncRegistration will throw an exception & rollback the transaction if the record
         // is already deleted. This can happen if both fallback & regular job are running at the
@@ -429,6 +467,7 @@ public class AsyncRegistrationQueueRunner {
                         DataType.REGISTRATION_REDIRECT_COUNT);
         int currentCount = keyValueData.getRegistrationRedirectCount();
         if (currentCount == maxRedirects) {
+            asyncFetchStatus.setRedirectError(true);
             return;
         }
         for (Uri uri : asyncRedirect.getRedirects()) {
