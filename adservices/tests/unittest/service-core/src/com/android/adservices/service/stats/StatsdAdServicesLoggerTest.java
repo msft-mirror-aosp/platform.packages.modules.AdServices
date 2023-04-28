@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -33,6 +34,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.errorlogging.AdServicesErrorCode;
+import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
@@ -398,6 +401,54 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(hashedValue),
                                 eq(hashLimit));
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logAdServicesError_success() {
+        int errorCode = AdServicesErrorCode.DATABASE_READ_EXCEPTION.getErrorCode();
+        int ppapiName = 1;
+        String className = "TopicsService";
+        String methodName = "getTopics";
+        int lineNumber = 100;
+        String exceptionName = "SQLiteException";
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(errorCode)
+                        .setPpapiName(ppapiName)
+                        .setClassName(className)
+                        .setMethodName(methodName)
+                        .setLineNumber(lineNumber)
+                        .setLastObservedExceptionName(exceptionName)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyString(),
+                                        anyString(),
+                                        anyInt(),
+                                        anyString()));
+
+        // Invoke logging call
+        mLogger.logAdServicesError(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_ERROR_REPORTED),
+                                eq(errorCode),
+                                eq(ppapiName),
+                                eq(className),
+                                eq(methodName),
+                                eq(lineNumber),
+                                eq(exceptionName));
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
