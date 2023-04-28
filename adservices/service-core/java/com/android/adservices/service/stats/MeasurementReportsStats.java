@@ -27,9 +27,11 @@ public class MeasurementReportsStats {
     private int mCode;
     private int mType;
     private int mResultCode;
+    private int mFailureType;
+    private int mUploadMethod;
+    private long mReportingDelay;
 
-    public MeasurementReportsStats() {
-    }
+    public MeasurementReportsStats() {}
 
     @Override
     public boolean equals(Object obj) {
@@ -39,27 +41,40 @@ public class MeasurementReportsStats {
         MeasurementReportsStats measurementReportsStats = (MeasurementReportsStats) obj;
         return mCode == measurementReportsStats.getCode()
                 && mType == measurementReportsStats.getType()
-                && mResultCode == measurementReportsStats.getResultCode();
+                && mResultCode == measurementReportsStats.getResultCode()
+                && mFailureType == measurementReportsStats.getFailureType()
+                && mUploadMethod == measurementReportsStats.getUploadMethod()
+                && mReportingDelay == measurementReportsStats.getReportingDelay();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mCode, mType, mResultCode);
+        return Objects.hash(
+                mCode, mType, mResultCode, mFailureType, mUploadMethod, mReportingDelay);
     }
 
-    @NonNull
     public int getCode() {
         return mCode;
     }
 
-    @NonNull
     public int getType() {
         return mType;
     }
 
-    @NonNull
     public int getResultCode() {
         return mResultCode;
+    }
+
+    public int getFailureType() {
+        return mFailureType;
+    }
+
+    public int getUploadMethod() {
+        return mUploadMethod;
+    }
+
+    public long getReportingDelay() {
+        return mReportingDelay;
     }
 
     /**
@@ -93,6 +108,24 @@ public class MeasurementReportsStats {
          */
         public @NonNull MeasurementReportsStats.Builder setResultCode(int resultCode) {
             mBuilding.mResultCode = resultCode;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getFailureType()} . */
+        public @NonNull MeasurementReportsStats.Builder setFailureType(int failureType) {
+            mBuilding.mFailureType = failureType;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getUploadMethod()} . */
+        public @NonNull MeasurementReportsStats.Builder setUploadMethod(int uploadMethod) {
+            mBuilding.mUploadMethod = uploadMethod;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getReportingDelay()} . */
+        public @NonNull MeasurementReportsStats.Builder setReportingDelay(long reportingDelay) {
+            mBuilding.mReportingDelay = reportingDelay;
             return this;
         }
         /**
