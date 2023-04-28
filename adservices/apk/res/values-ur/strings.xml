@@ -117,12 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"اشتہارات کی رازداری کی نئی خصوصیات اب دستیاب ہیں"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"اپنی شناخت کی حفاظت کرتے ہوئے آپ کو نظر آنے والے اشتہارات پر مزید انتخاب حاصل کریں"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"اشتہارات کی رازداری کی نئی خصوصیات اب دستیاب ہیں"</string>
-    <!-- no translation found for notificationUI_fledge_measurement_introduction_text1_v2 (6713190564619176449) -->
-    <skip />
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"‏ایپ کے آپ کو ذاتی نوعیت کے اشتہارات دکھانے پر وہ آپ کے بارے میں کیا جان سکتی ہے اسے محدود کرنے کے لیے Android نئے طریقے متعارف کرا رہا ہے۔"</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  ایپس کے تجویز کردہ اشتہارات کے ساتھ، رازداری کی نئی خصوصیات ایپس کو آپ کو متعلقہ اشتہارات دکھانے کے قابل بناتے ہوئے آپ کی شناخت اور آپ کی ایپ کے استعمال سے متعلق معلومات کے تحفظ میں مدد کرتی ہیں۔ آپ کی سرگرمی کی بنیاد پر، آپ جو ایپ استعمال کرتے ہیں وہ دیگر ایپس پر متعلقہ اشتہارات تجویز کر سکتی ہے۔ آپ رازداری کی ترتیبات میں ایپس کی فہرست دیکھ سکتے ہیں اور انہیں تجاویز پیش کرنے سے مسدود کر سکتے ہیں۔"</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  اشتہار کی پیمائش کے ساتھ، ایپس کے درمیان ان کے اشتہارات کی کارکردگی کو سمجھنے کے لیے محدود اقسام کے ڈیٹا کا اشتراک کیا جاتا ہے، جیسے کہ دن کا وہ وقت جب آپ کو کوئی اشتہار دکھایا گیا تھا۔"</string>
-    <!-- no translation found for notificationUI_how_it_works_fledge_measurement_expanded_text2_v2 (7429503997561484856) -->
-    <skip />
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"اس آلہ پر کسی ایپ میں آپ کی سرگرمی اشتہارات تجویز کرنے کے لیے استعمال کی جا سکتی ہے۔"</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"اشتہارات کی رازداری کی کوئی دوسری خصوصیت آن کریں"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"‏Android رازداری کی ایک نئی خصوصیت بھی پیش کرتا ہے جو آپ کو نظر آنے والے اشتہارات کے بارے میں زیادہ انتخاب فراہم کرتی ہے۔"</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"‏اشتہار کے موضوعات آپ کی شناخت اور آپ کی ایپ کے استعمال کے بارے میں معلومات کی حفاظت کرتے ہوئے آپ کو متعلقہ اشتہارات دکھانے میں ایپس کی مدد کرتے ہیں۔ Android آپ کی حال ہی میں استعمال کردہ ایپس کی بنیاد پر دلچسپی کے موضوعات کو نوٹ کر سکتا ہے۔ بعد میں، آپ جو ایپ استعمال کرتے ہیں وہ آپ کو مزید متعلقہ اشتہارات دکھانے کے لیے Android سے متعلقہ عنوانات کے لیے کہہ سکتی ہے۔"</string>
@@ -653,7 +651,7 @@
     <string name="topic10434" msgid="7081309045291255264">"ہنی مون اور رومانی سفر"</string>
     <string name="topic10435" msgid="1064605516265819020">"ہوٹلز اور رہائش"</string>
     <string name="topic10436" msgid="9050375924140897722">"لمبی دوری کی بس اور ریل"</string>
-    <string name="topic10437" msgid="2655664900730187701">"کم قیمت اور ہنگامی سفر"</string>
+    <string name="topic10437" msgid="2655664900730187701">"کم قیمت اور ایمرجنسی سفر"</string>
     <string name="topic10438" msgid="7944023251845122923">"سامان اور سفر کے لوازمات"</string>
     <string name="topic10439" msgid="7845433008088931971">"سیاحتی مقامات"</string>
     <string name="topic10440" msgid="485118071443976808">"سواحل اور جزائر"</string>

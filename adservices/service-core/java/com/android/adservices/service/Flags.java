@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -606,6 +607,22 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT = 1000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT = 950;
+
+    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
+    default int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
+     * there are too many entries.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
+    }
+
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
@@ -881,11 +898,21 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
-    /** Write consent data to AppSearch only. */
+    /**
+     * Write consent data to AppSearch only. To store consent data in AppSearch the flag
+     * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
+     * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
+     * running on S- for all consent requests and on T+ once after OTA.
+     */
     int APPSEARCH_ONLY = 3;
 
-    /* Consent source of truth intended to be used by default. */
-    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+    /**
+     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
+     * code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -1889,14 +1916,6 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
-    // Enable per-app consent in FLEDGE if GA UX is enabled
-    boolean FLEDGE_PER_APP_CONSENT_ENABLED = GA_UX_FEATURE_ENABLED;
-
-    /** Returns {@code true} if per-app consent is enabled in FLEDGE. */
-    default boolean getFledgePerAppConsentEnabled() {
-        return FLEDGE_PER_APP_CONSENT_ENABLED;
-    }
-
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
@@ -1999,10 +2018,43 @@ public interface Flags {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
     }
 
-    /** Returns whether to enable flexible event reporting API */
+    /** Default value for flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
+    /** Returns whether to enable flexible event reporting API */
     default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
         return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default maximum sources per publisher */
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    /** Returns maximum sources per publisher */
+    default int getMeasurementMaxSourcesPerPublisher() {
+        return MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
+    }
+
+    /** Default maximum triggers per destination */
+    int MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION = 1024;
+
+    /** Returns maximum triggers per destination */
+    default int getMeasurementMaxTriggersPerDestination() {
+        return MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+    }
+
+    /** Default maximum Aggregate Reports per destination */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Aggregate Reports per publisher */
+    default int getMeasurementMaxAggregateReportsPerDestination() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default maximum Event Reports per destination */
+    int MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Event Reports per destination */
+    default int getMeasurementMaxEventReportsPerDestination() {
+        return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 }

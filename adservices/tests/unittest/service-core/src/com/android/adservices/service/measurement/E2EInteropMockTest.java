@@ -46,8 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop
- *
- * <p>Saturday, March 24, 2023
+ * April 2, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -137,7 +136,14 @@ public class E2EInteropMockTest extends E2EMockTest {
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -171,7 +177,14 @@ public class E2EInteropMockTest extends E2EMockTest {
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())

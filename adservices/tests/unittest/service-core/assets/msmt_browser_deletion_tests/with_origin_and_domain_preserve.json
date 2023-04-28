@@ -371,6 +371,7 @@
         "destinationOrigin": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S3",
         "triggerId" : "T1"
@@ -383,6 +384,7 @@
         "destinationOrigin": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
+        "triggerId": "ignored1648665733605",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S2",
         "triggerId" : "T2"
@@ -395,6 +397,7 @@
         "destinationOrigin": "https://deleteCandidate2.site.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S2",
         "triggerId" : "T1"
@@ -407,6 +410,7 @@
         "destinationOrigin": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S1",
         "triggerId" : "T3"
@@ -419,6 +423,7 @@
         "destinationOrigin": "https://abc.deletesite2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S7",
         "triggerId" : "Trigger6"
@@ -431,6 +436,7 @@
         "destinationOrigin": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S3",
         "triggerId" : "Trigger6"
@@ -724,6 +730,7 @@
         "destinationOrigin": "https://site2.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733605,
+        "triggerId": "ignored1648665733605",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S2",
         "triggerId" : "T2"
@@ -736,6 +743,7 @@
         "destinationOrigin": "https://deleteCandidate2.site.test",
         "enrollmentId": "enrollment-id",
         "triggerTime": 1648665733601,
+        "triggerId": "ignored1648665733601",
         "registrant": "android-app://com.registrant.deleteCandidate",
         "sourceId" : "S2",
         "triggerId" : "T1"

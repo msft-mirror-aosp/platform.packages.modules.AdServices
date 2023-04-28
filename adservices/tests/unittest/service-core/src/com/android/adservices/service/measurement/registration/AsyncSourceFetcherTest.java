@@ -33,6 +33,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -57,10 +58,10 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
@@ -94,6 +95,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import javax.net.ssl.HttpsURLConnection;
+
 /** Unit tests for {@link AsyncSourceFetcher} */
 @RunWith(MockitoJUnitRunner.class)
 @SmallTest
@@ -102,8 +104,6 @@ public final class AsyncSourceFetcherTest {
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
     private static final String DEFAULT_REGISTRATION = WebUtil.validUrl("https://foo.test");
     private static final String ENROLLMENT_ID = "enrollment-id";
-    private static final EnrollmentData ENROLLMENT =
-            new EnrollmentData.Builder().setEnrollmentId("enrollment-id").build();
     private static final String DEFAULT_TOP_ORIGIN =
             "https://com.android.adservices.servicecoretest";
     ;
@@ -118,8 +118,6 @@ public final class AsyncSourceFetcherTest {
     private static final String LIST_TYPE_REDIRECT_URI = WebUtil.validUrl("https://bar.test");
     private static final String LOCATION_TYPE_REDIRECT_URI =
             WebUtil.validUrl("https://example.test");
-    private static final String ALT_DESTINATION = "android-app://com.yourapps";
-    private static final long ALT_PRIORITY = 321;
     private static final long ALT_EVENT_ID = 123456789;
     private static final long ALT_EXPIRY = 456790;
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test");
@@ -160,14 +158,19 @@ public final class AsyncSourceFetcherTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(Enrollment.class)
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
 
-        mFetcher = spy(new AsyncSourceFetcher(mEnrollmentDao, mFlags, mLogger));
+        mFetcher = spy(new AsyncSourceFetcher(sContext, mEnrollmentDao, mFlags, mLogger));
         // For convenience, return the same enrollment-ID since we're using many arbitrary
         // registration URIs and not yet enforcing uniqueness of enrollment.
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(ENROLLMENT);
+        ExtendedMockito.doReturn(Optional.of(ENROLLMENT_ID))
+                .when(
+                        () ->
+                                Enrollment.getValidEnrollmentId(
+                                        any(), anyString(), any(), any(), any()));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
@@ -246,7 +249,11 @@ public final class AsyncSourceFetcherTest {
     @Test
     public void testBasicSourceRequest_skipSourceWhenNotEnrolled() throws Exception {
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
-        when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any())).thenReturn(null);
+        ExtendedMockito.doReturn(Optional.empty())
+                .when(
+                        () ->
+                                Enrollment.getValidEnrollmentId(
+                                        any(), anyString(), any(), any(), any()));
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getHeaderFields())

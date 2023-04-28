@@ -70,6 +70,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -445,7 +446,6 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         InteractionReporter interactionReporter =
                 new InteractionReporter(
-                        mContext,
                         mAdSelectionEntryDao,
                         mAdServicesHttpsClient,
                         mLightweightExecutor,
@@ -512,7 +512,13 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         UpdateAdCounterHistogramWorker worker =
                 new UpdateAdCounterHistogramWorker(
-                        new AdCounterHistogramUpdaterImpl(mAdSelectionEntryDao, mFrequencyCapDao),
+                        new AdCounterHistogramUpdaterImpl(
+                                mAdSelectionEntryDao,
+                                mFrequencyCapDao,
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeAdCounterHistogramAbsoluteMaxEventCount),
+                                BinderFlagReader.readFlag(
+                                        mFlags::getFledgeAdCounterHistogramLowerMaxEventCount)),
                         mBackgroundExecutor,
                         // TODO(b/235841960): Use the same injected clock as AdSelectionRunner
                         //  after aligning on Clock usage

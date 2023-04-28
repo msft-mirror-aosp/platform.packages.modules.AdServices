@@ -38,6 +38,7 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.devapi.DevContext;
@@ -75,6 +76,9 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @Before
     public void setup() throws InterruptedException {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
@@ -108,6 +112,10 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
 
     @After
     public void tearDown() throws ExecutionException, InterruptedException, TimeoutException {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         leaveJoinedCustomAudiences();
         PhFlagsFixture.overrideEnableEnrollmentSeed(false);
 
@@ -122,6 +130,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
             throws ExecutionException, InterruptedException, TimeoutException {
         joinCustomAudience(
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1).build());
+    }
+
+    @Test
+    public void testJoinCustomAudience_validCustomAudience_success_usingGetMethodToCreateManager()
+            throws ExecutionException, InterruptedException, TimeoutException {
+        // Override mClient with a new value that explicitly uses the Get method to create manager
+        createClientUsingGetMethod();
+        testJoinCustomAudience_validCustomAudience_success();
     }
 
     @Test
@@ -142,6 +158,13 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
     }
 
     @Test
+    public void testJoinCustomAudience_withMissingEnrollment_fail_usingGetMethodToCreateManager() {
+        // Override mClient with a new value that explicitly uses the Get method to create manager
+        createClientUsingGetMethod();
+        testJoinCustomAudience_withMissingEnrollment_fail();
+    }
+
+    @Test
     public void testJoinCustomAudience_invalidAdsMetadata_fail() {
         CustomAudience customAudienceWithInvalidAdDataMetadata =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
@@ -154,6 +177,13 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataMetadata));
         assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
         assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+    }
+
+    @Test
+    public void testJoinCustomAudience_invalidAdsMetadata_fail_usingGetMethodToCreateManager() {
+        // Override mClient with a new value that explicitly uses the Get method to create manager
+        createClientUsingGetMethod();
+        testJoinCustomAudience_invalidAdsMetadata_fail();
     }
 
     @Test
@@ -426,5 +456,14 @@ public class CustomAudienceApiCtsTest extends ForegroundCtsTest {
         } finally {
             mCustomAudiencesToCleanUp.clear();
         }
+    }
+
+    private void createClientUsingGetMethod() {
+        mClient =
+                new AdvertisingCustomAudienceClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(MoreExecutors.directExecutor())
+                        .setUseGetMethodToCreateManagerInstance(true)
+                        .build();
     }
 }
