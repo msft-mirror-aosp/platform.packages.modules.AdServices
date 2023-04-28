@@ -314,6 +314,9 @@ public final class PhFlags implements Flags {
             "measurement_job_registration_fallback_job_kill_switch";
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
+
+    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
+            "measurement_rollback_deletion_app_search_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
@@ -1640,6 +1643,17 @@ public final class PhFlags implements Flags {
                                 NAMESPACE_ADSERVICES,
                                 /* flagName */ KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
                                 defaultValue));
+    }
+
+    @Override
+    public boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
+                /* def= */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* name= */ KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                        defaultValue));
     }
 
     @Override
@@ -3050,6 +3064,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
         writer.println(
                 "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
+                        + " = "
+                        + getMeasurementRollbackDeletionAppSearchKillSwitch());
     }
 
     @Override
