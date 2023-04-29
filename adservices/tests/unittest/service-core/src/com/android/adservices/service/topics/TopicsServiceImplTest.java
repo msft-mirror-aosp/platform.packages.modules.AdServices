@@ -68,6 +68,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -150,6 +151,7 @@ public class TopicsServiceImplTest {
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
+    @Mock AppSearchConsentManager mAppSearchConsentManager;
 
     @Before
     public void setup() throws Exception {
@@ -162,7 +164,11 @@ public class TopicsServiceImplTest {
         mTopicsDao = new TopicsDao(dbHelper);
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
-                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+                        mTopicsDao,
+                        mMockAdServicesManager,
+                        mAppSearchConsentManager,
+                        Flags.PPAPI_AND_SYSTEM_SERVER,
+                        /* enableAppSearchConsent= */ false);
         CacheManager cacheManager =
                 new CacheManager(
                         mTopicsDao,

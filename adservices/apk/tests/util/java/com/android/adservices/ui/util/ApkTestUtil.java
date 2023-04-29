@@ -21,7 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Environment;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -99,6 +98,14 @@ public class ApkTestUtil {
         obj.clickTopLeft();
     }
 
+    public static void gentleSwipe(UiDevice device) throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+
+        scrollView.scrollForward(100);
+    }
+
     /** Returns the UiObject corresponding to a resource ID after scrolling. */
     public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
@@ -160,17 +167,11 @@ public class ApkTestUtil {
     /** Takes the screenshot at the end of each test for debugging. */
     public static void takeScreenshot(UiDevice device, String methodName) {
         try {
-            String uiDocumentsDir = "/Documents/AdServicesUiTests_Screenshots_";
             String timeStamp =
                     new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
                             .format(Date.from(Instant.now()));
 
-            File screenshotFile =
-                    new File(
-                            Environment.getExternalStorageDirectory()
-                                    + uiDocumentsDir
-                                    + methodName
-                                    + timeStamp);
+            File screenshotFile = new File("/sdcard/Pictures/" + methodName + timeStamp + ".png");
             device.takeScreenshot(screenshotFile);
         } catch (RuntimeException e) {
             LogUtil.e("Failed to take screenshot: " + e.getMessage());

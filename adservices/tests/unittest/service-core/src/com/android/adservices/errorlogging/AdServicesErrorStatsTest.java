@@ -16,13 +16,15 @@
 
 package com.android.adservices.errorlogging;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 public class AdServicesErrorStatsTest {
     private static final int ERROR_CODE =
-            AdServicesErrorCode.DATABASE_READ_EXCEPTION.getErrorCode();
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
     private static final int PPAPI_NAME = 1;
     private static final String CLASS_NAME = "TopicsService";
     private static final String METHOD_NAME = "getTopics";

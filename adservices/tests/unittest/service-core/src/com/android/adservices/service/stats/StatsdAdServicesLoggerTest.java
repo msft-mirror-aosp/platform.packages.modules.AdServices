@@ -17,6 +17,8 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -34,7 +36,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import com.android.adservices.errorlogging.AdServicesErrorCode;
 import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -408,16 +409,15 @@ public class StatsdAdServicesLoggerTest {
 
     @Test
     public void logAdServicesError_success() {
-        int errorCode = AdServicesErrorCode.DATABASE_READ_EXCEPTION.getErrorCode();
-        int ppapiName = 1;
         String className = "TopicsService";
         String methodName = "getTopics";
         int lineNumber = 100;
         String exceptionName = "SQLiteException";
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
-                        .setErrorCode(errorCode)
-                        .setPpapiName(ppapiName)
+                        .setErrorCode(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
+                        .setPpapiName(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
                         .setClassName(className)
                         .setMethodName(methodName)
                         .setLineNumber(lineNumber)
@@ -443,8 +443,8 @@ public class StatsdAdServicesLoggerTest {
                 () ->
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_ERROR_REPORTED),
-                                eq(errorCode),
-                                eq(ppapiName),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
                                 eq(className),
                                 eq(methodName),
                                 eq(lineNumber),
