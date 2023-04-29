@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
@@ -32,7 +33,6 @@ import static com.android.adservices.service.Flags.CLASSIFIER_THRESHOLD;
 import static com.android.adservices.service.Flags.COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
@@ -171,6 +171,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
 import static com.android.adservices.service.Flags.MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_APP_SIGNATURE_ALLOW_LIST;
 import static com.android.adservices.service.Flags.PPAPI_ONLY;
@@ -192,6 +193,7 @@ import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_
 import static com.android.adservices.service.PhFlags.DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
@@ -377,6 +379,7 @@ import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoSession;
@@ -4050,6 +4053,24 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetAdServicesApksShaCerts() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getAdservicesApkShaCertificate())
+                .isEqualTo(ADSERVICES_APK_SHA_CERTIFICATE);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_APK_SHA_CERTS,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdservicesApkShaCertificate()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetSdkRequestPermitsPerSecond() {
         // Without any overriding, the value is the hard coded constant.
         assertThat(FlagsFactory.getFlags().getSdkRequestPermitsPerSecond())
@@ -4639,9 +4660,23 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testDefaultConsentSourceOfTruth_isAtLeastT() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_SYSTEM_SERVER);
+    }
+
+    @Test
+    public void testDefaultConsentSourceOfTruth_isS() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH).isEqualTo(PPAPI_ONLY);
+    }
+
+    @Test
     public void testGetConsentSourceOfTruth() {
         assertThat(FlagsFactory.getFlags().getConsentSourceOfTruth())
-                .isEqualTo(DEFAULT_CONSENT_SOURCE_OF_TRUTH);
+                .isEqualTo(Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH);
 
         final int phOverridingValue = PPAPI_ONLY;
         DeviceConfig.setProperty(
@@ -4652,6 +4687,20 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getConsentSourceOfTruth()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isAtLeastT() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_SYSTEM_SERVER);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isS() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_ONLY);
     }
 
     @Test
