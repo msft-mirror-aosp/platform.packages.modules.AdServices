@@ -98,6 +98,14 @@ public class ApkTestUtil {
         obj.clickTopLeft();
     }
 
+    public static void gentleSwipe(UiDevice device) throws UiObjectNotFoundException {
+        UiScrollable scrollView =
+                new UiScrollable(
+                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
+
+        scrollView.scrollForward(100);
+    }
+
     /** Returns the UiObject corresponding to a resource ID after scrolling. */
     public static UiObject scrollTo(UiDevice device, int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
