@@ -67,6 +67,7 @@ public class SdkSandboxServiceProviderImplUnitTest {
         ExtendedMockito.doReturn(mAmLocal)
                 .when(() -> LocalManagerRegistry.getManager(ActivityManagerLocal.class));
 
+        // Required for Context#registerReceiverForAllUsers
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
