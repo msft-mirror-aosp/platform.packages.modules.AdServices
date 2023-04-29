@@ -324,6 +324,9 @@ public final class PhFlags implements Flags {
     static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
     static final String KEY_PPAPI_APP_SIGNATURE_ALLOW_LIST = "ppapi_app_signature_allow_list";
 
+    // AdServices APK sha certs.
+    static final String KEY_ADSERVICES_APK_SHA_CERTS = "adservices_apk_sha_certs";
+
     // Rate Limit keys
     static final String KEY_SDK_REQUEST_PERMITS_PER_SECOND = "sdk_request_permits_per_second";
     static final String KEY_ADID_REQUEST_PERMITS_PER_SECOND = "adid_request_permits_per_second";
@@ -1730,6 +1733,15 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ PPAPI_APP_ALLOW_LIST);
     }
 
+    // AdServices APK SHA certs.
+    @Override
+    public String getAdservicesApkShaCertificate() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_APK_SHA_CERTS,
+                /* defaultValue */ ADSERVICES_APK_SHA_CERTIFICATE);
+    }
+
     // PPAPI Signature allow-list.
     @Override
     public String getPpapiAppSignatureAllowList() {
@@ -3021,13 +3033,11 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getEnableAppsearchConsentData() {
-        // Check if enable Back compat is true first and then check flag value
         // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return getEnableBackCompat()
-                && DeviceConfig.getBoolean(
-                        NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
-                        /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_APPSEARCH_CONSENT_DATA,
+                /* defaultValue */ ENABLE_APPSEARCH_CONSENT_DATA);
     }
 
     @Override

@@ -144,6 +144,14 @@ public final class AsyncSourceFetcherTest {
 
     private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
 
+    private static final int UNKNOWN_SOURCE_TYPE = 0;
+    private static final int EVENT_SOURCE_TYPE = 1;
+    private static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    private static final int APP_REGISTRATION_SURFACE_TYPE = 2;
+    private static final int UNKNOWN_STATUS = 0;
+    private static final int SUCCESS_STATUS = 1;
+    private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+
     AsyncSourceFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -215,6 +223,7 @@ public final class AsyncSourceFetcherTest {
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
         // Execution
         AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
         Optional<Source> fetch =
@@ -234,13 +243,19 @@ public final class AsyncSourceFetcherTest {
         assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
         assertNotNull(result.getRegistrationId());
         assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                253)
+                                                253,
+                                                EVENT_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                SUCCESS_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
         verify(mUrlConnection).setRequestMethod("POST");
@@ -3863,19 +3878,26 @@ public final class AsyncSourceFetcherTest {
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
         // Execution
         Optional<Source> fetch =
-                mFetcher.fetchSource(
-                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirect);
 
         assertTrue(fetch.isPresent());
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
         verify(mLogger)
                 .logMeasurementRegistrationsResponseSize(
                         eq(
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__SOURCE,
-                                                115)
+                                                115,
+                                                EVENT_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                SUCCESS_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(DEFAULT_REGISTRATION)
                                         .build()));
     }
