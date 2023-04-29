@@ -90,9 +90,9 @@ android {
             java.srcDirs = [
                 'tests/src',
                 'unittest/src',
-                'tests/Notification/src',
-                'tests/Settings/src',
-                'tests/uitestutil',
+                'tests/notification/src',
+                'tests/settings/src',
+                'tests/util/java',
             ]
             java.setIncludes(new HashSet([
                 'com/android/adservices/ui/**/*.java',

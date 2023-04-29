@@ -53,7 +53,6 @@ public class AdServicesSettingsAppsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupViewModel(view);
-        initActionListeners();
     }
 
     @Override
@@ -61,6 +60,7 @@ public class AdServicesSettingsAppsFragment extends Fragment {
         super.onResume();
         AppsViewModel viewModel = new ViewModelProvider(requireActivity()).get(AppsViewModel.class);
         viewModel.refresh();
+        initActionListeners();
     }
 
     // initialize all action listeners except for actions in apps list

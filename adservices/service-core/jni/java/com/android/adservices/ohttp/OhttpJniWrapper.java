@@ -65,6 +65,9 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     /** Returns a reference to the AEAD algorithm AES-256-GCM */
     public native long hpkeAeadAes256Gcm();
 
+    /** Returns a reference to the HKDF_SHA256 message digest (i.e., SHA256) */
+    public native long hkdfSha256MessageDigest();
+
     /**
      * Returns reference to a newly-allocated EVP_HPKE_CTX BoringSSL object. Object thus created
      * must be freed by calling {@link #hpkeCtxFree(long)}
@@ -91,7 +94,7 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
      * @return The encapsulated shared secret that can be decrypted by the server using their
      *     private key and will also be required on the client to decrypt server's response
      */
-    public byte[] hpkeCtxSetupSenderWithSeed(
+    public EncapsulatedSharedSecret hpkeCtxSetupSenderWithSeed(
             HpkeContextNativeRef hpkeContextNativeRef,
             KemNativeRef kemNativeRef,
             KdfNativeRef kdfNativeRef,
@@ -105,14 +108,16 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
         Objects.requireNonNull(aeadNativeRef);
         Objects.requireNonNull(publicKey);
         Objects.requireNonNull(seed);
-        return hpkeCtxSetupSenderWithSeed(
-                hpkeContextNativeRef.getAddress(),
-                kemNativeRef.getAddress(),
-                kdfNativeRef.getAddress(),
-                aeadNativeRef.getAddress(),
-                publicKey,
-                info,
-                seed);
+        byte[] encapsulatedSharedSecret =
+                hpkeCtxSetupSenderWithSeed(
+                        hpkeContextNativeRef.getAddress(),
+                        kemNativeRef.getAddress(),
+                        kdfNativeRef.getAddress(),
+                        aeadNativeRef.getAddress(),
+                        publicKey,
+                        info,
+                        seed);
+        return EncapsulatedSharedSecret.create(encapsulatedSharedSecret);
     }
 
     /**
@@ -150,7 +155,7 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
             byte[] seed,
             @Nullable byte[] plainText,
             @Nullable byte[] aad) {
-        byte[] encapsulatedSharedSecret =
+        EncapsulatedSharedSecret encapsulatedSharedSecret =
                 hpkeCtxSetupSenderWithSeed(
                         hpkeContextNativeRef,
                         kemNativeRef,
@@ -162,6 +167,60 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
         byte[] cipherText = hpkeCtxSeal(hpkeContextNativeRef, plainText, aad);
 
         return HpkeEncryptResponse.create(encapsulatedSharedSecret, cipherText);
+    }
+
+    /**
+     * Computes and returns a HKDF PseudoRandomKey (as specified by RFC 5869) from initial keying
+     * material {@code secret} and {@code salt} using a digest method referenced by {@code
+     * hkdfMessageDigestNativeRef}
+     */
+    public HkdfExtractResponse hkdfExtract(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef, byte[] secret, byte[] salt) {
+        Objects.requireNonNull(hkdfMessageDigestNativeRef);
+        byte[] extractResponse = hkdfExtract(hkdfMessageDigestNativeRef.getAddress(), secret, salt);
+        return HkdfExtractResponse.create(extractResponse);
+    }
+
+    /**
+     * Uses the HPKE context to export a secret of length {@code secretLength}. This function uses
+     * contextual information in the form of a {@code contextString} for the secret. This is
+     * necessary to separate different uses of exported secrets and bind relevant caller-specific
+     * context into the output.
+     */
+    public HpkeExportResponse hpkeExport(
+            HpkeContextNativeRef hpkeContext, byte[] contextString, int secretLength) {
+        Objects.requireNonNull(hpkeContext);
+        byte[] exportResponse = hpkeExport(hpkeContext.getAddress(), contextString, secretLength);
+        return HpkeExportResponse.create(exportResponse);
+    }
+
+    /**
+     * Computes and returns a HKDF Output Keying Material (as specified by RFC 5869) of length
+     * {@code keyLength} from the PseudoRandomKey ({@code prkArray}) and {@code info} using a digest
+     * referenced by {@code hkdfMessageDigestNativeRef}
+     */
+    public HkdfExpandResponse hkdfExpand(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef,
+            byte[] prkArray,
+            byte[] infoArray,
+            int keyLength) {
+        Objects.requireNonNull(hkdfMessageDigestNativeRef);
+        byte[] expandResponse =
+                hkdfExpand(hkdfMessageDigestNativeRef.getAddress(), prkArray, infoArray, keyLength);
+        return HkdfExpandResponse.create(expandResponse);
+    }
+
+    /**
+     * Decrypts the {@code cipherTextArray} using the symmetric key {@code keyArray} and the
+     * single-use {@code nonceArray} that were used at the time of encryption.
+     */
+    public byte[] aeadOpen(
+            AeadNativeRef aeadNativeRef,
+            byte[] keyArray,
+            byte[] nonceArray,
+            byte[] cipherTextArray) {
+        Objects.requireNonNull(aeadNativeRef);
+        return aeadOpen(aeadNativeRef.getAddress(), keyArray, nonceArray, cipherTextArray);
     }
 
     /**
@@ -194,4 +253,14 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
             byte[] seed);
 
     private native byte[] hpkeCtxSeal(long ctx, @Nullable byte[] plaintText, @Nullable byte[] aad);
+
+    private native byte[] aeadOpen(
+            long aeadNativeRef, byte[] keyArray, byte[] nonceArray, byte[] cipherTextArray);
+
+    private native byte[] hkdfExpand(
+            long hkdfMessageDigestNativeRef, byte[] prkArray, byte[] infoArray, int keyLength);
+
+    private native byte[] hkdfExtract(long hkdfMessageDigestNativeRef, byte[] secret, byte[] salt);
+
+    private native byte[] hpkeExport(long hpkeContext, byte[] contextString, int secretLength);
 }

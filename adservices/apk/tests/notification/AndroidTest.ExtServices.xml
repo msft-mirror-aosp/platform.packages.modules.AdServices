@@ -32,6 +32,12 @@
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
 
+    <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
+        <option name="directory-keys" value="/sdcard/Pictures" />
+        <option name="clean-up" value="false" />
+        <option name="collect-on-run-ended-only" value="true" />
+    </metrics_collector>
+
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name" value="AdExtServicesApkUINotificationTests.apk"/>
@@ -41,7 +47,15 @@
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
+        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
+        <option name="run-command" value="device_config put adservices adservice_enabled true"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
+    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
+        <option name="pre-reboot" value="true"/>
+    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="am wait-for-broadcast-idle"/>
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="force-skip-system-props" value="true"/>
