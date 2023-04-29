@@ -31,6 +31,7 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -73,6 +74,10 @@ public class PermissionsAppOptOutTest {
             overridePpapiAppAllowList();
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // TODO: Remove once b/277790129 has been resolved
+        final String flags = ShellUtils.runShellCommand("device_config list adservices");
+        Log.d("Adservices", flags);
     }
 
     @After
