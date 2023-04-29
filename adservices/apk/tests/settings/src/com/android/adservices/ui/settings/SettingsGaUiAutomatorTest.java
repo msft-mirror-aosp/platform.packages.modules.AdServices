@@ -42,7 +42,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -417,7 +416,6 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    @Ignore("git master fail")
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
