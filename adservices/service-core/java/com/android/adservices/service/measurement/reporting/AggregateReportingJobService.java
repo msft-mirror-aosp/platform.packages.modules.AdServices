@@ -65,17 +65,22 @@ public final class AggregateReportingJobService extends JobService {
         }
 
         LogUtil.d("AggregateReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new AggregateReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis() - SystemHealthParams
-                                    .MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis());
-            jobFinished(params, !success);
-        });
+        sBlockingExecutor.execute(
+                () -> {
+                    long maxAggregateReportUploadRetryWindowMs =
+                            SystemHealthParams.MAX_AGGREGATE_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    boolean success =
+                            new AggregateReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.REGULAR)
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxAggregateReportUploadRetryWindowMs,
+                                            System.currentTimeMillis());
+                    jobFinished(params, !success);
+                });
 
         return true;
     }

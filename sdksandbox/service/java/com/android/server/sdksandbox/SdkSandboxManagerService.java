@@ -348,7 +348,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                     /*scheduler=*/ null,
                     Context.RECEIVER_EXPORTED);
         } catch (IntentFilter.MalformedMimeTypeException e) {
-            Log.w(TAG, "Could not register verifier");
+            Log.e(TAG, "Could not register verifier");
         }
     }
 
