@@ -24,6 +24,7 @@ import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -1403,6 +1404,12 @@ public class FledgeE2ETest {
                         AdTechIdentifier.fromString(
                                 mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(
+                                mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
 
         doNothing()
                 .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
