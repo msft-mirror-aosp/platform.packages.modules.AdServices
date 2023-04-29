@@ -391,6 +391,10 @@ public class SettingsActivityUiAutomatorTest {
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        ApkTestUtil.gentleSwipe(sDevice);
+
         // open blocked apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
         UiObject unblockAppText =
