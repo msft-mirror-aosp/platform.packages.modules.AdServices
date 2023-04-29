@@ -79,7 +79,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
                             new AggregateReportingJobHandler(
                                             EnrollmentDao.getInstance(getApplicationContext()),
                                             DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()))
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.FALLBACK)
                                     .performScheduledPendingReportsInWindow(
                                             windowStartTime, windowEndTime);
                     jobFinished(params, !success);
