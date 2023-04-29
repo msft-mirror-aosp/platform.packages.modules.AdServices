@@ -42,7 +42,6 @@ import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Spy;
@@ -210,7 +209,6 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     @Test
-    @Ignore("git master fail")
     public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
         String packageNameOfDefaultBrowser =
                 ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
