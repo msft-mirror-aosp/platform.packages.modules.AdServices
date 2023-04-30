@@ -20,8 +20,8 @@ import com.android.compatibility.common.util.ShellUtils;
 
 /** Class to place back-compat Adservices related helper methods */
 public class CompatAdServicesTestUtils {
-    private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final int APPSEARCH_ONLY = 3;
 
     private CompatAdServicesTestUtils() {
         /* cannot be instantiated */
@@ -33,8 +33,9 @@ public class CompatAdServicesTestUtils {
      */
     public static void setFlags() {
         setEnableBackCompatFlag(true);
-        setBlockedTopicsSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
+        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
+        setConsentSourceOfTruth(APPSEARCH_ONLY);
+        setEnableAppSearchConsentData(true);
         // Measurement rollback check requires loading AdServicesManagerService's Binder from the
         // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
         // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
@@ -46,6 +47,7 @@ public class CompatAdServicesTestUtils {
         setEnableBackCompatFlag(false);
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
+        setEnableAppSearchConsentData(false);
         setMeasurementRollbackDeleteKillSwitch(false);
     }
 
@@ -79,5 +81,10 @@ public class CompatAdServicesTestUtils {
 
     private static void setEnableBackCompatFlag(boolean isEnabled) {
         ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
+    }
+
+    private static void setEnableAppSearchConsentData(boolean isEnabled) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_appsearch_consent_data " + isEnabled);
     }
 }

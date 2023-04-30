@@ -23,6 +23,8 @@ import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTest.DB_AD_SELECTION_FILE_SIZE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -267,6 +269,8 @@ public class FledgeE2ETest {
     @Spy
     FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
             new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLogger);
+
+    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
     @Mock private File mMockDBAdSelectionFile;
 
@@ -706,7 +710,7 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -860,7 +864,7 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         DEFAULT_FLAGS,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1361,6 +1365,100 @@ public class FledgeE2ETest {
                 impressionReportingSemaphore,
                 interactionReportingSemaphore);
         verifyStandardServerRequests(server);
+    }
+
+    @Test
+    public void testFledgeFlowSuccessWithMockServer_DoesNotReportToBuyerWhenEnrollmentFails()
+            throws Exception {
+        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
+        doReturn(false)
+                .when(mConsentManagerMock)
+                .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
+
+        setupAdSelectionConfig();
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        MockWebServer server =
+                getMockWebServer(
+                        getDecisionLogicWithBeacons(),
+                        getV3BiddingLogicJs(),
+                        impressionReportingSemaphore,
+                        interactionReportingSemaphore,
+                        true);
+
+        // Make buyer reporting fail enrollment check
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(
+                                mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(
+                                mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH).getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
+
+        doNothing()
+                .when(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), anyBoolean()));
+
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
+
+        verify(() -> BackgroundFetchJobService.scheduleIfNeeded(any(), any(), eq(false)), times(2));
+
+        // Run Ad Selection
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelection(
+                        mAdSelectionService, mAdSelectionConfig, CommonFixture.TEST_PACKAGE_NAME);
+
+        assertTrue(resultsCallback.mIsSuccess);
+        long resultSelectionId = resultsCallback.mAdSelectionResponse.getAdSelectionId();
+        assertTrue(mAdSelectionEntryDao.doesAdSelectionIdExist(resultSelectionId));
+        assertEquals(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                resultsCallback.mAdSelectionResponse.getRenderUri());
+
+        reportImpressionAndAssertSuccess(resultSelectionId);
+        reportInteractionAndAssertSuccess(resultsCallback);
+
+        // Assert only seller reporting happened since buyer enrollment check fails
+        assertTrue(impressionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
+        assertTrue(interactionReportingSemaphore.tryAcquire(1, 10, TimeUnit.SECONDS));
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                impressionReportingSemaphore.availablePermits());
+        assertEquals(
+                "Extra calls made to MockWebServer",
+                0,
+                interactionReportingSemaphore.availablePermits());
+
+        // Verify 2 less requests since buyer reporting should not happen
+        mMockWebServerRule.verifyMockServerRequests(
+                server,
+                8,
+                ImmutableList.of(
+                        SELLER_DECISION_LOGIC_URI_PATH,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_1,
+                        BUYER_BIDDING_LOGIC_URI_PATH + CUSTOM_AUDIENCE_SEQ_2,
+                        BUYER_TRUSTED_SIGNAL_URI_PATH,
+                        SELLER_TRUSTED_SIGNAL_URI_PATH + SELLER_TRUSTED_SIGNAL_PARAMS),
+                mRequestMatcherPrefixMatch);
     }
 
     @Test
@@ -2455,7 +2553,7 @@ public class FledgeE2ETest {
                                         DEFAULT_FLAGS),
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 DEFAULT_FLAGS),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilter,
                         MoreExecutors.newDirectExecutorService(),
@@ -2468,7 +2566,7 @@ public class FledgeE2ETest {
                                 mConsentManagerMock,
                                 flags,
                                 mAppImportanceFilter,
-                                FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                                mFledgeAuthorizationFilterMock,
                                 mFledgeAllowListsFilterSpy,
                                 mThrottlerSupplier));
 
@@ -2493,7 +2591,7 @@ public class FledgeE2ETest {
                         mAdServicesLogger,
                         flags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        FledgeAuthorizationFilter.create(CONTEXT, mAdServicesLogger),
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);

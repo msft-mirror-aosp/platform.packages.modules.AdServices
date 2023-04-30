@@ -214,7 +214,6 @@ public class NotificationActivityUiAutomatorTest {
     public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        // TODO(277094594) fix broken Link Test on S
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 

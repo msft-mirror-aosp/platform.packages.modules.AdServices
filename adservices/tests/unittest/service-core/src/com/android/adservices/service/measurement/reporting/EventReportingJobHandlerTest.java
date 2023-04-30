@@ -143,7 +143,8 @@ public class EventReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -183,7 +184,8 @@ public class EventReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyDebugEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyDebugEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markEventDebugReportDelivered(any());
         verify(mTransaction, times(2)).begin();
@@ -223,7 +225,8 @@ public class EventReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -263,7 +266,8 @@ public class EventReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -303,7 +307,8 @@ public class EventReportingJobHandlerTest {
                 .markAggregateReportStatus(eventReport.getId(), AggregateReport.Status.DELIVERED);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -338,7 +343,8 @@ public class EventReportingJobHandlerTest {
 
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_IO_ERROR,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
@@ -356,7 +362,8 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
@@ -431,7 +438,8 @@ public class EventReportingJobHandlerTest {
         when(mMeasurementDao.getEventReport(eventReport.getId())).thenReturn(eventReport);
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                mSpyEventReportingJobHandler.performReport(eventReport.getId()));
+                mSpyEventReportingJobHandler.performReport(
+                        eventReport.getId(), new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markEventReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();

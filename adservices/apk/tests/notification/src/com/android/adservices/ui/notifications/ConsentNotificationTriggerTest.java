@@ -409,11 +409,26 @@ public class ConsentNotificationTriggerTest {
                         new UiSelector()
                                 .packageName("com.android.systemui")
                                 .resourceId("com.android.systemui:id/notification_stack_scroller"));
-        assertThat(scroller.exists()).isTrue();
-        UiObject notificationCard =
-                scroller.getChild(
-                        new UiSelector()
-                                .text(getString(R.string.notificationUI_notification_ga_title_eu)));
+
+        // there might be only one notification and no scroller exists.
+        UiObject notificationCard;
+        if (scroller.exists()) {
+            notificationCard =
+                    scroller.getChild(
+                            new UiSelector()
+                                    .text(
+                                            getString(
+                                                    R.string
+                                                            .notificationUI_notification_ga_title_eu)));
+        } else {
+            notificationCard =
+                    sDevice.findObject(
+                            new UiSelector()
+                                    .text(
+                                            getString(
+                                                    R.string
+                                                            .notificationUI_notification_ga_title_eu)));
+        }
         assertThat(notificationCard.exists()).isTrue();
 
         notificationCard.click();
