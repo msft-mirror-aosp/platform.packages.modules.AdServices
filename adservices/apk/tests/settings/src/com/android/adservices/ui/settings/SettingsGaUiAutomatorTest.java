@@ -443,14 +443,11 @@ public class SettingsGaUiAutomatorTest {
         sDevice.waitForIdle(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            if (!sentence.exists()) {
+                sDevice.pressBack();
                 ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
                 return;
             }
-        }
-        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-            return;
         }
 
         ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
