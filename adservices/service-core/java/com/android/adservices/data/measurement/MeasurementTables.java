@@ -91,6 +91,7 @@ public final class MeasurementTables {
         String DEBUG_KEY_ALLOWED = "debug_key_allowed";
         String AD_ID_PERMISSION = "ad_id_permission";
         String REGISTRATION_ID = "registration_id";
+        String PLATFORM_AD_ID = "platform_ad_id";
     }
 
     /** Contract for Source. */
@@ -128,6 +129,8 @@ public final class MeasurementTables {
         String DEBUG_JOIN_KEY = "debug_join_key";
         String TRIGGER_SPECS = "trigger_specs";
         String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
+        String PLATFORM_AD_ID = "platform_ad_id";
+        String DEBUG_AD_ID = "debug_ad_id";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -161,6 +164,8 @@ public final class MeasurementTables {
         String ATTRIBUTION_CONFIG = "attribution_config";
         String X_NETWORK_KEY_MAPPING = "x_network_key_mapping";
         String DEBUG_JOIN_KEY = "debug_join_key";
+        String PLATFORM_AD_ID = "platform_ad_id";
+        String DEBUG_AD_ID = "debug_ad_id";
     }
 
     /** Contract for EventReport. */
@@ -297,7 +302,40 @@ public final class MeasurementTables {
                     + ")";
 
     public static final String CREATE_TABLE_ASYNC_REGISTRATION_LATEST =
-            MeasurementDbMigratorV11.CREATE_TABLE_ASYNC_REGISTRATION_V11;
+            "CREATE TABLE "
+                    + MeasurementTables.AsyncRegistrationContract.TABLE
+                    + " ("
+                    + MeasurementTables.AsyncRegistrationContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.OS_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.VERIFIED_DESTINATION
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRANT
+                    + " TEXT, "
+                    + MeasurementTables.AsyncRegistrationContract.REQUEST_TIME
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.RETRY_COUNT
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.TYPE
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID
+                    + " TEXT NOT NULL,"
+                    + MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID
+                    + " TEXT "
+                    + ")";
 
     public static final String CREATE_TABLE_SOURCE_V6 =
             "CREATE TABLE "
@@ -433,7 +471,11 @@ public final class MeasurementTables {
                     + SourceContract.TRIGGER_SPECS
                     + " TEXT, "
                     + SourceContract.MAX_BUCKET_INCREMENTS
-                    + " INTEGER "
+                    + " INTEGER, "
+                    + SourceContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + SourceContract.DEBUG_AD_ID
+                    + " TEXT "
                     + ")";
 
     public static final String CREATE_TABLE_SOURCE_DESTINATION_LATEST =
@@ -542,6 +584,10 @@ public final class MeasurementTables {
                     + TriggerContract.X_NETWORK_KEY_MAPPING
                     + " TEXT, "
                     + TriggerContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + TriggerContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_AD_ID
                     + " TEXT "
                     + ")";
 
