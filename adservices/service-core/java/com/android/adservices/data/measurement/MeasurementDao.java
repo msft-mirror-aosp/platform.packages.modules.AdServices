@@ -2475,6 +2475,20 @@ class MeasurementDao implements IMeasurementDao {
         }
     }
 
+    @Override
+    public long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
+            throws DatastoreException {
+        return DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                countDistinctDebugAdIdsUsedByEnrollmentQuery(),
+                new String[] {
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB),
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB)
+                });
+    }
+
     private int getNumReportsPerDestination(
             String tableName,
             String columnName,
@@ -2664,6 +2678,47 @@ class MeasurementDao implements IMeasurementDao {
                         + ") "
                         + "AND ("
                         + sourceWhereStatement
+                        + ")");
+    }
+
+    /**
+     * Given an enrollment id, return the number unique debug ad id values present in sources and
+     * triggers with this enrollment id.
+     */
+    private static String countDistinctDebugAdIdsUsedByEnrollmentQuery() {
+        return String.format(
+                Locale.ENGLISH,
+                "SELECT COUNT (DISTINCT "
+                        + MeasurementTables.SourceContract.DEBUG_AD_ID
+                        + ") "
+                        + "FROM ( "
+                        + "SELECT "
+                        + MeasurementTables.SourceContract.DEBUG_AD_ID
+                        + " FROM "
+                        + MeasurementTables.SourceContract.TABLE
+                        + " WHERE "
+                        + MeasurementTables.SourceContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + MeasurementTables.SourceContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + MeasurementTables.SourceContract.PUBLISHER_TYPE
+                        + " = ? "
+                        + "UNION ALL "
+                        + "SELECT "
+                        + MeasurementTables.TriggerContract.DEBUG_AD_ID
+                        + " FROM "
+                        + MeasurementTables.TriggerContract.TABLE
+                        + " WHERE "
+                        + MeasurementTables.TriggerContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + MeasurementTables.TriggerContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + MeasurementTables.TriggerContract.DESTINATION_TYPE
+                        + " = ?"
                         + ")");
     }
 }

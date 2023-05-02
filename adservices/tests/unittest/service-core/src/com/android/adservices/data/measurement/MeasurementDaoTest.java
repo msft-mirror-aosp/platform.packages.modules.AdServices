@@ -6320,6 +6320,368 @@ public class MeasurementDaoTest {
                 });
     }
 
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_oneTriggerAndSource() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_nullValuesPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Source with debug AdId present
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        // Source with no debug AdId
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Trigger with debug AdId present
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        // Trigger with no debug AdId
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleSourcesAndTriggers() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with same AdId
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with same AdId
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleAdIdsPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with different AdIds but the same enrollmentId
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-2")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-3")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with different AdIds but the same enrollmentId
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-4")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-5")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-6")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        6,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleEnrollmentIdsPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with different AdIds and differing enrollmentIds
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-2")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-3")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with different AdIds and differing enrollmentIds
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-4")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-5")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-6")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        2,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        4,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-2"))));
+    }
+
     private void queryAndAssertSourceEntries(
             SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
         try (Cursor cursor =
@@ -6385,9 +6747,14 @@ public class MeasurementDaoTest {
 
     private EventReport createEventReportForSourceAndTrigger(
             String reportId, Source source, Trigger trigger) throws JSONException {
+
         return new EventReport.Builder()
                 .setId(reportId)
-                .populateFromSourceAndTrigger(source, trigger, trigger.parseEventTriggers().get(0))
+                .populateFromSourceAndTrigger(
+                        source,
+                        trigger,
+                        trigger.parseEventTriggers().get(0),
+                        new Pair<>(null, null))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

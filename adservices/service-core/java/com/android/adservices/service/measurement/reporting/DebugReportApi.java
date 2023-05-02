@@ -25,6 +25,8 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -94,10 +96,12 @@ public class DebugReportApi {
 
     private final Context mContext;
     private final Flags mFlags;
+    private final DatastoreManager mDatastoreManager;
 
     public DebugReportApi(Context context, Flags flags) {
         mContext = context;
         mFlags = flags;
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
     }
 
     /** Schedules the Source Success Debug Report */
@@ -224,7 +228,8 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
@@ -251,7 +256,8 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
@@ -281,7 +287,8 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBodyWithAllFields(
