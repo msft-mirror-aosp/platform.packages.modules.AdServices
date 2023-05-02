@@ -84,13 +84,14 @@ public class MainActivity extends Activity {
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
 
-    private Button mLoadButton;
-    private Button mRenderButton;
+    private Button mLoadSdksButton;
+    private Button mDeathCallbackButton;
+    private Button mNewBannerAdButton;
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
     private Button mSyncKeysButton;
     private Button mSdkToSdkCommButton;
-    private Button mStartActivity;
+    private Button mNewFullScreenAd;
 
     private SurfaceView mRenderedView;
 
@@ -111,37 +112,51 @@ public class MainActivity extends Activity {
         mRenderedView.setZOrderOnTop(true);
         mRenderedView.setVisibility(View.INVISIBLE);
 
-        mLoadButton = findViewById(R.id.load_code_button);
-        mRenderButton = findViewById(R.id.request_surface_button);
+        mLoadSdksButton = findViewById(R.id.load_sdks_button);
+        mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
+
+        mNewBannerAdButton = findViewById(R.id.new_banner_ad_button);
+        mNewFullScreenAd = findViewById(R.id.new_fullscreen_ad_button);
+
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
-        mStartActivity = findViewById(R.id.start_activity);
 
-        registerLoadSdkProviderButton();
-        registerLoadSurfacePackageButton();
+        registerLoadSdksButton();
+        registerDeathCallbackButton();
+
+        registerNewBannerAdButton();
+        registerBannerAdOptionsButton();
+        registerNewFullscreenAdButton();
+
         registerCreateFileButton();
         registerPlayVideoButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
-        registerStartActivityButton();
         // Register AppOwnedSdkInterface
         mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
                 new AppOwnedSdkSandboxInterface(
                         APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
     }
 
-    private void registerLoadSdkProviderButton() {
-        mLoadButton.setOnClickListener(
+    private void registerDeathCallbackButton() {
+        mDeathCallbackButton.setOnClickListener(
+                v -> {
+                    // Register for sandbox death event.
+                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                            Runnable::run, () -> makeToast("Sdk Sandbox process died"));
+                    makeToast("Registered death callback");
+                });
+    }
+
+    private void registerLoadSdksButton() {
+        mLoadSdksButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
                         resetStateForLoadSdkButton();
                         return;
                     }
-                    // Register for sandbox death event.
-                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                            Runnable::run, () -> makeToast("Sdk Sandbox process died"));
 
                     Bundle params = new Bundle();
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
@@ -165,13 +180,13 @@ public class MainActivity extends Activity {
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     makeToast("All SDKs Loaded successfully!");
                                     Log.d(TAG, "All SDKs Loaded successfully!");
-                                    mLoadButton.setText("Unload SDKs");
+                                    mLoadSdksButton.setText("Unload SDKs");
+                                    mLoadSdksButton.forceLayout();
                                 }
 
                                 @Override
                                 public void onError(LoadSdkException error) {
                                     makeToast("Failed: " + error);
-                                    resetStateForLoadSdkButton();
                                 }
                             };
                     mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
@@ -183,14 +198,14 @@ public class MainActivity extends Activity {
     private void resetStateForLoadSdkButton() {
         mSdkSandboxManager.unloadSdk(SDK_NAME);
         mSdkSandboxManager.unloadSdk(MEDIATEE_SDK_NAME);
-        mLoadButton.setText("Load SDKs");
+        mLoadSdksButton.setText("Load SDKs");
         mSdksLoaded = false;
     }
 
-    private void registerLoadSurfacePackageButton() {
+    private void registerNewBannerAdButton() {
         OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
                 new RequestSurfacePackageReceiver();
-        mRenderButton.setOnClickListener(
+        mNewBannerAdButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
                         sHandler.post(
@@ -205,6 +220,10 @@ public class MainActivity extends Activity {
                         makeToast("Sdk is not loaded");
                     }
                 });
+    }
+
+    private void registerBannerAdOptionsButton() {
+        // TODO(b/280417818): Implement options button
     }
 
     private void registerCreateFileButton() {
@@ -389,8 +408,8 @@ public class MainActivity extends Activity {
                         });
     }
 
-    private void registerStartActivityButton() {
-        mStartActivity.setOnClickListener(
+    private void registerNewFullscreenAdButton() {
+        mNewFullScreenAd.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
                         makeToast("Sdk is not loaded");
