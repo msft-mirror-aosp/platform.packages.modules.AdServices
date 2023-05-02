@@ -72,11 +72,10 @@ public class ApkTestUtil {
                 500,
                 consentSwitch.getVisibleBounds().centerX(),
                 0,
-                50);
+                1000);
 
         return consentSwitch;
     }
-
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getElement(UiDevice device, int resId) {
         UiObject obj = device.findObject(new UiSelector().text(getString(resId)));

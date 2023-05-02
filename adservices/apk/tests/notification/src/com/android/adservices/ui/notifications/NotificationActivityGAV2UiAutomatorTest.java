@@ -55,10 +55,7 @@ public class NotificationActivityGAV2UiAutomatorTest {
     private static final int SCROLL_WAIT_TIME = 2000;
     private static UiDevice sDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-    @Spy
-    private static Context sContext = InstrumentationRegistry.getInstrumentation().getContext();
-
+    @Spy private Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private String mTestName;
 
     @BeforeClass
@@ -212,9 +209,9 @@ public class NotificationActivityGAV2UiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTestRow() throws Exception {
+    public void privacyPolicyLinkTestRow() throws UiObjectNotFoundException {
         String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, sContext);
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
         sDevice.pressHome();
 
         /* isEUActivity false: Rest of World Notification landing page */
@@ -256,20 +253,16 @@ public class NotificationActivityGAV2UiAutomatorTest {
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws Exception {
+            throws UiObjectNotFoundException {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            Thread.sleep(500);
+            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+                return true;
+            }
         }
-        if (!sentence.exists()) {
-            sDevice.pressBack();
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-            return true;
-        } else {
-            return false;
-        }
+        return false;
     }
 }
