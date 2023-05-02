@@ -563,4 +563,17 @@ public interface IMeasurementDao {
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
             throws DatastoreException;
+
+    /**
+     * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the
+     * platform AdID from app contexts for debug key population in reports. It counts distinct AdIDs
+     * provided by the AdTech across sources and triggers in the DB.
+     *
+     * @param enrollmentId enrollmentId of previous source/trigger registrations to check AdId
+     *     provided on registration.
+     * @return number of unique AdIds the AdTech has provided.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
+            throws DatastoreException;
 }
