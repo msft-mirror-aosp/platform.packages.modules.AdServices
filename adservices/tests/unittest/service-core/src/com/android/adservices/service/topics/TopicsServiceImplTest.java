@@ -68,6 +68,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
@@ -114,7 +115,7 @@ public class TopicsServiceImplTest {
     private static final String TEST_APP_PACKAGE_NAME = "com.android.adservices.servicecoretest";
     private static final String INVALID_PACKAGE_NAME = "com.do_not_exists";
     private static final String SOME_SDK_NAME = "SomeSdkName";
-    private static final int BINDER_CONNECTION_TIMEOUT_MS = 5_000;
+    private static final int BINDER_CONNECTION_TIMEOUT_MS = 10_000;
     private static final String SDK_PACKAGE_NAME = "test_package_name";
     private static final String ALLOWED_SDK_ID = "1234567";
     // This is not allowed per the ad_services_config.xml manifest config.
@@ -150,6 +151,7 @@ public class TopicsServiceImplTest {
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock AdServicesLogger mLogger;
     @Mock AdServicesManager mMockAdServicesManager;
+    @Mock AppSearchConsentManager mAppSearchConsentManager;
 
     @Before
     public void setup() throws Exception {
@@ -162,7 +164,11 @@ public class TopicsServiceImplTest {
         mTopicsDao = new TopicsDao(dbHelper);
         mBlockedTopicsManager =
                 new BlockedTopicsManager(
-                        mTopicsDao, mMockAdServicesManager, Flags.PPAPI_AND_SYSTEM_SERVER);
+                        mTopicsDao,
+                        mMockAdServicesManager,
+                        mAppSearchConsentManager,
+                        Flags.PPAPI_AND_SYSTEM_SERVER,
+                        /* enableAppSearchConsent= */ false);
         CacheManager cacheManager =
                 new CacheManager(
                         mTopicsDao,

@@ -18,6 +18,8 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__ACTION_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__FLEDGE_OPT_IN_SELECTED;
@@ -53,7 +55,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SCROLLED_TO_BOTTOM;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__LANDING_PAGE_SETTINGS_BUTTON_CLICKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MEASUREMENT_OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__NOTIFICATION_DISABLED;
@@ -68,9 +72,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__REQUESTED_NOTIFICATION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_IN_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__TOPICS_OPT_OUT_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__AD_ID_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__DEFAULT_AD_ID_STATE__STATE_UNSPECIFIED;
@@ -358,24 +366,6 @@ public class UiStatsLogger {
         sLogger.logUIStats(uiStats);
     }
 
-    /** Logs that a user has reset the measurement feature. */
-    public static void logResetMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
-    /** Logs that a user has opened the measurement page. */
-    public static void logManageMeasurement(@NonNull Context context) {
-        UIStats uiStats = getBaseUiStats(context);
-
-        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
-
-        sLogger.logUIStats(uiStats);
-    }
-
     /** Logs user opt-in action for PP API. */
     public static void logOptInSelected(@NonNull Context context) {
         UIStats uiStats = getBaseUiStats(context);
@@ -424,6 +414,95 @@ public class UiStatsLogger {
 
         uiStats.setAction(
                 AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__PRIVACY_SANDBOX_SETTINGS_PAGE_DISPLAYED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage topics button. */
+    public static void logManageTopicsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_TOPICS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage apps button. */
+    public static void logManageAppsSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_APPS_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset topics button. */
+    public static void logResetTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset apps button. */
+    public static void logResetAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block topic button. */
+    public static void logBlockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+    /** Logs that a user has clicked unblock topic button. */
+    public static void logUnblockTopicSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_TOPIC_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked block app button. */
+    public static void logBlockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__BLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked unblock app button. */
+    public static void logUnblockAppSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__UNBLOCK_APP_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked manage measurement button. */
+    public static void logManageMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__MANAGE_MEASUREMENT_SELECTED);
+
+        sLogger.logUIStats(uiStats);
+    }
+
+    /** Logs that a user has clicked reset measurement button. */
+    public static void logResetMeasurementSelected(@NonNull Context context) {
+        UIStats uiStats = getBaseUiStats(context);
+
+        uiStats.setAction(AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__RESET_MEASUREMENT_SELECTED);
 
         sLogger.logUIStats(uiStats);
     }

@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.registration;
 
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 /** POJO for storing source and trigger fetcher status */
 public class AsyncFetchStatus {
     public enum ResponseStatus {
@@ -33,16 +37,24 @@ public class AsyncFetchStatus {
         HEADER_ERROR,
         PARSING_ERROR,
         VALIDATION_ERROR,
-        INVALID_ENROLLMENT
+        INVALID_ENROLLMENT,
+        STORAGE_ERROR
     }
 
     private ResponseStatus mResponseStatus;
 
     private EntityStatus mEntityStatus;
 
+    @Nullable private Long mResponseSize;
+
+    @Nullable private Long mRegistrationDelay;
+
+    private boolean mIsRedirectError;
+
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
         mEntityStatus = EntityStatus.UNKNOWN;
+        mIsRedirectError = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -68,6 +80,36 @@ public class AsyncFetchStatus {
     /** Set entity status */
     public void setEntityStatus(EntityStatus entityStatus) {
         mEntityStatus = entityStatus;
+    }
+
+    /** Get response header size. */
+    public Optional<Long> getResponseSize() {
+        return Optional.ofNullable(mResponseSize);
+    }
+
+    /** Set response header size. */
+    public void setResponseSize(Long responseSize) {
+        mResponseSize = responseSize;
+    }
+
+    /** Get registration delay. */
+    public Optional<Long> getRegistrationDelay() {
+        return Optional.ofNullable(mRegistrationDelay);
+    }
+
+    /** Set registration delay. */
+    public void setRegistrationDelay(Long registrationDelay) {
+        mRegistrationDelay = registrationDelay;
+    }
+
+    /** Get redirect error status. */
+    public boolean isRedirectError() {
+        return mIsRedirectError;
+    }
+
+    /** Set redirect error status. */
+    public void setRedirectError(boolean isRedirectError) {
+        mIsRedirectError = isRedirectError;
     }
 
     /** Returns true if request is successful. */

@@ -20,11 +20,17 @@ import static com.android.adservices.data.DbHelper.DATABASE_VERSION;
 import static com.android.adservices.data.DbTestUtil.doesIndexExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExist;
 import static com.android.adservices.data.DbTestUtil.doesTableExistAndColumnCountMatch;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -32,12 +38,14 @@ import static org.mockito.Mockito.spy;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteException;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.topics.migration.TopicDbMigratorV7;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -71,6 +79,7 @@ public class DbHelperTest {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
@@ -166,6 +175,42 @@ public class DbHelperTest {
 
         // Verify no error if downgrading db from current version to V1
         dbHelper.onDowngrade(db, DATABASE_VERSION, 1);
+    }
+
+    @Test
+    public void testSafeGetReadableDatabase_exceptionOccurs_validatesErrorLogging() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        Throwable tr = new SQLiteException();
+        Mockito.doThrow(tr).when(dbHelper).getReadableDatabase();
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+
+        SQLiteDatabase db = dbHelper.safeGetReadableDatabase();
+
+        assertNull(db);
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                tr,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
+    }
+
+    @Test
+    public void testSafeGetWriteDatabase_exceptionOccurs_validatesErrorLogging() {
+        DbHelper dbHelper = spy(DbTestUtil.getDbHelperForTest());
+        Throwable tr = new SQLiteException();
+        Mockito.doThrow(tr).when(dbHelper).getWritableDatabase();
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
+
+        SQLiteDatabase db = dbHelper.safeGetWritableDatabase();
+
+        assertNull(db);
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                tr,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED));
     }
 
     @Test

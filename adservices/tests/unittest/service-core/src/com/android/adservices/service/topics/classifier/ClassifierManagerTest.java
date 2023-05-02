@@ -244,6 +244,28 @@ public class ClassifierManagerTest {
     }
 
     @Test
+    public void testClassify_onDeviceClassifierKillSwitch_fallbackToPrecomputedClassifier() {
+        // Set classifier type to ON_DEVICE_CLASSIFIER, then turn on kill switch.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+        when(mMockFlags.getTopicsOnDeviceClassifierKillSwitch()).thenReturn(true);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        List<Topic> precomputedTopics = createTopics(/* TopicIds */ 13, 235);
+        when(mPrecomputedClassifier.classify(eq(appPackages)))
+                .thenReturn(ImmutableMap.of(appPackage1, precomputedTopics));
+
+        Map<String, List<Topic>> classifications = mClassifierManager.classify(appPackages);
+
+        // Verify the topics returned are from precomputed classifier.
+        assertThat(classifications.get(appPackage1)).containsExactlyElementsIn(precomputedTopics);
+        // Verify mPrecomputedClassifier is called once.
+        verify(mPrecomputedClassifier, times(1)).classify(eq(appPackages));
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
+    }
+
+    @Test
     public void testGetTopTopics_onDeviceClassifier() {
         // Set classifier type ON_DEVICE classifier.
         setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
@@ -333,6 +355,32 @@ public class ClassifierManagerTest {
         // Verify PrecomputedClassifier to be called once by default.
         verify(mPrecomputedClassifier, times(1))
                 .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
+    }
+
+    @Test
+    public void testGetTopTopics_onDeviceClassifierKillSwitch_fallbackToPrecomputedClassifier() {
+        // Set classifier type to ON_DEVICE_CLASSIFIER, then turn on kill switch.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+        when(mMockFlags.getTopicsOnDeviceClassifierKillSwitch()).thenReturn(true);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        String appPackage2 = "com.example.adservices.samples.topics.sampleapp2";
+        Map<String, List<Topic>> appTopics =
+                ImmutableMap.of(
+                        appPackage1,
+                        createTopics(/* TopicIds */ 1, 2, 3, 4, 5),
+                        appPackage2,
+                        createTopics(/* TopicIds */ 1, 2, 101, 102, 103));
+        int numberOfTopTopics = 5;
+        int numberOfRandomTopics = 1;
+
+        mClassifierManager.getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
+
+        // Verify mPrecomputedClassifier is called once.
+        verify(mPrecomputedClassifier, times(1))
+                .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
     }
 
     private List<Topic> createTopics(/* TopicIds */ Integer... topicIds) {
