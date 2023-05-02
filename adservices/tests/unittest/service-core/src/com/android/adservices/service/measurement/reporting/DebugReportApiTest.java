@@ -757,7 +757,8 @@ public final class DebugReportApiTest {
                                 DebugReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean(), anyBoolean()));
 
-        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, mMeasurementDao);
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -774,7 +775,8 @@ public final class DebugReportApiTest {
                                 DebugReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean(), anyBoolean()));
 
-        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, mMeasurementDao);
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
     }
 
@@ -793,7 +795,8 @@ public final class DebugReportApiTest {
                                 DebugReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean(), anyBoolean()));
 
-        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, mMeasurementDao);
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -812,7 +815,85 @@ public final class DebugReportApiTest {
                                 DebugReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean(), anyBoolean()));
 
-        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, mMeasurementDao);
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerUnknownErrorDebugReport_triggerNotOpIn_dontSchedule()
+            throws Exception {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(false)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_UNKNOWN_ERROR);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerUnknownErrorDebugReport_success() throws Exception {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_UNKNOWN_ERROR);
+        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerUnknownErrorDebugReport_debugFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_UNKNOWN_ERROR);
+        verify(mMeasurementDao, never()).insertDebugReport(any());
+    }
+
+    @Test
+    public void testScheduleTriggerUnknownErrorDebugReport_triggerFlagDisabled_dontSchedule()
+            throws Exception {
+        when(mFlags.getMeasurementEnableTriggerDebugReport()).thenReturn(false);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setIsDebugReporting(true)
+                        .setAdIdPermission(true)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                DebugReportingJobService.scheduleIfNeeded(
+                                        any(), anyBoolean(), anyBoolean()));
+
+        mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao, Type.TRIGGER_UNKNOWN_ERROR);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
