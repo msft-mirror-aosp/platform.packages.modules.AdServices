@@ -226,7 +226,15 @@ public class AsyncRegistrationQueueRunner {
     @VisibleForTesting
     public void storeTrigger(Trigger trigger, IMeasurementDao dao) throws DatastoreException {
         if (isTriggerAllowedToInsert(dao, trigger)) {
-            dao.insertTrigger(trigger);
+            try {
+                dao.insertTrigger(trigger);
+            } catch (DatastoreException e) {
+                mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
+                LogUtil.e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
+                throw new DatastoreException(
+                        "Insert trigger to DB error, generate trigger-unknown-error report");
+            }
             notifyTriggerContentProvider();
         }
     }
@@ -419,9 +427,9 @@ public class AsyncRegistrationQueueRunner {
             dao.insertSource(source);
         } catch (DatastoreException e) {
             mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, dao);
-            LogUtil.e(e, "Insert debug source-unknown-error report to database error");
+            LogUtil.e(e, "Insert source to DB error, generate source-unknown-error report");
             throw new DatastoreException(
-                    "Insert debug source-unknown-error report to database error");
+                    "Insert source to DB error, generate source-unknown-error report");
         }
         for (EventReport report : eventReports) {
             dao.insertEventReport(report);
