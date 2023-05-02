@@ -39,5 +39,4 @@ android_app {
     resource_dirs: ["res"],
     platform_apis: true,
     min_sdk_version: "31",
-    target_sdk_version: "33",
 }
