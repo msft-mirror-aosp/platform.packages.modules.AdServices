@@ -42,18 +42,18 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -63,7 +63,7 @@ import java.util.concurrent.Executors;
  */
 public class BlockedTopicsSettingsUiAutomatorTest {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String LOG_TAG = "adservices";
     // Used to get the package name. Copied over from com.android.adservices.AdServicesCommon
@@ -81,7 +81,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     //
     // Set it to 10 seconds because AVD takes longer time to operate UI. Normally 3 seconds are
     // enough for a non-ui test.
-    private static final long TEST_EPOCH_JOB_PERIOD_MS = 15000;
+    private static final long TEST_EPOCH_JOB_PERIOD_MS = 10000;
 
     private static UiDevice sDevice;
 
@@ -132,165 +132,147 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     @Test
-    public void topicBlockUnblockResetTest_betaUx_ppApiOnly() throws Exception {
+    @Ignore("b/272511638")
+    public void topicBlockUnblockResetTest_betaUxView() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        blockedTopicsBaseCuj(false, 1);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_betaUx_systemServerOnly() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        blockedTopicsBaseCuj(false, 2);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_betaUx_ppApiAndSystemServer() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        blockedTopicsBaseCuj(false, 3);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_betaUx_consentSourceAppSearch() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(!SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
-        blockedTopicsBaseCuj(false, Flags.APPSEARCH_ONLY);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_gaUx_ppApiOnly() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        blockedTopicsBaseCuj(true, 1);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_gaUx_systemServerOnly() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        blockedTopicsBaseCuj(true, 2);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_gaUx_ppApiAndSystemServer() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        blockedTopicsBaseCuj(true, 3);
-    }
-
-    @Test
-    public void topicBlockUnblockResetTest_gaUx_consentSourceAppSearch() throws Exception {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        Assume.assumeTrue(!SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
-        blockedTopicsBaseCuj(true, Flags.APPSEARCH_ONLY);
-    }
-
-    private void blockedTopicsBaseCuj(boolean isGa, int consentSourceOfTruth) throws Exception {
-        // Set Consent and Blocked Topics source of truth to PPAPI_AND_SYSTEM_SERVER
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + consentSourceOfTruth);
-        ShellUtils.runShellCommand(
-                "device_config put adservices blocked_topics_source_of_truth "
-                        + consentSourceOfTruth);
-
-        // Enable GA UX view for Privacy Sandbox Settings.
-        shouldEnableGaUx(isGa);
+        // Enable Beta UX view for Privacy Sandbox Settings.
+        shouldEnableGaUx(false);
 
         // Launch main view of Privacy Sandbox Settings.
-        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
 
-        // Enter Topics Consent view.
-        if (isGa) {
-            enterGaTopicsConsentView();
-        }
-
-        // A full consent reset is needed to clean up all topics data.
+        // Enable user consent. If it has been enabled due to stale test failures, disable it and
+        // enable it again. This is to ensure no stale data or pending jobs.
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
-        if (!consentSwitch.isChecked()) {
-            Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            consentSwitch.click();
-        }
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         if (consentSwitch.isChecked()) {
-            Thread.sleep(LAUNCHER_LAUNCH_TIMEOUT);
-            if (isGa) {
-                consentSwitch.click();
-            } else {
-                disableUserConsentWithDialog(consentSwitch);
-            }
+            disableUserConsentWithDialog(consentSwitch);
         }
-        Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         consentSwitch.click();
 
-        // Navigate back to main view. This allows to refresh the topics list by re-entering Topics
-        // consent view after a topic is generated . (There is no real-time listener)
-        if (isGa) {
-            sDevice.pressBack();
-        }
-
         // Generate a topic to block.
-        if (!generateATopicToBlock()) {
-            return;
-        }
+        generateATopicToBlock();
 
-        // Re-enter Topics Consent View.
-        if (isGa) {
-            enterGaTopicsConsentView();
-        } else {
-            UiObject topicsViewButton = scrollTo(R.string.settingsUI_topics_title);
-            topicsViewButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            topicsViewButton.click();
-        }
+        // Open the blocked topics view.
+        UiObject topicsViewButton = scrollTo(R.string.settingsUI_topics_title);
+        topicsViewButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        topicsViewButton.click();
 
-        // Verify there is a topic to be blocked.
+        // Verify there is a topic to block and block it.
         UiObject blockTopicButton =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
         blockTopicButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        if (!blockATopicWithDialog(blockTopicButton)) {
-            return;
-        }
+        blockATopicWithDialog(blockTopicButton);
 
         // When there is no topic available to be blocked, it will display "no topics" text and the
         // "Block" button will not be displayed.
         assertThat(blockTopicButton.exists()).isFalse();
-
-        UiObject noTopicsText =
-                scrollTo(
-                        isGa
-                                ? R.string.settingsUI_topics_view_no_topics_ga_text
-                                : R.string.settingsUI_topics_view_no_topics_text);
+        UiObject noTopicsText = getElement(R.string.settingsUI_topics_view_no_topics_text);
         assertThat(noTopicsText.exists()).isTrue();
 
         // Click viewBlockedTopicsButton to view topics being blocked.
-        if (isGa) {
-            ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_view_blocked_topics_title);
-        } else {
-            UiObject viewBlockedTopicsButton = scrollTo(R.string.settingsUI_blocked_topics_title);
-            viewBlockedTopicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-            assertThat(viewBlockedTopicsButton.exists()).isTrue();
-            viewBlockedTopicsButton.click();
-        }
+        UiObject viewBlockedTopicsButton = scrollTo(R.string.settingsUI_blocked_topics_title);
+        viewBlockedTopicsButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(viewBlockedTopicsButton.exists()).isTrue();
+        viewBlockedTopicsButton.click();
 
         // There is 1 topic being blocked and "Unblock" button should be visible. Unblock it.
         unblockATopicWithDialog();
 
         // Verify there is no blocked topic.
         UiObject noUnblockedTopicsText =
-                getElement(
-                        isGa
-                                ? R.string.settingsUI_no_blocked_topics_ga_text
-                                : R.string.settingsUI_topics_view_no_blocked_topics_text);
+                getElement(R.string.settingsUI_topics_view_no_blocked_topics_text);
+        noUnblockedTopicsText.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(noUnblockedTopicsText.exists()).isTrue();
+
+        // Press back to return to the blocked topic view.
+        sDevice.pressBack();
+
+        // Verify there is a topic to be blocked
+        blockTopicButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(blockTopicButton.exists()).isTrue();
+
+        // Reset blocked topics
+        UiObject resetButton = scrollTo(R.string.settingsUI_reset_topics_title);
+        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        resetATopicWithDialog(resetButton);
+
+        // Verify there is no topic to block after resetting.
+        assertThat(blockTopicButton.exists()).isFalse();
+
+        // Press back to consent main view.
+        sDevice.pressBack();
+
+        // restart the app since scrollToBeginning does not work.
+        AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
+        Thread.sleep(3000);
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
+
+        // Disable user consent.
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        scrollTo(R.string.settingsUI_privacy_sandbox_beta_switch_title);
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        disableUserConsentWithDialog(consentSwitch);
+        assertThat(consentSwitch.isChecked()).isFalse();
+    }
+
+    @Test
+    @Ignore("b/272511638")
+    public void topicBlockUnblockResetTest_gaUxView() throws Exception {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+
+        // Enable GA UX view for Privacy Sandbox Settings.
+        shouldEnableGaUx(true);
+
+        // Launch main view of Privacy Sandbox Settings.
+        ApkTestUtil.launchSettingView(CONTEXT, sDevice, LAUNCHER_LAUNCH_TIMEOUT);
+
+        // Enter Topics Consent view.
+        enterGaTopicsConsentView();
+
+        // Enable Topics consent. If it has been enabled due to stale test failures, disable it and
+        // enable it again. This is to ensure no stale data or pending jobs.
+        //
+        // Note there is no dialog when the user opts out in GA.
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        if (consentSwitch.isChecked()) {
+            consentSwitch.click();
+        }
+        consentSwitch.click();
+
+        // Navigate back to main view. This allows to refresh the topics list by re-entering Topics
+        // consent view after a topic is generated . (There is no real-time listener)
+        sDevice.pressBack();
+
+        // Generate a topic to block.
+        generateATopicToBlock();
+
+        // Re-enter Topics Consent View.
+        enterGaTopicsConsentView();
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+
+        // Verify there is a topic to be blocked.
+        UiObject blockTopicButton =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
+        blockTopicButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        blockATopicWithDialog(blockTopicButton);
+
+        // When there is no topic available to be blocked, it will display "no topics" text and the
+        // "Block" button will not be displayed.
+        assertThat(blockTopicButton.exists()).isFalse();
+        UiObject noTopicsText = getElement(R.string.settingsUI_topics_view_no_topics_ga_text);
+        assertThat(noTopicsText.exists()).isTrue();
+
+        // Click viewBlockedTopicsButton to view topics being blocked.
+        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_view_blocked_topics_title);
+
+        // There is 1 topic being blocked and "Unblock" button should be visible. Unblock it.
+        unblockATopicWithDialog();
+
+        // Verify there is no blocked topic.
+        UiObject noUnblockedTopicsText = getElement(R.string.settingsUI_no_blocked_topics_ga_text);
         noUnblockedTopicsText.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(noUnblockedTopicsText.exists()).isTrue();
 
@@ -300,21 +282,31 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Verify there is a topic to be blocked.
         blockTopicButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(blockTopicButton.exists()).isTrue();
+
+        // Reset blocked topics.
+        UiObject resetButton = scrollTo(R.string.settingsUI_reset_topics_ga_title);
+        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        resetATopicWithDialog(resetButton);
+
+        // Scroll to consent switch and verify there is no topic to block after resetting.
+        consentSwitch = scrollTo(R.string.settingsUI_topics_switch_title);
+        consentSwitch.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        assertThat(blockTopicButton.exists()).isFalse();
+
+        // Disable user consent.
+        consentSwitch.click();
+        assertThat(consentSwitch.isChecked()).isFalse();
     }
 
     // Enter Topics Consent view when GA UX is enabled.
-    private void enterGaTopicsConsentView() throws Exception {
+    private void enterGaTopicsConsentView() throws UiObjectNotFoundException {
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_ga_title);
-        Thread.sleep(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
     }
 
     // Block a topic when dialog is enabled.
-    private boolean blockATopicWithDialog(UiObject blockTopicButton)
-            throws UiObjectNotFoundException {
-        // simply return if the getTopics API failed, UI tests do not consider API flakes.
-        if (!blockTopicButton.exists()) {
-            return false;
-        }
+    private void blockATopicWithDialog(UiObject blockTopicButton) throws UiObjectNotFoundException {
+        // Verify the button is existed and click it.
+        assertThat(blockTopicButton.exists()).isTrue();
         blockTopicButton.click();
 
         // Handle dialog for blocking a topic
@@ -328,8 +320,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
         // Confirm to block.
         positiveText.click();
-
-        return true;
     }
 
     // Unblock a blocked topic when dialog is enabled.
@@ -355,8 +345,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
 
     // Reset blocked topics.
     private void resetATopicWithDialog(UiObject resetButton) throws UiObjectNotFoundException {
-        // Verify the button exists and click it.
-        resetButton.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
+        // Verify the button is existed and click it.
         assertThat(resetButton.exists()).isTrue();
         resetButton.click();
 
@@ -374,7 +363,8 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     // Disable user consent when dialog is enabled.
-    private void disableUserConsentWithDialog(UiObject consentSwitch) throws Exception {
+    private void disableUserConsentWithDialog(UiObject consentSwitch)
+            throws UiObjectNotFoundException {
         // Verify the button is existed and click it.
         assertThat(consentSwitch.exists()).isTrue();
         consentSwitch.click();
@@ -384,7 +374,6 @@ public class BlockedTopicsSettingsUiAutomatorTest {
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
         UiObject positiveText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
-        dialogTitle.waitForExists(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         assertThat(dialogTitle.exists()).isTrue();
         assertThat(positiveText.exists()).isTrue();
 
@@ -393,32 +382,28 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     }
 
     // Call Topics API and run epoch computation so there will be a topic to block.
-    private boolean generateATopicToBlock() throws Exception {
-        try {
-            AdvertisingTopicsClient advertisingTopicsClient1 =
-                    new AdvertisingTopicsClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
-            GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
-            // There should be no topic when Topics API is called for the first time.
-            assertThat(sdk1Result.getTopics()).isEmpty();
-        } catch (Exception e) {
-            // UI tests should not deal with API flakiness.
-            return false;
-        }
+    private void generateATopicToBlock() throws ExecutionException, InterruptedException {
+        // Generate a client and ask it to call Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient1 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(CONTEXT)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+        GetTopicsResponse sdk1Result = advertisingTopicsClient1.getTopics().get();
+        // There should be no past data to return a topic when Topics API is called for the first
+        // time.
+        assertThat(sdk1Result.getTopics()).isEmpty();
 
         // Force epoch computation. Add a delay to allow background executor to finish the Topics
         // API invocation.
-        Thread.sleep(3000);
+        Thread.sleep(500);
         forceEpochComputationJob();
 
         // Move to the next epoch because the computed result takes effect from the next epoch.
         Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
-
-        return true;
     }
 
+    // Scroll to a UI object.
     private UiObject scrollTo(int resId) throws UiObjectNotFoundException {
         UiScrollable scrollView =
                 new UiScrollable(
@@ -461,6 +446,9 @@ public class BlockedTopicsSettingsUiAutomatorTest {
         // Disable kill switches
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
         ShellUtils.runShellCommand("device_config put adservices topics_kill_switch false");
+        // Set Consent and Blocked Topics source of truth to PPAPI_AND_SYSTEM_SERVER
+        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
+        ShellUtils.runShellCommand("device_config put adservices blocked_topics_source_of_truth 2");
         // Temporarily disable Device Config sync.
         ShellUtils.runShellCommand("device_config set_sync_disabled_for_tests persistent");
         // Enable dialogs feature in order to test it
@@ -493,7 +481,7 @@ public class BlockedTopicsSettingsUiAutomatorTest {
     private static String getAdServicesPackageName() {
         final Intent intent = new Intent(TOPICS_SERVICE_NAME);
         final List<ResolveInfo> resolveInfos =
-                sContext.getPackageManager()
+                CONTEXT.getPackageManager()
                         .queryIntentServices(intent, PackageManager.MATCH_SYSTEM_ONLY);
         final ServiceInfo serviceInfo =
                 AdServicesCommon.resolveAdServicesService(resolveInfos, TOPICS_SERVICE_NAME);
