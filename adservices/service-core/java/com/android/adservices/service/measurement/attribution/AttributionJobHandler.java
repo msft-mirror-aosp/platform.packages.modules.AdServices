@@ -148,7 +148,7 @@ class AttributionJobHandler {
 
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                                trigger, measurementDao);
+                                trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
