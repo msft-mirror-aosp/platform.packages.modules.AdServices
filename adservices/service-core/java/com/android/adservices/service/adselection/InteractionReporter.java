@@ -67,6 +67,8 @@ import java.util.concurrent.ExecutorService;
 public class InteractionReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
             "Could not find a match in the database for this adSelectionId and callerPackageName!";
+    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
+            "Interaction data max size exceeded!";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int LOGGING_API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
@@ -152,6 +154,11 @@ public class InteractionReporter {
                                                         .doesAdSelectionMatchingCallerPackageNameExist(
                                                                 adSelectionId, callerPackageName),
                                                 NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+                                        Preconditions.checkArgument(
+                                                inputParams.getInteractionData().getBytes().length
+                                                        <= mFlags
+                                                                .getFledgeReportInteractionMaxInteractionDataSizeB(),
+                                                INTERACTION_DATA_SIZE_MAX_EXCEEDED);
                                     } finally {
                                         sLogger.v("Completed filtering and validation.");
                                         Trace.endSection();

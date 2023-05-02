@@ -101,6 +101,7 @@ import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
@@ -271,6 +272,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSIO
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_FOREGROUND_STATUS_LEVEL;
@@ -4353,6 +4355,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB())
+                .isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testFledgeReportInteractionMaxInteractionDataSize_B() {
+        // without any overriding, the value is hard coded constant
+        assertThat(FlagsFactory.getFlags().getFledgeReportInteractionMaxInteractionDataSizeB())
+                .isEqualTo(FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B);
+
+        final long phOverrideValue = 4;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B,
+                Long.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeReportInteractionMaxInteractionDataSizeB())
                 .isEqualTo(phOverrideValue);
     }
 
