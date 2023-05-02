@@ -101,7 +101,16 @@ public class ClassifierManager implements Classifier {
      */
     @Override
     public Map<String, List<Topic>> classify(Set<String> apps) {
-        @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsOnDeviceClassifierKillSwitch()) {
+            sLogger.v(
+                    "On-device classifier disabled via topics on device classifier kill switch - "
+                            + "falling back to precomputed classifier");
+            return mPrecomputedClassifier.get().classify(apps);
+        }
+
+        @ClassifierType int classifierTypeFlag = flags.getClassifierType();
         sLogger.v("Classifying with ClassifierType: " + classifierTypeFlag);
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
             return mPrecomputedClassifier.get().classify(apps);
@@ -146,7 +155,18 @@ public class ClassifierManager implements Classifier {
     @Override
     public List<Topic> getTopTopics(
             Map<String, List<Topic>> appTopics, int numberOfTopTopics, int numberOfRandomTopics) {
-        @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsOnDeviceClassifierKillSwitch()) {
+            sLogger.v(
+                    "On-device classifier disabled via topics on device classifier kill switch - "
+                            + "falling back to precomputed classifier");
+            return mPrecomputedClassifier
+                    .get()
+                    .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
+        }
+
+        @ClassifierType int classifierTypeFlag = flags.getClassifierType();
         // getTopTopics has the same implementation.
         // If the loaded assets are same, the output will be same.
         // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are used.
