@@ -253,6 +253,15 @@ class AttributionJobHandler {
             Optional<List<AggregateHistogramContribution>> contributions =
                     AggregatePayloadGenerator.generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
+                if (source.getAggregatableAttributionSource().isPresent()
+                        && trigger.getAggregatableAttributionTrigger().isPresent()) {
+                    mDebugReportApi.scheduleTriggerDebugReport(
+                            source,
+                            trigger,
+                            /* limit = */ null,
+                            measurementDao,
+                            Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
+                }
                 return TriggeringStatus.DROPPED;
             }
             OptionalInt newAggregateContributions =
