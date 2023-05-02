@@ -23,6 +23,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -58,6 +59,7 @@ import org.mockito.quality.Strictness;
 
 @RunWith(AndroidJUnit4.class)
 public class ConsentSettingsUiAutomatorTest {
+    private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
@@ -76,16 +78,26 @@ public class ConsentSettingsUiAutomatorTest {
         // Start from the home screen
         sDevice.pressHome();
 
-        // Wait for launcher
-        final String launcherPackage = sDevice.getLauncherPackageName();
-        assertThat(launcherPackage).isNotNull();
-        sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             startMockCompatFlags();
         } else {
             ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
         }
+
+        // Wait for launcher
+        final String launcherPackage = sDevice.getLauncherPackageName();
+        assertThat(launcherPackage).isNotNull();
+        sDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+
+        // launch app
+        Context context = ApplicationProvider.getApplicationContext();
+        Intent intent = new Intent(PRIVACY_SANDBOX_TEST_PACKAGE);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        context.startActivity(intent);
+
+        // Wait for the app to appear
+        sDevice.wait(
+            Until.hasObject(By.pkg(PRIVACY_SANDBOX_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
     @After
@@ -174,12 +186,9 @@ public class ConsentSettingsUiAutomatorTest {
     }
 
     private void consentTest(boolean dialogsOn) throws UiObjectNotFoundException {
-
-        ApkTestUtil.launchSettingView(
-                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
-
         UiObject mainSwitch =
                 sDevice.findObject(new UiSelector().className("android.widget.Switch"));
+        mainSwitch.waitForExists(1500);
         assertThat(mainSwitch.exists()).isTrue();
 
         setConsentToFalse(dialogsOn);
@@ -244,5 +253,6 @@ public class ConsentSettingsUiAutomatorTest {
         // Back compat only supports the following flags
         doReturn(1).when(mMockFlags).getBlockedTopicsSourceOfTruth();
         doReturn(true).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        doReturn("686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2").when(mMockFlags).getAdservicesApkShaCertificate();
     }
 }
