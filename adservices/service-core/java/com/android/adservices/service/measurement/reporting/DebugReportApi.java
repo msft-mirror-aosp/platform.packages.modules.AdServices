@@ -64,6 +64,7 @@ public class DebugReportApi {
         String TRIGGER_NO_MATCHING_SOURCE = "trigger-no-matching-source";
         String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
         String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
+        String TRIGGER_UNKNOWN_ERROR = "trigger-unknown-error";
     }
 
     private interface Body {
@@ -122,7 +123,6 @@ public class DebugReportApi {
             return;
         }
         try {
-            boolean isAppSource = source.getPublisherType() == EventSurfaceType.APP;
             JSONObject body = new JSONObject();
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
@@ -201,18 +201,22 @@ public class DebugReportApi {
                 dao);
     }
 
-    /** Schedules Trigger No Matching Source Debug Report */
-    public void scheduleTriggerNoMatchingSourceDebugReport(Trigger trigger, IMeasurementDao dao) {
-        if (isTriggerDebugFlagDisabled(Type.TRIGGER_NO_MATCHING_SOURCE)) {
+    /**
+     * Schedules trigger-no-matching-source and trigger-unknown-error debug reports when trigger
+     * doesn't have related source.
+     */
+    public void scheduleTriggerNoMatchingSourceDebugReport(
+            Trigger trigger, IMeasurementDao dao, String type) {
+        if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(trigger.isDebugReporting(), Type.TRIGGER_NO_MATCHING_SOURCE)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
-                Type.TRIGGER_NO_MATCHING_SOURCE,
+                type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
                 trigger.getEnrollmentId(),
                 dao);
