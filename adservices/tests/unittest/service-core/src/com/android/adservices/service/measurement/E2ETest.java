@@ -828,7 +828,7 @@ public abstract class E2ETest {
                             + "Expected aggregate report objects: %s\n\n"
                             + "Actual aggregate report objects: %s\n\n"
                             + "Expected debug aggregate report objects: %s\n\n"
-                            + "Actual debug aggregate report objects: %s\n"
+                            + "Actual debug aggregate report objects: %s\n\n"
                             + "Expected debug report objects: %s\n\n"
                             + "Actual debug report objects: %s\n",
                         prettify(
