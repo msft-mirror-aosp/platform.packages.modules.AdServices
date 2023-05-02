@@ -54,12 +54,15 @@
         <option name="teardown-command"
                 value="pm uninstall --user 0 com.example.adservices.samples.ui.consenttestapp"/>
     </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
         <option name="pre-reboot" value="true"/>
     </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="am wait-for-broadcast-idle"/>
     </target_preparer>
+
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="force-skip-system-props" value="true"/>
     </target_preparer>
