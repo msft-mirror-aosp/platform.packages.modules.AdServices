@@ -70,9 +70,7 @@ public class NotificationActivityUiAutomatorTest {
     private String mTestName;
 
     @Mock private ConsentManager mConsentManager;
-
-    @Spy
-    private static Context sContext = InstrumentationRegistry.getInstrumentation().getContext();
+    @Spy private Context mContext;
 
     // TODO(b/261216850): Migrate this NotificationActivity to non-mock test
     @Mock private Flags mMockFlags;
@@ -81,6 +79,8 @@ public class NotificationActivityUiAutomatorTest {
     public void setup() throws UiObjectNotFoundException, IOException {
         // Skip the test if it runs on unsupported platforms.
         Assume.assumeTrue(ApkTestUtil.isDeviceSupported());
+
+        mContext = InstrumentationRegistry.getInstrumentation().getContext();
 
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
@@ -116,7 +116,7 @@ public class NotificationActivityUiAutomatorTest {
 
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         mStaticMockSession.finishMocking();
     }
@@ -211,14 +211,14 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTest() throws Exception {
+    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         ExtendedMockito.doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
 
         String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, sContext);
+                ApkTestUtil.getDefaultBrowserPkgName(sDevice, mContext);
         sDevice.pressHome();
 
         /* isEUActivity false: Rest of World Notification landing page */
@@ -233,11 +233,11 @@ public class NotificationActivityUiAutomatorTest {
                         sDevice, R.string.notificationUI_learn_more_from_privacy_policy);
         if (isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
                 packageNameOfDefaultBrowser, sentence, 20)) {
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
             return;
         }
 
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
+        ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
         Assert.fail("Web browser not found after several clicks on the last line");
     }
 
@@ -335,7 +335,7 @@ public class NotificationActivityUiAutomatorTest {
         Intent intent = new Intent(NOTIFICATION_TEST_PACKAGE);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.putExtra("isEUDevice", isEUActivity);
-        sContext.startActivity(intent);
+        mContext.startActivity(intent);
 
         sDevice.wait(Until.hasObject(By.pkg(NOTIFICATION_TEST_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
@@ -350,20 +350,17 @@ public class NotificationActivityUiAutomatorTest {
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws Exception {
+            throws UiObjectNotFoundException {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            Thread.sleep(500);
+            if (!sentence.exists()) {
+                sDevice.pressBack();
+                return true;
+            }
         }
-        if (!sentence.exists()) {
-            sDevice.pressBack();
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-            return true;
-        } else {
-            return false;
-        }
+        return false;
     }
 }
