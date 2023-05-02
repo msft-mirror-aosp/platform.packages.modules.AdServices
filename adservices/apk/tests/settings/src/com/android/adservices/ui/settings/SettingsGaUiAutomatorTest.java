@@ -416,7 +416,7 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+    public void privacyPolicyLinkTest() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
 
@@ -443,15 +443,16 @@ public class SettingsGaUiAutomatorTest {
         sDevice.waitForIdle(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (!sentence.exists()) {
-                sDevice.pressBack();
-                ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-                return;
-            }
+            Thread.sleep(500);
         }
 
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-        Assert.fail("Web browser not found after several clicks on the last line");
+        if (!sentence.exists()) {
+            sDevice.pressBack();
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
+        } else {
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
+            Assert.fail("Web browser not found after several clicks on the last line");
+        }
     }
 
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)
