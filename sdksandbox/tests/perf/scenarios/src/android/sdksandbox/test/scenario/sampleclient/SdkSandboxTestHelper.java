@@ -36,8 +36,8 @@ public class SdkSandboxTestHelper {
     private static final long UI_WAIT_LOADSDK_MS = 500;
     private static final long UI_RETRIES_WAIT_LOADSDK = 10;
     private static final String SANDBOX_TEST_CLIENT_APP = "com.android.sdksandboxclient";
-    private static final String LOAD_BUTTON = "load_code_button";
-    private static final String RENDER_BUTTON = "request_surface_button";
+    private static final String LOAD_BUTTON = "load_sdks_button";
+    private static final String RENDER_BUTTON = "new_banner_ad_button";
 
     /** Open sandbox client test app using shell command line. */
     public void openClientApp() throws Exception {
