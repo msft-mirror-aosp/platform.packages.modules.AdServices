@@ -151,6 +151,9 @@ public final class TriggerFixture {
                         + "\"AdTechB-enrollment_id\": \"0x2\""
                         + "}";
 
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+        public static final String DEBUG_AD_ID = "test-debug-ad-id";
+
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =
                     new FilterMap.Builder()

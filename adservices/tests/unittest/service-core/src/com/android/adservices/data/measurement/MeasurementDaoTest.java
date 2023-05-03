@@ -201,6 +201,8 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getSharedAggregationKeys(), source.getSharedAggregationKeys());
         assertEquals(validSource.getRegistrationId(), source.getRegistrationId());
         assertEquals(validSource.getInstallTime(), source.getInstallTime());
+        assertEquals(validSource.getPlatformAdId(), source.getPlatformAdId());
+        assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -283,6 +285,8 @@ public class MeasurementDaoTest {
             assertEquals(validTrigger.getEventTriggers(), trigger.getEventTriggers());
             assertEquals(validTrigger.getAttributionConfig(), trigger.getAttributionConfig());
             assertEquals(validTrigger.getAdtechKeyMapping(), trigger.getAdtechKeyMapping());
+            assertEquals(validTrigger.getPlatformAdId(), trigger.getPlatformAdId());
+            assertEquals(validTrigger.getDebugAdId(), trigger.getDebugAdId());
         }
     }
 
@@ -5111,6 +5115,8 @@ public class MeasurementDaoTest {
             assertEquals(
                     asyncRegistration.getDebugKeyAllowed(),
                     validAsyncRegistration.getDebugKeyAllowed());
+            assertEquals(
+                    asyncRegistration.getPlatformAdId(), validAsyncRegistration.getPlatformAdId());
         }
     }
 
