@@ -66,19 +66,25 @@ public final class EventFallbackReportingJobService extends JobService {
         }
 
         LogUtil.d("EventFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new EventReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis()
-                                    - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis()
-                                    - AdServicesConfig
-                                    .getMeasurementEventMainReportingJobPeriodMs());
-            jobFinished(params, !success);
-        });
+        sBlockingExecutor.execute(
+                () -> {
+                    long maxEventReportUploadRetryWindowMs =
+                            SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    long eventMainReportingJobPeriodMs =
+                            AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
+                    boolean success =
+                            new EventReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.FALLBACK)
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis()
+                                                    - eventMainReportingJobPeriodMs);
+                    jobFinished(params, !success);
+                });
         return true;
     }
 

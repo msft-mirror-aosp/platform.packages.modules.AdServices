@@ -152,6 +152,13 @@ public final class AsyncTriggerFetcherTest {
             InstrumentationRegistry.getInstrumentation().getContext();
     private static final String DEFAULT_EVENT_TRIGGER_DATA = "[]";
 
+    private static final int UNKNOWN_SOURCE_TYPE = 0;
+    private static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    private static final int APP_REGISTRATION_SURFACE_TYPE = 2;
+    private static final int UNKNOWN_STATUS = 0;
+    private static final int SUCCESS_STATUS = 1;
+    private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+
     AsyncTriggerFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -196,7 +203,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223)
+                                223,
+                                UNKNOWN_SOURCE_TYPE,
+                                APP_REGISTRATION_SURFACE_TYPE,
+                                SUCCESS_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(null)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -210,6 +222,7 @@ public final class AsyncTriggerFetcherTest {
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
@@ -224,6 +237,7 @@ public final class AsyncTriggerFetcherTest {
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 
@@ -234,7 +248,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                436)
+                                436,
+                                UNKNOWN_SOURCE_TYPE,
+                                APP_REGISTRATION_SURFACE_TYPE,
+                                SUCCESS_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(null)
                         .build();
         String wrappedFilters =
@@ -276,6 +295,7 @@ public final class AsyncTriggerFetcherTest {
 
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
         AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
@@ -293,6 +313,7 @@ public final class AsyncTriggerFetcherTest {
                 new JSONArray(expectedAggregateDedupKeys).toString(),
                 result.getAggregateDeduplicationKeys());
         verify(mUrlConnection).setRequestMethod("POST");
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 
@@ -3511,7 +3532,12 @@ public final class AsyncTriggerFetcherTest {
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223)
+                                223,
+                                UNKNOWN_SOURCE_TYPE,
+                                APP_REGISTRATION_SURFACE_TYPE,
+                                SUCCESS_STATUS,
+                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                0)
                         .setAdTechDomain(TRIGGER_URI)
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
@@ -3524,15 +3550,17 @@ public final class AsyncTriggerFetcherTest {
         doReturn(5L).when(mFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         AsyncRedirect asyncRedirect = new AsyncRedirect();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
         // Execution
         Optional<Trigger> fetch =
-                mFetcher.fetchTrigger(
-                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
         assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
         assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
         verify(mUrlConnection).setRequestMethod("POST");
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
         verify(mLogger).logMeasurementRegistrationsResponseSize(eq(expectedStats));
     }
 

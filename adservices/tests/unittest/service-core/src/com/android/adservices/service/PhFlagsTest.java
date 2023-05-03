@@ -18,6 +18,7 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
 import static com.android.adservices.service.Flags.ADSERVICES_ENABLED;
 import static com.android.adservices.service.Flags.ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.APPSETID_KILL_SWITCH;
@@ -186,6 +187,7 @@ import static com.android.adservices.service.Flags.TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.Flags.TOPICS_NUMBER_OF_TOP_TOPICS;
+import static com.android.adservices.service.Flags.TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
@@ -193,6 +195,7 @@ import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_
 import static com.android.adservices.service.PhFlags.DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_ADID_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_APK_SHA_CERTS;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADSERVICES_ERROR_LOGGING_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_APPSETID_KILL_SWITCH;
@@ -357,6 +360,7 @@ import static com.android.adservices.service.PhFlags.KEY_TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_NUMBER_OF_TOP_TOPICS;
+import static com.android.adservices.service.PhFlags.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.PhFlags.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.PhFlags.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED;
@@ -3805,6 +3809,27 @@ public class PhFlagsTest {
     }
 
     @Test
+    public void testGetOnDeviceClassifierKillSwitch() {
+        // Disable global_kill_switch so that this flag can be tested.
+        disableGlobalKillSwitch();
+
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getTopicsOnDeviceClassifierKillSwitch())
+                .isEqualTo(TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH);
+
+        // Now overriding with the value from PH.
+        final boolean phOverridingValue = true;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getTopicsOnDeviceClassifierKillSwitch()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
     public void testGetMddBackgroundTaskKillSwitch() {
         // Disable global_kill_switch so that this flag can be tested.
         disableGlobalKillSwitch();
@@ -4013,6 +4038,24 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getPpapiAppSignatureAllowList()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetAdServicesApksShaCerts() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getAdservicesApkShaCertificate())
+                .isEqualTo(ADSERVICES_APK_SHA_CERTIFICATE);
+
+        // Now overriding with the value from PH.
+        final String phOverridingValue = "SomePackageName,AnotherPackageName";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ADSERVICES_APK_SHA_CERTS,
+                phOverridingValue,
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getAdservicesApkShaCertificate()).isEqualTo(phOverridingValue);
     }
 
     @Test
@@ -4632,6 +4675,20 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getConsentSourceOfTruth()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isAtLeastT() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_AND_SYSTEM_SERVER);
+    }
+
+    @Test
+    public void testDefaultBlockedTopicsConsentSourceOfTruth_isS() {
+        Assume.assumeFalse(SdkLevel.isAtLeastT());
+        // On T+, default is PPAPI_AND_SYSTEM_SERVER.
+        assertThat(DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH).isEqualTo(PPAPI_ONLY);
     }
 
     @Test
