@@ -25,7 +25,6 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -75,7 +74,6 @@ public class MeasurementService extends Service {
                             this,
                             Clock.SYSTEM_CLOCK,
                             ConsentManager.getInstance(this),
-                            EnrollmentDao.getInstance(this),
                             flags,
                             appImportanceFilter);
         }
