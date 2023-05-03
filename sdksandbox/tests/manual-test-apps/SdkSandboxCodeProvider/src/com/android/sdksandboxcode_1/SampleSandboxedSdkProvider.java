@@ -36,6 +36,7 @@ import android.os.RemoteException;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -181,8 +182,26 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                             () -> {
                                 setVideoURI(Uri.parse(url));
                                 requestFocus();
+
+                                // Add playback controls to the video.
+                                MediaController mediaController = new MediaController(getContext());
+                                mediaController.setAnchorView(this);
+                                setMediaController(mediaController);
+
                                 start();
                             });
+        }
+
+        @Override
+        public void pause() {
+            super.pause();
+            Log.i(TAG, "Video was paused.");
+        }
+
+        @Override
+        public void start() {
+            super.start();
+            Log.i(TAG, "Video was started.");
         }
     }
 }
