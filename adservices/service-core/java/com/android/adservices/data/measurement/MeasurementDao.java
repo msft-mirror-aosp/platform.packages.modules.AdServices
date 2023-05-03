@@ -127,6 +127,8 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 trigger.getAdtechKeyMapping());
         values.put(MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, trigger.getDebugJoinKey());
+        values.put(MeasurementTables.TriggerContract.PLATFORM_AD_ID, trigger.getPlatformAdId());
+        values.put(MeasurementTables.TriggerContract.DEBUG_AD_ID, trigger.getDebugAdId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -394,6 +396,8 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
         values.put(MeasurementTables.SourceContract.DEBUG_JOIN_KEY, source.getDebugJoinKey());
+        values.put(MeasurementTables.SourceContract.PLATFORM_AD_ID, source.getPlatformAdId());
+        values.put(MeasurementTables.SourceContract.DEBUG_AD_ID, source.getDebugAdId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2302,6 +2306,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
                 asyncRegistration.getRegistrationId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                asyncRegistration.getPlatformAdId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
