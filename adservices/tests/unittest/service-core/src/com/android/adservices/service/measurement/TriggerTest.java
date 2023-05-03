@@ -100,6 +100,8 @@ public class TriggerTest {
         JSONObject adtechBitMapping = new JSONObject();
         adtechBitMapping.put("AdTechA-enrollment_id", "0x1");
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
+        String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
+        String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -125,6 +127,8 @@ public class TriggerTest {
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -150,6 +154,8 @@ public class TriggerTest {
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build());
     }
 
@@ -281,6 +287,12 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-1").build(),
                 TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setPlatformAdId("debugAppAdId1").build(),
+                TriggerFixture.getValidTriggerBuilder().setPlatformAdId("debugAppAdId2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId1").build(),
+                TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId2").build());
     }
 
     @Test
