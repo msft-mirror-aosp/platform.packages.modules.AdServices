@@ -82,6 +82,8 @@ public class SourceTest {
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
+        String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
+        String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -119,6 +121,8 @@ public class SourceTest {
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -156,6 +160,8 @@ public class SourceTest {
                         .setInstallTime(100L)
                         .setParentId(parentId)
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build());
     }
 
@@ -307,6 +313,12 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
                 SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId2").build());
     }
 
     @Test
