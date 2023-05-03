@@ -17,11 +17,17 @@
 
 <resources>
     <string name="title_activity_main" description="Launcher title">Sdk Sandbox Test</string>
-    <string name="load_code_provider">Load Code Providers</string>
-    <string name="load_surface_package">Load Surface Package</string>
+    <string name="sdks" description="SDKs title">SDKs</string>
+    <string name="load_sdks">Load SDKs</string>
+    <string name="register_death_callback">Register Death Callback</string>
+    <string name="ads" description="Ads title">Ads</string>
+    <string name="new_banner_ad">New Banner Ad</string>
+    <string name="options">⌄</string>
+    <string name="new_fullscreen_ad">New Fullscreen Ad</string>
+    <string name="extra" description="Extra title">Extra</string>
     <string name="create_file">Create File</string>
     <string name="play_video">Play Video</string>
     <string name="sync_keys">Sync Keys</string>
     <string name="enable_sdk_sdk">Enable SDK to SDK comm</string>
-    <string name="start_activity">Start SandboxActivity</string>
+    <string name="ad_space" description="Ad Space title">Ad Space</string>
 </resources>
