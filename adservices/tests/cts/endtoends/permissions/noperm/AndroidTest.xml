@@ -39,6 +39,7 @@
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
         <!-- Increase the allowed API queries per second -->
