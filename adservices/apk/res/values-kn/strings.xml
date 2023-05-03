@@ -26,17 +26,17 @@
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audiences API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"AdId API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"AdId API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API ನ ಪ್ರವೇಶ"</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Consent Service API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ನ API ಗಳಿಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager ನ API ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
@@ -168,7 +168,7 @@
     <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"ಆ್ಯಪ್‌ಗಳು ಪರಸ್ಪರ ಹಂಚಿಕೊಳ್ಳಬಹುದಾದ ಮಾಹಿತಿಯನ್ನು ಸೀಮಿತಗೊಳಿಸುವ ಮೂಲಕ Android ನಿಮ್ಮ ಗೌಪ್ಯತೆಯನ್ನು ರಕ್ಷಿಸುತ್ತದೆ. ನಿಮ್ಮ ಗುರುತನ್ನು ರಕ್ಷಿಸಲು ತಡವಾಗಿ ವರದಿಗಳನ್ನು ಕಳುಹಿಸಲಾಗುತ್ತದೆ.\n\nನಿಮ್ಮ ಬ್ರೌಸರ್ ಇದೇ ರೀತಿಯ ಸೆಟ್ಟಿಂಗ್ ಅನ್ನು ಹೊಂದಿರಬಹುದು. Android ಮತ್ತು ನಿಮ್ಮ ಬ್ರೌಸರ್ ಎರಡಕ್ಕೂ ಜಾಹೀರಾತು ಮಾಪನ ಆನ್ ಆಗಿದ್ದರೆ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ನೀವು ಭೇಟಿ ನೀಡುವ ಸೈಟ್‌ಗಳ ನಡುವಿನ ಜಾಹೀರಾತೊಂದರ ಪರಿಣಾಮಕಾರಿತ್ವವನ್ನು ಕಂಪನಿಯು ಅಳೆಯಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ. ನಿಮ್ಮ ಬ್ರೌಸಿಂಗ್ ಇತಿಹಾಸವನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಖಾಸಗಿಯಾಗಿ ಇರಿಸಲಾಗಿದೆ.\n\nನಮ್ಮ "<a href="https://policies.google.com/privacy">"ಗೌಪ್ಯತೆ ನೀತಿಯಲ್ಲಿ"</a>" Android ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಹೇಗೆ ರಕ್ಷಿಸುತ್ತದೆ ಎಂಬುದರ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"ಜಾಹೀರಾತು ಮಾಪನ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಲಾಗಿದೆ"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ರದ್ದುಮಾಡಿ"</string>
-    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡುವುದೇ?"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡಬೇಕೆ?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ನೀವು ಮನಸ್ಸು ಬದಲಾಯಿಸಿದರೆ ಅಥವಾ Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆ ಬೀಟಾ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸಿದರೆ, ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೋಗಿ"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ಆಫ್ ಮಾಡಿ"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ಅನ್ನು ನಿರ್ಬಂಧಿಸುವುದೇ?"</string>
@@ -572,14 +572,14 @@
     <string name="topic10355" msgid="7720717354548642600">"ಉಲ್ಲೇಖ"</string>
     <string name="topic10356" msgid="8366981308613661935">"ವ್ಯಾಪಾರ &amp; ವೈಯಕ್ತಿಕ ಪಟ್ಟಿ ಮಾಡಿದವುಗಳು"</string>
     <string name="topic10357" msgid="3185598234676097975">"ಸಾಮಾನ್ಯ ಉಲ್ಲೇಖ"</string>
-    <string name="topic10358" msgid="6732669037513504019">"ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು &amp; ಉಲ್ಲೇಖ ಪರಿಕರಗಳು"</string>
+    <string name="topic10358" msgid="6732669037513504019">"ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು ಮತ್ತು ರೆಫರೆನ್ಸ್‌ ಟೂಲ್‌ಗಳು"</string>
     <string name="topic10359" msgid="8901932349008990500">"ನಿಘಂಟುಗಳು &amp; ವಿಶ್ವಕೋಶಗಳು"</string>
     <string name="topic10360" msgid="6113408769992775754">"ಶೈಕ್ಷಣಿಕ ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10361" msgid="364838820459183817">"ಹೇಗೆ"</string>
     <string name="topic10362" msgid="3760998790588600032">"ಸಮಯ &amp; ಕ್ಯಾಲೆಂಡರ್‌ಗಳು"</string>
     <string name="topic10363" msgid="5464708619861040861">"ಭಾಷೆಯ ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10364" msgid="4685400848805560054">"ವಿದೇಶಿ ಭಾಷಾ ಅಧ್ಯಯನ"</string>
-    <string name="topic10365" msgid="5196231842716190887">"ಅನುವಾದದ ಪರಿಕರಗಳು &amp; ಮೂಲಗಳು"</string>
+    <string name="topic10365" msgid="5196231842716190887">"ಅನುವಾದದ ಟೂಲ್‌ಗಳು &amp; ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10366" msgid="7460927054539097025">"Maps"</string>
     <string name="topic10367" msgid="3900361839783743700">"ವಿಜ್ಞಾನ"</string>
     <string name="topic10368" msgid="2069447039109930660">"ಆಗ್‌ಮೆಂಟೆಡ್ &amp; ವರ್ಚುವಲ್ ರಿಯಾಲಿಟಿ"</string>
