@@ -22,23 +22,35 @@ import android.database.sqlite.SQLiteDatabase;
 import com.android.adservices.data.measurement.MeasurementTables;
 
 /**
- * Migrates Measurement DB to version 8. This upgrade adds columns for debug join keys to source and
- * trigger tables.
+ * Migrates Measurement DB from version 12 to version 13. This upgrade adds columns for Debug AdID
+ * values for source and trigger registrations.
  */
-public class MeasurementDbMigratorV8 extends AbstractMeasurementDbMigrator {
+public class MeasurementDbMigratorV13 extends AbstractMeasurementDbMigrator {
     private static final String[] ALTER_STATEMENTS = {
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.AsyncRegistrationContract.TABLE,
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.SourceContract.TABLE,
-                MeasurementTables.SourceContract.DEBUG_JOIN_KEY),
+                MeasurementTables.SourceContract.PLATFORM_AD_ID),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.SourceContract.TABLE,
+                MeasurementTables.SourceContract.DEBUG_AD_ID),
         String.format(
                 "ALTER TABLE %1$s ADD %2$s TEXT",
                 MeasurementTables.TriggerContract.TABLE,
-                MeasurementTables.TriggerContract.DEBUG_JOIN_KEY)
+                MeasurementTables.TriggerContract.PLATFORM_AD_ID),
+        String.format(
+                "ALTER TABLE %1$s ADD %2$s TEXT",
+                MeasurementTables.TriggerContract.TABLE,
+                MeasurementTables.TriggerContract.DEBUG_AD_ID)
     };
 
-    public MeasurementDbMigratorV8() {
-        super(8);
+    public MeasurementDbMigratorV13() {
+        super(13);
     }
 
     @Override
