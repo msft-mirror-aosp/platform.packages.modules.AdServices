@@ -59,21 +59,6 @@ public final class XNetworkDataTest {
     }
 
     @Test
-    public void serializeAsJson_success() throws JSONException {
-        // Setup
-        JSONObject expectedXNetworkData = new JSONObject();
-        UnsignedLong keyOffsetValue = new UnsignedLong(10L);
-        expectedXNetworkData.put(XNetworkDataContract.KEY_OFFSET, keyOffsetValue.getValue());
-
-        // Execution
-        XNetworkData actual = new XNetworkData.Builder().setKeyOffset(keyOffsetValue).build();
-        JSONObject actualJsonObject = actual.serializeAsJson();
-
-        // Assertion
-        assertEquals(expectedXNetworkData.toString(), actualJsonObject.toString());
-    }
-
-    @Test
     public void builder_withInvalidOffset_throwsJsonException() throws JSONException {
         // Setup
         JSONObject xNetworkDataJson = new JSONObject();
