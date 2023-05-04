@@ -413,6 +413,7 @@ public class AsyncRegistrationQueueRunner {
                                         .setStatus(EventReport.Status.PENDING)
                                         .setRandomizedTriggerRate(
                                                 source.getRandomAttributionProbability())
+                                        .setRegistrationOrigin(source.getRegistrationOrigin())
                                         .build())
                 .collect(Collectors.toList());
     }
