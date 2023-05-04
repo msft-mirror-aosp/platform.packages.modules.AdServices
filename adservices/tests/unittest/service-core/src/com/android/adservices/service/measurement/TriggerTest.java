@@ -129,6 +129,8 @@ public class TriggerTest {
                         .setDebugJoinKey(debugJoinKey)
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -156,6 +158,8 @@ public class TriggerTest {
                         .setDebugJoinKey(debugJoinKey)
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
                         .build());
     }
 
@@ -293,6 +297,13 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId1").build(),
                 TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain1.example.test"))
+                        .build(),
+                TriggerFixture.getValidTriggerBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .build());
     }
 
     @Test
@@ -331,7 +342,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
         assertInvalidTriggerArguments(
                 Uri.parse("com.destination"),
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -344,7 +356,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -361,7 +374,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -378,7 +392,8 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
         assertInvalidTriggerArguments(
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
                 TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
@@ -391,7 +406,26 @@ public class TriggerTest {
                 TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
                 TriggerFixture.ValidTriggerParams.DEBUG_KEY,
                 TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
-                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+    }
+
+    @Test
+    public void testTriggerBuilder_validateArgumentRegistrationOrigin() {
+        assertInvalidTriggerArguments(
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION,
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID,
+                TriggerFixture.ValidTriggerParams.REGISTRANT,
+                TriggerFixture.ValidTriggerParams.TRIGGER_TIME,
+                TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA,
+                TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING,
+                TriggerFixture.ValidTriggerParams.DEBUG_KEY,
+                TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING,
+                TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING,
+                null);
     }
 
     @Test
@@ -816,7 +850,8 @@ public class TriggerTest {
             String notFilters,
             UnsignedLong debugKey,
             String mAttributionConfig,
-            String mAdtechBitMapping) {
+            String mAdtechBitMapping,
+            Uri registrationOrigin) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -833,6 +868,7 @@ public class TriggerTest {
                                 .setDebugKey(debugKey)
                                 .setAttributionConfig(mAttributionConfig)
                                 .setAdtechBitMapping(mAdtechBitMapping)
+                                .setRegistrationOrigin(registrationOrigin)
                                 .build());
     }
 

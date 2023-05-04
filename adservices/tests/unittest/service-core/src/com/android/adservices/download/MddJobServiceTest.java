@@ -54,6 +54,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -89,6 +90,7 @@ public class MddJobServiceTest {
     @Mock MobileDataDownloadFactory mMockMddFactory;
     @Mock Flags mMockFlags;
     @Mock MddFlags mMockMddFlags;
+    @Mock StatsdAdServicesLogger mMockStatsdLogger;
     private AdservicesJobServiceLogger mMockLogger;
 
     @Before
@@ -118,10 +120,11 @@ public class MddJobServiceTest {
                 .getSystemService(JobScheduler.class);
 
         // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mMockLogger = spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK));
+        mMockLogger =
+                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
         Mockito.doNothing()
                 .when(mMockLogger)
-                .logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+                .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
         ExtendedMockito.doReturn(mMockLogger)
                 .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
@@ -164,7 +167,7 @@ public class MddJobServiceTest {
         verify(mMockMdd).handleTask(WIFI_CHARGING_PERIODIC_TASK);
         // Verify logging methods are not invoked.
         verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -194,7 +197,7 @@ public class MddJobServiceTest {
         verify(mMockMdd).handleTask(WIFI_CHARGING_PERIODIC_TASK);
         // Verify logging methods are invoked.
         verify(mMockLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -229,7 +232,7 @@ public class MddJobServiceTest {
 
         // Verify logging methods are not invoked.
         verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -280,7 +283,7 @@ public class MddJobServiceTest {
         mSpyMddJobService.onStopJob(mMockJobParameters);
         // Verify logging methods are not invoked.
         verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -297,7 +300,7 @@ public class MddJobServiceTest {
         // Verify nothing throws
         mSpyMddJobService.onStopJob(mMockJobParameters);
         // Verify logging methods are invoked.
-        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), any(), anyInt());
+        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
