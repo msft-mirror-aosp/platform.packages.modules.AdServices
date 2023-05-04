@@ -17,17 +17,21 @@
 package com.android.apiimplementation;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import com.android.modules.utils.build.SdkLevel;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
 
 import com.android.modules.utils.build.SdkLevel;
 
@@ -107,11 +111,158 @@ public class SdkApi extends ISdkApi.Stub {
         TextView textView = new TextView(activity);
         textView.setText("This is an Activity running inside the sandbox process!");
         linLayout.addView(textView);
+
+        final Button toggleBackNavigationButton = createToggleBackNavigationButton(activity);
+        linLayout.addView(toggleBackNavigationButton);
+
+        final Button portraitOrientationButton = createRequestPortraitOrientationButton(activity);
+        final Button landscapeOrientationButton = createRequestLandscapeOrientationButton(activity);
+        linLayout.addView(portraitOrientationButton);
+        linLayout.addView(landscapeOrientationButton);
+
+        final Button finishActivityButton = createFinishActivityButton(activity);
+        linLayout.addView(finishActivityButton);
+
+        final TextView statesChangeLog = createStatesChangeLog(activity);
+        linLayout.addView(statesChangeLog);
+
         // set LinearLayout as a root element of the screen
         activity.setContentView(linLayout, linLayoutParam);
     }
 
+    private Button createToggleBackNavigationButton(Activity activity) {
+        final Button button = new Button(activity);
+        final BackNavigationDisabler disabler = new BackNavigationDisabler(activity);
+        button.setOnClickListener(
+                v -> {
+                    disabler.toggle();
+                    button.setText(
+                            toggleBackNavigationButtonText(disabler.isBackNavigationDisabled()));
+                });
+        button.setText(toggleBackNavigationButtonText(disabler.isBackNavigationDisabled()));
+        return button;
+    }
+
+    private Button createRequestLandscapeOrientationButton(Activity activity) {
+        final Button button = new Button(activity);
+        button.setText("Set SCREEN_ORIENTATION_LANDSCAPE");
+
+        button.setOnClickListener(
+                v -> activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
+
+        return button;
+    }
+
+    private Button createRequestPortraitOrientationButton(Activity activity) {
+        final Button button = new Button(activity);
+        button.setText("Set SCREEN_ORIENTATION_PORTRAIT");
+
+        button.setOnClickListener(
+                v -> activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
+
+        return button;
+    }
+
+    private Button createFinishActivityButton(Activity activity) {
+        final Button button = new Button(activity);
+        button.setText("Finish Activity");
+
+        button.setOnClickListener(v -> activity.finish());
+
+        return button;
+    }
+
+    private TextView createStatesChangeLog(Activity activity) {
+        final TextView textView = new TextView(activity);
+
+        activity.registerActivityLifecycleCallbacks(
+                new Application.ActivityLifecycleCallbacks() {
+                    @Override
+                    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityCreated");
+                    }
+
+                    @Override
+                    public void onActivityStarted(Activity activity) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityStarted");
+                    }
+
+                    @Override
+                    public void onActivityResumed(Activity activity) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityResumed");
+                    }
+
+                    @Override
+                    public void onActivityPaused(Activity activity) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityPaused");
+                    }
+
+                    @Override
+                    public void onActivityStopped(Activity activity) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityStopped");
+                    }
+
+                    @Override
+                    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivitySaveInstanceState");
+                    }
+
+                    @Override
+                    public void onActivityDestroyed(Activity activity) {
+                        textView.append(System.lineSeparator());
+                        textView.append("onActivityDestroyed");
+                    }
+                });
+
+        return textView;
+    }
+
+    private String toggleBackNavigationButtonText(boolean isBackNavigationDisabled) {
+        if (isBackNavigationDisabled) {
+            return "Enable Back Navigation";
+        } else {
+            return "Disable Back Navigation";
+        }
+    }
+
     private SharedPreferences getClientSharedPreferences() {
         return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
+    }
+
+    private static class BackNavigationDisabler {
+
+        private final OnBackInvokedDispatcher mDispatcher;
+
+        private final OnBackInvokedCallback mBackNavigationDisablingCallback;
+
+        private boolean mBackNavigationDisabled;
+
+        BackNavigationDisabler(Activity activity) {
+            mDispatcher = activity.getOnBackInvokedDispatcher();
+            mBackNavigationDisablingCallback =
+                    () -> {
+                        // do nothing
+                    };
+        }
+
+        public void toggle() {
+            if (mBackNavigationDisabled) {
+                mDispatcher.unregisterOnBackInvokedCallback(mBackNavigationDisablingCallback);
+            } else {
+                mDispatcher.registerOnBackInvokedCallback(
+                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, mBackNavigationDisablingCallback);
+            }
+            mBackNavigationDisabled = !mBackNavigationDisabled;
+        }
+
+        public boolean isBackNavigationDisabled() {
+            return mBackNavigationDisabled;
+        }
     }
 }
