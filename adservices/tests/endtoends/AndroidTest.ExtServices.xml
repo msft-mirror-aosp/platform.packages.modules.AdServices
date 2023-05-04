@@ -33,6 +33,8 @@
                 fledge_custom_audience_service_kill_switch false" />
         <option name="run-command"
                 value="device_config put adservices measurement_kill_switch false" />
+        <option name="run-command"
+                value="device_config put adservices adid_kill_switch false" />
 
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command"
