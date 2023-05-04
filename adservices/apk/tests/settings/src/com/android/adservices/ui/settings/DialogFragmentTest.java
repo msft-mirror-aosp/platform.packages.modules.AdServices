@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.adservices.ui.settings;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Matchers.any;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -63,13 +62,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @RunWith(AndroidJUnit4.class)
-public class SettingsActivityUiAutomatorTest {
+public class DialogFragmentTest {
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
     private static UiDevice sDevice;
@@ -97,7 +95,9 @@ public class SettingsActivityUiAutomatorTest {
                         .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
+        // UiDialogFragmentEnable flag should be on for this test
+        doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
+
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
@@ -161,7 +161,7 @@ public class SettingsActivityUiAutomatorTest {
         startActivityFromHomeAndCheckMainSwitch();
     }
 
-    private void startActivityFromHomeAndCheckMainSwitch() throws UiObjectNotFoundException {
+    private void startActivityFromHomeAndCheckMainSwitch() {
         // Initialize UiDevice instance
         sDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -198,7 +198,7 @@ public class SettingsActivityUiAutomatorTest {
     }
 
     @Test
-    public void optOutDialogTest() throws UiObjectNotFoundException {
+    public void dialogExistAfterRotateTest() throws RemoteException, UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
@@ -212,13 +212,22 @@ public class SettingsActivityUiAutomatorTest {
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
         assertThat(dialogTitle.exists()).isTrue();
         assertThat(positiveText.exists()).isTrue();
+        sDevice.setOrientationRight();
+        assertThat(dialogTitle.exists()).isTrue();
+        assertThat(positiveText.exists()).isTrue();
+    }
 
-        // confirm
-        positiveText.click();
+    @Test
+    public void optOutDialogTest() throws UiObjectNotFoundException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(consentSwitch.exists()).isTrue();
 
         // click switch
         consentSwitch.click();
-        dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+        UiObject dialogTitle =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+
         UiObject negativeText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_negative_text);
         assertThat(dialogTitle.exists()).isTrue();
@@ -226,6 +235,16 @@ public class SettingsActivityUiAutomatorTest {
 
         // cancel
         negativeText.click();
+
+        // click switch
+        consentSwitch.click();
+        dialogTitle = ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+        UiObject positiveText =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_positive_text);
+        assertThat(dialogTitle.exists()).isTrue();
+        assertThat(negativeText.exists()).isTrue();
+        // confirm
+        positiveText.click();
     }
 
     @Test
@@ -295,24 +314,6 @@ public class SettingsActivityUiAutomatorTest {
         unblockTopicText =
                 ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_topic_title, 0);
         assertThat(unblockTopicText.exists()).isTrue();
-    }
-
-    @Test
-    public void resetMeasurementDialogTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
-
-        startActivityFromHomeAndCheckMainSwitch();
-        // open measurement view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
-
-        // click reset
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-
-        // click reset again
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_reset_title);
-
-        verify(mConsentManager, times(2)).resetMeasurement();
     }
 
     @Test
@@ -392,10 +393,6 @@ public class SettingsActivityUiAutomatorTest {
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
 
-        // perform a gentle swipe so scroll won't miss the text close to the
-        // bottom of the current screen.
-        ApkTestUtil.gentleSwipe(sDevice);
-
         // open blocked apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
         UiObject unblockAppText =
@@ -449,92 +446,5 @@ public class SettingsActivityUiAutomatorTest {
         // cancel and verify it has still only been called once
         negativeText.click();
         verify(mConsentManager).resetApps();
-    }
-
-    @Test
-    public void disableMeasurementTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
-        // start the activity again to reflect the GaUxFeature flag change
-        startActivityFromHomeAndCheckMainSwitch();
-        // the entry point of ads measurement should be hidden
-        UiObject adsMeasurementTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_measurement_view_title);
-        assertThat(adsMeasurementTitle.exists()).isFalse();
-    }
-
-    @Test
-    public void disableDialogFeatureTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
-
-        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
-        assertThat(consentSwitch.exists()).isTrue();
-
-        // click switch
-        consentSwitch.click();
-        UiObject dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
-        assertThat(dialogTitle.exists()).isFalse();
-
-        // open topics view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
-        UiObject blockTopicText =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_block_topic_title, 0);
-        assertThat(blockTopicText.exists()).isTrue();
-
-        // block topic
-        blockTopicText.click();
-        dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_block_topic_message);
-        assertThat(dialogTitle.exists()).isFalse();
-        verify(mConsentManager).revokeConsentForTopic(any(Topic.class));
-
-        // reset topic
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_reset_topics_title);
-        dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_reset_topic_message);
-        assertThat(dialogTitle.exists()).isFalse();
-        verify(mConsentManager).resetTopics();
-
-        // open unblock topic view
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_topics_title);
-        UiObject unblockTopicText =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_unblock_topic_title, 0);
-        assertThat(unblockTopicText.exists()).isTrue();
-
-        // click unblock
-        unblockTopicText.click();
-        dialogTitle =
-                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_unblock_topic_message);
-        assertThat(dialogTitle.exists()).isFalse();
-        verify(mConsentManager).restoreConsentForTopic(any(Topic.class));
-    }
-
-    /**
-     * Test for the Button to show blocked topics when the list of Topics is Empty The Button should
-     * be disabled if blocked topics is empty
-     *
-     * @throws UiObjectNotFoundException
-     */
-    @Test
-    public void blockedTopicsWhenEmptyStateButtonTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-
-        // Return an empty topics list
-        doReturn(ImmutableList.of()).when(mConsentManager).getKnownTopicsWithConsent();
-        // Return a non-empty blocked topics list
-        List<Topic> tempList = new ArrayList<>();
-        tempList.add(Topic.create(10004, 1, 1));
-        tempList.add(Topic.create(10005, 1, 1));
-        ImmutableList<Topic> blockedTopicsList = ImmutableList.copyOf(tempList);
-        doReturn(blockedTopicsList).when(mConsentManager).getTopicsWithRevokedConsent();
-        // navigate to topics page
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_topics_title);
-        UiObject blockedTopicsWhenEmptyStateButton =
-                ApkTestUtil.scrollTo(sDevice, R.string.settingsUI_blocked_topics_title);
-        assertThat(blockedTopicsWhenEmptyStateButton.isEnabled()).isTrue();
     }
 }
