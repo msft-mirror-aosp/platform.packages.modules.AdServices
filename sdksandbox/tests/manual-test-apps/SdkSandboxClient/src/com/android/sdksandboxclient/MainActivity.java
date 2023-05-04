@@ -61,6 +61,7 @@ import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Set;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
     // TODO(b/253202014): Add toggle button
@@ -82,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
     private static final String DROPDOWN_KEY_SDK_APP = "SDK_IN_APP";
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
+
+    // Saved instance state keys
+    private static final String SDKS_LOADED_KEY = "sdks_loaded";
 
     private static String sVideoUrl;
     private boolean mSdksLoaded = false;
@@ -106,10 +110,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        PreferenceManager.setDefaultValues(this, R.xml.banner_preferences, false);
         enableStrictMode();
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
+        }
+
+        Executors.newSingleThreadExecutor()
+                .execute(
+                        () -> {
+                            Looper.prepare();
+                            mSharedPreferences =
+                                    PreferenceManager.getDefaultSharedPreferences(
+                                            MainActivity.this);
+                            PreferenceManager.setDefaultValues(
+                                    this, R.xml.banner_preferences, false);
+                        });
+
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
         Bundle extras = getIntent().getExtras();
@@ -146,10 +164,29 @@ public class MainActivity extends AppCompatActivity {
         registerInflateViewButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
-        // Register AppOwnedSdkInterface
-        mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
-                new AppOwnedSdkSandboxInterface(
-                        APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
+
+        if (savedInstanceState == null) {
+            // Register AppOwnedSdkInterface when activity first created
+            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                    new AppOwnedSdkSandboxInterface(
+                            APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
+        }
+
+        refreshLoadSdksButtonText();
+    }
+
+    private void refreshLoadSdksButtonText() {
+        if (mSdksLoaded) {
+            mLoadSdksButton.setText("Unload SDKs");
+        } else {
+            mLoadSdksButton.setText("Load SDKs");
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
     }
 
     private void registerDeathCallbackButton() {
@@ -175,7 +212,6 @@ public class MainActivity extends AppCompatActivity {
                             new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
-                                    mSdksLoaded = true;
                                     mSandboxedSdk = sandboxedSdk;
                                     makeToast("First SDK Loaded successfully!");
                                 }
@@ -192,8 +228,8 @@ public class MainActivity extends AppCompatActivity {
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     makeToast("All SDKs Loaded successfully!");
                                     Log.d(TAG, "All SDKs Loaded successfully!");
-                                    mLoadSdksButton.setText("Unload SDKs");
-                                    mLoadSdksButton.forceLayout();
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
                                 }
 
                                 @Override
@@ -210,8 +246,8 @@ public class MainActivity extends AppCompatActivity {
     private void resetStateForLoadSdkButton() {
         mSdkSandboxManager.unloadSdk(SDK_NAME);
         mSdkSandboxManager.unloadSdk(MEDIATEE_SDK_NAME);
-        mLoadSdksButton.setText("Load SDKs");
         mSdksLoaded = false;
+        refreshLoadSdksButtonText();
     }
 
     private void registerNewBannerAdButton() {
