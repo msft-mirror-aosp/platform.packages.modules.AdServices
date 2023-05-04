@@ -156,6 +156,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setType(AsyncRegistration.RegistrationType.WEB_SOURCE)
                         .setAdIdPermission(true)
                         .setDebugKeyAllowed(arDebugPermission)
+                        .setRegistrationUri(Uri.parse(uri))
                         .build();
         Source source = mAsyncSourceFetcher
                 .parseSource(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
@@ -194,6 +195,7 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setType(AsyncRegistration.RegistrationType.WEB_TRIGGER)
                         .setAdIdPermission(true)
                         .setDebugKeyAllowed(arDebugPermission)
+                        .setRegistrationUri(Uri.parse(uri))
                         .build();
         Trigger trigger = mAsyncTriggerFetcher
                 .parseTrigger(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())

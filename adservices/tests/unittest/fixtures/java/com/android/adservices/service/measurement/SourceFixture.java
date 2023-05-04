@@ -44,7 +44,8 @@ public final class SourceFixture {
                 .setPublisher(ValidSourceParams.PUBLISHER)
                 .setAppDestinations(ValidSourceParams.ATTRIBUTION_DESTINATIONS)
                 .setEnrollmentId(ValidSourceParams.ENROLLMENT_ID)
-                .setRegistrant(ValidSourceParams.REGISTRANT);
+                .setRegistrant(ValidSourceParams.REGISTRANT)
+                .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     // Assume the field values in this Source have no relation to the field values in
@@ -73,6 +74,9 @@ public final class SourceFixture {
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
                 .setInstallTime(ValidSourceParams.INSTALL_TIME)
+                .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
+                .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
+                .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -97,6 +101,10 @@ public final class SourceFixture {
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
         public static final Long INSTALL_TIME = 100L;
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+        public static final String DEBUG_AD_ID = "test-debug-ad-id";
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
 
         public static final String buildAggregateSource() {
             try {

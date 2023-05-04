@@ -69,6 +69,9 @@ public class Trigger {
     @Nullable private String mAttributionConfig;
     @Nullable private String mAdtechKeyMapping;
     @Nullable private String mDebugJoinKey;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -113,7 +116,10 @@ public class Trigger {
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
                 && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
                 && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
-                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey);
+                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
+                && Objects.equals(mDebugAdId, trigger.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin);
     }
 
     @Override
@@ -137,7 +143,10 @@ public class Trigger {
                 mAttributionConfig,
                 mAdtechKeyMapping,
                 mAggregateDeduplicationKeys,
-                mDebugJoinKey);
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId,
+                mRegistrationOrigin);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -315,6 +324,31 @@ public class Trigger {
     @Nullable
     public String getDebugJoinKey() {
         return mDebugJoinKey;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web source's {@link Source#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app source's {@link Source#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
     }
 
     /**
@@ -642,13 +676,35 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Trigger.Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Build the {@link Trigger}. */
         @NonNull
         public Trigger build() {
             Validation.validateNonNull(
                     mBuilding.mAttributionDestination,
                     mBuilding.mEnrollmentId,
-                    mBuilding.mRegistrant);
+                    mBuilding.mRegistrant,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }

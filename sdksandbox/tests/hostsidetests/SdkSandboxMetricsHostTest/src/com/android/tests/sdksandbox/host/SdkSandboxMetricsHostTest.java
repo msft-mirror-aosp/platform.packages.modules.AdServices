@@ -51,6 +51,18 @@ public class SdkSandboxMetricsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+        runPhase("testSdkCanAccessSdkSandboxExitReasons");
+    }
+
+    @Test
+    public void testAppWithDumpPermissionCanAccessSdkSandboxExitReasons() throws Exception {
+        assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
+        runPhase("testAppWithDumpPermissionCanAccessSdkSandboxExitReasons");
+    }
+
+    @Test
     public void testSdkSandboxCrashGeneratesDropboxReport() throws Exception {
         assumeTrue(mDeviceSdkLevel.isDeviceAtLeastU());
         runPhase("testCrashSandboxGeneratesDropboxReport");
