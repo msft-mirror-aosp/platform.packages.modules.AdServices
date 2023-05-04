@@ -30,6 +30,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
@@ -79,8 +80,13 @@ public class AppsActionDelegate {
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected(mAppsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showBlockAppDialog(
-                                            mAppsActivity, mAppsViewModel, app);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    } else {
+                                        DialogManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    }
                                 } else {
                                     mAppsViewModel.revokeAppConsent(app);
                                 }
@@ -88,7 +94,13 @@ public class AppsActionDelegate {
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected(mAppsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetAppDialog(mAppsActivity, mAppsViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    } else {
+                                        DialogManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    }
                                 } else {
                                     mAppsViewModel.resetApps();
                                 }
