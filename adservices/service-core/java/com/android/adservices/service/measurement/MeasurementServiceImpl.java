@@ -53,7 +53,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -95,7 +94,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final Flags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
-    private final EnrollmentDao mEnrollmentDao;
     private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
@@ -106,7 +104,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
@@ -114,7 +111,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 context,
                 clock,
                 consentManager,
-                enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags()),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
@@ -127,7 +123,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
@@ -136,7 +131,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mClock = clock;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
-        mEnrollmentDao = enrollmentDao;
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
