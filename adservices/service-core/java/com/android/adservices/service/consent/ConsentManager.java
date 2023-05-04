@@ -919,7 +919,7 @@ public class ConsentManager {
         Objects.requireNonNull(packageName);
         Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
 
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1106,7 +1106,7 @@ public class ConsentManager {
      * @return true if the topics default consent is true, false otherwise.
      */
     public Boolean getDefaultConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1140,7 +1140,7 @@ public class ConsentManager {
      * @return true if the topics default consent is true, false otherwise.
      */
     public Boolean getTopicsDefaultConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1174,7 +1174,7 @@ public class ConsentManager {
      * @return true if the FLEDGE default consent is true, false otherwise.
      */
     public Boolean getFledgeDefaultConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1208,7 +1208,7 @@ public class ConsentManager {
      * @return true if the measurement default consent is true, false otherwise.
      */
     public Boolean getMeasurementDefaultConsent() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1240,7 +1240,7 @@ public class ConsentManager {
      * @return true if the AdId is enabled by default, false otherwise.
      */
     public Boolean getDefaultAdIdState() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1272,7 +1272,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordDefaultConsent(boolean defaultConsent) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1308,7 +1308,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordTopicsDefaultConsent(boolean defaultConsent) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1344,7 +1344,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordFledgeDefaultConsent(boolean defaultConsent) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1380,7 +1380,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordMeasurementDefaultConsent(boolean defaultConsent) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1418,7 +1418,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1454,7 +1454,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
@@ -1537,7 +1537,7 @@ public class ConsentManager {
      * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public PrivacySandboxFeatureType getCurrentPrivacySandboxFeature() {
-        synchronized (ConsentManager.class) {
+        synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
