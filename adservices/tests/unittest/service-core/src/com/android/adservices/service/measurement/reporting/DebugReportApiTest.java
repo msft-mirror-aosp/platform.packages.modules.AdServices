@@ -41,9 +41,11 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
@@ -108,7 +110,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_SUCCESS, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -128,7 +138,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceSuccessDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_SUCCESS, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -269,7 +287,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceDestinationLimitDebugReport(source, LIMIT, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_DESTINATION_LIMIT, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -356,7 +382,16 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_NOISED, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -376,7 +411,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceNoisedDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_NOISED, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -491,7 +534,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceStorageLimitDebugReport(source, LIMIT, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_STORAGE_LIMIT, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -591,7 +642,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_UNKNOWN_ERROR, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -611,7 +670,15 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleSourceUnknownErrorDebugReport(source, mMeasurementDao);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.SOURCE_UNKNOWN_ERROR, report.getType());
+        Assert.assertEquals(
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -777,7 +844,15 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                 trigger, mMeasurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_NO_MATCHING_SOURCE, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -980,7 +1055,15 @@ public final class DebugReportApiTest {
                 /* limit =*/ null,
                 mMeasurementDao,
                 Type.TRIGGER_NO_MATCHING_FILTER_DATA);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_NO_MATCHING_FILTER_DATA, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1130,7 +1213,15 @@ public final class DebugReportApiTest {
                 /* limit =*/ null,
                 mMeasurementDao,
                 Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1266,6 +1357,15 @@ public final class DebugReportApiTest {
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
                 source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_LOW_PRIORITY, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1390,8 +1490,20 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_EXCESSIVE_REPORTS, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1530,7 +1642,16 @@ public final class DebugReportApiTest {
                 LIMIT,
                 mMeasurementDao,
                 Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(
+                Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1678,7 +1799,15 @@ public final class DebugReportApiTest {
                 /* limit =*/ null,
                 mMeasurementDao,
                 Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1812,7 +1941,15 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source, trigger, LIMIT, mMeasurementDao, Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_REPORTING_ORIGIN_LIMIT, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -1939,7 +2076,15 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source, trigger, /* limit =*/ null, mMeasurementDao, Type.TRIGGER_EVENT_NOISE);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_NOISE, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -2065,7 +2210,15 @@ public final class DebugReportApiTest {
 
         mDebugReportApi.scheduleTriggerDebugReport(
                 source, trigger, LIMIT, mMeasurementDao, Type.TRIGGER_EVENT_STORAGE_LIMIT);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_EVENT_STORAGE_LIMIT, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test
@@ -2203,7 +2356,16 @@ public final class DebugReportApiTest {
                 /* limit =*/ null,
                 mMeasurementDao,
                 Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
-        verify(mMeasurementDao, times(1)).insertDebugReport(any());
+
+        ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
+        verify(mMeasurementDao, times(1)).insertDebugReport(captor.capture());
+        DebugReport report = captor.getValue();
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.ENROLLMENT_ID, report.getEnrollmentId());
+        Assert.assertEquals(Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED, report.getType());
+        Assert.assertEquals(
+                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin());
     }
 
     @Test

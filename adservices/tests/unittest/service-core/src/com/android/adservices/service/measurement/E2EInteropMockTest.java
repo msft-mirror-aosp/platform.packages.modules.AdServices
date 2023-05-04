@@ -105,7 +105,7 @@ public class E2EInteropMockTest extends E2EMockTest {
         }
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
@@ -129,9 +129,9 @@ public class E2EInteropMockTest extends E2EMockTest {
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
-        processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
