@@ -463,6 +463,7 @@ public class MeasurementManagerCtsTest {
                         + overrideString);
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
     }
 
     private void enableGlobalKillSwitch(boolean enabled) {
