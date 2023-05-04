@@ -17,17 +17,22 @@
 package com.android.adservices.data.measurement.migration;
 
 import android.content.ContentValues;
+import android.net.Uri;
 
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 public class ContentValueFixtures {
+
+    public static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
 
     public static class AsyncRegistrationValues {
         public static final String ID = "async_registration_id";
@@ -110,6 +115,9 @@ public class ContentValueFixtures {
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
         public static final String DEBUG_AD_ID = "sample_debug_ad_id";
+
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class SourceDestinationValues {
@@ -176,6 +184,9 @@ public class ContentValueFixtures {
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
         public static final String DEBUG_AD_ID = "sample_debug_ad_id";
+
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AttributionValues {
@@ -216,6 +227,8 @@ public class ContentValueFixtures {
         public static final String SOURCE_ID_V3 = "source_id";
         public static final String TRIGGER_ID = "trigger_id";
         public static final long DEBUG_REPORT_STATUS = 4;
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AggregateReportValues {
@@ -240,6 +253,8 @@ public class ContentValueFixtures {
 
         // Added in V9
         public static final UnsignedLong DEDUP_KEY = new UnsignedLong(12L);
+        // Added in V14
+        public static final Uri REGISTRATION_ORIGIN = ContentValueFixtures.REGISTRATION_ORIGIN;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -527,6 +542,14 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateSourceContentValuesV14() {
+        ContentValues values = generateSourceContentValuesV13();
+        values.put(
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                SourceValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
     public static ContentValues generateSourceDestinationContentValuesV9() {
         ContentValues sourceDestination = new ContentValues();
 
@@ -648,6 +671,14 @@ public class ContentValueFixtures {
         ContentValues values = generateTriggerContentValuesV12();
         values.put(MeasurementTables.TriggerContract.PLATFORM_AD_ID, TriggerValues.PLATFORM_AD_ID);
         values.put(MeasurementTables.TriggerContract.DEBUG_AD_ID, TriggerValues.DEBUG_AD_ID);
+        return values;
+    }
+
+    public static ContentValues generateTriggerContentValuesV14() {
+        ContentValues values = generateTriggerContentValuesV13();
+        values.put(
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                TriggerValues.REGISTRATION_ORIGIN.toString());
         return values;
     }
 
@@ -810,6 +841,23 @@ public class ContentValueFixtures {
         return generateEventReportContentValuesV10();
     }
 
+    public static ContentValues generateEventReportContentValuesV12() {
+        return generateEventReportContentValuesV11();
+    }
+
+    public static ContentValues generateEventReportContentValuesV13() {
+        return generateEventReportContentValuesV12();
+    }
+
+    public static ContentValues generateEventReportContentValuesV14() {
+        ContentValues eventReport = generateEventReportContentValuesV13();
+
+        eventReport.put(
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                EventReportValues.REGISTRATION_ORIGIN.toString());
+        return eventReport;
+    }
+
     public static ContentValues generateAggregateReportContentValuesV1() {
         ContentValues aggregateReport = new ContentValues();
 
@@ -895,6 +943,25 @@ public class ContentValueFixtures {
 
     public static ContentValues generateAggregateReportContentValuesV11() {
         return generateAggregateReportContentValuesV10();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV12() {
+        return generateAggregateReportContentValuesV11();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV13() {
+        return generateAggregateReportContentValuesV12();
+    }
+
+    public static ContentValues generateAggregateReportContentValuesV14() {
+        ContentValues aggregateReport = generateAggregateReportContentValuesV13();
+
+        // Add columns.
+        aggregateReport.put(
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                AggregateReportValues.REGISTRATION_ORIGIN.toString());
+
+        return aggregateReport;
     }
 
     public static ContentValues generateAggregateEncryptionKeyContentValuesV1() {
