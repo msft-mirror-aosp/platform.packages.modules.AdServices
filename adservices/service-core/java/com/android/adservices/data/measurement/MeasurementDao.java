@@ -1923,6 +1923,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
