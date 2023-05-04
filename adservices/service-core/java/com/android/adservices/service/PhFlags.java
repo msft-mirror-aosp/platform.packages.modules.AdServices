@@ -424,6 +424,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
+    static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
+
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
@@ -2248,6 +2250,17 @@ public final class PhFlags implements Flags {
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_DIALOGS_FEATURE_ENABLED,
                         /* defaultValue */ UI_DIALOGS_FEATURE_ENABLED));
+    }
+
+    @Override
+    public boolean getUiDialogFragmentEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_DIALOG_FRAGMENT_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_DIALOG_FRAGMENT_ENABLED,
+                        /* defaultValue */ UI_DIALOG_FRAGMENT));
     }
 
     @Override
