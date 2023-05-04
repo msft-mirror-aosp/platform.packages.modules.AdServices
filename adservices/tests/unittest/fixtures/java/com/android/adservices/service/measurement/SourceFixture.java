@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public final class SourceFixture {
     private SourceFixture() { }
@@ -146,5 +147,28 @@ public final class SourceFixture {
                                     .build())
                     .build();
         }
+    }
+
+    public static JSONArray getValidTriggerSpec() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put("trigger_data", new JSONArray(new int[] {1, 2}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 0);
+        windows.put(
+                "end_times",
+                new JSONArray(new long[] {TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7)}));
+        json.put("event_report_windows", windows);
+        json.put("summary_window_operator", TriggerSpec.SummaryOperatorType.COUNT);
+        json.put("summary_buckets", new JSONArray(new int[] {1}));
+
+        return new JSONArray(new JSONObject[] {json});
+    }
+
+    public static ReportSpec getValidReportSpec() throws JSONException {
+        return new ReportSpec(getValidTriggerSpec(), 3, true);
+    }
+
+    public static Source getValidSourceWithFlexEventReport() throws JSONException {
+        return getValidSourceBuilder().setFlexEventReportSpec(getValidReportSpec()).build();
     }
 }
