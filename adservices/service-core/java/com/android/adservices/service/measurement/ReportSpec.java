@@ -54,6 +54,26 @@ public class ReportSpec {
         return getPrivacyParams().getFlipProbability();
     }
 
+    /** @return the number of states */
+    public int getNumberState() {
+        return getPrivacyParams().getNumStates();
+    }
+
+    /**
+     * Get the parameters for the privacy computation. 1st element: total report cap, an array with
+     * 1 element is used to store the integer; 2nd element: number of windows per trigger data type;
+     * 3rd element: number of report cap per trigger data type.
+     *
+     * @return the parameters to computer number of states and fake report
+     */
+    public int[][] getPrivacyParamsForComputation() {
+        int[][] params = new int[3][];
+        params[0] = new int[] {mMaxBucketIncrements};
+        params[1] = mPrivacyParams.getPerTypeNumWindowList();
+        params[2] = mPrivacyParams.getPerTypeCapList();
+        return params;
+    }
+
     private PrivacyComputationParams getPrivacyParams() {
         return mPrivacyParams;
     }
@@ -67,8 +87,46 @@ public class ReportSpec {
         return mTriggerSpecs;
     }
 
+    /** @return Max bucket increments. (a.k.a max number of reports) */
     public int getMaxReports() {
         return mMaxBucketIncrements;
+    }
+
+    /**
+     * Get the trigger data type given a trigger data index. In the flexible event API, the trigger
+     * data is not necessary input as [0, 1, 2..]
+     *
+     * @param triggerDataIndex The index of the triggerData
+     * @return the value of the trigger data
+     */
+    public int getTriggerDataValue(int triggerDataIndex) {
+        for (TriggerSpec triggerSpec : mTriggerSpecs) {
+            int prevTriggerDataIndex = triggerDataIndex;
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                return triggerSpec.getTriggerData().get(prevTriggerDataIndex);
+            }
+        }
+        // will not reach here
+        return -1;
+    }
+
+    /**
+     * Get the reporting window end time given a trigger data and window index
+     *
+     * @param triggerDataIndex The index of the triggerData
+     * @param windowIndex the window index, not the actual window end time
+     * @return the report window end time
+     */
+    public long getWindowEndTime(int triggerDataIndex, int windowIndex) {
+        for (TriggerSpec triggerSpec : mTriggerSpecs) {
+            triggerDataIndex -= triggerSpec.getTriggerData().size();
+            if (triggerDataIndex < 0) {
+                return triggerSpec.getEventReportWindowsEnd().get(windowIndex);
+            }
+        }
+        // will not reach here
+        return -1;
     }
 
     private int[] computerPerTypeNumWindowList() {
@@ -161,7 +219,7 @@ public class ReportSpec {
                 }
             }
 
-            // computer number of state and other privacy parameters
+            // compute number of state and other privacy parameters
             mNumStates =
                     Combinatorics.getNumStatesFlexAPI(
                             mMaxBucketIncrements, mPerTypeNumWindowList, mPerTypeCapList);
@@ -177,5 +235,19 @@ public class ReportSpec {
         private double getFlipProbability() {
             return mFlipProbability;
         }
+
+        private int getNumStates() {
+            return mNumStates;
+        }
+
+        private int[] getPerTypeNumWindowList() {
+            return mPerTypeNumWindowList;
+        }
+        ;
+
+        private int[] getPerTypeCapList() {
+            return mPerTypeCapList;
+        }
+        ;
     }
 }
