@@ -131,6 +131,7 @@ public final class MeasurementTables {
         String MAX_BUCKET_INCREMENTS = "max_bucket_increments";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for sub-table for destinations in Source. */
@@ -166,6 +167,7 @@ public final class MeasurementTables {
         String DEBUG_JOIN_KEY = "debug_join_key";
         String PLATFORM_AD_ID = "platform_ad_id";
         String DEBUG_AD_ID = "debug_ad_id";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for EventReport. */
@@ -188,6 +190,7 @@ public final class MeasurementTables {
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for Attribution rate limit. */
@@ -224,6 +227,7 @@ public final class MeasurementTables {
         String SOURCE_ID = "source_id";
         String TRIGGER_ID = "trigger_id";
         String DEDUP_KEY = "dedup_key";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for aggregate encryption key. */
@@ -404,6 +408,7 @@ public final class MeasurementTables {
                     + SourceContract.INSTALL_TIME
                     + " INTEGER "
                     + ")";
+
     public static final String CREATE_TABLE_SOURCE_LATEST =
             "CREATE TABLE "
                     + SourceContract.TABLE
@@ -475,6 +480,8 @@ public final class MeasurementTables {
                     + SourceContract.PLATFORM_AD_ID
                     + " TEXT, "
                     + SourceContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + SourceContract.REGISTRATION_ORIGIN
                     + " TEXT "
                     + ")";
 
@@ -588,10 +595,13 @@ public final class MeasurementTables {
                     + TriggerContract.PLATFORM_AD_ID
                     + " TEXT, "
                     + TriggerContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.REGISTRATION_ORIGIN
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_EVENT_REPORT_V6 =
+    // Only used in V3
+    public static final String CREATE_TABLE_EVENT_REPORT_V3 =
             "CREATE TABLE "
                     + EventReportContract.TABLE
                     + " ("
@@ -645,7 +655,61 @@ public final class MeasurementTables {
                     + ") ON DELETE CASCADE"
                     + ")";
 
-    public static final String CREATE_TABLE_EVENT_REPORT_LATEST = CREATE_TABLE_EVENT_REPORT_V6;
+    public static final String CREATE_TABLE_EVENT_REPORT_LATEST =
+            "CREATE TABLE "
+                    + EventReportContract.TABLE
+                    + " ("
+                    + EventReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EventReportContract.SOURCE_EVENT_ID
+                    + " INTEGER, "
+                    + EventReportContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + EventReportContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + EventReportContract.REPORT_TIME
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DATA
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_PRIORITY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEDUP_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + EventReportContract.STATUS
+                    + " INTEGER, "
+                    + EventReportContract.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
+                    + EventReportContract.SOURCE_TYPE
+                    + " TEXT, "
+                    + EventReportContract.RANDOMIZED_TRIGGER_RATE
+                    + " DOUBLE, "
+                    + EventReportContract.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + EventReportContract.TRIGGER_DEBUG_KEY
+                    + " INTEGER, "
+                    + EventReportContract.SOURCE_ID
+                    + " TEXT, "
+                    + EventReportContract.TRIGGER_ID
+                    + " TEXT, "
+                    + EventReportContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + "FOREIGN KEY ("
+                    + EventReportContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE, "
+                    + "FOREIGN KEY ("
+                    + EventReportContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
 
     public static final String CREATE_TABLE_ATTRIBUTION_V6 =
             "CREATE TABLE "
@@ -771,6 +835,8 @@ public final class MeasurementTables {
                     + " TEXT, "
                     + AggregateReport.DEDUP_KEY
                     + " INTEGER, "
+                    + AggregateReport.REGISTRATION_ORIGIN
+                    + " TEXT, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -1063,7 +1129,7 @@ public final class MeasurementTables {
                     Arrays.asList(
                             CREATE_TABLE_SOURCE_V6,
                             CREATE_TABLE_TRIGGER_V6,
-                            CREATE_TABLE_EVENT_REPORT_V6,
+                            CREATE_TABLE_EVENT_REPORT_V3,
                             CREATE_TABLE_ATTRIBUTION_V6,
                             CREATE_TABLE_AGGREGATE_REPORT_V6,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6,
