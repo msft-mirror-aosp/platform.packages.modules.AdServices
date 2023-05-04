@@ -18,7 +18,7 @@ package com.android.adservices.service.devapi;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
-import android.adservices.adselection.BuyerDecisionLogic;
+import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -177,7 +177,7 @@ public class AdSelectionDevOverridesHelper {
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJS,
             @NonNull AdSelectionSignals trustedScoringSignals,
-            @NonNull List<BuyerDecisionLogic> buyersDecisionLogic) {
+            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJS);
 
@@ -194,12 +194,12 @@ public class AdSelectionDevOverridesHelper {
                         .build());
 
         List<DBBuyerDecisionOverride> dbBuyerDecisionOverrideList =
-                buyersDecisionLogic.stream()
+                buyersDecisionLogic.getLogicMap().entrySet().stream()
                         .map(
                                 x ->
                                         DBBuyerDecisionOverride.builder()
-                                                .setBuyer(x.getBuyer())
-                                                .setDecisionLogic(x.getDecisionLogic())
+                                                .setBuyer(x.getKey())
+                                                .setDecisionLogic(x.getValue().getLogic())
                                                 .setAdSelectionConfigId(adSelectionConfigId)
                                                 .setAppPackageName(
                                                         mDevContext.getCallingAppPackageName())

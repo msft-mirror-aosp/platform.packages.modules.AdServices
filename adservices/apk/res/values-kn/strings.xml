@@ -26,17 +26,17 @@
     <string name="permdesc_accessAdServicesCustomAudience" msgid="2034811807106784662">"AdServices Custom Audiences API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesAdId" msgid="2754825914769538156">"AdId API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="7717770480967762044">"AdId API ಅನ್ನು ಆ್ಯಕ್ಸೆಸ್ ಮಾಡಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API ನ ಪ್ರವೇಶ"</string>
+    <string name="permlab_accessAdServicesConsent" msgid="3203633397142568707">"AdServices Consent API ನ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesConsent" msgid="8440334072391708453">"AdServices Consent API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAdId" msgid="1425385999072194463">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAdId" msgid="5082994464565978279">"Ad ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_adServicesAccessAppSetId" msgid="1300149048751231124">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಿ"</string>
     <string name="permdesc_adServicesAccessAppSetId" msgid="7919418391145455372">"App Set ID API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_adServicesAccessConsentService" msgid="5994709782267864205">"Consent Service API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_adServicesAccessConsentService" msgid="4587727715580124241">"Consent Service API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_modifyAdServicesState" msgid="3594653261299518914">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_modifyAdServicesState" msgid="2485849128464307209">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿಯ ಮಾರ್ಪಾಡು API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್ ಅನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
-    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಗೆ ಪ್ರವೇಶ"</string>
+    <string name="permlab_accessAdServicesState" msgid="482058883975394398">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesState" msgid="1165015604618567202">"AdService ನ ಸಕ್ರಿಯಗೊಳಿಸುವಿಕೆ ಸ್ಥಿತಿ API ಅನ್ನು ಪ್ರವೇಶಿಸಲು ಅಪ್ಲಿಕೇಶನ್‌ಗೆ ಅನುಮತಿಸುತ್ತದೆ."</string>
     <string name="permlab_accessAdServicesManager" msgid="4816332609066703740">"AdServicesManager ನ API ಗಳಿಗೆ ಆ್ಯಕ್ಸೆಸ್"</string>
     <string name="permdesc_accessAdServicesManager" msgid="2619300431637689524">"AdServicesManager ನ API ಗಳನ್ನು ಪ್ರವೇಶಿಸಲು ಆ್ಯಪ್ ಒಂದನ್ನು ಅನುಮತಿಸುತ್ತದೆ."</string>
@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"ಅರ್ಥವಾಯಿತು"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"ನೀವು ಬೀಟಾದ ಭಾಗವಾಗಿದ್ದೀರಿ"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"ನಿಮ್ಮ ಸಾಧನಕ್ಕಾಗಿ ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಆನ್ ಆಗಿದೆ, ಮತ್ತು ನಿಮಗೆ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುವ ಈ ಹೊಸತಾದ ಇನ್ನಷ್ಟು ಖಾಸಗಿಯಾದ ವಿಧಾನಗಳನ್ನು ಆ್ಯಪ್‌ಗಳು ಪರೀಕ್ಷಿಸಬಹುದು. ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಯಾವಾಗ ಬೇಕಾದರೂ ಬೀಟಾ ಅನ್ನು ಆಫ್ ಮಾಡಬಹುದು."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"ಅರ್ಥವಾಯಿತು"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"Android ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಹೊಸ ಫೀಚರ್‌ಗಳನ್ನು ಒದಗಿಸುತ್ತಿದ್ದು ಅವುಗಳನ್ನು ಬಳಸಿಕೊಂಡು ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಬಹುದು. ಈ ತಂತ್ರಜ್ಞಾನಗಳು ಸಾಧನ ಗುರುತಿಸುವಿಕೆಗಳನ್ನು ಬಳಸುವುದಿಲ್ಲ.\n\nAndroid ಮತ್ತು ನಿಮ್ಮ ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ಯಾವ ಪ್ರಕಾರದ ಜಾಹೀರಾತುಗಳು ಇಷ್ಟವಾಗುತ್ತವೆ ಎಂಬುದನ್ನು ಅಂದಾಜು ಮಾಡಬಲ್ಲವು ಮತ್ತು ಆಸಕ್ತಿಗಳನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ತಾತ್ಕಾಲಿಕವಾಗಿ ಉಳಿಸಬಲ್ಲವು. ಇದರಿಂದ ಇತರ ಡೆವಲಪರ್‌ಗಳ ವೆಬ್‌ಸೈಟ್‌ಗಳು ಮತ್ತು ಆ್ಯಪ್‌ಗಳಾದ್ಯಂತ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡದೇ ನಿಮಗೆ ಇಷ್ಟವಾಗಬಹುದಾದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸುವ ಅವಕಾಶ ಆ್ಯಪ್‌ಗಳಿಗೆ ದೊರೆಯುತ್ತದೆ."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಮೂಲಕ ಜಾಹೀರಾತು ವೈಯಕ್ತಿಕಗೊಳಿಸುವಿಕೆ"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"ಹೊಸ ಜಾಹೀರಾತು ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳನ್ನು ಬಳಸಿ ನೋಡಿ"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"ನೀವು ನೋಡುವ ಜಾಹೀರಾತುಗಳ ಮೇಲೆ ಜಾಹೀರಾತು ವಿಷಯಗಳು ನಿಮಗೆ ಹೆಚ್ಚಿನ ಆಯ್ಕೆಯನ್ನು ನೀಡುತ್ತವೆ"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"ವಿವರಗಳನ್ನು ವೀಕ್ಷಿಸಿ"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"ಹೊಸ ಜಾಹೀರಾತು ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳನ್ನು ಬಳಸಿ ನೋಡಿ"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"ನಿಮಗೆ ಕಾಣಿಸುವ ಜಾಹೀರಾತುಗಳ ಮೇಲೆ ನಿಮಗೆ ಹೆಚ್ಚಿನ ಆಯ್ಕೆಯನ್ನು ನೀಡುವ ಹೊಸ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳನ್ನು Android ಪ್ರಾರಂಭಿಸುತ್ತಿದೆ."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"ನಿಮ್ಮ ಗುರುತು ಮತ್ತು ನಿಮ್ಮ ಆ್ಯಪ್ ಬಳಕೆಯ ಕುರಿತು ಮಾಹಿತಿಯನ್ನು ರಕ್ಷಿಸುವ ಸಂದರ್ಭದಲ್ಲಿ, ನಿಮಗೆ ಸಂಬಂಧಪಟ್ಟ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಆ್ಯಡ್ ವಿಷಯವು ಆ್ಯಪ್‌ಗಳಿಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ. ನೀವು ಇತ್ತೀಚೆಗೆ ಬಳಸಿದ ಆ್ಯಪ್‌ಗಳ ಆಧಾರದ ಮೇಲೆ ಆಸಕ್ತಿಯ ವಿಷಯಗಳನ್ನು Android ಗುರುತು ಹಾಕಿಕೊಳ್ಳಬಹುದು. ನಂತರ, ನಿಮಗೆ ಕಾಣಿಸುವ ಜಾಹೀರಾತುಗಳನ್ನು ವೈಯಕ್ತೀಕರಿಸಲು ಸಂಬಂಧಿತ ವಿಷಯಗಳಿಗಾಗಿ ನೀವು ಬಳಸುವ ಒಂದು ಆ್ಯಪ್‌ Android ಅನ್ನು ಕೇಳಬಹುದು."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"ನಿಮ್ಮ ಸಾಧನದ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಆ್ಯಡ್ ವಿಷಯವನ್ನು ನೋಡಬಹುದು ಮತ್ತು ನೀವು ಆ್ಯಪ್‌ಗಳೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲು ಬಯಸದ ವಿಷಯಗಳನ್ನು ನಿರ್ಬಂಧಿಸಬಹುದು. Android ಸಹ ನಿಯಮಿತವಾಗಿ ಆ್ಯಡ್ ವಿಷಯವನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅಳಿಸುತ್ತದೆ."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಯಾವುದೇ ಸಮಯದಲ್ಲಿ ನಿಮ್ಮ ಮನಸ್ಸನ್ನು ಬದಲಾಯಿಸಬಹುದು."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"ಜಾಹೀರಾತು ವಿಷಯಗಳ ಕುರಿತು ಇನ್ನಷ್ಟು"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"ನಮ್ಮ ಗೌಪ್ಯತೆ ನೀತಿಯಲ್ಲಿ, ನಿಮ್ಮ ಡೇಟಾವನ್ನು Android ಹೇಗೆ ರಕ್ಷಿಸುತ್ತದೆ ಎಂಬುದರ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"ನಮ್ಮ "<a href="https://policies.google.com/privacy">"ಗೌಪ್ಯತೆ ನೀತಿಯಲ್ಲಿ"</a>" Android ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಹೇಗೆ ರಕ್ಷಿಸುತ್ತದೆ ಎಂಬುದರ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"ಇದನ್ನು ಬಳಸಿ ನೋಡಿ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"•  ಯಾವ ಡೇಟಾವನ್ನು ಬಳಸಲಾಗುತ್ತದೆ"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"ನಿಮ್ಮ ಆ್ಯಡ್ ವಿಷಯವು ಈ ಸಾಧನದಲ್ಲಿ ನೀವು ಇತ್ತೀಚೆಗೆ ಬಳಸಿದ ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ನೀವು ಅವುಗಳನ್ನು ಎಷ್ಟು ಬಾರಿ ಬಳಸುತ್ತೀರಿ ಎಂಬುದನ್ನು ಆಧರಿಸಿದೆ."</string>
@@ -120,11 +117,13 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"ಹೊಸ ಆ್ಯಡ್ಸ್ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳು ಈಗ ಲಭ್ಯವಿವೆ"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"ನಿಮ್ಮ ಗುರುತನ್ನು ರಕ್ಷಿಸುವ ಸಂದರ್ಭದಲ್ಲಿ ಜಾಹೀರಾತುಗಳಿಗೆ ಸಂಬಂಧಿಸಿದಂತೆ ಹೆಚ್ಚಿನ ಆಯ್ಕೆಯನ್ನು ಪಡೆಯಿರಿ"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"ಹೊಸ ಆ್ಯಡ್ಸ್ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳು ಈಗ ಲಭ್ಯವಿವೆ"</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"ಆ್ಯಪ್‌ಗಳು ನಿಮಗೆ ವೈಯಕ್ತೀಕರಿಸಿದ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಿದಾಗ ನಿಮ್ಮ ಬಗ್ಗೆ ಏನೆಲ್ಲ ತಿಳಿದುಕೊಳ್ಳಬಹುದು ಎಂಬುದನ್ನು ಮಿತಿಗೊಳಿಸಲು Android ಹೊಸ ಮಾರ್ಗಗಳನ್ನು ಪ್ರಾರಂಭಿಸುತ್ತಿದೆ."</string>
     <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  ನಿಮಗೆ ಸೂಕ್ತವಾಗುವ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಆ್ಯಪ್‌ಗಳನ್ನು ಸಕ್ರಿಯಗೊಳಿಸುವಾಗ, ಆ್ಯಪ್ ಶಿಫಾರಸು ಮಾಡಿದ ಜಾಹೀರಾತುಗಳೊಂದಿಗೆ, ಹೊಸ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳು ನಿಮ್ಮ ಗುರುತು ಮತ್ತು ನಿಮ್ಮ ಆ್ಯಪ್ ಬಳಕೆಯ ಕುರಿತ ಮಾಹಿತಿಯನ್ನು ರಕ್ಷಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತದೆ. ನಿಮ್ಮ ಚಟುವಟಿಕೆಯ ಆಧಾರದ ಮೇಲೆ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್ ಇತರ ಆ್ಯಪ್‌ಗಳಲ್ಲಿ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ಸೂಚಿಸಬಹುದು. ನೀವು ಆ್ಯಪ್‌ಗಳ ಪಟ್ಟಿಯನ್ನು ನೋಡಬಹುದು ಮತ್ತು ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಸಲಹೆಗಳನ್ನು ನೀಡದಂತೆ ನಿರ್ಬಂಧಿಸಬಹುದು."</string>
     <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  ಜಾಹೀರಾತು ಮಾಪನದ ಮೂಲಕ, ತಮ್ಮ ಜಾಹೀರಾತುಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯ ಬಗ್ಗೆ ತಿಳಿಯಲು ಆ್ಯಪ್‌ಗಳ ನಡುವೆ ಸೀಮಿತ ಪ್ರಕಾರದ ಡೇಟಾವನ್ನು ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ, ಉದಾಹರಣೆಗೆ ನಿಮಗೆ ಜಾಹೀರಾತನ್ನು ತೋರಿಸಿರುವ ದಿನದ ಸಮಯ."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"ಜಾಹೀರಾತುಗಳನ್ನು ಸೂಚಿಸಲು ಈ ಸಾಧನದಲ್ಲಿರುವ ಆ್ಯಪ್ ಒಂದರಲ್ಲಿನ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಬಳಸಬಹುದು."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"ಮತ್ತೊಂದು ಆ್ಯಡ್ಸ್ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ ಅನ್ನು ಆನ್ ಮಾಡಿ"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android ಹೊಸ ಗೌಪ್ಯತೆ ಫೀಚರ್ ಒಂದನ್ನು ಸಹ ನೀಡುತ್ತದೆ, ಅದು ನೀವು ನೋಡುವ ಜಾಹೀರಾತುಗಳಿಗೆ ಸಂಬಂಧಿಸಿದಂತೆ ನಿಮಗೆ ಹೆಚ್ಚಿನ ಆಯ್ಕೆಯನ್ನು ನೀಡುತ್ತವೆ."</string>
-    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"ನಿಮ್ಮ ವೈಯಕ್ತಿಕವಾಗಿ ಗುರುತಿಸಬಹುದಾದ ಮಾಹಿತಿ ಮತ್ತು ನಿಮ್ಮ ಆ್ಯಪ್ ಬಳಕೆಯ ಕುರಿತು ಮಾಹಿತಿಯನ್ನು ರಕ್ಷಿಸುವ ಸಂದರ್ಭದಲ್ಲಿ, ಜಾಹೀರಾತು ವಿಷಯಗಳು ಆ್ಯಪ್‌ಗಳಿಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತವೆ. ನೀವು ಇತ್ತೀಚೆಗೆ ಬಳಸಿದ ಆ್ಯಪ್‌ಗಳ ಆಧಾರದ ಮೇಲೆ Android ಆಸಕ್ತಿಕರ ವಿಷಯಗಳನ್ನು ಉಳಿಸಬಹುದು. ನಂತರ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ ನಿಮಗೆ ಹೆಚ್ಚು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು Android ನಿಂದ ಸಂಬಂಧಿತ ವಿಷಯಗಳನ್ನು ವಿನಂತಿಸಬಹುದು."</string>
+    <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"ನಿಮ್ಮ ವೈಯಕ್ತಿಕವಾಗಿ ಗುರುತಿಸಬಹುದಾದ ಮಾಹಿತಿ ಮತ್ತು ನಿಮ್ಮ ಆ್ಯಪ್ ಬಳಕೆಯ ಕುರಿತು ಮಾಹಿತಿಯನ್ನು ರಕ್ಷಿಸುವ ಸಂದರ್ಭದಲ್ಲಿ, ಜಾಹೀರಾತು ವಿಷಯಗಳು ಆ್ಯಪ್‌ಗಳಿಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ಸಹಾಯ ಮಾಡುತ್ತವೆ. ನೀವು ಇತ್ತೀಚೆಗೆ ಬಳಸಿದ ಆ್ಯಪ್‌ಗಳ ಆಧಾರದ ಮೇಲೆ Android ಆಸಕ್ತಿಕರ ವಿಷಯಗಳನ್ನು ನೋಟ್ ಮಾಡಿಕೊಳ್ಳಬಹುದು. ನಂತರ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ ನಿಮಗೆ ಹೆಚ್ಚು ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು Android ನಿಂದ ಸಂಬಂಧಿತ ವಿಷಯಗಳನ್ನು ವಿನಂತಿಸಬಹುದು."</string>
     <string name="notificationUI_container3_body_ga_text_eu_v2" msgid="3204499878554843655">"ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ನೀವು ಜಾಹೀರಾತು ವಿಷಯಗಳನ್ನು ನೋಡಬಹುದು ಮತ್ತು ನೀವು ಆ್ಯಪ್‌ಗಳೊಂದಿಗೆ ಹಂಚಿಕೊಳ್ಳಲು ಬಯಸದ ವಿಷಯಗಳನ್ನು ನಿರ್ಬಂಧಿಸಬಹುದು. Android ಸಹ ನಿಯಮಿತವಾಗಿ ಜಾಹೀರಾತು ವಿಷಯಗಳನ್ನು ಸ್ವಯಂಚಾಲಿತವಾಗಿ ಅಳಿಸುತ್ತದೆ."</string>
     <string name="notificationUI_right_control_button_ga_text_eu_v2" msgid="7227289411885047121">"ಅದನ್ನು ಆನ್ ಮಾಡಿ"</string>
     <string name="notificationUI_notification_ga_title_v2" msgid="7429979629916798545">"ಹೊಸ ಆ್ಯಡ್ಸ್ ಗೌಪ್ಯತೆ ಫೀಚರ್‌ಗಳು ಈಗ ಲಭ್ಯವಿವೆ"</string>
@@ -166,10 +165,10 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"ಜಾಹೀರಾತು ಮಾಪನವನ್ನು ಅನುಮತಿಸಿ"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ಜಾಹೀರಾತುದಾರರು ತಮ್ಮ ಜಾಹೀರಾತುಗಳ ಕಾರ್ಯಕ್ಷಮತೆಯನ್ನು ಅಳೆಯಲು ಸಹಾಯ ಮಾಡುವ ಮಾಹಿತಿಯನ್ನು Android ನಿಂದ ವಿನಂತಿಸಬಹುದು.\n\nಜಾಹೀರಾತು ಮಾಪನ ಡೇಟಾವನ್ನು ನಿಮ್ಮ ಸಾಧನದಿಂದ ನಿಯಮಿತವಾಗಿ ಅಳಿಸಲಾಗುತ್ತದೆ."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"ಮಾಪನ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"ಆ್ಯಪ್‌ಗಳು ಪರಸ್ಪರ ಹಂಚಿಕೊಳ್ಳಬಹುದಾದ ಮಾಹಿತಿಯನ್ನು ಸೀಮಿತಗೊಳಿಸುವ ಮೂಲಕ Android ನಿಮ್ಮ ಗೌಪ್ಯತೆಯನ್ನು ರಕ್ಷಿಸುತ್ತದೆ. ನಿಮ್ಮ ಗುರುತನ್ನು ರಕ್ಷಿಸಲು ತಡವಾಗಿ ವರದಿಗಳನ್ನು ಕಳುಹಿಸಲಾಗುತ್ತದೆ.\n\nನಿಮ್ಮ ಬ್ರೌಸರ್ ಇದೇ ರೀತಿಯ ಸೆಟ್ಟಿಂಗ್ ಅನ್ನು ಹೊಂದಿರಬಹುದು. Android ಮತ್ತು ನಿಮ್ಮ ಬ್ರೌಸರ್ ಎರಡಕ್ಕೂ ಜಾಹೀರಾತು ಮಾಪನ ಆನ್ ಆಗಿದ್ದರೆ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ನೀವು ಭೇಟಿ ನೀಡುವ ಸೈಟ್‌ಗಳ ನಡುವಿನ ಜಾಹೀರಾತೊಂದರ ಪರಿಣಾಮಕಾರಿತ್ವವನ್ನು ಕಂಪನಿಯು ಅಳೆಯಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ. ನಿಮ್ಮ ಬ್ರೌಸಿಂಗ್ ಇತಿಹಾಸವನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಖಾಸಗಿಯಾಗಿ ಇರಿಸಲಾಗಿದೆ.\n\nನಮ್ಮ ಗೌಪ್ಯತೆ ನೀತಿಯಲ್ಲಿ Android ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಹೇಗೆ ರಕ್ಷಿಸುತ್ತದೆ ಎಂಬುದರ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"ಆ್ಯಪ್‌ಗಳು ಪರಸ್ಪರ ಹಂಚಿಕೊಳ್ಳಬಹುದಾದ ಮಾಹಿತಿಯನ್ನು ಸೀಮಿತಗೊಳಿಸುವ ಮೂಲಕ Android ನಿಮ್ಮ ಗೌಪ್ಯತೆಯನ್ನು ರಕ್ಷಿಸುತ್ತದೆ. ನಿಮ್ಮ ಗುರುತನ್ನು ರಕ್ಷಿಸಲು ತಡವಾಗಿ ವರದಿಗಳನ್ನು ಕಳುಹಿಸಲಾಗುತ್ತದೆ.\n\nನಿಮ್ಮ ಬ್ರೌಸರ್ ಇದೇ ರೀತಿಯ ಸೆಟ್ಟಿಂಗ್ ಅನ್ನು ಹೊಂದಿರಬಹುದು. Android ಮತ್ತು ನಿಮ್ಮ ಬ್ರೌಸರ್ ಎರಡಕ್ಕೂ ಜಾಹೀರಾತು ಮಾಪನ ಆನ್ ಆಗಿದ್ದರೆ, ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ಮತ್ತು ನೀವು ಭೇಟಿ ನೀಡುವ ಸೈಟ್‌ಗಳ ನಡುವಿನ ಜಾಹೀರಾತೊಂದರ ಪರಿಣಾಮಕಾರಿತ್ವವನ್ನು ಕಂಪನಿಯು ಅಳೆಯಲು ಸಾಧ್ಯವಾಗುತ್ತದೆ. ನಿಮ್ಮ ಬ್ರೌಸಿಂಗ್ ಇತಿಹಾಸವನ್ನು ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಖಾಸಗಿಯಾಗಿ ಇರಿಸಲಾಗಿದೆ.\n\nನಮ್ಮ "<a href="https://policies.google.com/privacy">"ಗೌಪ್ಯತೆ ನೀತಿಯಲ್ಲಿ"</a>" Android ನಿಮ್ಮ ಡೇಟಾವನ್ನು ಹೇಗೆ ರಕ್ಷಿಸುತ್ತದೆ ಎಂಬುದರ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"ಜಾಹೀರಾತು ಮಾಪನ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಲಾಗಿದೆ"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"ರದ್ದುಮಾಡಿ"</string>
-    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡುವುದೇ?"</string>
+    <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"ಪ್ರೈವೆಸಿ ಸ್ಯಾಂಡ್‌ಬಾಕ್ಸ್ ಅನ್ನು ಆಫ್ ಮಾಡಬೇಕೆ?"</string>
     <string name="settingsUI_dialog_opt_out_message" msgid="5696012172835241848">"ನೀವು ಮನಸ್ಸು ಬದಲಾಯಿಸಿದರೆ ಅಥವಾ Android ನ ಜಾಹೀರಾತುಗಳ ಗೌಪ್ಯತೆ ಬೀಟಾ ಕುರಿತು ಇನ್ನಷ್ಟು ತಿಳಿದುಕೊಳ್ಳಲು ಬಯಸಿದರೆ, ನಿಮ್ಮ ಗೌಪ್ಯತೆ ಸೆಟ್ಟಿಂಗ್‌ಗಳಿಗೆ ಹೋಗಿ"</string>
     <string name="settingsUI_dialog_opt_out_positive_text" msgid="5344259263448028614">"ಆಫ್ ಮಾಡಿ"</string>
     <string name="settingsUI_dialog_block_topic_title" msgid="5744004384480280782">"<xliff:g id="TOPIC">%1$s</xliff:g> ಅನ್ನು ನಿರ್ಬಂಧಿಸುವುದೇ?"</string>
@@ -503,7 +502,7 @@
     <string name="topic10285" msgid="7056449544316408821">"ಹುಡುಕಾಟ ಎಂಜಿನ್‌ಗಳು"</string>
     <string name="topic10286" msgid="3458688996478472971">"ಸ್ಮಾರ್ಟ್ ಫೋನ್‌ಗಳು"</string>
     <string name="topic10287" msgid="6766203044518402938">"ಟೆಲಿಕಾನ್ಫರೆನ್ಸಿಂಗ್"</string>
-    <string name="topic10288" msgid="3883137694557636622">"ವೆಬ್ ಆ್ಯಪ್ &amp; ಆನ್‌ಲೈನ್ ಪರಿಕರಗಳು"</string>
+    <string name="topic10288" msgid="3883137694557636622">"ವೆಬ್ ಆ್ಯಪ್‌ಗಳು &amp; ಆನ್‌ಲೈನ್ ಟೂಲ್‌ಗಳು"</string>
     <string name="topic10289" msgid="3392995633794787676">"ವೆಬ್ ಸೇವೆಗಳು"</string>
     <string name="topic10290" msgid="3118880486702986341">"ಕ್ಲೌಡ್ ಸಂಗ್ರಹಣೆ"</string>
     <string name="topic10291" msgid="6025855926350955094">"ವೆಬ್ ವಿನ್ಯಾಸ &amp; ಅಭಿವೃದ್ಧಿ"</string>
@@ -573,14 +572,14 @@
     <string name="topic10355" msgid="7720717354548642600">"ಉಲ್ಲೇಖ"</string>
     <string name="topic10356" msgid="8366981308613661935">"ವ್ಯಾಪಾರ &amp; ವೈಯಕ್ತಿಕ ಪಟ್ಟಿ ಮಾಡಿದವುಗಳು"</string>
     <string name="topic10357" msgid="3185598234676097975">"ಸಾಮಾನ್ಯ ಉಲ್ಲೇಖ"</string>
-    <string name="topic10358" msgid="6732669037513504019">"ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು &amp; ಉಲ್ಲೇಖ ಪರಿಕರಗಳು"</string>
+    <string name="topic10358" msgid="6732669037513504019">"ಕ್ಯಾಲ್ಕುಲೇಟರ್‌ಗಳು ಮತ್ತು ರೆಫರೆನ್ಸ್‌ ಟೂಲ್‌ಗಳು"</string>
     <string name="topic10359" msgid="8901932349008990500">"ನಿಘಂಟುಗಳು &amp; ವಿಶ್ವಕೋಶಗಳು"</string>
     <string name="topic10360" msgid="6113408769992775754">"ಶೈಕ್ಷಣಿಕ ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10361" msgid="364838820459183817">"ಹೇಗೆ"</string>
     <string name="topic10362" msgid="3760998790588600032">"ಸಮಯ &amp; ಕ್ಯಾಲೆಂಡರ್‌ಗಳು"</string>
     <string name="topic10363" msgid="5464708619861040861">"ಭಾಷೆಯ ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10364" msgid="4685400848805560054">"ವಿದೇಶಿ ಭಾಷಾ ಅಧ್ಯಯನ"</string>
-    <string name="topic10365" msgid="5196231842716190887">"ಅನುವಾದದ ಪರಿಕರಗಳು &amp; ಮೂಲಗಳು"</string>
+    <string name="topic10365" msgid="5196231842716190887">"ಅನುವಾದದ ಟೂಲ್‌ಗಳು &amp; ಸಂಪನ್ಮೂಲಗಳು"</string>
     <string name="topic10366" msgid="7460927054539097025">"Maps"</string>
     <string name="topic10367" msgid="3900361839783743700">"ವಿಜ್ಞಾನ"</string>
     <string name="topic10368" msgid="2069447039109930660">"ಆಗ್‌ಮೆಂಟೆಡ್ &amp; ವರ್ಚುವಲ್ ರಿಯಾಲಿಟಿ"</string>

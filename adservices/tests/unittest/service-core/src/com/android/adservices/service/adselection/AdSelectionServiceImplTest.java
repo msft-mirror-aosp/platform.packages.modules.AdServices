@@ -68,8 +68,9 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionResponse;
-import android.adservices.adselection.BuyerDecisionLogic;
+import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.DecisionLogic;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -99,7 +100,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -113,7 +113,6 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -129,6 +128,7 @@ import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -136,6 +136,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mockwebserver.Dispatcher;
@@ -197,10 +198,11 @@ public class AdSelectionServiceImplTest {
                             + "}");
     private static final AdSelectionSignals DUMMY_SELECTION_SIGNALS =
             AdSelectionSignals.fromString("{\"selection\": \"signal_1\"}");
-    private static final List<BuyerDecisionLogic> BUYERS_DECISION_LOGIC =
-            List.of(
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_1, "reportWin()"),
-                    new BuyerDecisionLogic(CommonFixture.VALID_BUYER_2, "reportWin()"));
+    private static final BuyersDecisionLogic BUYERS_DECISION_LOGIC =
+            new BuyersDecisionLogic(
+                    ImmutableMap.of(
+                            CommonFixture.VALID_BUYER_1, new DecisionLogic("reportWin()"),
+                            CommonFixture.VALID_BUYER_2, new DecisionLogic("reportWin()")));
 
     private static final long AD_SELECTION_ID_1 = 12345L;
     private static final long AD_SELECTION_ID_2 = 123456L;
@@ -258,14 +260,10 @@ public class AdSelectionServiceImplTest {
     @Mock public DevContextFilter mDevContextFilter;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
 
-    @Spy
-    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
-            new FledgeAuthorizationFilter(
-                    CONTEXT.getPackageManager(),
-                    new EnrollmentDao(CONTEXT, DbTestUtil.getDbHelperForTest()),
-                    mAdServicesLoggerMock);
-
     private Flags mFlags;
+
+    @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+
     private MockitoSession mStaticMockSession = null;
     @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
@@ -293,6 +291,7 @@ public class AdSelectionServiceImplTest {
                         .mockStatic(ConsentManager.class)
                         .mockStatic(AppImportanceFilter.class)
                         .startMocking();
+
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(CONTEXT, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true))
@@ -357,6 +356,8 @@ public class AdSelectionServiceImplTest {
                         CALLER_UID,
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS);
+
+
         when(ConsentManager.getInstance(CONTEXT)).thenReturn(mConsentManagerMock);
         when(AppImportanceFilter.create(any(), anyInt(), any()))
                 .thenReturn(mAppImportanceFilterMock);
@@ -454,7 +455,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -560,7 +561,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -670,7 +671,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -786,7 +787,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -899,7 +900,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1018,7 +1019,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1185,7 +1186,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1322,7 +1323,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1477,7 +1478,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1629,7 +1630,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1770,7 +1771,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -1915,7 +1916,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxEventUris,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2075,7 +2076,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionKeySize,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2213,7 +2214,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2313,7 +2314,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2412,7 +2413,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2517,7 +2518,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2617,7 +2618,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2712,7 +2713,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2806,7 +2807,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -2901,7 +2902,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3016,7 +3017,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3154,7 +3155,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3242,7 +3243,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3295,7 +3296,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3343,7 +3344,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3396,7 +3397,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3460,7 +3461,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3520,7 +3521,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3584,7 +3585,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3649,7 +3650,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3755,7 +3756,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3863,7 +3864,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -3967,7 +3968,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4068,13 +4069,43 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
+    }
+
+    @Test
+    public void testJSScriptEngineConnectionExceptionAtShutDown() {
+        JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
+        doThrow(JSSandboxIsNotAvailableException.class)
+                .when(() -> JSScriptEngine.getInstance(any()));
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        adSelectionService.destroy();
+        verify(jsScriptEngineMock, never()).shutdown();
     }
 
     @Test
@@ -4111,7 +4142,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4169,7 +4200,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4228,7 +4259,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4278,7 +4309,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4330,7 +4361,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4376,7 +4407,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4426,7 +4457,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4518,7 +4549,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4624,7 +4655,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4653,7 +4684,7 @@ public class AdSelectionServiceImplTest {
     }
 
     @Test
-    public void testReportImpressionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
+    public void testReportImpressionFailsWhenSellerFailsEnrollmentCheck() throws Exception {
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -4734,7 +4765,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4849,7 +4880,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -4947,7 +4978,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5045,7 +5076,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5170,7 +5201,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5277,7 +5308,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5386,7 +5417,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5409,6 +5440,125 @@ public class AdSelectionServiceImplTest {
 
         // Assert that buyer reporting didn't happen
         assertEquals(buyerServer.getRequestCount(), 0);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
+            throws Exception {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
+
+        Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
+        Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
+
+        doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
+                .when(mFledgeAuthorizationFilterMock)
+                .assertAdTechEnrolled(
+                        AdTechIdentifier.fromString(buyerReportingUri.getHost()),
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+
+        Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
+
+        String sellerDecisionLogicJs =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
+                        + " \n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
+                        + sellerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        String buyerDecisionLogicJs =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
+                        + " contextual_signals, custom_audience_signals) { \n"
+                        + " return {'status': 0, 'results': {'reporting_uri': '"
+                        + buyerReportingUri
+                        + "' } };\n"
+                        + "}";
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                switch (request.getPath()) {
+                                    case mFetchJavaScriptPathSeller:
+                                        return new MockResponse().setBody(sellerDecisionLogicJs);
+                                    case mSellerReportingPath:
+                                        return new MockResponse();
+                                    default:
+                                        throw new IllegalStateException(
+                                                "Only seller reporting can occur");
+                                }
+                            }
+                        });
+
+        DBBuyerDecisionLogic dbBuyerDecisionLogic =
+                new DBBuyerDecisionLogic.Builder()
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setBuyerDecisionLogicJs(buyerDecisionLogicJs)
+                        .build();
+
+        DBAdSelection dbAdSelection =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCustomAudienceSignals(mCustomAudienceSignals)
+                        .setContextualSignals(mContextualSignals.toString())
+                        .setBiddingLogicUri(biddingLogicUri)
+                        .setWinningAdRenderUri(RENDER_URI)
+                        .setWinningAdBid(BID)
+                        .setCreationTimestamp(ACTIVATION_TIME)
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelection);
+        mAdSelectionEntryDao.persistBuyerDecisionLogic(dbBuyerDecisionLogic);
+
+        AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
+
+        when(mDevContextFilter.createDevContext())
+                .thenReturn(DevContext.createForDevOptionsDisabled());
+
+        AdSelectionServiceImpl adSelectionService =
+                new AdSelectionServiceImpl(
+                        mAdSelectionEntryDao,
+                        mAppInstallDao,
+                        mCustomAudienceDao,
+                        mFrequencyCapDao,
+                        mClient,
+                        mDevContextFilter,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        CONTEXT,
+                        mAdServicesLoggerMock,
+                        mFlags,
+                        CallingAppUidSupplierProcessImpl.create(),
+                        mFledgeAuthorizationFilterMock,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory,
+                        mConsentManagerMock);
+
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(adSelectionConfig)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportImpressionTestCallback callback =
+                callReportImpression(adSelectionService, input, true);
+        assertTrue(callback.mIsSuccess);
+        RecordedRequest fetchRequest = server.takeRequest();
+        assertEquals(mFetchJavaScriptPathSeller, fetchRequest.getPath());
+
+        assertEquals(mSellerReportingPath, server.takeRequest().getPath());
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
@@ -5442,7 +5592,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5498,7 +5648,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5548,7 +5698,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5604,7 +5754,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5672,7 +5822,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5734,7 +5884,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5800,7 +5950,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5865,7 +6015,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -5979,7 +6129,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -6087,7 +6237,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -6200,7 +6350,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -6331,7 +6481,7 @@ public class AdSelectionServiceImplTest {
                         mAdServicesLoggerMock,
                         mFlags,
                         CallingAppUidSupplierProcessImpl.create(),
-                        mFledgeAuthorizationFilterSpy,
+                        mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mConsentManagerMock);
@@ -6903,7 +7053,7 @@ public class AdSelectionServiceImplTest {
                 mAdServicesLoggerMock,
                 mFlags,
                 CallingAppUidSupplierProcessImpl.create(),
-                mFledgeAuthorizationFilterSpy,
+                mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilter,
                 mAdFilteringFeatureFactory,
                 mConsentManagerMock);
@@ -6955,7 +7105,7 @@ public class AdSelectionServiceImplTest {
             AdSelectionConfig adSelectionConfig,
             String decisionLogicJS,
             AdSelectionSignals trustedScoringSignals,
-            List<BuyerDecisionLogic> buyersDecisionLogic)
+            BuyersDecisionLogic buyersDecisionLogic)
             throws Exception {
         // Counted down in 1) callback and 2) logApiCall
         CountDownLatch resultLatch = new CountDownLatch(2);

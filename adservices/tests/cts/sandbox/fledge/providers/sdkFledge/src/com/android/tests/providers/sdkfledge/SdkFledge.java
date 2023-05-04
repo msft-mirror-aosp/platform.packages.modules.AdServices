@@ -143,6 +143,8 @@ public class SdkFledge extends SandboxedSdkProvider {
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
+    private static final long SLEEP_TIME_MS = (long) 1500 + 100L;
+
     private AdSelectionClient mAdSelectionClient;
     private TestAdSelectionClient mTestAdSelectionClient;
     private AdvertisingCustomAudienceClient mCustomAudienceClient;
@@ -269,6 +271,9 @@ public class SdkFledge extends SandboxedSdkProvider {
 
         try {
             mCustomAudienceClient.joinCustomAudience(customAudience1).get(10, TimeUnit.SECONDS);
+
+            complyWithAPIThrottling(SLEEP_TIME_MS);
+
             mCustomAudienceClient.joinCustomAudience(customAudience2).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
             String errorMessage =
@@ -402,6 +407,28 @@ public class SdkFledge extends SandboxedSdkProvider {
         //            throw new LoadSdkException(e, new Bundle());
         //        }
 
+        // TODO(b/221876775): Unhide for frequency cap mainline promotion
+        /*
+        try {
+            UpdateAdCounterHistogramRequest updateHistogramRequest =
+                    new UpdateAdCounterHistogramRequest.Builder()
+                            .setAdSelectionId(adSelectionId)
+                            .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
+                            .setCallerAdTech(AD_SELECTION_CONFIG.getSeller())
+                            .build();
+            mAdSelectionClient
+                    .updateAdCounterHistogram(updateHistogramRequest)
+                    .get(10, TimeUnit.SECONDS);
+        } catch (Exception exception) {
+            String errorMessage =
+                    String.format(
+                            "Error encountered during ad counter histogram update: message is %s",
+                            exception.getMessage());
+            Log.e(TAG, errorMessage);
+            throw new LoadSdkException(exception, new Bundle());
+        }
+        */
+
         // If we got this far, that means the test succeeded
         return new SandboxedSdk(new Binder());
     }
@@ -493,5 +520,21 @@ public class SdkFledge extends SandboxedSdkProvider {
 
     private static Uri getUri(String host, String path) {
         return Uri.parse(HTTPS_SCHEME + "://" + host + path);
+    }
+
+    private static void complyWithAPIThrottling(long timeout) {
+        Log.i(TAG, String.format("Starting to sleep for %d ms", timeout));
+        long currentTime = System.currentTimeMillis();
+        long wakeupTime = currentTime + timeout;
+        while (wakeupTime - currentTime > 0) {
+            Log.i(TAG, String.format("Time left to sleep: %d ms", wakeupTime - currentTime));
+            try {
+                Thread.sleep(wakeupTime - currentTime);
+            } catch (InterruptedException ignored) {
+
+            }
+            currentTime = System.currentTimeMillis();
+        }
+        Log.i(TAG, "Done sleeping");
     }
 }

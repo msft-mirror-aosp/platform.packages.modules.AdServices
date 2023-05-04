@@ -42,7 +42,7 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CtsExtAdServicesDebuggableDeviceTestCases.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesDebuggableDeviceTestCases.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
@@ -70,6 +70,15 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
+
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
 
         <!-- Disable Register Ad Beacon Feature -->
         <option name="run-command"

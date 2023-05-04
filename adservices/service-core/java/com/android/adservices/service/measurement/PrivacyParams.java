@@ -254,6 +254,13 @@ public final class PrivacyParams {
 
     public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
 
+    // place holder for future change
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+
+    public static double getMaxFlexibleEventInformationGain() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
+    }
+
     private PrivacyParams() {
     }
 }

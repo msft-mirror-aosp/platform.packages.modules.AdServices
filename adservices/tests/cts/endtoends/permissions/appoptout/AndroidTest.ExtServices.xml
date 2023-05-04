@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services Permissions E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesPermissionsAppOptOutEndToEndTests"/>
+    <option name="test-tag" value="CtsAdExtServicesPermissionsAppOptOutEndToEndTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -39,7 +39,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <option name="test-file-name"
-                value="CtsExtAdServicesPermissionsAppOptOutEndToEndTests.apk"/>
+                value="CtsAdExtServicesPermissionsAppOptOutEndToEndTests.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
@@ -65,6 +65,13 @@
                 value="setprop debug.adservices.disable_topics_enrollment_check false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE"/>
+
+        <!-- TODO(b/221876775): Temporarily enable the ad filtering feature when unhidden -->
+        <option name="run-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
+        <option name="teardown-command"
+                value="device_config put adservices fledge_ad_selection_filtering_enabled false" />
 
         <!-- Increase the allowed API queries per second -->
         <option name="run-command"
@@ -75,6 +82,12 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

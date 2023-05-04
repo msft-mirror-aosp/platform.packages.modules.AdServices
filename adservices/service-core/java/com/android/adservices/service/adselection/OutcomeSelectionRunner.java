@@ -103,6 +103,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
+    @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -163,6 +164,7 @@ public class OutcomeSelectionRunner {
                         mFlags);
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     @VisibleForTesting
@@ -202,6 +204,7 @@ public class OutcomeSelectionRunner {
         mAdOutcomeSelector = adOutcomeSelector;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
     }
 
     /**
@@ -456,7 +459,9 @@ public class OutcomeSelectionRunner {
 
         AdSelectionFromOutcomesConfigValidator validator =
                 new AdSelectionFromOutcomesConfigValidator(
-                        mAdSelectionEntryDao, inputParams.getCallerPackageName());
+                        mAdSelectionEntryDao,
+                        inputParams.getCallerPackageName(),
+                        mPrebuiltLogicGenerator);
         validator.validate(inputParams.getAdSelectionFromOutcomesConfig());
     }
 

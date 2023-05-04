@@ -61,8 +61,6 @@
     <string name="notificationUI_confirmation_right_control_button_text" msgid="1390803936115621269">"OK"</string>
     <string name="notificationUI_container2_title" msgid="3844342008598264655">"Je doet mee aan de bèta"</string>
     <string name="notificationUI_container2_body_text" msgid="758560159693325060">"De Privacy Sandbox staat aan voor je apparaat. Apps kunnen deze nieuwe, meer privacyvriendelijke manieren testen om jou advertenties te laten zien. Je kunt de bèta altijd uitzetten in de privacyinstellingen."</string>
-    <!-- no translation found for notificationUI_left_control_button_text (4481677339679056) -->
-    <skip />
     <string name="notificationUI_right_control_button_text" msgid="4418849554981401536">"OK"</string>
     <string name="notificationUI_how_it_works_expanded_text1" msgid="5567641119079971239">"De Privacy Sandbox van Android biedt nieuwe functies waarmee apps je advertenties kunnen laten zien die je misschien interessant vindt. Deze technologieën gebruiken geen apparaat-ID\'s.\n\nAndroid en je apps kunnen inschatten wat voor advertenties interessant voor jou zouden zijn en deze interesses tijdelijk op je apparaat opslaan. Zo kunnen apps advertenties laten zien die je misschien interessant vindt zonder je activiteit op websites en in apps van andere ontwikkelaars te tracken."</string>
     <string name="notificationUI_how_it_works_expanded_text2" msgid="6676443093692450581">"Advertentiepersonalisatie met de Privacy Sandbox"</string>
@@ -87,14 +85,13 @@
     <string name="notificationUI_notification_ga_title_eu" msgid="5803977334621918481">"Nieuwe functies voor advertentieprivacy proberen"</string>
     <string name="notificationUI_notification_ga_content_eu" msgid="8430705356085726474">"Met advertentieonderwerpen krijg je meer controle over de advertenties die je ziet"</string>
     <string name="notificationUI_notification_ga_cta_eu" msgid="8494461862622985200">"Details bekijken"</string>
-    <!-- no translation found for notificationUI_header_ga_title_eu (6246782633712559485) -->
-    <skip />
+    <string name="notificationUI_header_ga_title_eu" msgid="6246782633712559485">"Nieuwe functies voor advertentieprivacy proberen"</string>
     <string name="notificationUI_container1_body_ga_text_eu" msgid="2461669162863900717">"Android lanceert nieuwe privacyfuncties die je meer controle geven over de advertenties die je te zien krijgt."</string>
     <string name="notificationUI_container2_body_ga_text_eu" msgid="1692066129509373924">"Met advertentieonderwerpen kunnen apps je relevante advertenties laten zien, terwijl je identiteit en informatie over je app-gebruik worden beschermd. Android stelt interessante onderwerpen vast op basis van de apps die je onlangs hebt gebruikt. Later kan een app die je gebruikt relevante onderwerpen opvragen bij Android om zo de advertenties te personaliseren die je te zien krijgt."</string>
     <string name="notificationUI_container3_body_ga_text_eu" msgid="5992069735281496875">"Je kunt advertentieonderwerpen zien in je apparaatinstellingen en de onderwerpen blokkeren die je niet wilt delen met apps. Android verwijdert advertentieonderwerpen ook regelmatig automatisch."</string>
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="2908767337419331427">"Je kunt het op elk moment weer veranderen in de privacyinstellingen."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4496835418228234590">"Meer info over advertentieonderwerpen"</string>
-    <string name="notificationUI_learn_more_from_privacy_policy" msgid="6136946426341305579">"In ons Privacybeleid vind je meer informatie over hoe Android je gegevens beschermt."</string>
+    <string name="notificationUI_learn_more_from_privacy_policy" msgid="7809111628979410445">"In ons "<a href="https://policies.google.com/privacy">"Privacybeleid"</a>" vind je meer informatie over hoe Android je gegevens beschermt."</string>
     <string name="notificationUI_right_control_button_ga_text_eu" msgid="7164165910760741822">"Nu proberen"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="5620813445262745365">"• Welke gegevens worden gebruikt"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="398508225331553559">"Je advertentieonderwerpen zijn gebaseerd op de apps die je onlangs hebt gebruikt op dit apparaat en hoe vaak je ze gebruikt."</string>
@@ -120,8 +117,10 @@
     <string name="notificationUI_notification_ga_title_eu_v2" msgid="9132669086237883391">"Nieuwe functies voor advertentieprivacy zijn nu beschikbaar"</string>
     <string name="notificationUI_notification_ga_content_eu_v2" msgid="9205285241542339861">"Krijg meer controle over de advertenties die je te zien krijgt terwijl je identiteit wordt beschermd"</string>
     <string name="notificationUI_fledge_measurement_title_v2" msgid="1097778529908285549">"Nieuwe functies voor advertentieprivacy zijn nu beschikbaar"</string>
-    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"Met door apps voorgestelde advertenties kunnen nieuwe privacyfuncties je identiteit en informatie over je app-gebruik beschermen terwijl apps je relevante advertenties kunnen tonen. Op basis van je activiteiten kan een app die je gebruikt suggesties doen voor toepasselijke advertenties in andere apps. In de privacyinstellingen kun je een lijst met apps bekijken en voorkomen dat ze suggesties doen."</string>
-    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"Met advertentiemeting worden beperkte soorten gegevens gedeeld tussen apps om inzicht in de prestaties van hun advertenties te krijgen, zoals de tijd van de dag dat een advertentie aan je is getoond."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text1_v2" msgid="4019531984422364790">"Android lanceert nieuwe manieren om te beperken wat apps over jou te weten kunnen komen wanneer ze je gepersonaliseerde advertenties tonen."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text2_v2" msgid="7324869061552803848">"•  Met door apps voorgestelde advertenties kunnen nieuwe privacyfuncties je identiteit en informatie over je app-gebruik beschermen terwijl apps je relevante advertenties kunnen tonen. Op basis van je activiteiten kan een app die je gebruikt suggesties doen voor toepasselijke advertenties in andere apps. In de privacyinstellingen kun je een lijst met apps bekijken en voorkomen dat ze suggesties doen."</string>
+    <string name="notificationUI_fledge_measurement_introduction_text3_v2" msgid="7061185974787039681">"•  Met advertentiemeting worden beperkte soorten gegevens gedeeld tussen apps om inzicht in de prestaties van hun advertenties te krijgen, zoals de tijd waarop een advertentie aan je is getoond."</string>
+    <string name="notificationUI_how_it_works_fledge_measurement_expanded_text2_v2" msgid="5467298277353569728">"Je activiteit in een app op dit apparaat kan worden gebruikt om advertenties voor te stellen."</string>
     <string name="notificationUI_header_ga_title_eu_v2" msgid="8442776546238998877">"Nog een functie voor advertentieprivacy aanzetten"</string>
     <string name="notificationUI_container1_body_ga_text_eu_v2" msgid="1119632112904754361">"Android biedt ook een nieuwe privacyfunctie die je meer controle geeft over de advertenties die je te zien krijgt."</string>
     <string name="notificationUI_container2_body_ga_text_eu_v2" msgid="7264946073865844642">"Met advertentieonderwerpen kunnen apps je relevante advertenties tonen, terwijl je identiteit en informatie over je app-gebruik worden beschermd. Android stelt interessante onderwerpen vast op basis van de apps die je onlangs hebt gebruikt. Later kan een app die je gebruikt Android om relevante onderwerpen vragen om je meer relevante advertenties te tonen."</string>
@@ -166,7 +165,7 @@
     <string name="settingsUI_measurement_switch_title" msgid="6623116680555954932">"Advertentiemeting toestaan"</string>
     <string name="settingsUI_measurement_view_intro_text" msgid="3608942051176719850">"Apps en adverteerders kunnen informatie van Android opvragen om de prestaties van hun advertenties te meten.\n\nGegevens over advertentiemeting worden regelmatig van je apparaat verwijderd."</string>
     <string name="settingsUI_measurement_view_reset_title" msgid="3063374834649428050">"Meetgegevens resetten"</string>
-    <string name="settingsUI_measurement_view_footer_text" msgid="3296828552097878309">"Android beschermt je privacy door de informatie te beperken die apps met elkaar kunnen delen. Rapporten worden met een vertraging gestuurd om je identiteit te beschermen.\n\nJe browser heeft misschien een vergelijkbare instelling. Als advertentiemeting aanstaat voor zowel Android als je browser, kan een bedrijf misschien de effectiviteit van een advertentie meten tussen de apps die je gebruikt en de sites die je bezoekt. Je browsegeschiedenis wordt privé gehouden op je apparaat.\n\nBekijk in ons Privacybeleid meer informatie over hoe Android je gegevens beschermt."</string>
+    <string name="settingsUI_measurement_view_footer_text" msgid="5978750159738729308">"Android beschermt je privacy door de informatie te beperken die apps met elkaar kunnen delen. Rapporten worden met een vertraging gestuurd om je identiteit te beschermen.\n\nJe browser heeft misschien een vergelijkbare instelling. Als advertentiemeting aanstaat voor zowel Android als je browser, kan een bedrijf misschien de effectiviteit van een advertentie meten tussen de apps die je gebruikt en de sites die je bezoekt. Je browsegeschiedenis wordt privé gehouden op je apparaat.\n\nIn ons "<a href="https://policies.google.com/privacy">"Privacybeleid"</a>" vind je meer informatie over hoe Android je gegevens beschermt."</string>
     <string name="settingsUI_measurement_are_reset" msgid="4375330550418573499">"Gegevens over advertentiemeting zijn gereset"</string>
     <string name="settingsUI_dialog_negative_text" msgid="3014088254631375852">"Annuleren"</string>
     <string name="settingsUI_dialog_opt_out_title" msgid="1862069591629418291">"Privacy Sandbox uitzetten?"</string>
@@ -567,7 +566,7 @@
     <string name="topic10349" msgid="5253723822905761195">"Vissen en aquariums"</string>
     <string name="topic10350" msgid="6164036369108076590">"Reptielen en amfibieën"</string>
     <string name="topic10351" msgid="1132984519083501363">"Dierenartsen"</string>
-    <string name="topic10352" msgid="6310110390516037997">"Onroerend goed"</string>
+    <string name="topic10352" msgid="6310110390516037997">"Vastgoed"</string>
     <string name="topic10353" msgid="5114390804081576684">"Percelen en land"</string>
     <string name="topic10354" msgid="7980778954791504082">"Timesharing en vakantiehuizen"</string>
     <string name="topic10355" msgid="7720717354548642600">"Naslag"</string>

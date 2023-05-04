@@ -51,9 +51,6 @@ public class AdSelectionFromOutcomesConfigValidator
             "AdSelectionOutcomes cannot be null or empty";
 
     @VisibleForTesting
-    static final String SELECTION_SIGNALS_CANNOT_BE_NULL = "AdSelectionSignals cannot be null";
-
-    @VisibleForTesting
     static final String SELECTION_LOGIC_URI_CANNOT_BE_NULL_OR_EMPTY =
             "SelectionLogicUri cannot be null or empty";
 
@@ -84,13 +81,16 @@ public class AdSelectionFromOutcomesConfigValidator
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
 
     public AdSelectionFromOutcomesConfigValidator(
-            @NonNull AdSelectionEntryDao adSelectionEntryDao, @NonNull String callerPackageName) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull String callerPackageName,
+            @NonNull PrebuiltLogicGenerator prebuiltLogicGenerator) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(callerPackageName);
+        Objects.requireNonNull(prebuiltLogicGenerator);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mCallerPackageName = callerPackageName;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = prebuiltLogicGenerator;
     }
 
     /** Validates the object and populate the violations. */

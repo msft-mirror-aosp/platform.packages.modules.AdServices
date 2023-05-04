@@ -25,7 +25,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
@@ -52,6 +52,7 @@ import java.util.stream.Stream;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ClassifierManager implements Classifier {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static ClassifierManager sSingleton;
 
     private Supplier<OnDeviceClassifier> mOnDeviceClassifier;
@@ -100,8 +101,17 @@ public class ClassifierManager implements Classifier {
      */
     @Override
     public Map<String, List<Topic>> classify(Set<String> apps) {
-        @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
-        LogUtil.v("Classifying with ClassifierType: " + classifierTypeFlag);
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsOnDeviceClassifierKillSwitch()) {
+            sLogger.v(
+                    "On-device classifier disabled via topics on device classifier kill switch - "
+                            + "falling back to precomputed classifier");
+            return mPrecomputedClassifier.get().classify(apps);
+        }
+
+        @ClassifierType int classifierTypeFlag = flags.getClassifierType();
+        sLogger.v("Classifying with ClassifierType: " + classifierTypeFlag);
         if (classifierTypeFlag == Flags.PRECOMPUTED_CLASSIFIER) {
             return mPrecomputedClassifier.get().classify(apps);
         } else if (classifierTypeFlag == Flags.ON_DEVICE_CLASSIFIER) {
@@ -145,7 +155,18 @@ public class ClassifierManager implements Classifier {
     @Override
     public List<Topic> getTopTopics(
             Map<String, List<Topic>> appTopics, int numberOfTopTopics, int numberOfRandomTopics) {
-        @ClassifierType int classifierTypeFlag = FlagsFactory.getFlags().getClassifierType();
+        Flags flags = FlagsFactory.getFlags();
+
+        if (flags.getTopicsOnDeviceClassifierKillSwitch()) {
+            sLogger.v(
+                    "On-device classifier disabled via topics on device classifier kill switch - "
+                            + "falling back to precomputed classifier");
+            return mPrecomputedClassifier
+                    .get()
+                    .getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
+        }
+
+        @ClassifierType int classifierTypeFlag = flags.getClassifierType();
         // getTopTopics has the same implementation.
         // If the loaded assets are same, the output will be same.
         // TODO(b/240478024): Unify asset loading for Classifiers to ensure same assets are used.

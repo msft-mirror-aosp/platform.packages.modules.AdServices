@@ -20,51 +20,35 @@ import com.android.compatibility.common.util.ShellUtils;
 
 /** Class to place back-compat Adservices related helper methods */
 public class CompatAdServicesTestUtils {
-    private static final int PPAPI_ONLY_SOURCE_OF_TRUTH = 1;
     private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final int APPSEARCH_ONLY = 3;
 
     private CompatAdServicesTestUtils() {
         /* cannot be instantiated */
     }
 
     /**
-     * Common flags that need to be set to avoid invoking system server related code on S- before
-     * running various PPAPI related tests.
+     * Common flags that need to be set to enable back-compat and avoid invoking system server
+     * related code on S- before running various PPAPI related tests.
      */
     public static void setFlags() {
-        setBlockedTopicsSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_ONLY_SOURCE_OF_TRUTH);
+        setEnableBackCompatFlag(true);
+        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
+        setConsentSourceOfTruth(APPSEARCH_ONLY);
+        setEnableAppSearchConsentData(true);
         // Measurement rollback check requires loading AdServicesManagerService's Binder from the
         // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
-        // measurement rollback, we omit invoking that code.
-        disableMeasurementRollbackDelete();
+        // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
+        setMeasurementRollbackDeleteKillSwitch(true);
     }
 
-    /** Reset system-server related flags to their default values after test execution. */
+    /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
+        setEnableBackCompatFlag(false);
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        enableMeasurementRollbackDelete();
-    }
-
-    private static void setConsentSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + source);
-    }
-
-    private static void setBlockedTopicsSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices blocked_topics_source_of_truth " + source);
-    }
-
-    private static void disableMeasurementRollbackDelete() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_kill_switch true");
-    }
-
-    private static void enableMeasurementRollbackDelete() {
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_kill_switch false");
+        setEnableAppSearchConsentData(false);
+        setMeasurementRollbackDeleteKillSwitch(false);
     }
 
     public static void setPpapiAppAllowList(String allowList) {
@@ -77,5 +61,30 @@ public class CompatAdServicesTestUtils {
                 ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
         setPpapiAppAllowList(mPreviousAppAllowList + "," + packageName);
         return mPreviousAppAllowList;
+    }
+
+    private static void setConsentSourceOfTruth(int source) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_source_of_truth " + source);
+    }
+
+    private static void setBlockedTopicsSourceOfTruth(int source) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices blocked_topics_source_of_truth " + source);
+    }
+
+    private static void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_rollback_deletion_kill_switch "
+                        + isEnabled);
+    }
+
+    private static void setEnableBackCompatFlag(boolean isEnabled) {
+        ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
+    }
+
+    private static void setEnableAppSearchConsentData(boolean isEnabled) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices enable_appsearch_consent_data " + isEnabled);
     }
 }

@@ -1298,6 +1298,7 @@ public class AdSelectionEntryDaoTest {
             DBAdSelection adSelection, DBBuyerDecisionLogic buyerDecisionLogic) {
         return new DBAdSelectionEntry.Builder()
                 .setAdSelectionId(adSelection.getAdSelectionId())
+                .setBiddingLogicUri(adSelection.getBiddingLogicUri())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
                 .setContextualSignals(adSelection.getContextualSignals())
                 .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
@@ -1314,6 +1315,7 @@ public class AdSelectionEntryDaoTest {
     private DBAdSelectionEntry toAdSelectionEntry(DBAdSelection adSelection) {
         return new DBAdSelectionEntry.Builder()
                 .setAdSelectionId(adSelection.getAdSelectionId())
+                .setBiddingLogicUri(adSelection.getBiddingLogicUri())
                 .setCustomAudienceSignals(adSelection.getCustomAudienceSignals())
                 .setContextualSignals(adSelection.getContextualSignals())
                 .setWinningAdRenderUri(adSelection.getWinningAdRenderUri())
