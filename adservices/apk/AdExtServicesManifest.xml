@@ -350,7 +350,7 @@
         <provider
             android:name=
                 "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
-            android:authorities="com.android.ext.adservices.provider.asyncregistration"
+            android:authorities="FOO"
             android:exported="false"
         />
 
