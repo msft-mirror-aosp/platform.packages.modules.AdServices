@@ -151,10 +151,12 @@ public final class DebugReportingJobService extends JobService {
             new DebugReportingJobHandler(enrollmentDao, datastoreManager)
                     .performScheduledPendingReports();
         } else {
-            new EventReportingJobHandler(enrollmentDao, datastoreManager)
+            new EventReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
-            new AggregateReportingJobHandler(enrollmentDao, datastoreManager)
+            new AggregateReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
         }

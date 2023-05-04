@@ -99,6 +99,8 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -347,7 +349,9 @@ public class Source {
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
                 && Objects.equals(mParentId, source.mParentId)
                 && Objects.equals(mInstallTime, source.mInstallTime)
-                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey);
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, source.mPlatformAdId)
+                && Objects.equals(mDebugAdId, source.mDebugAdId);
     }
 
     @Override
@@ -379,7 +383,9 @@ public class Source {
                 mRegistrationId,
                 mSharedAggregationKeys,
                 mInstallTime,
-                mDebugJoinKey);
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId);
     }
 
     /**
@@ -399,7 +405,7 @@ public class Source {
                 destinationType == EventSurfaceType.APP && mIsInstallAttributed;
         List<Long> reportingWindows = getEarlyReportingWindows(isAppInstalled);
         for (Long window: reportingWindows) {
-            if (triggerTime < window) {
+            if (triggerTime <= window) {
                 return window + ONE_HOUR_IN_MILLIS;
             }
         }
@@ -407,7 +413,7 @@ public class Source {
     }
 
     @VisibleForTesting
-    void setAttributionMode(@AttributionMode int attributionMode) {
+    public void setAttributionMode(@AttributionMode int attributionMode) {
         mAttributionMode = attributionMode;
     }
 
@@ -706,6 +712,26 @@ public class Source {
         return mDebugJoinKey;
     }
 
+    /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app trigger's {@link Trigger#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
     /** See {@link Source#getAppDestinations()} */
     public void setAppDestinations(@Nullable List<Uri> appDestinations) {
         mAppDestinations = appDestinations;
@@ -879,6 +905,8 @@ public class Source {
             builder.setPriority(copyFrom.mPriority);
             builder.setStatus(copyFrom.mStatus);
             builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
+            builder.setPlatformAdId(copyFrom.mPlatformAdId);
+            builder.setDebugAdId(copyFrom.mDebugAdId);
             return builder;
         }
 
@@ -1131,6 +1159,20 @@ public class Source {
         @NonNull
         public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
             mBuilding.mDebugJoinKey = debugJoinKey;
+            return this;
+        }
+
+        /** See {@link Source#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Source#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
             return this;
         }
 

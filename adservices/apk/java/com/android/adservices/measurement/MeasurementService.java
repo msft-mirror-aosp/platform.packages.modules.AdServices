@@ -25,7 +25,6 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -33,11 +32,11 @@ import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
@@ -75,7 +74,6 @@ public class MeasurementService extends Service {
                             this,
                             Clock.SYSTEM_CLOCK,
                             ConsentManager.getInstance(this),
-                            EnrollmentDao.getInstance(this),
                             flags,
                             appImportanceFilter);
         }

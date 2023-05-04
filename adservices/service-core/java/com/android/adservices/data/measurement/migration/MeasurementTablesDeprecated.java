@@ -26,6 +26,11 @@ public final class MeasurementTablesDeprecated {
         String INPUT_EVENT = "input_event";
         String REDIRECT = "redirect";
         String SCHEDULED_TIME = "scheduled_time";
+
+        String ENROLLMENT_ID = "enrollment_id";
+        String REDIRECT_TYPE = "redirect_type";
+        String REDIRECT_COUNT = "redirect_count";
+        String LAST_PROCESSING_TIME = "last_processing_time";
     }
 
     /** Contract for Source. */

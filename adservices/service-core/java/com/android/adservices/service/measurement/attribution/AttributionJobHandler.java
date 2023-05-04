@@ -104,7 +104,7 @@ class AttributionJobHandler {
      *
      * @return false if there are datastore failures or pending {@link Trigger} left, true otherwise
      */
-    synchronized boolean performPendingAttributions() {
+    boolean performPendingAttributions() {
         Optional<List<String>> pendingTriggersOpt = mDatastoreManager
                 .runInTransactionWithResult(IMeasurementDao::getPendingTriggerIds);
         if (!pendingTriggersOpt.isPresent()) {
@@ -148,7 +148,7 @@ class AttributionJobHandler {
 
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                                trigger, measurementDao);
+                                trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -157,9 +157,10 @@ class AttributionJobHandler {
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
                     if (!doTopLevelFiltersMatch(source, trigger)) {
-                        mDebugReportApi.scheduleTriggerNoLimitDebugReport(
+                        mDebugReportApi.scheduleTriggerDebugReport(
                                 source,
                                 trigger,
+                                /* limit = */ null,
                                 measurementDao,
                                 Type.TRIGGER_NO_MATCHING_FILTER_DATA);
                         ignoreTrigger(trigger, measurementDao);
@@ -190,8 +191,9 @@ class AttributionJobHandler {
                 });
     }
 
-    private static boolean shouldAttributionBeBlockedByRateLimits(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean shouldAttributionBeBlockedByRateLimits(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         if (!hasAttributionQuota(source, trigger, measurementDao)
                 || !isEnrollmentWithinPrivacyBounds(source, trigger, measurementDao)) {
             LogUtil.d("Attribution blocked by rate limits. Source ID: %s ; Trigger ID: %s ",
@@ -201,10 +203,17 @@ class AttributionJobHandler {
         return false;
     }
 
-    private static TriggeringStatus maybeGenerateAggregateReport(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private TriggeringStatus maybeGenerateAggregateReport(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
 
         if (trigger.getTriggerTime() > source.getAggregatableReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    null,
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -220,6 +229,12 @@ class AttributionJobHandler {
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
                             SystemHealthParams.getMaxAggregateReportsPerDestination()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReports),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
         }
 
@@ -231,24 +246,33 @@ class AttributionJobHandler {
                             .contains(
                                     aggregateDeduplicationKeyOptional
                                             .get()
-                                            .getDeduplicationKey())) {
-                return TriggeringStatus.DROPPED;
-            }
-            if (aggregateDeduplicationKeyOptional.isPresent()
-                    && source.getAggregateReportDedupKeys()
-                            .contains(
-                                    aggregateDeduplicationKeyOptional
-                                            .get()
-                                            .getDeduplicationKey())) {
+                                            .getDeduplicationKey()
+                                            .get())) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_AGGREGATE_DEDUPLICATED);
                 return TriggeringStatus.DROPPED;
             }
             Optional<List<AggregateHistogramContribution>> contributions =
                     AggregatePayloadGenerator.generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
+                if (source.getAggregatableAttributionSource().isPresent()
+                        && trigger.getAggregatableAttributionTrigger().isPresent()) {
+                    mDebugReportApi.scheduleTriggerDebugReport(
+                            source,
+                            trigger,
+                            /* limit = */ null,
+                            measurementDao,
+                            Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
+                }
                 return TriggeringStatus.DROPPED;
             }
             OptionalInt newAggregateContributions =
-                    validateAndGetUpdatedAggregateContributions(contributions.get(), source);
+                    validateAndGetUpdatedAggregateContributions(
+                            contributions.get(), source, trigger, measurementDao);
             if (!newAggregateContributions.isPresent()) {
                 LogUtil.d(
                         "Aggregate contributions exceeded bound. Source ID: %s ; "
@@ -274,7 +298,7 @@ class AttributionJobHandler {
                       triggerDebugKey)) {
                 debugReportStatus = AggregateReport.DebugReportStatus.PENDING;
             }
-            AggregateReport aggregateReport =
+            AggregateReport.Builder aggregateReportBuilder =
                     new AggregateReport.Builder()
                             // TODO: b/254855494 unused field, incorrect value; cleanup
                             .setPublisher(source.getRegistrant())
@@ -294,14 +318,13 @@ class AttributionJobHandler {
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
-                            .setTriggerId(trigger.getId())
-                            .setDedupKey(
-                                    aggregateDeduplicationKeyOptional.isPresent()
-                                            ? aggregateDeduplicationKeyOptional
-                                                    .get()
-                                                    .getDeduplicationKey()
-                                            : null)
-                            .build();
+                            .setTriggerId(trigger.getId());
+
+            if (aggregateDeduplicationKeyOptional.isPresent()) {
+                aggregateReportBuilder.setDedupKey(
+                        aggregateDeduplicationKeyOptional.get().getDeduplicationKey().get());
+            }
+            AggregateReport aggregateReport = aggregateReportBuilder.build();
 
             finalizeAggregateReportCreation(
                     source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
@@ -441,18 +464,31 @@ class AttributionJobHandler {
 
         // TODO: Handle attribution rate limit consideration for non-truthful cases.
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_NOISE);
             return TriggeringStatus.DROPPED;
         }
 
         if (trigger.getTriggerTime() > source.getEventReportWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source, trigger, null, measurementDao, Type.TRIGGER_EVENT_REPORT_WINDOW_PASSED);
             return TriggeringStatus.DROPPED;
         }
 
         Optional<EventTrigger> matchingEventTrigger =
                 findFirstMatchingEventTrigger(source, trigger);
         if (!matchingEventTrigger.isPresent()) {
-            mDebugReportApi.scheduleTriggerNoLimitDebugReport(
-                    source, trigger, measurementDao, Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            // trigger-no-matching-configurations verbose debug report is generated when trigger
+            // "filters/not_filters" field doesn't match source "filter_data" field, it won't be
+            // generated when source doesn't have "filter_data" field.
+            if (source.getFilterDataString() != null) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            }
             return TriggeringStatus.DROPPED;
         }
 
@@ -460,6 +496,12 @@ class AttributionJobHandler {
         // Check if deduplication key clashes with existing reports.
         if (eventTrigger.getDedupKey() != null
                 && source.getEventReportDedupKeys().contains(eventTrigger.getDedupKey())) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    /* limit = */ null,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_DEDUPLICATED);
             return TriggeringStatus.DROPPED;
         }
 
@@ -475,6 +517,12 @@ class AttributionJobHandler {
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
                             SystemHealthParams.getMaxEventReportsPerDestination()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReports),
+                    measurementDao,
+                    Type.TRIGGER_EVENT_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
         }
 
@@ -499,8 +547,11 @@ class AttributionJobHandler {
         return TriggeringStatus.ATTRIBUTED;
     }
 
-    private static boolean provisionEventReportQuota(Source source, Trigger trigger,
-            EventReport newEventReport, IMeasurementDao measurementDao)
+    private boolean provisionEventReportQuota(
+            Source source,
+            Trigger trigger,
+            EventReport newEventReport,
+            IMeasurementDao measurementDao)
             throws DatastoreException {
         List<EventReport> sourceEventReports = measurementDao.getSourceEventReports(source);
 
@@ -510,8 +561,11 @@ class AttributionJobHandler {
 
         List<EventReport> relevantEventReports =
                 sourceEventReports.stream()
-                        .filter((r) -> r.getStatus() == EventReport.Status.PENDING)
-                        .filter((r) -> r.getReportTime() == newEventReport.getReportTime())
+                        .filter(
+                                (r) ->
+                                        r.getStatus() == EventReport.Status.PENDING
+                                                && r.getReportTime()
+                                                        == newEventReport.getReportTime())
                         .sorted(
                                 Comparator.comparingLong(EventReport::getTriggerPriority)
                                         .thenComparing(
@@ -520,12 +574,16 @@ class AttributionJobHandler {
                         .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
             return false;
         }
 
         EventReport lowestPriorityEventReport = relevantEventReports.get(0);
         if (lowestPriorityEventReport.getTriggerPriority()
                 >= newEventReport.getTriggerPriority()) {
+            mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
+                    source, trigger, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
             return false;
         }
 
@@ -559,7 +617,7 @@ class AttributionJobHandler {
             throws DatastoreException {
         if (aggregateDeduplicationKeyOptional.isPresent()) {
             source.getAggregateReportDedupKeys()
-                    .add(aggregateDeduplicationKeyOptional.get().getDeduplicationKey());
+                    .add(aggregateDeduplicationKeyOptional.get().getDeduplicationKey().get());
         }
 
         if (source.getParentId() == null) {
@@ -587,10 +645,18 @@ class AttributionJobHandler {
         measurementDao.insertAttribution(createAttribution(source, trigger));
     }
 
-    private static boolean hasAttributionQuota(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
-        long attributionCount =
-                measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+    private boolean hasAttributionQuota(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
+        long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
+        if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(attributionCount),
+                    measurementDao,
+                    Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
+        }
         return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
     }
 
@@ -675,13 +741,27 @@ class AttributionJobHandler {
         return filterSet;
     }
 
-    private static OptionalInt validateAndGetUpdatedAggregateContributions(
-            List<AggregateHistogramContribution> contributions, Source source) {
+    private OptionalInt validateAndGetUpdatedAggregateContributions(
+            List<AggregateHistogramContribution> contributions,
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao) {
         int newAggregateContributions = source.getAggregateContributions();
         for (AggregateHistogramContribution contribution : contributions) {
             try {
                 newAggregateContributions =
                         Math.addExact(newAggregateContributions, contribution.getValue());
+                if (newAggregateContributions
+                        >= PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                    // When histogram value is >= 65536 (aggregatable_budget_per_source),
+                    // generate verbose debug report, record the actual histogram value.
+                    mDebugReportApi.scheduleTriggerDebugReport(
+                            source,
+                            trigger,
+                            String.valueOf(newAggregateContributions),
+                            measurementDao,
+                            Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
+                }
                 if (newAggregateContributions
                         > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     return OptionalInt.empty();
@@ -698,8 +778,9 @@ class AttributionJobHandler {
         return Math.floorDiv(timestamp, TimeUnit.DAYS.toMillis(1)) * TimeUnit.DAYS.toMillis(1);
     }
 
-    private static boolean isEnrollmentWithinPrivacyBounds(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
+    private boolean isEnrollmentWithinPrivacyBounds(
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         Optional<Pair<Uri, Uri>> publisherAndDestination =
                 getPublisherAndDestinationTopPrivateDomains(source, trigger);
         if (publisherAndDestination.isPresent()) {
@@ -711,6 +792,16 @@ class AttributionJobHandler {
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
+            if (count
+                    >= PrivacyParams
+                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution()) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        String.valueOf(count),
+                        measurementDao,
+                        Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
+            }
 
             return count < PrivacyParams
                     .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
@@ -766,7 +857,8 @@ class AttributionJobHandler {
                 .setDestinationSite(destinationTopPrivateDomain.get().toString())
                 .setDestinationOrigin(BaseUriExtractor.getBaseUri(destination).toString())
                 .setEnrollmentId(trigger.getEnrollmentId())
-                .setTriggerTime(trigger.getTriggerTime())
+                // TODO: b/276638412 rename to Attribution::setSourceTime
+                .setTriggerTime(source.getEventTime())
                 .setRegistrant(trigger.getRegistrant().toString())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

@@ -240,10 +240,25 @@ public final class PrivacyParams {
         return MAX_FLEXIBLE_EVENT_TRIGGER_DATA_CARDINALITY;
     }
 
-    public static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
+    private static final int MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS = 5;
 
     public static int getMaxFlexibleEventReportingWindows() {
         return MAX_FLEXIBLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    private static final int PRIVACY_EPSILON = 14;
+
+    public static int getPrivacyEpsilon() {
+        return PRIVACY_EPSILON;
+    }
+
+    public static final double NUMBER_EQUAL_THRESHOLD = 0.0000001d;
+
+    // place holder for future change
+    private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+
+    public static double getMaxFlexibleEventInformationGain() {
+        return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
     }
 
     private PrivacyParams() {
