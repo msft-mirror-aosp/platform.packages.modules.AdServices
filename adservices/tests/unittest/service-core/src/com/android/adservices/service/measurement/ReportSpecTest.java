@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThrows;
@@ -196,5 +197,88 @@ public class ReportSpecTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec1}), 21, true));
+    }
+
+    private JSONObject getTestJSONObjectTriggerSpec_4_3_2() throws JSONException {
+        JSONObject jsonTriggerSpec = new JSONObject();
+        jsonTriggerSpec.put("trigger_data", new JSONArray(new int[] {1, 2, 3, 4}));
+        JSONObject windows = new JSONObject();
+        windows.put("start_time", 0);
+        windows.put("end_times", new JSONArray(new int[] {10000, 20000, 30000}));
+        jsonTriggerSpec.put("event_report_windows", windows);
+        jsonTriggerSpec.put("summary_buckets", new JSONArray(new int[] {1, 2}));
+        return jsonTriggerSpec;
+    }
+
+    @Test
+    public void getPrivacyParamsForComputation_equal() throws JSONException {
+        JSONObject jsonTriggerSpec = getTestJSONObjectTriggerSpec_4_3_2();
+
+        ReportSpec testObject1 =
+                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec}), 3, true);
+        // Assertion
+        assertEquals(3, testObject1.getPrivacyParamsForComputation()[0][0]);
+        assertArrayEquals(new int[] {3, 3, 3, 3}, testObject1.getPrivacyParamsForComputation()[1]);
+        assertArrayEquals(new int[] {2, 2, 2, 2}, testObject1.getPrivacyParamsForComputation()[2]);
+    }
+
+    @Test
+    public void getNumberState_equal() throws JSONException {
+        JSONObject jsonTriggerSpec = getTestJSONObjectTriggerSpec_4_3_2();
+
+        ReportSpec testObject1 =
+                new ReportSpec(new JSONArray(new JSONObject[] {jsonTriggerSpec}), 3, true);
+        // Assertion
+        assertEquals(
+                415,
+                testObject1.getNumberState()); // Privacy parameter is {3, {3,3,3,3}, {2,2,2,2}}
+    }
+
+    @Test
+    public void getTriggerDataValue_equal() throws JSONException {
+        JSONObject jsonTriggerSpec1 = getTestJSONObjectTriggerSpec_4_3_2();
+
+        JSONObject jsonTriggerSpec2 = new JSONObject();
+        jsonTriggerSpec2.put("trigger_data", new JSONArray(new int[] {5, 6, 7}));
+        JSONObject windows2 = new JSONObject();
+        windows2.put("start_time", 0);
+        windows2.put("end_times", new JSONArray(new int[] {15000}));
+        jsonTriggerSpec2.put("event_report_windows", windows2);
+        jsonTriggerSpec2.put("summary_buckets", new JSONArray(new int[] {1, 2}));
+
+        ReportSpec testObject1 =
+                new ReportSpec(
+                        new JSONArray(new JSONObject[] {jsonTriggerSpec1, jsonTriggerSpec2}),
+                        3,
+                        true);
+        // Assertion
+        assertEquals(1, testObject1.getTriggerDataValue(0));
+        assertEquals(3, testObject1.getTriggerDataValue(2));
+        assertEquals(5, testObject1.getTriggerDataValue(4));
+        assertEquals(7, testObject1.getTriggerDataValue(6));
+    }
+
+    @Test
+    public void getWindowEndTime_equal() throws JSONException {
+        JSONObject jsonTriggerSpec1 = getTestJSONObjectTriggerSpec_4_3_2();
+
+        JSONObject jsonTriggerSpec2 = new JSONObject();
+        jsonTriggerSpec2.put("trigger_data", new JSONArray(new int[] {5, 6, 7}));
+        JSONObject windows2 = new JSONObject();
+        windows2.put("start_time", 0);
+        windows2.put("end_times", new JSONArray(new int[] {15000}));
+        jsonTriggerSpec2.put("event_report_windows", windows2);
+        jsonTriggerSpec2.put("summary_buckets", new JSONArray(new int[] {1, 2}));
+
+        ReportSpec testObject1 =
+                new ReportSpec(
+                        new JSONArray(new JSONObject[] {jsonTriggerSpec1, jsonTriggerSpec2}),
+                        3,
+                        true);
+        // Assertion
+        assertEquals(10000, testObject1.getWindowEndTime(0, 0));
+        assertEquals(20000, testObject1.getWindowEndTime(0, 1));
+        assertEquals(10000, testObject1.getWindowEndTime(1, 0));
+        assertEquals(15000, testObject1.getWindowEndTime(4, 0));
     }
 }
