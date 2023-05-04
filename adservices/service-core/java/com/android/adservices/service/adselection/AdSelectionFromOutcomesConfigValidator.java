@@ -103,13 +103,13 @@ public class AdSelectionFromOutcomesConfigValidator
         Objects.requireNonNull(config, INPUT_PARAM_CANNOT_BE_NULL);
 
         violations.addAll(validateAdSelectionIds(config.getAdSelectionIds()));
-        if (!mPrebuiltLogicGenerator.isPrebuiltUri(config.getSelectionLogicUri())) {
+        if (mPrebuiltLogicGenerator.isPrebuiltUri(config.getSelectionLogicUri())) {
+            sLogger.v(
+                    "Selection logic uri validation is skipped because prebuilt uri is detected!");
+        } else {
+            sLogger.v("Validating selection logic URI");
             violations.addAll(
                     validateSelectionLogicUri(config.getSeller(), config.getSelectionLogicUri()));
-        } else {
-            sLogger.v(
-                    "AdSelectionFromOutcomesConfig validation is skipped because prebuilt uri is"
-                            + " detected!");
         }
     }
 
