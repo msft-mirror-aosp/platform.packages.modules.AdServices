@@ -221,6 +221,7 @@ public class CombinatoricsTest {
             {{{3}, {8, 8}, {2, 2}}, {{-1}}},
             {{{2}, {6, 7}, {1, 2}}, {{-1}}},
             {{{3}, {2, 2}, {3, 3}}, {{35}}},
+            {{{3}, {4, 4}, {2, 2}}, {{125}}},
             {{{7}, {2, 2}, {3, 3}}, {{100}}},
             {{{7}, {2, 2}, {4, 5}}, {{236}}},
             {{{1000}, {2, 2}, {4, 5}}, {{315}}},
@@ -383,10 +384,10 @@ public class CombinatoricsTest {
             perTypeReportList[i] = 0;
         }
         for (Combinatorics.AtomReportState report : reportSet) {
-            int triggerDataIndex = report.triggerDataType;
+            int triggerDataIndex = report.getTriggerDataType();
             // if the report window larger than total report window of this trigger data
             // input perTypeNumWindowList is [3,3,3], and report windows index is 4, return false
-            if (report.windowIndex > perTypeNumWindowList[triggerDataIndex]) {
+            if (report.getWindowIndex() + 1 > perTypeNumWindowList[triggerDataIndex]) {
                 return false;
             }
             perTypeReportList[triggerDataIndex]++;
@@ -402,10 +403,10 @@ public class CombinatoricsTest {
             implements Comparator<Combinatorics.AtomReportState> {
         @Override
         public int compare(Combinatorics.AtomReportState o1, Combinatorics.AtomReportState o2) {
-            if (o1.triggerDataType != o2.triggerDataType) {
-                return Integer.compare(o1.triggerDataType, o2.triggerDataType);
+            if (o1.getTriggerDataType() != o2.getTriggerDataType()) {
+                return Integer.compare(o1.getTriggerDataType(), o2.getTriggerDataType());
             }
-            return Integer.compare(o1.windowIndex, o2.windowIndex);
+            return Integer.compare(o1.getWindowIndex(), o2.getWindowIndex());
         }
     }
 }
