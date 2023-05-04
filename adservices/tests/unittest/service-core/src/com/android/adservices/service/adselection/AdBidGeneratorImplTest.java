@@ -53,6 +53,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -73,6 +74,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -111,7 +113,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -125,19 +126,18 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class AdBidGeneratorImplTest {
-    public static final List<Double> BIDS =
-            new ArrayList<Double>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4));
+    public static final List<Double> BIDS = new ArrayList<>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4));
     public static final List<AdData> ADS =
             AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1);
     public static final List<AdWithBid> AD_WITH_NON_POSITIVE_BIDS =
-            new ArrayList<AdWithBid>(
+            new ArrayList<>(
                     ImmutableList.of(
                             new AdWithBid(ADS.get(0), BIDS.get(1)),
                             new AdWithBid(ADS.get(1), BIDS.get(0)),
                             new AdWithBid(ADS.get(2), BIDS.get(1)),
                             new AdWithBid(ADS.get(3), BIDS.get(0))));
     public static final List<AdWithBid> AD_WITH_BIDS =
-            new ArrayList<AdWithBid>(
+            new ArrayList<>(
                     ImmutableList.of(
                             new AdWithBid(ADS.get(0), BIDS.get(1)),
                             new AdWithBid(ADS.get(1), BIDS.get(0)),
@@ -246,6 +246,10 @@ public class AdBidGeneratorImplTest {
                 }
             };
 
+    private static final AdCounterKeyCopier AD_COUNTER_KEY_COPIER_NO_OP =
+            new AdCounterKeyCopierNoOpImpl();
+    private static final AdCounterKeyCopier AD_COUNTER_KEY_COPIER = new AdCounterKeyCopierImpl();
+
     private ListeningExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
     private ListeningExecutorService mBlockingExecutorService;
@@ -291,6 +295,12 @@ public class AdBidGeneratorImplTest {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
+        mJsFetcher =
+                new JsFetcher(
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mAdServicesHttpsClient,
+                        mFlags);
 
         mDecisionLogicUri = mMockWebServerRule.uriForPath(FETCH_JAVA_SCRIPT_PATH);
 
@@ -305,7 +315,7 @@ public class AdBidGeneratorImplTest {
                 ImmutableMap.of(mTrustedBiddingUri, new JSONObject(TRUSTED_BIDDING_SIGNALS_MAP));
 
         mCustomAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(mTrustedBiddingData)
                         .build();
@@ -343,11 +353,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -356,19 +361,19 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(ADS),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                eq(mCustomAudienceSignals),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -434,18 +439,13 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCASuccess_v3BiddingLogic() throws Exception {
+    public void testRunAdBiddingPerCASuccess_preV3BiddingLogicWithCopier() throws Exception {
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
-        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_V3);
+        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_PRE_V3);
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -454,18 +454,227 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBidsV3(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(mCustomAudienceWithAds),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
+                .thenAnswer(
+                        unUsedInvocation -> {
+                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
+                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            return FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS));
+                        });
+        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
+                        RUN_BIDDING_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
+                        GENERATE_BIDS_START_TIMESTAMP,
+                        GENERATE_BIDS_END_TIMESTAMP,
+                        RUN_BIDDING_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdBiddingPerCAProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingPerCAProcessReportedStats(any());
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        mCustomAudienceWithAds,
+                        mTrustedBiddingDataByBaseUri,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        mRunAdBiddingPerCAExecutionLogger);
+        AdBiddingOutcome expectedAdBiddingOutcome =
+                AdBiddingOutcome.builder()
+                        .setAdWithBid(AD_WITH_BIDS.get(2))
+                        .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
+                        .build();
+        runAdBiddingPerCAProcessLoggerLatch.await();
+        // Then we can test the result by assertion,
+        assertEquals(expectedAdBiddingOutcome, result.get());
+        verify(mAdSelectionScriptEngine)
+                .generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        eq(mRunAdBiddingPerCAExecutionLogger));
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
+        verifySuccessAdBiddingPerCALogging(
+                mCustomAudienceWithAds.getAds().size(),
+                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                TRUSTED_BIDDING_KEYS.size(),
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+    }
+
+    @Test
+    public void testRunAdBiddingPerCASuccess_preV3BiddingLogicWithCopierWithAdCounterKeys()
+            throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_PRE_V3);
+
+        DBCustomAudience customAudienceWithFiltersAndAdCounterKeys =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setBiddingLogicUri(mDecisionLogicUri)
+                        .setTrustedBiddingData(mTrustedBiddingData)
+                        .build();
+        List<AdData> expectedAdsWithCounterKeys = new ArrayList<>();
+        for (DBAdData dbAdData : customAudienceWithFiltersAndAdCounterKeys.getAds()) {
+            // We expect the filters to be stripped out and the keys to be copied over
+            expectedAdsWithCounterKeys.add(
+                    new AdData.Builder()
+                            .setRenderUri(dbAdData.getRenderUri())
+                            .setMetadata(dbAdData.getMetadata())
+                            .setAdCounterKeys(dbAdData.getAdCounterKeys())
+                            .build());
+        }
+        List<AdWithBid> expectedAdsWithBids =
+                ImmutableList.of(
+                        new AdWithBid(expectedAdsWithCounterKeys.get(0), BIDS.get(1)),
+                        new AdWithBid(expectedAdsWithCounterKeys.get(1), BIDS.get(0)),
+                        new AdWithBid(expectedAdsWithCounterKeys.get(2), BIDS.get(3)),
+                        new AdWithBid(expectedAdsWithCounterKeys.get(3), BIDS.get(2)));
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdSelectionScriptEngine,
+                        customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER,
+                        mFlags,
+                        mIsolateSettings,
+                        mJsFetcher);
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(expectedAdsWithCounterKeys),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
+                .thenAnswer(
+                        unUsedInvocation -> {
+                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
+                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            return FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS));
+                        });
+        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
+                        RUN_BIDDING_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
+                        GENERATE_BIDS_START_TIMESTAMP,
+                        GENERATE_BIDS_END_TIMESTAMP,
+                        RUN_BIDDING_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdBiddingPerCAProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingPerCAProcessReportedStats(any());
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        customAudienceWithFiltersAndAdCounterKeys,
+                        mTrustedBiddingDataByBaseUri,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        mRunAdBiddingPerCAExecutionLogger);
+        AdBiddingOutcome expectedAdBiddingOutcome =
+                AdBiddingOutcome.builder()
+                        .setAdWithBid(expectedAdsWithBids.get(2))
+                        .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
+                        .build();
+        runAdBiddingPerCAProcessLoggerLatch.await();
+        // Then we can test the result by assertion,
+        assertEquals(expectedAdBiddingOutcome, result.get());
+        verify(mAdSelectionScriptEngine)
+                .generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(expectedAdsWithCounterKeys),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        eq(mRunAdBiddingPerCAExecutionLogger));
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
+        verifySuccessAdBiddingPerCALogging(
+                customAudienceWithFiltersAndAdCounterKeys.getAds().size(),
+                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                TRUSTED_BIDDING_KEYS.size(),
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+    }
+
+    @Test
+    public void testRunAdBiddingPerCASuccess_v3BiddingLogic() throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_V3);
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdSelectionScriptEngine,
+                        customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
+                        mFlags,
+                        mIsolateSettings,
+                        mJsFetcher);
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -530,17 +739,33 @@ public class AdBidGeneratorImplTest {
     }
 
     @Test
-    public void testRunAdBiddingPerCAServerReturnTooHighVersionBiddingLogic() throws Exception {
-        // Set server to return too high version.
-        mServer = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_RETURN_TOO_HIGH_VERSION);
+    public void testV2BiddingLogicDoesNotAddHeaders_Success() throws Exception {
+        Flags jsVersionV2Flags =
+                new AdBidGeneratorImplTestFlags() {
+                    @Override
+                    public long getFledgeAdSelectionBiddingLogicJsVersion() {
+                        return 2;
+                    }
+                };
+        final Dispatcher versionHeaderFailsDispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request) {
+                        String headerName =
+                                JsVersionHelper.getVersionHeaderName(
+                                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS);
+                        if (request.getHeaders().stream()
+                                .noneMatch(h -> h.startsWith(headerName))) {
+                            return new MockResponse().setBody(BUYER_DECISION_LOGIC_JS);
+                        }
+                        return new MockResponse().setResponseCode(404);
+                    }
+                };
+
+        mServer = mMockWebServerRule.startMockWebServer(versionHeaderFailsDispatcher);
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -549,6 +774,291 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
+                        jsVersionV2Flags,
+                        mIsolateSettings,
+                        mJsFetcher);
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
+                .thenAnswer(
+                        unUsedInvocation -> {
+                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
+                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            return FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS));
+                        });
+        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
+                        RUN_BIDDING_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
+                        GENERATE_BIDS_START_TIMESTAMP,
+                        GENERATE_BIDS_END_TIMESTAMP,
+                        RUN_BIDDING_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdBiddingPerCAProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingPerCAProcessReportedStats(any());
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        mCustomAudienceWithAds,
+                        mTrustedBiddingDataByBaseUri,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        mRunAdBiddingPerCAExecutionLogger);
+
+        AdBiddingOutcome expectedAdBiddingOutcome =
+                AdBiddingOutcome.builder()
+                        .setAdWithBid(AD_WITH_BIDS.get(2))
+                        .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
+                        .build();
+        runAdBiddingPerCAProcessLoggerLatch.await();
+        // Then we can test the result by assertion,
+        assertEquals(expectedAdBiddingOutcome, result.get());
+        verify(mAdSelectionScriptEngine)
+                .generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        eq(mRunAdBiddingPerCAExecutionLogger));
+        verify(mAdSelectionScriptEngine, times(0))
+                .generateBidsV3(any(), any(), any(), any(), any(), any(), any());
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
+        verifySuccessAdBiddingPerCALogging(
+                mCustomAudienceWithAds.getAds().size(),
+                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                TRUSTED_BIDDING_KEYS.size(),
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+    }
+
+    @Test
+    public void testRunAdBiddingPerCASuccess_v3BiddingLogicWithCopier() throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_V3);
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdSelectionScriptEngine,
+                        customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER,
+                        mFlags,
+                        mIsolateSettings,
+                        mJsFetcher);
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
+                .thenAnswer(
+                        unUsedInvocation -> {
+                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
+                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            return FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS));
+                        });
+        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
+                        RUN_BIDDING_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
+                        GENERATE_BIDS_START_TIMESTAMP,
+                        GENERATE_BIDS_END_TIMESTAMP,
+                        RUN_BIDDING_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdBiddingPerCAProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingPerCAProcessReportedStats(any());
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        mCustomAudienceWithAds,
+                        mTrustedBiddingDataByBaseUri,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        mRunAdBiddingPerCAExecutionLogger);
+        AdBiddingOutcome expectedAdBiddingOutcome =
+                AdBiddingOutcome.builder()
+                        .setAdWithBid(AD_WITH_BIDS.get(2))
+                        .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
+                        .build();
+        runAdBiddingPerCAProcessLoggerLatch.await();
+        // Then we can test the result by assertion,
+        assertEquals(expectedAdBiddingOutcome, result.get());
+        verify(mAdSelectionScriptEngine)
+                .generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mRunAdBiddingPerCAExecutionLogger));
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
+        verifySuccessAdBiddingPerCALogging(
+                mCustomAudienceWithAds.getAds().size(),
+                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                TRUSTED_BIDDING_KEYS.size(),
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+    }
+
+    @Test
+    public void testRunAdBiddingPerCASuccess_v3BiddingLogicWithCopierWithAdCounterKeys()
+            throws Exception {
+        // Given we are using a direct executor and mock the returned result from the
+        // AdSelectionScriptEngine.generateBids for preparing the test,
+        mServer = mMockWebServerRule.startMockWebServer(DEFAULT_DISPATCHER_V3);
+
+        DBCustomAudience customAudienceWithAdCounterKeys =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                        .setBiddingLogicUri(mDecisionLogicUri)
+                        .setTrustedBiddingData(mTrustedBiddingData)
+                        .build();
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdSelectionScriptEngine,
+                        customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER,
+                        mFlags,
+                        mIsolateSettings,
+                        mJsFetcher);
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(customAudienceWithAdCounterKeys),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
+                .thenAnswer(
+                        unUsedInvocation -> {
+                            mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
+                            mRunAdBiddingPerCAExecutionLogger.endGenerateBids();
+                            return FluentFuture.from(Futures.immediateFuture(AD_WITH_BIDS));
+                        });
+        when(mRunAdBiddingPerCAClockMock.elapsedRealtime())
+                .thenReturn(
+                        RUN_AD_BIDDING_PER_CA_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_START_TIMESTAMP,
+                        GET_BUYER_DECISION_LOGIC_END_TIMESTAMP,
+                        RUN_BIDDING_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_START_TIMESTAMP,
+                        GET_TRUSTED_BIDDING_SIGNALS_END_TIMESTAMP,
+                        GENERATE_BIDS_START_TIMESTAMP,
+                        GENERATE_BIDS_END_TIMESTAMP,
+                        RUN_BIDDING_END_TIMESTAMP,
+                        STOP_ELAPSED_TIMESTAMP);
+        // Logger calls come after the callback is returned
+        CountDownLatch runAdBiddingPerCAProcessLoggerLatch = new CountDownLatch(1);
+        doAnswer(
+                        unusedInvocation -> {
+                            runAdBiddingPerCAProcessLoggerLatch.countDown();
+                            return null;
+                        })
+                .when(mAdServicesLoggerMock)
+                .logRunAdBiddingPerCAProcessReportedStats(any());
+
+        // When the call to runAdBiddingPerCA, and the computation of future is complete,
+        FluentFuture<AdBiddingOutcome> result =
+                mAdBidGenerator.runAdBiddingPerCA(
+                        customAudienceWithAdCounterKeys,
+                        mTrustedBiddingDataByBaseUri,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        mRunAdBiddingPerCAExecutionLogger);
+        AdBiddingOutcome expectedAdBiddingOutcome =
+                AdBiddingOutcome.builder()
+                        .setAdWithBid(AD_WITH_BIDS.get(2))
+                        .setCustomAudienceBiddingInfo(mCustomAudienceBiddingInfo)
+                        .build();
+        runAdBiddingPerCAProcessLoggerLatch.await();
+        // Then we can test the result by assertion,
+        assertEquals(expectedAdBiddingOutcome, result.get());
+        verify(mAdSelectionScriptEngine)
+                .generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(customAudienceWithAdCounterKeys),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mRunAdBiddingPerCAExecutionLogger));
+        mMockWebServerRule.verifyMockServerRequests(
+                mServer, 1, ImmutableList.of(FETCH_JAVA_SCRIPT_PATH), mRequestMatcherExactMatch);
+        verifySuccessAdBiddingPerCALogging(
+                customAudienceWithAdCounterKeys.getAds().size(),
+                BUYER_DECISION_LOGIC_JS.getBytes().length,
+                TRUSTED_BIDDING_KEYS.size(),
+                TRUSTED_BIDDING_SIGNALS.toString().getBytes().length);
+    }
+
+    @Test
+    public void testRunAdBiddingPerCAServerReturnTooHighVersionBiddingLogic() throws Exception {
+        // Set server to return too high version.
+        mServer = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_RETURN_TOO_HIGH_VERSION);
+
+        CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
+                new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
+        mAdBidGenerator =
+                new AdBidGeneratorImpl(
+                        mContext,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mScheduledExecutor,
+                        mAdSelectionScriptEngine,
+                        customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -628,11 +1138,6 @@ public class AdBidGeneratorImplTest {
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -641,21 +1146,21 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(ADS),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                eq(mCustomAudienceSignals),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -756,7 +1261,8 @@ public class AdBidGeneratorImplTest {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        mAdServicesHttpsClient);
+                        mAdServicesHttpsClient,
+                        mFlags);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -765,20 +1271,20 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
         // Given we are using a direct executor and mock the returned result from the
         // AdSelectionScriptEngine.generateBids for preparing the test,
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBidsV3(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(mCustomAudienceWithAds),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -850,11 +1356,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -863,6 +1364,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -887,16 +1389,15 @@ public class AdBidGeneratorImplTest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(ADS),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                eq(mCustomAudienceSignals),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -943,11 +1444,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -956,6 +1452,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -980,15 +1477,14 @@ public class AdBidGeneratorImplTest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBidsV3(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(mCustomAudienceWithAds),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer(
                         unUsedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -1035,11 +1531,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         Flags flagsWithSmallerLimits =
                 new Flags() {
                     @Override
@@ -1055,6 +1546,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         flagsWithSmallerLimits,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1079,16 +1571,15 @@ public class AdBidGeneratorImplTest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(ADS),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                eq(mCustomAudienceSignals),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenAnswer((invocation) -> generateBidsWithDelay(flagsWithSmallerLimits));
         // When the call to runAdBiddingPerCA, and the computation of future is complete,
         FluentFuture<AdBiddingOutcome> result =
@@ -1128,11 +1619,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1141,6 +1627,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1163,16 +1650,15 @@ public class AdBidGeneratorImplTest {
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
         JSONException jsonException = new JSONException(JSON_EXCEPTION_MESSAGE);
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(ADS),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                eq(mCustomAudienceSignals),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBids(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(ADS),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        eq(mCustomAudienceSignals),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenThrow(jsonException);
         // When the call to runBidding, and the computation of future is complete.
         FluentFuture<AdBiddingOutcome> result =
@@ -1202,11 +1688,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1215,6 +1696,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1237,15 +1719,14 @@ public class AdBidGeneratorImplTest {
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
         JSONException jsonException = new JSONException(JSON_EXCEPTION_MESSAGE);
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBidsV3(
-                                eq(BUYER_DECISION_LOGIC_JS),
-                                eq(mCustomAudienceWithAds),
-                                eq(EMPTY_AD_SELECTION_SIGNALS),
-                                eq(EMPTY_BUYER_SIGNALS),
-                                argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
-                                eq(EMPTY_CONTEXTUAL_SIGNALS),
-                                isA(RunAdBiddingPerCAExecutionLogger.class)))
+        when(mAdSelectionScriptEngine.generateBidsV3(
+                        eq(BUYER_DECISION_LOGIC_JS),
+                        eq(mCustomAudienceWithAds),
+                        eq(EMPTY_AD_SELECTION_SIGNALS),
+                        eq(EMPTY_BUYER_SIGNALS),
+                        argThat(TRUSTED_BIDDING_SIGNALS_MATCHER),
+                        eq(EMPTY_CONTEXTUAL_SIGNALS),
+                        isA(RunAdBiddingPerCAExecutionLogger.class)))
                 .thenThrow(jsonException);
         // When the call to runBidding, and the computation of future is complete.
         FluentFuture<AdBiddingOutcome> result =
@@ -1290,11 +1771,6 @@ public class AdBidGeneratorImplTest {
         mServer = mMockWebServerRule.startMockWebServer(dispatcher);
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         List<String> emptyTrustedBiddingKeys = Collections.EMPTY_LIST;
         DBTrustedBiddingData trustedBiddingData =
                 new DBTrustedBiddingData.Builder()
@@ -1303,7 +1779,7 @@ public class AdBidGeneratorImplTest {
                         .build();
 
         DBCustomAudience customAudienceWithAds =
-                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1)
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(CommonFixture.VALID_BUYER_1)
                         .setBiddingLogicUri(mDecisionLogicUri)
                         .setTrustedBiddingData(trustedBiddingData)
                         .build();
@@ -1323,6 +1799,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1347,16 +1824,15 @@ public class AdBidGeneratorImplTest {
                         })
                 .when(mAdServicesLoggerMock)
                 .logRunAdBiddingPerCAProcessReportedStats(any());
-        Mockito.when(
-                        mAdSelectionScriptEngine.generateBids(
-                                BUYER_DECISION_LOGIC_JS,
-                                ADS,
-                                EMPTY_AD_SELECTION_SIGNALS,
-                                EMPTY_BUYER_SIGNALS,
-                                AdSelectionSignals.EMPTY,
-                                EMPTY_CONTEXTUAL_SIGNALS,
-                                customAudienceSignals,
-                                mRunAdBiddingPerCAExecutionLogger))
+        when(mAdSelectionScriptEngine.generateBids(
+                        BUYER_DECISION_LOGIC_JS,
+                        ADS,
+                        EMPTY_AD_SELECTION_SIGNALS,
+                        EMPTY_BUYER_SIGNALS,
+                        AdSelectionSignals.EMPTY,
+                        EMPTY_CONTEXTUAL_SIGNALS,
+                        customAudienceSignals,
+                        mRunAdBiddingPerCAExecutionLogger))
                 .thenAnswer(
                         unusedInvocation -> {
                             mRunAdBiddingPerCAExecutionLogger.startGenerateBids();
@@ -1411,11 +1887,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1424,6 +1895,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1472,11 +1944,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1485,6 +1952,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1532,11 +2000,6 @@ public class AdBidGeneratorImplTest {
 
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
                 new CustomAudienceDevOverridesHelper(mDevContext, mCustomAudienceDao);
-        mJsFetcher =
-                new JsFetcher(
-                        mBackgroundExecutorService,
-                        mLightweightExecutorService,
-                        mAdServicesHttpsClient);
         mAdBidGenerator =
                 new AdBidGeneratorImpl(
                         mContext,
@@ -1545,6 +2008,7 @@ public class AdBidGeneratorImplTest {
                         mScheduledExecutor,
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
+                        AD_COUNTER_KEY_COPIER_NO_OP,
                         mFlags,
                         mIsolateSettings,
                         mJsFetcher);
@@ -1868,6 +2332,11 @@ public class AdBidGeneratorImplTest {
         @Override
         public long getAdSelectionBiddingTimeoutPerCaMs() {
             return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+        }
+
+        @Override
+        public long getFledgeAdSelectionBiddingLogicJsVersion() {
+            return JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
         }
     }
 }

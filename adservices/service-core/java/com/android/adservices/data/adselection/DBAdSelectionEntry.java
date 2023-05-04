@@ -63,6 +63,10 @@ public final class DBAdSelectionEntry {
     @Nullable
     private final String mBuyerDecisionLogicJs;
 
+    @ColumnInfo(name = "bidding_logic_uri")
+    @NonNull
+    private final Uri mBiddingLogicUri;
+
     public DBAdSelectionEntry(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
@@ -70,7 +74,8 @@ public final class DBAdSelectionEntry {
             @NonNull Uri winningAdRenderUri,
             double winningAdBid,
             @NonNull Instant creationTimestamp,
-            @Nullable String buyerDecisionLogicJs) {
+            @Nullable String buyerDecisionLogicJs,
+            @NonNull Uri biddingLogicUri) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
@@ -78,6 +83,7 @@ public final class DBAdSelectionEntry {
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
         this.mBuyerDecisionLogicJs = buyerDecisionLogicJs;
+        this.mBiddingLogicUri = biddingLogicUri;
     }
 
     @Override
@@ -92,8 +98,8 @@ public final class DBAdSelectionEntry {
                     && Objects.equals(mWinningAdRenderUri, adSelectionEntry.mWinningAdRenderUri)
                     && mWinningAdBid == adSelectionEntry.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelectionEntry.mCreationTimestamp)
-                    && Objects.equals(
-                            mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs);
+                    && Objects.equals(mBuyerDecisionLogicJs, adSelectionEntry.mBuyerDecisionLogicJs)
+                    && Objects.equals(mBiddingLogicUri, adSelectionEntry.mBiddingLogicUri);
         }
         return false;
     }
@@ -107,7 +113,8 @@ public final class DBAdSelectionEntry {
                 mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
-                mBuyerDecisionLogicJs);
+                mBuyerDecisionLogicJs,
+                mBiddingLogicUri);
     }
 
     /**
@@ -164,6 +171,12 @@ public final class DBAdSelectionEntry {
         return mBuyerDecisionLogicJs;
     }
 
+    /** @return the buyer-provided uri for buyer-side logic. */
+    @NonNull
+    public Uri getBiddingLogicUri() {
+        return mBiddingLogicUri;
+    }
+
     /** Builder for {@link DBAdSelectionEntry} object. */
     public static final class Builder {
         private long mAdSelectionId = UNSET;
@@ -173,6 +186,7 @@ public final class DBAdSelectionEntry {
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mBuyerDecisionLogicJs;
+        private Uri mBiddingLogicUri;
 
         public Builder() {}
 
@@ -234,6 +248,14 @@ public final class DBAdSelectionEntry {
             return this;
         }
 
+        /** Sets the buyer_decision_logic_js of this ad_selection_entry. */
+        @NonNull
+        public DBAdSelectionEntry.Builder setBiddingLogicUri(@NonNull Uri biddingLogicUri) {
+            Objects.requireNonNull(biddingLogicUri);
+            this.mBiddingLogicUri = biddingLogicUri;
+            return this;
+        }
+
         /**
          * Builds an {@link DBAdSelectionEntry} instance.
          *
@@ -254,6 +276,7 @@ public final class DBAdSelectionEntry {
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
+            Objects.requireNonNull(mBiddingLogicUri);
 
             return new DBAdSelectionEntry(
                     mAdSelectionId,
@@ -262,7 +285,8 @@ public final class DBAdSelectionEntry {
                     mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
-                    mBuyerDecisionLogicJs);
+                    mBuyerDecisionLogicJs,
+                    mBiddingLogicUri);
         }
     }
 }

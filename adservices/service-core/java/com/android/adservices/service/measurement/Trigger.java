@@ -69,6 +69,8 @@ public class Trigger {
     @Nullable private String mAttributionConfig;
     @Nullable private String mAdtechKeyMapping;
     @Nullable private String mDebugJoinKey;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -113,7 +115,9 @@ public class Trigger {
                 && Objects.equals(mAttributionConfig, trigger.mAttributionConfig)
                 && Objects.equals(mAdtechKeyMapping, trigger.mAdtechKeyMapping)
                 && Objects.equals(mAggregateDeduplicationKeys, trigger.mAggregateDeduplicationKeys)
-                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey);
+                && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
+                && Objects.equals(mDebugAdId, trigger.mDebugAdId);
     }
 
     @Override
@@ -137,7 +141,9 @@ public class Trigger {
                 mAttributionConfig,
                 mAdtechKeyMapping,
                 mAggregateDeduplicationKeys,
-                mDebugJoinKey);
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -318,6 +324,26 @@ public class Trigger {
     }
 
     /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web source's {@link Source#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app source's {@link Source#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
+    /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
@@ -372,10 +398,12 @@ public class Trigger {
             JSONArray dedupKeyObjects = new JSONArray(this.getAggregateDeduplicationKeys());
             for (int i = 0; i < dedupKeyObjects.length(); i++) {
                 JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
-                UnsignedLong dedupKey =
-                        new UnsignedLong(dedupKeyObject.getLong("deduplication_key"));
-                AggregateDeduplicationKey.Builder builder =
-                        new AggregateDeduplicationKey.Builder(dedupKey);
+                AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder();
+                if (dedupKeyObject.has("deduplication_key")
+                        && !dedupKeyObject.isNull("deduplication_key")) {
+                    builder.setDeduplicationKey(
+                            new UnsignedLong(dedupKeyObject.getString("deduplication_key")));
+                }
                 if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
                     List<FilterMap> filterSet =
                             Filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
@@ -637,6 +665,20 @@ public class Trigger {
         @NonNull
         public Builder setDebugJoinKey(@Nullable String debugJoinKey) {
             mBuilding.mDebugJoinKey = debugJoinKey;
+            return this;
+        }
+
+        /** See {@link Trigger#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Trigger#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
             return this;
         }
 

@@ -24,7 +24,7 @@ import android.os.IBinder;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
@@ -51,6 +51,7 @@ import java.util.Objects;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsService extends Service {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     /** The binder service. This field must only be accessed on the main thread. */
     private TopicsServiceImpl mTopicsService;
@@ -60,7 +61,7 @@ public class TopicsService extends Service {
         super.onCreate();
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("onCreate(): Topics API is disabled");
+            sLogger.e("onCreate(): Topics API is disabled");
             return;
         }
 
@@ -107,7 +108,7 @@ public class TopicsService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("onBind(): Topics API is disabled, return nullBinding.");
+            sLogger.e("onBind(): Topics API is disabled, return nullBinding.");
             // Return null so that clients can not bind to the service.
             return null;
         }

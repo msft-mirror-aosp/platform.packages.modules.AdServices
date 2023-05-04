@@ -73,6 +73,8 @@ public final class SourceFixture {
                 .setRegistrationId(ValidSourceParams.REGISTRATION_ID)
                 .setSharedAggregationKeys(ValidSourceParams.SHARED_AGGREGATE_KEYS)
                 .setInstallTime(ValidSourceParams.INSTALL_TIME)
+                .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
+                .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .build();
     }
 
@@ -97,6 +99,8 @@ public final class SourceFixture {
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
         public static final Long INSTALL_TIME = 100L;
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+        public static final String DEBUG_AD_ID = "test-debug-ad-id";
 
         public static final String buildAggregateSource() {
             try {
