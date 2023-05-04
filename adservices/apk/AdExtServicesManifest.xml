@@ -354,13 +354,6 @@
             android:exported="false"
         />
 
-        <provider
-            android:name=
-                "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
-            android:authorities="com.android.adservices.provider.asyncregistration"
-            android:exported="false"
-        />
-
         <!-- Boot completed receiver registers package changed event receivers.
              On T+, we explicitly disable this in the system service, so it runs only on S-. -->
         <receiver android:name="com.android.adservices.service.common.AdExtBootCompletedReceiver"
