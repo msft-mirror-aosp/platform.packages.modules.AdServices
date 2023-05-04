@@ -15,6 +15,8 @@
  */
 package com.android.tests.sdkprovider.crashtest;
 
+import android.app.ActivityManager;
+import android.app.ApplicationExitInfo;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
@@ -25,6 +27,12 @@ import java.util.concurrent.Executors;
 
 public class CrashTestSandboxedSdkProvider extends SandboxedSdkProvider {
     static class CrashTestSdkImpl extends ICrashTestSdkApi.Stub {
+        private final Context mContext;
+
+        CrashTestSdkImpl(Context context) {
+            mContext = context;
+        }
+
         @Override
         public void triggerCrash() {
             Executors.newSingleThreadExecutor()
@@ -33,11 +41,20 @@ public class CrashTestSandboxedSdkProvider extends SandboxedSdkProvider {
                                 throw new RuntimeException("This is a test exception");
                             });
         }
+
+        @Override
+        public ApplicationExitInfo getLastApplicationExitInfo() {
+            final ActivityManager am = mContext.getSystemService(ActivityManager.class);
+            if (am == null) {
+                return null;
+            }
+            return am.getHistoricalProcessExitReasons(mContext.getPackageName(), 0, 1).get(0);
+        }
     }
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new CrashTestSdkImpl());
+        return new SandboxedSdk(new CrashTestSdkImpl(getContext()));
     }
 
     @Override
