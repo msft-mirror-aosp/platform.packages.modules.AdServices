@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 package com.android.tests.sdkprovider.crashtest;
+import android.app.ApplicationExitInfo;
 
 interface ICrashTestSdkApi {
     void triggerCrash();
+    ApplicationExitInfo getLastApplicationExitInfo();
 }
