@@ -101,6 +101,7 @@ public class Source {
     @Nullable private String mDebugJoinKey;
     @Nullable private String mPlatformAdId;
     @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -351,7 +352,8 @@ public class Source {
                 && Objects.equals(mInstallTime, source.mInstallTime)
                 && Objects.equals(mDebugJoinKey, source.mDebugJoinKey)
                 && Objects.equals(mPlatformAdId, source.mPlatformAdId)
-                && Objects.equals(mDebugAdId, source.mDebugAdId);
+                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin);
     }
 
     @Override
@@ -385,7 +387,8 @@ public class Source {
                 mInstallTime,
                 mDebugJoinKey,
                 mPlatformAdId,
-                mDebugAdId);
+                mDebugAdId,
+                mRegistrationOrigin);
     }
 
     /**
@@ -732,6 +735,11 @@ public class Source {
         return mDebugAdId;
     }
 
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
     /** See {@link Source#getAppDestinations()} */
     public void setAppDestinations(@Nullable List<Uri> appDestinations) {
         mAppDestinations = appDestinations;
@@ -907,6 +915,7 @@ public class Source {
             builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
             builder.setPlatformAdId(copyFrom.mPlatformAdId);
             builder.setDebugAdId(copyFrom.mDebugAdId);
+            builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             return builder;
         }
 
@@ -1176,6 +1185,13 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Build the {@link Source}. */
         @NonNull
         public Source build() {
@@ -1185,11 +1201,8 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType,
                     mBuilding.mAggregateReportDedupKeys,
-                    mBuilding.mEventReportDedupKeys);
-
-            //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
-            //    throw new IllegalArgumentException("At least one destination is required");
-            //}
+                    mBuilding.mEventReportDedupKeys,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }
