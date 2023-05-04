@@ -229,6 +229,12 @@ class AttributionJobHandler {
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
                             SystemHealthParams.getMaxAggregateReportsPerDestination()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReports),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
         }
 
@@ -312,7 +318,8 @@ class AttributionJobHandler {
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
-                            .setTriggerId(trigger.getId());
+                            .setTriggerId(trigger.getId())
+                            .setRegistrationOrigin(trigger.getRegistrationOrigin());
 
             if (aggregateDeduplicationKeyOptional.isPresent()) {
                 aggregateReportBuilder.setDedupKey(
