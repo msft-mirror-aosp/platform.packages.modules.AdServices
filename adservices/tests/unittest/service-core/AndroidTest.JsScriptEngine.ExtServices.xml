@@ -16,6 +16,11 @@
   -->
 <configuration description="Config for Ad Services Service-core unit test cases in ExtServices">
     <option name="test-tag" value="AdExtServicesJsEngineUnitTests"/>
+
+    <!-- For this test suite to get picked up in presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex" />
+
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">

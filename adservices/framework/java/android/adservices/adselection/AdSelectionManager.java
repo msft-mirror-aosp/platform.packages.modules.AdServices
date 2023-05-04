@@ -224,8 +224,20 @@ public class AdSelectionManager {
      *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
      *       {@link IllegalArgumentException} for input validation will raise listing violating ad
      *       selection ids.
-     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
-     *       IllegalArgumentException} will be thrown.
+     *   <li>{@code Selection logic URI} that could follow either the HTTPS or Ad Selection Prebuilt
+     *       schemas.
+     *       <p>If the URI follows HTTPS schema then the host should match the {@code seller}.
+     *       Otherwise, {@link IllegalArgumentException} will be thrown.
+     *       <p>Prebuilt URIs are a way of substituting a generic pre-built logics for the required
+     *       JavaScripts for {@code selectOutcome}. Prebuilt Uri for this endpoint should follow;
+     *       <ul>
+     *         <li>{@code
+     *             ad-selection-prebuilt://ad-selection-from-outcomes/<name>?<script-generation-parameters>}
+     *       </ul>
+     *       <p>If an unsupported prebuilt URI is passed or prebuilt URI feature is disabled by the
+     *       service then {@link IllegalArgumentException} will be thrown.
+     *       <p>See {@link AdSelectionFromOutcomesConfig.Builder#setSelectionLogicUri} for supported
+     *       {@code <name>} and required {@code <script-generation-parameters>}.
      * </ul>
      *
      * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
@@ -489,7 +501,8 @@ public class AdSelectionManager {
     }
 
     /**
-     * Updates the counter histograms for an ad.
+     * Updates the counter histograms for an ad which was previously selected by a call to {@link
+     * #selectAds(AdSelectionConfig, Executor, OutcomeReceiver)}.
      *
      * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
      * candidate ads, where ads whose frequency caps are met or exceeded are removed from the

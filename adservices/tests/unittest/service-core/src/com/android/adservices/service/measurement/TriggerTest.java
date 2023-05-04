@@ -100,6 +100,8 @@ public class TriggerTest {
         JSONObject adtechBitMapping = new JSONObject();
         adtechBitMapping.put("AdTechA-enrollment_id", "0x1");
         String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
+        String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
+        String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         assertEquals(
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -125,6 +127,8 @@ public class TriggerTest {
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build(),
                 TriggerFixture.getValidTriggerBuilder()
                         .setEnrollmentId("enrollment-id")
@@ -150,6 +154,8 @@ public class TriggerTest {
                         .setAttributionConfig(createAttributionConfigJSONArray().toString())
                         .setAdtechBitMapping(adtechBitMapping.toString())
                         .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
                         .build());
     }
 
@@ -281,6 +287,12 @@ public class TriggerTest {
         assertNotEquals(
                 TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-1").build(),
                 TriggerFixture.getValidTriggerBuilder().setDebugJoinKey("debug_key-2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setPlatformAdId("debugAppAdId1").build(),
+                TriggerFixture.getValidTriggerBuilder().setPlatformAdId("debugAppAdId2").build());
+        assertNotEquals(
+                TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId1").build(),
+                TriggerFixture.getValidTriggerBuilder().setDebugAdId("debugWebAdId2").build());
     }
 
     @Test
@@ -435,8 +447,12 @@ public class TriggerTest {
         dedupKeyJsonObject2.put("deduplication_key", "11");
         dedupKeyJsonObject2.put("filters", createFilterJSONArray());
         dedupKeyJsonObject2.put("not_filters", createFilterJSONArray());
+        JSONObject dedupKeyJsonObject3 = new JSONObject();
+        dedupKeyJsonObject3.put("filters", createFilterJSONArray());
+        dedupKeyJsonObject3.put("not_filters", createFilterJSONArray());
         aggregateDedupKeys.put(dedupKeyJsonObject1);
         aggregateDedupKeys.put(dedupKeyJsonObject2);
+        aggregateDedupKeys.put(dedupKeyJsonObject3);
 
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
@@ -490,9 +506,21 @@ public class TriggerTest {
                         .longValue(),
                 10L);
         assertTrue(aggregateTrigger.getAggregateDeduplicationKeys().isPresent());
-        assertEquals(aggregateTrigger.getAggregateDeduplicationKeys().get().size(), 2);
+        assertEquals(aggregateTrigger.getAggregateDeduplicationKeys().get().size(), 3);
+        assertTrue(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(0)
+                        .getDeduplicationKey()
+                        .isPresent());
         assertEquals(
-                aggregateTrigger.getAggregateDeduplicationKeys().get().get(0).getDeduplicationKey(),
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(0)
+                        .getDeduplicationKey()
+                        .get(),
                 new UnsignedLong(10L));
         assertTrue(
                 aggregateTrigger
@@ -567,6 +595,58 @@ public class TriggerTest {
                         .getAttributionFilterMap()
                         .size(),
                 2);
+        assertEquals(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(1)
+                        .getDeduplicationKey()
+                        .get(),
+                new UnsignedLong(11L));
+
+        assertTrue(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(2)
+                        .getFilterSet()
+                        .isPresent());
+        assertEquals(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(2)
+                        .getFilterSet()
+                        .get()
+                        .get(0)
+                        .getAttributionFilterMap()
+                        .size(),
+                2);
+        assertTrue(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(2)
+                        .getNotFilterSet()
+                        .isPresent());
+        assertEquals(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(2)
+                        .getNotFilterSet()
+                        .get()
+                        .get(0)
+                        .getAttributionFilterMap()
+                        .size(),
+                2);
+        assertTrue(
+                aggregateTrigger
+                        .getAggregateDeduplicationKeys()
+                        .get()
+                        .get(2)
+                        .getDeduplicationKey()
+                        .isEmpty());
     }
 
     @Test

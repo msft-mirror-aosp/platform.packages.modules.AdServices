@@ -74,6 +74,7 @@
                     tools:ignore="ContentDescription" />
 
                 <TextView
+                    android:id="@+id/measurement_footer"
                     android:text="@string/settingsUI_measurement_view_footer_text"
                     style="@style/MainStyle.Body2" />
             </LinearLayout>

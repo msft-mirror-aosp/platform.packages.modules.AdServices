@@ -150,7 +150,7 @@ public class AttributionJobHandlerTest {
                 new AttributionJobHandler(
                         mDatastoreManager,
                         mFlags,
-                        new DebugReportApi(ApplicationProvider.getApplicationContext()));
+                        new DebugReportApi(ApplicationProvider.getApplicationContext(), mFlags));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
     }
 

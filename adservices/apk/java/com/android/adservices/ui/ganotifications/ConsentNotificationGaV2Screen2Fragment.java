@@ -27,6 +27,7 @@ import static com.android.adservices.ui.notifications.ConsentNotificationActivit
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnScrollChangeListener;
@@ -84,11 +85,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
         mIsEUDevice =
                 requireActivity().getIntent().getBooleanExtra(
                         IS_EU_DEVICE_ARGUMENT_KEY, true);
-        View rootView;
-        rootView = inflater.inflate(
-                R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
-
-        return rootView;
+        return inflater.inflate(R.layout.consent_notification_screen_2_ga_v2_eu, container, false);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -104,6 +101,9 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                     ConsentNotificationActivity.handleAction(
                             LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
                 });
+
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                .setMovementMethod(LinkMovementMethod.getInstance());
 
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton_screen_2);
         leftControlButton.setOnClickListener(
@@ -205,7 +205,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                                 : R.string.notificationUI_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);
-                mRightControlButton.setText(R.string.notificationUI_next_button_text);
+                mRightControlButton.setText(R.string.notificationUI_more_button_text);
             }
         }
 
@@ -219,7 +219,7 @@ public class ConsentNotificationGaV2Screen2Fragment extends Fragment {
                 ConsentNotificationActivity.handleAction(
                         LANDING_PAGE_OPT_IN_CLICKED, getContext());
 
-                // opt-in confirmation activity
+                // opt-in to topics
                 ConsentManager.getInstance(requireContext())
                         .enable(requireContext(), AdServicesApiType.TOPICS);
                 if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {

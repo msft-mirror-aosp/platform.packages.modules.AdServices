@@ -18,10 +18,12 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_FETCH_PROCESS_REPORTED;
@@ -34,17 +36,23 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_CUS
 import android.annotation.NonNull;
 import android.util.proto.ProtoOutputStream;
 
+import com.android.adservices.errorlogging.AdServicesErrorStats;
+import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-/** {@link AdServicesLogger} that log stats to StatsD */
+/**
+ * {@link AdServicesLogger} that log stats to StatsD and {@link StatsdAdServicesErrorLogger} that
+ * logs error stats to Statsd.
+ */
 @ThreadSafe
-public class StatsdAdServicesLogger implements AdServicesLogger {
+public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdServicesErrorLogger {
     private static final int AD_SERVICES_TOPIC_IDS_FIELD_ID = 1;
 
     @GuardedBy("SINGLETON_LOCK")
@@ -76,7 +84,10 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
         AdServicesStatsLog.write(
                 measurementReportsStats.getCode(),
                 measurementReportsStats.getType(),
-                measurementReportsStats.getResultCode());
+                measurementReportsStats.getResultCode(),
+                measurementReportsStats.getFailureType(),
+                measurementReportsStats.getUploadMethod(),
+                measurementReportsStats.getReportingDelay());
     }
 
     /** log method for API call stats. */
@@ -115,7 +126,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getCode(),
                 stats.getRegistrationType(),
                 stats.getResponseSize(),
-                stats.getAdTechDomain());
+                stats.getAdTechDomain(),
+                stats.getInteractionType(),
+                stats.getSurfaceType(),
+                stats.getRegistrationStatus(),
+                stats.getFailureType(),
+                stats.getRegistrationDelay());
     }
 
     @Override
@@ -289,6 +305,29 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.isMatched(),
                 stats.getDebugJoinKeyHashedValue(),
                 stats.getDebugJoinKeyHashLimit());
+    }
+
+    @Override
+    public void logAdServicesError(AdServicesErrorStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_ERROR_REPORTED,
+                stats.getErrorCode(),
+                stats.getPpapiName(),
+                stats.getClassName(),
+                stats.getMethodName(),
+                stats.getLineNumber(),
+                stats.getLastObservedExceptionName());
+    }
+
+    /** Logging method for AdServices background job execution stats. */
+    public void logExecutionReportedStats(ExecutionReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED,
+                stats.getJobId(),
+                stats.getExecutionLatencyMs(),
+                stats.getExecutionPeriodMinute(),
+                stats.getExecutionResultCode(),
+                stats.getStopReason());
     }
 
     @NonNull

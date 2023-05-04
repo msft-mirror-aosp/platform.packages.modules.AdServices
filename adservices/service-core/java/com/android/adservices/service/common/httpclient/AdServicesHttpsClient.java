@@ -180,6 +180,7 @@ public class AdServicesHttpsClient {
      */
     @NonNull
     public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(@NonNull Uri uri) {
+        LogUtil.v("Fetching payload from uri: " + uri);
         return fetchPayload(AdServicesHttpClientRequest.builder().setUri(uri).build());
     }
 
@@ -193,6 +194,12 @@ public class AdServicesHttpsClient {
     public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
+
+        LogUtil.v(
+                "Fetching payload for request: uri: "
+                        + request.getUri()
+                        + " use cache: "
+                        + request.getUseCache());
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(

@@ -16,15 +16,61 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdData;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.service.js.JSScriptRecordArgument;
 
-/** Interface for caching the ad counter keys for an ad into the ad selection table. */
+import org.json.JSONObject;
+
+/**
+ * Interface for persisting the ad counter keys for an ad throughout the ad selection process and
+ * into the ad selection table.
+ */
 public interface AdCounterKeyCopier {
     /**
-     * Copies the ad counter keys from the winning ad's {@link AdScoringOutcome} to the {@link
-     * DBAdSelection.Builder} which will be persisted into the ad selection table.
+     * Copies the ad counter keys from the source {@link DBAdData} into the given {@link
+     * AdData.Builder} and returns it.
+     *
+     * <p>Note that the given {@code targetBuilder} will be modified.
+     */
+    @NonNull
+    AdData.Builder copyAdCounterKeys(
+            @NonNull AdData.Builder targetBuilder, @NonNull DBAdData sourceAdData);
+
+    /**
+     * Copies the ad counter keys from the source {@link AdData} into a copy of the given {@link
+     * JSScriptRecordArgument} and returns the copy.
+     */
+    @NonNull
+    JSScriptRecordArgument copyAdCounterKeys(
+            @NonNull JSScriptRecordArgument originalRecordArgument, @NonNull AdData sourceAdData);
+
+    /**
+     * Copies the ad counter keys from the source {@link DBAdData} into a copy of the given {@link
+     * JSScriptRecordArgument} and returns the copy.
+     */
+    @NonNull
+    JSScriptRecordArgument copyAdCounterKeys(
+            @NonNull JSScriptRecordArgument originalRecordArgument, @NonNull DBAdData sourceAdData);
+
+    /**
+     * Parses the ad counter keys from the JSON bidding or scoring result and copies any keys into
+     * the given {@link AdData.Builder} and returns it.
+     *
+     * <p>Note that the given {@code targetBuilder} will be modified.
+     */
+    @NonNull
+    AdData.Builder copyAdCounterKeys(
+            @NonNull AdData.Builder targetBuilder, @NonNull JSONObject sourceObject);
+
+    /**
+     * Copies the ad counter keys from the winning ad's {@link AdScoringOutcome} to the given {@link
+     * DBAdSelection.Builder} which will be persisted into the ad selection table and returns it.
+     *
+     * <p>Note that the given {@code targetBuilder} will be modified.
      */
     @NonNull
     DBAdSelection.Builder copyAdCounterKeys(

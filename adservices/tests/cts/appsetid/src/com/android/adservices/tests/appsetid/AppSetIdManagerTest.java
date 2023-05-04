@@ -101,8 +101,8 @@ public class AppSetIdManagerTest {
     @Test
     @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager() throws Exception {
-        boolean isConnected = ConnectivityUtils.isNetworkConnected(sContext);
-        Assume.assumeTrue("App set id is dependent on network capabilities", isConnected);
+        Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
+
         AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
         CompletableFuture<AppSetId> future = new CompletableFuture<>();
         OutcomeReceiver<AppSetId, Exception> callback =
@@ -126,6 +126,8 @@ public class AppSetIdManagerTest {
     @Test
     @FlakyTest(bugId = 271656209)
     public void testAppSetIdManager_verifyRateLimitReached() throws Exception {
+        Assume.assumeTrue(ConnectivityUtils.isNetworkConnected(sContext));
+
         final AppSetIdManager appSetIdManager = AppSetIdManager.get(sContext);
 
         // Rate limit hasn't reached yet

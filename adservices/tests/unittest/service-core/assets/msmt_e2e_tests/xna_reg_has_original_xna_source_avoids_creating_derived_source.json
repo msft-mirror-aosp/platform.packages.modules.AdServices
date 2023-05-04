@@ -72,9 +72,7 @@
                 }
               },
               "Location": null,
-              "Attribution-Reporting-Redirect": [
-                "https://www.ad-tech2.test"
-              ]
+              "Attribution-Reporting-Redirect": null
             }
           }
         ],

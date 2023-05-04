@@ -16,9 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdData;
 import android.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.service.js.JSScriptRecordArgument;
+
+import org.json.JSONObject;
 
 import java.util.Objects;
 
@@ -27,7 +33,46 @@ import java.util.Objects;
  * disabled.
  */
 public class AdCounterKeyCopierNoOpImpl implements AdCounterKeyCopier {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     public AdCounterKeyCopierNoOpImpl() {}
+
+    @Override
+    @NonNull
+    public AdData.Builder copyAdCounterKeys(
+            @NonNull AdData.Builder targetBuilder, @NonNull DBAdData sourceAdData) {
+        Objects.requireNonNull(targetBuilder);
+        Objects.requireNonNull(sourceAdData);
+        return targetBuilder;
+    }
+
+    @Override
+    @NonNull
+    public JSScriptRecordArgument copyAdCounterKeys(
+            @NonNull JSScriptRecordArgument originalRecordArgument, @NonNull AdData sourceAdData) {
+        Objects.requireNonNull(originalRecordArgument);
+        Objects.requireNonNull(sourceAdData);
+        return originalRecordArgument;
+    }
+
+    @Override
+    @NonNull
+    public JSScriptRecordArgument copyAdCounterKeys(
+            @NonNull JSScriptRecordArgument originalRecordArgument,
+            @NonNull DBAdData sourceAdData) {
+        Objects.requireNonNull(originalRecordArgument);
+        Objects.requireNonNull(sourceAdData);
+        return originalRecordArgument;
+    }
+
+    @Override
+    @NonNull
+    public AdData.Builder copyAdCounterKeys(
+            @NonNull AdData.Builder targetBuilder, @NonNull JSONObject sourceObject) {
+        Objects.requireNonNull(targetBuilder);
+        Objects.requireNonNull(sourceObject);
+        return targetBuilder;
+    }
 
     @Override
     @NonNull
@@ -35,6 +80,7 @@ public class AdCounterKeyCopierNoOpImpl implements AdCounterKeyCopier {
             @NonNull DBAdSelection.Builder targetBuilder, @NonNull AdScoringOutcome sourceOutcome) {
         Objects.requireNonNull(targetBuilder);
         Objects.requireNonNull(sourceOutcome);
+        sLogger.v("Ad selection filtering disabled, skipping ad counter key copying");
         return targetBuilder;
     }
 }

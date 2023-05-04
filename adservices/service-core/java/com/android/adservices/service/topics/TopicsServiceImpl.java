@@ -43,7 +43,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
@@ -74,6 +74,7 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final Context mContext;
     private final TopicsWorker mTopicsWorker;
@@ -151,7 +152,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }
                     } catch (RemoteException e) {
-                        LogUtil.e(e, "Unable to send result to the callback");
+                        sLogger.e(e, "Unable to send result to the callback");
                         resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -193,11 +194,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 Throttler.ApiKey.TOPICS_API_SDK_NAME, topicsParam.getSdkName());
 
         if (throttled) {
-            LogUtil.e("Rate Limit Reached for TOPICS_API");
+            sLogger.e("Rate Limit Reached for TOPICS_API");
             try {
                 callback.onFailure(STATUS_RATE_LIMIT_REACHED);
             } catch (RemoteException e) {
-                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+                sLogger.e(e, "Fail to call the callback on Rate Limit Reached.");
             }
             return true;
         }
@@ -320,11 +321,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             IGetTopicsCallback callback,
             @AdServicesStatusUtils.StatusCode int statusCode,
             String message) {
-        LogUtil.e(message);
+        sLogger.e(message);
         try {
             callback.onFailure(statusCode);
         } catch (RemoteException e) {
-            LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+            sLogger.e(e, String.format("Fail to call the callback. %s", message));
         }
     }
 
@@ -335,11 +336,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, callingPackage + " not found");
+            sLogger.e(e, callingPackage + " not found");
             return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
-            LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+            sLogger.e(callingPackage + " does not belong to uid " + callingUid);
             return STATUS_UNAUTHORIZED;
         }
         return STATUS_SUCCESS;
