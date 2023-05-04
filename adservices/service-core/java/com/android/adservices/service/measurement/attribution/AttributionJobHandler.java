@@ -318,7 +318,8 @@ class AttributionJobHandler {
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
-                            .setTriggerId(trigger.getId());
+                            .setTriggerId(trigger.getId())
+                            .setRegistrationOrigin(trigger.getRegistrationOrigin());
 
             if (aggregateDeduplicationKeyOptional.isPresent()) {
                 aggregateReportBuilder.setDedupKey(
