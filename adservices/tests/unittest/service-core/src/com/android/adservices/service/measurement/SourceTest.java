@@ -1101,6 +1101,32 @@ public class SourceTest {
     }
 
     @Test
+    public void fakeReports_flexEventReport_generatesFromStaticReportStates() throws JSONException {
+        Source source = spy(SourceFixture.getValidSourceWithFlexEventReport());
+        // Increase the probability of random attribution.
+        doReturn(0.50D).when(source).getRandomAttributionProbability();
+        int falseCount = 0;
+        int neverCount = 0;
+        int truthCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    source.assignAttributionModeAndGenerateFakeReports();
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                falseCount++;
+                assertNotEquals(0, fakeReports.size());
+            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
+                neverCount++;
+                assertEquals(0, fakeReports.size());
+            } else {
+                truthCount++;
+            }
+        }
+        assertNotEquals(0, falseCount);
+        assertNotEquals(0, neverCount);
+        assertNotEquals(0, truthCount);
+    }
+
+    @Test
     public void impressionNoiseParamGeneration() {
         long eventTime = System.currentTimeMillis();
         Source eventSource30dExpiry = SourceFixture.getValidSourceBuilder()
