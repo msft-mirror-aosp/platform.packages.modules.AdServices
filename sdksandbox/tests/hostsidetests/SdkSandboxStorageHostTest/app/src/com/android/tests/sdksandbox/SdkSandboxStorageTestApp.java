@@ -42,6 +42,7 @@ import com.android.tests.codeprovider.storagetest_1.IStorageTestSdk1Api;
 
 import junit.framework.AssertionFailedError;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -79,6 +80,17 @@ public class SdkSandboxStorageTestApp {
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
         mUiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // unload SDK to fix flakiness
+        mSdkSandboxManager.unloadSdk(SDK_NAME);
+    }
+
+    @After
+    public void tearDown() {
+        // unload SDK to fix flakiness
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        }
     }
 
     @Test
