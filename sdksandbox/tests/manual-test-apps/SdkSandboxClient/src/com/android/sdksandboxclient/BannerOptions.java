@@ -20,8 +20,9 @@ import android.content.SharedPreferences;
 
 public class BannerOptions {
 
-    public enum ContentType {
-        RANDOM_COLOUR
+    public enum ViewType {
+        RANDOM_COLOUR,
+        INFLATED
     }
 
     public enum OnClick {
@@ -32,12 +33,12 @@ public class BannerOptions {
         BOTTOM
     }
 
-    private final ContentType mContentType;
+    private final ViewType mViewType;
     private final OnClick mOnClick;
     private final Placement mPlacement;
 
-    public ContentType getContentType() {
-        return mContentType;
+    public ViewType getViewType() {
+        return mViewType;
     }
 
     public OnClick getOnClick() {
@@ -51,19 +52,19 @@ public class BannerOptions {
     @Override
     public String toString() {
         return String.format(
-                "BannerOptions { ContentType=%s, OnClick=%s, Placement=%s }",
-                mContentType, mOnClick, mPlacement);
+                "BannerOptions { ViewType=%s, OnClick=%s, Placement=%s }",
+                mViewType, mOnClick, mPlacement);
     }
 
-    private BannerOptions(ContentType contentType, OnClick onClick, Placement placement) {
-        mContentType = contentType;
+    private BannerOptions(ViewType viewType, OnClick onClick, Placement placement) {
+        mViewType = viewType;
         mOnClick = onClick;
         mPlacement = placement;
     }
 
     public static BannerOptions fromSharedPreferences(SharedPreferences sharedPreferences) {
         return new BannerOptions(
-                ContentType.valueOf(sharedPreferences.getString("banner_content_type", "")),
+                ViewType.valueOf(sharedPreferences.getString("banner_view_type", "")),
                 OnClick.valueOf(sharedPreferences.getString("banner_on_click", "")),
                 Placement.valueOf(sharedPreferences.getString("banner_placement", "")));
     }

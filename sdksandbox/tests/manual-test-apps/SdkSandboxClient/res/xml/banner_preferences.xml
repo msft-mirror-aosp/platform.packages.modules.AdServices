@@ -19,14 +19,14 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory
-        app:key="banner_content_category"
-        app:title="@string/content">
+        app:key="banner_view_category"
+        app:title="@string/view">
         <ListPreference
-            app:key="banner_content_type"
-            app:title="@string/content_type"
+            app:key="banner_view_type"
+            app:title="@string/view_type"
             app:useSimpleSummaryProvider="true"
-            android:entries="@array/banner_content_type"
-            android:entryValues="@array/banner_content_type_values"
+            android:entries="@array/banner_view_type"
+            android:entryValues="@array/banner_view_type_values"
             android:defaultValue="RANDOM_COLOUR"
         />
     </PreferenceCategory>
