@@ -1,3 +1,0 @@
-%s. %s
-APP_NAME
-SPLIT_PACKAGE_NAME

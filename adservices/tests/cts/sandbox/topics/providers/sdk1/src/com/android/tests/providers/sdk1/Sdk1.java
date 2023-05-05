@@ -43,12 +43,12 @@ public class Sdk1 extends SandboxedSdkProvider {
     // Expected Taxonomy version and Model version. This should be changed along with corresponding
     // model and taxonomy change.
     private static final long TAXONOMY_VERSION = 2L;
-    private static final long MODEL_VERSION = 4L;
+    private static final long MODEL_VERSION = 3L;
 
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(10175, 10147, 10254, 10333, 10253);
+            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
