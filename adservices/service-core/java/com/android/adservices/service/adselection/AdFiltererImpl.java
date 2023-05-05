@@ -28,6 +28,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.profiling.Tracing;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -69,30 +70,35 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        List<DBCustomAudience> toReturn = new ArrayList<>();
-        Instant currentTime = mClock.instant();
-        sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
-        int totalAds = 0;
-        int remainingAds = 0;
-        for (DBCustomAudience ca : cas) {
-            List<DBAdData> filteredAds = new ArrayList<>();
-            totalAds += ca.getAds().size();
-            for (DBAdData ad : ca.getAds()) {
-                if (doesAdPassFilters(
-                        ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
-                    filteredAds.add(ad);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CA);
+        try {
+            List<DBCustomAudience> toReturn = new ArrayList<>();
+            Instant currentTime = mClock.instant();
+            sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
+            int totalAds = 0;
+            int remainingAds = 0;
+            for (DBCustomAudience ca : cas) {
+                List<DBAdData> filteredAds = new ArrayList<>();
+                totalAds += ca.getAds().size();
+                for (DBAdData ad : ca.getAds()) {
+                    if (doesAdPassFilters(
+                            ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
+                        filteredAds.add(ad);
+                    }
+                }
+                if (!filteredAds.isEmpty()) {
+                    toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
+                    remainingAds += filteredAds.size();
                 }
             }
-            if (!filteredAds.isEmpty()) {
-                toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
-                remainingAds += filteredAds.size();
-            }
+            sLogger.v(
+                    "Filtering finished. %d CAs of the original %d remain. "
+                            + "%d Ads of the original %d remain.",
+                    toReturn.size(), cas.size(), remainingAds, totalAds);
+            return toReturn;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTER_CA, traceCookie);
         }
-        sLogger.v(
-                "Filtering finished. %d CAs of the original %d remain. "
-                        + "%d Ads of the original %d remain.",
-                toReturn.size(), cas.size(), remainingAds, totalAds);
-        return toReturn;
     }
 
     /**
@@ -104,30 +110,39 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public ContextualAds filterContextualAds(ContextualAds contextualAds) {
-        List<AdWithBid> toReturn = new ArrayList<>();
-        Instant currentTime = mClock.instant();
-        sLogger.v(
-                "Applying filters to %d contextual ads with current time %s.",
-                contextualAds.getAdsWithBid().size(), currentTime);
-        for (AdWithBid ad : contextualAds.getAdsWithBid()) {
-            DBAdData dbAdData =
-                    new DBAdData(
-                            ad.getAdData().getRenderUri(),
-                            ad.getAdData().getMetadata(),
-                            ad.getAdData().getAdCounterKeys(),
-                            ad.getAdData().getAdFilters());
-            if (doesAdPassFilters(dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
-                toReturn.add(ad);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CONTEXTUAL);
+        try {
+            List<AdWithBid> adsList = new ArrayList<>();
+            Instant currentTime = mClock.instant();
+            sLogger.v(
+                    "Applying filters to %d contextual ads with current time %s.",
+                    contextualAds.getAdsWithBid().size(), currentTime);
+            for (AdWithBid ad : contextualAds.getAdsWithBid()) {
+                DBAdData dbAdData =
+                        new DBAdData(
+                                ad.getAdData().getRenderUri(),
+                                ad.getAdData().getMetadata(),
+                                ad.getAdData().getAdCounterKeys(),
+                                ad.getAdData().getAdFilters());
+                if (doesAdPassFilters(
+                        dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
+                    adsList.add(ad);
+                }
             }
+            sLogger.v(
+                    "Filtering finished. %d contextual ads of the original %d remain.",
+                    adsList.size(), contextualAds.getAdsWithBid().size());
+            ContextualAds toReturn =
+                    new ContextualAds.Builder()
+                            .setAdsWithBid(adsList)
+                            .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
+                            .setBuyer(contextualAds.getBuyer())
+                            .build();
+
+            return toReturn;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTER_CONTEXTUAL, traceCookie);
         }
-        sLogger.v(
-                "Filtering finished. %d contextual ads of the original %d remain.",
-                toReturn.size(), contextualAds.getAdsWithBid().size());
-        return new ContextualAds.Builder()
-                .setAdsWithBid(toReturn)
-                .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
-                .setBuyer(contextualAds.getBuyer())
-                .build();
     }
 
     private boolean doesAdPassFilters(
