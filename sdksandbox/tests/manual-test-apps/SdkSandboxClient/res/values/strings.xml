@@ -18,7 +18,6 @@
 <resources>
     <string name="title_activity_main" description="Launcher title">Sdk Sandbox Test</string>
     <string name="sdks" description="SDKs title">SDKs</string>
-    <string name="load_sdks">Load SDKs</string>
     <string name="register_death_callback">Register Death Callback</string>
     <string name="ads" description="Ads title">Ads</string>
     <string name="new_banner_ad">New Banner Ad</string>
