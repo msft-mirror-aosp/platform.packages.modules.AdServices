@@ -127,6 +127,7 @@ class TestObjectProvider {
                                         .setTriggerDedupKey(null)
                                         .setSourceType(source.getSourceType())
                                         .setStatus(EventReport.Status.PENDING)
+                                        .setRegistrationOrigin(source.getRegistrationOrigin())
                                         .build());
                     };
             doAnswer(answerSourceEventReports)

@@ -99,6 +99,9 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -347,7 +350,10 @@ public class Source {
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
                 && Objects.equals(mParentId, source.mParentId)
                 && Objects.equals(mInstallTime, source.mInstallTime)
-                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey);
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, source.mPlatformAdId)
+                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin);
     }
 
     @Override
@@ -379,7 +385,10 @@ public class Source {
                 mRegistrationId,
                 mSharedAggregationKeys,
                 mInstallTime,
-                mDebugJoinKey);
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId,
+                mRegistrationOrigin);
     }
 
     /**
@@ -706,6 +715,31 @@ public class Source {
         return mDebugJoinKey;
     }
 
+    /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app trigger's {@link Trigger#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
     /** See {@link Source#getAppDestinations()} */
     public void setAppDestinations(@Nullable List<Uri> appDestinations) {
         mAppDestinations = appDestinations;
@@ -879,6 +913,9 @@ public class Source {
             builder.setPriority(copyFrom.mPriority);
             builder.setStatus(copyFrom.mStatus);
             builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
+            builder.setPlatformAdId(copyFrom.mPlatformAdId);
+            builder.setDebugAdId(copyFrom.mDebugAdId);
+            builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             return builder;
         }
 
@@ -1134,6 +1171,27 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Source#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Build the {@link Source}. */
         @NonNull
         public Source build() {
@@ -1143,11 +1201,8 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType,
                     mBuilding.mAggregateReportDedupKeys,
-                    mBuilding.mEventReportDedupKeys);
-
-            //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
-            //    throw new IllegalArgumentException("At least one destination is required");
-            //}
+                    mBuilding.mEventReportDedupKeys,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }
