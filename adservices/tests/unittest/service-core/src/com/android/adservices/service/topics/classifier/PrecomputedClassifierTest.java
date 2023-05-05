@@ -63,8 +63,6 @@ public class PrecomputedClassifierTest {
     private static final String APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_assets_metadata.json";
-    private static final String CLASSIFIER_INPUT_CONFIG_PATH =
-            "classifier/classifier_input_config.txt";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private PrecomputedClassifier sPrecomputedClassifier;
     private ModelManager mModelManager;
@@ -95,7 +93,6 @@ public class PrecomputedClassifierTest {
                         LABELS_FILE_PATH,
                         APPS_FILE_PATH,
                         CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -135,8 +132,8 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of(10222, 10223, 10116, 10243, 10254))
-                                .setBuildId(1800)
-                                .setAssetVersion("4")
+                                .setBuildId(1467)
+                                .setAssetVersion("3")
                                 .setClassifierType(
                                         EpochComputationClassifierStats.ClassifierType
                                                 .PRECOMPUTED_CLASSIFIER)
@@ -165,8 +162,8 @@ public class PrecomputedClassifierTest {
                 .isEqualTo(
                         EpochComputationClassifierStats.builder()
                                 .setTopicIds(ImmutableList.of())
-                                .setBuildId(1800)
-                                .setAssetVersion("4")
+                                .setBuildId(1467)
+                                .setAssetVersion("3")
                                 .setClassifierType(
                                         EpochComputationClassifierStats.ClassifierType
                                                 .PRECOMPUTED_CLASSIFIER)
@@ -265,7 +262,7 @@ public class PrecomputedClassifierTest {
         // This test case should return top 5 topics from appTopics and 1 random topic
         List<Topic> testResponse =
                 sPrecomputedClassifier.getTopTopics(
-                        appTopics, /* numberOfTopTopics= */ 5, /* numberOfRandomTopics= */ 1);
+                        appTopics, /* numberOfTopTopics = */ 5, /* numberOfRandomTopics = */ 1);
 
         assertThat(testResponse.get(0)).isEqualTo(createRealTopic(1));
         assertThat(testResponse.get(1)).isEqualTo(createRealTopic(2));
