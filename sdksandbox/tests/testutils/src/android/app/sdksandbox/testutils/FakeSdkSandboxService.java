@@ -66,6 +66,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     boolean mWasVisibilityPatchChecked = false;
     public boolean dieOnLoad = false;
 
+    public boolean failInitialization = false;
+
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
 
@@ -89,7 +91,11 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     @Override
     public void initialize(
-            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled)
+            throws IllegalStateException {
+        if (failInitialization) {
+            throw new IllegalStateException();
+        }
         mInitializationCount++;
     }
 
