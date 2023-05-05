@@ -488,7 +488,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "AND %1$s.%4$s > ? "
                                 + "AND %1$s.%5$s = ?",
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         MeasurementTables.SourceContract.EXPIRY_TIME,
                         MeasurementTables.SourceContract.STATUS);
@@ -502,7 +502,7 @@ class MeasurementDao implements IMeasurementDao {
                                         trigger.getDestinationType(),
                                         sourceWhereStatement),
                                 new String[] {
-                                    trigger.getEnrollmentId(),
+                                    trigger.getRegistrationOrigin().toString(),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(Source.Status.ACTIVE)
@@ -1739,7 +1739,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "OVER (PARTITION BY %2$s ORDER BY %3$s DESC, %4$s DESC) "
                                 + "first_source_id FROM %5$s)",
                         MeasurementTables.SourceContract.ID,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                         MeasurementTables.SourceContract.PRIORITY,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         filterQuery);
