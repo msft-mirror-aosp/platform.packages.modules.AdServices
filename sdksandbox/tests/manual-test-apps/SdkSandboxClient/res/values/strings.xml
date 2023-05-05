@@ -32,8 +32,8 @@
     <string name="ad_space" description="Ad Space title">Ad Space</string>
     <!-- Banner Options -->
     <string name="banner_options_title" description="Banner Ad Options Title">Banner Ad Options</string>
-    <string name="content">Content</string>
-    <string name="content_type">Content Type</string>
+    <string name="view">View</string>
+    <string name="view_type">View Type</string>
     <string name="behaviour">Behaviour</string>
     <string name="on_click">On Click</string>
     <string name="positioning">Positioning</string>

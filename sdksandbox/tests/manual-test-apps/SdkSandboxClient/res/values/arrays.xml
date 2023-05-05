@@ -17,8 +17,9 @@
 
 <resources>
     <!-- Text for the options. -->
-    <array name="banner_content_type">
+    <array name="banner_view_type">
         <item>Random colour</item>
+        <item>Inflated from layout</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
@@ -27,8 +28,9 @@
         <item>Bottom of screen</item>
     </array>
     <!-- Values for the options, matching the enum names. -->
-    <array name="banner_content_type_values">
+    <array name="banner_view_type_values">
         <item>RANDOM_COLOUR</item>
+        <item>INFLATED</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>
