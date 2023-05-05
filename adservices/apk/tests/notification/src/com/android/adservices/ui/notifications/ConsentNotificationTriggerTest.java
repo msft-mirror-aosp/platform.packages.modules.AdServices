@@ -412,22 +412,16 @@ public class ConsentNotificationTriggerTest {
 
         // there might be only one notification and no scroller exists.
         UiObject notificationCard;
+        // notification card title might be cut off, so check for first portion of title
+        UiSelector notificationCardSelector =
+                new UiSelector()
+                        .textContains(
+                                getString(R.string.notificationUI_notification_ga_title_eu)
+                                        .substring(0, 15));
         if (scroller.exists()) {
-            notificationCard =
-                    scroller.getChild(
-                            new UiSelector()
-                                    .text(
-                                            getString(
-                                                    R.string
-                                                            .notificationUI_notification_ga_title_eu)));
+            notificationCard = scroller.getChild(notificationCardSelector);
         } else {
-            notificationCard =
-                    sDevice.findObject(
-                            new UiSelector()
-                                    .text(
-                                            getString(
-                                                    R.string
-                                                            .notificationUI_notification_ga_title_eu)));
+            notificationCard = sDevice.findObject(notificationCardSelector);
         }
         notificationCard.waitForExists(LAUNCH_TIMEOUT);
         assertThat(notificationCard.exists()).isTrue();
@@ -496,22 +490,16 @@ public class ConsentNotificationTriggerTest {
 
         // there might be only one notification and no scroller exists.
         UiObject notificationCard;
+        // notification card title might be cut off, so check for first portion of title
+        UiSelector notificationCardSelector =
+                new UiSelector()
+                        .textContains(
+                                getString(R.string.notificationUI_notification_ga_title_eu)
+                                        .substring(0, 15));
         if (scroller.exists()) {
-            notificationCard =
-                    scroller.getChild(
-                            new UiSelector()
-                                    .text(
-                                            getString(
-                                                    R.string
-                                                            .notificationUI_notification_ga_title_eu)));
+            notificationCard = scroller.getChild(notificationCardSelector);
         } else {
-            notificationCard =
-                    sDevice.findObject(
-                            new UiSelector()
-                                    .text(
-                                            getString(
-                                                    R.string
-                                                            .notificationUI_notification_ga_title_eu)));
+            notificationCard = sDevice.findObject(notificationCardSelector);
         }
         notificationCard.waitForExists(LAUNCH_TIMEOUT);
         assertThat(notificationCard.exists()).isTrue();

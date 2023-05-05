@@ -88,6 +88,11 @@ public class SqliteObjectMapper {
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -173,6 +178,10 @@ public class SqliteObjectMapper {
         setTextColumn(
                 cursor, MeasurementTables.SourceContract.PLATFORM_AD_ID, builder::setPlatformAdId);
         setTextColumn(cursor, MeasurementTables.SourceContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
         return builder.build();
     }
 
@@ -235,6 +244,11 @@ public class SqliteObjectMapper {
         setTextColumn(
                 cursor, MeasurementTables.TriggerContract.PLATFORM_AD_ID, builder::setPlatformAdId);
         setTextColumn(cursor, MeasurementTables.TriggerContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -277,6 +291,11 @@ public class SqliteObjectMapper {
         setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
         setUnsignedLongColumn(
                 cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
