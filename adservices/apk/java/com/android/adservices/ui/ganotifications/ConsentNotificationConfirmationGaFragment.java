@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ui.ganotifications;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DISMISS_NOTIFICATION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
 import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED;
@@ -45,6 +47,7 @@ import androidx.fragment.app.Fragment;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -90,6 +93,11 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
             notificationManager.cancel(NOTIFICATION_ID);
         } catch (Exception e) {
             LogUtil.e(e.toString());
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DISMISS_NOTIFICATION_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
+                    this.getClass().getSimpleName(),
+                    this.getClass().getEnclosingMethod().getName());
         }
     }
 
