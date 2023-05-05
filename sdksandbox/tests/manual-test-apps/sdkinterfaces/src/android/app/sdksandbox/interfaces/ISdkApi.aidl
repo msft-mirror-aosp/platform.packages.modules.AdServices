@@ -17,6 +17,7 @@ package android.app.sdksandbox.interfaces;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 
 interface ISdkApi {
+    ParcelFileDescriptor getFileDescriptor(String inputValue);
     String createFile(int sizeInMb);
     String getSyncedSharedPreferencesString(String key);
     // Representative method for SDK-SDK communication. This can be any method called by other

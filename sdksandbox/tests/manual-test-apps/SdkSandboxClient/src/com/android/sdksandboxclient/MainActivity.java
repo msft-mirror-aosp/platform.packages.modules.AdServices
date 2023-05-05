@@ -44,6 +44,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.OutcomeReceiver;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.os.StrictMode;
 import android.text.InputType;
@@ -65,6 +66,7 @@ import androidx.preference.PreferenceManager;
 import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
+import java.io.FileInputStream;
 import java.util.Set;
 import java.util.concurrent.Executors;
 
@@ -146,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
         mNewBannerAdButton = findViewById(R.id.new_banner_ad_button);
         mBannerAdOptionsButton = findViewById(R.id.banner_ad_options_button);
         mNewFullScreenAd = findViewById(R.id.new_fullscreen_ad_button);
-
         mCreateFileButton = findViewById(R.id.create_file_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
@@ -158,6 +159,7 @@ public class MainActivity extends AppCompatActivity {
         registerBannerAdOptionsButton();
         registerNewFullscreenAdButton();
 
+        registerGetFileDescriptorButton();
         registerCreateFileButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
@@ -283,6 +285,89 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         toastAndLog(WARN, "Sdk is not loaded");
                     }
+                });
+    }
+
+    private void registerGetFileDescriptorButton() {
+        final Button mGetFileDescriptorButton = findViewById(R.id.get_filedescriptor_button);
+        mGetFileDescriptorButton.setOnClickListener(
+                v -> {
+                    if (!mSdksLoaded) {
+                        toastAndLog(WARN, "Sdk is not loaded");
+                        return;
+                    }
+                    Log.i(TAG, "Ready to get File Descriptor from SDK to APP");
+
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    builder.setTitle("Set the value for FileDescriptor");
+                    final EditText inputValue = new EditText(this);
+                    inputValue.setText("default");
+                    builder.setView(inputValue);
+
+                    builder.setPositiveButton(
+                            "Get",
+                            (dialog, which) -> {
+                                BackgroundThread.getExecutor()
+                                        .execute(
+                                                () -> {
+                                                    IBinder binder = mSandboxedSdk.getInterface();
+                                                    String value = "";
+                                                    final String inputValueString =
+                                                            inputValue.getText().toString();
+                                                    if (inputValueString.length() == 0
+                                                            || inputValueString.length() > 10) {
+                                                        toastAndLog(
+                                                                WARN,
+                                                                "Input string cannot be empty or"
+                                                                    + " have more than 10"
+                                                                    + " characters. Try again.");
+                                                        return;
+                                                    }
+                                                    try {
+                                                        ISdkApi sdkApi =
+                                                                ISdkApi.Stub.asInterface(binder);
+                                                        ParcelFileDescriptor pFd =
+                                                                sdkApi.getFileDescriptor(
+                                                                        inputValueString);
+                                                        FileInputStream fis =
+                                                                new FileInputStream(
+                                                                        pFd.getFileDescriptor());
+                                                        // Reading fileInputStream and adding its
+                                                        // value to a string
+                                                        while (fis.available() != 0) {
+                                                            value += (char) fis.read();
+                                                        }
+                                                        fis.close();
+                                                        pFd.close();
+                                                    } catch (Exception e) {
+                                                        toastAndLog(
+                                                                ERROR,
+                                                                "Failed to get FileDescriptor: %s",
+                                                                e);
+                                                        return;
+                                                    }
+
+                                                    if (inputValueString.equals(value)) {
+                                                        toastAndLog(
+                                                                INFO,
+                                                                "FileDescriptor read successful,"
+                                                                        + " value sent = "
+                                                                        + inputValueString
+                                                                        + " , value received = "
+                                                                        + value);
+                                                    } else {
+                                                        toastAndLog(
+                                                                WARN,
+                                                                "FileDescriptor read unsuccessful,"
+                                                                        + " value sent ="
+                                                                        + inputValueString
+                                                                        + " , value received = "
+                                                                        + value);
+                                                    }
+                                                });
+                            });
+                    builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                    builder.show();
                 });
     }
 

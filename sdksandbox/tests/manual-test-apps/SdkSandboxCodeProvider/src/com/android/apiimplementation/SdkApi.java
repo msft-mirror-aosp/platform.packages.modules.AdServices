@@ -26,6 +26,7 @@ import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -36,6 +37,7 @@ import android.window.OnBackInvokedDispatcher;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,6 +48,25 @@ public class SdkApi extends ISdkApi.Stub {
 
     public SdkApi(Context sdkContext) {
         mContext = sdkContext;
+    }
+
+    @Override
+    public ParcelFileDescriptor getFileDescriptor(String inputValue) {
+        try {
+            final String fileName = "testParcelFileDescriptor";
+            FileOutputStream fout = mContext.openFileOutput(fileName, Context.MODE_PRIVATE);
+            // Writing inputValue String to a file
+            for (int i = 0; i < inputValue.length(); i++) {
+                fout.write((int) inputValue.charAt(i));
+            }
+            fout.close();
+            File file = new File(mContext.getFilesDir(), fileName);
+            ParcelFileDescriptor pFd =
+                    ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+            return pFd;
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
