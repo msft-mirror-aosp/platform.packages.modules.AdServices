@@ -32,6 +32,7 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,7 +41,6 @@ import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.StrictMode;
-import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
@@ -49,16 +49,20 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
 
 import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Set;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     // TODO(b/253202014): Add toggle button
     private static final Boolean IS_WEBVIEW_TESTING_ENABLED = false;
     private static final String SDK_NAME =
@@ -80,7 +84,6 @@ public class MainActivity extends Activity {
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
 
     private static String sVideoUrl;
-
     private boolean mSdksLoaded = false;
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
@@ -88,6 +91,7 @@ public class MainActivity extends Activity {
     private Button mLoadSdksButton;
     private Button mDeathCallbackButton;
     private Button mNewBannerAdButton;
+    private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
     private Button mInflateViewButton;
@@ -98,9 +102,12 @@ public class MainActivity extends Activity {
     private SurfaceView mRenderedView;
 
     private SandboxedSdk mSandboxedSdk;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        PreferenceManager.setDefaultValues(this, R.xml.banner_preferences, false);
         enableStrictMode();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -118,6 +125,7 @@ public class MainActivity extends Activity {
         mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
 
         mNewBannerAdButton = findViewById(R.id.new_banner_ad_button);
+        mBannerAdOptionsButton = findViewById(R.id.banner_ad_options_button);
         mNewFullScreenAd = findViewById(R.id.new_fullscreen_ad_button);
 
         mCreateFileButton = findViewById(R.id.create_file_button);
@@ -212,6 +220,9 @@ public class MainActivity extends Activity {
         mNewBannerAdButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
+                        final BannerOptions options =
+                                BannerOptions.fromSharedPreferences(mSharedPreferences);
+                        Log.i(TAG, options.toString());
                         sHandler.post(
                                 () -> {
                                     mSdkSandboxManager.requestSurfacePackage(
@@ -227,7 +238,8 @@ public class MainActivity extends Activity {
     }
 
     private void registerBannerAdOptionsButton() {
-        // TODO(b/280417818): Implement options button
+        mBannerAdOptionsButton.setOnClickListener(
+                v -> startActivity(new Intent(MainActivity.this, BannerOptionsActivity.class)));
     }
 
     private void registerCreateFileButton() {
