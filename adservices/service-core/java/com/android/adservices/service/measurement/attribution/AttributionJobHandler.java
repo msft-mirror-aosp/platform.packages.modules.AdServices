@@ -148,7 +148,7 @@ class AttributionJobHandler {
 
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                                trigger, measurementDao);
+                                trigger, measurementDao, Type.TRIGGER_NO_MATCHING_SOURCE);
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -229,6 +229,12 @@ class AttributionJobHandler {
                                     + " %2$d.",
                             trigger.getAttributionDestination(),
                             SystemHealthParams.getMaxAggregateReportsPerDestination()));
+            mDebugReportApi.scheduleTriggerDebugReport(
+                    source,
+                    trigger,
+                    String.valueOf(numReports),
+                    measurementDao,
+                    Type.TRIGGER_AGGREGATE_STORAGE_LIMIT);
             return TriggeringStatus.DROPPED;
         }
 
@@ -253,10 +259,20 @@ class AttributionJobHandler {
             Optional<List<AggregateHistogramContribution>> contributions =
                     AggregatePayloadGenerator.generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
+                if (source.getAggregatableAttributionSource().isPresent()
+                        && trigger.getAggregatableAttributionTrigger().isPresent()) {
+                    mDebugReportApi.scheduleTriggerDebugReport(
+                            source,
+                            trigger,
+                            /* limit = */ null,
+                            measurementDao,
+                            Type.TRIGGER_AGGREGATE_NO_CONTRIBUTIONS);
+                }
                 return TriggeringStatus.DROPPED;
             }
             OptionalInt newAggregateContributions =
-                    validateAndGetUpdatedAggregateContributions(contributions.get(), source);
+                    validateAndGetUpdatedAggregateContributions(
+                            contributions.get(), source, trigger, measurementDao);
             if (!newAggregateContributions.isPresent()) {
                 LogUtil.d(
                         "Aggregate contributions exceeded bound. Source ID: %s ; "
@@ -302,7 +318,8 @@ class AttributionJobHandler {
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
-                            .setTriggerId(trigger.getId());
+                            .setTriggerId(trigger.getId())
+                            .setRegistrationOrigin(trigger.getRegistrationOrigin());
 
             if (aggregateDeduplicationKeyOptional.isPresent()) {
                 aggregateReportBuilder.setDedupKey(
@@ -462,12 +479,17 @@ class AttributionJobHandler {
         Optional<EventTrigger> matchingEventTrigger =
                 findFirstMatchingEventTrigger(source, trigger);
         if (!matchingEventTrigger.isPresent()) {
-            mDebugReportApi.scheduleTriggerDebugReport(
-                    source,
-                    trigger,
-                    /* limit = */ null,
-                    measurementDao,
-                    Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            // trigger-no-matching-configurations verbose debug report is generated when trigger
+            // "filters/not_filters" field doesn't match source "filter_data" field, it won't be
+            // generated when source doesn't have "filter_data" field.
+            if (source.getFilterDataString() != null) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            }
             return TriggeringStatus.DROPPED;
         }
 
@@ -720,13 +742,27 @@ class AttributionJobHandler {
         return filterSet;
     }
 
-    private static OptionalInt validateAndGetUpdatedAggregateContributions(
-            List<AggregateHistogramContribution> contributions, Source source) {
+    private OptionalInt validateAndGetUpdatedAggregateContributions(
+            List<AggregateHistogramContribution> contributions,
+            Source source,
+            Trigger trigger,
+            IMeasurementDao measurementDao) {
         int newAggregateContributions = source.getAggregateContributions();
         for (AggregateHistogramContribution contribution : contributions) {
             try {
                 newAggregateContributions =
                         Math.addExact(newAggregateContributions, contribution.getValue());
+                if (newAggregateContributions
+                        >= PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
+                    // When histogram value is >= 65536 (aggregatable_budget_per_source),
+                    // generate verbose debug report, record the actual histogram value.
+                    mDebugReportApi.scheduleTriggerDebugReport(
+                            source,
+                            trigger,
+                            String.valueOf(newAggregateContributions),
+                            measurementDao,
+                            Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
+                }
                 if (newAggregateContributions
                         > PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE) {
                     return OptionalInt.empty();

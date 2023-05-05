@@ -315,6 +315,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
+    static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
+            "topics_on_device_classifier_kill_switch";
     static final String KEY_MDD_BACKGROUND_TASK_KILL_SWITCH = "mdd_background_task_kill_switch";
     static final String KEY_MDD_LOGGER_KILL_SWITCH = "mdd_logger_kill_switch";
     static final String KEY_ADID_KILL_SWITCH = "adid_kill_switch";
@@ -419,6 +421,8 @@ public final class PhFlags implements Flags {
     static final String KEY_UI_EEA_COUNTRIES = "ui_eea_countries";
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
+
+    static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
 
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
@@ -1684,6 +1688,19 @@ public final class PhFlags implements Flags {
                                 /* defaultValue */ TOPICS_KILL_SWITCH));
     }
 
+    @Override
+    public boolean getTopicsOnDeviceClassifierKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        // The priority of applying the flag values: SystemProperties, PH (DeviceConfig), then
+        // hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                        /* defaultValue */ TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH));
+    }
+
     // MDD Killswitches
     @Override
     public boolean getMddBackgroundTaskKillSwitch() {
@@ -2224,6 +2241,17 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getUiDialogFragmentEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_DIALOG_FRAGMENT_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_DIALOG_FRAGMENT_ENABLED,
+                        /* defaultValue */ UI_DIALOG_FRAGMENT));
+    }
+
+    @Override
     public boolean isEeaDeviceFeatureEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2355,6 +2383,11 @@ public final class PhFlags implements Flags {
         writer.println("==== AdServices PH Flags Dump killswitches ====");
         writer.println("\t" + KEY_GLOBAL_KILL_SWITCH + " = " + getGlobalKillSwitch());
         writer.println("\t" + KEY_TOPICS_KILL_SWITCH + " = " + getTopicsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH
+                        + " = "
+                        + getTopicsOnDeviceClassifierKillSwitch());
         writer.println("\t" + KEY_ADID_KILL_SWITCH + " = " + getAdIdKillSwitch());
         writer.println("\t" + KEY_APPSETID_KILL_SWITCH + " = " + getAppSetIdKillSwitch());
         writer.println(
@@ -2617,7 +2650,8 @@ public final class PhFlags implements Flags {
                 "\t"
                         + KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH
                         + " = "
-                        + getAsyncRegistrationFallbackJobKillSwitch());        writer.println(
+                        + getAsyncRegistrationFallbackJobKillSwitch());
+        writer.println(
                 "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH
                         + " = "
