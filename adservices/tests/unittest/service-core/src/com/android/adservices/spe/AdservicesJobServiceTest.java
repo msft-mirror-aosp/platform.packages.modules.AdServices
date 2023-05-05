@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_LATENCY;
@@ -407,6 +408,53 @@ public class AdservicesJobServiceTest {
                         stopReason);
     }
 
+    /** To test 1) skipping as first execution 2) skipping result code */
+    @Test
+    public void testJobExecutionLifeCycle_skipThenSkip() throws InterruptedException {
+        TestJobService jobService = new TestJobService(mLogger);
+        // Enable logging feature
+        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(false);
+        // Mock clock to return mocked currentTimeStamp in sequence.
+        when(mMockClock.currentTimeMillis())
+                .thenReturn(
+                        START_TIMESTAMP_EXECUTION_1,
+                        END_TIMESTAMP_EXECUTION_1,
+                        START_TIMESTAMP_EXECUTION_2,
+                        END_TIMESTAMP_EXECUTION_2);
+        // onStopJob() is not called, so stop reason is the unavailable value.
+        int stopReason = UNAVAILABLE_STOP_REASON;
+        // First Execution -- skip to execute
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch1.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isTrue();
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_1,
+                        PERIOD_EXECUTION_1,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                        stopReason);
+        // Second Execution -- Succeed to execute
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch2 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch2.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isTrue();
+        verify(mLogger)
+                .logJobStatsHelper(
+                        JOB_ID,
+                        Latency_EXECUTION_2,
+                        PERIOD_EXECUTION_2,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
+                        stopReason);
+    }
+
     @Test
     public void testKillSwitchIsOn_successfulExecution() throws InterruptedException {
         TestJobService jobService = new TestJobService(mLogger);
@@ -454,6 +502,22 @@ public class AdservicesJobServiceTest {
                                 BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
                 .isFalse();
     }
+
+    @Test
+    public void testKillSwitchIsOn_skipExecution() throws InterruptedException {
+        TestJobService jobService = new TestJobService(mLogger);
+        // Disable logging feature
+        when(mMockFlags.getBackgroundJobsLoggingKillSwitch()).thenReturn(true);
+        // First Execution -- onStopJob() is called with retry
+        jobService.setShouldSkip(true);
+        CountDownLatch logOperationCalledLatch1 = createCountDownLatchWithMockedOperation();
+        jobService.onStartJob(mMockJobParameters);
+        assertThat(
+                        logOperationCalledLatch1.await(
+                                BACKGROUND_EXECUTION_TIMEOUT, TimeUnit.MILLISECONDS))
+                .isFalse();
+    }
+
     // Since executions happen in background thread, create and use a countdownLatch to verify
     // the logging event has happened.
     private CountDownLatch createCountDownLatchWithMockedOperation() {
@@ -470,6 +534,7 @@ public class AdservicesJobServiceTest {
                 .logJobStatsHelper(anyInt(), anyLong(), anyLong(), anyInt(), anyInt());
         return logOperationCalledLatch;
     }
+
     // Helper class implemented as the pattern of Adservices background jobs. It's used to mimic
     // different scenarios of a JobService's lifecycle, in order to test the logging logic.
     //
@@ -480,6 +545,7 @@ public class AdservicesJobServiceTest {
         private boolean mShouldRetryOnStopJob;
         private boolean mShouldRetryOnJobFinished;
         private boolean mShouldOnStopJobHappen;
+        private boolean mShouldSkip;
         private final AdservicesJobServiceLogger mLogger;
 
         TestJobService(AdservicesJobServiceLogger logger) {
@@ -491,6 +557,13 @@ public class AdservicesJobServiceTest {
             mLogger.recordOnStartJob(JOB_ID);
 
             if (mShouldOnStopJobHappen) {
+                return false;
+            }
+
+            if (mShouldSkip) {
+                mLogger.recordJobSkipped(
+                        JOB_ID,
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
                 return false;
             }
 
@@ -543,6 +616,10 @@ public class AdservicesJobServiceTest {
 
         void setShouldOnStopJobHappen(boolean shouldHappen) {
             mShouldOnStopJobHappen = shouldHappen;
+        }
+
+        void setShouldSkip(@SuppressWarnings("SameParameterValue") boolean shouldSkip) {
+            mShouldSkip = shouldSkip;
         }
     }
 }
