@@ -31,8 +31,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -91,7 +91,7 @@ public class DebugReportingJobHandler {
                 LogUtil.d("Reading Enrollment failed");
                 return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
-            JSONObject debugReportJsonPayload = createReportJsonPayload(debugReport);
+            JSONArray debugReportJsonPayload = createReportJsonPayload(debugReport);
             int returnCode = makeHttpPostRequest(reportingOrigin.get(), debugReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK && returnCode <= 299) {
@@ -118,13 +118,15 @@ public class DebugReportingJobHandler {
 
     /** Creates the JSON payload for the POST request from the DebugReport. */
     @VisibleForTesting
-    JSONObject createReportJsonPayload(DebugReport debugReport) throws JSONException {
-        return debugReport.toPayloadJson();
+    JSONArray createReportJsonPayload(DebugReport debugReport) throws JSONException {
+        JSONArray debugReportJsonPayload = new JSONArray();
+        debugReportJsonPayload.put(debugReport.toPayloadJson());
+        return debugReportJsonPayload;
     }
 
     /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri adTechDomain, JSONObject debugReportPayload)
+    public int makeHttpPostRequest(Uri adTechDomain, JSONArray debugReportPayload)
             throws IOException {
         DebugReportSender debugReportSender = new DebugReportSender();
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);
