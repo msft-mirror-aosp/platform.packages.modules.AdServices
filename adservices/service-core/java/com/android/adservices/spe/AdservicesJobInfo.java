@@ -16,25 +16,16 @@
 
 package com.android.adservices.spe;
 
-import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 /** Enum class to store background jobs metadata. */
 public enum AdservicesJobInfo {
-    MDD_MAINTENANCE_PERIODIC_TASK_JOB(
-            "MDD_MAINTENANCE_PERIODIC_TASK_JOB", MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID),
-    MDD_CHARGING_PERIODIC_TASK_JOB(
-            "MDD_CHARGING_PERIODIC_TASK_JOB", MDD_CHARGING_PERIODIC_TASK_JOB_ID),
-    MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB(
-            "MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB", MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID),
-    MDD_WIFI_CHARGING_PERIODIC_TASK_JOB(
-            "MDD_WIFI_CHARGING_PERIODIC_TASK_JOB", MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+    MDD_MAINTENANCE_PERIODIC_TASK_JOB("MDD_MAINTENANCE_PERIODIC_TASK_JOB", 11),
+    MDD_CHARGING_PERIODIC_TASK_JOB("MDD_CHARGING_PERIODIC_TASK_JOB", 12),
+    MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB("MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB", 13),
+    MDD_WIFI_CHARGING_PERIODIC_TASK_JOB("MDD_WIFI_CHARGING_PERIODIC_TASK_JOB", 14);
 
     private final String mJobServiceName;
     private final int mJobId;
