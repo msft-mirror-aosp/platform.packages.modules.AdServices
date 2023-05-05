@@ -25,7 +25,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
-import android.content.res.AssetManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -48,12 +47,10 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,16 +72,12 @@ public class ModelManagerTest {
     private static final String TEST_APPS_FILE_PATH = "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_test_assets_metadata.json";
-    private static final String TEST_CLASSIFIER_INPUT_CONFIG_PATH =
-            "classifier/classifier_input_config.txt";
     private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
 
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_assets_metadata.json";
-    private static final String PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH =
-            "classifier/classifier_input_config.txt";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
 
@@ -131,7 +124,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -160,7 +152,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         downloadedFiles);
@@ -180,7 +171,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         "IncorrectPathWithNoModel",
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -213,7 +203,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         downloadedFiles);
@@ -238,7 +227,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -269,7 +257,6 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -285,7 +272,6 @@ public class ModelManagerTest {
         mProductionModelManager =
                 new ModelManager(
                         sContext,
-                        "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -311,7 +297,6 @@ public class ModelManagerTest {
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
-                        "WrongFilePath",
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
@@ -329,7 +314,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -392,7 +376,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -421,7 +404,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -491,7 +473,6 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -514,10 +495,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1800". This is used for comparing the model version with MDD
+        // and its value should be "1467". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1800");
+                .isEqualTo("1467");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -573,7 +554,6 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -596,10 +576,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "1800". This is used for comparing the model version with MDD
+        // and its value should be "1467". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("1800");
+                .isEqualTo("1467");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -643,161 +623,6 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void testRetrieveClassifierInputConfig_bundled_successfulRead() {
-        mProductionModelManager =
-                new ModelManager(
-                        sContext,
-                        TEST_LABELS_FILE_PATH,
-                        TEST_APPS_FILE_PATH,
-                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
-                        TEST_CLASSIFIER_MODEL_PATH,
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig.getInputFormat()).isEqualTo("%s. %s");
-        assertThat(classifierInputConfig.getInputFields())
-                .containsExactly(
-                        ClassifierInputConfig.ClassifierInputField.APP_NAME,
-                        ClassifierInputConfig.ClassifierInputField.SPLIT_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testRetrieveClassifierInputConfig_downloaded_successfulRead() throws IOException {
-        // Mock a MDD FileGroup and FileStorage
-        when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH));
-
-        mProductionModelManager =
-                new ModelManager(
-                        sContext,
-                        PRODUCTION_LABELS_FILE_PATH,
-                        PRODUCTION_APPS_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
-                        MODEL_FILE_PATH,
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig.getInputFormat()).isEqualTo("%s. %s");
-        assertThat(classifierInputConfig.getInputFields())
-                .containsExactly(
-                        ClassifierInputConfig.ClassifierInputField.APP_NAME,
-                        ClassifierInputConfig.ClassifierInputField.SPLIT_PACKAGE_NAME);
-    }
-
-    @Test
-    public void testRetrieveClassifierInputConfig_bundled_emptyConfigReturnedOnException() {
-        mProductionModelManager =
-                new ModelManager(
-                        sContext,
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
-    }
-
-    @Test
-    public void testRetrieveClassifierInputConfig_downloaded_emptyConfigReturnedOnException()
-            throws IOException {
-        // Mock a MDD FileGroup and FileStorage
-        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
-        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
-
-        mProductionModelManager =
-                new ModelManager(
-                        sContext,
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        "WrongFilePath",
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
-    }
-
-    @Test
-    public void testRetrieveClassifierInputConfig_emptyConfigReturnedOnInvalidConfigField()
-            throws IOException {
-        String invalidClassifierInputConfig = "%s\nINVALID_FIELD";
-        InputStream inputStream =
-                new ByteArrayInputStream(
-                        invalidClassifierInputConfig.getBytes(StandardCharsets.UTF_8));
-
-        Context mockContext = mock(Context.class);
-        AssetManager mockAssetManager = mock(AssetManager.class);
-
-        when(mockContext.getAssets()).thenReturn(mockAssetManager);
-        when(mockAssetManager.open(any())).thenReturn(inputStream);
-
-        mProductionModelManager =
-                new ModelManager(
-                        mockContext,
-                        TEST_LABELS_FILE_PATH,
-                        TEST_APPS_FILE_PATH,
-                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
-                        TEST_CLASSIFIER_MODEL_PATH,
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
-    }
-
-    @Test
-    public void testRetrieveClassifierInputConfig_emptyConfigReturnedOnInvalidConfigFormat()
-            throws IOException {
-        String invalidClassifierInputConfig = "%s -> %s\nAPP_DESCRIPTION";
-        InputStream inputStream =
-                new ByteArrayInputStream(
-                        invalidClassifierInputConfig.getBytes(StandardCharsets.UTF_8));
-
-        Context mockContext = mock(Context.class);
-        AssetManager mockAssetManager = mock(AssetManager.class);
-
-        when(mockContext.getAssets()).thenReturn(mockAssetManager);
-        when(mockAssetManager.open(any())).thenReturn(inputStream);
-
-        mProductionModelManager =
-                new ModelManager(
-                        mockContext,
-                        TEST_LABELS_FILE_PATH,
-                        TEST_APPS_FILE_PATH,
-                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
-                        TEST_CLASSIFIER_MODEL_PATH,
-                        mMockFileStorage,
-                        mMockDownloadedFiles);
-
-        ClassifierInputConfig classifierInputConfig =
-                mProductionModelManager.retrieveClassifierInputConfig();
-
-        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
-    }
-
-    @Test
     public void testIsModelAvailable_downloadedModelIsAvailable() {
         mTestModelManager =
                 new ModelManager(
@@ -805,7 +630,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -822,7 +646,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         null /*No downloaded files.*/);
@@ -839,7 +662,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         "ModelWrongPath",
                         mMockFileStorage,
                         null /*No downloaded files.*/);
@@ -856,7 +678,6 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
-                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
