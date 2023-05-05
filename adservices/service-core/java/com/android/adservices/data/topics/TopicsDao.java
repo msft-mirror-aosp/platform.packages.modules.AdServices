@@ -16,6 +16,20 @@
 
 package com.android.adservices.data.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_BLOCKED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_OLD_EPOCH_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOP_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_SDK_USAGE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_USAGE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_RETURNED_TOPICS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.ContentValues;
 import android.content.Context;
@@ -26,6 +40,7 @@ import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -43,6 +58,18 @@ public class TopicsDao {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static TopicsDao sSingleton;
     private static final Object SINGLETON_LOCK = new Object();
+
+    // Defined constants for error codes which have very long names
+    private static final int TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE;
+    private static final int TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE;
+    private static final int TOPICS_RECORD_RETURNED_TOPICS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_RETURNED_TOPICS_FAILURE;
+    private static final int TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE;
+    private static final int TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE;
 
     // TODO(b/227393493): Should support a test to notify if new table is added.
     private static final String[] ALL_TOPICS_TABLES = {
@@ -119,6 +146,10 @@ public class TopicsDao {
                             values);
                 } catch (SQLException e) {
                     sLogger.e("Failed to persist classified Topics. Exception : " + e.getMessage());
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_PERSIST_CLASSIFIED_TOPICS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 }
             }
         }
@@ -225,6 +256,10 @@ public class TopicsDao {
             db.insert(TopicsTables.TopTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             sLogger.e("Failed to persist Top Topics. Exception : " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_PERSIST_TOP_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -338,7 +373,12 @@ public class TopicsDao {
             db.insert(TopicsTables.UsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             sLogger.e("Failed to record App-Sdk usage history." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_SDK_USAGE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
+
     }
 
     /**
@@ -365,6 +405,10 @@ public class TopicsDao {
                     TopicsTables.AppUsageHistoryContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             sLogger.e("Failed to record App Only usage history." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_APP_USAGE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -547,6 +591,10 @@ public class TopicsDao {
                             values);
                 } catch (SQLException e) {
                     sLogger.e(e, "Failed to record can learn topic.");
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_RECORD_CAN_LEARN_TOPICS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 }
             }
         }
@@ -638,6 +686,7 @@ public class TopicsDao {
     }
 
     // TODO(b/236759629): Add a validation to ensure same topic for an app.
+
     /**
      * Persist the Apps, Sdks returned topics to DB.
      *
@@ -672,6 +721,10 @@ public class TopicsDao {
                         values);
             } catch (SQLException e) {
                 sLogger.e(e, "Failed to record returned topic.");
+                ErrorLogUtil.e(
+                        e,
+                        TOPICS_RECORD_RETURNED_TOPICS_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
     }
@@ -785,6 +838,10 @@ public class TopicsDao {
             db.insert(TopicsTables.BlockedTopicsContract.TABLE, /* nullColumnHack */ null, values);
         } catch (SQLException e) {
             sLogger.e("Failed to record blocked topic." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_RECORD_BLOCKED_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -829,7 +886,11 @@ public class TopicsDao {
         try {
             db.delete(TopicsTables.BlockedTopicsContract.TABLE, whereClause, whereArgs);
         } catch (SQLException e) {
-            sLogger.e("Failed to record blocked topic." + e.getMessage());
+            sLogger.e("Failed to delete blocked topic." + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_BLOCKED_TOPICS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -902,6 +963,10 @@ public class TopicsDao {
             db.delete(tableName, deletion, deletionArgs);
         } catch (SQLException e) {
             sLogger.e(e, "Failed to delete old epochs' data.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_OLD_EPOCH_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -976,6 +1041,10 @@ public class TopicsDao {
                         e,
                         String.format(
                                 "Failed to delete %s in table %s.", valuesToDelete, tableName));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
     }
@@ -1048,6 +1117,10 @@ public class TopicsDao {
                         e,
                         String.format(
                                 "Failed to delete %s in table %s.", valuesToDelete, tableName));
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_DELETE_COLUMN_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
         }
     }
@@ -1148,6 +1221,10 @@ public class TopicsDao {
                             values);
                 } catch (SQLException e) {
                     sLogger.e(e, "Failed to persist topic contributors.");
+                    ErrorLogUtil.e(
+                            e,
+                            TOPICS_PERSIST_TOPICS_CONTRIBUTORS_FAILURE,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 }
             }
         }
@@ -1226,6 +1303,10 @@ public class TopicsDao {
             sLogger.e(
                     "Failed to delete all entries from table %s. Error: %s",
                     tableName, e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    TOPICS_DELETE_ALL_ENTRIES_IN_TABLE_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 }
