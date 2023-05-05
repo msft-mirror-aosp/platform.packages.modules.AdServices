@@ -94,7 +94,6 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
     private Button mPlayVideoButton;
-    private Button mInflateViewButton;
     private Button mSyncKeysButton;
     private Button mSdkToSdkCommButton;
     private Button mNewFullScreenAd;
@@ -130,7 +129,6 @@ public class MainActivity extends AppCompatActivity {
 
         mCreateFileButton = findViewById(R.id.create_file_button);
         mPlayVideoButton = findViewById(R.id.play_video_button);
-        mInflateViewButton = findViewById(R.id.inflate_view_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
 
@@ -143,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
 
         registerCreateFileButton();
         registerPlayVideoButton();
-        registerInflateViewButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
         // Register AppOwnedSdkInterface
@@ -223,13 +220,14 @@ public class MainActivity extends AppCompatActivity {
                         final BannerOptions options =
                                 BannerOptions.fromSharedPreferences(mSharedPreferences);
                         Log.i(TAG, options.toString());
+                        final Bundle params = getRequestSurfacePackageParams(null);
+                        if (options.getViewType() == BannerOptions.ViewType.INFLATED) {
+                            params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
+                        }
                         sHandler.post(
                                 () -> {
                                     mSdkSandboxManager.requestSurfacePackage(
-                                            SDK_NAME,
-                                            getRequestSurfacePackageParams(null),
-                                            Runnable::run,
-                                            receiver);
+                                            SDK_NAME, params, Runnable::run, receiver);
                                 });
                     } else {
                         makeToast("Sdk is not loaded");
@@ -315,25 +313,6 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private void registerInflateViewButton() {
-        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
-                new RequestSurfacePackageReceiver();
-        mInflateViewButton.setOnClickListener(
-                v -> {
-                    if (mSdksLoaded) {
-                        sHandler.post(
-                                () -> {
-                                    Log.i(TAG, "Requesting an inflated view from SDK");
-                                    Bundle params = getRequestSurfacePackageParams(null);
-                                    params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
-                                    mSdkSandboxManager.requestSurfacePackage(
-                                            SDK_NAME, params, Runnable::run, receiver);
-                                });
-                    } else {
-                        makeToast("Sdk is not loaded");
-                    }
-                });
-    }
 
     private void registerSdkToSdkButton() {
         mSdkToSdkCommButton.setOnClickListener(
