@@ -183,7 +183,13 @@
       "name": "CtsAdServicesTopicsConnectionTests"
     },
     {
-      "name": "CtsAdServicesMddTests"
+      "name": "CtsAdServicesMddTests",
+      "options": [
+          {
+            // Exclude tests that are marked flaky
+            "exclude-annotation": "androidx.test.filters.FlakyTest"
+          }
+      ]
     },
     {
       "name": "CtsAdServicesDeviceTestCases"
