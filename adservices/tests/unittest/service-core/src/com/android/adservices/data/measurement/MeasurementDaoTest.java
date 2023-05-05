@@ -1714,11 +1714,12 @@ public class MeasurementDaoTest {
 
         insertSource(
                 createSourceForIATest(
-                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID),
+                                "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest(
-                        "IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id IA1 because it has higher priority
         assertTrue(
@@ -1738,11 +1739,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_selectLatest() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id=IA2 as it is latest
         assertTrue(
@@ -1763,11 +1765,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_ignoreNewerSources() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
@@ -1789,10 +1792,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_noValidSource() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should not update any sources.
         assertTrue(
@@ -1811,8 +1816,8 @@ public class MeasurementDaoTest {
     public void installAttribution_install_installTimeEqualsEventTime() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1834,7 +1839,8 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
                 createSourceForIATest(
-                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID);
+                                "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
 
         // Execution
         // Active source should get install attributed
@@ -1876,59 +1882,100 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachAdTech() {
+    public void
+            doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachRegOrigin() {
         long currentTimestamp = System.currentTimeMillis();
 
         // Enrollment1: Choose IA2 because that's newer and still occurred before install
         insertSource(
                 createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                                "IA1",
+                                currentTimestamp,
+                                -1,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest(
-                        "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                                "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .build(),
                 "IA2");
 
         // Enrollment2: Choose IA4 because IA3's install attribution window has expired
         insertSource(
                 createSourceForIATest(
-                        "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2"),
+                                "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .build(),
                 "IA3");
         insertSource(
                 createSourceForIATest(
-                        "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2"),
+                                "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .build(),
                 "IA4");
 
         // Enrollment3: Choose IA5 because IA6 was registered after install event
         insertSource(
                 createSourceForIATest(
-                        "IA5", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                                "IA5",
+                                currentTimestamp,
+                                -1,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_3")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .build(),
                 "IA5");
         insertSource(
                 createSourceForIATest(
-                        "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                                "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .build(),
                 "IA6");
 
         // Enrollment4: Choose IA8 due to higher priority
         insertSource(
                 createSourceForIATest(
-                        "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                                "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .build(),
                 "IA7");
         insertSource(
                 createSourceForIATest(
-                        "IA8", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                                "IA8",
+                                currentTimestamp,
+                                10,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_4")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .build(),
                 "IA8");
 
         // Enrollment5: Choose none because both sources are ineligible
         // Expired install attribution window
         insertSource(
                 createSourceForIATest(
-                        "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5"),
+                                "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .build(),
                 "IA9");
         // Registered after install attribution
         insertSource(
                 createSourceForIATest(
-                        "IA10", currentTimestamp, 10, 3, false, DEFAULT_ENROLLMENT_ID + "_5"),
+                                "IA10",
+                                currentTimestamp,
+                                10,
+                                3,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_5")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .build(),
                 "IA10");
 
         assertTrue(
@@ -2247,8 +2294,8 @@ public class MeasurementDaoTest {
     public void testUndoInstallAttribution_noMarkedSource() {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
-                createSourceForIATest(
-                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
         source.setInstallAttributed(true);
         insertSource(source, source.getId());
         assertTrue(
@@ -2265,8 +2312,8 @@ public class MeasurementDaoTest {
     public void undoInstallAttribution_uninstall_nullInstallTime() {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
-                createSourceForIATest(
-                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
         source.setInstallAttributed(true);
         insertSource(source, source.getId());
         assertTrue(
@@ -3048,6 +3095,67 @@ public class MeasurementDaoTest {
         List<Source> result6 = runFunc.apply(trigger6MatchSource67);
         assertEquals(1, result6.size());
         assertEquals(sWeb6.getId(), result6.get(0).getId());
+
+        // Trigger with different subdomain than source
+        // Expected: No Match found
+        Trigger triggerDifferentRegistrationOrigin =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain-different.example.test"))
+                        .build();
+
+        List<Source> result7 = runFunc.apply(triggerDifferentRegistrationOrigin);
+        assertTrue(result7.isEmpty());
+
+        // Trigger with different domain than source
+        // Expected: No Match found
+        Trigger triggerDifferentDomainOrigin =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain.example-different.test"))
+                        .build();
+
+        List<Source> result8 = runFunc.apply(triggerDifferentDomainOrigin);
+        assertTrue(result8.isEmpty());
+
+        // Trigger with different port than source
+        // Expected: No Match found
+        Trigger triggerDifferentPort =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain.example.test:8083"))
+                        .build();
+
+        List<Source> result9 = runFunc.apply(triggerDifferentPort);
+        assertTrue(result9.isEmpty());
+
+        // Enrollment id for trigger and source not same
+        // Registration Origin for trigger and source same
+        // Expected: Match with sApp1, sApp2, sAppWeb7
+        Trigger triggerDifferentEnrollmentSameRegistration =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId("different-enrollment-id")
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        List<Source> result10 = runFunc.apply(triggerDifferentEnrollmentSameRegistration);
+        assertEquals(3, result10.size());
+        assertEquals(sApp1.getId(), result10.get(0).getId());
+        assertEquals(sApp2.getId(), result10.get(1).getId());
+        assertEquals(sAppWeb7.getId(), result10.get(2).getId());
     }
 
     @Test
@@ -6568,7 +6676,7 @@ public class MeasurementDaoTest {
         }
     }
 
-    private Source createSourceForIATest(
+    private Source.Builder createSourceForIATest(
             String id,
             long currentTime,
             long priority,
@@ -6588,8 +6696,7 @@ public class MeasurementDaoTest {
                                 - TimeUnit.DAYS.toMillis(
                                         eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
-                .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                .build();
+                .setRegistrationOrigin(REGISTRATION_ORIGIN);
     }
 
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {

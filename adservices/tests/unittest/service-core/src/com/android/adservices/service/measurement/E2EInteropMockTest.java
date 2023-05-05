@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit;
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
-    private static final String LOG_TAG = "msmt_e2e_interop_mock_test";
     private static final String TEST_DIR_NAME = "msmt_interop_tests";
     private static final String ANDROID_APP_SCHEME = "android-app";
 

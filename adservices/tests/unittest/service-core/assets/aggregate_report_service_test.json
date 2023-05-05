@@ -16,7 +16,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -34,7 +35,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -42,7 +44,8 @@
         "responseCode": 200,
         "action": "SINGLE_REPORT",
         "result": 0,
-        "id": "AR1"
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -61,7 +64,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -79,7 +83,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -87,7 +92,8 @@
         "responseCode": 400,
         "action": "SINGLE_REPORT",
         "result": 4,
-        "id": "AR1"
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -106,7 +112,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -124,7 +131,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -132,7 +140,8 @@
         "responseCode": 200,
         "action": "SINGLE_REPORT",
         "result": 2,
-        "id": "AR1"
+        "id": "AR1",
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -151,7 +160,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -161,7 +171,8 @@
             "sourceRegistrationTime": 19998000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -179,7 +190,8 @@
             "sourceRegistrationTime": 19999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -189,7 +201,8 @@
             "sourceRegistrationTime": 19998000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -197,7 +210,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 19999000,
-        "end": 20000000
+        "end": 20000000,
+        "registration_origin": "https://subdomain.example.test"
       }
     },
     {
@@ -216,7 +230,8 @@
             "sourceRegistrationTime": 9999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -226,7 +241,8 @@
             "sourceRegistrationTime": 22100000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -236,7 +252,8 @@
             "sourceRegistrationTime": 19998000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -254,7 +271,8 @@
             "sourceRegistrationTime": 9999000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -264,7 +282,8 @@
             "sourceRegistrationTime": 22100000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
+            "status": 0,
+            "registration_origin": "https://subdomain.example.test"
           },
           {
             "publisher": "https://source.site2",
@@ -274,7 +293,8 @@
             "sourceRegistrationTime": 19998000,
             "enrollmentId": "enrollment-id",
             "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 1
+            "status": 1,
+            "registration_origin": "https://subdomain.example.test"
           }
         ]
       },
@@ -282,53 +302,8 @@
         "responseCode": 200,
         "action": "ALL_REPORTS",
         "start": 11000000,
-        "end": 20000000
-      }
-    },
-    {
-      "name": "Single pending report, retrieving enrollment fails",
-      "input": {
-        "sources": [],
-        "triggers": [],
-        "event_reports": [],
-        "attributions": [],
-        "aggregate_reports": [
-          {
-            "publisher": "https://source.site",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR1",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "enrollmentId": "enrollment-id",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          }
-        ]
-      },
-      "output": {
-        "sources": [],
-        "triggers": [],
-        "event_reports": [],
-        "attributions": [],
-        "aggregate_reports": [
-          {
-            "publisher": "https://source.site",
-            "attributionDestination": "https://attribution.destination",
-            "id": "AR1",
-            "scheduledReportTime": 20000000,
-            "sourceRegistrationTime": 19999000,
-            "enrollmentId": "enrollment-id",
-            "debugCleartextPayload": "{\"operation\":\"histogram\",\"data\":[{\"bucket\":1369,\"value\":32768},{\"bucket\":3461,\"value\":1664}]}",
-            "status": 0
-          }
-        ]
-      },
-      "param": {
-        "responseCode": 200,
-        "action": "SINGLE_REPORT",
-        "result": 1,
-        "id": "AR1",
-	"notEnrolled": true
+        "end": 20000000,
+        "registration_origin": "https://subdomain.example.test"
       }
     }
   ]

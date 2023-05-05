@@ -783,10 +783,6 @@ public final class EventReportTest {
     @Test
     public void populateFromSourceAndTrigger_setsRegistrationOrigin_FromTrigger()
             throws JSONException {
-        // This test should fail after attribution scope is changed to origin
-        // This is because trigger and source registration origin are not equal
-        // Therefore trigger and source will not be attributed
-        // To fix update source and trigger registration origin to be equal
         long baseTime = System.currentTimeMillis();
         Source source =
                 getValidSourceBuilder()
