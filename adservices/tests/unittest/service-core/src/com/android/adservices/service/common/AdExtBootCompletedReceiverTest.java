@@ -19,12 +19,12 @@ package com.android.adservices.service.common;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.atLeastOnce;
 
 import android.content.ComponentName;
@@ -42,6 +42,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -57,7 +59,12 @@ public class AdExtBootCompletedReceiverTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Intent sIntent = new Intent();
     private static final String TEST_PACKAGE_NAME = "test";
+    private static final String AD_SERVICES_APK_PKG_SUFFIX = "android.adservices";
+    private static final int NUM_ACTIVITIES_TO_DISABLE = 7;
+    private static final int NUM_SERVICE_CLASSES_TO_DISABLE = 7;
+
     @Mock Flags mMockFlags;
+    @Mock Context mContext;
     @Mock PackageManager mPackageManager;
     MockitoSession mSession;
 
@@ -93,6 +100,7 @@ public class AdExtBootCompletedReceiverTest {
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce()).disableAdExtServicesServices(any());
     }
 
     @Test
@@ -108,6 +116,7 @@ public class AdExtBootCompletedReceiverTest {
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce()).disableAdExtServicesServices(any());
     }
 
     @Test
@@ -165,18 +174,10 @@ public class AdExtBootCompletedReceiverTest {
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
 
-        Context mockContext = mock(Context.class);
-        when(mockContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mockContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
-
-        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
-        packageInfo.packageName = TEST_PACKAGE_NAME;
-        packageInfo.isApex = true;
-        when(mPackageManager.getPackageInfo(eq(packageInfo.packageName), eq(0)))
-                .thenReturn(packageInfo);
+        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
-        bootCompletedReceiver.updateAdExtServicesActivities(mockContext, true);
+        bootCompletedReceiver.updateAdExtServicesActivities(mContext, true);
 
         verify(mPackageManager, times(7))
                 .setComponentEnabledSetting(
@@ -190,24 +191,85 @@ public class AdExtBootCompletedReceiverTest {
         Assume.assumeTrue(Build.VERSION.SDK_INT == 33);
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
-
-        Context mockContext = mock(Context.class);
-        when(mockContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mockContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
-
-        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
-        packageInfo.packageName = TEST_PACKAGE_NAME;
-        packageInfo.isApex = true;
-        when(mPackageManager.getPackageInfo(eq(packageInfo.packageName), eq(0)))
-                .thenReturn(packageInfo);
+        setCommonMocks(TEST_PACKAGE_NAME);
 
         // Call the method we're testing.
-        bootCompletedReceiver.updateAdExtServicesActivities(mockContext, false);
+        bootCompletedReceiver.updateAdExtServicesActivities(mContext, false);
 
-        verify(mPackageManager, times(7))
+        verify(mPackageManager, times(NUM_ACTIVITIES_TO_DISABLE))
                 .setComponentEnabledSetting(
                         any(ComponentName.class),
                         eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
                         eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testDisableAdExtServicesServices_tPlus() throws Exception {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(TEST_PACKAGE_NAME);
+
+        // Call the method we're testing.
+        bootCompletedReceiver.disableAdExtServicesServices(mContext);
+
+        verify(mPackageManager, times(NUM_SERVICE_CLASSES_TO_DISABLE))
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testUpdateAdExtServicesActivities_withAdServicesPackageSuffix_doesNotUpdate()
+            throws Exception {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
+
+        // Call the method we're testing.
+        bootCompletedReceiver.updateAdExtServicesActivities(mContext, false);
+
+        verify(mPackageManager, never())
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testDisableAdExtServicesServices_withAdServicesPackageSuffix_doesNotUpdate()
+            throws Exception {
+        AdExtBootCompletedReceiver bootCompletedReceiver =
+                Mockito.spy(new AdExtBootCompletedReceiver());
+        setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
+
+        // Call the method we're testing.
+        bootCompletedReceiver.disableAdExtServicesServices(mContext);
+
+        verify(mPackageManager, never())
+                .setComponentEnabledSetting(
+                        any(ComponentName.class),
+                        eq(PackageManager.COMPONENT_ENABLED_STATE_DISABLED),
+                        eq(PackageManager.DONT_KILL_APP));
+    }
+
+    @Test
+    public void testUpdateComponents_withAdServicesPackagePrefix_throwsException() {
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                        AdExtBootCompletedReceiver.updateComponents(
+                                mContext, ImmutableList.of(), AD_SERVICES_APK_PKG_SUFFIX, false));
+    }
+
+    private void setCommonMocks(String packageName) throws Exception {
+        when(mContext.getPackageManager()).thenReturn(mPackageManager);
+        when(mContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
+
+        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
+        packageInfo.packageName = packageName;
+        when(mPackageManager.getPackageInfo(eq(packageInfo.packageName), eq(0)))
+                .thenReturn(packageInfo);
     }
 }

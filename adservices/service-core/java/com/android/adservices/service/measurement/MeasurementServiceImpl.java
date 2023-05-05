@@ -53,7 +53,6 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -64,7 +63,6 @@ import com.android.adservices.service.measurement.access.AppPackageAccessResolve
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
-import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -96,7 +94,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final Flags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
-    private final EnrollmentDao mEnrollmentDao;
     private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
@@ -107,7 +104,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
@@ -115,7 +111,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 context,
                 clock,
                 consentManager,
-                enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags()),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
@@ -128,7 +123,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
@@ -137,7 +131,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mClock = clock;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
-        mEnrollmentDao = enrollmentDao;
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
@@ -187,12 +180,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -249,14 +237,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getSourceRegistrationRequest()
-                                                    .getSourceParams()
-                                                    .get(0)
-                                                    .getRegistrationUri()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
                                             request.getAppPackageName())),
@@ -315,15 +295,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getTriggerRegistrationRequest()
-                                                    .getTriggerParams()
-                                                    .get(0)
-                                                    .getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),

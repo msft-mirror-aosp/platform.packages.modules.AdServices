@@ -25,6 +25,7 @@ import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -36,13 +37,12 @@ import com.android.settingslib.widget.MainSwitchBar;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class MeasurementActionDelegate extends BaseActionDelegate {
+public class MeasurementActionDelegate {
     private final MeasurementActivity mMeasurementActivity;
     private final MeasurementViewModel mMeasurementViewModel;
 
     public MeasurementActionDelegate(
             MeasurementActivity measurementActivity, MeasurementViewModel measurementViewModel) {
-        super(measurementActivity);
         this.mMeasurementActivity = measurementActivity;
         this.mMeasurementViewModel = measurementViewModel;
         listenToMeasurementViewModelUiEvents();
@@ -63,7 +63,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
                                 mMeasurementViewModel.setMeasurementConsent(false);
                                 break;
                             case RESET_MEASUREMENT:
-                                logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
+                                UiStatsLogger.logResetMeasurementSelected(mMeasurementActivity);
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mMeasurementActivity,

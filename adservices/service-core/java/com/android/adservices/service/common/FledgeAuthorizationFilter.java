@@ -171,6 +171,30 @@ public class FledgeAuthorizationFilter {
     }
 
     /**
+     * Check if a certain ad tech is enrolled for FLEDGE.
+     *
+     * @param adTechIdentifier the ad tech to check against
+     * @param apiNameLoggingId the id of the api being called
+     * @throws AdTechNotAllowedException if the ad tech is not enrolled in FLEDGE
+     */
+    public void assertAdTechEnrolled(
+            @NonNull AdTechIdentifier adTechIdentifier, int apiNameLoggingId)
+            throws AdTechNotAllowedException {
+        Objects.requireNonNull(adTechIdentifier);
+
+        EnrollmentData enrollmentData =
+                mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(adTechIdentifier);
+
+        if (enrollmentData == null) {
+            sLogger.v(
+                    "Enrollment data match not found for ad tech \"%s\" while calling API %d",
+                    adTechIdentifier.toString(), apiNameLoggingId);
+            mAdServicesLogger.logFledgeApiCallStats(apiNameLoggingId, STATUS_CALLER_NOT_ALLOWED, 0);
+            throw new AdTechNotAllowedException();
+        }
+    }
+
+    /**
      * Internal exception for easy assertion catches specific to checking that a caller matches the
      * given package name.
      *

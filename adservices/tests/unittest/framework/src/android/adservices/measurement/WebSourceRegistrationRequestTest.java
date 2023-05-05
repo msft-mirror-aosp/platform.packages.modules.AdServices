@@ -35,6 +35,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WebSourceRegistrationRequestTest {
@@ -127,6 +129,14 @@ public class WebSourceRegistrationRequestTest {
                         new WebSourceRegistrationRequest.Builder(SOURCE_REGISTRATIONS, null)
                                 .setInputEvent(INPUT_KEY_EVENT)
                                 .build());
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new WebSourceRegistrationRequest.Builder(
+                                        generateWebSourceParamsList(21), TOP_ORIGIN_URI)
+                                .setInputEvent(INPUT_KEY_EVENT)
+                                .build());
     }
 
     @Test
@@ -180,5 +190,15 @@ public class WebSourceRegistrationRequestTest {
         assertEquals(
                 INPUT_KEY_EVENT.getKeyCode(), ((KeyEvent) request.getInputEvent()).getKeyCode());
         assertEquals(VERIFIED_DESTINATION, request.getVerifiedDestination());
+    }
+
+    private static List<WebSourceParams> generateWebSourceParamsList(int count) {
+        return IntStream.range(0, count)
+                .mapToObj(
+                        i ->
+                                new WebSourceParams.Builder(REGISTRATION_URI_1)
+                                        .setDebugKeyAllowed(true)
+                                        .build())
+                .collect(Collectors.toList());
     }
 }

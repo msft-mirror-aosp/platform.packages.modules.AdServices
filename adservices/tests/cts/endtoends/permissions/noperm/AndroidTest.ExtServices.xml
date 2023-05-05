@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services Permissions E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts" />
-    <option name="test-tag" value="CtsExtAdServicesPermissionsNoPermEndToEndTests" />
+    <option name="test-tag" value="CtsAdExtServicesPermissionsNoPermEndToEndTests" />
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
@@ -38,7 +38,7 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CtsExtAdServicesPermissionsNoPermEndToEndTests.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesPermissionsNoPermEndToEndTests.apk"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
@@ -54,6 +54,7 @@
         <option name="teardown-command" value="setprop debug.adservices.consent_manager_debug_mode false"/>
 
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
 
         <!-- Increase the allowed API queries per second -->

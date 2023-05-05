@@ -22,6 +22,7 @@ import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
@@ -62,6 +63,8 @@ public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTe
                         .setExpiryTime(5L)
                         .setStatus(Source.Status.ACTIVE)
                         .setRegistrant(Uri.parse("android-app://com.example.abc"))
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://example1.test-registration.test"))
                         .build();
 
         SourceDestination sourceDest =

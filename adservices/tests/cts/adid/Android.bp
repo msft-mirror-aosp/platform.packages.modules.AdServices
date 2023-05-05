@@ -44,7 +44,7 @@ android_test {
 }
 
 android_test {
-    name: "CtsExtAdIdEndToEndTest",
+    name: "CtsAdExtServicesAdIdEndToEndTest",
     srcs: [
         "src/**/*.java",
     ],

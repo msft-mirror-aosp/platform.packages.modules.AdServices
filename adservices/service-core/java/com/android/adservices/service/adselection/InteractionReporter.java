@@ -28,7 +28,6 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -76,7 +75,6 @@ public class InteractionReporter {
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
-    @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -88,7 +86,6 @@ public class InteractionReporter {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public InteractionReporter(
-            @NonNull Context context,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ExecutorService lightweightExecutorService,
@@ -98,7 +95,6 @@ public class InteractionReporter {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -108,7 +104,6 @@ public class InteractionReporter {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
 
-        mContext = context;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -229,7 +224,7 @@ public class InteractionReporter {
     private FluentFuture<List<Uri>> getReportingUris(ReportInteractionInput inputParams) {
         return fetchReportingUris(inputParams)
                 .transformAsync(
-                        reportingUris -> filterReportingUris(inputParams, reportingUris),
+                        reportingUris -> filterReportingUris(reportingUris),
                         mLightweightExecutorService);
     }
 
@@ -262,8 +257,7 @@ public class InteractionReporter {
                         }));
     }
 
-    private FluentFuture<List<Uri>> filterReportingUris(
-            ReportInteractionInput inputParams, List<Uri> reportingUris) {
+    private FluentFuture<List<Uri>> filterReportingUris(List<Uri> reportingUris) {
         return FluentFuture.from(
                 mLightweightExecutorService.submit(
                         () -> {
@@ -271,14 +265,11 @@ public class InteractionReporter {
                                 return reportingUris;
                             } else {
                                 // Do enrollment check and only add Uris that pass enrollment
-                                String callerPackageName = inputParams.getCallerPackageName();
                                 ArrayList<Uri> validatedUris = new ArrayList<>();
 
                                 for (Uri uri : reportingUris) {
                                     try {
-                                        mFledgeAuthorizationFilter.assertAdTechAllowed(
-                                                mContext,
-                                                callerPackageName,
+                                        mFledgeAuthorizationFilter.assertAdTechEnrolled(
                                                 AdTechIdentifier.fromString(uri.getHost()),
                                                 LOGGING_API_NAME);
                                         validatedUris.add(uri);

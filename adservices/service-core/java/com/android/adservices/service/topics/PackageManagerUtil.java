@@ -15,23 +15,26 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+
 import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import com.google.common.collect.ImmutableMap;
 
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Util class that query PackageManager to retrieve app information
- */
+/** Util class that query PackageManager to retrieve app information */
 public class PackageManagerUtil {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     private final Context mContext;
     private static final String EMPTY_STRING = "";
@@ -70,10 +73,11 @@ public class PackageManagerUtil {
         String resultAppName = EMPTY_STRING, resultAppDescription = EMPTY_STRING;
         try {
             PackageManager packageManager = mContext.getPackageManager();
-            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName,
-                    /* PackageManager.ApplicationInfoFlags = */ 0);
+            ApplicationInfo applicationInfo =
+                    packageManager.getApplicationInfo(
+                            packageName, /* PackageManager.ApplicationInfoFlags = */ 0);
             if (applicationInfo == null) {
-                LogUtil.e("ApplicationInfo get from packageManager is null");
+                sLogger.e("ApplicationInfo get from packageManager is null");
                 return new AppInfo(resultAppName, resultAppDescription);
             }
 
@@ -81,17 +85,21 @@ public class PackageManagerUtil {
             CharSequence appName = packageManager.getApplicationLabel(applicationInfo);
 
             if (appDescription == null) {
-                LogUtil.e("AppDescription get from applicationInfo is null");
+                sLogger.e("AppDescription get from applicationInfo is null");
             } else {
                 resultAppDescription = appDescription.toString();
             }
             if (appName == null) {
-                LogUtil.e("AppName get from packageManager is null");
+                sLogger.e("AppName get from packageManager is null");
             } else {
                 resultAppName = appName.toString();
             }
         } catch (NameNotFoundException e) {
-            LogUtil.e("NameNotFoundException thrown when fetching AppDescription");
+            sLogger.e("NameNotFoundException thrown when fetching AppDescription");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
         return new AppInfo(resultAppName, resultAppDescription);
     }
