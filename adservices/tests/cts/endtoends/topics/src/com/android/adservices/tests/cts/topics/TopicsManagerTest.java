@@ -52,7 +52,7 @@ public class TopicsManagerTest {
     // Override the Epoch Job Period to this value to speed up the epoch computation.
     private static final long TEST_EPOCH_JOB_PERIOD_MS = 5000;
     // Expected model versions.
-    private static final long EXPECTED_MODEL_VERSION = 3L;
+    private static final long EXPECTED_MODEL_VERSION = 4L;
     // Expected taxonomy version.
     private static final long EXPECTED_TAXONOMY_VERSION = 2L;
 
@@ -165,7 +165,7 @@ public class TopicsManagerTest {
         sdk1Result = advertisingTopicsClient1.getTopics().get();
         assertThat(sdk1Result.getTopics()).isNotEmpty();
 
-        // We only have 1 test app which has 5 classification topics: 10147,10253,10175,10254,10333
+        // We only have 1 test app which has 5 classification topics: 10175,10147,10254,10333,10253)
         // in the precomputed list.
         // These 5 classification topics will become top 5 topics of the epoch since there is
         // no other apps calling Topics API.
@@ -183,7 +183,7 @@ public class TopicsManagerTest {
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
         // topic is one of the 5 classification topics of the Test App.
-        assertThat(topic.getTopicId()).isIn(Arrays.asList(10147, 10253, 10175, 10254, 10333));
+        assertThat(topic.getTopicId()).isIn(Arrays.asList(10175, 10147, 10254, 10333, 10253));
 
         // Sdk 2 did not call getTopics API. So it should not receive any topic.
         AdvertisingTopicsClient advertisingTopicsClient2 =
@@ -259,10 +259,20 @@ public class TopicsManagerTest {
                 .that(topic.getTaxonomyVersion())
                 .isEqualTo(EXPECTED_TAXONOMY_VERSION);
 
-        // Top 5 classifications for empty string with v3 model are [10230, 10228, 10253, 10232,
-        // 10140]. This is computed by running the model on the device for empty string.
-        // topic is one of the 5 classification topics of the Test App.
-        List<Integer> expectedTopTopicIds = Arrays.asList(10230, 10228, 10253, 10232, 10140);
+        // Top 5 classifications for empty string with v4 model are:
+        // S-: [10420, 10189, 10301, 10230, 10276].
+        // T+: [10166, 10010, 10301, 10230, 10184].
+        // V4 model uses package name as part of input, which differs between
+        // versions for back-compat, changing the returned topics for each version.
+        // This is computed by running the model on the device; topics are checked
+        // depending on whether the package name is that for S- or T+.
+        // Returned topic is one of the 5 classification topics of the test app.
+        List<Integer> expectedTopTopicIds;
+        if (ADSERVICES_PACKAGE_NAME.contains("android.ext.adservices")) {
+            expectedTopTopicIds = Arrays.asList(10420, 10189, 10301, 10230, 10276);
+        } else {
+            expectedTopTopicIds = Arrays.asList(10166, 10010, 10301, 10230, 10184);
+        }
         assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
 
         // Set classifier flag back to default.
@@ -313,4 +323,3 @@ public class TopicsManagerTest {
         ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth " + value);
     }
 }
-
