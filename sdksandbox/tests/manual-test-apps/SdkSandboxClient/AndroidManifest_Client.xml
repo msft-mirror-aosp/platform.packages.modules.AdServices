@@ -25,11 +25,20 @@
 
         <activity
             android:name="com.android.sdksandboxclient.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AppCompat">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+        <activity
+            android:name="com.android.sdksandboxclient.BannerOptionsActivity"
+            android:exported="true"
+            android:label="@string/banner_options_title"
+            android:parentActivityName="com.android.sdksandboxclient.MainActivity"
+            android:theme="@style/Theme.AppCompat">
         </activity>
         <uses-sdk-library android:name="com.android.sdksandboxcode"
                           android:versionMajor="1"

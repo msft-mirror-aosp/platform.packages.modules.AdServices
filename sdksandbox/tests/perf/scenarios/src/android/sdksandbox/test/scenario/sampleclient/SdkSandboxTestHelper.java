@@ -67,12 +67,12 @@ public class SdkSandboxTestHelper {
         assertThat(getLoadSdkButton().getText()).isEqualTo("Unload SDKs");
     }
 
-    /** Remote render ad on sandbox client test app by clicking request surface button. */
+    /** Remote render ad on sandbox client test app by clicking banner ad button. */
     public void remoteRenderAd() {
-        if (getRequestSurfaceButton() != null) {
-            getRequestSurfaceButton().click();
+        if (getNewBannerAdButton() != null) {
+            getNewBannerAdButton().click();
         } else {
-            throw new RuntimeException("Did not find 'Load Surface Package' button.");
+            throw new RuntimeException("Did not find 'New Banner Ad' button.");
         }
     }
 
@@ -86,7 +86,7 @@ public class SdkSandboxTestHelper {
                 UI_NAVIGATION_WAIT_MS);
     }
 
-    private UiObject2 getRequestSurfaceButton() {
+    private UiObject2 getNewBannerAdButton() {
         return sUiDevice.wait(
                 Until.findObject(By.res(SANDBOX_TEST_CLIENT_APP, RENDER_BUTTON)),
                 UI_NAVIGATION_WAIT_MS);
