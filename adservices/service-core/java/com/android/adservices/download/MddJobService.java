@@ -16,12 +16,12 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -183,7 +183,7 @@ public class MddJobService extends JobService {
                         // does not need to be rescheduled.
                         boolean shouldRetry = false;
                         AdservicesJobServiceLogger.getInstance(MddJobService.this)
-                                .recordJobFinished(jobId, /* isSuccessful= */ true, shouldRetry);
+                                .recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
 
                         jobFinished(params, shouldRetry);
                     }
@@ -266,10 +266,10 @@ public class MddJobService extends JobService {
      * @param jobScheduler Job scheduler to cancel the jobs
      */
     public static void unscheduleAllJobs(@NonNull JobScheduler jobScheduler) {
-        jobScheduler.cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+        jobScheduler.cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
     }
 
     /**
@@ -379,13 +379,13 @@ public class MddJobService extends JobService {
     private static int getMddTaskJobId(String mddTag) {
         switch (mddTag) {
             case MAINTENANCE_PERIODIC_TASK:
-                return MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
+                return MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
             case CHARGING_PERIODIC_TASK:
-                return MDD_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_CHARGING_PERIODIC_TASK_JOB.getJobId();
             case CELLULAR_CHARGING_PERIODIC_TASK:
-                return MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId();
             default:
-                return MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
         }
     }
 
