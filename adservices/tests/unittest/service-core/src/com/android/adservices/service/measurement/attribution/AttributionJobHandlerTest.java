@@ -49,6 +49,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
@@ -87,6 +88,7 @@ public class AttributionJobHandlerTest {
     private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.example.app");
     private static final Uri PUBLISHER = Uri.parse("android-app://publisher.app");
+    private static final Uri REGISTRATION_URI = WebUtil.validUri("https://subdomain.example.test");
     private static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(111111L);
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(222222L);
     private static final String EVENT_TRIGGERS =
@@ -552,6 +554,13 @@ public class AttributionJobHandlerTest {
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
         verify(mMeasurementDao).insertEventReport(any());
+
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
+
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -621,7 +630,12 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
+
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -692,7 +706,11 @@ public class AttributionJobHandlerTest {
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -753,6 +771,7 @@ public class AttributionJobHandlerTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setId("triggerId2")
                         .setStatus(Trigger.Status.PENDING)
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
                         .setEventTriggers(
                                 "[\n"
                                         + "{\n"
@@ -771,9 +790,11 @@ public class AttributionJobHandlerTest {
                 .build();
         matchingSourceList1.add(source1);
         List<Source> matchingSourceList2 = new ArrayList<>();
-        Source source2 = SourceFixture.getValidSourceBuilder()
-                .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
-                .build();
+        Source source2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
         matchingSourceList2.add(source2);
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Arrays.asList(trigger1.getId(), trigger2.getId()));
@@ -813,6 +834,9 @@ public class AttributionJobHandlerTest {
             assertEquals(
                     newReportArgs.get(i).getTriggerDedupKey(),
                     triggers.get(i).parseEventTriggers().get(0).getDedupKey());
+            assertEquals(
+                    newReportArgs.get(i).getRegistrationOrigin(),
+                    triggers.get(i).getRegistrationOrigin());
         }
     }
 
@@ -887,7 +911,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -967,7 +995,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(2L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -1043,6 +1075,50 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    public void performPendingAttributions_GeneratesEventReport_WithReportingOriginOfTrigger()
+            throws DatastoreException {
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setRegistrationOrigin(WebUtil.validUri("https://trigger.example.test"))
+                        .build();
+        List<Source> matchingSourceList1 = new ArrayList<>();
+        Source source1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
+                        .build();
+        matchingSourceList1.add(source1);
+        when(mMeasurementDao.getPendingTriggerIds()).thenReturn(Arrays.asList(trigger1.getId()));
+        when(mMeasurementDao.getTrigger(trigger1.getId())).thenReturn(trigger1);
+        when(mMeasurementDao.getMatchingActiveSources(trigger1)).thenReturn(matchingSourceList1);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source1.getId()))
+                .thenReturn(
+                        Pair.create(source1.getAppDestinations(), source1.getWebDestinations()));
+
+        assertTrue(mHandler.performPendingAttributions());
+        // Verify trigger status updates.
+        verify(mMeasurementDao).updateTriggerStatus(any(), eq(Trigger.Status.ATTRIBUTED));
+        // Verify new event report insertion.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(
+                WebUtil.validUri("https://trigger.example.test"),
+                eventReport.getRegistrationOrigin());
+    }
+
+    @Test
     public void shouldDoSimpleAttributionGenerateUnencryptedAggregateReport()
             throws DatastoreException, JSONException {
         JSONArray triggerDatas = new JSONArray();
@@ -1085,12 +1161,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
-                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .setAggregateAttributionData(
                                 new AggregateAttributionData.Builder()
                                         .setContributions(
@@ -1127,6 +1204,91 @@ public class AttributionJobHandlerTest {
 
         assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
         assertEquals(sourceArg.getValue().getAggregateContributions(), 32768 + 1644);
+    }
+
+    @Test
+    public void performPendingAttributions_GeneratesAggregateReport_WithReportingOriginOfTrigger()
+            throws JSONException, DatastoreException {
+        JSONArray triggerDatas = new JSONArray();
+        JSONObject jsonObject1 = new JSONObject();
+        jsonObject1.put("key_piece", "0x400");
+        jsonObject1.put("source_keys", new JSONArray(Arrays.asList("campaignCounts")));
+        JSONObject jsonObject2 = new JSONObject();
+        jsonObject2.put("key_piece", "0xA80");
+        jsonObject2.put("source_keys", new JSONArray(Arrays.asList("geoValue", "noMatch")));
+        triggerDatas.put(jsonObject1);
+        triggerDatas.put(jsonObject2);
+
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(
+                                "[\n"
+                                        + "{\n"
+                                        + "  \"trigger_data\": \"5\",\n"
+                                        + "  \"priority\": \"123\",\n"
+                                        + "  \"deduplication_key\": \"1\"\n"
+                                        + "}"
+                                        + "]\n")
+                        .setAggregateTriggerData(triggerDatas.toString())
+                        .setAggregateValues("{\"campaignCounts\":32768,\"geoValue\":1644}")
+                        .setRegistrationOrigin(WebUtil.validUri("https://trigger.example.test"))
+                        .build();
+
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("sourceId1")
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .setAggregateSource(
+                                "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
+                        .setFilterData("{\"product\":[\"1234\",\"2345\"]}")
+                        .setRegistrationOrigin(WebUtil.validUri("https://source.example.test"))
+                        .build();
+
+        AggregateReport expectedAggregateReport =
+                new AggregateReport.Builder()
+                        .setApiVersion("0.1")
+                        .setAttributionDestination(trigger.getAttributionDestination())
+                        .setDebugCleartextPayload(
+                                "{\"operation\":\"histogram\","
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                        .setEnrollmentId(source.getEnrollmentId())
+                        .setPublisher(source.getRegistrant())
+                        .setSourceId(source.getId())
+                        .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(WebUtil.validUri("https://trigger.example.test"))
+                        .setAggregateAttributionData(
+                                new AggregateAttributionData.Builder()
+                                        .setContributions(
+                                                Arrays.asList(
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("1369"))
+                                                                .setValue(32768)
+                                                                .build(),
+                                                        new AggregateHistogramContribution.Builder()
+                                                                .setKey(new BigInteger("2693"))
+                                                                .setValue(1644)
+                                                                .build()))
+                                        .build())
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(any(), any())).thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+
+        ArgumentCaptor<AggregateReport> aggregateReportCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportCaptor.capture());
+        assertAggregateReportsEqual(expectedAggregateReport, aggregateReportCaptor.getValue());
     }
 
     @Test
@@ -1173,12 +1335,13 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
-                                    + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .setAggregateAttributionData(
                                 new AggregateAttributionData.Builder()
                                         .setContributions(
@@ -1538,7 +1701,12 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
+
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1600,7 +1768,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1662,7 +1834,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1724,7 +1900,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1790,7 +1970,11 @@ public class AttributionJobHandlerTest {
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1855,7 +2039,11 @@ public class AttributionJobHandlerTest {
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
         assertEquals(sourceArg.getValue().getDebugKey(), SOURCE_DEBUG_KEY);
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1919,7 +2107,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -1982,7 +2174,11 @@ public class AttributionJobHandlerTest {
         assertEquals(
                 sourceArg.getValue().getEventReportDedupKeys(),
                 Collections.singletonList(new UnsignedLong(1L)));
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -2047,6 +2243,7 @@ public class AttributionJobHandlerTest {
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2133,6 +2330,7 @@ public class AttributionJobHandlerTest {
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2221,6 +2419,7 @@ public class AttributionJobHandlerTest {
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2307,6 +2506,7 @@ public class AttributionJobHandlerTest {
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2396,6 +2596,7 @@ public class AttributionJobHandlerTest {
                         .setRandomizedTriggerRate(source.getRandomAttributionProbability())
                         .setSourceId(source.getId())
                         .setTriggerId(trigger.getId())
+                        .setRegistrationOrigin(REGISTRATION_URI)
                         .build();
         when(mMeasurementDao.getPendingTriggerIds())
                 .thenReturn(Collections.singletonList(trigger.getId()));
@@ -2487,7 +2688,11 @@ public class AttributionJobHandlerTest {
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mMeasurementDao).insertAggregateReport(any());
+        // Verify aggregate report registration origin.
+        ArgumentCaptor<AggregateReport> reportArg = ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(reportArg.capture());
+        AggregateReport aggregateReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, aggregateReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -2844,7 +3049,11 @@ public class AttributionJobHandlerTest {
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao).insertAggregateReport(any());
-        verify(mMeasurementDao).insertEventReport(any());
+        // Verify event report registration origin.
+        ArgumentCaptor<EventReport> reportArg = ArgumentCaptor.forClass(EventReport.class);
+        verify(mMeasurementDao).insertEventReport(reportArg.capture());
+        EventReport eventReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, eventReport.getRegistrationOrigin());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }
@@ -3018,7 +3227,11 @@ public class AttributionJobHandlerTest {
                 .updateTriggerStatus(
                         eq(Collections.singletonList(trigger.getId())),
                         eq(Trigger.Status.ATTRIBUTED));
-        verify(mMeasurementDao).insertAggregateReport(any());
+        // Verify aggregate report registration origin.
+        ArgumentCaptor<AggregateReport> reportArg = ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(reportArg.capture());
+        AggregateReport aggregateReport = reportArg.getValue();
+        assertEquals(REGISTRATION_URI, aggregateReport.getRegistrationOrigin());
         verify(mMeasurementDao, never()).insertEventReport(any());
         verify(mMeasurementDao).insertAttribution(any());
         verify(mMeasurementDao)
@@ -3136,7 +3349,8 @@ public class AttributionJobHandlerTest {
                 .setFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_FILTERS_JSON_STRING)
                 .setNotFilters(TriggerFixture.ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .setAttributionConfig(TriggerFixture.ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
-                .setAdtechBitMapping(TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING);
+                .setAdtechBitMapping(TriggerFixture.ValidTriggerParams.X_NETWORK_KEY_MAPPING)
+                .setRegistrationOrigin(TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     private Source.Builder createXnaSourceBuilder() {
@@ -3163,6 +3377,7 @@ public class AttributionJobHandlerTest {
                 .setSharedAggregationKeys(SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS)
                 .setInstallTime(SourceFixture.ValidSourceParams.INSTALL_TIME)
                 .setAggregatableReportWindow(SourceFixture.ValidSourceParams.EXPIRY_TIME)
+                .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
                 .setInstallAttributed(true);
     }
 
@@ -3222,5 +3437,6 @@ public class AttributionJobHandlerTest {
                 actualReport.getAggregateAttributionData());
         assertEquals(expectedReport.getSourceDebugKey(), actualReport.getSourceDebugKey());
         assertEquals(expectedReport.getTriggerDebugKey(), actualReport.getTriggerDebugKey());
+        assertEquals(expectedReport.getRegistrationOrigin(), actualReport.getRegistrationOrigin());
     }
 }

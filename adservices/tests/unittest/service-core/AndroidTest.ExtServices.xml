@@ -34,6 +34,7 @@
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
         <option name="run-command" value="setprop log.tag.adservices.fledge VERBOSE" />
     </target_preparer>
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

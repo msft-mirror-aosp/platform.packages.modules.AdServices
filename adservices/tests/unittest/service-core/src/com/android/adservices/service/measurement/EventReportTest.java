@@ -66,6 +66,8 @@ public final class EventReportTest {
     private static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
     private static final String SOURCE_ID = UUID.randomUUID().toString();
     private static final String TRIGGER_ID = UUID.randomUUID().toString();
+    private static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://example1.app");
     private static final Uri WEB_DESTINATION = Uri.parse("https://example1.test");
     private static final String EVENT_TRIGGERS =
@@ -117,6 +119,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, eventReport.getSourceId());
         assertEquals(TRIGGER_ID, eventReport.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -139,6 +142,7 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, eventReport.getSourceId());
         assertEquals(TRIGGER_ID, eventReport.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -161,6 +165,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_DEBUG_KEY, eventReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, eventReport.getSourceId());
         assertEquals(TRIGGER_ID, eventReport.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -182,6 +187,7 @@ public final class EventReportTest {
         assertNull(eventReport.getTriggerDebugKey());
         assertNull(eventReport.getSourceId());
         assertNull(eventReport.getTriggerId());
+        assertNull(eventReport.getRegistrationOrigin());
     }
 
     @Test
@@ -214,6 +220,7 @@ public final class EventReportTest {
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -252,6 +259,7 @@ public final class EventReportTest {
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -283,6 +291,7 @@ public final class EventReportTest {
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -314,6 +323,7 @@ public final class EventReportTest {
                 DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -342,6 +352,7 @@ public final class EventReportTest {
         assertEquals(EVENT_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -375,6 +386,7 @@ public final class EventReportTest {
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -407,6 +419,7 @@ public final class EventReportTest {
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -445,6 +458,7 @@ public final class EventReportTest {
                 DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -481,6 +495,7 @@ public final class EventReportTest {
                 NAVIGATION_NOISE_PROBABILITY, report.getRandomizedTriggerRate(), DOUBLE_MAX_DELTA);
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -511,6 +526,7 @@ public final class EventReportTest {
                         .setStatus(EventReport.Status.PENDING)
                         .setStatus(EventReport.DebugReportStatus.PENDING)
                         .setSourceType(Source.SourceType.NAVIGATION)
+                        .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
                         .build();
         final Set<EventReport> eventReportSet1 = Set.of(eventReport1);
         final Set<EventReport> eventReportSet2 = Set.of(eventReport2);
@@ -539,6 +555,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -569,6 +586,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -600,6 +618,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertNull(report.getSourceDebugKey());
         assertNull(report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -630,6 +649,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -659,6 +679,7 @@ public final class EventReportTest {
 
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
         assertNull(report.getSourceDebugKey());
         assertNull(report.getTriggerDebugKey());
     }
@@ -692,6 +713,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -723,6 +745,7 @@ public final class EventReportTest {
         assertEquals(TRIGGER_ID, report.getTriggerId());
         assertEquals(SOURCE_DEBUG_KEY, report.getSourceDebugKey());
         assertEquals(TRIGGER_DEBUG_KEY, report.getTriggerDebugKey());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
     }
 
     @Test
@@ -752,8 +775,55 @@ public final class EventReportTest {
 
         assertEquals(SOURCE_ID, report.getSourceId());
         assertEquals(TRIGGER_ID, report.getTriggerId());
+        assertEquals(REGISTRATION_ORIGIN, report.getRegistrationOrigin());
         assertNull(report.getSourceDebugKey());
         assertNull(report.getTriggerDebugKey());
+    }
+
+    @Test
+    public void populateFromSourceAndTrigger_setsRegistrationOrigin_FromTrigger()
+            throws JSONException {
+        // This test should fail after attribution scope is changed to origin
+        // This is because trigger and source registration origin are not equal
+        // Therefore trigger and source will not be attributed
+        // To fix update source and trigger registration origin to be equal
+        long baseTime = System.currentTimeMillis();
+        Source source =
+                getValidSourceBuilder()
+                        .setId(SOURCE_ID)
+                        .setEventId(new UnsignedLong(10L))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setInstallCooldownWindow(100)
+                        .setEventTime(baseTime)
+                        .setEnrollmentId("enrollment-id")
+                        .setAppDestinations(getNullableUriList(APP_DESTINATION))
+                        .setWebDestinations(getNullableUriList(null))
+                        .setEventReportWindow(TimeUnit.DAYS.toMillis(10))
+                        .setRegistrationOrigin(REGISTRATION_ORIGIN)
+                        .build();
+
+        Uri triggerRegistrationUrl = WebUtil.validUri("https://trigger.example.test");
+        Trigger trigger =
+                getValidTriggerBuilder()
+                        .setId(TRIGGER_ID)
+                        .setTriggerTime(baseTime + TimeUnit.SECONDS.toMillis(10))
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setEnrollmentId("enrollment-id")
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(triggerRegistrationUrl)
+                        .build();
+
+        List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
+        EventReport report =
+                new EventReport.Builder()
+                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .build();
+
+        assertEquals(triggerRegistrationUrl, report.getRegistrationOrigin());
+        assertEquals("enrollment-id", report.getEnrollmentId());
+        assertEquals(SOURCE_ID, report.getSourceId());
+        assertEquals(TRIGGER_ID, report.getTriggerId());
     }
 
     private Source createSourceForTest(
@@ -805,6 +875,7 @@ public final class EventReportTest {
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -825,6 +896,7 @@ public final class EventReportTest {
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -845,6 +917,7 @@ public final class EventReportTest {
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 
