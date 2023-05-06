@@ -39,6 +39,7 @@ import android.app.adservices.IAdServicesManager;
 import android.app.adservices.topics.TopicParcel;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Parcel;
 import android.os.RemoteException;
 
 import androidx.test.core.app.ApplicationProvider;
@@ -90,6 +91,16 @@ public class BlockedTopicsManagerTest {
 
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
+    }
+
+    @Test
+    public void testTopicParcelCreation() {
+        TopicParcel topicParcelFromParcel = TopicParcel.CREATOR.createFromParcel(Parcel.obtain());
+        TopicParcel[] topicParcels = TopicParcel.CREATOR.newArray(2);
+        topicParcelFromParcel.writeToParcel(Parcel.obtain(), 0);
+
+        assertThat(topicParcelFromParcel.describeContents()).isEqualTo(0);
+        assertThat(topicParcels[0]).isNull();
     }
 
     @Test
