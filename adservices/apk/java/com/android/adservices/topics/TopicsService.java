@@ -16,6 +16,8 @@
 package com.android.adservices.topics;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.app.Service;
 import android.content.Intent;
@@ -28,6 +30,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -62,6 +65,11 @@ public class TopicsService extends Service {
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             sLogger.e("onCreate(): Topics API is disabled");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                    "TopicsService",
+                    "onCreate");
             return;
         }
 
@@ -109,6 +117,11 @@ public class TopicsService extends Service {
     public IBinder onBind(Intent intent) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             sLogger.e("onBind(): Topics API is disabled, return nullBinding.");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+                    "TopicsService",
+                    "onBind");
             // Return null so that clients can not bind to the service.
             return null;
         }
