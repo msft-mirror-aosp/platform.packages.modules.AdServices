@@ -99,6 +99,10 @@ public class Source {
     @Nullable private Long mInstallTime;
     @Nullable private String mParentId;
     @Nullable private String mDebugJoinKey;
+    @Nullable private String mPlatformAdId;
+    @Nullable private String mDebugAdId;
+    private Uri mRegistrationOrigin;
+    @Nullable private ReportSpec mFlexEventReportSpec;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -189,17 +193,24 @@ public class Source {
         }
     }
 
-    ImpressionNoiseParams getImpressionNoiseParams() {
-        int destinationMultiplier =
-                hasAppDestinations() && hasWebDestinations()
-                        ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
-                        : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
+    /**
+     * Get the destination type multiplier,
+     *
+     * @return number of the destination type
+     */
+    private int getDestinationTypeMultiplier() {
+        return hasAppDestinations() && hasWebDestinations()
+                ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
+                : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
+    }
 
+    ImpressionNoiseParams getImpressionNoiseParams() {
+        int destinationTypeMultiplier = getDestinationTypeMultiplier();
         return new ImpressionNoiseParams(
                 getMaxReportCountInternal(isInstallDetectionEnabled()),
                 getTriggerDataCardinality(),
                 getReportingWindowCountForNoising(),
-                destinationMultiplier);
+                destinationTypeMultiplier);
     }
 
     private ImmutableList<Long> getEarlyReportingWindows(boolean installState) {
@@ -237,6 +248,11 @@ public class Source {
         return windowIndex < windowList.size()
                 ? windowList.get(windowIndex) + ONE_HOUR_IN_MILLIS :
                 mEventReportWindow + ONE_HOUR_IN_MILLIS;
+    }
+
+    private long getReportingTimeForNoisingFlexEventAPI(
+            int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
+        return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
     }
 
     @VisibleForTesting
@@ -347,7 +363,12 @@ public class Source {
                 && Objects.equals(mSharedAggregationKeys, source.mSharedAggregationKeys)
                 && Objects.equals(mParentId, source.mParentId)
                 && Objects.equals(mInstallTime, source.mInstallTime)
-                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey);
+                && Objects.equals(mDebugJoinKey, source.mDebugJoinKey)
+                && Objects.equals(mPlatformAdId, source.mPlatformAdId)
+                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
+                && Objects.equals(mDebugAdId, source.mDebugAdId)
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
     }
 
     @Override
@@ -379,7 +400,13 @@ public class Source {
                 mRegistrationId,
                 mSharedAggregationKeys,
                 mInstallTime,
-                mDebugJoinKey);
+                mDebugJoinKey,
+                mPlatformAdId,
+                mDebugAdId,
+                mRegistrationOrigin,
+                mDebugAdId,
+                mDebugJoinKey,
+                mFlexEventReportSpec);
     }
 
     /**
@@ -426,25 +453,52 @@ public class Source {
         }
 
         List<FakeReport> fakeReports;
-        if (isVtcDualDestinationModeWithPostInstallEnabled()) {
-            // Source is 'EVENT' type, both app and web destination are set and install exclusivity
-            // window is provided. Pick one of the static reporting states randomly.
-            fakeReports = generateVtcDualDestinationPostInstallFakeReports();
+        if (mFlexEventReportSpec == null) {
+            if (isVtcDualDestinationModeWithPostInstallEnabled()) {
+                // Source is 'EVENT' type, both app and web destination are set and install
+                // exclusivity
+                // window is provided. Pick one of the static reporting states randomly.
+                fakeReports = generateVtcDualDestinationPostInstallFakeReports();
+            } else {
+                // There will at least be one (app or web) destination available
+                ImpressionNoiseParams noiseParams = getImpressionNoiseParams();
+                fakeReports =
+                        ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
+                                        noiseParams, rand)
+                                .stream()
+                                .map(
+                                        reportConfig ->
+                                                new FakeReport(
+                                                        new UnsignedLong(
+                                                                Long.valueOf(reportConfig[0])),
+                                                        getReportingTimeForNoising(reportConfig[1]),
+                                                        resolveFakeReportDestinations(
+                                                                reportConfig[2])))
+                                .collect(Collectors.toList());
+            }
         } else {
-            // There will at least be one (app or web) destination available
-            ImpressionNoiseParams noiseParams = getImpressionNoiseParams();
+            int destinationTypeMultiplier = getDestinationTypeMultiplier();
+            List<int[]> fakeReportConfigs =
+                    ImpressionNoiseUtil.selectFlexEventReportRandomStateAndGenerateReportConfigs(
+                            mFlexEventReportSpec, destinationTypeMultiplier, rand);
             fakeReports =
-                    ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(noiseParams, rand)
-                            .stream()
+                    fakeReportConfigs.stream()
                             .map(
                                     reportConfig ->
                                             new FakeReport(
-                                                    new UnsignedLong(Long.valueOf(reportConfig[0])),
-                                                    getReportingTimeForNoising(reportConfig[1]),
+                                                    new UnsignedLong(
+                                                            Long.valueOf(
+                                                                    mFlexEventReportSpec
+                                                                            .getTriggerDataValue(
+                                                                                    reportConfig[
+                                                                                            0]))),
+                                                    getReportingTimeForNoisingFlexEventAPI(
+                                                            reportConfig[1],
+                                                            reportConfig[0],
+                                                            mFlexEventReportSpec),
                                                     resolveFakeReportDestinations(reportConfig[2])))
                             .collect(Collectors.toList());
         }
-
         mAttributionMode = fakeReports.isEmpty() ? AttributionMode.NEVER : AttributionMode.FALSELY;
         return fakeReports;
     }
@@ -706,6 +760,37 @@ public class Source {
         return mDebugJoinKey;
     }
 
+    /**
+     * Returns SHA256 hash of AdID from getAdId() on app registration concatenated with enrollment
+     * ID, to be matched with a web trigger's {@link Trigger#getDebugAdId()} value at the time of
+     * generating reports.
+     */
+    @Nullable
+    public String getPlatformAdId() {
+        return mPlatformAdId;
+    }
+
+    /**
+     * Returns SHA256 hash of AdID from registration response on web registration concatenated with
+     * enrollment ID, to be matched with an app trigger's {@link Trigger#getPlatformAdId()} value at
+     * the time of generating reports.
+     */
+    @Nullable
+    public String getDebugAdId() {
+        return mDebugAdId;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
+    }
+
+    /** Returns flex event report spec */
+    @Nullable
+    public ReportSpec getFlexEventReportSpec() {
+        return mFlexEventReportSpec;
+    }
+
     /** See {@link Source#getAppDestinations()} */
     public void setAppDestinations(@Nullable List<Uri> appDestinations) {
         mAppDestinations = appDestinations;
@@ -879,6 +964,10 @@ public class Source {
             builder.setPriority(copyFrom.mPriority);
             builder.setStatus(copyFrom.mStatus);
             builder.setDebugJoinKey(copyFrom.mDebugJoinKey);
+            builder.setPlatformAdId(copyFrom.mPlatformAdId);
+            builder.setDebugAdId(copyFrom.mDebugAdId);
+            builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
+            builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
             return builder;
         }
 
@@ -1134,6 +1223,34 @@ public class Source {
             return this;
         }
 
+        /** See {@link Source#getPlatformAdId()} */
+        @NonNull
+        public Builder setPlatformAdId(@Nullable String platformAdId) {
+            mBuilding.mPlatformAdId = platformAdId;
+            return this;
+        }
+
+        /** See {@link Source#getDebugAdId()} */
+        @NonNull
+        public Builder setDebugAdId(@Nullable String debugAdId) {
+            mBuilding.mDebugAdId = debugAdId;
+            return this;
+        }
+
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
+        /** See {@link Source#getFlexEventReportSpec()} */
+        @NonNull
+        public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
+            mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+            return this;
+        }
+
         /** Build the {@link Source}. */
         @NonNull
         public Source build() {
@@ -1143,11 +1260,8 @@ public class Source {
                     mBuilding.mRegistrant,
                     mBuilding.mSourceType,
                     mBuilding.mAggregateReportDedupKeys,
-                    mBuilding.mEventReportDedupKeys);
-
-            //if (mBuilding.mAppDestinations == null && mBuilding.mWebDestinations == null) {
-            //    throw new IllegalArgumentException("At least one destination is required");
-            //}
+                    mBuilding.mEventReportDedupKeys,
+                    mBuilding.mRegistrationOrigin);
 
             return mBuilding;
         }

@@ -25,6 +25,7 @@ import android.os.Bundle;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,6 +48,17 @@ public class SdkSandboxMultiUserTestApp {
                 ApplicationProvider.getApplicationContext()
                         .getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // unload SDK to fix flakiness
+        mSdkSandboxManager.unloadSdk(SDK_NAME);
+    }
+
+    @After
+    public void tearDown() {
+        // unload SDK to fix flakiness
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        }
     }
 
     @Test

@@ -127,6 +127,11 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 trigger.getAdtechKeyMapping());
         values.put(MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, trigger.getDebugJoinKey());
+        values.put(MeasurementTables.TriggerContract.PLATFORM_AD_ID, trigger.getPlatformAdId());
+        values.put(MeasurementTables.TriggerContract.DEBUG_AD_ID, trigger.getDebugAdId());
+        values.put(
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                trigger.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -394,6 +399,11 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(MeasurementTables.SourceContract.INSTALL_TIME, source.getInstallTime());
         values.put(MeasurementTables.SourceContract.DEBUG_JOIN_KEY, source.getDebugJoinKey());
+        values.put(MeasurementTables.SourceContract.PLATFORM_AD_ID, source.getPlatformAdId());
+        values.put(MeasurementTables.SourceContract.DEBUG_AD_ID, source.getDebugAdId());
+        values.put(
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                source.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -835,6 +845,9 @@ class MeasurementDao implements IMeasurementDao {
                 getNullableUnsignedLong(eventReport.getTriggerDebugKey()));
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, eventReport.getSourceId());
         values.put(MeasurementTables.EventReportContract.TRIGGER_ID, eventReport.getTriggerId());
+        values.put(
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                eventReport.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -1853,6 +1866,9 @@ class MeasurementDao implements IMeasurementDao {
                 aggregateReport.getDedupKey() != null
                         ? aggregateReport.getDedupKey().getValue()
                         : null);
+        values.put(
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                aggregateReport.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -2302,6 +2318,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
                 asyncRegistration.getRegistrationId());
+        values.put(
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                asyncRegistration.getPlatformAdId());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

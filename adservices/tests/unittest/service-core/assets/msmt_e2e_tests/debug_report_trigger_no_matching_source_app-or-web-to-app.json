@@ -31,17 +31,18 @@
     ]
   },
   "output": {
-    "event_level_results": [],
     "debug_report_results": [
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-        "payload": {
-          "type": "trigger-no-matching-source",
-          "body": {
-            "attribution_destination": "android-app://example.1d1.test",
-            "trigger_debug_key": "8971346783"
+        "payload": [
+          {
+            "type": "trigger-no-matching-source",
+            "body": {
+              "attribution_destination": "android-app://example.1d1.test",
+              "trigger_debug_key": "8971346783"
+            }
           }
-        }
+        ]
       }
     ]
   }

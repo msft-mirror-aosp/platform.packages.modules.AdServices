@@ -1334,6 +1334,17 @@ public interface Flags {
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
     }
 
+    /**
+     * Topics on-device classifier Kill Switch. The default value is false which means the on-device
+     * classifier in enabled. This flag is used for emergency turning off the on-device classifier.
+     */
+    boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
+
+    /** @return value of Topics on-device classifier kill switch. */
+    default boolean getTopicsOnDeviceClassifierKillSwitch() {
+        return TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
+    }
+
     // MDD Killswitches
 
     /**
@@ -1807,6 +1818,13 @@ public interface Flags {
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
+    }
+
+    /** UI Dialog Fragment feature enabled. */
+    boolean UI_DIALOG_FRAGMENT = false;
+    /** Returns if the UI Dialog Fragment is enabled. */
+    default boolean getUiDialogFragmentEnabled() {
+        return UI_DIALOG_FRAGMENT;
     }
 
     /** The EEA device region feature is off by default. */

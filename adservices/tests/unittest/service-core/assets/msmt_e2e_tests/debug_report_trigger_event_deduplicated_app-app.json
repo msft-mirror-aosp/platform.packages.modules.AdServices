@@ -112,27 +112,31 @@
     "debug_report_results": [
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-        "payload": {
-          "type":"trigger-event-deduplicated",
-          "body": {
-            "attribution_destination": "android-app://example.2d1.test",
-            "trigger_debug_key": "8971346782",
-            "source_debug_key": "347982378",
-            "source_event_id": "1",
-            "source_site": "android-app://example.1s1.test"
+        "payload": [
+          {
+            "type":"trigger-event-deduplicated",
+            "body": {
+              "attribution_destination": "android-app://example.2d1.test",
+              "trigger_debug_key": "8971346782",
+              "source_debug_key": "347982378",
+              "source_event_id": "1",
+              "source_site": "android-app://example.1s1.test"
+            }
           }
-        }
+        ]
       }, {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-        "payload": {
-          "type": "source-success",
-          "body": {
-            "source_event_id": "1",
-            "attribution_destination": "android-app://example.2d1.test",
-            "source_site": "android-app://example.1s1.test",
-            "source_debug_key": "347982378"
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "1",
+              "attribution_destination": "android-app://example.2d1.test",
+              "source_site": "android-app://example.1s1.test",
+              "source_debug_key": "347982378"
+            }
           }
-        }
+        ]
       }
     ]
   }

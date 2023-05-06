@@ -236,10 +236,6 @@ public class NotificationActivityUiAutomatorTest {
             ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
             return;
         }
-        if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
-            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
-            return;
-        }
 
         ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
         Assert.fail("Web browser not found after several clicks on the last line");
@@ -360,7 +356,8 @@ public class NotificationActivityUiAutomatorTest {
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (sDevice.getCurrentPackageName().equals(packageNameOfDefaultBrowser)) {
+            if (!sentence.exists()) {
+                sDevice.pressBack();
                 return true;
             }
         }
