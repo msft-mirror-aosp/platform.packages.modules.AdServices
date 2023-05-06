@@ -24,6 +24,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.KEY_ADSERVICES_ENTRY_POINT_STATUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 
 import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
@@ -39,6 +43,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
@@ -94,6 +99,10 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             callback.onFailure(STATUS_INTERNAL_ERROR);
                         } catch (RemoteException re) {
                             LogUtil.e(re, "Unable to send result to the callback");
+                            ErrorLogUtil.e(
+                                    re,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
                         }
                     }
                 });
@@ -131,6 +140,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                 KEY_ADSERVICES_ENTRY_POINT_STATUS, adServiceEntryPointStatusInt);
                         if (!editor.commit()) {
                             LogUtil.e("saving to the sharedpreference failed");
+                            ErrorLogUtil.e(
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
+                                    this.getClass().getSimpleName(),
+                                    this.getClass().getEnclosingMethod().getName());
                         }
                         LogUtil.d(
                                 "adid status is "
@@ -190,6 +204,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         LogUtil.e(
                                 "unable to save the adservices entry point status of "
                                         + e.getMessage());
+                        ErrorLogUtil.e(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
+                                this.getClass().getSimpleName(),
+                                this.getClass().getEnclosingMethod().getName());
                     }
                 });
     }
