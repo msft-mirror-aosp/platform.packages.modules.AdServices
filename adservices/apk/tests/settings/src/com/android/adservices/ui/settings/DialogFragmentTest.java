@@ -95,9 +95,9 @@ public class DialogFragmentTest {
                         .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
-
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
@@ -392,6 +392,10 @@ public class DialogFragmentTest {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
         // open apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_apps_title);
+
+        // perform a gentle swipe so scroll won't miss the text close to the
+        // bottom of the current screen.
+        ApkTestUtil.gentleSwipe(sDevice);
 
         // open blocked apps view
         ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_blocked_apps_title);
