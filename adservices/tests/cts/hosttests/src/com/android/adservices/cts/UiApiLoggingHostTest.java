@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotNull;
 
 import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
+import android.cts.statsdatom.lib.DeviceUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
@@ -34,6 +35,7 @@ import com.android.tradefed.device.ITestDevice;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner;
 import com.android.tradefed.testtype.DeviceJUnit4ClassRunner.TestMetrics;
 import com.android.tradefed.testtype.IDeviceTest;
+
 
 import org.junit.After;
 import org.junit.Assume;
@@ -55,11 +57,23 @@ import java.util.List;
  */
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class UiApiLoggingHostTest implements IDeviceTest {
+    public static final String FEATURE_WATCH = "android.hardware.type.watch";
+    public static final String FEATURE_AUTOMOTIVE = "android.hardware.type.automotive";
+    public static final String FEATURE_LEANBACK = "android.software.leanback";
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
     private static final String TARGET_PACKAGE = "com.google.android.adservices.api";
     private static final String TARGET_PACKAGE_AOSP = "com.android.adservices.api";
 
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE =
+            "com.google.android.ext.adservices.api";
+    private static final String TARGET_EXT_ADSERVICES_PACKAGE_AOSP =
+            "com.android.ext.adservices.api";
+    private static final int PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH = 2;
+    private static final int APPSEARCH_ONLY = 3;
+    private int mApiLevel;
+    private String mTargetPackage;
+    private String mTargetPackageAosp;
     @Rule public TestMetrics mMetrics = new TestMetrics();
 
     private ITestDevice mDevice;
@@ -76,7 +90,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
 
     @Before
     public void setUp() throws Exception {
-        Assume.assumeTrue(getDevice().getApiLevel() >= 33);
+        Assume.assumeTrue(isDeviceSupported(getDevice()));
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
         disableGlobalKillSwitch();
@@ -84,11 +98,28 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         disableMddBackgroundTasks(true);
         overrideDisableTopicsEnrollmentCheck(/* enrolmentCheckFlag */ "1");
         stopPacakageAPI();
+        mApiLevel = getDevice().getApiLevel();
+
+        // Set flags for test to run on devices with api level lower than 33 (S-)
+        if (mApiLevel < 33) {
+            mTargetPackage = TARGET_EXT_ADSERVICES_PACKAGE;
+            mTargetPackageAosp = TARGET_EXT_ADSERVICES_PACKAGE_AOSP;
+            setFlags();
+        } else {
+            mTargetPackage = TARGET_PACKAGE;
+            mTargetPackageAosp = TARGET_PACKAGE_AOSP;
+        }
     }
 
     @After
     public void tearDown() throws Exception {
+        if (!isDeviceSupported(getDevice())) {
+            return;
+        }
         disableMddBackgroundTasks(false);
+        if (mApiLevel < 33) {
+            resetFlagsToDefault();
+        }
         stopPacakageAPI();
         ConfigUtils.removeConfig(getDevice());
         ReportUtils.clearReports(getDevice());
@@ -100,7 +131,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         ITestDevice device = getDevice();
         assertNotNull("Device not set", device);
 
-        startSettingMainActivity(TARGET_PACKAGE, device, /* isAosp */ false);
+        startSettingMainActivity(mTargetPackage, device, /* isAosp */ false);
 
         // Fetch a list of happened log events and their data
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device);
@@ -111,7 +142,7 @@ public class UiApiLoggingHostTest implements IDeviceTest {
         if (data.isEmpty()) {
             ConfigUtils.removeConfig(getDevice());
             ReportUtils.clearReports(getDevice());
-            startSettingMainActivity(TARGET_PACKAGE_AOSP, device, /* isAosp */ true);
+            startSettingMainActivity(mTargetPackageAosp, device, /* isAosp */ true);
             data = ReportUtils.getEventMetricDataList(device);
         }
 
@@ -164,12 +195,70 @@ public class UiApiLoggingHostTest implements IDeviceTest {
 
     public void startUiMainActivity(ITestDevice device, boolean isAosp)
             throws DeviceNotAvailableException {
-        String packageName = isAosp ? TARGET_PACKAGE_AOSP : TARGET_PACKAGE;
+        String packageName = isAosp ? mTargetPackageAosp : mTargetPackage;
         device.executeShellCommand("am start -n " + packageName + "/" + CLASS);
     }
 
     public void stopPacakageAPI() throws DeviceNotAvailableException {
-        getDevice().executeShellCommand("am force-stop " + TARGET_PACKAGE);
-        getDevice().executeShellCommand("am force-stop " + TARGET_PACKAGE_AOSP);
+        getDevice().executeShellCommand("am force-stop " + mTargetPackage);
+        getDevice().executeShellCommand("am force-stop " + mTargetPackageAosp);
+    }
+
+    public void setFlags() throws DeviceNotAvailableException {
+        setEnableBackCompatFlag(true);
+        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
+        setConsentSourceOfTruth(APPSEARCH_ONLY);
+        setEnableAppSearchConsentData(true);
+        // Measurement rollback check requires loading AdServicesManagerService's Binder from the
+        // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
+        // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
+        setMeasurementRollbackDeleteKillSwitch(true);
+    }
+
+    public void resetFlagsToDefault() throws DeviceNotAvailableException {
+        setEnableBackCompatFlag(false);
+        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
+        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
+        setEnableAppSearchConsentData(false);
+        setMeasurementRollbackDeleteKillSwitch(false);
+    }
+
+    private void setEnableBackCompatFlag(boolean isEnabled) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices enable_back_compat " + isEnabled);
+    }
+
+    private void setBlockedTopicsSourceOfTruth(int source) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices blocked_topics_source_of_truth " + source);
+    }
+
+    private void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled)
+            throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices measurement_rollback_deletion_kill_switch "
+                                + isEnabled);
+    }
+
+    private void setConsentSourceOfTruth(int source) throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices consent_source_of_truth " + source);
+    }
+
+    private void setEnableAppSearchConsentData(boolean isEnabled)
+            throws DeviceNotAvailableException {
+        getDevice()
+                .executeShellCommand(
+                        "device_config put adservices enable_appsearch_consent_data " + isEnabled);
+    }
+
+    private boolean isDeviceSupported(ITestDevice device) throws Exception {
+        return !DeviceUtils.hasFeature(device, FEATURE_WATCH)
+                && !DeviceUtils.hasFeature(device, FEATURE_AUTOMOTIVE)
+                && !DeviceUtils.hasFeature(device, FEATURE_LEANBACK);
     }
 }
