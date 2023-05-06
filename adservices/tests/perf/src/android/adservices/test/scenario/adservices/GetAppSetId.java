@@ -80,5 +80,6 @@ public class GetAppSetId {
     // Override global_kill_switch to ignore the effect of actual PH values.
     private void disableGlobalKillSwitch() {
         ShellUtils.runShellCommand("device_config put adservices global_kill_switch false");
+        ShellUtils.runShellCommand("device_config put adservices appsetid_kill_switch false");
     }
 }

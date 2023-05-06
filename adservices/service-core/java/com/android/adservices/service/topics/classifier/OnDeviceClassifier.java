@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ON_DEVICE_CLASSIFY_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ON_DEVICE_NUMBER_FORMAT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.topics.classifier.Preprocessor.limitDescriptionSize;
 
 import android.annotation.NonNull;
@@ -25,6 +29,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
@@ -71,6 +76,10 @@ public class OnDeviceClassifier implements Classifier {
     private static final String BUILD_ID_FIELD = "build_id";
 
     private static final String NO_VERSION_INFO = "NO_VERSION_INFO";
+
+    // Defined constants for error codes which have very long names.
+    private static final int TOPICS_ON_DEVICE_NUMBER_FORMAT_EXCEPTION =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ON_DEVICE_NUMBER_FORMAT_EXCEPTION;
 
     private final Preprocessor mPreprocessor;
     private final PackageManagerUtil mPackageManagerUtil;
@@ -194,6 +203,10 @@ public class OnDeviceClassifier implements Classifier {
             // (TODO:b/242926783): Update to more granular Exception after resolving JNI error
             // propagation.
             sLogger.e("[ML] classify call failed for mBertNLClassifier.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ON_DEVICE_CLASSIFY_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return ImmutableList.of();
         }
         // Get the highest score first. Sort in decreasing order.
@@ -232,6 +245,10 @@ public class OnDeviceClassifier implements Classifier {
                     numberFormatException,
                     "ML model did not return a topic id. Label returned is %s",
                     category.getLabel());
+            ErrorLogUtil.e(
+                    numberFormatException,
+                    TOPICS_ON_DEVICE_NUMBER_FORMAT_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return -1;
         }
     }
@@ -318,6 +335,10 @@ public class OnDeviceClassifier implements Classifier {
             mBertNLClassifier = loadModel();
         } catch (Exception e) {
             sLogger.e(e, "Loading ML model failed.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return false;
         }
 
