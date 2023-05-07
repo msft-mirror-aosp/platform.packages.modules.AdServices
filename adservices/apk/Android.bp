@@ -140,7 +140,7 @@ android_library {
     ],
     // Must use EmptyManifest.xml since "adservices-assets" will also be used by the
     // service-core tests. If we use the normal "AndroidManifest.xml", we will redeclare permissions
-    // in the tests
+    // in the tests.
     // See b/228270294 for the error about duplicated permissions.
     manifest: "EmptyManifest.xml",
 }
