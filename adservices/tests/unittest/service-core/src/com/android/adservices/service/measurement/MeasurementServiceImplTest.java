@@ -62,7 +62,6 @@ import android.test.mock.MockContext;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -108,7 +107,6 @@ public final class MeasurementServiceImplTest {
     @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private ConsentManager mMockConsentManager;
-    @Mock private EnrollmentDao mMockEnrollmentDao;
     @Mock private Flags mMockFlags;
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
@@ -993,7 +991,6 @@ public final class MeasurementServiceImplTest {
                 mMockContext,
                 Clock.SYSTEM_CLOCK,
                 mMockConsentManager,
-                mMockEnrollmentDao,
                 mMockThrottler,
                 mMockFlags,
                 mMockAdServicesLogger,

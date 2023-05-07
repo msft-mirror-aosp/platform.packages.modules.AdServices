@@ -16,11 +16,13 @@
 
 package com.android.adservices.spe;
 
-import static com.android.adservices.spe.JobExecutionResultCode.FAILED_WITHOUT_RETRY;
-import static com.android.adservices.spe.JobExecutionResultCode.FAILED_WITH_RETRY;
-import static com.android.adservices.spe.JobExecutionResultCode.ONSTOP_CALLED_WITHOUT_RETRY;
-import static com.android.adservices.spe.JobExecutionResultCode.ONSTOP_CALLED_WITH_RETRY;
-import static com.android.adservices.spe.JobExecutionResultCode.SUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL;
+import static com.android.adservices.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
 import static com.android.adservices.spe.JobServiceConstants.SHARED_PREFS_BACKGROUND_JOBS;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_PERIOD;
 import static com.android.adservices.spe.JobServiceConstants.UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP;
@@ -39,6 +41,8 @@ import android.os.Build;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -50,12 +54,17 @@ public final class AdservicesJobServiceLogger {
 
     private final Context mContext;
     private final Clock mClock;
+    private final StatsdAdServicesLogger mStatsdLogger;
 
     /** Create an instance of {@link AdservicesJobServiceLogger}. */
     @VisibleForTesting
-    public AdservicesJobServiceLogger(@NonNull Context context, @NonNull Clock clock) {
+    public AdservicesJobServiceLogger(
+            @NonNull Context context,
+            @NonNull Clock clock,
+            @NonNull StatsdAdServicesLogger statsdLogger) {
         mContext = context.getApplicationContext();
         mClock = clock;
+        mStatsdLogger = statsdLogger;
     }
 
     /** Get a singleton instance of {@link AdservicesJobServiceLogger} to be used. */
@@ -64,7 +73,11 @@ public final class AdservicesJobServiceLogger {
         if (sSingleton == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sSingleton == null) {
-                    sSingleton = new AdservicesJobServiceLogger(context, Clock.SYSTEM_CLOCK);
+                    sSingleton =
+                            new AdservicesJobServiceLogger(
+                                    context,
+                                    Clock.SYSTEM_CLOCK,
+                                    StatsdAdServicesLogger.getInstance());
                 }
             }
         }
@@ -101,10 +114,12 @@ public final class AdservicesJobServiceLogger {
             return;
         }
 
-        JobExecutionResultCode resultCode =
+        int resultCode =
                 isSuccessful
-                        ? SUCCESSFUL
-                        : (shouldRetry ? FAILED_WITH_RETRY : FAILED_WITHOUT_RETRY);
+                        ? AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SUCCESSFUL
+                        : (shouldRetry
+                                ? AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITH_RETRY
+                                : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__FAILED_WITHOUT_RETRY);
         logExecutionStats(jobId, mClock.currentTimeMillis(), resultCode, UNAVAILABLE_STOP_REASON);
     }
 
@@ -127,10 +142,26 @@ public final class AdservicesJobServiceLogger {
         // StopReason is only supported for Android Version S+.
         int stopReason = SdkLevel.isAtLeastS() ? params.getStopReason() : UNAVAILABLE_STOP_REASON;
 
-        JobExecutionResultCode resultCode =
-                shouldRetry ? ONSTOP_CALLED_WITH_RETRY : ONSTOP_CALLED_WITHOUT_RETRY;
+        int resultCode =
+                shouldRetry
+                        ? AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITH_RETRY
+                        : AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__ONSTOP_CALLED_WITHOUT_RETRY;
 
         logExecutionStats(jobId, endJobTimestamp, resultCode, stopReason);
+    }
+
+    /**
+     * Log when the execution is skipped due to customized reasons.
+     *
+     * @param jobId the unique id of the job to log for
+     * @param skipReason the result to skip the execution
+     */
+    public void recordJobSkipped(int jobId, int skipReason) {
+        if (FlagsFactory.getFlags().getBackgroundJobsLoggingKillSwitch()) {
+            return;
+        }
+
+        logExecutionStats(jobId, mClock.currentTimeMillis(), skipReason, UNAVAILABLE_STOP_REASON);
     }
 
     /**
@@ -144,7 +175,7 @@ public final class AdservicesJobServiceLogger {
      * @param jobStopExecutionTimestamp the timestamp of the end of an execution. Note it can happen
      *     in either {@link JobService#jobFinished(JobParameters, boolean)} or {@link
      *     JobService#onStopJob(JobParameters)}.
-     * @param executionResultCode the {@link JobExecutionResultCode} for current execution
+     * @param executionResultCode the result code for current execution
      * @param possibleStopReason if {@link JobService#onStopJob(JobParameters)} is invoked. Set
      *     {@link JobServiceConstants#UNAVAILABLE_STOP_REASON} if {@link
      *     JobService#onStopJob(JobParameters)} is not invoked.
@@ -153,7 +184,7 @@ public final class AdservicesJobServiceLogger {
     public void logExecutionStats(
             int jobId,
             long jobStopExecutionTimestamp,
-            @NonNull JobExecutionResultCode executionResultCode,
+            int executionResultCode,
             int possibleStopReason) {
         String jobStartTimestampKey = getJobStartTimestampKey(jobId);
         String executionPeriodKey = getExecutionPeriodKey(jobId);
@@ -166,7 +197,7 @@ public final class AdservicesJobServiceLogger {
         long jobStartExecutionTimestamp =
                 sharedPreferences.getLong(
                         jobStartTimestampKey, UNAVAILABLE_JOB_EXECUTION_START_TIMESTAMP);
-        long jobExecutionPeriod =
+        long jobExecutionPeriodMs =
                 sharedPreferences.getLong(executionPeriodKey, UNAVAILABLE_JOB_EXECUTION_PERIOD);
 
         // Stop telemetry the metrics and log error in logcat if the stat is not valid.
@@ -183,7 +214,7 @@ public final class AdservicesJobServiceLogger {
         }
 
         // Compute the execution latency.
-        long executionLatency = jobStopExecutionTimestamp - jobStartExecutionTimestamp;
+        long executionLatencyMs = jobStopExecutionTimestamp - jobStartExecutionTimestamp;
 
         // Update jobStopExecutionTimestamp in storage.
         editor.putLong(jobStopTimestampKey, jobStopExecutionTimestamp);
@@ -200,9 +231,9 @@ public final class AdservicesJobServiceLogger {
         // Actually upload the metrics to statsD.
         logJobStatsHelper(
                 jobId,
-                executionLatency,
-                jobExecutionPeriod,
-                executionResultCode.getResultCode(),
+                executionLatencyMs,
+                jobExecutionPeriodMs,
+                executionResultCode,
                 possibleStopReason);
     }
 
@@ -210,28 +241,39 @@ public final class AdservicesJobServiceLogger {
      * Do background job telemetry.
      *
      * @param jobId the job ID
-     * @param executionLatency the latency of an execution. Defined as the difference of timestamp
+     * @param executionLatencyMs the latency of an execution. Defined as the difference of timestamp
      *     between end and start of an execution.
-     * @param executionPeriod the execution period. Defined as the difference of timestamp between
+     * @param executionPeriodMs the execution period. Defined as the difference of timestamp between
      *     current and previous start of an execution. This is only valid for periodical jobs to
      *     monitor the difference between actual and configured execution period.
-     * @param resultCode the {@link JobExecutionResultCode} of an execution
+     * @param resultCode the result code of an execution
      * @param stopReason {@link JobParameters#getStopReason()} if {@link
      *     JobService#onStopJob(JobParameters)} is invoked. Otherwise, set it to {@link
      *     JobServiceConstants#UNAVAILABLE_STOP_REASON}.
      */
-    // TODO: Will implement this method in a follow-up CL.
     @VisibleForTesting
     public void logJobStatsHelper(
             int jobId,
-            long executionLatency,
-            long executionPeriod,
+            long executionLatencyMs,
+            long executionPeriodMs,
             int resultCode,
             int stopReason) {
+        long executionPeriodMinute = executionPeriodMs / MILLISECONDS_PER_MINUTE;
+
+        ExecutionReportedStats stats =
+                ExecutionReportedStats.builder()
+                        .setJobId(jobId)
+                        .setExecutionLatencyMs(convertLongToInteger(executionLatencyMs))
+                        .setExecutionPeriodMinute(convertLongToInteger(executionPeriodMinute))
+                        .setExecutionResultCode(resultCode)
+                        .setStopReason(stopReason)
+                        .build();
+        mStatsdLogger.logExecutionReportedStats(stats);
+
         LogUtil.v(
-                "[Adservices background job logging] jobId: %d, executionLatency: %d, "
-                        + "executionPeriod: %d, resultCode: %d, stopReason: %d",
-                jobId, executionLatency, executionPeriod, resultCode, stopReason);
+                "[Adservices background job logging] jobId: %d, executionLatencyInMs: %d, "
+                        + "executionPeriodInMs: %d, resultCode: %d, stopReason: %d",
+                jobId, executionLatencyMs, executionPeriodMs, resultCode, stopReason);
     }
 
     /**
@@ -284,7 +326,7 @@ public final class AdservicesJobServiceLogger {
                         jobId,
                         UNAVAILABLE_JOB_LATENCY,
                         previousExecutionPeriod,
-                        JobExecutionResultCode.HALTED_FOR_UNKNOWN_REASON.getResultCode(),
+                        AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__HALTED_FOR_UNKNOWN_REASON,
                         UNAVAILABLE_STOP_REASON);
             }
 
@@ -292,10 +334,10 @@ public final class AdservicesJobServiceLogger {
             // Define the execution period = difference of the timestamp of two consecutive
             // invocations of onStartJob().
             // TODO(b/279231865): TODO log to CEL: SPE_INVALID_EXECUTION_PERIOD
-            long executionPeriod = startJobTimestamp - previousJobStartTimestamp;
+            long executionPeriodInMs = startJobTimestamp - previousJobStartTimestamp;
 
             // Store the execution period into shared preference.
-            editor.putLong(executionPeriodKey, executionPeriod);
+            editor.putLong(executionPeriodKey, executionPeriodInMs);
         }
         // Store current JobStartTimestamp into shared preference.
         editor.putLong(jobStartTimestampKey, startJobTimestamp);
@@ -323,5 +365,29 @@ public final class AdservicesJobServiceLogger {
     @VisibleForTesting
     static String getExecutionPeriodKey(int jobId) {
         return jobId + JobServiceConstants.SHARED_PREFS_EXEC_PERIOD_SUFFIX;
+    }
+
+    // Convert a long value to an integer.
+    //
+    // Used to convert a time period in long-format but needs to be logged with integer-format.
+    // Generally, a time period should always be a positive integer with a proper design of its
+    // unit.
+    //
+    // Defensively use this method to avoid any Exception.
+    @VisibleForTesting
+    static int convertLongToInteger(long longVal) {
+        int intValue;
+
+        // The given time period should always be in the range of positive integer. Defensively
+        // handle overflow values to avoid potential Exceptions.
+        if (longVal <= Integer.MIN_VALUE) {
+            intValue = Integer.MIN_VALUE;
+        } else if (longVal >= Integer.MAX_VALUE) {
+            intValue = Integer.MAX_VALUE;
+        } else {
+            intValue = (int) longVal;
+        }
+
+        return intValue;
     }
 }

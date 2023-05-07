@@ -36,8 +36,8 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.data.measurement.ITransaction;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -102,7 +102,8 @@ public class DebugReportingJobHandlerTest {
     public void testSendDebugReportForSuccess()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport = createDebugReport1();
-        JSONObject debugReportPayload = debugReport.toPayloadJson();
+        JSONArray debugReportPayload = new JSONArray();
+        debugReportPayload.put(debugReport.toPayloadJson());
 
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_OK)
@@ -127,8 +128,8 @@ public class DebugReportingJobHandlerTest {
     public void testSendDebugReportForFailure()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport = createDebugReport1();
-        JSONObject debugReportPayload = debugReport.toPayloadJson();
-
+        JSONArray debugReportPayload = new JSONArray();
+        debugReportPayload.put(debugReport.toPayloadJson());
         when(mMeasurementDao.getDebugReport(debugReport.getId())).thenReturn(debugReport);
         doReturn(HttpURLConnection.HTTP_BAD_REQUEST)
                 .when(mSpyDebugReportingJobHandler)
@@ -150,9 +151,11 @@ public class DebugReportingJobHandlerTest {
     public void testPerformScheduledReportsForMultipleReports()
             throws DatastoreException, IOException, JSONException {
         DebugReport debugReport1 = createDebugReport1();
-        JSONObject debugReportPayload1 = debugReport1.toPayloadJson();
+        JSONArray debugReportPayload1 = new JSONArray();
+        debugReportPayload1.put(debugReport1.toPayloadJson());
         DebugReport debugReport2 = createDebugReport2();
-        JSONObject debugReportPayload2 = debugReport2.toPayloadJson();
+        JSONArray debugReportPayload2 = new JSONArray();
+        debugReportPayload2.put(debugReport2.toPayloadJson());
 
         when(mMeasurementDao.getDebugReportIds())
                 .thenReturn(List.of(debugReport1.getId(), debugReport2.getId()));

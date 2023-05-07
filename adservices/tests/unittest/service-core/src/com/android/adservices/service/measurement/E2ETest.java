@@ -591,17 +591,20 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
-    private static int hashForDebugReportObject(OutputType outputType, JSONObject obj) {
-        Object[] objArray = new Object[3];
+    private static int hashForDebugReportObject(OutputType outputType, JSONObject obj)
+            throws JSONException {
+        List<Object> objectList = new ArrayList<>();
         String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objArray[0] =
+        objectList.add(
                 outputType == OutputType.EXPECTED
                         ? url
-                        : getReportUrl(ReportType.DEBUG_REPORT_API, url);
-        JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = payload.optString(DebugReportPayloadKeys.TYPE, "");
-        objArray[2] = payload.optString(DebugReportPayloadKeys.BODY, "");
-        return Arrays.hashCode(objArray);
+                        : getReportUrl(ReportType.DEBUG_REPORT_API, url));
+        JSONArray payloads = obj.optJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
+        for (int i = 0; i < payloads.length(); i++) {
+            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.TYPE, ""));
+            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.BODY, ""));
+        }
+        return objectList.hashCode();
     }
 
     // Used in interop tests, where we have known discrepancies.
@@ -700,17 +703,32 @@ public abstract class E2ETest {
 
     private boolean areEqualDebugReportJsons(JSONObject obj1, JSONObject obj2)
             throws JSONException {
-        JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        if (!payload1.optString(DebugReportPayloadKeys.TYPE, "")
-                .equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
-            log("Debug report type mismatch");
+        JSONArray payloads1 = obj1.getJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
+        JSONArray payloads2 = obj2.getJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
+        if (payloads1.length() != payloads2.length()) {
+            log("Debug report size mismatch");
             return false;
         }
-        if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
-                .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
-            log("Debug report body mismatch");
-            return false;
+        for (int i = 0; i < payloads1.length(); i++) {
+            JSONObject payload1 = payloads1.getJSONObject(i);
+            String type = payload1.optString(DebugReportPayloadKeys.TYPE, "");
+            boolean hasSameType = false;
+            for (int j = 0; j < payloads2.length(); j++) {
+                JSONObject payload2 = payloads2.getJSONObject(j);
+                if (type.equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
+                    hasSameType = true;
+                    if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
+                            .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
+                        log("Debug report body mismatch");
+                        return false;
+                    }
+                    break;
+                }
+            }
+            if (!hasSameType) {
+                log("Debug report type mismatch");
+                return false;
+            }
         }
         return obj1.optString(TestFormatJsonMapping.REPORT_TO_KEY)
                 .equals(
@@ -760,7 +778,14 @@ public abstract class E2ETest {
     private static void sortDebugReportObjects(
             OutputType outputType, List<JSONObject> debugReportObjects) {
         debugReportObjects.sort(
-                Comparator.comparing(obj -> hashForDebugReportObject(outputType, obj)));
+                Comparator.comparing(
+                        obj -> {
+                            try {
+                                return hashForDebugReportObject(outputType, obj);
+                            } catch (JSONException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }));
     }
 
     private boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
@@ -828,7 +853,7 @@ public abstract class E2ETest {
                             + "Expected aggregate report objects: %s\n\n"
                             + "Actual aggregate report objects: %s\n\n"
                             + "Expected debug aggregate report objects: %s\n\n"
-                            + "Actual debug aggregate report objects: %s\n"
+                            + "Actual debug aggregate report objects: %s\n\n"
                             + "Expected debug report objects: %s\n\n"
                             + "Actual debug report objects: %s\n",
                         prettify(
