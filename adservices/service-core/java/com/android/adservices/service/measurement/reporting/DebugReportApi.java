@@ -234,8 +234,7 @@ public class DebugReportApi {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -256,8 +255,7 @@ public class DebugReportApi {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
