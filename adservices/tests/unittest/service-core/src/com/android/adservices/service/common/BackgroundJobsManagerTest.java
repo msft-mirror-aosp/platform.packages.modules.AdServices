@@ -16,9 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.service.AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MAINTENANCE_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
@@ -27,11 +24,14 @@ import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_UNINSTALLED_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID;
 import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.TOPICS_EPOCH_JOB_ID;
+import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -308,8 +308,8 @@ public class BackgroundJobsManagerTest {
         BackgroundJobsManager.unscheduleAllBackgroundJobs(mockJobScheduler);
 
         // Verification
-        verify(mockJobScheduler, times(1)).cancel(eq(MAINTENANCE_JOB_ID));
-        verify(mockJobScheduler, times(1)).cancel(eq(TOPICS_EPOCH_JOB_ID));
+        verify(mockJobScheduler, times(1)).cancel(eq(MAINTENANCE_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(TOPICS_EPOCH_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID));
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
@@ -318,8 +318,8 @@ public class BackgroundJobsManagerTest {
         verify(mockJobScheduler, times(1)).cancel(eq(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID));
         verify(mockJobScheduler, times(1))
                 .cancel(eq(MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID));
-        verify(mockJobScheduler, times(1)).cancel(eq(FLEDGE_BACKGROUND_FETCH_JOB_ID));
-        verify(mockJobScheduler, times(1)).cancel(eq(CONSENT_NOTIFICATION_JOB_ID));
+        verify(mockJobScheduler, times(1)).cancel(eq(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()));
+        verify(mockJobScheduler, times(1)).cancel(eq(CONSENT_NOTIFICATION_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1)).cancel(eq(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId()));
         verify(mockJobScheduler, times(1))
