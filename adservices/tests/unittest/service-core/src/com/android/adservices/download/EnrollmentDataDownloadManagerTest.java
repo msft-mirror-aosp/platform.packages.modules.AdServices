@@ -16,8 +16,14 @@
 
 package com.android.adservices.download;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -30,6 +36,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -76,12 +83,15 @@ public class EnrollmentDataDownloadManagerTest {
         MockitoAnnotations.initMocks(this);
         mSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(FlagsFactory.class)
-                        .mockStatic(MobileDataDownloadFactory.class)
-                        .mockStatic(EnrollmentDao.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(MobileDataDownloadFactory.class)
+                        .spyStatic(EnrollmentDao.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
     }
 
     @After
@@ -183,6 +193,7 @@ public class EnrollmentDataDownloadManagerTest {
     @Test
     public void testReadFileAndInsertIntoDatabaseExecutionException()
             throws ExecutionException, InterruptedException, IOException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mMockFileStorage)
                 .when(() -> (MobileDataDownloadFactory.getFileStorage(any())));
         ExtendedMockito.doReturn(mMockMdd)
@@ -202,11 +213,20 @@ public class EnrollmentDataDownloadManagerTest {
                 .isEqualTo(EnrollmentDataDownloadManager.DownloadStatus.NO_FILE_AVAILABLE);
 
         verify(mMockEnrollmentDao, times(0)).insert(any());
+
+        ExtendedMockito.verify(
+                () -> {
+                    ErrorLogUtil.e(
+                            any(Throwable.class),
+                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE),
+                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
+                });
     }
 
     @Test
     public void testReadFileAndInsertIntoDatabaseParsingFailed()
             throws IOException, ExecutionException, InterruptedException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ExtendedMockito.doReturn(mMockFileStorage)
                 .when(() -> (MobileDataDownloadFactory.getFileStorage(any())));
         ExtendedMockito.doReturn(mMockMdd)
@@ -229,5 +249,14 @@ public class EnrollmentDataDownloadManagerTest {
                 .isEqualTo(EnrollmentDataDownloadManager.DownloadStatus.PARSING_FAILED);
 
         verify(mMockEnrollmentDao, times(0)).insert(any());
+
+        ExtendedMockito.verify(
+                () -> {
+                    ErrorLogUtil.e(
+                            any(Throwable.class),
+                            eq(
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR),
+                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT));
+                });
     }
 }
