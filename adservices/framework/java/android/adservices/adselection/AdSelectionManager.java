@@ -334,10 +334,10 @@ public class AdSelectionManager {
      *
      * <p>To calculate the winning buyer reporting URL, the service fetches the winning buyer's
      * JavaScript logic which is fetched via the buyer's {@link
-     * CustomAudience#getBiddingLogicUri()}. Then, the service executes one of the functions found
-     * in the buyer JS called {@code reportWin}, providing on-device signals, {@code
-     * signals_for_buyer} calculated by {@code reportResult}, and specific fields from {@link
-     * ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
+     * android.adservices.customaudience.CustomAudience#getBiddingLogicUri()}. Then, the service
+     * executes one of the functions found in the buyer JS called {@code reportWin}, providing
+     * on-device signals, {@code signals_for_buyer} calculated by {@code reportResult}, and specific
+     * fields from {@link ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
      *
      * <p>The function definition of {@code reportWin} is:
      *
