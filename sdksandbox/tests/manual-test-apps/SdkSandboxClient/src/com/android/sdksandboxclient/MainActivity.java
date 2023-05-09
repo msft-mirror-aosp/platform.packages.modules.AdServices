@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mSdkToSdkCommButton;
     private Button mNewFullScreenAd;
 
-    private SurfaceView mRenderedView;
+    private SurfaceView mBottomView;
 
     private SandboxedSdk mSandboxedSdk;
     private SharedPreferences mSharedPreferences;
@@ -134,9 +134,9 @@ public class MainActivity extends AppCompatActivity {
             sVideoUrl = extras.getString(VIDEO_URL_KEY);
         }
 
-        mRenderedView = findViewById(R.id.rendered_view);
-        mRenderedView.setZOrderOnTop(true);
-        mRenderedView.setVisibility(View.INVISIBLE);
+        mBottomView = findViewById(R.id.bottom_view);
+        mBottomView.setZOrderOnTop(true);
+        mBottomView.setVisibility(View.INVISIBLE);
 
         mLoadSdksButton = findViewById(R.id.load_sdks_button);
         mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
@@ -483,10 +483,10 @@ public class MainActivity extends AppCompatActivity {
 
     private Bundle getRequestSurfacePackageParams(String commType) {
         Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mRenderedView.getHeight());
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, mBottomView.getWidth());
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mBottomView.getHeight());
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
-        params.putBinder(EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
+        params.putBinder(EXTRA_HOST_TOKEN, mBottomView.getHostToken());
         params.putString(EXTRA_SDK_SDK_ENABLED_KEY, commType);
         return params;
     }
@@ -504,8 +504,8 @@ public class MainActivity extends AppCompatActivity {
                     () -> {
                         SurfacePackage surfacePackage =
                                 result.getParcelable(EXTRA_SURFACE_PACKAGE, SurfacePackage.class);
-                        mRenderedView.setChildSurfacePackage(surfacePackage);
-                        mRenderedView.setVisibility(View.VISIBLE);
+                        mBottomView.setChildSurfacePackage(surfacePackage);
+                        mBottomView.setVisibility(View.VISIBLE);
                     });
             makeToast("Rendered surface view");
         }
