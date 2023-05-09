@@ -23,7 +23,6 @@
             "Attribution-Reporting-Register-Source": {
               "source_event_id": "1",
               "web_destination": "https://example.2d1.test",
-              "debug_reporting": true,
               "debug_key": "347982378",
               "debug_join_key": "sample-debug-join-key"
             }
@@ -249,20 +248,6 @@
               "randomized_trigger_rate": 0.0024263,
               "source_debug_key": "347982378",
               "trigger_debug_key": "8971346784"
-            }
-          }
-        ]
-      },
-      {
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-        "payload": [
-          {
-            "type": "source-success",
-            "body": {
-              "source_event_id": "1",
-              "attribution_destination": "https://2d1.test",
-              "source_site": "android-app://example.1s1.test",
-              "source_debug_key": "347982378"
             }
           }
         ]
