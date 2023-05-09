@@ -92,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
     // Saved instance state keys
     private static final String SDKS_LOADED_KEY = "sdks_loaded";
 
-    private static String sVideoUrl;
     private boolean mSdksLoaded = false;
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
@@ -128,16 +127,14 @@ public class MainActivity extends AppCompatActivity {
                             mSharedPreferences =
                                     PreferenceManager.getDefaultSharedPreferences(
                                             MainActivity.this);
+
+                            handleExtras();
                             PreferenceManager.setDefaultValues(
                                     this, R.xml.banner_preferences, false);
                         });
 
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            sVideoUrl = extras.getString(VIDEO_URL_KEY);
-        }
 
         mBottomView = findViewById(R.id.bottom_view);
         mBottomView.setZOrderOnTop(true);
@@ -151,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
         mNewFullScreenAd = findViewById(R.id.new_fullscreen_ad_button);
 
         mCreateFileButton = findViewById(R.id.create_file_button);
-        mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
 
@@ -163,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
         registerNewFullscreenAdButton();
 
         registerCreateFileButton();
-        registerPlayVideoButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
 
@@ -175,6 +170,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         refreshLoadSdksButtonText();
+    }
+
+    private void handleExtras() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            final String videoUrl = extras.getString(VIDEO_URL_KEY);
+            mSharedPreferences.edit().putString("banner_video_url", videoUrl).apply();
+        }
     }
 
     private void refreshLoadSdksButtonText() {
@@ -262,8 +265,15 @@ public class MainActivity extends AppCompatActivity {
                                 BannerOptions.fromSharedPreferences(mSharedPreferences);
                         Log.i(TAG, options.toString());
                         final Bundle params = getRequestSurfacePackageParams(null);
-                        if (options.getViewType() == BannerOptions.ViewType.INFLATED) {
-                            params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
+
+                        switch (options.getViewType()) {
+                            case INFLATED -> {
+                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
+                            }
+                            case VIDEO -> {
+                                params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
+                                params.putString(VIDEO_URL_KEY, options.getVideoUrl());
+                            }
                         }
                         sHandler.post(
                                 () -> {
@@ -323,32 +333,6 @@ public class MainActivity extends AppCompatActivity {
                     builder.show();
                 });
     }
-
-    private void registerPlayVideoButton() {
-        if (sVideoUrl == null) {
-            mPlayVideoButton.setVisibility(View.GONE);
-            return;
-        }
-
-        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
-                new RequestSurfacePackageReceiver();
-        mPlayVideoButton.setOnClickListener(
-                v -> {
-                    if (mSdksLoaded) {
-                        sHandler.post(
-                                () -> {
-                                    Bundle params = getRequestSurfacePackageParams(null);
-                                    params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
-                                    params.putString(VIDEO_URL_KEY, sVideoUrl);
-                                    mSdkSandboxManager.requestSurfacePackage(
-                                            SDK_NAME, params, Runnable::run, receiver);
-                                });
-                    } else {
-                        toastAndLog(WARN, "Sdk is not loaded");
-                    }
-                });
-    }
-
 
     private void registerSdkToSdkButton() {
         mSdkToSdkCommButton.setOnClickListener(

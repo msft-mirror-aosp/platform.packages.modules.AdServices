@@ -20,6 +20,7 @@
     <array name="banner_view_type">
         <item>Random colour</item>
         <item>Inflated from layout</item>
+        <item>Video</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
@@ -31,6 +32,7 @@
     <array name="banner_view_type_values">
         <item>RANDOM_COLOUR</item>
         <item>INFLATED</item>
+        <item>VIDEO</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>

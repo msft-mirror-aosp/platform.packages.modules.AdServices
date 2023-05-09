@@ -24,8 +24,6 @@
     <string name="new_fullscreen_ad">New Fullscreen Ad</string>
     <string name="extra" description="Extra title">Extra</string>
     <string name="create_file">Create File</string>
-    <string name="play_video">Play Video</string>
-    <string name="inflate_view">Inflate View</string>
     <string name="sync_keys">Sync Keys</string>
     <string name="enable_sdk_sdk">Enable SDK to SDK comm</string>
     <string name="ad_space" description="Ad Space title">Ad Space</string>
@@ -33,6 +31,7 @@
     <string name="banner_options_title" description="Banner Ad Options Title">Banner Ad Options</string>
     <string name="view">View</string>
     <string name="view_type">View Type</string>
+    <string name="video_url">Video URL</string>
     <string name="behaviour">Behaviour</string>
     <string name="on_click">On Click</string>
     <string name="positioning">Positioning</string>
