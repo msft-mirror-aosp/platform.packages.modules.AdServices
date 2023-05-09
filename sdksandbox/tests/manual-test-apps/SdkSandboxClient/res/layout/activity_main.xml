@@ -119,6 +119,13 @@
                 android:text="@string/sync_keys"
                 android:textAllCaps="false" />
 
+            <Button
+                android:id="@+id/dump_sandbox_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/dump_sandbox"
+                android:textAllCaps="false" />
+
             <TextView
                 android:id="@+id/ad_space_title"
                 android:layout_height="wrap_content"

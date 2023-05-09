@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -182,6 +183,8 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
 
     private static class TestVideoView extends VideoView {
 
+        private MediaPlayer mPlayer;
+
         TestVideoView(Context windowContext, String url) {
             super(windowContext);
             new Handler(Looper.getMainLooper())
@@ -195,14 +198,23 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                                 mediaController.setAnchorView(this);
                                 setMediaController(mediaController);
 
-                                start();
+                                setOnPreparedListener(this::onPrepared);
                             });
+        }
+
+        private void onPrepared(MediaPlayer mp) {
+            mPlayer = mp;
+            mPlayer.setVolume(1.0f, 1.0f);
+            start();
         }
 
         @Override
         public void pause() {
             super.pause();
             Log.i(TAG, "Video was paused.");
+
+            // For testing, mute the video when it is paused for the first time.
+            mPlayer.setVolume(0.0f, 0.0f);
         }
 
         @Override
