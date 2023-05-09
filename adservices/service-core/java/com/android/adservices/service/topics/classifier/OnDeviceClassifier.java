@@ -198,7 +198,7 @@ public class OnDeviceClassifier implements Classifier {
         int numberOfTopLabels = FlagsFactory.getFlags().getClassifierNumberOfTopLabels();
         float classifierThresholdValue = FlagsFactory.getFlags().getClassifierThreshold();
         sLogger.i(
-                "numberOfTopLabels = %s\n classifierThresholdValue = %s",
+                "numberOfTopLabels = %s | classifierThresholdValue = %s",
                 numberOfTopLabels, classifierThresholdValue);
         return classifications.stream()
                 .sorted((c1, c2) -> Float.compare(c2.getScore(), c1.getScore())) // Reverse sorted.
