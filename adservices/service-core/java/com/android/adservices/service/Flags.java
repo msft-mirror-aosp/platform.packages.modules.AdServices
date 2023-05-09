@@ -141,7 +141,7 @@ public interface Flags {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.1f;
+    float CLASSIFIER_THRESHOLD = 0.2f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
