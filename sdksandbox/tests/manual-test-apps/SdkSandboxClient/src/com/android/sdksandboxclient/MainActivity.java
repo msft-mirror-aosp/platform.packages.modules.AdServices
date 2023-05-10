@@ -483,10 +483,16 @@ public class MainActivity extends AppCompatActivity {
                     IBinder binder = mSandboxedSdk.getInterface();
                     ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
                     ActivityStarter starter = new ActivityStarter(this, mSdkSandboxManager);
-                    try {
-                        sdkApi.startActivity(starter);
-                        toastAndLog(INFO, "Started activity %s", starter);
 
+                    final BannerOptions options =
+                            BannerOptions.fromSharedPreferences(mSharedPreferences);
+                    Bundle params = new Bundle();
+                    if (options.getViewType() == BannerOptions.ViewType.VIDEO) {
+                        params.putString(VIDEO_URL_KEY, options.getVideoUrl());
+                    }
+                    try {
+                        sdkApi.startActivity(starter, params);
+                        toastAndLog(INFO, "Started activity %s", starter);
                     } catch (RemoteException e) {
                         toastAndLog(e, "Failed to startActivity (%s)", starter);
                     }
