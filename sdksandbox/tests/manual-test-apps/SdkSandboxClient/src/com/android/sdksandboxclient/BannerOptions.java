@@ -23,7 +23,8 @@ public class BannerOptions {
     public enum ViewType {
         RANDOM_COLOUR,
         INFLATED,
-        VIDEO
+        VIDEO,
+        WEBVIEW
     }
 
     public enum OnClick {
