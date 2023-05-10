@@ -95,6 +95,7 @@ import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_TR
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.Flags.FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
@@ -269,6 +270,7 @@ import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
@@ -942,6 +944,22 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getFledgeAdSelectionContextualAdsEnabled()).isEqualTo(phOverrideValue);
+    }
+
+    @Test
+    public void testGetFledgeFetchCustomAudienceEnabled() {
+        assertThat(FlagsFactory.getFlags().getFledgeFetchCustomAudienceEnabled())
+                .isEqualTo(FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED);
+
+        final boolean phOverrideValue = !FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED,
+                Boolean.toString(phOverrideValue),
+                false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getFledgeFetchCustomAudienceEnabled()).isEqualTo(phOverrideValue);
     }
 
     @Test
