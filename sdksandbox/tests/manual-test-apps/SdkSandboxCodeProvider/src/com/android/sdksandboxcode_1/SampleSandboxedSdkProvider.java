@@ -82,7 +82,9 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             final LayoutInflater inflater =
                     (LayoutInflater)
                             windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            return inflater.inflate(R.layout.sample_layout, null);
+            View view = inflater.inflate(R.layout.sample_layout, null);
+            view.setOnClickListener(new OpenBrowserOnClickListener(getContext()));
+            return view;
         } else if (VIEW_TYPE_WEBVIEW.equals(type)) {
             return new TestWebView(windowContext);
         }
@@ -169,10 +171,20 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-            setOnClickListener(this::onClickListener);
+            setOnClickListener(new OpenBrowserOnClickListener(mSdkContext));
+        }
+    }
+
+    private static class OpenBrowserOnClickListener implements View.OnClickListener {
+
+        private final Context mSdkContext;
+
+        private OpenBrowserOnClickListener(Context sdkContext) {
+            mSdkContext = sdkContext;
         }
 
-        private void onClickListener(View view) {
+        @Override
+        public void onClick(View view) {
             Context context = view.getContext();
             Toast.makeText(context, "Opening url", Toast.LENGTH_LONG).show();
 
