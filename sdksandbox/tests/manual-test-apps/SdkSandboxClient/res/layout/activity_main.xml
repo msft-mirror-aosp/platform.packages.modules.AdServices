@@ -26,7 +26,7 @@
     >
         <LinearLayout
             android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:orientation="vertical"
         >
             <TextView
@@ -137,13 +137,18 @@
             <LinearLayout
                 android:id="@+id/ad_space_linear_layout"
                 android:layout_width="match_parent"
-                android:layout_height="160dp"
+                android:layout_height="400dp"
                 android:orientation="vertical" >
+                <SurfaceView
+                    android:id="@+id/in_scroll_banner_view"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
     <SurfaceView
-        android:id="@+id/bottom_view"
+        android:id="@+id/bottom_banner_view"
         android:layout_marginVertical="10dp"
         android:layout_width="match_parent"
         android:layout_height="80dp"
