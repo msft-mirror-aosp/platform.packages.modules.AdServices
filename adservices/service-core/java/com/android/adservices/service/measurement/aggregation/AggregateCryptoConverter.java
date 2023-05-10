@@ -176,9 +176,12 @@ public class AggregateCryptoConverter {
                             .array();
             final byte[] bucket = new byte[AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE];
             final byte[] src = contribution.getKey().toByteArray();
-            final int length = Math.min(src.length, AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE);
+            final int bytesExcludingSign = (int) Math.ceil(contribution.getKey().bitLength() / 8d);
+            final int length = Math.min(bytesExcludingSign, AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE);
             final int position = bucket.length - length;
-            System.arraycopy(src, /* srcPos = */ 0, bucket, position, length);
+            // Excluding sign bit that BigInteger#toByteArray adds to the first element of the array
+            final int srcPosExcludingSign = src[0] == 0 ? 1 : 0;
+            System.arraycopy(src, srcPosExcludingSign, bucket, position, length);
 
             final Map dataMap = new Map();
             dataMap.put(new UnicodeString("bucket"), new ByteString(bucket));

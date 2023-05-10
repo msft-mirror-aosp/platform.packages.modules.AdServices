@@ -36,11 +36,6 @@ public class SdkSandboxTestActivity2 extends Activity {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         assert sdkSandboxManager != null;
         sdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, callback);
-        if (!callback.isLoadSdkSuccessful()) {
-            throw new AssertionError(
-                    "Failed to load " + SDK_NAME + ": "
-                            + callback.getLoadSdkErrorCode() + "["
-                            + callback.getLoadSdkErrorMsg() + "]");
-        }
+        callback.assertLoadSdkIsSuccessful();
     }
 }

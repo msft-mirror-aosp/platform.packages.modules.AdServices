@@ -16,7 +16,8 @@
 
 package android.adservices.common;
 
-/** This class holds JSON that will be passed into a javascript auction function. Its
+/**
+ * This class holds JSON that will be passed into a javascript auction function. Its
  * contents are not used by FLEDGE system code, but are merely validated then passed to the
  * appropriate javascript auction function.
  */

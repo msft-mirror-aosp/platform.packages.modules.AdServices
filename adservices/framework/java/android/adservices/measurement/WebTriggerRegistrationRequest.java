@@ -18,6 +18,7 @@ package android.adservices.measurement;
 
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -27,6 +28,8 @@ import java.util.Objects;
 
 /** Class to hold input to measurement trigger registration calls from web context. */
 public final class WebTriggerRegistrationRequest implements Parcelable {
+    private static final int WEB_TRIGGER_PARAMS_MAX_COUNT = 20;
+
     /** Creator for Paracelable (via reflection). */
     @NonNull
     public static final Parcelable.Creator<WebTriggerRegistrationRequest> CREATOR =
@@ -55,8 +58,14 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
     private WebTriggerRegistrationRequest(Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebTriggerParams> webTriggerParams = new ArrayList<>();
-        in.readList(
-                webTriggerParams, WebTriggerParams.class.getClassLoader(), WebTriggerParams.class);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            in.readList(webTriggerParams, WebTriggerParams.class.getClassLoader());
+        } else {
+            in.readList(
+                    webTriggerParams,
+                    WebTriggerParams.class.getClassLoader(),
+                    WebTriggerParams.class);
+        }
         mWebTriggerParams = webTriggerParams;
         mDestination = Uri.CREATOR.createFromParcel(in);
     }
@@ -118,8 +127,11 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
          */
         public Builder(@NonNull List<WebTriggerParams> webTriggerParams, @NonNull Uri destination) {
             Objects.requireNonNull(webTriggerParams);
-            if (webTriggerParams.isEmpty()) {
-                throw new IllegalArgumentException("web trigger params list is empty");
+            if (webTriggerParams.isEmpty()
+                    || webTriggerParams.size() > WEB_TRIGGER_PARAMS_MAX_COUNT) {
+                throw new IllegalArgumentException(
+                        "web trigger params size is not within bounds, size: "
+                                + webTriggerParams.size());
             }
 
             Objects.requireNonNull(destination);
@@ -128,6 +140,7 @@ public final class WebTriggerRegistrationRequest implements Parcelable {
             }
             mWebTriggerParams = webTriggerParams;
             mDestination = destination;
+
         }
 
         /** Pre-validates parameters and builds {@link WebTriggerRegistrationRequest}. */

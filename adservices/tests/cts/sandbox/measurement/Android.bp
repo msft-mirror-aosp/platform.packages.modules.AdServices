@@ -27,6 +27,7 @@ android_test {
         "androidx.test.runner",
         "truth-prebuilt",
         "SdkSandboxTestUtils",
+        "adservices-test-utility",
     ],
     libs: [
         "android.test.base",

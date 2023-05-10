@@ -16,14 +16,43 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
+
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 
-import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.adselection.AdSelectionOutcomeFixture;
+import android.adservices.adselection.AdSelectionCallback;
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.AdSelectionFromOutcomesInput;
+import android.adservices.adselection.AdSelectionResponse;
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.common.CommonFixture;
+import android.adservices.common.FledgeErrorResponse;
+import android.annotation.NonNull;
+import android.content.Context;
 import android.net.Uri;
+import android.os.Process;
+import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
@@ -33,84 +62,90 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
+import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
+import org.mockito.quality.Strictness;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 public class OutcomeSelectionRunnerTest {
-    // Time allowed by current test async calls to respond
-    private static final int RESPONSE_TIMEOUT_SECONDS = 3;
-
-    private static final Uri BIDDING_LOGIC_URI_1 = Uri.parse("http://www.domain.com/logic/1");
-    private static final Uri BIDDING_LOGIC_URI_2 = Uri.parse("http://www.domain.com/logic/2");
-
-    private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert/");
-
-    private static final Instant ACTIVATION_TIME = Instant.now();
-
+    private static final int CALLER_UID = Process.myUid();
+    private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
+    private static final String ANOTHER_CALLER_PACKAGE_NAME = "another.caller.package";
+    private static final Uri RENDER_URI_1 = Uri.parse("https://www.domain.com/advert1/");
+    private static final Uri RENDER_URI_2 = Uri.parse("https://www.domain.com/advert2/");
+    private static final Uri RENDER_URI_3 = Uri.parse("https://www.domain.com/advert3/");
     private static final long AD_SELECTION_ID_1 = 1;
     private static final long AD_SELECTION_ID_2 = 2;
     private static final long AD_SELECTION_ID_3 = 3;
-    private static final String CONTEXTUAL_SIGNALS = "contextual_signals";
-
-    private static final double BID_1 = 10;
-    private static final double BID_2 = 20;
-    private static final double BID_3 = 30;
-
-    private static final String CALLER_PACKAGE_NAME_1 = "callerPackageName1";
-    private static final String CALLER_PACKAGE_NAME_2 = "callerPackageName2";
-
-    public static final CustomAudienceSignals CUSTOM_AUDIENCE_SIGNALS =
-            CustomAudienceSignalsFixture.aCustomAudienceSignals();
-
-    public static final DBAdSelection DB_AD_SELECTION_1 =
-            new DBAdSelection.Builder()
+    private static final double BID_1 = 10.0;
+    private static final double BID_2 = 20.0;
+    private static final double BID_3 = 30.0;
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_1 =
+            AdSelectionIdWithBidAndRenderUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_1)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_1)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_1)
+                    .setBid(BID_1)
+                    .setRenderUri(RENDER_URI_1)
                     .build();
-
-    public static final DBAdSelection DB_AD_SELECTION_2 =
-            new DBAdSelection.Builder()
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_2 =
+            AdSelectionIdWithBidAndRenderUri.builder()
                     .setAdSelectionId(AD_SELECTION_ID_2)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_2)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_2)
+                    .setBid(BID_2)
+                    .setRenderUri(RENDER_URI_2)
+                    .build();
+    private static final AdSelectionIdWithBidAndRenderUri AD_SELECTION_WITH_BID_3 =
+            AdSelectionIdWithBidAndRenderUri.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setBid(BID_3)
+                    .setRenderUri(RENDER_URI_3)
                     .build();
 
-    public static final DBAdSelection DB_AD_SELECTION_3 =
-            new DBAdSelection.Builder()
-                    .setAdSelectionId(AD_SELECTION_ID_3)
-                    .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
-                    .setContextualSignals(CONTEXTUAL_SIGNALS)
-                    .setBiddingLogicUri(BIDDING_LOGIC_URI_2)
-                    .setWinningAdRenderUri(RENDER_URI)
-                    .setWinningAdBid(BID_3)
-                    .setCreationTimestamp(ACTIVATION_TIME)
-                    .setCallerPackageName(CALLER_PACKAGE_NAME_2)
-                    .build();
+    private final Context mContext = ApplicationProvider.getApplicationContext();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
+    private Flags mFlags = new OutcomeSelectionRunnerTestFlags();
+    private final AdServicesLogger mAdServicesLoggerMock =
+            ExtendedMockito.mock(AdServicesLoggerImpl.class);
+    private MockitoSession mStaticMockSession = null;
+    private ListeningExecutorService mBlockingExecutorService;
+
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setup() {
+        mBlockingExecutorService = AdServicesExecutors.getBlockingExecutor();
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        //                        .spyStatic(JSScriptEngine.class)
+                        // mAdServicesLoggerMock is not referenced in many tests
+                        .strictness(Strictness.LENIENT)
+                        .initMocks(this)
+                        .startMocking();
+
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -120,76 +155,290 @@ public class OutcomeSelectionRunnerTest {
 
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
+                        CALLER_UID,
+                        mAdOutcomeSelectorMock,
                         mAdSelectionEntryDao,
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        AdServicesExecutors.getLightWeightExecutor());
+                        mBlockingExecutorService,
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdServicesLoggerMock,
+                        mContext,
+                        mFlags,
+                        mAdSelectionServiceFilter);
+
+        doNothing()
+                .when(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
     }
 
-    @Test
-    public void testRetrieveOutcomesAndBidsFromDbSuccess()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        List<DBAdSelection> adSelectionResults =
-                List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
-        for (DBAdSelection selection : adSelectionResults) {
-            mAdSelectionEntryDao.persistAdSelection(selection);
-        }
-
-        List<AdSelectionOutcome> adOutcomes =
-                List.of(
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_1.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_2.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_3.getAdSelectionId()));
-
-        Map<Long, Double> adOutcomeBidPair =
-                mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdToBidMap(adOutcomes)
-                        .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-
-        for (DBAdSelection selection : adSelectionResults) {
-            assertTrue(
-                    String.format(
-                            "Ad selection id %s is missing from db results",
-                            selection.getAdSelectionId()),
-                    adOutcomeBidPair.containsKey(selection.getAdSelectionId()));
-            assertEquals(
-                    String.format(
-                            "Bid values are not equal for ad selection id %s",
-                            selection.getAdSelectionId()),
-                    adOutcomeBidPair.get(selection.getAdSelectionId()),
-                    selection.getWinningAdBid(),
-                    0.0);
+    @After
+    public void tearDown() {
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
         }
     }
 
     @Test
-    public void testIgnoresAdSelectionIdsNotInDbSuccess()
-            throws ExecutionException, InterruptedException, TimeoutException {
-        List<DBAdSelection> adSelectionResults =
-                List.of(DB_AD_SELECTION_1, DB_AD_SELECTION_2, DB_AD_SELECTION_3);
+    public void testRunOutcomeSelectionInvalidAdSelectionConfigFromOutcomes() {
+        List<AdSelectionIdWithBidAndRenderUri> AdSelectionIdWithBidAndRenderUris =
+                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
+        persistAdSelectionEntry(AdSelectionIdWithBidAndRenderUris.get(0), MY_APP_PACKAGE_NAME);
+        // Not persisting index 1
+        // Persisting index 2 with a different package name
+        persistAdSelectionEntry(
+                AdSelectionIdWithBidAndRenderUris.get(2), ANOTHER_CALLER_PACKAGE_NAME);
 
-        List<AdSelectionOutcome> adOutcomes =
-                List.of(
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_1.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_2.getAdSelectionId()),
-                        AdSelectionOutcomeFixture.anAdSelectionOutcome(
-                                DB_AD_SELECTION_3.getAdSelectionId()));
+        List<Long> adOutcomesConfigParam =
+                AdSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .collect(Collectors.toList());
 
-        Map<Long, Double> adOutcomeBidPair =
-                mOutcomeSelectionRunner
-                        .retrieveAdSelectionIdToBidMap(adOutcomes)
-                        .get(RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adOutcomesConfigParam);
 
-        for (DBAdSelection selection : adSelectionResults) {
-            assertFalse(
-                    String.format(
-                            "Ad selection id %s is missing from db results",
-                            selection.getAdSelectionId()),
-                    adOutcomeBidPair.containsKey(selection.getAdSelectionId()));
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionFromOutcomes(
+                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+
+        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
+        assertFalse(resultsCallback.mIsSuccess);
+        assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void testRunOutcomeSelectionRevokedUserConsentEmptyResult() {
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
+
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
+                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
+        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
+        }
+
+        List<Long> adOutcomesConfigParam =
+                adSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .collect(Collectors.toList());
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adOutcomesConfigParam);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionFromOutcomes(
+                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+
+        verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
+        assertTrue(resultsCallback.mIsSuccess);
+        assertNull(resultsCallback.mAdSelectionResponse);
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(STATUS_USER_CONSENT_REVOKED),
+                        anyInt());
+    }
+
+    @Test
+    public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
+        mFlags =
+                new Flags() {
+                    @Override
+                    public long getAdSelectionSelectingOutcomeTimeoutMs() {
+                        return 300;
+                    }
+
+                    @Override
+                    public boolean getDisableFledgeEnrollmentCheck() {
+                        return true;
+                    }
+
+                    @Override
+                    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+                        return 100;
+                    }
+                };
+
+        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
+                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
+        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
+            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
+        }
+
+        List<Long> adOutcomesConfigParam =
+                adSelectionIdWithBidAndRenderUris.stream()
+                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
+                        .collect(Collectors.toList());
+
+        AdSelectionFromOutcomesConfig config =
+                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
+                        adOutcomesConfigParam);
+
+        GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
+        doAnswer((ignored) -> getSelectedOutcomeWithDelay(AD_SELECTION_ID_1, mFlags))
+                .when(mAdOutcomeSelectorMock)
+                .runAdOutcomeSelector(argThat(matcher), eq(config));
+
+        OutcomeSelectionRunner outcomeSelectionRunner =
+                new OutcomeSelectionRunner(
+                        CALLER_UID,
+                        mAdOutcomeSelectorMock,
+                        mAdSelectionEntryDao,
+                        mBlockingExecutorService,
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdServicesLoggerMock,
+                        mContext,
+                        mFlags,
+                        mAdSelectionServiceFilter);
+
+        AdSelectionTestCallback resultsCallback =
+                invokeRunAdSelectionFromOutcomes(
+                        outcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
+
+        verify(mAdOutcomeSelectorMock, Mockito.times(1)).runAdOutcomeSelector(any(), any());
+        assertFalse(resultsCallback.mIsSuccess);
+        assertNotNull(resultsCallback.mFledgeErrorResponse);
+        assertEquals(STATUS_TIMEOUT, resultsCallback.mFledgeErrorResponse.getStatusCode());
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(STATUS_TIMEOUT),
+                        anyInt());
+    }
+
+    private void persistAdSelectionEntry(
+            AdSelectionIdWithBidAndRenderUri idWithBidAndRenderUri, String callerPackageName) {
+        final Uri biddingLogicUri1 = Uri.parse("https://www.domain.com/logic/1");
+        final Instant activationTime = Instant.now();
+        final String contextualSignals = "contextual_signals";
+        final CustomAudienceSignals customAudienceSignals =
+                CustomAudienceSignalsFixture.aCustomAudienceSignals();
+
+        final DBAdSelection dbAdSelectionEntry =
+                new DBAdSelection.Builder()
+                        .setAdSelectionId(idWithBidAndRenderUri.getAdSelectionId())
+                        .setCustomAudienceSignals(customAudienceSignals)
+                        .setContextualSignals(contextualSignals)
+                        .setBiddingLogicUri(biddingLogicUri1)
+                        .setWinningAdRenderUri(idWithBidAndRenderUri.getRenderUri())
+                        .setWinningAdBid(idWithBidAndRenderUri.getBid())
+                        .setCreationTimestamp(activationTime)
+                        .setCallerPackageName(callerPackageName)
+                        .build();
+        mAdSelectionEntryDao.persistAdSelection(dbAdSelectionEntry);
+    }
+
+    private OutcomeSelectionRunnerTest.AdSelectionTestCallback invokeRunAdSelectionFromOutcomes(
+            OutcomeSelectionRunner outcomeSelectionRunner,
+            AdSelectionFromOutcomesConfig config,
+            String callerPackageName) {
+
+        // Counted down in the callback
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        OutcomeSelectionRunnerTest.AdSelectionTestCallback adSelectionTestCallback =
+                new OutcomeSelectionRunnerTest.AdSelectionTestCallback(countDownLatch);
+
+        AdSelectionFromOutcomesInput input =
+                new AdSelectionFromOutcomesInput.Builder()
+                        .setAdSelectionFromOutcomesConfig(config)
+                        .setCallerPackageName(callerPackageName)
+                        .build();
+
+        outcomeSelectionRunner.runOutcomeSelection(input, adSelectionTestCallback);
+        try {
+            adSelectionTestCallback.mCountDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return adSelectionTestCallback;
+    }
+
+    private ListenableFuture<Long> getSelectedOutcomeWithDelay(
+            Long outcomeId, @NonNull Flags flags) {
+        return mBlockingExecutorService.submit(
+                () -> {
+                    Thread.sleep(2 * flags.getAdSelectionFromOutcomesOverallTimeoutMs());
+                    return outcomeId;
+                });
+    }
+
+    static class AdSelectionTestCallback extends AdSelectionCallback.Stub {
+
+        final CountDownLatch mCountDownLatch;
+        boolean mIsSuccess = false;
+        AdSelectionResponse mAdSelectionResponse;
+        FledgeErrorResponse mFledgeErrorResponse;
+
+        AdSelectionTestCallback(CountDownLatch countDownLatch) {
+            mCountDownLatch = countDownLatch;
+            mAdSelectionResponse = null;
+            mFledgeErrorResponse = null;
+        }
+
+        @Override
+        public void onSuccess(AdSelectionResponse adSelectionResponse) throws RemoteException {
+            mIsSuccess = true;
+            mAdSelectionResponse = adSelectionResponse;
+            mCountDownLatch.countDown();
+        }
+
+        @Override
+        public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
+            mIsSuccess = false;
+            mFledgeErrorResponse = fledgeErrorResponse;
+            mCountDownLatch.countDown();
+        }
+    }
+
+    static class GenericListMatcher
+            implements ArgumentMatcher<List<AdSelectionIdWithBidAndRenderUri>> {
+        private final List<AdSelectionIdWithBidAndRenderUri> mTruth;
+
+        GenericListMatcher(List<AdSelectionIdWithBidAndRenderUri> truth) {
+            this.mTruth = truth;
+        }
+
+        @Override
+        public boolean matches(List<AdSelectionIdWithBidAndRenderUri> argument) {
+            return mTruth.size() == argument.size()
+                    && new HashSet<>(mTruth).equals(new HashSet<>(argument));
+        }
+    }
+
+    private static class OutcomeSelectionRunnerTestFlags implements Flags {
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
         }
     }
 }

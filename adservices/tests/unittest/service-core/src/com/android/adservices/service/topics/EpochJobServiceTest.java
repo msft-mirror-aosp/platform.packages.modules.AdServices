@@ -25,6 +25,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -41,6 +42,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.After;
@@ -88,6 +90,7 @@ public class EpochJobServiceTest {
                         .spyStatic(EpochJobService.class)
                         .spyStatic(TopicsWorker.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .startMocking();
 
         // Mock JobScheduler invocation in EpochJobService
@@ -140,7 +143,7 @@ public class EpochJobServiceTest {
         // TopicsWorker.computeEpoch() is executed.
         ExtendedMockito.verify(() -> TopicsWorker.getInstance(any(Context.class)));
         verify(mMockEpochManager).processEpoch();
-        verify(mMockCacheManager).loadCache();
+        verify(mMockCacheManager).loadCache(anyLong());
     }
 
     @Test
@@ -198,6 +201,38 @@ public class EpochJobServiceTest {
     }
 
     @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        doNothing().when(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                TOPICS_EPOCH_JOB_ID,
+                                new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(EPOCH_JOB_PERIOD_MS, EPOCH_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyEpochJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(TOPICS_EPOCH_JOB_ID));
+
+        verify(mSpyEpochJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
+        verifyNoMoreInteractions(staticMockMarker(FlagsFactory.class));
+    }
+
+    @Test
     public void testOnStopJob() {
         // Verify nothing throws
         mSpyEpochJobService.onStopJob(mMockJobParameters);
@@ -205,8 +240,10 @@ public class EpochJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_Success() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
@@ -214,8 +251,14 @@ public class EpochJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+        doReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs())
+                .when(mMockFlags)
+                .getTopicsEpochJobPeriodMs();
+        doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();
@@ -248,8 +291,14 @@ public class EpochJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+        doReturn(TEST_FLAGS.getTopicsEpochJobPeriodMs())
+                .when(mMockFlags)
+                .getTopicsEpochJobPeriodMs();
+        doReturn(TEST_FLAGS.getTopicsEpochJobFlexMs()).when(mMockFlags).getTopicsEpochJobFlexMs();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isTrue();

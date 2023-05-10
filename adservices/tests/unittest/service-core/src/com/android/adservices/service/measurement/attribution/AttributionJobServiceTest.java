@@ -41,6 +41,8 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -57,7 +59,7 @@ import java.util.Optional;
  * Unit test for {@link AttributionJobService
  */
 public class AttributionJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     private DatastoreManager mMockDatastoreManager;
     private JobScheduler mMockJobScheduler;
@@ -124,6 +126,35 @@ public class AttributionJobServiceTest {
     }
 
     @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    ExtendedMockito.verify(
+                            () -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()),
+                            never());
+                    verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_ATTRIBUTION_JOB_ID));
+                    ExtendedMockito.verifyNoMoreInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
+                });
+    }
+
+    @Test
     public void scheduleIfNeeded_killSwitchOn_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
@@ -144,8 +175,6 @@ public class AttributionJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -175,8 +204,6 @@ public class AttributionJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -205,8 +232,6 @@ public class AttributionJobServiceTest {
                     AttributionJobService.scheduleIfNeeded(mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -234,8 +259,6 @@ public class AttributionJobServiceTest {
                     AttributionJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> AttributionJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -263,7 +286,9 @@ public class AttributionJobServiceTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(AttributionJobService.class)
                         .spyStatic(DatastoreManagerFactory.class)
+                        .spyStatic(DebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -278,6 +303,11 @@ public class AttributionJobServiceTest {
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> AttributionJobService.schedule(any(), any()));
+            ExtendedMockito.doNothing()
+                    .when(
+                            () ->
+                                    DebugReportingJobService.scheduleIfNeeded(
+                                            any(), anyBoolean(), anyBoolean()));
 
             // Execute
             execute.run();

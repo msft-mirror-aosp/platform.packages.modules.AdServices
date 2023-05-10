@@ -26,6 +26,8 @@ import java.util.Objects;
  * POJO for AggregateReportPayload, the result for Aggregate API.
  */
 public class AggregateHistogramContribution {
+    static final String BUCKET = "bucket";
+    static final String VALUE = "value";
     private BigInteger mKey;  // Equivalent to uint128 in C++.
     private int mValue;
 
@@ -54,8 +56,8 @@ public class AggregateHistogramContribution {
      */
     public JSONObject toJSONObject() throws JSONException {
         JSONObject jsonObject = new JSONObject();
-        jsonObject.put("bucket", mKey);
-        jsonObject.put("value", mValue);
+        jsonObject.put(BUCKET, mKey.toString());
+        jsonObject.put(VALUE, mValue);
         return jsonObject;
     }
 
@@ -97,6 +99,22 @@ public class AggregateHistogramContribution {
         public Builder setValue(int value) {
             mAggregateHistogramContribution.mValue = value;
             return this;
+        }
+
+        /**
+         * Builds a {@link AggregateHistogramContribution} from the provided json object.
+         *
+         * @param jsonObject json to deserialize
+         * @return {@link AggregateHistogramContribution}
+         * @throws JSONException if the json deserialization fails
+         */
+        public AggregateHistogramContribution fromJsonObject(JSONObject jsonObject)
+                throws JSONException {
+            AggregateHistogramContribution aggregateHistogramContribution =
+                    new AggregateHistogramContribution();
+            aggregateHistogramContribution.mKey = new BigInteger(jsonObject.getString(BUCKET));
+            aggregateHistogramContribution.mValue = jsonObject.getInt(VALUE);
+            return aggregateHistogramContribution;
         }
 
         /**

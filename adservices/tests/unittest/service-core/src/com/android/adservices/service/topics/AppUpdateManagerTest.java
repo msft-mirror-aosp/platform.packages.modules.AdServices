@@ -24,14 +24,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,6 +44,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -117,8 +112,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(Collections.singletonList(appInfo1));
+        mockInstalledApplications(Collections.singletonList(appInfo1));
 
         // Begin to persist data into database
         // Handle AppClassificationTopicsContract
@@ -193,7 +187,12 @@ public class AppUpdateManagerTest {
         mAppUpdateManager.reconcileUninstalledApps(mContext, epochId1);
 
         verify(mContext).getPackageManager();
-        verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+
+        if (SdkLevel.isAtLeastT()) {
+            verify(mMockPackageManager).getInstalledApplications(Mockito.any());
+        } else {
+            verify(mMockPackageManager).getInstalledApplications(anyInt());
+        }
 
         // Each Table should have wiped off all data belonging to app2
         Set<String> setContainsOnlyApp1 = new HashSet<>(Collections.singletonList(app1));
@@ -252,8 +251,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -282,9 +280,6 @@ public class AppUpdateManagerTest {
 
         // Mock flag value to remove dependency of actual flag value
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
-        // Enable the feature
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // Execute reconciliation to handle app2
         mAppUpdateManager.reconcileUninstalledApps(mContext, epoch4);
@@ -332,8 +327,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo1 = new ApplicationInfo();
         appInfo1.packageName = app1;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1));
+        mockInstalledApplications(List.of(appInfo1));
 
         // Persist to AppClassificationTopics table
         mTopicsDao.persistAppClassificationTopics(
@@ -353,9 +347,6 @@ public class AppUpdateManagerTest {
 
         // Mock flag value to remove dependency of actual flag value
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
-        // Enable the feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         // Execute reconciliation to handle app2 and app3
         mAppUpdateManager.reconcileUninstalledApps(mContext, epoch2);
@@ -366,34 +357,6 @@ public class AppUpdateManagerTest {
         // well.
         assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch1)).isEmpty();
         assertThat(mTopicsDao.retrieveReturnedTopics(epoch1, numberOfLookBackEpochs)).isEmpty();
-    }
-
-    @Test
-    public void testReconcileUninstalledApps_disableTopicContributorsCheck() {
-        AppUpdateManager appUpdateManager =
-                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
-
-        // Do not check actual usage of related methods.
-        doNothing().when(appUpdateManager).handleTopTopicsWithoutContributors(anyLong(), any());
-        doNothing().when(appUpdateManager).deleteAppDataFromTableByApps(any());
-        doReturn(Set.of()).when(appUpdateManager).getCurrentInstalledApps(any());
-        doReturn(Set.of("anyValue")).when(appUpdateManager).getUnhandledUninstalledApps(any());
-        doReturn(3).when(mMockFlags).getTopicsNumberOfLookBackEpochs();
-
-        // verify feature is enabled
-        doReturn(false).when(appUpdateManager).supportsTopicContributorFeature();
-        appUpdateManager.reconcileUninstalledApps(mContext, /* any positive long */ 1L);
-        // handleTopTopicsWithoutContributors() is not invoked.
-        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(anyLong(), any());
-        verify(appUpdateManager).deleteAppDataFromTableByApps(any());
-
-        // verify feature is disabled
-        doReturn(true).when(appUpdateManager).supportsTopicContributorFeature();
-        appUpdateManager.reconcileUninstalledApps(mContext, /* any positive long */ 1L);
-        // handleTopTopicsWithoutContributors() is invoked.
-        verify(appUpdateManager, atLeastOnce())
-                .handleTopTopicsWithoutContributors(anyLong(), any());
-        verify(appUpdateManager, times(2)).deleteAppDataFromTableByApps(any());
     }
 
     @Test
@@ -533,6 +496,14 @@ public class AppUpdateManagerTest {
                                 .get(epochId1))
                 .isEqualTo(returnedAppSdkTopics);
 
+        // Handle Topics Contributors Table
+        Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId1, Set.of(app1, app2, app3));
+        mTopicsDao.persistTopicContributors(epochId1, topicContributorsMap);
+
+        // Verify Topics Contributors Table has all apps
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1))
+                .isEqualTo(topicContributorsMap);
+
         // Delete app2's derived data
         mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app2, app3));
 
@@ -549,6 +520,8 @@ public class AppUpdateManagerTest {
                                 .retrieveCallerCanLearnTopicsMap(epochId1, numberOfLookBackEpochs)
                                 .get(topic1))
                 .isEqualTo(Set.of(app1, sdk1));
+        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epochId1).get(topicId1))
+                .isEqualTo(setContainsOnlyApp1);
         // Returned Topics Map contains only App1 paris
         Map<Pair<String, String>, Topic> expectedReturnedTopicsAfterWiping = new HashMap<>();
         expectedReturnedTopicsAfterWiping.put(Pair.create(app1, EMPTY_SDK), topic1);
@@ -571,33 +544,6 @@ public class AppUpdateManagerTest {
     public void testDeleteAppDataFromTableByApps_nonExistingUninstalledAppName() {
         // To test it won't throw by calling the method with non-existing application name
         mAppUpdateManager.deleteAppDataFromTableByApps(List.of("app"));
-    }
-
-    @Test
-    public void testDeleteAppDataFromTableByApps_topicContributorsTable() {
-        final long epoch1 = 1L;
-
-        final String app = "app";
-        final int topicId = 1;
-
-        Map<Integer, Set<String>> topicContributorsMap = Map.of(topicId, Set.of(app));
-        mTopicsDao.persistTopicContributors(epoch1, topicContributorsMap);
-
-        // Enable Database Version 3
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(true);
-
-        // Feature flag is Off
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
-        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
-        // Table should not be cleared
-        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch1))
-                .isEqualTo(topicContributorsMap);
-
-        // Feature flag is On
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
-        mAppUpdateManager.deleteAppDataFromTableByApps(List.of(app));
-        // Table should be cleared
-        assertThat(mTopicsDao.retrieveTopicToContributorsMap(epoch1)).isEmpty();
     }
 
     @Test
@@ -639,8 +585,7 @@ public class AppUpdateManagerTest {
         ApplicationInfo appInfo2 = new ApplicationInfo();
         appInfo2.packageName = app2;
 
-        when(mMockPackageManager.getInstalledApplications(Mockito.any()))
-                .thenReturn(List.of(appInfo1, appInfo2));
+        mockInstalledApplications(List.of(appInfo1, appInfo2));
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -729,6 +674,55 @@ public class AppUpdateManagerTest {
     }
 
     @Test
+    public void testSelectAssignedTopicFromTopTopics_bothListsAreEmpty() {
+        final int topicsPercentageForRandomTopic = 5;
+
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags);
+
+        List<Topic> regularTopics = List.of();
+        List<Topic> randomTopics = List.of();
+
+        Topic selectedTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(selectedTopic).isNull();
+    }
+
+    @Test
+    public void testSelectAssignedTopicFromTopTopics_oneListIsEmpty() {
+        final int topicsPercentageForRandomTopic = 5;
+
+        // Test the randomness with pre-defined values. Ask it to select the second element for next
+        // two random draws.
+        MockRandom mockRandom = new MockRandom(new long[] {1, 1});
+        AppUpdateManager appUpdateManager =
+                new AppUpdateManager(mDbHelper, mTopicsDao, mockRandom, mMockFlags);
+
+        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
+        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
+
+        // Return a regular topic if the list of random topics is empty.
+        List<Topic> regularTopics = List.of(topic1, topic2, topic3);
+        List<Topic> randomTopics = List.of();
+
+        Topic regularTopTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(regularTopTopic).isEqualTo(topic2);
+
+        // Return a random topic if the list of regular topics is empty.
+        regularTopics = List.of();
+        randomTopics = List.of(topic1, topic2, topic3);
+
+        Topic randomTopTopic =
+                appUpdateManager.selectAssignedTopicFromTopTopics(
+                        regularTopics, randomTopics, topicsPercentageForRandomTopic);
+        assertThat(randomTopTopic).isEqualTo(topic2);
+    }
+
+    @Test
     public void testAssignTopicsToNewlyInstalledApps() {
         final String appName = "app";
         final long currentEpochId = 4L;
@@ -762,9 +756,6 @@ public class AppUpdateManagerTest {
         when(mMockFlags.getTopicsNumberOfTopTopics()).thenReturn(topicsNumberOfTopTopics);
         when(mMockFlags.getTopicsPercentageForRandomTopic())
                 .thenReturn(topicsPercentageForRandomTopic);
-        // Enable TopContributors check
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -807,51 +798,6 @@ public class AppUpdateManagerTest {
     }
 
     @Test
-    public void testAssignTopicsToNewlyInstalledApps_disableTopicContributorsCheck() {
-        AppUpdateManager appUpdateManager =
-                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
-
-        Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
-        Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
-        Topic topic3 = Topic.create(/* topic */ 3, TAXONOMY_VERSION, MODEL_VERSION);
-        Topic topic4 = Topic.create(/* topic */ 4, TAXONOMY_VERSION, MODEL_VERSION);
-        Topic topic5 = Topic.create(/* topic */ 5, TAXONOMY_VERSION, MODEL_VERSION);
-        Topic topic6 = Topic.create(/* topic */ 6, TAXONOMY_VERSION, MODEL_VERSION);
-        List<Topic> topTopics = List.of(topic1, topic2, topic3, topic4, topic5, topic6);
-        final long epochId = 1L;
-        final int numberOfLookBackEpochs = 3;
-        final int numberOfTopTopics = 5;
-        final int percentageForRandomTopic = 5;
-
-        // Do not check actual usage of related methods.
-        doReturn(List.of())
-                .when(appUpdateManager)
-                .filterRegularTopicsWithoutContributors(any(), anyLong());
-        doReturn(topic1)
-                .when(appUpdateManager)
-                .selectAssignedTopicFromTopTopics(any(), any(), eq(percentageForRandomTopic));
-        mTopicsDao.persistTopTopics(epochId, topTopics);
-        doReturn(numberOfLookBackEpochs).when(mMockFlags).getTopicsNumberOfLookBackEpochs();
-        doReturn(numberOfTopTopics).when(mMockFlags).getTopicsNumberOfTopTopics();
-        doReturn(percentageForRandomTopic).when(mMockFlags).getTopicsPercentageForRandomTopic();
-
-        // verify feature flag is off
-        doReturn(false).when(appUpdateManager).supportsTopicContributorFeature();
-        appUpdateManager.assignTopicsToNewlyInstalledApps("anyApp", epochId + 1);
-        // The filter method is not invoked.
-        verify(appUpdateManager, never()).filterRegularTopicsWithoutContributors(any(), anyLong());
-        verify(appUpdateManager, atLeastOnce())
-                .selectAssignedTopicFromTopTopics(any(), any(), eq(percentageForRandomTopic));
-
-        // verify feature flag is on
-        doReturn(true).when(appUpdateManager).supportsTopicContributorFeature();
-        appUpdateManager.assignTopicsToNewlyInstalledApps("anyApp", epochId + 1);
-        // The filter method is invoked.
-        verify(appUpdateManager, atLeastOnce())
-                .filterRegularTopicsWithoutContributors(any(), anyLong());
-    }
-
-    @Test
     public void testAssignTopicsToSdkForAppInstallation() {
         final String app = "app";
         final String sdk = "sdk";
@@ -870,13 +816,21 @@ public class AppUpdateManagerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
+            // Assign the returned topic for the app in this epoch.
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
-            // SDK needs to be able to learn this topic in past epochs
-            mTopicsDao.persistCallerCanLearnTopics(epochId, Map.of(topic, Set.of(sdk)));
+
+            // Make the topic learnable to app-sdk caller for epochs in [current - 3, current - 1].
+            // In order to achieve this, persist learnability in [current - 5, current - 3]. This
+            // ensures to test the earliest epoch to be learnt from.
+            long earliestEpochIdToLearnFrom = epochId - numberOfLookBackEpochs + 1;
+            mTopicsDao.persistCallerCanLearnTopics(
+                    earliestEpochIdToLearnFrom, Map.of(topic, Set.of(sdk)));
         }
 
         // Check app-sdk doesn't have returned topic before calling the method
@@ -891,9 +845,10 @@ public class AppUpdateManagerTest {
 
         // Check app-sdk has been assigned with topic after calling the method
         Map<Long, Map<Pair<String, String>, Topic>> expectedReturnedTopics = new HashMap<>();
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
             expectedReturnedTopics.put(epochId, Map.of(appSdkCaller, topic, appOnlyCaller, topic));
         }
@@ -906,11 +861,11 @@ public class AppUpdateManagerTest {
     @Test
     public void testAssignTopicsToSdkForAppInstallation_NonSdk() {
         final String app = "app";
-        final String sdk = ""; // App calls Topics API directly
+        final String sdk = EMPTY_SDK; // App calls Topics API directly
         final int numberOfLookBackEpochs = 3;
         final long currentEpochId = 5L;
 
-        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
+        Pair<String, String> appOnlyCaller = Pair.create(app, sdk);
 
         Topic topic1 = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
         Topic topic2 = Topic.create(/* topic */ 2, TAXONOMY_VERSION, MODEL_VERSION);
@@ -919,9 +874,11 @@ public class AppUpdateManagerTest {
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        for (long epoch = 0; epoch < numberOfLookBackEpochs; epoch++) {
-            long epochId = currentEpochId - 1 - epoch;
-            Topic topic = topics[(int) epoch];
+        // Assign returned topics to app-only caller for epochs in [current - 3, current - 1]
+        for (long epochId = currentEpochId - 1;
+                epochId >= currentEpochId - numberOfLookBackEpochs;
+                epochId--) {
+            Topic topic = topics[(int) (currentEpochId - 1 - epochId)];
 
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, topic));
             mTopicsDao.persistCallerCanLearnTopics(epochId - 1, Map.of(topic, Set.of(sdk)));
@@ -938,27 +895,32 @@ public class AppUpdateManagerTest {
         final String sdk = "sdk";
         final int numberOfLookBackEpochs = 1;
 
-        Pair<String, String> appOnlyCaller = Pair.create(app, /* sdk */ "");
-        Pair<String, String> otherAppOnlyCaller = Pair.create("otherApp", /* sdk */ "");
+        Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
+        Pair<String, String> otherAppOnlyCaller = Pair.create("otherApp", EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
         Topic topic = Topic.create(/* topic */ 1, TAXONOMY_VERSION, MODEL_VERSION);
 
         when(mMockFlags.getTopicsNumberOfLookBackEpochs()).thenReturn(numberOfLookBackEpochs);
 
-        // For Epoch 2, no topic will be assigned to app because Epoch 1 doesn't have any
+        // For Epoch 3, no topic will be assigned to app because epoch in [0,2] doesn't have any
+        // returned topics.
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Persist returned topics to otherAppOnlyCaller instead of appOnlyCaller
+        // Also persist sdk to CallerCanLearnTopics Map to allow sdk to learn the topic.
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, Map.of(otherAppOnlyCaller, topic));
         mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
-        // Epoch 2 won't be assigned topics as app doesn't have a returned Topic
+        // Epoch 3 won't be assigned topics as appOnlyCaller doesn't have a returned Topic for epoch
+        // in [0,2].
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Persist returned topics to appOnlyCaller
         mTopicsDao.persistReturnedAppTopicsMap(/* epochId */ 2L, Map.of(appOnlyCaller, topic));
 
         assertTrue(
@@ -998,20 +960,15 @@ public class AppUpdateManagerTest {
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 3L, Map.of(topic, Set.of(sdk)));
-
-        // No topic will be assigned as topic is only learned in current Epoch 3
-        assertFalse(
-                mAppUpdateManager.assignTopicsToSdkForAppInstallation(
-                        app, sdk, /* currentEpochId */ 3L));
-
-        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(otherSDK)));
+        // Enable learnability for otherSDK instead of sdk
+        mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 1L, Map.of(topic, Set.of(otherSDK)));
 
         // No topic will be assigned as topic is not learned by "sdk" in past epochs
         assertFalse(
                 mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                         app, sdk, /* currentEpochId */ 3L));
 
+        // Enable learnability for sdk
         mTopicsDao.persistCallerCanLearnTopics(/* epochId */ 2L, Map.of(topic, Set.of(sdk)));
 
         // Topic will be assigned as both app and sdk are satisfied
@@ -1023,28 +980,6 @@ public class AppUpdateManagerTest {
                         Map.of(
                                 /* epochId */ 2L,
                                 Map.of(appOnlyCaller, topic, appSdkCaller, topic)));
-    }
-
-    @Test
-    public void testSupportsTopicContributorFeature() {
-        // Both on
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
-        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isTrue();
-
-        // On and Off
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(true);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
-        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
-
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(false);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
-        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
-
-        // Both off
-        when(mDbHelper.supportsTopicContributorsTable()).thenReturn(false);
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(false);
-        assertThat(mAppUpdateManager.supportsTopicContributorFeature()).isFalse();
     }
 
     @Test
@@ -1163,48 +1098,6 @@ public class AppUpdateManagerTest {
                 .isEqualTo(List.of(topic1, topic3));
     }
 
-    // The actual e2e logic is tested in TopicsWorkerTest "testHandleAppUninstallation" tests.
-    // Methods invoked are tested respectively.
-    @Test
-    public void testHandleAppUninstallationInRealTime_enableTopicContributors() {
-        final String app = "app";
-        final long epochId = 1L;
-
-        AppUpdateManager appUpdateManager =
-                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
-
-        // Enable Topic Contributors feature
-        doReturn(true).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
-
-        appUpdateManager.handleAppUninstallationInRealTime(Uri.parse(app), epochId);
-
-        verify(appUpdateManager).convertUriToAppName(Uri.parse(app));
-        verify(appUpdateManager).handleTopTopicsWithoutContributors(epochId, app);
-        verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
-    }
-
-    // The actual e2e logic is tested in TopicsWorkerTest "testHandleAppUninstallation" tests.
-    // Methods invoked are tested respectively in this test class.
-    @Test
-    public void testHandleAppUninstallationInRealTime_disableTopicContributors() {
-        final String app = "app";
-        final long epochId = 1L;
-
-        AppUpdateManager appUpdateManager =
-                spy(new AppUpdateManager(mDbHelper, mTopicsDao, new Random(), mMockFlags));
-
-        // Disable Topic Contributors feature
-        doReturn(false).when(mDbHelper).supportsTopicContributorsTable();
-        when(mMockFlags.getEnableTopicContributorsCheck()).thenReturn(true);
-
-        appUpdateManager.handleAppUninstallationInRealTime(Uri.parse(app), epochId);
-
-        verify(appUpdateManager).convertUriToAppName(Uri.parse(app));
-        verify(appUpdateManager, never()).handleTopTopicsWithoutContributors(epochId, app);
-        verify(appUpdateManager).deleteAppDataFromTableByApps(List.of(app));
-    }
-
     // For test coverage only. The actual e2e logic is tested in TopicsWorkerTest. Methods invoked
     // are tested respectively in this test class.
     @Test
@@ -1218,5 +1111,16 @@ public class AppUpdateManagerTest {
         appUpdateManager.handleAppInstallationInRealTime(Uri.parse(app), epochId);
 
         verify(appUpdateManager).assignTopicsToNewlyInstalledApps(app, epochId);
+    }
+
+    private void mockInstalledApplications(List<ApplicationInfo> applicationInfos) {
+        if (SdkLevel.isAtLeastT()) {
+            when(mMockPackageManager.getInstalledApplications(
+                            any(PackageManager.ApplicationInfoFlags.class)))
+                    .thenReturn(applicationInfos);
+        } else {
+            when(mMockPackageManager.getInstalledApplications(anyInt()))
+                    .thenReturn(applicationInfos);
+        }
     }
 }

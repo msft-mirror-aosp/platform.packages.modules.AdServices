@@ -28,6 +28,7 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -81,8 +82,14 @@ public class AggregateReportingJobHandlerWrapper {
         verify(aggregateReportingJobHandler, atLeast(0))
                 .makeHttpPostRequest(aggregateDestination.capture(), aggregatePayload.capture());
 
+        ArgumentCaptor<AggregateReport> aggregateReport =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(aggregateReportingJobHandler, atLeast(0))
+                .createReportJsonPayload(aggregateReport.capture(), any(), any());
+
         // Collect actual reports
         return new Object[]{
+                aggregateReport.getAllValues(),
                 aggregateDestination.getAllValues(),
                 aggregatePayload.getAllValues()
         };

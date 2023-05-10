@@ -39,18 +39,34 @@ public class AddAdSelectionOverrideRequest {
 
     @NonNull private final AdSelectionSignals mTrustedScoringSignals;
 
-    /** Builds a {@link AddAdSelectionOverrideRequest} instance. */
+    @NonNull private final BuyersDecisionLogic mBuyersDecisionLogic;
+
+    /**
+     * Builds a {@link AddAdSelectionOverrideRequest} instance.
+     *
+     * @hide
+     */
     public AddAdSelectionOverrideRequest(
             @NonNull AdSelectionConfig adSelectionConfig,
             @NonNull String decisionLogicJs,
-            @NonNull AdSelectionSignals trustedScoringSignals) {
+            @NonNull AdSelectionSignals trustedScoringSignals,
+            @NonNull BuyersDecisionLogic buyersDecisionLogic) {
         Objects.requireNonNull(adSelectionConfig);
         Objects.requireNonNull(decisionLogicJs);
         Objects.requireNonNull(trustedScoringSignals);
+        Objects.requireNonNull(buyersDecisionLogic);
 
         mAdSelectionConfig = adSelectionConfig;
         mDecisionLogicJs = decisionLogicJs;
         mTrustedScoringSignals = trustedScoringSignals;
+        mBuyersDecisionLogic = buyersDecisionLogic;
+    }
+
+    public AddAdSelectionOverrideRequest(
+            @NonNull AdSelectionConfig adSelectionConfig,
+            @NonNull String decisionLogicJs,
+            @NonNull AdSelectionSignals trustedScoringSignals) {
+        this(adSelectionConfig, decisionLogicJs, trustedScoringSignals, BuyersDecisionLogic.EMPTY);
     }
 
     /**
@@ -79,5 +95,15 @@ public class AddAdSelectionOverrideRequest {
     @NonNull
     public AdSelectionSignals getTrustedScoringSignals() {
         return mTrustedScoringSignals;
+    }
+
+    /**
+     * @return The override for the decision logic for each buyer that is used by contextual ads for
+     *     reporting, which may be extended to updating bid values for contextual ads in the future
+     * @hide
+     */
+    @NonNull
+    public BuyersDecisionLogic getBuyersDecisionLogic() {
+        return mBuyersDecisionLogic;
     }
 }

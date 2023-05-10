@@ -22,14 +22,8 @@
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user"/>
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="LoadSdkSuccessfullySdkProvider.apk"/>
-        <option name="test-file-name" value="LoadSdkAndCheckClassloaderSdkProvider.apk"/>
-        <option name="test-file-name" value="GetLoadedSdkLibInfoSuccessfully.apk"/>
-        <option name="test-file-name" value="LoadSdkSuccessfullySdkProviderTwo.apk"/>
-        <option name="test-file-name" value="LoadSdkWithInternalErrorSdkProvider.apk"/>
-        <option name="test-file-name" value="RequestSurfacePackageSuccessfullySdkProvider.apk"/>
-        <option name="test-file-name" value="RequestSurfacePackageWithInternalErrorSdkProvider.apk"/>
-        <option name="test-file-name" value="CodeProviderWithResources.apk"/>
+        <option name="test-file-name" value="SdkSandboxManagerCtsProvider.apk"/>
+        <option name="test-file-name" value="EmptySdkProviderApp.apk"/>
         <option name="test-file-name" value="SdkSandboxManagerTests.apk"/>
     </target_preparer>
 

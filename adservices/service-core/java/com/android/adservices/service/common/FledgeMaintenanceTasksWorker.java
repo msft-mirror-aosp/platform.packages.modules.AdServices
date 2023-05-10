@@ -19,7 +19,7 @@ package com.android.adservices.service.common;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.FlagsFactory;
@@ -30,6 +30,7 @@ import java.time.Instant;
 
 /** Utility class to perform Fledge maintenance tasks */
 public class FledgeMaintenanceTasksWorker {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @VisibleForTesting
@@ -48,17 +49,21 @@ public class FledgeMaintenanceTasksWorker {
 
     /**
      * Clears all entries in the {@code ad_selection} table that are older than {@code
-     * expirationTime}. Then, clears all expired entries in the {@code buyer_decision_logic}.
+     * expirationTime}. Then, clears all expired entries in the {@code buyer_decision_logic} as well
+     * as the {@code registered_ad_interactions} table.
      */
     public void clearExpiredAdSelectionData() {
         Instant expirationTime =
                 Clock.systemUTC()
                         .instant()
                         .minusSeconds(FlagsFactory.getFlags().getAdSelectionExpirationWindowS());
-        LogUtil.v("Clearing expired Ad Selection data");
+        sLogger.v("Clearing expired Ad Selection data");
         mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
 
-        LogUtil.v("Clearing expired Buyer Decision Logic data ");
+        sLogger.v("Clearing expired Buyer Decision Logic data ");
         mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
+
+        sLogger.v("Clearing expired Registered Ad Interaction data ");
+        mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
     }
 }

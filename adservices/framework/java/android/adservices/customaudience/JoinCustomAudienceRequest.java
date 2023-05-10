@@ -68,8 +68,8 @@ public class JoinCustomAudienceRequest {
 
         /**
          * Sets the custom audience to join.
-         * <p>
-         * See {@link #getCustomAudience()} ()} for more information.
+         *
+         * <p>See {@link #getCustomAudience()} for more information.
          */
         @NonNull
         public JoinCustomAudienceRequest.Builder setCustomAudience(

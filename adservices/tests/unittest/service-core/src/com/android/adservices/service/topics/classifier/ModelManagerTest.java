@@ -25,17 +25,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
+import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
 
 import org.junit.After;
 import org.junit.Before;
@@ -45,9 +48,12 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,6 +64,8 @@ import java.util.Map;
 public class ModelManagerTest {
 
     private static final Context sContext = ApplicationProvider.getApplicationContext();
+    // Change this to a higher number when classifier_test_assets_metadata build_id changed.
+    private static final int CLIENT_FILE_GROUP_BUILD_ID = 9;
     private ImmutableList<Integer> mProductionLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> mProductionClassifierAssetsMetadata;
     private ImmutableMap<String, ImmutableMap<String, String>> mTestClassifierAssetsMetadata;
@@ -67,12 +75,16 @@ public class ModelManagerTest {
     private static final String TEST_APPS_FILE_PATH = "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String TEST_CLASSIFIER_MODEL_PATH = "classifier/test_model.tflite";
 
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH =
             "classifier/classifier_assets_metadata.json";
+    private static final String PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
 
@@ -86,6 +98,7 @@ public class ModelManagerTest {
         mMockitoSession =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(ModelManager.class)
                         .initMocks(this)
                         .strictness(Strictness.WARN)
                         .startMocking();
@@ -118,6 +131,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -125,6 +139,7 @@ public class ModelManagerTest {
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
         assertThat(byteBuffer.capacity()).isGreaterThan(0);
     }
 
@@ -145,11 +160,13 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         downloadedFiles);
 
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
         assertThat(byteBuffer.capacity()).isGreaterThan(0);
@@ -163,6 +180,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         "IncorrectPathWithNoModel",
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -181,12 +199,21 @@ public class ModelManagerTest {
         // Mock File Storage to return null when gets invoked.
         doReturn(null).when(mMockFileStorage).open(any(), any());
 
+        // Mocks a ClientFileGroup with build id = 9 as downloaded model, which is bigger than test
+        // bundled model build id = 8. ModelManager will choose the downloaded model for
+        // classification because downloaded model build id is bigger.
+        ClientFileGroup clientFileGroup =
+                ClientFileGroup.newBuilder().setBuildId(CLIENT_FILE_GROUP_BUILD_ID).build();
+        ExtendedMockito.doReturn(clientFileGroup)
+                .when(() -> ModelManager.getClientFileGroup(any(Context.class)));
+
         mProductionModelManager =
                 new ModelManager(
                         sContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         downloadedFiles);
@@ -195,19 +222,23 @@ public class ModelManagerTest {
         assertThat(mProductionModelManager.retrieveModel()).isNull();
 
         verify(mMockFileStorage).open(any(), any());
+
+        assertThat(mProductionModelManager.useDownloadedFiles()).isTrue();
+        assertThat(mProductionModelManager.getBuildId()).isEqualTo(CLIENT_FILE_GROUP_BUILD_ID);
     }
 
     @Test
     public void testRetrieveLabels_bundled_successfulRead() {
-        // Test the labels list in production assets
+        // Test the labels list in test assets with build id = 8.
         // Check size of list.
         // The labels_topics.txt contains 446 topics.
         mProductionModelManager =
                 new ModelManager(
                         sContext,
-                        PRODUCTION_LABELS_FILE_PATH,
-                        PRODUCTION_APPS_FILE_PATH,
-                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -217,6 +248,10 @@ public class ModelManagerTest {
 
         // Check some labels.
         assertThat(mProductionLabels).containsAtLeast(10010, 10200, 10270, 10432);
+        // Verify ModelManager chooses bundled model because mMockDownloadedFiles is empty.
+        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
+        // Verify ModelManager returns test bundled model build id = 8.
+        assertThat(mProductionModelManager.getBuildId()).isEqualTo(8);
     }
 
     @Test
@@ -234,6 +269,7 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -253,6 +289,7 @@ public class ModelManagerTest {
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
+                        "WrongFilePath",
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
@@ -265,10 +302,12 @@ public class ModelManagerTest {
     @Test
     public void testRetrieveLabels_downloaded_emptyListReturnedOnException() throws IOException {
         // Mock a MDD FileGroup and FileStorage
-        when(mMockFileStorage.open(any(), any())).thenReturn(FileInputStream.nullInputStream());
+        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
+        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
         mProductionModelManager =
                 new ModelManager(
                         sContext,
+                        "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -290,6 +329,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -352,6 +392,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -380,6 +421,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -409,8 +451,8 @@ public class ModelManagerTest {
         // "asset_version", "path", "checksum", "updated_date".
         // Check if "labels_topics" asset has the correct format.
         assertThat(mTestClassifierAssetsMetadata.get("labels_topics")).hasSize(4);
-        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet()).containsExactly(
-                "asset_version", "path", "checksum", "updated_date");
+        assertThat(mTestClassifierAssetsMetadata.get("labels_topics").keySet())
+                .containsExactly("asset_version", "path", "checksum", "updated_date");
 
         // The asset "labels_topics" should have attribution "asset_version" and its value should be
         // "34"
@@ -449,6 +491,7 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -471,10 +514,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "2". This is used for comparing the model version with MDD
+        // and its value should be "1800". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("2");
+                .isEqualTo("1800");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -499,9 +542,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/labels_topics.txt");
 
         // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-07-29"
+        // "2022-09-10"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-07-29");
+                .isEqualTo("2022-09-10");
 
         // There should contain 5 metadata attributions in asset "topic_id_to_name"
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
@@ -512,9 +555,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
+        // its value should be "12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
+                .isEqualTo("12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157");
     }
 
     @Test
@@ -530,6 +573,7 @@ public class ModelManagerTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -552,10 +596,10 @@ public class ModelManagerTest {
                 .isEqualTo("2");
 
         // The property "version_info" should have attribution "build_id"
-        // and its value should be "2". This is used for comparing the model version with MDD
+        // and its value should be "1800". This is used for comparing the model version with MDD
         // downloaded model.
         assertThat(mProductionClassifierAssetsMetadata.get("version_info").get("build_id"))
-                .isEqualTo("2");
+                .isEqualTo("1800");
 
         // The property "version_info" should have attribution "taxonomy_type"
         // and its value should be "chrome_and_mobile_taxonomy".
@@ -580,9 +624,9 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/labels_topics.txt");
 
         // The asset "labels_topics" should have attribution "updated_date" and its value should be
-        // "2022-07-29"
+        // "2022-09-10"
         assertThat(mProductionClassifierAssetsMetadata.get("labels_topics").get("updated_date"))
-                .isEqualTo("2022-07-29");
+                .isEqualTo("2022-09-10");
 
         // There should contain 5 metadata attributions in asset "topic_id_to_name"
         assertThat(mProductionClassifierAssetsMetadata.get("topic_id_to_name")).hasSize(4);
@@ -593,9 +637,164 @@ public class ModelManagerTest {
                 .isEqualTo("assets/classifier/topic_id_to_name.csv");
 
         // The asset "precomputed_app_list" should have attribution "checksum" and
-        // its value should be "8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830"
+        // its value should be "12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157"
         assertThat(mProductionClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
-                .isEqualTo("8749598423bb8baca59e0da508739d544e40f230e7edcdb92438e9e76f75e830");
+                .isEqualTo("12a8b7da9566c800e2422543267fa63a2484849b5afeffddd9177825d2e2e157");
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_bundled_successfulRead() {
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig.getInputFormat()).isEqualTo("%s. %s");
+        assertThat(classifierInputConfig.getInputFields())
+                .containsExactly(
+                        ClassifierInputConfig.ClassifierInputField.APP_NAME,
+                        ClassifierInputConfig.ClassifierInputField.SPLIT_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_downloaded_successfulRead() throws IOException {
+        // Mock a MDD FileGroup and FileStorage
+        when(mMockFileStorage.open(any(), any()))
+                .thenReturn(sContext.getAssets().open(PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH));
+
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        PRODUCTION_LABELS_FILE_PATH,
+                        PRODUCTION_APPS_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
+                        MODEL_FILE_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig.getInputFormat()).isEqualTo("%s. %s");
+        assertThat(classifierInputConfig.getInputFields())
+                .containsExactly(
+                        ClassifierInputConfig.ClassifierInputField.APP_NAME,
+                        ClassifierInputConfig.ClassifierInputField.SPLIT_PACKAGE_NAME);
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_bundled_emptyConfigReturnedOnException() {
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_downloaded_emptyConfigReturnedOnException()
+            throws IOException {
+        // Mock a MDD FileGroup and FileStorage
+        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
+        when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
+
+        mProductionModelManager =
+                new ModelManager(
+                        sContext,
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        "WrongFilePath",
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_emptyConfigReturnedOnInvalidConfigField()
+            throws IOException {
+        String invalidClassifierInputConfig = "%s\nINVALID_FIELD";
+        InputStream inputStream =
+                new ByteArrayInputStream(
+                        invalidClassifierInputConfig.getBytes(StandardCharsets.UTF_8));
+
+        Context mockContext = mock(Context.class);
+        AssetManager mockAssetManager = mock(AssetManager.class);
+
+        when(mockContext.getAssets()).thenReturn(mockAssetManager);
+        when(mockAssetManager.open(any())).thenReturn(inputStream);
+
+        mProductionModelManager =
+                new ModelManager(
+                        mockContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
+    }
+
+    @Test
+    public void testRetrieveClassifierInputConfig_emptyConfigReturnedOnInvalidConfigFormat()
+            throws IOException {
+        String invalidClassifierInputConfig = "%s -> %s\nAPP_DESCRIPTION";
+        InputStream inputStream =
+                new ByteArrayInputStream(
+                        invalidClassifierInputConfig.getBytes(StandardCharsets.UTF_8));
+
+        Context mockContext = mock(Context.class);
+        AssetManager mockAssetManager = mock(AssetManager.class);
+
+        when(mockContext.getAssets()).thenReturn(mockAssetManager);
+        when(mockAssetManager.open(any())).thenReturn(inputStream);
+
+        mProductionModelManager =
+                new ModelManager(
+                        mockContext,
+                        TEST_LABELS_FILE_PATH,
+                        TEST_APPS_FILE_PATH,
+                        TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
+                        TEST_CLASSIFIER_MODEL_PATH,
+                        mMockFileStorage,
+                        mMockDownloadedFiles);
+
+        ClassifierInputConfig classifierInputConfig =
+                mProductionModelManager.retrieveClassifierInputConfig();
+
+        assertThat(classifierInputConfig).isEqualTo(ClassifierInputConfig.getEmptyConfig());
     }
 
     @Test
@@ -606,6 +805,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -622,6 +822,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         TEST_CLASSIFIER_MODEL_PATH,
                         mMockFileStorage,
                         null /*No downloaded files.*/);
@@ -638,6 +839,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         "ModelWrongPath",
                         mMockFileStorage,
                         null /*No downloaded files.*/);
@@ -654,6 +856,7 @@ public class ModelManagerTest {
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);

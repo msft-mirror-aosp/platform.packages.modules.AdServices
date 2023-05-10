@@ -18,69 +18,58 @@ package com.android.sdksandboxcode_webview;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
+import android.app.sdksandbox.interfaces.IWebViewSdkApi;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
-import com.android.apiimplementation.SdkApi;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 public class SandboxedSdkWebViewProvider extends SandboxedSdkProvider {
+
+    private WebView mWebView = null;
+    private static final Handler sHandler = new Handler(Looper.getMainLooper());
+
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) {
-        return new SandboxedSdk(new SdkApi(getContext()));
+        IWebViewSdkApi.Stub webviewProxy =
+                new IWebViewSdkApi.Stub() {
+                    public void loadUrl(String url) {
+                        sHandler.post(() -> mWebView.loadUrl(url));
+                    }
+
+                    public void destroy() {
+                        sHandler.post(() -> mWebView.destroy());
+                    }
+                };
+        return new SandboxedSdk(webviewProxy);
     }
 
     @Override
     public View getView(Context windowContext, Bundle params, int width, int height) {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final TestWebView webview = new TestWebView();
-        try {
-            webview.generate(windowContext, latch);
-            latch.await(2, TimeUnit.SECONDS);
-            return webview.getWebView();
-        } catch (Exception e) {
-            return null;
-        }
+        mWebView = new WebView(windowContext);
+        initializeSettings(mWebView.getSettings());
+        mWebView.loadUrl("https://www.google.com/");
+        return mWebView;
     }
 
-    private class TestWebView {
+    private void initializeSettings(WebSettings settings) {
+        settings.setJavaScriptEnabled(true);
 
-        WebView mWebView = null;
+        settings.setGeolocationEnabled(true);
+        settings.setSupportZoom(true);
+        settings.setDatabaseEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
 
-        private TestWebView() {
-        }
-
-        private void initializeSettings(WebSettings settings) {
-            settings.setJavaScriptEnabled(true);
-
-            settings.setGeolocationEnabled(true);
-            settings.setSupportZoom(true);
-            settings.setDatabaseEnabled(true);
-            settings.setDomStorageEnabled(true);
-            settings.setAllowFileAccess(true);
-            settings.setAllowContentAccess(true);
-
-            // Default layout behavior for chrome on android.
-            settings.setUseWideViewPort(true);
-            settings.setLoadWithOverviewMode(true);
-            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
-        }
-        WebView getWebView() {
-            return mWebView;
-        }
-
-        void generate(Context context, CountDownLatch latch) {
-            WebView wv = new WebView(context);
-            WebSettings settings = wv.getSettings();
-            initializeSettings(settings);
-            wv.loadUrl("localhost:5037");
-            mWebView = wv;
-            latch.countDown();
-        }
+        // Default layout behavior for chrome on android.
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
     }
+
 }

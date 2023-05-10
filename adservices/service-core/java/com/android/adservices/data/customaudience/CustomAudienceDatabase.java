@@ -28,8 +28,8 @@ import androidx.room.TypeConverters;
 import androidx.room.migration.AutoMigrationSpec;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
-import com.android.internal.annotations.GuardedBy;
-
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.BinderFlagReader;
 
 import java.util.Objects;
 
@@ -42,13 +42,14 @@ import java.util.Objects;
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
-            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class)
+            @AutoMigration(from = 1, to = 2, spec = CustomAudienceDatabase.AutoMigration1To2.class),
+            @AutoMigration(from = 2, to = 3),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 2;
+    public static final int DATABASE_VERSION = 3;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME = "customaudience.db";
 
@@ -66,18 +67,30 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
             toColumnName = "daily_update_uri")
     static class AutoMigration1To2 implements AutoMigrationSpec {}
 
-    @GuardedBy("SINGLETON_LOCK")
-    private static CustomAudienceDatabase sSingleton;
+    private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
 
-    /** Returns an instance of the AdServiceDatabase given a context. */
+    /** Returns an instance of the CustomAudienceDatabase given a context. */
     public static CustomAudienceDatabase getInstance(@NonNull Context context) {
         Objects.requireNonNull(context, "Context must be provided.");
+        // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
+        CustomAudienceDatabase singleReadResult = sSingleton;
+        if (singleReadResult != null) {
+            return singleReadResult;
+        }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                DBCustomAudience.Converters converters =
+                        new DBCustomAudience.Converters(
+                                BinderFlagReader.readFlag(
+                                        () ->
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeAdSelectionFilteringEnabled()));
                 sSingleton =
                         Room.databaseBuilder(context, CustomAudienceDatabase.class, DATABASE_NAME)
+                                .fallbackToDestructiveMigration()
+                                .addTypeConverter(converters)
                                 .build();
             }
             return sSingleton;

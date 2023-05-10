@@ -27,10 +27,14 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -42,6 +46,8 @@ import java.util.List;
 import java.util.Objects;
 
 /** Maintenance job to clean up. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class MaintenanceJobService extends JobService {
 
     private FledgeMaintenanceTasksWorker mFledgeMaintenanceTasksWorker;
@@ -56,6 +62,13 @@ public final class MaintenanceJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("MaintenanceJobService.onStartJob");
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling MaintenanceJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()
                 && FlagsFactory.getFlags().getFledgeSelectAdsKillSwitch()) {

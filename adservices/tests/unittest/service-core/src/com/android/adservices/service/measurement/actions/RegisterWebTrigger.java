@@ -17,7 +17,11 @@
 package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
@@ -38,7 +42,10 @@ import java.util.Map;
 public final class RegisterWebTrigger implements Action {
     public final WebTriggerRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
 
     public RegisterWebTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
@@ -52,7 +59,7 @@ public final class RegisterWebTrigger implements Action {
 
         WebTriggerRegistrationRequest registrationRequest =
                 new WebTriggerRegistrationRequest.Builder(
-                                createTriggerParams(triggerParamsArray),
+                                createTriggerParams(triggerParamsArray, obj),
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.TRIGGER_TOP_ORIGIN_URI_KEY)))
@@ -63,13 +70,13 @@ public final class RegisterWebTrigger implements Action {
                                 registrationRequest,
                                 attributionSource.getPackageName(),
                                 /* sdkPackageName = */ "")
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = hasTriggerDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
     @Override
@@ -77,7 +84,7 @@ public final class RegisterWebTrigger implements Action {
         return mTimestamp;
     }
 
-    private List<WebTriggerParams> createTriggerParams(JSONArray triggerParamsArray)
+    private List<WebTriggerParams> createTriggerParams(JSONArray triggerParamsArray, JSONObject obj)
             throws JSONException {
         List<WebTriggerParams> triggerParamsList = new ArrayList<>(triggerParamsArray.length());
 
@@ -88,7 +95,7 @@ public final class RegisterWebTrigger implements Action {
                                     Uri.parse(
                                             triggerParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(true)
+                            .setDebugKeyAllowed(hasArDebugPermission(obj))
                             .build());
         }
 

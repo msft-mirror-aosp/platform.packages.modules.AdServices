@@ -6,8 +6,7 @@
         "attribution_src_url": "https://www.ad-tech1.test",
         "source_origin": "android-app://example.1s1.test",
         "source_type": "navigation",
-        "registrant": "example.1s1.test",
-        "is_adid_permission_granted": false
+        "registrant": "example.1s1.test"
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
@@ -45,8 +44,7 @@
       "registration_request": {
         "attribution_src_url": "https://www.ad-tech1.test",
         "destination_origin": "android-app://example.2d1.test",
-        "registrant": "example.2d1.test",
-        "is_adid_permission_granted": false
+        "registrant": "example.2d1.test"
       },
       "responses": [{
         "url": "https://www.ad-tech1.test",
@@ -104,6 +102,7 @@
       "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
       "payload": {
         "attribution_destination": "android-app://example.2d1.test",
+        "scheduled_report_time": "800176400",
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",

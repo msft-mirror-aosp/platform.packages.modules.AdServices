@@ -20,11 +20,13 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.util.Dumpable;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
+import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -35,9 +37,11 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AdServices Feature Flags interface. This Flags interface hold the default values of Ad Services
- * Flags.
+ * Flags. The default values in this class must match with the default values in PH since we will
+ * migrate to Flag Codegen in the future. With that migration, the Flags.java file will be generated
+ * from the GCL.
  */
-public interface Flags extends Dumpable {
+public interface Flags {
     /** Topics Epoch Job Period. */
     long TOPICS_EPOCH_JOB_PERIOD_MS = 7 * 86_400_000; // 7 days.
 
@@ -76,6 +80,14 @@ public interface Flags extends Dumpable {
     /** Returns the number of top topics. */
     default int getTopicsNumberOfRandomTopics() {
         return TOPICS_NUMBER_OF_RANDOM_TOPICS;
+    }
+
+    /** Global blocked Topics. Default value is empty list. */
+    ImmutableList<Integer> TOPICS_GLOBAL_BLOCKED_TOPIC_IDS = ImmutableList.of();
+
+    /** Returns a list of global blocked topics. */
+    default ImmutableList<Integer> getGlobalBlockedTopicIds() {
+        return TOPICS_GLOBAL_BLOCKED_TOPIC_IDS;
     }
 
     /** How many epochs to look back when deciding if a caller has observed a topic before. */
@@ -128,7 +140,7 @@ public interface Flags extends Dumpable {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.1f;
+    float CLASSIFIER_THRESHOLD = 0.2f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
@@ -258,6 +270,13 @@ public interface Flags extends Dumpable {
         return MEASUREMENT_IS_CLICK_VERIFICATION_ENABLED;
     }
 
+    /** Returns whether a click is verified by Input Event. */
+    boolean MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT = false;
+
+    default boolean getMeasurementIsClickVerifiedByInputEvent() {
+        return MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
+    }
+
     /** Returns the DB size limit for measurement. */
     default long getMeasurementDbSizeLimit() {
         return MEASUREMENT_DB_SIZE_LIMIT;
@@ -271,6 +290,98 @@ public interface Flags extends Dumpable {
     /** Measurement manifest file url. */
     default String getMeasurementManifestFileUrl() {
         return MEASUREMENT_MANIFEST_FILE_URL;
+    }
+
+    boolean MEASUREMENT_ENABLE_XNA = false;
+
+    /** Returns whether XNA should be used for eligible sources. */
+    default boolean getMeasurementEnableXNA() {
+        return MEASUREMENT_ENABLE_XNA;
+    }
+
+    boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
+
+    /** Returns whether verbose debug report generation is enabled. */
+    default boolean getMeasurementEnableDebugReport() {
+        return MEASUREMENT_ENABLE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT = true;
+
+    /** Returns whether source debug report generation is enabled. */
+    default boolean getMeasurementEnableSourceDebugReport() {
+        return MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT = true;
+
+    /** Returns whether trigger debug report generation is enabled. */
+    default boolean getMeasurementEnableTriggerDebugReport() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+    }
+
+    long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
+
+    /** Returns the data expiry window in milliseconds. */
+    default long getMeasurementDataExpiryWindowMs() {
+        return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+    }
+
+    int MEASUREMENT_MAX_REGISTRATION_REDIRECTS = 20;
+
+    /** Returns the number of maximum registration redirects allowed. */
+    default int getMeasurementMaxRegistrationRedirects() {
+        return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
+    }
+
+    int MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION = 100;
+
+    /** Returns the number of maximum registration per job invocation. */
+    default int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
+    }
+
+    int MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST = 5;
+
+    /** Returns the number of maximum retires per registration request. */
+    default int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /** Returns the kill switch for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for Attribution Fallback Job . */
+    default long getMeasurementAttributionFallbackJobPeriodMs() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -394,6 +505,10 @@ public interface Flags extends Dumpable {
     int FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS = 5 * 1000; // 5 seconds
     int FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS = 30 * 1000; // 30 seconds
     int FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B = 10 * 1024; // 10 KiB
+    boolean FLEDGE_HTTP_CACHE_ENABLE = true;
+    boolean FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING = true;
+    long FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS = 2 * 24 * 60 * 60; // 2 days
+    long FLEDGE_HTTP_CACHE_MAX_ENTRIES = 100;
 
     /** Returns {@code true} if the FLEDGE Background Fetch is enabled. */
     default boolean getFledgeBackgroundFetchEnabled() {
@@ -472,11 +587,47 @@ public interface Flags extends Dumpable {
         return FLEDGE_BACKGROUND_FETCH_MAX_RESPONSE_SIZE_B;
     }
 
-    int FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT = 6;
+    /** Returns boolean, if the caching is enabled for {@link FledgeHttpCache} */
+    default boolean getFledgeHttpCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE;
+    }
+
+    /** Returns boolean, if the caching is enabled for JS for bidding and scoring */
+    default boolean getFledgeHttpJsCachingEnabled() {
+        return FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
+    }
+
+    /** Returns max number of entries that should be persisted in cache */
+    default long getFledgeHttpCacheMaxEntries() {
+        return FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+    }
+
+    /** Returns the default max age of entries in cache */
+    default long getFledgeHttpCacheMaxAgeSeconds() {
+        return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
+    }
+
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT = 1000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT = 950;
+
+    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
+    default int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
+     * there are too many entries.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
+    }
+
+    int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
-    default int getAdSelectionConcurrentBiddingCount() {
-        return FLEDGE_AD_SELECTION_CONCURRENT_BIDDING_COUNT;
+    default int getAdSelectionMaxConcurrentBiddingCount() {
+        return FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
     }
 
     // TODO(b/240647148): Limits are increased temporarily, re-evaluate these numbers after
@@ -487,9 +638,17 @@ public interface Flags extends Dumpable {
     long FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS = 5000;
     // For *on device* ad selection.
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
+    long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 2L;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
+
+    // RegisterAdBeacon  Constants
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT = 1000; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT = 10; // Num entries
+    long FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
+            20 * 2; // Num characters * 2 bytes per char in UTF-8
 
     /** Returns the timeout constant in milliseconds that limits the bidding per CA */
     default long getAdSelectionBiddingTimeoutPerCaMs() {
@@ -523,11 +682,24 @@ public interface Flags extends Dumpable {
     }
 
     /**
+     * Returns the timeout constant in milliseconds that limits the overall *on device* ad selection
+     * from outcomes orchestration.
+     */
+    default long getAdSelectionFromOutcomesOverallTimeoutMs() {
+        return FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
      * Returns the timeout constant in milliseconds that limits the overall off device ad selection
      * orchestration.
      */
     default long getAdSelectionOffDeviceOverallTimeoutMs() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS;
+    }
+
+    /** Returns the default JS version for running bidding. */
+    default long getFledgeAdSelectionBiddingLogicJsVersion() {
+        return FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
     }
 
     /**
@@ -536,6 +708,29 @@ public interface Flags extends Dumpable {
      */
     default long getReportImpressionOverallTimeoutMs() {
         return FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+    }
+
+    /**
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that can be in the {@code
+     * registered_ad_interactions} database at any one time.
+     */
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
+    }
+
+    /**
+     * Returns the maximum number of {@link DBRegisteredAdInteraction} that an ad-tech can register
+     * in one call to {@code reportImpression}.
+     */
+    default long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+        return FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_PER_AD_TECH_COUNT;
+    }
+
+    /**
+     * Returns the maximum size in bytes of {@link DBRegisteredAdInteraction#getInteractionKey()}
+     */
+    default long getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
+        return FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
     }
 
     // 24 hours in seconds
@@ -548,11 +743,34 @@ public interface Flags extends Dumpable {
         return FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S;
     }
 
+    // Filtering feature flag disabled by default
+    boolean FLEDGE_AD_SELECTION_FILTERING_ENABLED = false;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionFilteringEnabled() {
+        return FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+    }
+
+    // Enable contextual Ads feature, based on Filtering feature enabled or not
+    boolean FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED = FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+
+    /** Returns {@code true} if negative filtering of ads during ad selection is enabled. */
+    default boolean getFledgeAdSelectionContextualAdsEnabled() {
+        return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getAdSelectionOffDeviceEnabled() {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
+    }
+
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
+
+    /** @return whether to call trusted servers for off device ad selection. */
+    default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
+        return FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
     }
 
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
@@ -568,6 +786,13 @@ public interface Flags extends Dumpable {
         return ADSERVICES_ENABLED;
     }
 
+    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
+
+    /** Return {@code true} if error logging is enabled */
+    default boolean getAdServicesErrorLoggingEnabled() {
+        return ADSERVICES_ERROR_LOGGING_ENABLED;
+    }
+
     /** Dump some debug info for the flags */
     default void dump(@NonNull PrintWriter writer, @Nullable String[] args) {}
 
@@ -575,11 +800,8 @@ public interface Flags extends Dumpable {
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
      * should be erased
-     *
-     * <p>In order to provide enough epochs to assign topics for newly installed apps, keep
-     * TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS more epochs in database.
      */
-    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS * 2;
+    int NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY = TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS;
 
     /*
      * Return the number of epochs to keep in the history
@@ -658,6 +880,74 @@ public interface Flags extends Dumpable {
         return CONSENT_MANAGER_DEBUG_MODE;
     }
 
+    /** Available sources of truth to get consent for PPAPI. */
+    @IntDef(
+            flag = true,
+            value = {
+                SYSTEM_SERVER_ONLY,
+                PPAPI_ONLY,
+                PPAPI_AND_SYSTEM_SERVER,
+                APPSEARCH_ONLY,
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    @interface ConsentSourceOfTruth {}
+
+    /** Write and read consent from system server only. */
+    int SYSTEM_SERVER_ONLY = 0;
+    /** Write and read consent from PPAPI only */
+    int PPAPI_ONLY = 1;
+    /** Write consent to both PPAPI and system server. Read consent from system server only. */
+    int PPAPI_AND_SYSTEM_SERVER = 2;
+    /**
+     * Write consent data to AppSearch only. To store consent data in AppSearch the flag
+     * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
+     * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
+     * running on S- for all consent requests and on T+ once after OTA.
+     */
+    int APPSEARCH_ONLY = 3;
+
+    /**
+     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
+     * code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+
+    /** Returns the consent source of truth currently used for PPAPI. */
+    @ConsentSourceOfTruth
+    default int getConsentSourceOfTruth() {
+        return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+    }
+
+    /**
+     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
+     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+
+    /** Returns the blocked topics source of truth currently used for PPAPI */
+    @ConsentSourceOfTruth
+    default int getBlockedTopicsSourceOfTruth() {
+        return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+    }
+
+    /**
+     * The SHA certificates of the AdServices and the AdExtServices APKs. This is required when
+     * writing consent data to AppSearch in order to allow reads from T+ APK. This is a comma
+     * searpated list.
+     */
+    // TODO: Add the release key signed cert.
+    String ADSERVICES_APK_SHA_CERTIFICATE =
+            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
+
+    /** Only App signatures belonging to this Allow List can use PP APIs. */
+    default String getAdservicesApkShaCertificate() {
+        return ADSERVICES_APK_SHA_CERTIFICATE;
+    }
+
     // Group of All Killswitches
 
     /**
@@ -665,7 +955,9 @@ public interface Flags extends Dumpable {
      * which means the PP API is enabled. This flag is used for emergency turning off the whole PP
      * API.
      */
-    boolean GLOBAL_KILL_SWITCH = false; // By default, the PP API is enabled.
+    // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
+    // M-2022-11), the value of this flag in the binary was false.
+    boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
         return GLOBAL_KILL_SWITCH;
@@ -928,6 +1220,7 @@ public interface Flags extends Dumpable {
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
     }
+
     /**
      * Measurement Job Debug Reporting Kill Switch. The default value is false which means Debug
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
@@ -985,6 +1278,24 @@ public interface Flags extends Dumpable {
                 || MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
     }
 
+    /**
+     * Measurement Rollback Kill Switch. The default value is false which means the rollback
+     * handling on measurement service start is enabled. This flag is used for emergency turning off
+     * measurement rollback data deletion handling.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Measurement rollback deletion handling. The rollback
+     * deletion handling will be disabled if the Global Kill Switch, Measurement Kill Switch or the
+     * Measurement rollback deletion Kill Switch value is true.
+     */
+    default boolean getMeasurementRollbackDeletionKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -1021,6 +1332,17 @@ public interface Flags extends Dumpable {
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    /**
+     * Topics on-device classifier Kill Switch. The default value is false which means the on-device
+     * classifier in enabled. This flag is used for emergency turning off the on-device classifier.
+     */
+    boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
+
+    /** @return value of Topics on-device classifier kill switch. */
+    default boolean getTopicsOnDeviceClassifierKillSwitch() {
+        return TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
     }
 
     // MDD Killswitches
@@ -1073,6 +1395,29 @@ public interface Flags extends Dumpable {
     default boolean getFledgeCustomAudienceServiceKillSwitch() {
         // Check for global kill switch first, as it should override all other kill switches
         return getGlobalKillSwitch() || FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+    }
+
+    /**
+     * Enable Back Compat feature flag. The default value is false which means that all back compat
+     * related features are disabled by default. This flag would be enabled for R/S during rollout.
+     */
+    boolean ENABLE_BACK_COMPAT = false;
+
+    /** @return value of enable Back Compat */
+    default boolean getEnableBackCompat() {
+        return ENABLE_BACK_COMPAT;
+    }
+
+    /**
+     * Enable AppSearch read for consent data feature flag. The default value is false which means
+     * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
+     * support of consent data on T+ devices.
+     */
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+
+    /** @return value of enable appsearch consent data flag */
+    default boolean getEnableAppsearchConsentData() {
+        return ENABLE_APPSEARCH_CONSENT_DATA;
     }
 
     /*
@@ -1160,9 +1505,86 @@ public interface Flags extends Dumpable {
      */
     float SDK_REQUEST_PERMITS_PER_SECOND = 1; // allow max 1 request to any PP API per second.
 
+    /**
+     * PP API Rate Limit for ad id. This is the max allowed QPS for one API client to one PP API.
+     * Negative Value means skipping the rate limiting checking.
+     */
+    float ADID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for app set id. This is the max allowed QPS for one API client to one PP
+     * API. Negative Value means skipping the rate limiting checking.
+     */
+    float APPSETID_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register source. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for measurement register web source. This is the max allowed QPS for one
+     * API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND = 5;
+
+    /**
+     * PP API Rate Limit for Topics API based on App Package name. This is the max allowed QPS for
+     * one API client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND = 1;
+
+    /**
+     * PP API Rate Limit for Topics API based on Sdk Name. This is the max allowed QPS for one API
+     * client to one PP API. Negative Value means skipping the rate limiting checking.
+     */
+    float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
+
+    /**
+     * PP API Rate Limit for Fledge Report Interaction API. This is the max allowed QPS for one SDK
+     * to one the Report Interaction API. Negative Value means skipping the rate limiting checking.
+     */
+    float FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND = 1;
+
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
         return SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Ad id Request Permits Per Second. */
+    default float getAdIdRequestPermitsPerSecond() {
+        return ADID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the App Set Ad Request Permits Per Second. */
+    default float getAppSetIdRequestPermitsPerSecond() {
+        return APPSETID_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On App Package Name Request Permits Per Second. */
+    default float getTopicsApiAppRequestPermitsPerSecond() {
+        return TOPICS_API_APP_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Topics API Based On Sdk Name Request Permits Per Second. */
+    default float getTopicsApiSdkRequestPermitsPerSecond() {
+        return TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Source Request Permits Per Second. */
+    default float getMeasurementRegisterSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Measurement Register Web Source Request Permits Per Second. */
+    default float getMeasurementRegisterWebSourceRequestPermitsPerSecond() {
+        return MEASUREMENT_REGISTER_WEB_SOURCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Fledge Report Interaction API Request Permits Per Second. */
+    default float getFledgeReportInteractionRequestPermitsPerSecond() {
+        return FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
@@ -1170,6 +1592,7 @@ public interface Flags extends Dumpable {
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
     boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
+    boolean ENABLE_ENROLLMENT_TEST_SEED = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1186,10 +1609,19 @@ public interface Flags extends Dumpable {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
     }
 
+    /**
+     * @return {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
+     *     testing)
+     */
+    default boolean isEnableEnrollmentTestSeed() {
+        return ENABLE_ENROLLMENT_TEST_SEED;
+    }
+
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
     boolean ENFORCE_FOREGROUND_STATUS_APPSETID = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION = true;
+    boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
@@ -1208,6 +1640,14 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+    }
+
+    /**
+     * @return true if FLEDGE reportInteraction API should require that the calling API is running
+     *     in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
+        return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
     }
 
     /**
@@ -1232,6 +1672,7 @@ public interface Flags extends Dumpable {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
 
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
@@ -1279,6 +1720,11 @@ public interface Flags extends Dumpable {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1334,12 +1780,161 @@ public interface Flags extends Dumpable {
         return MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
     }
 
+    /** Ui OTA strings group name, used for MDD download. */
+    String UI_OTA_STRINGS_GROUP_NAME = "ui-ota-strings";
+
+    /** UI OTA strings group name. */
+    default String getUiOtaStringsGroupName() {
+        return UI_OTA_STRINGS_GROUP_NAME;
+    }
+
+    /** Ui OTA strings manifest file url, used for MDD download. */
+    String UI_OTA_STRINGS_MANIFEST_FILE_URL = "";
+
+    /** UI OTA strings manifest file url. */
+    default String getUiOtaStringsManifestFileUrl() {
+        return UI_OTA_STRINGS_MANIFEST_FILE_URL;
+    }
+
+    /** Ui OTA strings feature flag. */
+    boolean UI_OTA_STRINGS_FEATURE_ENABLED = false;
+
+    /** Returns if UI OTA strings feature is enabled. */
+    default boolean getUiOtaStringsFeatureEnabled() {
+        return UI_OTA_STRINGS_FEATURE_ENABLED;
+    }
+
+    /** Deadline for downloading UI OTA strings. */
+    long UI_OTA_STRINGS_DOWNLOAD_DEADLINE = 86700000; /* 1 day */
+
+    /** Returns the deadline for downloading UI OTA strings. */
+    default long getUiOtaStringsDownloadDeadline() {
+        return UI_OTA_STRINGS_DOWNLOAD_DEADLINE;
+    }
+
     /** UI Dialogs feature enabled. */
     boolean UI_DIALOGS_FEATURE_ENABLED = false;
 
     /** Returns if the UI Dialogs feature is enabled. */
     default boolean getUIDialogsFeatureEnabled() {
         return UI_DIALOGS_FEATURE_ENABLED;
+    }
+
+    /** UI Dialog Fragment feature enabled. */
+    boolean UI_DIALOG_FRAGMENT = false;
+    /** Returns if the UI Dialog Fragment is enabled. */
+    default boolean getUiDialogFragmentEnabled() {
+        return UI_DIALOG_FRAGMENT;
+    }
+
+    /** The EEA device region feature is off by default. */
+    boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
+
+    /** Returns if the EEA device region feature has been enabled. */
+    default boolean isEeaDeviceFeatureEnabled() {
+        return IS_EEA_DEVICE_FEATURE_ENABLED;
+    }
+
+    /** Default is that the device is in the EEA region. */
+    boolean IS_EEA_DEVICE = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isEeaDevice() {
+        return IS_EEA_DEVICE;
+    }
+
+    /** Default is that the ui feature type logging is enabled. */
+    boolean UI_FEATURE_TYPE_LOGGING_ENABLED = true;
+
+    /** Returns if device is in the EEA region. */
+    default boolean isUiFeatureTypeLoggingEnabled() {
+        return UI_FEATURE_TYPE_LOGGING_ENABLED;
+    }
+
+    /** Default is that the manual interaction feature is enabled. */
+    boolean RECORD_MANUAL_INTERACTION_ENABLED = true;
+
+    /** Returns if the manual interaction feature is enabled. */
+    default boolean getRecordManualInteractionEnabled() {
+        return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+    }
+
+    /**
+     * The check activity feature is off by default. When enabled, we check whether all Rubidium
+     * activities are enabled when we determine whether AdServices is enabled
+     */
+    boolean IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED = false;
+
+    /** Returns if the check activity feature has been enabled. */
+    default boolean isBackCompatActivityFeatureEnabled() {
+        return IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED;
+    }
+
+    String UI_EEA_COUNTRIES =
+            "AT," // Austria
+                    + "BE," // Belgium
+                    + "BG," // Bulgaria
+                    + "HR," // Croatia
+                    + "CY," // Republic of Cyprus
+                    + "CZ," // Czech Republic
+                    + "DK," // Denmark
+                    + "EE," // Estonia
+                    + "FI," // Finland
+                    + "FR," // France
+                    + "DE," // Germany
+                    + "GR," // Greece
+                    + "HU," // Hungary
+                    + "IE," // Ireland
+                    + "IT," // Italy
+                    + "LV," // Latvia
+                    + "LT," // Lithuania
+                    + "LU," // Luxembourg
+                    + "MT," // Malta
+                    + "NL," // Netherlands
+                    + "PL," // Poland
+                    + "PT," // Portugal
+                    + "RO," // Romania
+                    + "SK," // Slovakia
+                    + "SI," // Slovenia
+                    + "ES," // Spain
+                    + "SE," // Sweden
+                    + "IS," // Iceland
+                    + "LI," // Liechtenstein
+                    + "NO," // Norway
+                    + "CH," // Switzerland
+                    + "GB," // Great Britain
+                    + "GI," // Gibraltar
+                    + "GP," // Guadeloupe
+                    + "GG," // Guernsey
+                    + "JE," // Jersey
+                    + "VA," // Vatican City
+                    + "AX," // Åland Islands
+                    + "IC," // Canary Islands
+                    + "EA," // Ceuta & Melilla
+                    + "GF," // French Guiana
+                    + "PF," // French Polynesia
+                    + "TF," // French Southern Territories
+                    + "MQ," // Martinique
+                    + "YT," // Mayotte
+                    + "NC," // New Caledonia
+                    + "RE," // Réunion
+                    + "BL," // St. Barthélemy
+                    + "MF," // St. Martin
+                    + "PM," // St. Pierre & Miquelon
+                    + "SJ," // Svalbard & Jan Mayen
+                    + "WF"; // Wallis & Futuna
+
+    /** Returns the list of EEA countries in a String separated by comma */
+    default String getUiEeaCountries() {
+        return UI_EEA_COUNTRIES;
     }
 
     /**
@@ -1359,8 +1954,9 @@ public interface Flags extends Dumpable {
     }
 
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
+
     /** Returns the interval in which to run Registration Job Queue Service. */
-    default long getRegistrationJobQueueIntervalMs() {
+    default long getAsyncRegistrationJobQueueIntervalMs() {
         return ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
     }
 
@@ -1371,38 +1967,29 @@ public interface Flags extends Dumpable {
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * Returns the kill switch value for Registration Job Queue. The job will be disabled if either
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
-    default boolean getRegistrationJobQueueKillSwitch() {
+    default boolean getAsyncRegistrationJobQueueKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 
+    boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
+
     /**
-     * A feature flag to enable the feature of handling topics without any contributors. Note that
-     * in an epoch, an app is a contributor to a topic if the app has called Topics API in this
-     * epoch and is classified to the topic.
-     *
-     * <p>Default value is false, which means the feature is disabled by default and needs to be
-     * ramped up.
+     * Returns the kill switch value for Registration Fallback Job. The Job will be disabled if
+     * either the Global Kill Switch, Measurement Kill Switch, or the Registration Fallback Job Kill
+     * Switch value is true.
      */
-    boolean ENABLE_TOPIC_CONTRIBUTORS_CHECK = false;
-
-    /** @return if to enable topic contributors check. */
-    default boolean getEnableTopicContributorsCheck() {
-        return ENABLE_TOPIC_CONTRIBUTORS_CHECK;
-    }
-
-    /** Whether to enable database schema version 3 */
-    boolean ENABLE_DATABASE_SCHEMA_VERSION_3 = false;
-
-    /** @return if to enable database schema version 3. */
-    default boolean getEnableDatabaseSchemaVersion3() {
-        return ENABLE_DATABASE_SCHEMA_VERSION_3;
+    default boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1413,5 +2000,98 @@ public interface Flags extends Dumpable {
     /** Returns a list of enrollmentId blocked from using PP-API. */
     default ImmutableList<String> getEnrollmentBlocklist() {
         return ImmutableList.of();
+    }
+
+    long DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT = 100L;
+
+    /** Returns debug keys hash limit. */
+    default long getMeasurementDebugJoinKeyHashLimit() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
+    }
+
+    /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    boolean COMPAT_LOGGING_KILL_SWITCH = false;
+
+    /** Returns true if backward-compatible logging should be disabled; false otherwise. */
+    default boolean getCompatLoggingKillSwitch() {
+        return COMPAT_LOGGING_KILL_SWITCH;
+    }
+
+    /** Kill switch to guard background jobs logging. */
+    boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
+
+    /** Returns true if background jobs logging should be disabled; false otherwise */
+    default boolean getBackgroundJobsLoggingKillSwitch() {
+        return BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
+    }
+
+    // New Feature Flags
+    boolean FLEDGE_REGISTER_AD_BEACON_ENABLED = false;
+
+    /** Returns whether the {@code registerAdBeacon} feature is enabled. */
+    default boolean getFledgeRegisterAdBeaconEnabled() {
+        return FLEDGE_REGISTER_AD_BEACON_ENABLED;
+    }
+
+    /**
+     * Default allowlist of the enrollments for whom debug key insertion based on join key matching
+     * is allowed.
+     */
+    String DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST = "";
+
+    /**
+     * Allowlist of the enrollments for whom debug key insertion based on join key matching is
+     * allowed.
+     */
+    default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
+        return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled. */
+    boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
+
+    /** Determines whether EU notification flow change is enabled. */
+    default boolean getEuNotifFlowChangeEnabled() {
+        return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Default value for flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    /** Returns whether to enable flexible event reporting API */
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default maximum sources per publisher */
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    /** Returns maximum sources per publisher */
+    default int getMeasurementMaxSourcesPerPublisher() {
+        return MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
+    }
+
+    /** Default maximum triggers per destination */
+    int MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION = 1024;
+
+    /** Returns maximum triggers per destination */
+    default int getMeasurementMaxTriggersPerDestination() {
+        return MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+    }
+
+    /** Default maximum Aggregate Reports per destination */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Aggregate Reports per publisher */
+    default int getMeasurementMaxAggregateReportsPerDestination() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default maximum Event Reports per destination */
+    int MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Event Reports per destination */
+    default int getMeasurementMaxEventReportsPerDestination() {
+        return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
     }
 }

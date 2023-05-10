@@ -35,8 +35,8 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import java.io.StringWriter;
 import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
                     mResultTextView.setText("");
                     mResultTextView.append("Topics -> ");
                     for (String sdkName : SDK_NAMES) {
-                      getTopics(sdkName, true);
+                        getTopics(sdkName, true);
                     }
                 });
     }
@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
                     mResultTextView.setText("");
                     mResultTextView.append("Preview Topics -> ");
                     for (String sdkName : SDK_NAMES) {
-                      getTopics(sdkName, false);
+                        getTopics(sdkName, false);
                     }
                 });
     }
@@ -108,71 +108,75 @@ public class MainActivity extends AppCompatActivity {
         return sb.toString();
     }
 
-    private void getTopics(String sdkName, boolean shouldRecordObservation){
-      mAdvertisingTopicsClient =
-              new AdvertisingTopicsClient.Builder()
-                      .setContext(this)
-                      .setSdkName(sdkName)
-                      .setExecutor(CALLBACK_EXECUTOR)
-                      .setShouldRecordObservation(shouldRecordObservation)
-                      .build();
-      ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
-              mAdvertisingTopicsClient.getTopics();
+    @SuppressWarnings("NewApi")
+    private void getTopics(String sdkName, boolean shouldRecordObservation) {
+        // On R, Privacy Sandbox is initially disabled.
+        try {
+            mAdvertisingTopicsClient =
+                    new AdvertisingTopicsClient.Builder()
+                            .setContext(this)
+                            .setSdkName(sdkName)
+                            .setExecutor(CALLBACK_EXECUTOR)
+                            .setShouldRecordObservation(shouldRecordObservation)
+                            .build();
+        } catch (IllegalStateException e) {
+            mHandler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            mResultTextView.append("Privacy Sandbox is not available.");
+                        }
+                    });
+            return;
+        }
+        ListenableFuture<GetTopicsResponse> getTopicsResponseFuture =
+                mAdvertisingTopicsClient.getTopics();
 
+        Futures.addCallback(
+                getTopicsResponseFuture,
+                new FutureCallback<GetTopicsResponse>() {
+                    @Override
+                    public void onSuccess(GetTopicsResponse result) {
+                        Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
+                        String topics = getTopics(result.getTopics());
+                        mHandler.post(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mResultTextView.append(
+                                                sdkName
+                                                        + "'s topics: "
+                                                        + NEWLINE
+                                                        + topics
+                                                        + NEWLINE);
+                                    }
+                                });
+                        Log.d(TAG, sdkName + "'s topics: " + NEWLINE + topics + NEWLINE);
+                    }
 
-      Futures.addCallback(
-              getTopicsResponseFuture,
-              new FutureCallback<GetTopicsResponse>() {
-                  @Override
-                  public void onSuccess(GetTopicsResponse result) {
-                      Log.d(TAG, "GetTopics for sdk " + sdkName + " succeeded!");
-                      String topics = getTopics(result.getTopics());
-                      mHandler.post(new Runnable() {
-                          @Override
-                          public void run() {
-                            mResultTextView.append(
-                              sdkName
-                                      + "'s topics: "
-                                      + NEWLINE
-                                      + topics
-                                      + NEWLINE);
-                          }
-                      });
-                      Log.d(
-                              TAG,
-                              sdkName
-                                      + "'s topics: "
-                                      + NEWLINE
-                                      + topics
-                                      + NEWLINE);
-                  }
-
-                  @Override
-                  public void onFailure(Throwable t) {
-                      StringWriter sw = new StringWriter();
-                      PrintWriter pw = new PrintWriter(sw);
-                      t.printStackTrace(pw);
-                      Log.e(
-                              TAG,
-                              "Failed to getTopics for sdk "
-                                      + sdkName
-                                      + ": "
-                                      + t.getMessage());
-                      mHandler.post(new Runnable() {
-                          @Override
-                          public void run() {
-                            mResultTextView.append(
-                              "Failed to getTopics for sdk "
-                                      + sdkName
-                                      + ": "
-                                      + t.toString()
-                                      + NEWLINE);
-                          }
-                      });
-                  }
-              },
-              directExecutor()
-       );
+                    @Override
+                    public void onFailure(Throwable t) {
+                        StringWriter sw = new StringWriter();
+                        PrintWriter pw = new PrintWriter(sw);
+                        t.printStackTrace(pw);
+                        Log.e(
+                                TAG,
+                                "Failed to getTopics for sdk " + sdkName + ": " + t.getMessage());
+                        mHandler.post(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        mResultTextView.append(
+                                                "Failed to getTopics for sdk "
+                                                        + sdkName
+                                                        + ": "
+                                                        + t.toString()
+                                                        + NEWLINE);
+                                    }
+                                });
+                    }
+                },
+                directExecutor());
     }
 
     private void registerLauchSettingsAppButton() {
@@ -181,10 +185,25 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onClick(View view) {
-                        Context context = getApplicationContext();
-                        Intent activity2Intent = new Intent(RB_SETTING_APP_INTENT);
-                        activity2Intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        context.startActivity(activity2Intent);
+                        // Use try-catch to handle open Settings App failure and show
+                        // error msg in Sample App
+                        try {
+                            Context context = getApplicationContext();
+                            Intent activity2Intent = new Intent(RB_SETTING_APP_INTENT);
+                            activity2Intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(activity2Intent);
+                        } catch (Exception err) {
+                            mHandler.post(
+                                    new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            mResultTextView.append(
+                                                    "Failed to open SETTINGS APP: "
+                                                            + err.getMessage()
+                                                            + NEWLINE);
+                                        }
+                                    });
+                        }
                     }
                 });
     }

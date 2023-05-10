@@ -43,6 +43,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -123,6 +124,33 @@ public class EventFallbackReportingJobServiceTest {
     }
 
     @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID));
+                    ExtendedMockito.verifyZeroInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
+                });
+    }
+
+    @Test
     public void scheduleIfNeeded_killSwitchOn_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
@@ -143,8 +171,6 @@ public class EventFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> EventFallbackReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -174,8 +200,6 @@ public class EventFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> EventFallbackReportingJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -205,8 +229,6 @@ public class EventFallbackReportingJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> EventFallbackReportingJobService.schedule(any(), any()),
                             times(1));
@@ -235,8 +257,6 @@ public class EventFallbackReportingJobServiceTest {
                     EventFallbackReportingJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> EventFallbackReportingJobService.schedule(any(), any()),
                             times(1));
@@ -273,6 +293,7 @@ public class EventFallbackReportingJobServiceTest {
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {

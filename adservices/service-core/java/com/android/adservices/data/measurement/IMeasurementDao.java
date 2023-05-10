@@ -18,37 +18,37 @@ package com.android.adservices.data.measurement;
 
 import android.adservices.measurement.DeletionRequest;
 import android.net.Uri;
+import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
+import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
-/**
- * Interface for Measurement related data access operations.
- */
+/** Interface for Measurement related data access operations. */
 public interface IMeasurementDao {
-    /**
-     * Set the transaction.
-     */
+    /** Set the transaction. */
     void setTransaction(ITransaction transaction);
 
     /** Add an entry to the Trigger datastore. */
     void insertTrigger(Trigger trigger) throws DatastoreException;
 
-    /**
-     * Returns list of ids for all pending {@link Trigger}.
-     */
+    /** Returns list of ids for all pending {@link Trigger}. */
     List<String> getPendingTriggerIds() throws DatastoreException;
 
     /**
@@ -58,6 +58,15 @@ public interface IMeasurementDao {
      * @return the requested Source
      */
     Source getSource(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link Source}'s destinations.
+     *
+     * @param sourceId ID of the requested Source
+     * @return a Pair of lists of app destination and web destination Uris
+     */
+    Pair<List<Uri>, List<Uri>> getSourceDestinations(@NonNull String sourceId)
+            throws DatastoreException;
 
     /**
      * Queries and returns the {@link Trigger}.
@@ -99,11 +108,6 @@ public interface IMeasurementDao {
     long getNumSourcesPerPublisher(Uri publisherUri, @EventSurfaceType int publisherType)
             throws DatastoreException;
 
-    /**
-     * Gets the number of triggers a registrant has registered.
-     */
-    long getNumTriggersPerRegistrant(Uri registrant) throws DatastoreException;
-
     /** Gets the number of triggers associated to a destination. */
     long getNumTriggersPerDestination(Uri destination, @EventSurfaceType int destinationType)
             throws DatastoreException;
@@ -124,18 +128,28 @@ public interface IMeasurementDao {
      * Gets the count of distinct Uri's of destinations in the Source table in a time window with
      * matching publisher, enrollment, and ACTIVE status, excluding a given destination.
      */
-    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(Uri publisher,
-            @EventSurfaceType int publisherType, String enrollmentId, Uri excludedDestination,
-            @EventSurfaceType int destinationType, long windowStartTime, long windowEndTime)
+    Integer countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            List<Uri> excludedDestinations,
+            @EventSurfaceType int destinationType,
+            long windowStartTime,
+            long windowEndTime)
             throws DatastoreException;
 
     /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
-    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(Uri publisher,
-            @EventSurfaceType int publisherType, Uri destination, String enrollmentId,
-            long windowStartTime, long windowEndTime) throws DatastoreException;
+    Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            List<Uri> destinations,
+            String excludedEnrollmentId,
+            long windowStartTime,
+            long windowEndTime)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Trigger.Status} value for the provided {@link Trigger}.
@@ -149,6 +163,8 @@ public interface IMeasurementDao {
 
     /**
      * Add an entry to the Source datastore.
+     *
+     * @param source Source data to be inserted.
      */
     void insertSource(Source source) throws DatastoreException;
 
@@ -173,7 +189,14 @@ public interface IMeasurementDao {
      *
      * @param source the {@link Source} object.
      */
-    void updateSourceDedupKeys(@NonNull Source source) throws DatastoreException;
+    void updateSourceEventReportDedupKeys(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Update the set of Aggregate dedup keys contained in the provided {@link Source}
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
      * Updates the value of aggregate contributions for the corresponding {@link Source}
@@ -201,12 +224,21 @@ public interface IMeasurementDao {
 
     /**
      * Queries and returns the {@link AggregateReport}
+     *
      * @param aggregateReportId Id of the request Aggregate Report
      * @return the request Aggregate Report; Null in case of SQL failure
      */
     @Nullable
-    AggregateReport getAggregateReport(String aggregateReportId)
-            throws DatastoreException;
+    AggregateReport getAggregateReport(String aggregateReportId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link DebugReport}
+     *
+     * @param debugReportId of the request Debug Report
+     * @return the request Debug Report; Null in case of SQL failure
+     */
+    @Nullable
+    DebugReport getDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Change the status of an event report to DELIVERED
@@ -240,15 +272,14 @@ public interface IMeasurementDao {
      */
     void markAggregateDebugReportDelivered(String aggregateReportId) throws DatastoreException;
 
-    /**
-     * Saves the {@link EventReport} to datastore.
-     */
+    /** Saves the {@link EventReport} to datastore. */
     void insertEventReport(EventReport eventReport) throws DatastoreException;
 
-    /**
-     * Deletes the {@link EventReport} from datastore.
-     */
+    /** Deletes the {@link EventReport} from datastore. */
     void deleteEventReport(EventReport eventReport) throws DatastoreException;
+
+    /** Deletes the {@link DebugReport} from datastore. */
+    void deleteDebugReport(String debugReportId) throws DatastoreException;
 
     /**
      * Returns list of all event reports that have a scheduled reporting time in the given window.
@@ -259,9 +290,7 @@ public interface IMeasurementDao {
     /** Returns list of all debug event reports. */
     List<String> getPendingDebugEventReportIds() throws DatastoreException;
 
-    /**
-     * Returns list of all pending event reports for a given app right away.
-     */
+    /** Returns list of all pending event reports for a given app right away. */
     List<String> getPendingEventReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
@@ -280,16 +309,17 @@ public interface IMeasurementDao {
      * Deletes all records in measurement tables that correspond with the provided Uri.
      *
      * @param uri the Uri to match on
+     * @return if any entry was deleted.
      */
-    void deleteAppRecords(Uri uri) throws DatastoreException;
+    boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords() throws DatastoreException;
+    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
      *
-     * @param uri            package identifier
+     * @param uri package identifier
      * @param eventTimestamp timestamp of installation event
      */
     void doInstallAttribution(Uri uri, long eventTimestamp) throws DatastoreException;
@@ -297,13 +327,11 @@ public interface IMeasurementDao {
     /**
      * Undo any install attributed source events.
      *
-     * @param uri            package identifier
+     * @param uri package identifier
      */
     void undoInstallAttribution(Uri uri) throws DatastoreException;
 
-    /**
-     * Save aggregate encryption key to datastore.
-     */
+    /** Save aggregate encryption key to datastore. */
     void insertAggregateEncryptionKey(AggregateEncryptionKey aggregateEncryptionKey)
             throws DatastoreException;
 
@@ -314,15 +342,14 @@ public interface IMeasurementDao {
     List<AggregateEncryptionKey> getNonExpiredAggregateEncryptionKeys(long expiry)
             throws DatastoreException;
 
-    /**
-     *  Remove aggregate encryption keys from the datastore older than {@code expiry}.
-     */
+    /** Remove aggregate encryption keys from the datastore older than {@code expiry}. */
     void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
 
-    /**
-     * Save unencrypted aggregate payload to datastore.
-     */
+    /** Save unencrypted aggregate payload to datastore. */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
+
+    /** Save debug report payload to datastore. */
+    void insertDebugReport(DebugReport payload) throws DatastoreException;
 
     /**
      * Returns list of all aggregate reports that have a scheduled reporting time in the given
@@ -334,9 +361,10 @@ public interface IMeasurementDao {
     /** Returns list of all aggregate debug reports. */
     List<String> getPendingAggregateDebugReportIds() throws DatastoreException;
 
-    /**
-     * Returns list of all pending aggregate reports for a given app right away.
-     */
+    /** Returns list of all debug reports. */
+    List<String> getDebugReportIds() throws DatastoreException;
+
+    /** Returns list of all pending aggregate reports for a given app right away. */
     List<String> getPendingAggregateReportIdsForGivenApp(Uri appName) throws DatastoreException;
 
     /**
@@ -354,6 +382,15 @@ public interface IMeasurementDao {
      * @throws DatastoreException database transaction issues
      */
     void deleteSources(@NonNull List<String> sourceIds) throws DatastoreException;
+
+    /**
+     * Delete records from Async Registration table whose registrant or app destination match with
+     * provided app URI.
+     *
+     * @param uri AsyncRegistrations registrant or OS Destination to match
+     * @throws DatastoreException database transaction issues
+     */
+    void deleteAsyncRegistrationsProvidedRegistrant(@NonNull String uri) throws DatastoreException;
 
     /**
      * Delete records from source table that match provided trigger IDs.
@@ -383,11 +420,28 @@ public interface IMeasurementDao {
      * Get the record with the earliest request time and a valid retry count.
      *
      * @param retryLimit a long that is used for determining the next valid record to be serviced
-     * @param failedAdTechEnrollmentIds a String that contains the Ids of records that have been
-     *     serviced during the current run
+     * @param failedOrigins set of origins that have failed during the current run
      */
-    AsyncRegistration fetchNextQueuedAsyncRegistration(
-            short retryLimit, List<String> failedAdTechEnrollmentIds) throws DatastoreException;
+    AsyncRegistration fetchNextQueuedAsyncRegistration(int retryLimit, Set<Uri> failedOrigins)
+            throws DatastoreException;
+
+    /**
+     * Insert/Update the supplied {@link KeyValueData} object
+     *
+     * @param keyValueData a {@link KeyValueData} to be stored/update
+     * @throws DatastoreException when insertion fails
+     */
+    void insertOrUpdateKeyValueData(@NonNull KeyValueData keyValueData) throws DatastoreException;
+
+    /**
+     * Returns the {@link KeyValueData} for {key, dataType} pair
+     *
+     * @param key of the stored data
+     * @param dataType of the stored datta
+     * @return {@link KeyValueData} object
+     */
+    KeyValueData getKeyValueData(@NonNull String key, @NonNull DataType dataType)
+            throws DatastoreException;
 
     /**
      * Update the retry count for a record in the Async Registration table.
@@ -402,8 +456,9 @@ public interface IMeasurementDao {
      *
      * @param uriList a {@link List} of Uris whos related records won't be deleted.
      * @throws DatastoreException
+     * @return If any entry was deleted.
      */
-    void deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
+    boolean deleteAppRecordsNotPresent(List<Uri> uriList) throws DatastoreException;
 
     /**
      * Fetches aggregate reports that match either given source or trigger IDs. If A1 is set of
@@ -483,5 +538,29 @@ public interface IMeasurementDao {
             @NonNull List<Uri> origins,
             @NonNull List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior)
+            throws DatastoreException;
+
+    /**
+     * Fetches the XNA relevant sources. It includes sources associated to the trigger's enrollment
+     * ID as well as the sources associated to the provided SAN enrollment IDs.
+     *
+     * @param trigger trigger to match
+     * @param xnaEnrollmentIds SAN enrollment IDs to match
+     * @return XNA relevant sources
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    List<Source> fetchTriggerMatchingSourcesForXna(
+            @NonNull Trigger trigger, @NonNull Collection<String> xnaEnrollmentIds)
+            throws DatastoreException;
+
+    /**
+     * Insert an entry of source ID with enrollment ID into the {@link
+     * MeasurementTables.XnaIgnoredSourcesContract#TABLE}. It means that the provided source should
+     * be ignored to be picked up for doing XNA based attribution on the provided enrollment.
+     *
+     * @param sourceId source ID
+     * @param enrollmentId enrollment ID
+     */
+    void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
             throws DatastoreException;
 }

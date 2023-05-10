@@ -359,10 +359,42 @@ public class BooleanFileDatastore {
         }
     }
 
-    @VisibleForTesting
-    void delete() {
+    /**
+     * Removes all entries that begin with the specified prefix from the datastore file.
+     *
+     * <p>This change is committed immediately to file.
+     *
+     * @param prefix A non-null, non-empty string that all keys are matched against
+     * @throws NullPointerException if {@code prefix} is null
+     * @throws IllegalArgumentException if {@code prefix} is an empty string
+     * @throws IOException if file write fails
+     */
+    public void removeByPrefix(@NonNull String prefix) throws IOException {
+        Objects.requireNonNull(prefix);
+        Preconditions.checkStringNotEmpty(prefix, "Prefix must not be empty");
+
         mWriteLock.lock();
         try {
+            Set<String> allKeys = mLocalMap.keySet();
+            Set<String> keysToDelete =
+                    allKeys.stream().filter(s -> s.startsWith(prefix)).collect(Collectors.toSet());
+            allKeys.removeAll(keysToDelete); // Modifying the keySet updates the underlying map
+            writeToFile();
+        } finally {
+            mWriteLock.unlock();
+        }
+    }
+
+    /**
+     * Deletes the datastore's underlying file and clears the local map.
+     *
+     * <p>This method is meant only to be used for unit testing.
+     */
+    @VisibleForTesting
+    void tearDownForTesting() {
+        mWriteLock.lock();
+        try {
+            mLocalMap.clear();
             mAtomicFile.delete();
         } finally {
             mWriteLock.unlock();

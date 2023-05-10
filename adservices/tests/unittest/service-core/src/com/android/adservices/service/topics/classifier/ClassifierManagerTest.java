@@ -28,21 +28,22 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
-import android.provider.DeviceConfig;
-
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
-import com.android.modules.utils.testing.TestableDeviceConfig;
+import com.android.adservices.service.FlagsFactory;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -52,9 +53,10 @@ import java.util.stream.Collectors;
 
 /** Manager Classifier Test {@link ClassifierManager}. */
 public class ClassifierManagerTest {
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
+
+    private MockitoSession mStaticMockSession;
+
+    @Mock Flags mMockFlags;
 
     @Mock private OnDeviceClassifier mOnDeviceClassifier;
     @Mock private PrecomputedClassifier mPrecomputedClassifier;
@@ -65,10 +67,22 @@ public class ClassifierManagerTest {
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
 
+        // Start a mockitoSession to mock static method
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+
         mClassifierManager =
                 new ClassifierManager(
                         Suppliers.memoize(() -> mOnDeviceClassifier),
                         Suppliers.memoize(() -> mPrecomputedClassifier));
+    }
+
+    @After
+    public void tearDown() {
+        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -230,6 +244,28 @@ public class ClassifierManagerTest {
     }
 
     @Test
+    public void testClassify_onDeviceClassifierKillSwitch_fallbackToPrecomputedClassifier() {
+        // Set classifier type to ON_DEVICE_CLASSIFIER, then turn on kill switch.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+        when(mMockFlags.getTopicsOnDeviceClassifierKillSwitch()).thenReturn(true);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
+        List<Topic> precomputedTopics = createTopics(/* TopicIds */ 13, 235);
+        when(mPrecomputedClassifier.classify(eq(appPackages)))
+                .thenReturn(ImmutableMap.of(appPackage1, precomputedTopics));
+
+        Map<String, List<Topic>> classifications = mClassifierManager.classify(appPackages);
+
+        // Verify the topics returned are from precomputed classifier.
+        assertThat(classifications.get(appPackage1)).containsExactlyElementsIn(precomputedTopics);
+        // Verify mPrecomputedClassifier is called once.
+        verify(mPrecomputedClassifier, times(1)).classify(eq(appPackages));
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
+    }
+
+    @Test
     public void testGetTopTopics_onDeviceClassifier() {
         // Set classifier type ON_DEVICE classifier.
         setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
@@ -321,6 +357,32 @@ public class ClassifierManagerTest {
                 .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
     }
 
+    @Test
+    public void testGetTopTopics_onDeviceClassifierKillSwitch_fallbackToPrecomputedClassifier() {
+        // Set classifier type to ON_DEVICE_CLASSIFIER, then turn on kill switch.
+        setClassifierTypeFlag(ON_DEVICE_CLASSIFIER);
+        when(mMockFlags.getTopicsOnDeviceClassifierKillSwitch()).thenReturn(true);
+
+        String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
+        String appPackage2 = "com.example.adservices.samples.topics.sampleapp2";
+        Map<String, List<Topic>> appTopics =
+                ImmutableMap.of(
+                        appPackage1,
+                        createTopics(/* TopicIds */ 1, 2, 3, 4, 5),
+                        appPackage2,
+                        createTopics(/* TopicIds */ 1, 2, 101, 102, 103));
+        int numberOfTopTopics = 5;
+        int numberOfRandomTopics = 1;
+
+        mClassifierManager.getTopTopics(appTopics, numberOfTopTopics, numberOfRandomTopics);
+
+        // Verify mPrecomputedClassifier is called once.
+        verify(mPrecomputedClassifier, times(1))
+                .getTopTopics(eq(appTopics), eq(numberOfTopTopics), eq(numberOfRandomTopics));
+        // Verify mOnDeviceClassifier is not called.
+        verifyZeroInteractions(mOnDeviceClassifier);
+    }
+
     private List<Topic> createTopics(/* TopicIds */ Integer... topicIds) {
         return Arrays.stream(topicIds)
                 .map(topicId -> Topic.create(topicId, /*taxonomyVersion*/ 1, /*modelVersion*/ 1))
@@ -328,10 +390,6 @@ public class ClassifierManagerTest {
     }
 
     private void setClassifierTypeFlag(@ClassifierType int overrideValue) {
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "classifier_type",
-                Integer.toString(overrideValue),
-                /* makeDefault */ false);
+        when(mMockFlags.getClassifierType()).thenReturn(overrideValue);
     }
 }

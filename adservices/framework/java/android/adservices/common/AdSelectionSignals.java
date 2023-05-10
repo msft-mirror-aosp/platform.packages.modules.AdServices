@@ -138,6 +138,14 @@ public final class AdSelectionSignals implements Parcelable {
         return new AdSelectionSignals(source, validate);
     }
 
+    /**
+     * @return the signal's String form data size in bytes.
+     * @hide
+     */
+    public int getSizeInBytes() {
+        return this.mSignals.getBytes().length;
+    }
+
     private void validate(String inputString) {
         // TODO(b/238849930) Bring the existing validation function in here
     }

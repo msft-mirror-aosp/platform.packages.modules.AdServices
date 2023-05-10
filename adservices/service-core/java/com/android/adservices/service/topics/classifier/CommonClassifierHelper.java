@@ -16,17 +16,25 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import android.annotation.NonNull;
-import android.content.res.AssetManager;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
-import com.android.adservices.LogUtil;
+import android.annotation.NonNull;
+import android.content.Context;
+import android.content.res.AssetManager;
+import android.util.JsonReader;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
 import com.android.internal.util.Preconditions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -38,13 +46,21 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** Helper methods for shared implementations of {@link Classifier}. */
-class CommonClassifierHelper {
+public class CommonClassifierHelper {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The key name of asset metadata property in classifier_assets_metadata.json
     private static final String ASSET_PROPERTY_NAME = "property";
     // The key name of asset element in classifier_assets_metadata.json
     private static final String ASSET_ELEMENT_NAME = "asset_name";
     // The algorithm name of checksum
     private static final String SHA256_DIGEST_ALGORITHM_NAME = "SHA-256";
+    private static final String BUILD_ID_FIELD = "build_id";
+
+    // Defined constants for error codes which have very long names.
+    private static final int TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE;
+    private static final int TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND;
 
     /**
      * Compute the SHA256 checksum of classifier asset.
@@ -52,15 +68,12 @@ class CommonClassifierHelper {
      * @return A string of classifier asset's SHA256 checksum.
      */
     static String computeClassifierAssetChecksum(
-            @NonNull AssetManager assetManager,
-            @NonNull String classifierAssetsMetadataPath) {
+            @NonNull AssetManager assetManager, @NonNull String classifierAssetsMetadataPath) {
         StringBuilder assetSha256CheckSum = new StringBuilder();
         try {
-            MessageDigest sha256Digest =
-                    MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
+            MessageDigest sha256Digest = MessageDigest.getInstance(SHA256_DIGEST_ALGORITHM_NAME);
 
-            try (InputStream inputStream =
-                         assetManager.open(classifierAssetsMetadataPath)) {
+            try (InputStream inputStream = assetManager.open(classifierAssetsMetadataPath)) {
 
                 // Create byte array to read data in chunks
                 byte[] byteArray = new byte[8192];
@@ -81,13 +94,21 @@ class CommonClassifierHelper {
                             Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
                 }
             } catch (IOException e) {
-                LogUtil.e(e, "Unable to read classifier asset file");
+                sLogger.e(e, "Unable to read classifier asset file");
+                ErrorLogUtil.e(
+                        e,
+                        TOPICS_READ_CLASSIFIER_ASSET_FILE_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                 // When catching IOException -> return empty string.
                 return "";
             }
         } catch (NoSuchAlgorithmException e) {
-            LogUtil.e(e, "Unable to find correct message digest algorithm.");
+            sLogger.e(e, "Unable to find correct message digest algorithm.");
             // When catching NoSuchAlgorithmException -> return empty string.
+            ErrorLogUtil.e(
+                    e,
+                    TOPICS_MESSAGE_DIGEST_ALGORITHM_NOT_FOUND,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return "";
         }
 
@@ -128,13 +149,13 @@ class CommonClassifierHelper {
 
         // If there are no topic in the appTopics list, an empty topic list will be returned.
         if (topicsToAppTopicCount.isEmpty()) {
-            LogUtil.w("Unable to retrieve any topics from device.");
+            sLogger.w("Unable to retrieve any topics from device.");
             // Log atom for getTopTopics call.
             logger.logEpochComputationGetTopTopicsStats(
                     EpochComputationGetTopTopicsStats.builder()
                             .setTopTopicCount(0)
                             .setPaddedRandomTopicsCount(0)
-                            .setAppsConsideredCount(-1)
+                            .setAppsConsideredCount(appTopics.size())
                             .setSdksConsideredCount(-1)
                             .build());
             return new ArrayList<>();
@@ -158,7 +179,7 @@ class CommonClassifierHelper {
                 EpochComputationGetTopTopicsStats.builder()
                         .setTopTopicCount(numberOfTopTopics)
                         .setPaddedRandomTopicsCount(numberOfRandomPaddingTopics)
-                        .setAppsConsideredCount(-1)
+                        .setAppsConsideredCount(appTopics.size())
                         .setSdksConsideredCount(-1)
                         .build());
 
@@ -211,5 +232,43 @@ class CommonClassifierHelper {
         }
 
         return returnedTopics;
+    }
+
+    /**
+     * Gets bundled model build_id from classifierAssetsMetadata file. Returns the default value of
+     * -1 if there is no build_id available.
+     *
+     * @return bundled model build_id
+     */
+    public static long getBundledModelBuildId(
+            @NonNull Context context, @NonNull String classifierAssetsMetadataPath) {
+        InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.
+        try {
+            inputStream = context.getAssets().open(classifierAssetsMetadataPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read bundled metadata file", e);
+        }
+        JsonReader reader = new JsonReader(new InputStreamReader(inputStream));
+        try {
+            reader.beginArray();
+            while (reader.hasNext()) {
+                // Read through each JSONObject.
+                reader.beginObject();
+                while (reader.hasNext()) {
+                    // Read through version info object and find build_id.
+                    String elementKeyName = reader.nextName();
+                    if (BUILD_ID_FIELD.equals(elementKeyName)) {
+                        return reader.nextLong();
+                    } else {
+                        reader.skipValue();
+                    }
+                }
+                reader.endObject();
+            }
+            reader.endArray();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to parse classifier assets metadata file", e);
+        }
+        return -1;
     }
 }

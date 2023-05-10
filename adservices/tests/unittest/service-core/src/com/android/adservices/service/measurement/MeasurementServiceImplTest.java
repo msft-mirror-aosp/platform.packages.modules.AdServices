@@ -30,6 +30,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -61,11 +62,9 @@ import android.test.mock.MockContext;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -108,7 +107,6 @@ public final class MeasurementServiceImplTest {
     @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private ConsentManager mMockConsentManager;
-    @Mock private EnrollmentDao mMockEnrollmentDao;
     @Mock private Flags mMockFlags;
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
@@ -174,7 +172,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -217,14 +215,6 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByKillSwitch(),
                 () -> registerSourceAndAssertFailure(STATUS_KILLSWITCH_ENABLED));
-    }
-
-    @Test
-    public void testRegisterSource_failureByManifestBasedResolver() throws Exception {
-        runRunMocks(
-                Api.REGISTER_SOURCE,
-                new AccessDenier().deniedByManifestBased(),
-                () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
     @Test
@@ -287,7 +277,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).register(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).register(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -331,14 +321,6 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_TRIGGER,
                 new AccessDenier().deniedByKillSwitch(),
                 () -> registerTriggerAndAssertFailure(STATUS_KILLSWITCH_ENABLED));
-    }
-
-    @Test
-    public void testRegisterTrigger_failureByManifestBasedResolver() throws Exception {
-        runRunMocks(
-                Api.REGISTER_TRIGGER,
-                new AccessDenier().deniedByManifestBased(),
-                () -> registerTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
     @Test
@@ -563,7 +545,6 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatchAny.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).getMeasurementApiStatus();
         assertThat(resultWrapper.get()).isEqualTo(MEASUREMENT_API_STATE_DISABLED);
     }
 
@@ -590,6 +571,14 @@ public final class MeasurementServiceImplTest {
         runRunMocks(
                 Api.STATUS,
                 new AccessDenier().deniedByKillSwitch(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_failureByConsentAccessResolver() throws Exception {
+        runRunMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByConsent(),
                 this::getMeasurementApiStatusAndAssertFailure);
     }
 
@@ -679,7 +668,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebSource(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -732,14 +721,6 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_WEB_SOURCE,
                 new AccessDenier().deniedByKillSwitch(),
                 () -> registerWebSourceAndAssertFailure(STATUS_KILLSWITCH_ENABLED));
-    }
-
-    @Test
-    public void testRegisterWebSource_failureByManifestBasedResolver() throws Exception {
-        runRunMocks(
-                Api.REGISTER_WEB_SOURCE,
-                new AccessDenier().deniedByManifestBased(),
-                () -> registerWebSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
     @Test
@@ -836,7 +817,7 @@ public final class MeasurementServiceImplTest {
                         });
 
         assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyLong());
+        verify(mMockMeasurementImpl, never()).registerWebTrigger(any(), anyBoolean(), anyLong());
         Assert.assertEquals(1, errorContainer.size());
         Assert.assertEquals(status, errorContainer.get(0).getStatusCode());
     }
@@ -880,14 +861,6 @@ public final class MeasurementServiceImplTest {
                 Api.REGISTER_WEB_TRIGGER,
                 new AccessDenier().deniedByKillSwitch(),
                 () -> registerWebTriggerAndAssertFailure(STATUS_KILLSWITCH_ENABLED));
-    }
-
-    @Test
-    public void testRegisterWebTrigger_failureByManifestBasedResolver() throws Exception {
-        runRunMocks(
-                Api.REGISTER_WEB_TRIGGER,
-                new AccessDenier().deniedByManifestBased(),
-                () -> registerWebTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED));
     }
 
     @Test
@@ -1018,7 +991,6 @@ public final class MeasurementServiceImplTest {
                 mMockContext,
                 Clock.SYSTEM_CLOCK,
                 mMockConsentManager,
-                mMockEnrollmentDao,
                 mMockThrottler,
                 mMockFlags,
                 mMockAdServicesLogger,
@@ -1042,7 +1014,6 @@ public final class MeasurementServiceImplTest {
 
         final MockitoSession mockitoSession =
                 ExtendedMockito.mockitoSession()
-                        .mockStatic(AppManifestConfigHelper.class)
                         .mockStatic(Binder.class)
                         .mockStatic(FlagsFactory.class)
                         .mockStatic(PermissionHelper.class)
@@ -1159,11 +1130,8 @@ public final class MeasurementServiceImplTest {
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
-        // Manifest Resolver
-        updateManifestBasedDenied(accessDenier.mByManifestBased);
-
         // Results
-        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
+        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1202,11 +1170,8 @@ public final class MeasurementServiceImplTest {
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
-        // Manifest Resolver
-        updateManifestBasedDenied(accessDenier.mByManifestBased);
-
         // Results
-        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyLong()))
+        when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1249,12 +1214,9 @@ public final class MeasurementServiceImplTest {
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
-        // Manifest Resolver
-        updateManifestBasedDenied(accessDenier.mByManifestBased);
-
         // Results
         when(mMockMeasurementImpl.registerWebSource(
-                        any(WebSourceRegistrationRequestInternal.class), anyLong()))
+                        any(WebSourceRegistrationRequestInternal.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1294,12 +1256,9 @@ public final class MeasurementServiceImplTest {
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
-        // Manifest Resolver
-        updateManifestBasedDenied(accessDenier.mByManifestBased);
-
         // Results
         when(mMockMeasurementImpl.registerWebTrigger(
-                        any(WebTriggerRegistrationRequestInternal.class), anyLong()))
+                        any(WebTriggerRegistrationRequestInternal.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
     }
 
@@ -1327,9 +1286,8 @@ public final class MeasurementServiceImplTest {
         // App Package Resolver Pp Api
         updateAppPackagePpApiResolverDenied(accessDenier.mByAppPackagePpApiApp);
 
-        // Results
-        when(mMockMeasurementImpl.getMeasurementApiStatus())
-                .thenReturn(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
+        // Consent Resolver
+        updateConsentDenied(accessDenier.mByConsent);
     }
 
     private void doThrowExceptionCallerNotInForeground() {
@@ -1360,19 +1318,6 @@ public final class MeasurementServiceImplTest {
         when(mMockConsentManager.getConsent()).thenReturn(apiConsent);
     }
 
-    private void updateManifestBasedDenied(boolean denied) {
-        if (denied) {
-            when(mMockFlags.isDisableMeasurementEnrollmentCheck()).thenReturn(false);
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    AppManifestConfigHelper.isAllowedAttributionAccess(
-                                            any(), any(), any()));
-        } else {
-            when(mMockFlags.isDisableMeasurementEnrollmentCheck()).thenReturn(true);
-        }
-    }
-
     private void updateThrottlerDenied(boolean denied) {
         final boolean canAcquire = !denied;
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(canAcquire);
@@ -1385,7 +1330,6 @@ public final class MeasurementServiceImplTest {
         private boolean mByConsent;
         private boolean mByForegroundEnforcement;
         private boolean mByKillSwitch;
-        private boolean mByManifestBased;
         private boolean mByThrottler;
 
         private AccessDenier deniedByAppPackagePpApiApp() {
@@ -1415,11 +1359,6 @@ public final class MeasurementServiceImplTest {
 
         private AccessDenier deniedByKillSwitch() {
             mByKillSwitch = true;
-            return this;
-        }
-
-        private AccessDenier deniedByManifestBased() {
-            mByManifestBased = true;
             return this;
         }
 

@@ -25,9 +25,15 @@ import com.google.mockwebserver.RecordedRequest;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 /** Setup the dispatcher for mock web server. */
 public final class MockWebServerDispatcherFactory {
+
+    // Networks types
+    public static final String NETWORK_5G = "5G";
+    public static final String NETWORK_4GPLUS = "4GPLUS";
+    public static final String NETWORK_4G = "4G";
 
     public static final String DECISION_LOGIC_PATH = "/seller/decision/simple_logic_with_delay";
     public static final String TRUSTED_SCORING_SIGNAL_PATH =
@@ -38,38 +44,34 @@ public final class MockWebServerDispatcherFactory {
             new ArrayList<>(Arrays.asList("example", "valid", "list", "of", "keys"));
     // Estimated based on
     // https://docs.google.com/spreadsheets/d/1EP_cwBbwYI-NMro0Qq5uif1krwjIQhjK8fjOu15j7hQ/edit?usp=sharing&resourcekey=0-A67kzEnAKKz1k7qpshSedg
-    public static final int SCORING_JS_EXECUTION_TIME_p50_MS = 40;
-    public static final int BIDDING_JS_EXECUTION_TIME_p50_MS = 40;
-    public static final int SCORING_JS_EXECUTION_TIME_p90_MS = 70;
-    public static final int BIDDING_JS_EXECUTION_TIME_p90_MS = 70;
-    public static final int DECISION_LOGIC_FETCH_DELAY_5G_p50_MS = 22;
-    public static final int DECISION_LOGIC_FETCH_DELAY_5G_p90_MS = 23;
-    public static final int DECISION_LOGIC_FETCH_DELAY_4GPLUS_p50_MS = 56;
-    public static final int DECISION_LOGIC_FETCH_DELAY_4GPLUS_p90_MS = 57;
-    public static final int DECISION_LOGIC_FETCH_DELAY_4G_p50_MS = 114;
-    public static final int DECISION_LOGIC_FETCH_DELAY_4G_p90_MS = 116;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_5G_p50_MS = 23;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_5G_p90_MS = 25;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_4GPLUS_p50_MS = 57;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_4GPLUS_p90_MS = 62;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_4G_p50_MS = 116;
-    public static final int BIDDING_LOGIC_FETCH_DELAY_4G_p90_MS = 128;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_5G_p50_MS = 21;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_5G_p90_MS = 22;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_4GPLUS_p50_MS = 51;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS = 52;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_4G_p50_MS = 101;
-    public static final int SCORING_SIGNALS_FETCH_DELAY_4G_p90_MS = 104;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_5G_p50_MS = 22;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_5G_p90_MS = 47;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p50_MS = 53;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS = 123;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_4G_p50_MS = 105;
-    public static final int BIDDING_SIGNALS_FETCH_DELAY_4G_p90_MS = 275;
+    public static final Map<Integer, Integer> scoringJsPercentileToExecutionTimeMs =
+            Map.of(50, 40, 90, 70);
+    public static final Map<Integer, Integer> biddingJsPercentileToExecutionTimeMs =
+            Map.of(50, 40, 90, 70);
+    // Map from network name to (percentile, delay ms)
+    public static final Map<String, Map<Integer, Integer>> DECISION_LOGIC_DELAY_MS =
+            generateNetworkMap(22, 23, 56, 57, 114, 116);
+    public static final Map<String, Map<Integer, Integer>> BIDDING_LOGIC_DELAY_MS =
+            generateNetworkMap(23, 25, 57, 62, 116, 128);
+    public static final Map<String, Map<Integer, Integer>> SCORING_SIGNALS_DELAY_MS =
+            generateNetworkMap(21, 22, 51, 52, 101, 104);
+    public static final Map<String, Map<Integer, Integer>> BIDDING_SIGNALS_DELAY_MS =
+            generateNetworkMap(22, 47, 53, 123, 105, 275);
+
+    // Estimated based on https://screenshot.googleplex.com/5PW2bQ8Azfyb9rS
+    // Assuming PP API has access to only 10% of bandwidth
+    public static final Map<String, Integer> NETWORK_TO_BANDWIDTH =
+            Map.of(NETWORK_5G, 50, NETWORK_4GPLUS, 16, NETWORK_4G, 6);
+
+    // Base throttling constant. Feel free to increase it to see more drastic throttling.
+    public static final int BASE_THROTTLING = 2;
+
     private static final String BUYER_REPORTING_PATH = "/reporting/buyer";
     private static final String SELLER_REPORTING_PATH = "/reporting/seller";
     private static final String BUYER_BIDDING_LOGIC_URI_PATH =
             "/buyer/bidding/simple_logic_with_delay";
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID =
+            "/buyer/bidding/simple_logic_with_delay_fixed_bid";
     private static final String DEFAULT_DECISION_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT =
             "function scoreAd(ad, bid, auction_config, seller_signals,"
                     + " trusted_scoring_signals, contextual_signal, user_signal,"
@@ -97,6 +99,19 @@ public final class MockWebServerDispatcherFactory {
                     + " return {'status': 0, 'results': {'reporting_uri': '%s"
                     + "' } };\n"
                     + "}";
+    private static final String DEFAULT_BIDDING_LOGIC_JS_FIXED_BID =
+            "function generateBid(ad, auction_signals, per_buyer_signals,"
+                    + " trusted_bidding_signals, contextual_signals,"
+                    + " custom_audience_signals) { \n"
+                    + " const start = Date.now(); let now = start; while (now-start < %d) "
+                    + "{now=Date.now();}\n"
+                    + " return {'status': 0, 'ad': ad, 'bid': 1 };\n"
+                    + "}\n"
+                    + "function reportWin(ad_selection_signals, per_buyer_signals,"
+                    + " signals_for_buyer, contextual_signals, custom_audience_signals) { \n"
+                    + " return {'status': 0, 'results': {'reporting_uri': '%s"
+                    + "' } };\n"
+                    + "}";
     private static final AdSelectionSignals TRUSTED_SCORING_SIGNALS =
             AdSelectionSignals.fromString(
                     "{\n"
@@ -113,69 +128,16 @@ public final class MockWebServerDispatcherFactory {
                             + "\t\"keys\": \"trusted bidding signal Values\"\n"
                             + "}");
 
-    public static Dispatcher create5Gp50LatencyDispatcher(MockWebServerRule mockWebServerRule) {
+    public static Dispatcher createLatencyDispatcher(
+            MockWebServerRule mockWebServerRule, String network, int percentile) {
         return create(
-                DECISION_LOGIC_FETCH_DELAY_5G_p50_MS,
-                BIDDING_LOGIC_FETCH_DELAY_5G_p50_MS,
-                SCORING_SIGNALS_FETCH_DELAY_5G_p50_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_5G_p50_MS,
-                BIDDING_JS_EXECUTION_TIME_p50_MS,
-                SCORING_JS_EXECUTION_TIME_p50_MS,
-                mockWebServerRule);
-    }
-
-    public static Dispatcher create5Gp90LatencyDispatcher(MockWebServerRule mockWebServerRule) {
-        return create(
-                DECISION_LOGIC_FETCH_DELAY_5G_p90_MS,
-                BIDDING_LOGIC_FETCH_DELAY_5G_p90_MS,
-                SCORING_SIGNALS_FETCH_DELAY_5G_p90_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_5G_p90_MS,
-                BIDDING_JS_EXECUTION_TIME_p90_MS,
-                SCORING_JS_EXECUTION_TIME_p90_MS,
-                mockWebServerRule);
-    }
-
-    public static Dispatcher create4GPlusp50LatencyDispatcher(MockWebServerRule mockWebServerRule) {
-        return create(
-                DECISION_LOGIC_FETCH_DELAY_4GPLUS_p50_MS,
-                BIDDING_LOGIC_FETCH_DELAY_4GPLUS_p50_MS,
-                SCORING_SIGNALS_FETCH_DELAY_4GPLUS_p50_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p50_MS,
-                BIDDING_JS_EXECUTION_TIME_p50_MS,
-                SCORING_JS_EXECUTION_TIME_p50_MS,
-                mockWebServerRule);
-    }
-
-    public static Dispatcher create4GPlusp90LatencyDispatcher(MockWebServerRule mockWebServerRule) {
-        return create(
-                DECISION_LOGIC_FETCH_DELAY_4GPLUS_p90_MS,
-                BIDDING_LOGIC_FETCH_DELAY_4GPLUS_p90_MS,
-                SCORING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_4GPLUS_p90_MS,
-                BIDDING_JS_EXECUTION_TIME_p90_MS,
-                SCORING_JS_EXECUTION_TIME_p90_MS,
-                mockWebServerRule);
-    }
-
-    public static Dispatcher create4Gp50LatencyDispatcher(MockWebServerRule mockWebServerRule) {
-        return create(
-                DECISION_LOGIC_FETCH_DELAY_4G_p50_MS,
-                BIDDING_LOGIC_FETCH_DELAY_4G_p50_MS,
-                SCORING_SIGNALS_FETCH_DELAY_4G_p50_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_4G_p50_MS,
-                BIDDING_JS_EXECUTION_TIME_p50_MS,
-                SCORING_JS_EXECUTION_TIME_p50_MS,
-                mockWebServerRule);
-    }
-
-    public static Dispatcher create4Gp90LatencyDispatcher(MockWebServerRule mockWebServerRule) {
-        return create(
-                DECISION_LOGIC_FETCH_DELAY_4G_p90_MS,
-                BIDDING_LOGIC_FETCH_DELAY_4G_p90_MS,
-                SCORING_SIGNALS_FETCH_DELAY_4G_p90_MS,
-                BIDDING_SIGNALS_FETCH_DELAY_4G_p90_MS,
-                BIDDING_JS_EXECUTION_TIME_p90_MS,
-                SCORING_JS_EXECUTION_TIME_p90_MS,
+                DECISION_LOGIC_DELAY_MS.get(network).get(percentile),
+                BIDDING_LOGIC_DELAY_MS.get(network).get(percentile),
+                SCORING_SIGNALS_DELAY_MS.get(network).get(percentile),
+                BIDDING_SIGNALS_DELAY_MS.get(network).get(percentile),
+                biddingJsPercentileToExecutionTimeMs.get(percentile),
+                scoringJsPercentileToExecutionTimeMs.get(percentile),
+                NETWORK_TO_BANDWIDTH.get(network),
                 mockWebServerRule);
     }
 
@@ -186,14 +148,22 @@ public final class MockWebServerDispatcherFactory {
             int biddingSignalFetchDelayMs,
             int biddingLogicExecutionRunMs,
             int scoringLogicExecutionRunMs,
+            int bandwidth,
             MockWebServerRule mockWebServerRule) {
 
         return new Dispatcher() {
+
+            private int mNumRequests = 0;
+
             @Override
             public MockResponse dispatch(RecordedRequest request) {
+                mNumRequests++;
                 if (DECISION_LOGIC_PATH.equals(request.getPath())) {
                     return new MockResponse()
-                            .setBodyDelayTimeMs(decisionLogicFetchDelayMs)
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (decisionLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
                             .setBody(
                                     getDecisionLogicJS(
                                             scoringLogicExecutionRunMs,
@@ -202,32 +172,73 @@ public final class MockWebServerDispatcherFactory {
                                                     .toString()));
                 } else if (BUYER_BIDDING_LOGIC_URI_PATH.equals(request.getPath())) {
                     return new MockResponse()
-                            .setBodyDelayTimeMs(biddingLogicFetchDelayMs)
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
                             .setBody(
                                     getBiddingLogicJS(
                                             biddingLogicExecutionRunMs,
                                             mockWebServerRule
                                                     .uriForPath(BUYER_REPORTING_PATH)
                                                     .toString()));
+                } else if (BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID.equals((request.getPath()))) {
+                    return new MockResponse()
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingLogicFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
+                            .setBody(
+                                    getBiddingLogicJS(
+                                            biddingLogicExecutionRunMs,
+                                            mockWebServerRule
+                                                    .uriForPath(BUYER_REPORTING_PATH)
+                                                    .toString(),
+                                            DEFAULT_BIDDING_LOGIC_JS_FIXED_BID));
                 } else if (BUYER_REPORTING_PATH.equals(request.getPath())
                         || SELLER_REPORTING_PATH.equals(request.getPath())) {
                     return new MockResponse().setBody("");
                 } else if (request.getPath().startsWith(TRUSTED_SCORING_SIGNAL_PATH)) {
                     return new MockResponse()
-                            .setBodyDelayTimeMs(scoringSignalFetchDelayMs)
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (scoringSignalFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
                             .setBody(TRUSTED_SCORING_SIGNALS.toString());
                 } else if (request.getPath().startsWith(TRUSTED_BIDDING_SIGNALS_PATH)) {
                     return new MockResponse()
-                            .setBodyDelayTimeMs(biddingSignalFetchDelayMs)
+                            .setBodyDelayTimeMs(
+                                    (int)
+                                            (biddingSignalFetchDelayMs
+                                                    * getThrottlingFactor(bandwidth, mNumRequests)))
                             .setBody(TRUSTED_BIDDING_SIGNALS.toString());
                 }
                 return new MockResponse().setResponseCode(404);
+            }
+
+            private double getThrottlingFactor(int bandwidth, int numRequests) {
+                if (numRequests <= bandwidth) {
+                    return 1;
+                }
+                int numRequestsMod = numRequests % bandwidth;
+
+                // do not throttle if > bandwidth/2
+                if (numRequestsMod > (bandwidth / 2)) {
+                    return 1;
+                }
+
+                // otherwise, throttle to the equation (BASE_THROTTLING + ln(1+x))
+                return (BASE_THROTTLING + Math.log(1 + numRequestsMod));
             }
         };
     }
 
     public static String getBiddingLogicUriPath() {
         return BUYER_BIDDING_LOGIC_URI_PATH;
+    }
+
+    public static String getBiddingLogicUriPathFixedBid() {
+        return BUYER_BIDDING_LOGIC_URI_PATH_FIXED_BID;
     }
 
     public static String getDecisionLogicPath() {
@@ -256,9 +267,27 @@ public final class MockWebServerDispatcherFactory {
 
     private static String getBiddingLogicJS(
             int biddingLogicExecutionRunMs, String buyerReportingUri) {
-        return String.format(
-                DEFAULT_BIDDING_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT,
+        return getBiddingLogicJS(
                 biddingLogicExecutionRunMs,
-                buyerReportingUri);
+                buyerReportingUri,
+                DEFAULT_BIDDING_LOGIC_JS_WITH_EXECUTION_TIME_FORMAT);
+    }
+
+    private static String getBiddingLogicJS(
+            int biddingLogicExecutionRunMs, String buyerReportingUri, String script) {
+        return String.format(script, biddingLogicExecutionRunMs, buyerReportingUri);
+    }
+
+    private static Map<String, Map<Integer, Integer>> generateNetworkMap(
+            int latency5GP50,
+            int latency5GP90,
+            int latency4GPLUSP50,
+            int latency4GPLUSP90,
+            int latency4GP50,
+            int latency4GP90) {
+        return Map.of(
+                NETWORK_5G, Map.of(50, latency5GP50, 90, latency5GP90),
+                NETWORK_4GPLUS, Map.of(50, latency4GPLUSP50, 90, latency4GPLUSP90),
+                NETWORK_4G, Map.of(50, latency4GP50, 90, latency4GP90));
     }
 }

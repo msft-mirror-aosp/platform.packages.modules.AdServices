@@ -39,6 +39,7 @@ import android.content.Context;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -53,7 +54,7 @@ import org.mockito.quality.Strictness;
 import java.util.concurrent.TimeUnit;
 
 public class DeleteUninstalledJobServiceTest {
-    private static final long WAIT_IN_MILLIS = 50L;
+    private static final long WAIT_IN_MILLIS = 1_000L;
 
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MeasurementImpl mMockMeasurementImpl;
@@ -105,6 +106,34 @@ public class DeleteUninstalledJobServiceTest {
     }
 
     @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+
+                    // Execute
+                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+                    // Validate
+                    assertFalse(result);
+
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockMeasurementImpl, never()).deleteAllUninstalledMeasurementData();
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1))
+                            .cancel(eq(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID));
+                    ExtendedMockito.verifyNoMoreInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
+                });
+    }
+
+    @Test
     public void scheduleIfNeeded_killSwitchOn_dontSchedule() throws Exception {
         runWithMocks(
                 () -> {
@@ -125,8 +154,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, never())
@@ -156,8 +183,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), never());
                     verify(mMockJobScheduler, times(1))
@@ -187,8 +212,6 @@ public class DeleteUninstalledJobServiceTest {
                             mockContext, /* forceSchedule = */ true);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -216,8 +239,6 @@ public class DeleteUninstalledJobServiceTest {
                     DeleteUninstalledJobService.scheduleIfNeeded(mockContext, false);
 
                     // Validate
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
                     ExtendedMockito.verify(
                             () -> DeleteUninstalledJobService.schedule(any(), any()), times(1));
                     verify(mMockJobScheduler, times(1))
@@ -248,6 +269,7 @@ public class DeleteUninstalledJobServiceTest {
                         .spyStatic(MeasurementImpl.class)
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {

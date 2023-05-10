@@ -31,6 +31,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -52,25 +53,38 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling EventFallbackReportingJobService job because it's running in"
+                            + " ExtServices on T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
             LogUtil.e("EventFallbackReportingJobService Job is disabled");
             return skipAndCancelBackgroundJob(params);
         }
 
         LogUtil.d("EventFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new EventReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis()
-                                    - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis()
-                                    - AdServicesConfig
-                                    .getMeasurementEventMainReportingJobPeriodMs());
-            jobFinished(params, !success);
-        });
+        sBlockingExecutor.execute(
+                () -> {
+                    long maxEventReportUploadRetryWindowMs =
+                            SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    long eventMainReportingJobPeriodMs =
+                            AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
+                    boolean success =
+                            new EventReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.FALLBACK)
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis()
+                                                    - eventMainReportingJobPeriodMs);
+                    jobFinished(params, !success);
+                });
         return true;
     }
 

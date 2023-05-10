@@ -46,11 +46,13 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.os.Binder;
+import android.os.Build;
 import android.os.RemoteException;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -61,7 +63,6 @@ import com.android.adservices.service.measurement.access.AppPackageAccessResolve
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
-import com.android.adservices.service.measurement.access.ManifestBasedAdtechAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -83,6 +84,8 @@ import java.util.function.Supplier;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private static final Executor sLightExecutor = AdServicesExecutors.getLightWeightExecutor();
@@ -91,7 +94,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final Flags mFlags;
     private final AdServicesLogger mAdServicesLogger;
     private final ConsentManager mConsentManager;
-    private final EnrollmentDao mEnrollmentDao;
     private final AppImportanceFilter mAppImportanceFilter;
     private final Context mContext;
     private final Throttler mThrottler;
@@ -102,7 +104,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter) {
         this(
@@ -110,7 +111,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 context,
                 clock,
                 consentManager,
-                enrollmentDao,
                 Throttler.getInstance(FlagsFactory.getFlags()),
                 flags,
                 AdServicesLoggerImpl.getInstance(),
@@ -123,7 +123,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull Context context,
             @NonNull Clock clock,
             @NonNull ConsentManager consentManager,
-            @NonNull EnrollmentDao enrollmentDao,
             @NonNull Throttler throttler,
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
@@ -132,7 +131,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mClock = clock;
         mMeasurementImpl = measurementImpl;
         mConsentManager = consentManager;
-        mEnrollmentDao = enrollmentDao;
         mThrottler = throttler;
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
@@ -167,7 +165,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         sBackgroundExecutor.execute(
                 () -> {
                     performRegistration(
-                            (service) -> service.register(request, now()),
+                            (service) ->
+                                    service.register(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(() -> isRegisterDisabled(request)),
                                     new ForegroundEnforcementAccessResolver(
@@ -180,12 +180,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -226,7 +221,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebSource;
                     performRegistration(
-                            (service) -> service.registerWebSource(request, now()),
+                            (service) ->
+                                    service.registerWebSource(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebSourceKillSwitch),
@@ -240,14 +237,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
                                     new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getSourceRegistrationRequest()
-                                                    .getSourceParams()
-                                                    .get(0)
-                                                    .getRegistrationUri()),
                                     new AppPackageAccessResolver(
                                             mFlags.getWebContextClientAppAllowList(),
                                             request.getAppPackageName())),
@@ -291,7 +280,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                     final Supplier<Boolean> enforceForeground =
                             mFlags::getEnforceForegroundStatusForMeasurementRegisterWebTrigger;
                     performRegistration(
-                            (service) -> service.registerWebTrigger(request, now()),
+                            (service) ->
+                                    service.registerWebTrigger(
+                                            request, request.isAdIdPermissionGranted(), now()),
                             List.of(
                                     new KillSwitchAccessResolver(
                                             mFlags::getMeasurementApiRegisterWebTriggerKillSwitch),
@@ -304,15 +295,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mFlags.getPpapiAppAllowList(),
                                             request.getAppPackageName()),
                                     new UserConsentAccessResolver(mConsentManager),
-                                    new PermissionAccessResolver(attributionPermission),
-                                    new ManifestBasedAdtechAccessResolver(
-                                            mEnrollmentDao,
-                                            mFlags,
-                                            request.getAppPackageName(),
-                                            request.getTriggerRegistrationRequest()
-                                                    .getTriggerParams()
-                                                    .get(0)
-                                                    .getRegistrationUri())),
+                                    new PermissionAccessResolver(attributionPermission)),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -400,6 +383,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                 List.of(
                                         new KillSwitchAccessResolver(
                                                 mFlags::getMeasurementApiStatusKillSwitch),
+                                        new UserConsentAccessResolver(mConsentManager),
                                         new ForegroundEnforcementAccessResolver(
                                                 apiNameId,
                                                 callerUid,
@@ -420,7 +404,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                             return;
                         }
 
-                        callback.onResult(mMeasurementImpl.getMeasurementApiStatus());
+                        callback.onResult(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
                         statusCode = STATUS_SUCCESS;
                     } catch (RemoteException e) {
                         LogUtil.e(e, CALLBACK_ERROR);

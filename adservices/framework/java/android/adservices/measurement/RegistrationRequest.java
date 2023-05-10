@@ -36,9 +36,9 @@ public final class RegistrationRequest implements Parcelable {
     /** @hide */
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({
-       INVALID,
-       REGISTER_SOURCE,
-       REGISTER_TRIGGER,
+        INVALID,
+        REGISTER_SOURCE,
+        REGISTER_TRIGGER,
     })
     public @interface RegistrationType {}
     /** Invalid registration type used as a default. */

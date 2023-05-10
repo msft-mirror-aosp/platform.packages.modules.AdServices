@@ -16,30 +16,38 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.os.Build;
 import android.util.Pair;
 import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsTopicsFragment;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel;
 import com.android.adservices.ui.settings.viewmodels.TopicsViewModel.TopicsViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-public class TopicsActionDelegate extends BaseActionDelegate {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class TopicsActionDelegate {
     private final TopicsActivity mTopicsActivity;
     private final TopicsViewModel mTopicsViewModel;
 
     public TopicsActionDelegate(TopicsActivity topicsActivity, TopicsViewModel topicsViewModel) {
-        super(topicsActivity);
         mTopicsActivity = topicsActivity;
         mTopicsViewModel = topicsViewModel;
         listenToTopicsViewModelUiEvents();
@@ -58,20 +66,38 @@ public class TopicsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         switch (event) {
+                            case SWITCH_ON_TOPICS:
+                                mTopicsViewModel.setTopicsConsent(true);
+                                mTopicsViewModel.refresh();
+                                break;
+                            case SWITCH_OFF_TOPICS:
+                                mTopicsViewModel.setTopicsConsent(false);
+                                mTopicsViewModel.refresh();
+                                break;
                             case BLOCK_TOPIC:
-                                logUIAction(ActionEnum.BLOCK_TOPIC_SELECTED);
+                                UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showBlockTopicDialog(
-                                            mTopicsActivity, mTopicsViewModel, topic);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showBlockTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel, topic);
+                                    } else {
+                                        DialogManager.showBlockTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel, topic);
+                                    }
                                 } else {
                                     mTopicsViewModel.revokeTopicConsent(topic);
                                 }
                                 break;
                             case RESET_TOPICS:
-                                logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
+                                UiStatsLogger.logResetTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetTopicDialog(
-                                            mTopicsActivity, mTopicsViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showResetTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel);
+                                    } else {
+                                        DialogManager.showResetTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel);
+                                    }
                                 } else {
                                     mTopicsViewModel.resetTopics();
                                 }
@@ -94,16 +120,66 @@ public class TopicsActionDelegate extends BaseActionDelegate {
      * handle user actions.
      */
     public void initTopicsFragment(AdServicesSettingsTopicsFragment fragment) {
-        mTopicsActivity.setTitle(R.string.settingsUI_topics_view_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mTopicsActivity.setTitle(R.string.settingsUI_topics_ga_title);
+
+            configureTopicsConsentSwitch(fragment);
+
+            setGaUxLayoutVisibilities(View.VISIBLE);
+            setBetaLayoutVisibilities(View.GONE);
+            setGaUxTopicsViewText();
+        } else {
+            mTopicsActivity.setTitle(R.string.settingsUI_topics_view_title);
+
+            setGaUxLayoutVisibilities(View.GONE);
+            setBetaLayoutVisibilities(View.VISIBLE);
+            setBetaTopicsViewText();
+        }
         configureBlockedTopicsFragmentButton(fragment);
         configureResetTopicsButton(fragment);
+    }
+
+    private void setGaUxTopicsViewText() {
+        ((TextView) mTopicsActivity.findViewById(R.id.blocked_topics_button_child))
+                .setText(R.string.settingsUI_blocked_topics_ga_title);
+        ((TextView) mTopicsActivity.findViewById(R.id.reset_topics_button_child))
+                .setText(R.string.settingsUI_reset_topics_ga_title);
+        ((TextView) mTopicsActivity.findViewById(R.id.no_topics_state))
+                .setText(R.string.settingsUI_topics_view_no_topics_ga_text);
+    }
+
+    private void setBetaTopicsViewText() {
+        ((TextView) mTopicsActivity.findViewById(R.id.blocked_topics_button_child))
+                .setText(R.string.settingsUI_blocked_topics_title);
+        ((TextView) mTopicsActivity.findViewById(R.id.reset_topics_button_child))
+                .setText(R.string.settingsUI_reset_topics_title);
+        ((TextView) mTopicsActivity.findViewById(R.id.no_topics_state))
+                .setText(R.string.settingsUI_topics_view_no_topics_text);
+    }
+
+    private void setBetaLayoutVisibilities(int visibility) {
+        mTopicsActivity.findViewById(R.id.topics_introduction).setVisibility(visibility);
+        mTopicsActivity.findViewById(R.id.topics_view_footer).setVisibility(visibility);
+    }
+
+    private void setGaUxLayoutVisibilities(int visibility) {
+        mTopicsActivity.findViewById(R.id.topics_ga_introduction).setVisibility(visibility);
+        mTopicsActivity.findViewById(R.id.topics_view_ga_footer).setVisibility(visibility);
+    }
+
+    private void configureTopicsConsentSwitch(AdServicesSettingsTopicsFragment fragment) {
+        MainSwitchBar topicsSwitchBar = mTopicsActivity.findViewById(R.id.topics_switch_bar);
+        topicsSwitchBar.setVisibility(View.VISIBLE);
+
+        mTopicsViewModel.getTopicsConsent().observe(fragment, topicsSwitchBar::setChecked);
+        topicsSwitchBar.setOnClickListener(
+                switchBar -> mTopicsViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureBlockedTopicsFragmentButton(AdServicesSettingsTopicsFragment fragment) {
         View blockedTopicsButton = fragment.requireView().findViewById(R.id.blocked_topics_button);
         View blockedTopicsWhenEmptyListButton =
                 fragment.requireView().findViewById(R.id.blocked_topics_when_empty_state_button);
-
         blockedTopicsButton.setOnClickListener(
                 view -> mTopicsViewModel.blockedTopicsFragmentButtonClickHandler());
         blockedTopicsWhenEmptyListButton.setOnClickListener(
@@ -112,7 +188,6 @@ public class TopicsActionDelegate extends BaseActionDelegate {
 
     private void configureResetTopicsButton(AdServicesSettingsTopicsFragment fragment) {
         View resetTopicsButton = fragment.requireView().findViewById(R.id.reset_topics_button);
-
         resetTopicsButton.setOnClickListener(
                 view -> mTopicsViewModel.resetTopicsButtonClickHandler());
     }

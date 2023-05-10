@@ -21,7 +21,7 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.util.Patterns;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 
 /** Util class for pre-processing input for the classifier. */
 public final class Preprocessor {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     // This regular expression is to identify URLs like https://google.com or www.youtube.com.
     private static final Pattern URL_REGEX = Patterns.WEB_URL;
@@ -104,11 +105,11 @@ public final class Preprocessor {
             }
         } catch (IOException e) {
             // TODO(b/225937395): Fix logging upgrades.
-            LogUtil.e(e, "Unable to read the stop words assets at %s", STOP_WORDS_FILE_PATH);
+            sLogger.e(e, "Unable to read the stop words assets at %s", STOP_WORDS_FILE_PATH);
         }
         mStopWords = setBuilder.build();
 
-        LogUtil.v("Read %d stop words for pre-processing.", countWords);
+        sLogger.v("Read %d stop words for pre-processing.", countWords);
     }
 
     /**

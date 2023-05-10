@@ -18,15 +18,19 @@ package com.android.adservices.adselection;
 
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
 import com.android.adservices.service.adselection.AdSelectionServiceImpl;
 import com.android.adservices.service.common.PackageChangedReceiver;
+import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -34,7 +38,10 @@ import com.google.common.annotations.VisibleForTesting;
 import java.util.Objects;
 
 /** Ad Selection Service */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionService extends Service {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     /** The binder service. This field will only be accessed on the main thread. */
     private AdSelectionServiceImpl mAdSelectionService;
@@ -54,7 +61,7 @@ public class AdSelectionService extends Service {
     public void onCreate() {
         super.onCreate();
         if (mFlags.getFledgeSelectAdsKillSwitch()) {
-            LogUtil.e("Select Ads API is disabled");
+            sLogger.e("Select Ads API is disabled");
             return;
         }
 
@@ -63,7 +70,7 @@ public class AdSelectionService extends Service {
         }
 
         if (hasUserConsent()) {
-            PackageChangedReceiver.enableReceiver(this);
+            PackageChangedReceiver.enableReceiver(this, mFlags);
             MddJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
             MaintenanceJobService.scheduleIfNeeded(this, /* forceSchedule */ false);
         }
@@ -72,7 +79,7 @@ public class AdSelectionService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         if (mFlags.getFledgeSelectAdsKillSwitch()) {
-            LogUtil.e("Select Ads API is disabled");
+            sLogger.e("Select Ads API is disabled");
             // Return null so that clients can not bind to the service.
             return null;
         }
@@ -88,6 +95,10 @@ public class AdSelectionService extends Service {
 
     /** @return {@code true} if the Privacy Sandbox has user consent */
     private boolean hasUserConsent() {
-        return ConsentManager.getInstance(this).getConsent().isGiven();
+        if (mFlags.getGaUxFeatureEnabled()) {
+            return ConsentManager.getInstance(this).getConsent(AdServicesApiType.FLEDGE).isGiven();
+        } else {
+            return ConsentManager.getInstance(this).getConsent().isGiven();
+        }
     }
 }

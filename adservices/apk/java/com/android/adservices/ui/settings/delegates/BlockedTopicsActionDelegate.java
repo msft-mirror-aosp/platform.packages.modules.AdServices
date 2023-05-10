@@ -15,14 +15,19 @@
  */
 package com.android.adservices.ui.settings.delegates;
 
+import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
@@ -32,14 +37,15 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.Bloc
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-public class BlockedTopicsActionDelegate extends BaseActionDelegate {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class BlockedTopicsActionDelegate {
     private final BlockedTopicsActivity mBlockedTopicsActivity;
     private final BlockedTopicsViewModel mBlockedTopicsViewModel;
 
     public BlockedTopicsActionDelegate(
             BlockedTopicsActivity blockedTopicsActivity,
             BlockedTopicsViewModel blockedTopicsViewModel) {
-        super(blockedTopicsActivity);
         mBlockedTopicsActivity = blockedTopicsActivity;
         mBlockedTopicsViewModel = blockedTopicsViewModel;
         listenToBlockedTopicsViewModelUiEvents();
@@ -58,10 +64,16 @@ public class BlockedTopicsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
-                            logUIAction(ActionEnum.UNBLOCK_TOPIC_SELECTED);
+                            UiStatsLogger.logUnblockTopicSelected(mBlockedTopicsActivity);
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
                             if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                DialogManager.showUnblockTopicDialog(mBlockedTopicsActivity, topic);
+                                if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                    DialogFragmentManager.showUnblockTopicDialog(
+                                            mBlockedTopicsActivity, topic);
+                                } else {
+                                    DialogManager.showUnblockTopicDialog(
+                                            mBlockedTopicsActivity, topic);
+                                }
                             }
                         } else {
                             Log.e("AdservicesUI", "Unknown Action for UI Logging");
@@ -78,6 +90,10 @@ public class BlockedTopicsActionDelegate extends BaseActionDelegate {
      * AdServicesSettingsBlockedTopicsFragment} to handle user actions.
      */
     public void initBlockedTopicsFragment() {
-        mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
+        } else {
+            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
+        }
     }
 }

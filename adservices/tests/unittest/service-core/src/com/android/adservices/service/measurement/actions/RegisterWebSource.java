@@ -18,7 +18,11 @@ package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
 import static com.android.adservices.service.measurement.E2ETest.getInputEvent;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasSourceDebugReportingPermission;
 
 import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
@@ -39,7 +43,10 @@ import java.util.Map;
 public final class RegisterWebSource implements Action {
     public final WebSourceRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
 
     public RegisterWebSource(JSONObject obj) throws JSONException {
         JSONObject regParamsJson =
@@ -62,7 +69,7 @@ public final class RegisterWebSource implements Action {
 
         WebSourceRegistrationRequest registrationRequest =
                 new WebSourceRegistrationRequest.Builder(
-                                createSourceParams(sourceParamsArray),
+                                createSourceParams(sourceParamsArray, obj),
                                 Uri.parse(
                                         regParamsJson.getString(
                                                 TestFormatJsonMapping.SOURCE_TOP_ORIGIN_URI_KEY)))
@@ -83,13 +90,13 @@ public final class RegisterWebSource implements Action {
                                 attributionSource.getPackageName(),
                                 /* sdkPackageName = */ "",
                                 /* requestTime =*/ 2000L)
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = hasSourceDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
     @Override
@@ -97,7 +104,7 @@ public final class RegisterWebSource implements Action {
         return mTimestamp;
     }
 
-    private List<WebSourceParams> createSourceParams(JSONArray sourceParamsArray)
+    private List<WebSourceParams> createSourceParams(JSONArray sourceParamsArray, JSONObject obj)
             throws JSONException {
         List<WebSourceParams> sourceParamsList = new ArrayList<>(sourceParamsArray.length());
 
@@ -108,7 +115,7 @@ public final class RegisterWebSource implements Action {
                                     Uri.parse(
                                             sourceParams.getString(
                                                     TestFormatJsonMapping.REGISTRATION_URI_KEY)))
-                            .setDebugKeyAllowed(true)
+                            .setDebugKeyAllowed(hasArDebugPermission(obj))
                             .build());
         }
 

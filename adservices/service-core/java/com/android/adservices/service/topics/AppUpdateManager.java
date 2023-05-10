@@ -17,20 +17,25 @@
 package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.os.Build;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -52,7 +57,10 @@ import java.util.stream.Collectors;
  *
  * <p>See go/rb-topics-app-update for details.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppUpdateManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final String EMPTY_SDK = "";
     private static AppUpdateManager sSingleton;
 
@@ -75,7 +83,10 @@ public class AppUpdateManager {
                         TopicsTables.UsageHistoryContract.APP),
                 Pair.create(
                         TopicsTables.AppUsageHistoryContract.TABLE,
-                        TopicsTables.AppUsageHistoryContract.APP)
+                        TopicsTables.AppUsageHistoryContract.APP),
+                Pair.create(
+                        TopicsTables.TopicContributorsContract.TABLE,
+                        TopicsTables.TopicContributorsContract.APP)
             };
 
     private final DbHelper mDbHelper;
@@ -133,7 +144,7 @@ public class AppUpdateManager {
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e(
+            sLogger.e(
                     "Database is not available, Stop processing app uninstallation for %s!",
                     packageName);
             return;
@@ -143,9 +154,7 @@ public class AppUpdateManager {
         db.beginTransaction();
 
         try {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, packageName);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, packageName);
 
             deleteAppDataFromTableByApps(List.of(packageName));
 
@@ -153,7 +162,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.d("End of processing app uninstallation for %s", packageName);
+            sLogger.d("End of processing app uninstallation for %s", packageName);
         }
     }
 
@@ -170,7 +179,7 @@ public class AppUpdateManager {
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e(
+            sLogger.e(
                     "Database is not available, Stop processing app installation for %s",
                     packageName);
             return;
@@ -186,7 +195,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.d("End of processing app installation for %s", packageName);
+            sLogger.d("End of processing app installation for %s", packageName);
         }
     }
 
@@ -213,13 +222,13 @@ public class AppUpdateManager {
             return;
         }
 
-        LogUtil.v(
+        sLogger.v(
                 "Detect below unhandled mismatched applications: %s",
                 unhandledUninstalledApps.toString());
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e("Database is not available, Stop reconciling app uninstallation in Topics!");
+            sLogger.e("Database is not available, Stop reconciling app uninstallation in Topics!");
             return;
         }
 
@@ -233,7 +242,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.v("App uninstallation reconciliation in Topics is finished!");
+            sLogger.v("App uninstallation reconciliation in Topics is finished!");
         }
     }
 
@@ -261,13 +270,13 @@ public class AppUpdateManager {
             return;
         }
 
-        LogUtil.v(
+        sLogger.v(
                 "Detect below unhandled installed applications: %s",
                 unhandledInstalledApps.toString());
 
         SQLiteDatabase db = mDbHelper.safeGetWritableDatabase();
         if (db == null) {
-            LogUtil.e("Database is not available, Stop reconciling app installation in Topics!");
+            sLogger.e("Database is not available, Stop reconciling app installation in Topics!");
             return;
         }
 
@@ -281,7 +290,7 @@ public class AppUpdateManager {
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
-            LogUtil.v("App installation reconciliation in Topics is finished!");
+            sLogger.v("App installation reconciliation in Topics is finished!");
         }
     }
 
@@ -312,8 +321,8 @@ public class AppUpdateManager {
         Pair<String, String> appOnlyCaller = Pair.create(app, EMPTY_SDK);
         Pair<String, String> appSdkCaller = Pair.create(app, sdk);
 
-        // Get ReturnedTopics and CallerCanLearnTopics  for past epochs in
-        // [epochId - numberOfLookBackEpochs, epochId - 1].
+        // Get ReturnedTopics for past epochs in [currentEpochId - numberOfLookBackEpochs,
+        // currentEpochId - 1].
         // TODO(b/237436146): Create an object class for Returned Topics.
         Map<Long, Map<Pair<String, String>, Topic>> pastReturnedTopics =
                 mTopicsDao.retrieveReturnedTopics(currentEpochId - 1, numberOfLookBackEpochs);
@@ -337,10 +346,13 @@ public class AppUpdateManager {
             // If so, the same topic should be assigned to the sdk.
             if (pastReturnedTopics.get(epochId) != null
                     && pastReturnedTopics.get(epochId).containsKey(appOnlyCaller)) {
+                // This is the top Topic assigned to this app-only caller.
                 Topic appReturnedTopic = pastReturnedTopics.get(epochId).get(appOnlyCaller);
 
-                // For current epoch, check whether sdk can learn this topic for past observed
-                // epochs in [epochId - numberOfLookBackEpochs + 1, epochId]
+                // For this epochId, check whether sdk can learn this topic for past
+                // numberOfLookBackEpochs observed epochs, i.e.
+                // [epochId - numberOfLookBackEpochs + 1, epochId]
+                // pastCallerCanLearnTopicsMap = Map<Topic, Set<Caller>>. Caller = App or Sdk
                 Map<Topic, Set<String>> pastCallerCanLearnTopicsMap =
                         mTopicsDao.retrieveCallerCanLearnTopicsMap(epochId, numberOfLookBackEpochs);
                 List<Topic> pastTopTopic = mTopicsDao.retrieveTopTopics(epochId);
@@ -368,14 +380,28 @@ public class AppUpdateManager {
      *     which have no contributors
      * @param randomTopics a {@link List} of random top topics
      * @param percentageForRandomTopic the probability to select random object
-     * @return a selected {@link Topic} to be assigned to newly installed app
+     * @return a selected {@link Topic} to be assigned to newly installed app. Return null if both
+     *     lists are empty.
      */
     @VisibleForTesting
-    @NonNull
+    @Nullable
     Topic selectAssignedTopicFromTopTopics(
             @NonNull List<Topic> regularTopics,
             @NonNull List<Topic> randomTopics,
             int percentageForRandomTopic) {
+        // Return null if both lists are empty.
+        if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
+            return null;
+        }
+
+        // If one of the list is empty, select from the other list.
+        if (regularTopics.isEmpty()) {
+            return randomTopics.get(mRandom.nextInt(randomTopics.size()));
+        } else if (randomTopics.isEmpty()) {
+            return regularTopics.get(mRandom.nextInt(regularTopics.size()));
+        }
+
+        // If both lists are not empty, make a draw to determine whether to pick a random topic.
         // If random number is in [0, randomPercentage - 1], a random topic will be selected.
         boolean shouldSelectRandomTopic = mRandom.nextInt(100) < percentageForRandomTopic;
 
@@ -396,17 +422,11 @@ public class AppUpdateManager {
     void deleteAppDataFromTableByApps(@NonNull List<String> apps) {
         List<Pair<String, String>> tableToEraseData =
                 Arrays.stream(TABLE_INFO_TO_ERASE_APP_DATA).collect(Collectors.toList());
-        if (supportsTopicContributorFeature()) {
-            tableToEraseData.add(
-                    Pair.create(
-                            TopicsTables.TopicContributorsContract.TABLE,
-                            TopicsTables.TopicContributorsContract.APP));
-        }
 
         mTopicsDao.deleteFromTableByColumn(
                 /* tableNamesAndColumnNamePairs */ tableToEraseData, /* valuesToDelete */ apps);
 
-        LogUtil.v("Have deleted data for application " + apps);
+        sLogger.v("Have deleted data for application " + apps);
     }
 
     /**
@@ -436,7 +456,7 @@ public class AppUpdateManager {
             List<Topic> topTopics = mTopicsDao.retrieveTopTopics(epochId);
 
             if (topTopics.isEmpty()) {
-                LogUtil.v(
+                sLogger.v(
                         "Empty top topic list in Epoch %d, do not assign topic to App %s.",
                         epochId, app);
                 continue;
@@ -444,28 +464,25 @@ public class AppUpdateManager {
 
             // Regular Topics are placed at the beginning of top topic list.
             List<Topic> regularTopics = topTopics.subList(0, numberOfTopTopics);
-            // If enabled, filter out topics without contributors.
-            if (supportsTopicContributorFeature()) {
-                regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
-            }
+            regularTopics = filterRegularTopicsWithoutContributors(regularTopics, epochId);
             List<Topic> randomTopics = topTopics.subList(numberOfTopTopics, topTopics.size());
 
-            if (regularTopics.isEmpty() && randomTopics.isEmpty()) {
-                LogUtil.v(
+            Topic assignedTopic =
+                    selectAssignedTopicFromTopTopics(
+                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
+
+            if (assignedTopic == null) {
+                sLogger.v(
                         "No topic is available to assign in Epoch %d, do not assign topic to App"
                                 + " %s.",
                         epochId, app);
                 continue;
             }
 
-            Topic assignedTopic =
-                    selectAssignedTopicFromTopTopics(
-                            regularTopics, randomTopics, topicsPercentageForRandomTopic);
-
             // Persist this topic to database as returned topic in this epoch
             mTopicsDao.persistReturnedAppTopicsMap(epochId, Map.of(appOnlyCaller, assignedTopic));
 
-            LogUtil.v(
+            sLogger.v(
                     "Topic %s has been assigned to newly installed App %s in Epoch %d",
                     assignedTopic.getTopic(), app, epochId);
         }
@@ -524,7 +541,7 @@ public class AppUpdateManager {
                             .collect(Collectors.toList());
 
             if (!topTopicsToDelete.isEmpty()) {
-                LogUtil.v(
+                sLogger.v(
                         "Topics %s will not have contributors at epoch %d. Delete them in"
                                 + " epoch %d",
                         topTopicsToDelete, epochId, epochId);
@@ -568,16 +585,6 @@ public class AppUpdateManager {
                                                 .get(regularTopic.getTopic())
                                                 .isEmpty())
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Check whether TopContributors Feature is enabled. It's enabled only when TopicContributors
-     * table is supported and the feature flag is on.
-     */
-    @VisibleForTesting
-    boolean supportsTopicContributorFeature() {
-        return mFlags.getEnableTopicContributorsCheck()
-                && mDbHelper.supportsTopicContributorsTable();
     }
 
     // An app will be regarded as an unhandled uninstalled app if it has an entry in any epoch of
@@ -638,9 +645,8 @@ public class AppUpdateManager {
     Set<String> getCurrentInstalledApps(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> appInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
-
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return appInfoList.stream().map(appInfo -> appInfo.packageName).collect(Collectors.toSet());
     }
 
@@ -669,9 +675,7 @@ public class AppUpdateManager {
     private void handleUninstalledAppsInReconciliation(
             @NonNull Set<String> newlyUninstalledApps, long currentEpochId) {
         for (String app : newlyUninstalledApps) {
-            if (supportsTopicContributorFeature()) {
-                handleTopTopicsWithoutContributors(currentEpochId, app);
-            }
+            handleTopTopicsWithoutContributors(currentEpochId, app);
 
             deleteAppDataFromTableByApps(List.of(app));
         }

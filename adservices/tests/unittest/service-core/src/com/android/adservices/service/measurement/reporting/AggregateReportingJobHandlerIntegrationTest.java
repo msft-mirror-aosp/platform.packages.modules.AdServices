@@ -96,7 +96,7 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
         Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
                 .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         AggregateReportingJobHandler spyReportingService =
                 Mockito.spy(new AggregateReportingJobHandler(
                         mEnrollmentDao, datastoreManager, mockKeyManager));
@@ -123,7 +123,8 @@ public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbInteg
                 Assert.assertEquals(
                         "Aggregate report failed.",
                         result,
-                        spyReportingService.performReport(id, AggregateCryptoFixture.getKey()));
+                        spyReportingService.performReport(
+                                id, AggregateCryptoFixture.getKey(), new ReportingStatus()));
                 break;
         }
     }

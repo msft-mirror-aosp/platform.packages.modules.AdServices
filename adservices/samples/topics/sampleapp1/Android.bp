@@ -23,6 +23,9 @@ android_app {
     srcs: [
        "java/**/*.java",
     ],
+    libs: [
+        "android.ext.adservices",
+    ],
     static_libs: [
         "adservices-clients",
         "androidx.appcompat_appcompat",
@@ -32,4 +35,5 @@ android_app {
     ],
     resource_dirs: ["res"],
     platform_apis: true,
+    min_sdk_version: "30",
 }

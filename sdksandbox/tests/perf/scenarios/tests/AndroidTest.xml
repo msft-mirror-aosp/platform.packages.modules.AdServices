@@ -34,6 +34,8 @@
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
     </target_preparer>
 
@@ -49,6 +51,7 @@
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="android.sdksandbox.test.scenario"/>
         <option name="runner" value="androidx.test.runner.AndroidJUnitRunner" />
+        <option name="class" value="android.sdksandbox.test.scenario.sampleclient.LoadSdkMicrobenchmark,android.sdksandbox.test.scenario.sampleclient.RemoteRenderAdMicrobenchmark" />
 
         <!-- Listener for collecting the traces and waiting for the device to stabilize. -->
         <option name="device-listeners" value="android.device.collectors.PerfettoListener" />

@@ -29,14 +29,17 @@ import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.os.Binder;
 import android.os.RemoteException;
+import android.provider.DeviceConfig;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -49,10 +52,22 @@ import java.util.List;
 public class SdkSandboxControllerUnitTest {
     private static final String RESOURCES_PACKAGE = "com.android.codeproviderresources_1";
 
+    private static boolean sCustomizedSdkContextEnabled;
+
     private Context mContext;
     private SandboxedSdkContext mSandboxedSdkContext;
     private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
     private StaticMockitoSession mStaticMockSession;
+
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+        DeviceConfigStateManager stateManager =
+                new DeviceConfigStateManager(
+                        InstrumentationRegistry.getInstrumentation().getContext(),
+                        DeviceConfig.NAMESPACE_ADSERVICES,
+                        "sdksandbox_customized_sdk_context_enabled");
+        sCustomizedSdkContextEnabled = Boolean.parseBoolean(stateManager.get());
+    }
 
     @Before
     public void setup() throws Exception {
@@ -65,7 +80,8 @@ public class SdkSandboxControllerUnitTest {
                         new ApplicationInfo(),
                         /*sdkName=*/ "",
                         /*sdkCeDataDir=*/ null,
-                        /*sdkDeDataDir=*/ null);
+                        /*sdkDeDataDir=*/ null,
+                        sCustomizedSdkContextEnabled);
 
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
@@ -79,7 +95,9 @@ public class SdkSandboxControllerUnitTest {
 
     @After
     public void tearDown() {
-        mStaticMockSession.finishMocking();
+        if (mStaticMockSession != null) {
+            mStaticMockSession.finishMocking();
+        }
     }
 
     @Test

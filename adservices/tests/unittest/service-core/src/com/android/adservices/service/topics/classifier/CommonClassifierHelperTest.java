@@ -30,19 +30,23 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockRandom;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.MockitoSession;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,10 +71,14 @@ public class CommonClassifierHelperTest {
             "classifier/precomputed_test_app_list.csv";
     private static final String TEST_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_test_assets_metadata.json";
+    private static final String TEST_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String PRODUCTION_LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String PRODUCTION_APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH =
             "classifier/classifier_assets_metadata.json";
+    private static final String PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH =
+            "classifier/classifier_input_config.txt";
     private static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
     private ModelManager mTestModelManager;
@@ -84,6 +92,7 @@ public class CommonClassifierHelperTest {
     private ImmutableMap<String, ImmutableMap<String, String>> productionClassifierAssetsMetadata;
     private long mProductionTaxonomyVersion;
     private long mProductionModelVersion;
+    private MockitoSession mMockitoSession = null;
 
     @Mock SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
@@ -92,12 +101,21 @@ public class CommonClassifierHelperTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+        mMockitoSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .initMocks(this)
+                        .startMocking();
+
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+
         mTestModelManager =
                 new ModelManager(
                         sContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_PRECOMPUTED_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_PATH,
+                        TEST_CLASSIFIER_INPUT_CONFIG_PATH,
                         BUNDLED_MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -108,6 +126,7 @@ public class CommonClassifierHelperTest {
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH,
+                        PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH,
                         BUNDLED_MODEL_FILE_PATH,
                         mMockFileStorage,
                         mMockDownloadedFiles);
@@ -136,6 +155,13 @@ public class CommonClassifierHelperTest {
                                 .get("asset_version"));
     }
 
+    @After
+    public void tearDown() {
+        if (mMockitoSession != null) {
+            mMockitoSession.finishMocking();
+        }
+    }
+
     @Test
     public void testGetTopTopics_legalInput() {
         ArgumentCaptor<EpochComputationGetTopTopicsStats> argument =
@@ -157,8 +183,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
@@ -176,7 +202,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(5)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(6)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -196,8 +222,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 15,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 15,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 11 topics.
@@ -208,7 +234,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(15)
                                 .setPaddedRandomTopicsCount(10)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(1)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -226,8 +252,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 0,
-                                /* numberOfRandomTopics = */ 1,
+                                /* numberOfTopTopics */ 0,
+                                /* numberOfRandomTopics */ 1,
                                 mLogger));
     }
 
@@ -243,8 +269,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ 0,
+                                /* numberOfTopTopics */ 3,
+                                /* numberOfRandomTopics */ 0,
                                 mLogger));
     }
 
@@ -261,8 +287,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ -5,
-                                /* numberOfRandomTopics = */ 1,
+                                /* numberOfTopTopics */ -5,
+                                /* numberOfRandomTopics */ 1,
                                 mLogger));
     }
 
@@ -280,8 +306,8 @@ public class CommonClassifierHelperTest {
                                 appTopics,
                                 testLabels,
                                 new Random(),
-                                /* numberOfTopTopics = */ 3,
-                                /* numberOfRandomTopics = */ -1,
+                                /* numberOfTopTopics */ 3,
+                                /* numberOfRandomTopics */ -1,
                                 mLogger));
     }
 
@@ -295,8 +321,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should be empty.
@@ -320,8 +346,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         new Random(),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should be empty
@@ -332,7 +358,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(0)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(2)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -359,8 +385,8 @@ public class CommonClassifierHelperTest {
                         testAppTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
@@ -383,8 +409,8 @@ public class CommonClassifierHelperTest {
                         productionAppTopics,
                         productionLabels,
                         new MockRandom(new long[] {50, 100, 300}),
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic.
@@ -421,8 +447,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 7,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 7,
                         mLogger);
 
         // The response body should contain 5 topics + 7 random topic.
@@ -482,8 +508,8 @@ public class CommonClassifierHelperTest {
                         appTopics,
                         testLabels,
                         mockRandom,
-                        /* numberOfTopTopics = */ 5,
-                        /* numberOfRandomTopics = */ 1,
+                        /* numberOfTopTopics */ 5,
+                        /* numberOfRandomTopics */ 1,
                         mLogger);
 
         // The response body should contain 5 topics + 1 random topic
@@ -503,7 +529,7 @@ public class CommonClassifierHelperTest {
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(5)
                                 .setPaddedRandomTopicsCount(0)
-                                .setAppsConsideredCount(-1)
+                                .setAppsConsideredCount(1)
                                 .setSdksConsideredCount(-1)
                                 .build());
     }
@@ -544,6 +570,20 @@ public class CommonClassifierHelperTest {
                         productionClassifierAssetsMetadata
                                 .get("precomputed_app_list")
                                 .get("checksum"));
+    }
+
+    @Test
+    public void testGetBundledModelBuildId() {
+        // Verify bundled model build_id. This should be changed along with model update.
+        assertThat(
+                        CommonClassifierHelper.getBundledModelBuildId(
+                                sContext, PRODUCTION_CLASSIFIER_ASSETS_METADATA_PATH))
+                .isEqualTo(1800);
+        // Verify test model build_id.
+        assertThat(
+                        CommonClassifierHelper.getBundledModelBuildId(
+                                sContext, TEST_CLASSIFIER_ASSETS_METADATA_PATH))
+                .isEqualTo(8);
     }
 
     private Topic getTestTopic(int topicId) {

@@ -35,9 +35,9 @@ public class ClickVerifier {
     }
 
     @VisibleForTesting
-    ClickVerifier(InputManager inputManager) {
+    ClickVerifier(InputManager inputManager, Flags flags) {
         mInputManager = inputManager;
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = flags;
     }
 
     /**
@@ -58,7 +58,8 @@ public class ClickVerifier {
     /** Checks whether the InputEvent can be verified by the system. */
     @VisibleForTesting
     boolean isInputEventVerifiableBySystem(InputEvent event) {
-        return mInputManager.verifyInputEvent(event) != null;
+        return !mFlags.getMeasurementIsClickVerifiedByInputEvent()
+                || mInputManager.verifyInputEvent(event) != null;
     }
 
     /**

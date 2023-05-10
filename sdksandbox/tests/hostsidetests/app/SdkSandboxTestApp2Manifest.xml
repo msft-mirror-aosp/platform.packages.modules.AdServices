@@ -23,7 +23,10 @@
 
     <application android:process="com.android.sdksandbox.processname">
         <activity android:name=".SdkSandboxTestActivity2"
-                  android:exported="true">
+                  android:exported="true"
+                  android:turnScreenOn="true"
+                  android:keepScreenOn="true"
+                  android:showWhenLocked="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>

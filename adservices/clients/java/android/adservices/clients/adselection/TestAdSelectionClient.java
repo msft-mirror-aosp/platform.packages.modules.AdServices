@@ -22,9 +22,12 @@ import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.TestAdSelectionManager;
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.os.OutcomeReceiver;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
+
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -38,11 +41,13 @@ public class TestAdSelectionClient {
     private Context mContext;
     private Executor mExecutor;
 
-    private TestAdSelectionClient(@NonNull Context context, @NonNull Executor executor) {
+    private TestAdSelectionClient(
+            @NonNull Context context,
+            @NonNull Executor executor,
+            @NonNull TestAdSelectionManager testAdSelectionManager) {
         mContext = context;
         mExecutor = executor;
-        mTestAdSelectionManager =
-                mContext.getSystemService(AdSelectionManager.class).getTestAdSelectionManager();
+        mTestAdSelectionManager = testAdSelectionManager;
     }
 
     /**
@@ -143,6 +148,7 @@ public class TestAdSelectionClient {
     public static final class Builder {
         private Context mContext;
         private Executor mExecutor;
+        private boolean mUseGetMethodToCreateManagerInstance;
 
         /** Empty-arg constructor with an empty body for Builder */
         public Builder() {}
@@ -170,6 +176,19 @@ public class TestAdSelectionClient {
         }
 
         /**
+         * Sets whether to use the AdSelectionManager.get(context) method explicitly.
+         *
+         * @param value flag indicating whether to use the AdSelectionManager.get(context) method
+         *     explicitly. Default is {@code false}.
+         */
+        @VisibleForTesting
+        @NonNull
+        public Builder setUseGetMethodToCreateManagerInstance(boolean value) {
+            mUseGetMethodToCreateManagerInstance = value;
+            return this;
+        }
+
+        /**
          * Builds the Ad Selection Client.
          *
          * @throws NullPointerException if {@code mContext} is null or if {@code mExecutor} is null
@@ -179,7 +198,20 @@ public class TestAdSelectionClient {
             Objects.requireNonNull(mContext);
             Objects.requireNonNull(mExecutor);
 
-            return new TestAdSelectionClient(mContext, mExecutor);
+            TestAdSelectionManager manager = createAdSelectionManager().getTestAdSelectionManager();
+            return new TestAdSelectionClient(mContext, mExecutor, manager);
+        }
+
+        @NonNull
+        private AdSelectionManager createAdSelectionManager() {
+            if (mUseGetMethodToCreateManagerInstance) {
+                return AdSelectionManager.get(mContext);
+            }
+
+            // By default, use getSystemService for T+ and get(context) for S-.
+            return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                    ? mContext.getSystemService(AdSelectionManager.class)
+                    : AdSelectionManager.get(mContext);
         }
     }
 }

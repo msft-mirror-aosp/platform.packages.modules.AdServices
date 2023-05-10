@@ -46,6 +46,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.topics.AppUpdateManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.topics.CacheManager;
@@ -106,6 +107,7 @@ public class MaintenanceJobServiceTest {
                         .spyStatic(MaintenanceJobService.class)
                         .spyStatic(TopicsWorker.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
@@ -419,8 +421,10 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_Success() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -429,8 +433,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_ScheduledWithSameParameters() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -467,8 +478,15 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_forceRun() {
-        // Mock static method FlagsFactory.getFlags() to return test Flags.
-        ExtendedMockito.doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+        // Mock Flags in order to change values within this test
+        doReturn(TEST_FLAGS.getMaintenanceJobPeriodMs())
+                .when(mMockFlags)
+                .getMaintenanceJobPeriodMs();
+        doReturn(TEST_FLAGS.getMaintenanceJobFlexMs()).when(mMockFlags).getMaintenanceJobFlexMs();
+        doReturn(false).when(mMockFlags).getGlobalKillSwitch();
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
 
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(MaintenanceJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false))
@@ -507,5 +525,42 @@ public class MaintenanceJobServiceTest {
         verify(mMockJobScheduler, times(1)).schedule(argumentCaptor.capture());
         assertThat(argumentCaptor.getValue()).isNotNull();
         assertThat(argumentCaptor.getValue().isPersisted()).isTrue();
+    }
+
+    @Test
+    public void testOnStartJob_shouldDisableJobTrue() {
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        doNothing().when(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
+
+        // Inject FledgeMaintenanceTasksWorker since the test can't get it the standard way
+        mSpyMaintenanceJobService.injectFledgeMaintenanceTasksWorker(
+                mFledgeMaintenanceTasksWorkerSpy);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                MAINTENANCE_JOB_ID,
+                                new ComponentName(CONTEXT, EpochJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_FLEX_MS)
+                        .setPersisted(true)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyMaintenanceJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID));
+
+        verify(mSpyMaintenanceJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(TopicsWorker.class));
+        verify(mFledgeMaintenanceTasksWorkerSpy, never()).clearExpiredAdSelectionData();
+        verifyNoMoreInteractions(mMockFlags);
     }
 }

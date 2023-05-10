@@ -17,7 +17,11 @@
 package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
+import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
+import static com.android.adservices.service.measurement.E2ETest.hasTriggerDebugReportingPermission;
 
 import android.adservices.measurement.RegistrationRequest;
 import android.content.AttributionSource;
@@ -34,9 +38,13 @@ import java.util.Map;
 public final class RegisterTrigger implements Action {
     public final RegistrationRequest mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
     // Used in interop tests
     public final String mDestination;
+    public final boolean mDebugReporting;
+    public final boolean mAdIdPermission;
+    public final boolean mArDebugPermission;
 
     public RegisterTrigger(JSONObject obj) throws JSONException {
         JSONObject regParamsJson = obj.getJSONObject(
@@ -56,13 +64,14 @@ public final class RegisterTrigger implements Action {
                                                 TestFormatJsonMapping.REGISTRATION_URI_KEY)),
                                 attributionSource.getPackageName(),
                                 /* sdkPackageName = */ "")
-                        .setAdIdPermissionGranted(
-                                regParamsJson.optBoolean(
-                                        TestFormatJsonMapping.IS_ADID_PERMISSION_GRANTED_KEY, true))
                         .build();
 
         mUriToResponseHeadersMap = getUriToResponseHeadersMap(obj);
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
+        mDebugReporting = hasTriggerDebugReportingPermission(obj);
+        mAdIdPermission = hasAdIdPermission(obj);
+        mArDebugPermission = hasArDebugPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
     @Override

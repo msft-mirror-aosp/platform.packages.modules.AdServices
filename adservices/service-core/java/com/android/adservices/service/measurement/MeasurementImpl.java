@@ -21,10 +21,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.DeletionParam;
-import android.adservices.measurement.MeasurementManager;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebSourceRegistrationRequestInternal;
@@ -32,30 +30,33 @@ import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.annotation.NonNull;
 import android.annotation.WorkerThread;
+import android.app.adservices.AdServicesManager;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.view.InputEvent;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.DbHelper;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.consent.AdServicesApiConsent;
-import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
 import com.android.adservices.service.measurement.registration.EnqueueAsyncRegistration;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -69,6 +70,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
@@ -77,10 +80,10 @@ public final class MeasurementImpl {
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
+    private final ContentResolver mContentResolver;
     private final ClickVerifier mClickVerifier;
     private final MeasurementDataDeleter mMeasurementDataDeleter;
     private final Flags mFlags;
-    private EnrollmentDao mEnrollmentDao;
 
     @VisibleForTesting
     MeasurementImpl(Context context) {
@@ -89,7 +92,8 @@ public final class MeasurementImpl {
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager);
-        mEnrollmentDao = new EnrollmentDao(context, DbHelper.getInstance(mContext));
+        mContentResolver = mContext.getContentResolver();
+        deleteOnRollback();
     }
 
     @VisibleForTesting
@@ -98,13 +102,13 @@ public final class MeasurementImpl {
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
-            EnrollmentDao enrollmentDao) {
+            ContentResolver contentResolver) {
         mContext = context;
         mDatastoreManager = datastoreManager;
         mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
         mFlags = FlagsFactory.getFlagsForTest();
-        mEnrollmentDao = enrollmentDao;
+        mContentResolver = contentResolver;
     }
 
     /**
@@ -145,7 +149,7 @@ public final class MeasurementImpl {
 
     /** Implement a registration request, returning a {@link AdServicesStatusUtils.StatusCode}. */
     @AdServicesStatusUtils.StatusCode
-    int register(@NonNull RegistrationRequest request, long requestTime) {
+    int register(@NonNull RegistrationRequest request, boolean adIdPermission, long requestTime) {
         mReadWriteLock.readLock().lock();
         try {
             switch (request.getRegistrationType()) {
@@ -153,10 +157,17 @@ public final class MeasurementImpl {
                 case RegistrationRequest.REGISTER_TRIGGER:
                     return EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
                                     request,
+                                    adIdPermission,
                                     getRegistrant(request.getAppPackageName()),
                                     requestTime,
-                                    mEnrollmentDao,
-                                    mDatastoreManager)
+                                    request.getRegistrationType()
+                                                    == RegistrationRequest.REGISTER_TRIGGER
+                                            ? null
+                                            : getSourceType(
+                                                    request.getInputEvent(),
+                                                    request.getRequestTime()),
+                                    mDatastoreManager,
+                                    mContentResolver)
                             ? STATUS_SUCCESS
                             : STATUS_IO_ERROR;
 
@@ -172,7 +183,10 @@ public final class MeasurementImpl {
      * Processes a source registration request delegated to OS from the caller, e.g. Chrome,
      * returning a status code.
      */
-    int registerWebSource(@NonNull WebSourceRegistrationRequestInternal request, long requestTime) {
+    int registerWebSource(
+            @NonNull WebSourceRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
                 request.getSourceRegistrationRequest();
         if (!isValid(sourceRegistrationRequest)) {
@@ -184,11 +198,14 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webSourceRegistrationRequest(
                             sourceRegistrationRequest,
-                            request.isAdIdPermissionGranted(),
+                            adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
-                            mEnrollmentDao,
-                            mDatastoreManager);
+                            getSourceType(
+                                    sourceRegistrationRequest.getInputEvent(),
+                                    request.getRequestTime()),
+                            mDatastoreManager,
+                            mContentResolver);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
             } else {
@@ -205,7 +222,9 @@ public final class MeasurementImpl {
      * returning a status code.
      */
     int registerWebTrigger(
-            @NonNull WebTriggerRegistrationRequestInternal request, long requestTime) {
+            @NonNull WebTriggerRegistrationRequestInternal request,
+            boolean adIdPermission,
+            long requestTime) {
         WebTriggerRegistrationRequest triggerRegistrationRequest =
                 request.getTriggerRegistrationRequest();
         if (!isValid(triggerRegistrationRequest)) {
@@ -217,11 +236,11 @@ public final class MeasurementImpl {
             boolean enqueueStatus =
                     EnqueueAsyncRegistration.webTriggerRegistrationRequest(
                             triggerRegistrationRequest,
-                            request.isAdIdPermissionGranted(),
+                            adIdPermission,
                             getRegistrant(request.getAppPackageName()),
                             requestTime,
-                            mEnrollmentDao,
-                            mDatastoreManager);
+                            mDatastoreManager,
+                            mContentResolver);
             if (enqueueStatus) {
                 return STATUS_SUCCESS;
             } else {
@@ -242,24 +261,15 @@ public final class MeasurementImpl {
         mReadWriteLock.readLock().lock();
         try {
             boolean deleteResult = mMeasurementDataDeleter.delete(request);
+            if (deleteResult) {
+                markDeletionInSystemService();
+            }
             return deleteResult ? STATUS_SUCCESS : STATUS_INTERNAL_ERROR;
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete registration received invalid parameters");
             return STATUS_INVALID_ARGUMENT;
         } finally {
             mReadWriteLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Implement a getMeasurementApiStatus request, returning a result code.
-     */
-    @MeasurementManager.MeasurementApiState int getMeasurementApiStatus() {
-        AdServicesApiConsent consent = ConsentManager.getInstance(mContext).getConsent();
-        if (consent.isGiven()) {
-            return MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
-        } else {
-            return MeasurementManager.MEASUREMENT_API_STATE_DISABLED;
         }
     }
 
@@ -271,10 +281,15 @@ public final class MeasurementImpl {
         LogUtil.d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction((dao) -> {
-                dao.deleteAppRecords(appUri);
-                dao.undoInstallAttribution(appUri);
-            });
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> {
+                                dao.undoInstallAttribution(appUri);
+                                return dao.deleteAppRecords(appUri);
+                            });
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } catch (NullPointerException | IllegalArgumentException e) {
             LogUtil.e(e, "Delete package records received invalid parameters");
         } finally {
@@ -295,6 +310,7 @@ public final class MeasurementImpl {
             LogUtil.v(
                     "All data is cleared for Measurement API except: %s",
                     tablesToExclude.toString());
+            markDeletionInSystemService();
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -305,8 +321,12 @@ public final class MeasurementImpl {
         List<Uri> installedApplicationsList = getCurrentInstalledApplicationsList(mContext);
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastoreManager.runInTransaction(
-                    (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+            Optional<Boolean> didDeletionOccurOpt =
+                    mDatastoreManager.runInTransactionWithResult(
+                            (dao) -> dao.deleteAppRecordsNotPresent(installedApplicationsList));
+            if (didDeletionOccurOpt.isPresent() && didDeletionOccurOpt.get()) {
+                markDeletionInSystemService();
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -315,8 +335,8 @@ public final class MeasurementImpl {
     private List<Uri> getCurrentInstalledApplicationsList(Context context) {
         PackageManager packageManager = context.getPackageManager();
         List<ApplicationInfo> applicationInfoList =
-                packageManager.getInstalledApplications(
-                        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA));
+                PackageManagerCompatUtils.getInstalledApplications(
+                        packageManager, PackageManager.GET_META_DATA);
         return applicationInfoList.stream()
                 .map(applicationInfo -> Uri.parse("android-app://" + applicationInfo.packageName))
                 .collect(Collectors.toList());
@@ -422,5 +442,48 @@ public final class MeasurementImpl {
 
     private interface AppVendorPackages {
         String PLAY_STORE = "com.android.vending";
+    }
+
+    /**
+     * Checks if the module was rollback and if there was a deletion in the version rolled back
+     * from. If there was, delete all measurement data to prioritize user privacy.
+     */
+    private void deleteOnRollback() {
+        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
+            LogUtil.e("Rollback deletion is disabled. Not checking system server for rollback.");
+            return;
+        }
+
+        LogUtil.d("Checking rollback status.");
+        boolean needsToHandleRollbackReconciliation =
+                AdServicesManager.getInstance(mContext)
+                        .needsToHandleRollbackReconciliation(
+                                AdServicesManager.MEASUREMENT_DELETION);
+        if (needsToHandleRollbackReconciliation) {
+            LogUtil.d("Rollback and deletion detected, deleting all measurement data.");
+            mReadWriteLock.writeLock().lock();
+            try {
+                mDatastoreManager.runInTransaction(
+                        (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+            } finally {
+                mReadWriteLock.writeLock().unlock();
+            }
+        }
+    }
+
+    /**
+     * Stores a bit in the system server indicating that a deletion happened for the current
+     * AdServices module version. This information is used for deleting data after it has been
+     * restored by a module rollback.
+     */
+    private void markDeletionInSystemService() {
+        if (FlagsFactory.getFlags().getMeasurementRollbackDeletionKillSwitch()) {
+            LogUtil.e("Rollback deletion is disabled. Not storing status in system server.");
+            return;
+        }
+
+        LogUtil.d("Marking deletion in system server.");
+        AdServicesManager.getInstance(mContext)
+                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
     }
 }
