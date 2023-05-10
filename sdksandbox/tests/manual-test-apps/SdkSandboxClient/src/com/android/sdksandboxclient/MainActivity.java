@@ -101,12 +101,12 @@ public class MainActivity extends AppCompatActivity {
     private Button mNewBannerAdButton;
     private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
-    private Button mPlayVideoButton;
     private Button mSyncKeysButton;
     private Button mSdkToSdkCommButton;
     private Button mNewFullScreenAd;
 
-    private SurfaceView mBottomView;
+    private SurfaceView mInScrollBannerView;
+    private SurfaceView mBottomBannerView;
 
     private SandboxedSdk mSandboxedSdk;
     private SharedPreferences mSharedPreferences;
@@ -136,9 +136,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
 
-        mBottomView = findViewById(R.id.bottom_view);
-        mBottomView.setZOrderOnTop(true);
-        mBottomView.setVisibility(View.INVISIBLE);
+        mBottomBannerView = findViewById(R.id.bottom_banner_view);
+        mBottomBannerView.setZOrderOnTop(true);
+        mBottomBannerView.setVisibility(View.INVISIBLE);
+
+        mInScrollBannerView = findViewById(R.id.in_scroll_banner_view);
+        mInScrollBannerView.setZOrderOnTop(true);
+        mInScrollBannerView.setVisibility(View.INVISIBLE);
 
         mLoadSdksButton = findViewById(R.id.load_sdks_button);
         mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
@@ -256,15 +260,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerNewBannerAdButton() {
-        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
-                new RequestSurfacePackageReceiver();
         mNewBannerAdButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
                         final BannerOptions options =
                                 BannerOptions.fromSharedPreferences(mSharedPreferences);
                         Log.i(TAG, options.toString());
-                        final Bundle params = getRequestSurfacePackageParams(null);
+
+                        final SurfaceView surfaceView =
+                                (options.getPlacement() == BannerOptions.Placement.BOTTOM)
+                                        ? mBottomBannerView
+                                        : mInScrollBannerView;
+
+                        final OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
+                                new RequestSurfacePackageReceiver(surfaceView);
+
+                        final Bundle params = getRequestSurfacePackageParams(null, surfaceView);
 
                         switch (options.getViewType()) {
                             case INFLATED -> {
@@ -360,12 +371,13 @@ public class MainActivity extends AppCompatActivity {
                         builder.setPositiveButton(
                                 "Request SP",
                                 (dialog, which) -> {
+                                    final SurfaceView view = mBottomBannerView;
                                     OutcomeReceiver<Bundle, RequestSurfacePackageException>
-                                            receiver = new RequestSurfacePackageReceiver();
+                                            receiver = new RequestSurfacePackageReceiver(view);
                                     mSdkSandboxManager.requestSurfacePackage(
                                             SDK_NAME,
                                             getRequestSurfacePackageParams(
-                                                    dropdown.getSelectedItem().toString()),
+                                                    dropdown.getSelectedItem().toString(), view),
                                             Runnable::run,
                                             receiver);
                                 });
@@ -467,12 +479,12 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    private Bundle getRequestSurfacePackageParams(String commType) {
+    private Bundle getRequestSurfacePackageParams(String commType, SurfaceView surfaceView) {
         Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, mBottomView.getWidth());
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mBottomView.getHeight());
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, surfaceView.getWidth());
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, surfaceView.getHeight());
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
-        params.putBinder(EXTRA_HOST_TOKEN, mBottomView.getHostToken());
+        params.putBinder(EXTRA_HOST_TOKEN, surfaceView.getHostToken());
         params.putString(EXTRA_SDK_SDK_ENABLED_KEY, commType);
         return params;
     }
@@ -514,14 +526,20 @@ public class MainActivity extends AppCompatActivity {
     private class RequestSurfacePackageReceiver
             implements OutcomeReceiver<Bundle, RequestSurfacePackageException> {
 
+        private final SurfaceView mSurfaceView;
+
+        private RequestSurfacePackageReceiver(SurfaceView surfaceView) {
+            mSurfaceView = surfaceView;
+        }
+
         @Override
         public void onResult(Bundle result) {
             sHandler.post(
                     () -> {
                         SurfacePackage surfacePackage =
                                 result.getParcelable(EXTRA_SURFACE_PACKAGE, SurfacePackage.class);
-                        mBottomView.setChildSurfacePackage(surfacePackage);
-                        mBottomView.setVisibility(View.VISIBLE);
+                        mSurfaceView.setChildSurfacePackage(surfacePackage);
+                        mSurfaceView.setVisibility(View.VISIBLE);
                     });
             toastAndLog(INFO, "Rendered surface view");
         }

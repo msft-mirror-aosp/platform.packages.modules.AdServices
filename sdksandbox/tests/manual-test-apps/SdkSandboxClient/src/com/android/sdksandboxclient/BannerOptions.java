@@ -31,7 +31,8 @@ public class BannerOptions {
     }
 
     public enum Placement {
-        BOTTOM
+        BOTTOM,
+        SCROLL_VIEW
     }
 
     private final ViewType mViewType;

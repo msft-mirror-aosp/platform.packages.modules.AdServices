@@ -27,6 +27,7 @@
     </array>
     <array name="banner_placement">
         <item>Bottom of screen</item>
+        <item>In Scroll View</item>
     </array>
     <!-- Values for the options, matching the enum names. -->
     <array name="banner_view_type_values">
@@ -39,5 +40,6 @@
     </array>
     <array name="banner_placement_values">
         <item>BOTTOM</item>
+        <item>SCROLL_VIEW</item>
     </array>
 </resources>
