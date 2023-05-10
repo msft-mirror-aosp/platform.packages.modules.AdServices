@@ -19,7 +19,7 @@ package com.android.adservices.service.common;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.FlagsFactory;
@@ -30,6 +30,7 @@ import java.time.Instant;
 
 /** Utility class to perform Fledge maintenance tasks */
 public class FledgeMaintenanceTasksWorker {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private AdSelectionEntryDao mAdSelectionEntryDao;
 
     @VisibleForTesting
@@ -56,13 +57,13 @@ public class FledgeMaintenanceTasksWorker {
                 Clock.systemUTC()
                         .instant()
                         .minusSeconds(FlagsFactory.getFlags().getAdSelectionExpirationWindowS());
-        LogUtil.v("Clearing expired Ad Selection data");
+        sLogger.v("Clearing expired Ad Selection data");
         mAdSelectionEntryDao.removeExpiredAdSelection(expirationTime);
 
-        LogUtil.v("Clearing expired Buyer Decision Logic data ");
+        sLogger.v("Clearing expired Buyer Decision Logic data ");
         mAdSelectionEntryDao.removeExpiredBuyerDecisionLogic();
 
-        LogUtil.v("Clearing expired Registered Ad Interaction data ");
+        sLogger.v("Clearing expired Registered Ad Interaction data ");
         mAdSelectionEntryDao.removeExpiredRegisteredAdInteractions();
     }
 }

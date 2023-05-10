@@ -154,6 +154,13 @@ public final class SdkSandboxManager {
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
 
     private static final String TAG = "SdkSandboxManager";
+    private TimeProvider mTimeProvider;
+
+    static class TimeProvider {
+        long getCurrentTime() {
+            return System.currentTimeMillis();
+        }
+    }
 
     /** @hide */
     @IntDef(
@@ -269,6 +276,7 @@ public final class SdkSandboxManager {
         mService = Objects.requireNonNull(binder, "binder should not be null");
         // TODO(b/239403323): There can be multiple package in the same app process
         mSyncManager = SharedPreferencesSyncManager.getInstance(context, binder);
+        mTimeProvider = new TimeProvider();
     }
 
     /** Returns the current state of the availability of the SDK sandbox feature. */
@@ -296,7 +304,7 @@ public final class SdkSandboxManager {
      * Adds a callback which gets registered for SDK sandbox lifecycle events, such as SDK sandbox
      * death. If the sandbox has not yet been created when this is called, the request will be
      * stored until a sandbox is created, at which point it is activated for that sandbox. Multiple
-     * callbacks can be added to detect death.
+     * callbacks can be added to detect death and will not be removed when the sandbox dies.
      *
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive SDK sandbox
@@ -368,7 +376,9 @@ public final class SdkSandboxManager {
             @NonNull AppOwnedSdkSandboxInterface appOwnedSdkSandboxInterface) {
         try {
             mService.registerAppOwnedSdkSandboxInterface(
-                    mContext.getPackageName(), appOwnedSdkSandboxInterface);
+                    mContext.getPackageName(),
+                    appOwnedSdkSandboxInterface,
+                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -381,7 +391,10 @@ public final class SdkSandboxManager {
      */
     public void unregisterAppOwnedSdkSandboxInterface(@NonNull String name) {
         try {
-            mService.unregisterAppOwnedSdkSandboxInterface(mContext.getPackageName(), name);
+            mService.unregisterAppOwnedSdkSandboxInterface(
+                    mContext.getPackageName(),
+                    name,
+                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -395,7 +408,9 @@ public final class SdkSandboxManager {
      */
     public @NonNull List<AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces() {
         try {
-            return mService.getAppOwnedSdkSandboxInterfaces(mContext.getPackageName());
+            return mService.getAppOwnedSdkSandboxInterfaces(
+                    mContext.getPackageName(),
+                    /*timeAppCalledSystemServer=*/ mTimeProvider.getCurrentTime());
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

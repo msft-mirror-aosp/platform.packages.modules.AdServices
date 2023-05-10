@@ -34,6 +34,8 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.BuyerReportingResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.ReportingScriptResult;
 import com.android.adservices.service.adselection.ReportImpressionScriptEngine.SellerReportingResult;
@@ -63,6 +65,18 @@ public class ReportImpressionScriptEngineTest {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private final ExecutorService mExecutorService = Executors.newFixedThreadPool(1);
     IsolateSettings mIsolateSettings = IsolateSettings.forMaxHeapSizeEnforcementDisabled();
+    private static final Flags TEST_FLAGS = FlagsFactory.getFlagsForTest();
+    private static final Flags FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE =
+            new Flags() {
+                @Override
+                public long getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount() {
+                    return 2;
+                }
+            };
+
+    private final long mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount =
+            TEST_FLAGS.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
+
     private ReportImpressionScriptEngine mReportImpressionScriptEngine;
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -107,6 +121,10 @@ public class ReportImpressionScriptEngineTest {
                     .setInteractionReportingUri(HOVER_URI)
                     .build();
 
+    // Only used for setup, so no need to use the real impl for now
+    private static final AdDataArgumentUtil AD_DATA_ARGUMENT_UTIL =
+            new AdDataArgumentUtil(new AdCounterKeyCopierNoOpImpl());
+
     @Before
     public void setUp() {
         // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
@@ -114,13 +132,14 @@ public class ReportImpressionScriptEngineTest {
         // certain minimum version. Marking that as an assumption that the test is making.
         Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
 
-        mReportImpressionScriptEngine = initEngine(true);
+        mReportImpressionScriptEngine =
+                initEngine(true, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
     }
 
     @Test
     public void testCanCallScript() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
         final ReportingScriptResult result =
                 callReportingEngine(
                         "function helloAdvert(ad) { return {'status': 0, 'results': {'result':"
@@ -134,7 +153,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsJSExecutionExceptionIfFunctionNotFound() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -152,7 +171,7 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
-        args.add(AdDataArgument.asScriptArgument("ignored", AD_DATA));
+        args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
 
         Exception exception =
                 assertThrows(
@@ -192,7 +211,8 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testReportResultSuccessfulCaseRegisterAdBeaconDisabled() throws Exception {
         // Re init engine
-        mReportImpressionScriptEngine = initEngine(false);
+        mReportImpressionScriptEngine =
+                initEngine(false, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
 
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -275,7 +295,8 @@ public class ReportImpressionScriptEngineTest {
     public void testReportResultFailsWhenCallingRegisterAdBeaconWhenFlagDisabled()
             throws Exception {
         // Re init engine
-        mReportImpressionScriptEngine = initEngine(false);
+        mReportImpressionScriptEngine =
+                initEngine(false, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
 
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
@@ -433,6 +454,42 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    public void testReportResultSuccessfulCaseDoesNotExceedInteractionReportingUrisMaxSize()
+            throws Exception {
+        // Re-init Engine with smaller max size
+        mReportImpressionScriptEngine =
+                initEngine(
+                        true,
+                        FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE
+                                .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
+
+        String jsScript =
+                "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
+                        + "{\n"
+                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
+                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "    registerAdBeacon('hold', 'https://domain.com/hold');\n"
+                        + " return {'status': 0, 'results': {'signals_for_buyer':"
+                        + " '{\"seller\":\"' + ad_selection_config.seller + '\"}', "
+                        + "'reporting_uri': 'https://domain.com/reporting' } };\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        double bid = 5;
+
+        final SellerReportingResult result =
+                reportResult(jsScript, adSelectionConfig, TEST_DOMAIN_URI, bid, mContextualSignals);
+
+        assertEquals(REPORTING_URI, result.getReportingUri());
+
+        assertThat(
+                        AdSelectionSignals.fromString(
+                                SELLER_KEY + adSelectionConfig.getSeller() + "\"}"))
+                .isEqualTo(result.getSignalsForBuyer());
+
+        assertEquals(2, result.getInteractionReportingUris().size());
+    }
+
+    @Test
     public void testReportResultFailedStatusCase() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -560,7 +617,8 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testReportWinSuccessfulCaseRegisterAdBeaconEnabledDisabled() throws Exception {
         // Re init engine
-        mReportImpressionScriptEngine = initEngine(false);
+        mReportImpressionScriptEngine =
+                initEngine(false, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
 
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -635,7 +693,8 @@ public class ReportImpressionScriptEngineTest {
     @Test
     public void testReportWinFailsWhenCallingRegisterAdBeaconFlagDisabled() throws Exception {
         // Re init engine
-        mReportImpressionScriptEngine = initEngine(false);
+        mReportImpressionScriptEngine =
+                initEngine(false, mFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount);
 
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
@@ -780,6 +839,39 @@ public class ReportImpressionScriptEngineTest {
     }
 
     @Test
+    public void testReportWinSuccessfulCaseDoesNotExceedInteractionReportingUrisMaxSize()
+            throws Exception {
+        // Re-init Engine with smaller max size
+        mReportImpressionScriptEngine =
+                initEngine(
+                        true,
+                        FLAGS_WITH_SMALLER_MAX_ARRAY_SIZE
+                                .getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount());
+
+        String jsScript =
+                "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
+                        + "contextual_signals, custom_audience_signals) {\n"
+                        + "    registerAdBeacon('click', 'https://domain.com/click');\n"
+                        + "    registerAdBeacon('hover', 'https://domain.com/hover');\n"
+                        + "    registerAdBeacon('hold', 'https://domain.com/hold');\n"
+                        + "    return {'status': 0, 'results': {'reporting_uri': 'https://domain"
+                        + ".com/reporting' }};\n"
+                        + "}";
+        AdSelectionConfig adSelectionConfig = AdSelectionConfigFixture.anAdSelectionConfig();
+        final BuyerReportingResult result =
+                reportWin(
+                        jsScript,
+                        adSelectionConfig.getAdSelectionSignals(),
+                        adSelectionConfig.getPerBuyerSignals().get(BUYER_1),
+                        mSignalsForBuyer,
+                        adSelectionConfig.getSellerSignals(),
+                        mCustomAudienceSignals);
+        assertEquals(REPORTING_URI, result.getReportingUri());
+
+        assertEquals(2, result.getInteractionReportingUris().size());
+    }
+
+    @Test
     public void testReportWinFailedStatusCase() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
@@ -908,13 +1000,15 @@ public class ReportImpressionScriptEngineTest {
         T get() throws Exception;
     }
 
-    private ReportImpressionScriptEngine initEngine(boolean registerAdBeaconEnabled) {
+    private ReportImpressionScriptEngine initEngine(
+            boolean registerAdBeaconEnabled, long maxInteractionReportingUrisSize) {
         ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelper
                 registerAdBeaconScriptEngineHelper;
 
         if (registerAdBeaconEnabled) {
             registerAdBeaconScriptEngineHelper =
-                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled();
+                    new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperEnabled(
+                            maxInteractionReportingUrisSize);
         } else {
             registerAdBeaconScriptEngineHelper =
                     new ReportImpressionScriptEngine.RegisterAdBeaconScriptEngineHelperDisabled();

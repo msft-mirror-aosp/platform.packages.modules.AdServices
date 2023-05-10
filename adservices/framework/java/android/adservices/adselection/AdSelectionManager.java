@@ -37,7 +37,7 @@ import android.os.TransactionTooLargeException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.Objects;
@@ -51,6 +51,7 @@ import java.util.concurrent.TimeoutException;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     /**
      * Constant that represents the service name for {@link AdSelectionManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -192,11 +193,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -223,8 +224,20 @@ public class AdSelectionManager {
      *       AdSelectionManager#selectAds} calls originated from the same application. Otherwise,
      *       {@link IllegalArgumentException} for input validation will raise listing violating ad
      *       selection ids.
-     *   <li>{@code Selection logic URI} should match the {@code seller} host. Otherwise, {@link
-     *       IllegalArgumentException} will be thrown.
+     *   <li>{@code Selection logic URI} that could follow either the HTTPS or Ad Selection Prebuilt
+     *       schemas.
+     *       <p>If the URI follows HTTPS schema then the host should match the {@code seller}.
+     *       Otherwise, {@link IllegalArgumentException} will be thrown.
+     *       <p>Prebuilt URIs are a way of substituting a generic pre-built logics for the required
+     *       JavaScripts for {@code selectOutcome}. Prebuilt Uri for this endpoint should follow;
+     *       <ul>
+     *         <li>{@code
+     *             ad-selection-prebuilt://ad-selection-from-outcomes/<name>?<script-generation-parameters>}
+     *       </ul>
+     *       <p>If an unsupported prebuilt URI is passed or prebuilt URI feature is disabled by the
+     *       service then {@link IllegalArgumentException} will be thrown.
+     *       <p>See {@link AdSelectionFromOutcomesConfig.Builder#setSelectionLogicUri} for supported
+     *       {@code <name>} and required {@code <script-generation-parameters>}.
      * </ul>
      *
      * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
@@ -292,19 +305,63 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Failure of AdSelection service.");
+            sLogger.e(e, "Failure of AdSelection service.");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Report the given impression. The {@link ReportImpressionRequest} is provided by the Ads SDK.
-     * The receiver either returns a {@code void} for a successful run, or an {@link Exception}
-     * indicates the error.
+     * Notifies the service that there is a new impression to report for the ad selected by the
+     * ad-selection run identified by {@code adSelectionId}. There is no guarantee about when the
+     * impression will be reported. The impression reporting could be delayed and reports could be
+     * batched.
+     *
+     * <p>To calculate the winning seller reporting URL, the service fetches the seller's JavaScript
+     * logic from the {@link AdSelectionConfig#getDecisionLogicUri()} found at {@link
+     * ReportImpressionRequest#getAdSelectionConfig()}. Then, the service executes one of the
+     * functions found in the seller JS called {@code reportResult}, providing on-device signals as
+     * well as {@link ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
+     *
+     * <p>The function definition of {@code reportResult} is:
+     *
+     * <p>{@code function reportResult(ad_selection_config, render_url, bid, contextual_signals) {
+     * return { 'status': status, 'results': {'signals_for_buyer': signals_for_buyer,
+     * 'reporting_url': reporting_url } }; } }
+     *
+     * <p>To calculate the winning buyer reporting URL, the service fetches the winning buyer's
+     * JavaScript logic which is fetched via the buyer's {@link
+     * android.adservices.customaudience.CustomAudience#getBiddingLogicUri()}. Then, the service
+     * executes one of the functions found in the buyer JS called {@code reportWin}, providing
+     * on-device signals, {@code signals_for_buyer} calculated by {@code reportResult}, and specific
+     * fields from {@link ReportImpressionRequest#getAdSelectionConfig()} as input parameters.
+     *
+     * <p>The function definition of {@code reportWin} is:
+     *
+     * <p>{@code function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,
+     * contextual_signals, custom_audience_reporting_signals) { return {'status': 0, 'results':
+     * {'reporting_url': reporting_url } }; } }
+     *
+     * <p>The output is passed by the {@code receiver}, which either returns an empty {@link Object}
+     * for a successful run, or an {@link Exception} includes the type of the exception thrown and
+     * the corresponding error message.
+     *
+     * <p>If the {@link IllegalArgumentException} is thrown, it is caused by invalid input argument
+     * the API received to report the impression.
+     *
+     * <p>If the {@link IllegalStateException} is thrown with error message "Failure of AdSelection
+     * services.", it is caused by an internal failure of the ad selection service.
+     *
+     * <p>If the {@link LimitExceededException} is thrown, it is caused when the calling package
+     * exceeds the allowed rate limits and is throttled.
+     *
+     * <p>If the {@link SecurityException} is thrown, it is caused when the caller is not authorized
+     * or permission is not requested.
+     *
+     * <p>Impressions will be reported at most once as a best-effort attempt.
      */
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportImpression(
@@ -339,11 +396,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -410,11 +467,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
@@ -478,17 +535,18 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service.");
+            sLogger.e(e, "Unable to find the AdSelection service.");
             receiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service.", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Exception");
+            sLogger.e(e, "Exception");
             receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
         }
     }
 
     /**
-     * Updates the counter histograms for an ad.
+     * Updates the counter histograms for an ad which was previously selected by a call to {@link
+     * #selectAds(AdSelectionConfig, Executor, OutcomeReceiver)}.
      *
      * <p>The counter histograms are used in ad selection to inform frequency cap filtering on
      * candidate ads, where ads whose frequency caps are met or exceeded are removed from the
@@ -552,11 +610,11 @@ public class AdSelectionManager {
                         }
                     });
         } catch (NullPointerException e) {
-            LogUtil.e(e, "Unable to find the AdSelection service");
+            sLogger.e(e, "Unable to find the AdSelection service");
             outcomeReceiver.onError(
                     new IllegalStateException("Unable to find the AdSelection service", e));
         } catch (RemoteException e) {
-            LogUtil.e(e, "Remote exception encountered while updating ad counter histogram");
+            sLogger.e(e, "Remote exception encountered while updating ad counter histogram");
             outcomeReceiver.onError(new IllegalStateException("Failure of AdSelection service", e));
         }
     }

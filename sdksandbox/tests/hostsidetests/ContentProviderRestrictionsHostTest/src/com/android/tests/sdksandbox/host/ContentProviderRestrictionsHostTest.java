@@ -63,6 +63,11 @@ public class ContentProviderRestrictionsHostTest extends BaseHostJUnit4Test {
     }
 
     @Test
+    public void testGetWebViewContentProvider_restrictionsApplied() throws Exception {
+        runPhase("testGetWebViewContentProvider_restrictionsApplied");
+    }
+
+    @Test
     public void testRegisterContentObserver_restrictionsApplied() throws Exception {
         runPhase("testRegisterContentObserver_restrictionsApplied");
     }

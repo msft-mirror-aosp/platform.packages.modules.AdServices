@@ -21,16 +21,17 @@ import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SandboxedSdkProvider;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.os.Binder;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
 public class UiProvider extends SandboxedSdkProvider {
 
+    private boolean mWasClicked = false;
+
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
-        return new SandboxedSdk(new Binder());
+        return new SandboxedSdk(new UiProviderApiImpl());
     }
 
     @Override
@@ -38,6 +39,21 @@ public class UiProvider extends SandboxedSdkProvider {
         ImageView view = new ImageView(getContext());
         Drawable drawable = getContext().getDrawable(R.drawable.colors);
         view.setImageDrawable(drawable);
+        view.setOnClickListener(
+                v -> {
+                    mWasClicked = true;
+                });
         return view;
+    }
+
+    private boolean wasViewClicked() {
+        return mWasClicked;
+    }
+
+    class UiProviderApiImpl extends IUiProviderApi.Stub {
+        @Override
+        public boolean wasViewClicked() {
+            return UiProvider.this.wasViewClicked();
+        }
     }
 }

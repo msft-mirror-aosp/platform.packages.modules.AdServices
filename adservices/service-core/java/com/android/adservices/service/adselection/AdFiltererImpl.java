@@ -16,25 +16,45 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.FrequencyCapFilters;
+import android.adservices.common.KeyedFrequencyCap;
 import android.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
+import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.profiling.Tracing;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
 
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    @NonNull private final Clock mClock;
     @NonNull private final AppInstallDao mAppInstallDao;
+    @NonNull private final FrequencyCapDao mFrequencyCapDao;
 
-    public AdFiltererImpl(@NonNull AppInstallDao appInstallDao) {
+    public AdFiltererImpl(
+            @NonNull AppInstallDao appInstallDao,
+            @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull Clock clock) {
         Objects.requireNonNull(appInstallDao);
+        Objects.requireNonNull(frequencyCapDao);
+        Objects.requireNonNull(clock);
         mAppInstallDao = appInstallDao;
+        mFrequencyCapDao = frequencyCapDao;
+        mClock = clock;
     }
 
     /**
@@ -50,51 +70,96 @@ public final class AdFiltererImpl implements AdFilterer {
      */
     @Override
     public List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas) {
-        List<DBCustomAudience> toReturn = new ArrayList<>();
-        for (DBCustomAudience ca : cas) {
-            List<DBAdData> filteredAds = new ArrayList<>();
-            for (DBAdData ad : ca.getAds()) {
-                if (shouldAdBeFiltered(ad, ca.getBuyer())) {
-                    filteredAds.add(ad);
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CA);
+        try {
+            List<DBCustomAudience> toReturn = new ArrayList<>();
+            Instant currentTime = mClock.instant();
+            sLogger.v("Applying filters to %d CAs with current time %s.", cas.size(), currentTime);
+            int totalAds = 0;
+            int remainingAds = 0;
+            for (DBCustomAudience ca : cas) {
+                List<DBAdData> filteredAds = new ArrayList<>();
+                totalAds += ca.getAds().size();
+                for (DBAdData ad : ca.getAds()) {
+                    if (doesAdPassFilters(
+                            ad, ca.getBuyer(), ca.getOwner(), ca.getName(), currentTime)) {
+                        filteredAds.add(ad);
+                    }
+                }
+                if (!filteredAds.isEmpty()) {
+                    toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
+                    remainingAds += filteredAds.size();
                 }
             }
-            if (!filteredAds.isEmpty()) {
-                toReturn.add(new DBCustomAudience.Builder(ca).setAds(filteredAds).build());
-            }
+            sLogger.v(
+                    "Filtering finished. %d CAs of the original %d remain. "
+                            + "%d Ads of the original %d remain.",
+                    toReturn.size(), cas.size(), remainingAds, totalAds);
+            return toReturn;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTER_CA, traceCookie);
         }
-        return toReturn;
     }
 
     /**
-     * Takes a list of ads, and returns a new list with the ads that should not be in the auction
-     * removed.
+     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
+     * auction
      *
-     * <p>Note that DBAdData objects are shallow copied to the new list.
-     *
-     * @param ads The list of ads to filter.
-     * @param buyer The buyer adtech who is trying to display the ad.
-     * @return A list of ads identical to the ads input, but with any ads that should be filtered
-     *     removed.
+     * @param contextualAds An object containing contextual ads corresponding to a buyer
+     * @return A list of object identical to the input, but without any ads that should be filtered
      */
     @Override
-    public List<DBAdData> filterContextualAds(List<DBAdData> ads, AdTechIdentifier buyer) {
-        List<DBAdData> toReturn = new ArrayList<>();
-        for (DBAdData ad : ads) {
-            if (shouldAdBeFiltered(ad, buyer)) {
-                toReturn.add(ad);
+    public ContextualAds filterContextualAds(ContextualAds contextualAds) {
+        final int traceCookie = Tracing.beginAsyncSection(Tracing.FILTER_CONTEXTUAL);
+        try {
+            List<AdWithBid> adsList = new ArrayList<>();
+            Instant currentTime = mClock.instant();
+            sLogger.v(
+                    "Applying filters to %d contextual ads with current time %s.",
+                    contextualAds.getAdsWithBid().size(), currentTime);
+            for (AdWithBid ad : contextualAds.getAdsWithBid()) {
+                DBAdData dbAdData =
+                        new DBAdData(
+                                ad.getAdData().getRenderUri(),
+                                ad.getAdData().getMetadata(),
+                                ad.getAdData().getAdCounterKeys(),
+                                ad.getAdData().getAdFilters());
+                if (doesAdPassFilters(
+                        dbAdData, contextualAds.getBuyer(), null, null, currentTime)) {
+                    adsList.add(ad);
+                }
             }
+            sLogger.v(
+                    "Filtering finished. %d contextual ads of the original %d remain.",
+                    adsList.size(), contextualAds.getAdsWithBid().size());
+            ContextualAds toReturn =
+                    new ContextualAds.Builder()
+                            .setAdsWithBid(adsList)
+                            .setDecisionLogicUri(contextualAds.getDecisionLogicUri())
+                            .setBuyer(contextualAds.getBuyer())
+                            .build();
+
+            return toReturn;
+        } finally {
+            Tracing.endAsyncSection(Tracing.FILTER_CONTEXTUAL, traceCookie);
         }
-        return toReturn;
     }
 
-    private boolean shouldAdBeFiltered(DBAdData ad, AdTechIdentifier buyer) {
+    private boolean doesAdPassFilters(
+            DBAdData ad,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
         if (ad.getAdFilters() == null) {
             return true;
         }
-        return shouldAppInstallAdBeFiltered(ad, buyer);
+        return doesAdPassAppInstallFilters(ad, buyer)
+                && doesAdPassFrequencyCapFilters(
+                        ad, buyer, customAudienceOwner, customAudienceName, currentTime);
     }
 
-    private boolean shouldAppInstallAdBeFiltered(DBAdData ad, AdTechIdentifier buyer) {
+    private boolean doesAdPassAppInstallFilters(DBAdData ad, AdTechIdentifier buyer) {
         /* This could potentially be optimized by grouping the ads by package name before running
          * the queries, but unless the DB cache is playing poorly with these queries there might
          * not be a major performance improvement.
@@ -107,6 +172,111 @@ public final class AdFiltererImpl implements AdFilterer {
                 return false;
             }
         }
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFilters(
+            DBAdData ad,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
+        if (ad.getAdFilters().getFrequencyCapFilters() == null) {
+            return true;
+        }
+
+        FrequencyCapFilters filters = ad.getAdFilters().getFrequencyCapFilters();
+
+        // TODO(b/265205439): Compare the performance of loading the histograms once for each custom
+        //  audience and buyer versus querying for every filter
+
+        // Contextual ads cannot filter on win-typed events
+        boolean adIsFromCustomAudience =
+                (customAudienceOwner != null) && (customAudienceName != null);
+        if (adIsFromCustomAudience
+                && !filters.getKeyedFrequencyCapsForWinEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForWinType(
+                        filters.getKeyedFrequencyCapsForWinEvents(),
+                        buyer,
+                        customAudienceOwner,
+                        customAudienceName,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForImpressionEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForImpressionEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForViewEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForViewEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        if (!filters.getKeyedFrequencyCapsForClickEvents().isEmpty()
+                && !doesAdPassFrequencyCapFiltersForNonWinType(
+                        filters.getKeyedFrequencyCapsForClickEvents(),
+                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                        buyer,
+                        currentTime)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFiltersForWinType(
+            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            AdTechIdentifier buyer,
+            String customAudienceOwner,
+            String customAudienceName,
+            Instant currentTime) {
+        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+            Instant intervalStartTime =
+                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+            int numEventsSinceStartTime =
+                    mFrequencyCapDao.getNumEventsForCustomAudienceAfterTime(
+                            frequencyCap.getAdCounterKey(),
+                            buyer,
+                            customAudienceOwner,
+                            customAudienceName,
+                            FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                            intervalStartTime);
+
+            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private boolean doesAdPassFrequencyCapFiltersForNonWinType(
+            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            int adEventType,
+            AdTechIdentifier buyer,
+            Instant currentTime) {
+        for (KeyedFrequencyCap frequencyCap : keyedFrequencyCaps) {
+            Instant intervalStartTime =
+                    currentTime.minusMillis(frequencyCap.getInterval().toMillis());
+            int numEventsSinceStartTime =
+                    mFrequencyCapDao.getNumEventsForBuyerAfterTime(
+                            frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
+
+            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+                return false;
+            }
+        }
+
         return true;
     }
 }

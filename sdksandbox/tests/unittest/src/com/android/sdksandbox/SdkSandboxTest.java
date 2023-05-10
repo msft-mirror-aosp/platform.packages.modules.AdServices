@@ -195,17 +195,34 @@ public class SdkSandboxTest {
     @Test
     public void testLoadingSuccess() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
         loadSdkCallback.assertLoadSdkIsSuccessful();
+    }
+
+    @Test
+    public void testLoadingWithoutInitializingFails() throws Exception {
+        LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.loadSdk(
+                CLIENT_PACKAGE_NAME,
+                mApplicationInfo,
+                SDK_NAME,
+                SDK_PROVIDER_CLASS,
+                new ApplicationInfo(),
+                new Bundle(),
+                loadSdkCallback,
+                SANDBOX_LATENCY_INFO);
+        loadSdkCallback.assertLoadSdkIsUnsuccessful();
+        assertThat(loadSdkCallback.mErrorCode)
+                .isEqualTo(ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR);
     }
 
     private void createFileInPaths(List<String> paths) throws IOException {
@@ -251,13 +268,13 @@ public class SdkSandboxTest {
     @Test
     public void testDuplicateLoadingFails() throws Exception {
         LoadSdkCallback loadSdkCallback1 = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback1,
                 SANDBOX_LATENCY_INFO);
@@ -269,8 +286,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback2,
                 SANDBOX_LATENCY_INFO);
@@ -284,13 +300,13 @@ public class SdkSandboxTest {
     @Test
     public void testRequestSurfacePackage() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -316,13 +332,13 @@ public class SdkSandboxTest {
     @Test
     public void testSurfacePackageError() throws Exception {
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -358,13 +374,13 @@ public class SdkSandboxTest {
     @Test
     public void testDump_WithSdk() throws Exception {
         LoadSdkCallback callback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 callback,
                 SANDBOX_LATENCY_INFO);
@@ -488,13 +504,13 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         final LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -535,13 +551,13 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -582,13 +598,13 @@ public class SdkSandboxTest {
                         TIME_SANDBOX_CALLED_SYSTEM_SERVER);
 
         final LoadSdkCallback loadSdkCallback = new LoadSdkCallback();
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 loadSdkCallback,
                 SANDBOX_LATENCY_INFO);
@@ -658,13 +674,13 @@ public class SdkSandboxTest {
         LoadSdkCallback mCallback = new LoadSdkCallback();
         Bundle params = new Bundle();
         params.putString(THROW_EXCEPTION_KEY, "random-value");
+        mService.initialize(new StubSdkToServiceLink(), sCustomizedSdkContextEnabled);
         mService.loadSdk(
                 CLIENT_PACKAGE_NAME,
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 params,
                 mCallback,
                 SANDBOX_LATENCY_INFO);
@@ -676,8 +692,7 @@ public class SdkSandboxTest {
                 mApplicationInfo,
                 SDK_NAME,
                 SDK_PROVIDER_CLASS,
-                null,
-                null,
+                new ApplicationInfo(),
                 new Bundle(),
                 mCallback,
                 SANDBOX_LATENCY_INFO);

@@ -25,7 +25,7 @@ import android.os.LimitExceededException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 
@@ -36,6 +36,8 @@ import java.util.function.Supplier;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     public CustomAudienceServiceFilter(
             @NonNull Context context,
             @NonNull ConsentManager consentManager,
@@ -87,22 +89,22 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(apiKey);
 
-        LogUtil.v("Validating caller package name.");
+        sLogger.v("Validating caller package name.");
         assertCallerPackageName(callerPackageName, callerUid, apiName);
 
-        LogUtil.v("Validating API is not throttled.");
+        sLogger.v("Validating API is not throttled.");
         assertCallerNotThrottled(callerPackageName, apiKey);
 
         if (enforceForeground) {
-            LogUtil.v("Checking caller is in foreground.");
+            sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
         if (!Objects.isNull(adTech)) {
-            LogUtil.v("Checking ad tech is allowed to use FLEDGE.");
+            sLogger.v("Checking ad tech is allowed to use FLEDGE.");
             assertFledgeEnrollment(adTech, callerPackageName, apiName);
         }
 
-        LogUtil.v("Validating caller package is in allow list.");
+        sLogger.v("Validating caller package is in allow list.");
         assertAppInAllowList(callerPackageName, apiName);
     }
 }

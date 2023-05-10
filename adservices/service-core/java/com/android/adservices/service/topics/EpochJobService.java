@@ -31,9 +31,10 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
@@ -44,43 +45,50 @@ import com.google.common.util.concurrent.ListenableFuture;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("EpochJobService.onStartJob");
+        sLogger.d("EpochJobService.onStartJob");
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            sLogger.d("Disabling EpochJobService job because it's running in ExtServices on T+");
+            return skipAndCancelBackgroundJob(params);
+        }
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled, skipping and cancelling EpochJobService");
+            sLogger.e("Topics API is disabled, skipping and cancelling EpochJobService");
             return skipAndCancelBackgroundJob(params);
         }
 
         // This service executes each incoming job on a Handler running on the application's
         // main thread. This means that we must offload the execution logic to background executor.
         // TODO(b/225382268): Handle cancellation.
-        ListenableFuture<Void> epochComputationFuture = Futures.submit(
-                () -> {
-                    TopicsWorker.getInstance(this).computeEpoch();
-                },
-                AdServicesExecutors.getBackgroundExecutor());
+        ListenableFuture<Void> epochComputationFuture =
+                Futures.submit(
+                        () -> {
+                            TopicsWorker.getInstance(this).computeEpoch();
+                        },
+                        AdServicesExecutors.getBackgroundExecutor());
 
         Futures.addCallback(
                 epochComputationFuture,
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        LogUtil.d("Epoch Computation succeeded!");
+                        sLogger.d("Epoch Computation succeeded!");
                         // Tell the JobScheduler that the job has completed and does not need to be
                         // rescheduled.
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        jobFinished(params, /* wantsReschedule= */ false);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Failed to handle JobService: " + params.getJobId());
+                        sLogger.e(t, "Failed to handle JobService: " + params.getJobId());
                         //  When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         // TODO(b/225909845): Revisit this. We need a retry policy.
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        jobFinished(params, /* wantsReschedule= */ false);
                     }
                 },
                 directExecutor());
@@ -90,7 +98,7 @@ public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        LogUtil.d("EpochJobService.onStopJob");
+        sLogger.d("EpochJobService.onStopJob");
         return false;
     }
 
@@ -110,7 +118,7 @@ public final class EpochJobService extends JobService {
                         .build();
 
         jobScheduler.schedule(job);
-        LogUtil.d("Scheduling Epoch job ...");
+        sLogger.d("Scheduling Epoch job ...");
     }
 
     /**
@@ -122,13 +130,13 @@ public final class EpochJobService extends JobService {
      */
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
-            LogUtil.e("Topics API is disabled, skip scheduling the EpochJobService");
+            sLogger.e("Topics API is disabled, skip scheduling the EpochJobService");
             return false;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         if (jobScheduler == null) {
-            LogUtil.e("Cannot fetch Job Scheduler!");
+            sLogger.e("Cannot fetch Job Scheduler!");
             return false;
         }
 
@@ -143,7 +151,7 @@ public final class EpochJobService extends JobService {
 
             if (flagsEpochJobPeriodMs == epochJobPeriodMs
                     && flagsEpochJobFlexMs == epochJobFlexMs) {
-                LogUtil.i(
+                sLogger.i(
                         "Epoch Job Service has been scheduled with same parameters, skip"
                                 + " rescheduling!");
                 return false;

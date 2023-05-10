@@ -15,6 +15,12 @@
  */
 package com.android.adservices.ui.notifications;
 
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISMISSED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_DISPLAYED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED;
+import static com.android.adservices.ui.notifications.ConsentNotificationActivity.NotificationFragmentEnum.CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED;
 import static com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity.FROM_NOTIFICATION_KEY;
 
 import android.content.Intent;
@@ -30,7 +36,6 @@ import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
 import com.android.adservices.api.R;
-import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 
 /**
@@ -42,11 +47,14 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
 public class ConsentNotificationConfirmationFragment extends Fragment {
     public static final String IS_CONSENT_GIVEN_ARGUMENT_KEY = "isConsentGiven";
 
+    private boolean mOptedIn;
+
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        boolean optedIn = getArguments().getBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
-        if (optedIn) {
+        mOptedIn = getArguments().getBoolean(IS_CONSENT_GIVEN_ARGUMENT_KEY, false);
+
+        if (mOptedIn) {
             return inflater.inflate(
                     R.layout.consent_notification_accept_confirmation_fragment, container, false);
         }
@@ -56,8 +64,16 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
-        UiStatsLogger.logConfirmationPageDisplayed(getContext());
         setupListeners();
+
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
     }
 
     private void setupListeners() {
@@ -65,7 +81,14 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
                 requireActivity().findViewById(R.id.leftControlButtonConfirmation);
         leftControlButton.setOnClickListener(
                 view -> {
-                    // go to settings activity
+                    if (mOptedIn) {
+                        ConsentNotificationActivity.handleAction(
+                                CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED, getContext());
+                    } else {
+                        ConsentNotificationActivity.handleAction(
+                                CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                    }
+
                     Intent intent =
                             new Intent(requireActivity(), AdServicesSettingsMainActivity.class);
                     intent.putExtra(FROM_NOTIFICATION_KEY, true);
@@ -77,6 +100,14 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
                 requireActivity().findViewById(R.id.rightControlButtonConfirmation);
         rightControlButton.setOnClickListener(
                 view -> {
+                    if (mOptedIn) {
+                        ConsentNotificationActivity.handleAction(
+                                CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED, getContext());
+                    } else {
+                        ConsentNotificationActivity.handleAction(
+                                CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED, getContext());
+                    }
+
                     // acknowledge and dismiss
                     requireActivity().finish();
                 });

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2021 The Android Open Source Project
+  ~ Copyright (C) 2023 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -15,77 +15,138 @@
   ~ limitations under the License.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:orientation="vertical"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:layout_width="match_parent"
+              android:layout_marginHorizontal="20dp"
               android:layout_height="match_parent">
 
-    <LinearLayout
-        style="?android:attr/buttonBarButtonStyle"
-        android:orientation="vertical"
+    <ScrollView
+        android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <Button
-            android:id="@+id/load_code_button"
+    >
+        <LinearLayout
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/load_code_provider"
-            android:textAllCaps="false" />
+            android:orientation="vertical"
+        >
+            <TextView
+                android:id="@+id/sdks_title"
+                android:layout_gravity="start"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_marginVertical="15dp"
+                android:textSize="20sp"
+                android:text="@string/sdks"
+            />
 
-        <Button
-            android:id="@+id/request_surface_button"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/load_surface_package"
-            android:textAllCaps="false" />
+            <Button
+                android:id="@+id/load_sdks_button"
+                android:layout_gravity="start"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textAllCaps="false" />
 
-        <Button
-          android:id="@+id/play_video_button"
-          android:layout_height="wrap_content"
-          android:layout_width="wrap_content"
-          style="?android:attr/buttonBarButtonStyle"
-          android:text="@string/play_video"
-          android:textAllCaps="false" />
+            <Button
+                android:id="@+id/register_death_callback_button"
+                android:layout_gravity="start"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/register_death_callback"
+                android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/create_file_button"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/create_file"
-            android:textAllCaps="false" />
+            <TextView
+                android:id="@+id/ads_title"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:layout_marginVertical="15dp"
+                android:text="@string/ads"
+            />
 
-        <Button
-            android:id="@+id/enable_sdk_sdk_button"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/enable_sdk_sdk"
-            android:textAllCaps="false" />
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <Button
+                    android:id="@+id/new_banner_ad_button"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:text="@string/new_banner_ad"
+                    android:textAllCaps="false" />
+                <android.widget.ImageButton
+                    android:id="@+id/banner_ad_options_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:src="@drawable/ic_settings"
+                />
+            </LinearLayout>
 
-        <Button
+            <Button
+                android:id="@+id/new_fullscreen_ad_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/new_fullscreen_ad"
+                android:textAllCaps="false" />
+
+            <TextView
+                android:id="@+id/extra_title"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:layout_marginVertical="15dp"
+                android:text="@string/extra"
+            />
+
+            <Button
+                android:id="@+id/create_file_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/create_file"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/enable_sdk_sdk_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/enable_sdk_sdk"
+                android:textAllCaps="false" />
+
+            <Button
                 android:id="@+id/sync_keys_button"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                style="?android:attr/buttonBarButtonStyle"
                 android:text="@string/sync_keys"
                 android:textAllCaps="false" />
 
-        <Button
-            android:id="@+id/start_activity"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            style="?android:attr/buttonBarButtonStyle"
-            android:text="@string/start_activity"
-            android:textAllCaps="false" />
-    </LinearLayout>
+            <Button
+                android:id="@+id/dump_sandbox_button"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/dump_sandbox"
+                android:textAllCaps="false" />
 
+            <TextView
+                android:id="@+id/ad_space_title"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:textSize="20sp"
+                android:layout_marginVertical="15dp"
+                android:text="@string/ad_space"
+            />
+            <LinearLayout
+                android:id="@+id/ad_space_linear_layout"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:orientation="vertical" >
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
     <SurfaceView
-        android:id="@+id/rendered_view"
+        android:id="@+id/bottom_view"
+        android:layout_marginVertical="10dp"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
-
-</LinearLayout>
+        android:layout_height="80dp"
+        android:layout_alignParentBottom="true"
+    />
+</RelativeLayout>

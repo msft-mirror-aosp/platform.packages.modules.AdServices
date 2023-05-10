@@ -112,7 +112,7 @@ public class SdkSandboxActivityRegistryTest {
     }
 
     @Test
-    public void testNotifyOnActivityCreationFailIfHandlerAlreadyNotified() {
+    public void testNotifyOnActivityCreationMultipleTimeSucceed() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         IBinder token = mRegistry.register(SDK_NAME, mHandler);
@@ -121,15 +121,7 @@ public class SdkSandboxActivityRegistryTest {
                         () -> {
                             Activity activity = new Activity();
                             mRegistry.notifyOnActivityCreation(token, activity);
-
-                            IllegalArgumentException exception =
-                                    assertThrows(
-                                            IllegalArgumentException.class,
-                                            () ->
-                                                    mRegistry.notifyOnActivityCreation(
-                                                            token, activity));
-                            assertThat(exception.getMessage())
-                                    .isEqualTo("Activity is already created for this handler");
+                            mRegistry.notifyOnActivityCreation(token, activity);
                         },
                         1000);
     }

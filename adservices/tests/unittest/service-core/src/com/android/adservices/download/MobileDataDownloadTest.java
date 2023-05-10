@@ -17,7 +17,7 @@
 package com.android.adservices.download;
 
 import static com.android.adservices.download.EnrollmentDataDownloadManager.DownloadStatus.SUCCESS;
-import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH;
+import static com.android.adservices.service.topics.classifier.ModelManager.BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,6 +29,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import android.content.Context;
 import android.database.DatabaseUtils;
+import android.os.SystemClock;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
@@ -56,6 +57,7 @@ import com.google.android.libraries.mobiledatadownload.Logger;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownload;
 import com.google.android.libraries.mobiledatadownload.MobileDataDownloadBuilder;
 import com.google.android.libraries.mobiledatadownload.TaskScheduler;
+import com.google.android.libraries.mobiledatadownload.TimeSource;
 import com.google.android.libraries.mobiledatadownload.downloader.FileDownloader;
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.android.libraries.mobiledatadownload.monitor.NetworkUsageMonitor;
@@ -83,37 +85,42 @@ public class MobileDataDownloadTest {
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private static final int MAX_HANDLE_TASK_WAIT_TIME_SECS = 300;
+    private static final long WAIT_FOR_WIFI_CONNECTION_MS = 5 * 1000; // 5 seconds.
+    private static boolean sNeedWifiConnectionWait = true;
 
+    // Two files are from cts_test_1 folder.
+    // https://source.corp.google.com/piper///depot/google3/wireless/android/adservices/mdd/topics_classifier/cts_test_1/
     private static final String FILE_GROUP_NAME_1 = "test-group-1";
-    private static final String FILE_GROUP_NAME_2 = "test-group-2";
-    private static final String FILE_ID_1 = "test-file-1";
-    private static final String FILE_ID_2 = "test-file-2";
-    private static final String FILE_CHECKSUM_1 = "c1ef7864c76a99ae738ddad33882ed65972c99cc";
-    private static final String FILE_URL_1 = "https://www.gstatic.com/suggest-dev/odws1_test_4.jar";
-    private static final int FILE_SIZE_1 = 85769;
+    private static final String FILE_ID_1 = "classifier_assets_metadata.json";
+    private static final String FILE_ID_2 = "stopwords.txt";
+    private static final String FILE_CHECKSUM_1 = "52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final String FILE_URL_1 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/52633ae715ead32ec6c8ae721ad34ea301336a8e";
+    private static final int FILE_SIZE_1 = 1026;
 
-    private static final String FILE_CHECKSUM_2 = "a1cba9d87b1440f41ce9e7da38c43e1f6bd7d5df";
-    private static final String FILE_URL_2 = "https://www.gstatic.com/suggest-dev/odws1_empty.jar";
-    private static final int FILE_SIZE_2 = 554;
+    private static final String FILE_CHECKSUM_2 = "042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final String FILE_URL_2 =
+            "https://dl.google.com/mdi-serving/rubidium-adservices-topics-classifier/1489/042dc4512fa3d391c5170cf3aa61e6a638f84342";
+    private static final int FILE_SIZE_2 = 1;
 
     // TODO(b/263521464): Use the production topics classifier manifest URL.
     private static final String TEST_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/922/217081737fd739c74dd3ca5c407813d818526577";
     private static final String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1800/29dbe982cc8bf8f4ae05557b96cc7d8f69c4c0e4";
     private static final String PRODUCTION_ENROLLMENT_MANIFEST_FILE_URL =
             "https://dl.google.com/mdi-serving/adservices/adtech_enrollment/manifest_configs/1/manifest_config_1658790241927.binaryproto";
     // Prod Test Bed enrollment manifest URL
     private static final String PTB_ENROLLMENT_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1281/a245b0927ba27b3d954b0ca2775651ccfc9a5e84";
     private static final String OEM_ENROLLMENT_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1304/acd369267b5d25e377bc78a258a4e5e749b91e72";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-adtech-enrollment/1760/1460e6aea598fe7a153100d6e2749f45313ef905";
     private static final String UI_OTA_STRINGS_MANIFEST_FILE_URL =
             "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1360/d428721d225582922a7fe9d5ad6db7b09cb03209";
 
     private static final int PRODUCTION_ENROLLMENT_ENTRIES = 5;
     private static final int PTB_ENROLLMENT_ENTRIES = 1;
-    private static final int OEM_ENROLLMENT_ENTRIES = 33;
+    private static final int OEM_ENROLLMENT_ENTRIES = 114;
 
     private static final int PRODUCTION_FILEGROUP_VERSION = 1;
     private static final int PTB_FILEGROUP_VERSION = 0;
@@ -133,7 +140,15 @@ public class MobileDataDownloadTest {
     @Mock ConsentManager mConsentManager;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
+        // Add latency to fix the boot up WIFI connection delay. We only need to wait once during
+        // the whole test suite run.
+        // Checking wifi connection using WifiManager isn't working on low-performance devices.
+        if (sNeedWifiConnectionWait) {
+            Thread.sleep(WAIT_FOR_WIFI_CONNECTION_MS);
+            sNeedWifiConnectionWait = false;
+        }
+
         MockitoAnnotations.initMocks(this);
 
         // Start a mockitoSession to mock static method.
@@ -151,8 +166,6 @@ public class MobileDataDownloadTest {
         doReturn(/* Download max download threads */ 2)
                 .when(mMockFlags)
                 .getDownloaderMaxDownloadThreads();
-
-        doReturn(/* Default value */ false).when(mMockFlags).getEnableTopicMigration();
 
         mFileStorage = MobileDataDownloadFactory.getFileStorage(mContext);
         mFileDownloader =
@@ -229,8 +242,8 @@ public class MobileDataDownloadTest {
     public void testTopicsManifestFileGroupPopulator_ManifestConfigOverrider_NoFileGroup()
             throws ExecutionException, InterruptedException, TimeoutException {
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
-        // The server side test model build_id = 1467, which equals to bundled model build_id =
-        // 1467. ManifestConfigOverrider will not add the DataFileGroup in the
+        // The server side test model build_id = 1800, which equals to bundled model build_id =
+        // 1800. ManifestConfigOverrider will not add the DataFileGroup in the
         // TopicsManifestFileGroupPopulator and will not download either.
         assertThat(
                         mMdd.getFileGroup(
@@ -254,7 +267,7 @@ public class MobileDataDownloadTest {
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
 
         createMddForTopics(MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL);
 
@@ -272,7 +285,7 @@ public class MobileDataDownloadTest {
                 .isEqualTo(/* Test filegroup version number */ 0);
         assertThat(clientFileGroup.getFileCount()).isEqualTo(6);
         assertThat(clientFileGroup.getStatus()).isEqualTo(ClientFileGroup.Status.DOWNLOADED);
-        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1467);
+        assertThat(clientFileGroup.getBuildId()).isEqualTo(/* BuildID generated by Ingress */ 1800);
     }
 
     /**
@@ -412,7 +425,7 @@ public class MobileDataDownloadTest {
                 .when(
                         () ->
                                 CommonClassifierHelper.getBundledModelBuildId(
-                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_PATH));
+                                        mContext, BUNDLED_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
 
         doReturn(true).when(mMockFlags).getGaUxFeatureEnabled();
         when(mConsentManager.getConsent(AdServicesApiType.TOPICS))
@@ -577,7 +590,19 @@ public class MobileDataDownloadTest {
         FileDownloader fileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(context, flags, fileStorage);
         NetworkUsageMonitor networkUsageMonitor =
-                new NetworkUsageMonitor(context, System::currentTimeMillis);
+                new NetworkUsageMonitor(
+                        context,
+                        new TimeSource() {
+                            @Override
+                            public long currentTimeMillis() {
+                                return System.currentTimeMillis();
+                            }
+
+                            @Override
+                            public long elapsedRealtimeNanos() {
+                                return SystemClock.elapsedRealtimeNanos();
+                            }
+                        });
 
         return MobileDataDownloadBuilder.newBuilder()
                 .setContext(context)
@@ -690,7 +715,7 @@ public class MobileDataDownloadTest {
 
         EnrollmentDataDownloadManager enrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(mContext, mMockFlags);
-        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper);
+        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);
 
         ExtendedMockito.doReturn(enrollmentDao)
                 .when(() -> EnrollmentDao.getInstance(any(Context.class)));

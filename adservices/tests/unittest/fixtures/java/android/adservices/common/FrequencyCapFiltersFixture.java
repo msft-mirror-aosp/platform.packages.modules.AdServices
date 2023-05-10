@@ -21,6 +21,30 @@ public class FrequencyCapFiltersFixture {
     public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS =
             getValidFrequencyCapFiltersBuilder().build();
 
+    public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS_ONLY_WIN =
+            new FrequencyCapFilters.Builder()
+                    .setKeyedFrequencyCapsForWinEvents(
+                            KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                    .build();
+
+    public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS_ONLY_IMPRESSION =
+            new FrequencyCapFilters.Builder()
+                    .setKeyedFrequencyCapsForImpressionEvents(
+                            KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                    .build();
+
+    public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS_ONLY_VIEW =
+            new FrequencyCapFilters.Builder()
+                    .setKeyedFrequencyCapsForViewEvents(
+                            KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                    .build();
+
+    public static final FrequencyCapFilters VALID_FREQUENCY_CAP_FILTERS_ONLY_CLICK =
+            new FrequencyCapFilters.Builder()
+                    .setKeyedFrequencyCapsForClickEvents(
+                            KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                    .build();
+
     public static FrequencyCapFilters.Builder getValidFrequencyCapFiltersBuilder() {
         return new FrequencyCapFilters.Builder()
                 .setKeyedFrequencyCapsForWinEvents(

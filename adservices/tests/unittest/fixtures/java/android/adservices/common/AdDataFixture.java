@@ -29,16 +29,22 @@ import java.util.List;
 
 /** Utility class supporting ad services API unit tests */
 public class AdDataFixture {
+    // TODO(b/266837113) Set to true once app install is unhidden
+    public static final boolean APP_INSTALL_ENABLED = false;
+    // TODO(b/221876775) Set to true once fcap is unhidden
+    public static final boolean FCAP_ENABLED = false;
     public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     public static final String INVALID_METADATA = "not.{real!metadata} = 1";
-    public static final ImmutableSet<String> AD_COUNTER_KEYS =
-            ImmutableSet.<String>builder()
-                    .add(
-                            KeyedFrequencyCapFixture.KEY1,
-                            KeyedFrequencyCapFixture.KEY2,
-                            KeyedFrequencyCapFixture.KEY3,
-                            KeyedFrequencyCapFixture.KEY4)
-                    .build();
+
+    public static ImmutableSet<String> getAdCounterKeys() {
+        return ImmutableSet.<String>builder()
+                .add(
+                        KeyedFrequencyCapFixture.KEY1,
+                        KeyedFrequencyCapFixture.KEY2,
+                        KeyedFrequencyCapFixture.KEY3,
+                        KeyedFrequencyCapFixture.KEY4)
+                .build();
+    }
 
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
@@ -96,11 +102,16 @@ public class AdDataFixture {
     }
 
     // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
-    public static AdData getValidFilterAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+    public static AdData.Builder getValidFilterAdDataBuilderByBuyer(
+            AdTechIdentifier buyer, int sequenceNumber) {
         return getValidAdDataBuilderByBuyer(buyer, sequenceNumber)
-                .setAdCounterKeys(AD_COUNTER_KEYS)
-                .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
-                .build();
+                .setAdCounterKeys(getAdCounterKeys())
+                .setAdFilters(AdFiltersFixture.getValidAdFilters());
+    }
+
+    // TODO(b/266837113) Merge with getValidAdDataByBuyer once filters are unhidden
+    public static AdData getValidFilterAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {
+        return getValidFilterAdDataBuilderByBuyer(buyer, sequenceNumber).build();
     }
 
     public static AdData getValidAdDataByBuyer(AdTechIdentifier buyer, int sequenceNumber) {

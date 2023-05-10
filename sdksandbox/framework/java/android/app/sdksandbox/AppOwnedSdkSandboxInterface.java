@@ -22,7 +22,20 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Represents an Interface implemented by the App to interact with an SDK in the sandbox process.
+ * Represents a channel for an SDK in the sandbox process to interact with the app.
+ *
+ * <p>The SDK and the app can agree on a binder interface to be implemented by the app and shared
+ * via an object of {@link AppOwnedSdkSandboxInterface}.
+ *
+ * <p>The app registers the AppOwnedSdkSandboxInterfaces using {@link
+ * SdkSandboxManager#registerAppOwnedSdkSandboxInterface}.
+ *
+ * <p>The SDK in sandbox process can then query the list of registered AppOwnedSdkSandboxInterfaces
+ * using {@link SdkSandboxController#getAppOwnedSdkSandboxInterfaces}.
+ *
+ * <p>Once SDK has the AppOwnedSdkSandboxInterface it wants to communicate with, it will have to
+ * cast the binder object from {@link #getInterface} to the prearranged interface before initiating
+ * the communication.
  */
 public final class AppOwnedSdkSandboxInterface implements Parcelable {
 
@@ -72,12 +85,19 @@ public final class AppOwnedSdkSandboxInterface implements Parcelable {
      * <p>A version may be chosen by an app, and used to communicate any updates the app makes to
      * this implementation.
      */
-    @NonNull
     public long getVersion() {
         return mVersion;
     }
 
-    /** Returns Binder associated with AppOwnedSdkSandboxInterface. */
+    /**
+     * Returns binder object associated with AppOwnedSdkSandboxInterface.
+     *
+     * <p>The SDK and the app can agree on a binder interface to be implemented by the app and
+     * shared via this object, see {@link AppOwnedSdkSandboxInterface}.
+     *
+     * <p>The SDK in the sandbox will have to cast the binder object received from this method to
+     * the agreed upon interface before using it.
+     */
     @NonNull
     public IBinder getInterface() {
         return mInterface;

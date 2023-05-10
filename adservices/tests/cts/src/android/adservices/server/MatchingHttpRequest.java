@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.google.android.adservices.cts.server;
+package android.adservices.server;
 
 import android.net.Uri;
 import com.google.auto.value.AutoValue;
@@ -25,4 +25,18 @@ public abstract class MatchingHttpRequest {
   public abstract Uri getUri();
 
   public abstract HttpMethod getMethod();
+
+    public static android.adservices.server.MatchingHttpRequest.Builder builder() {
+        return new AutoValue_MatchingHttpRequest.Builder();
+    }
+
+    @AutoValue.Builder
+    public abstract static class Builder {
+        public abstract android.adservices.server.MatchingHttpRequest.Builder setUri(Uri uri);
+
+        public abstract android.adservices.server.MatchingHttpRequest.Builder setMethod(
+                HttpMethod method);
+
+        public abstract MatchingHttpRequest build();
+    }
 }

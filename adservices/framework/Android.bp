@@ -18,12 +18,12 @@ package {
 
 filegroup {
     name: "framework-adservices-sources",
+    defaults: ["framework-sources-module-defaults"],
     srcs: [
       "java/**/*.aidl",
       "java/**/*.java"
     ],
     visibility: [
-        "//frameworks/base",
         "//packages/modules/AdServices/adservices:__subpackages__",
         "//packages/modules/ExtServices/apex:__subpackages__",
     ],

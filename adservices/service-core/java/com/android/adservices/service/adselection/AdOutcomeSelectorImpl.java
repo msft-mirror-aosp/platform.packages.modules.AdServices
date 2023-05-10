@@ -19,19 +19,16 @@ package com.android.adservices.service.adselection;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.net.Uri;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
+import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.AdSelectionDevOverridesHelper;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 
@@ -47,8 +44,7 @@ import java.util.concurrent.TimeoutException;
  * <p>A new instance is assumed to be created for every call.
  */
 public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
-    @VisibleForTesting
-    static final String MISSING_OUTCOME_SELECTION_LOGIC = "Error fetching outcome selection logic";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting
     static final String OUTCOME_SELECTION_TIMED_OUT =
@@ -66,6 +62,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
     @NonNull private final AdSelectionDevOverridesHelper mAdSelectionDevOverridesHelper;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
     @NonNull private final Flags mFlags;
+    @NonNull private final JsFetcher mJsFetcher;
 
     public AdOutcomeSelectorImpl(
             @NonNull AdSelectionScriptEngine adSelectionScriptEngine,
@@ -88,8 +85,14 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         mBackgroundExecutorService = backgroundExecutor;
         mScheduledExecutor = scheduledExecutor;
         mAdSelectionDevOverridesHelper = adSelectionDevOverridesHelper;
-        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(flags);
         mFlags = flags;
+        mJsFetcher =
+                new JsFetcher(
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mAdServicesHttpsClient,
+                        mFlags);
     }
 
     /**
@@ -107,8 +110,15 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(config);
 
+        AdServicesHttpClientRequest outcomeSelectorLogicUriHttpRequest =
+                AdServicesHttpClientRequest.builder()
+                        .setUri(config.getSelectionLogicUri())
+                        .setUseCache(mFlags.getFledgeHttpJsCachingEnabled())
+                        .build();
+
         FluentFuture<String> selectionLogicJsFuture =
-                FluentFuture.from(getAdOutcomeSelectorLogic(config));
+                mJsFetcher.getOutcomeSelectionLogic(
+                        outcomeSelectorLogicUriHttpRequest, mAdSelectionDevOverridesHelper, config);
 
         FluentFuture<Long> selectedOutcomeFuture =
                 selectionLogicJsFuture.transformAsync(
@@ -143,7 +153,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
 
     @Nullable
     private Long handleTimeoutError(TimeoutException e) {
-        LogUtil.e(e, OUTCOME_SELECTION_TIMED_OUT);
+        sLogger.e(e, OUTCOME_SELECTION_TIMED_OUT);
         throw new UncheckedTimeoutException(OUTCOME_SELECTION_TIMED_OUT);
     }
 
@@ -154,56 +164,7 @@ public class AdOutcomeSelectorImpl implements AdOutcomeSelector {
      */
     @Nullable
     private Long handleIllegalStateException(IllegalStateException e) {
-        LogUtil.e(e, OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
+        sLogger.e(e, OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
         throw new IllegalStateException(OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT);
-    }
-
-    private ListenableFuture<String> getAdOutcomeSelectorLogic(
-            AdSelectionFromOutcomesConfig config) {
-        FluentFuture<String> jsOverrideFuture =
-                FluentFuture.from(
-                        mBackgroundExecutorService.submit(
-                                () ->
-                                        mAdSelectionDevOverridesHelper.getSelectionLogicOverride(
-                                                config)));
-
-        FluentFuture<String> jsLogicFuture =
-                jsOverrideFuture.transformAsync(
-                        jsOverride -> {
-                            if (jsOverride == null) {
-                                Uri selectionUri = config.getSelectionLogicUri();
-                                if (mPrebuiltLogicGenerator.isPrebuiltUri(selectionUri)) {
-                                    LogUtil.i(
-                                            "Prebuilt URI is detected. Generating JS function from"
-                                                    + " prebuilt implementations");
-                                    return Futures.immediateFuture(
-                                            mPrebuiltLogicGenerator.jsScriptFromPrebuiltUri(
-                                                    selectionUri));
-                                } else {
-                                    LogUtil.v("Fetching Outcome Selector Logic from the server");
-                                    return FluentFuture.from(
-                                                    mAdServicesHttpsClient.fetchPayload(
-                                                            config.getSelectionLogicUri()))
-                                            .transform(
-                                                    AdServicesHttpClientResponse::getResponseBody,
-                                                    mLightweightExecutorService);
-                                }
-                            } else {
-                                LogUtil.d(
-                                        "Developer options enabled and an override JS is provided "
-                                                + "for the current selection logic Uri. "
-                                                + "Skipping call to server.");
-                                return Futures.immediateFuture(jsOverride);
-                            }
-                        },
-                        mLightweightExecutorService);
-
-        return jsLogicFuture.catching(
-                Exception.class,
-                e -> {
-                    LogUtil.e(e, "Exception encountered when fetching outcome selection logic");
-                    throw new IllegalStateException(MISSING_OUTCOME_SELECTION_LOGIC);
-                },
-                mLightweightExecutorService);
     }
 }

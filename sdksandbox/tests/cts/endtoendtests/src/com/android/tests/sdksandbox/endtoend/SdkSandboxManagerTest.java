@@ -320,16 +320,16 @@ public class SdkSandboxManagerTest {
         // Kill the sandbox if it already exists from previous tests
         killSandboxIfExists();
 
-        // Killing the sandbox and loading the same SDKs again multiple times should work
-        for (int i = 0; i < 3; ++i) {
-            FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
-            mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
+        FakeSdkSandboxProcessDeathCallback callback = new FakeSdkSandboxProcessDeathCallback();
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
+        assertThat(callback.getSdkSandboxDeathCount()).isEqualTo(0);
 
+        // Killing the sandbox and loading the same SDKs again multiple times should work
+        for (int i = 1; i <= 3; ++i) {
             // The same SDKs should be able to be loaded again after sandbox death
             loadMultipleSdks();
-
             killSandbox();
-            assertThat(callback.isSdkSandboxDeathDetected()).isTrue();
+            assertThat(callback.getSdkSandboxDeathCount()).isEqualTo(i);
         }
     }
 
@@ -347,7 +347,7 @@ public class SdkSandboxManagerTest {
         loadSdk();
 
         killSandbox();
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -361,7 +361,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback);
 
         killSandbox();
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -383,8 +383,8 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -404,8 +404,8 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, lifecycleCallback2);
 
         killSandbox();
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(0);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -596,7 +596,45 @@ public class SdkSandboxManagerTest {
     }
 
     @Test
-    public void testStartSdkSandboxedActivity() {
+    public void testStartSdkSandboxedActivities() {
+        assumeTrue(SdkLevel.isAtLeastU());
+
+        // Load SDK in sandbox
+        ICtsSdkProviderApi sdk = loadSdk();
+
+        mRule.getScenario()
+                .onActivity(
+                        clientActivity -> {
+                            ActivityStarter activityStarter1 = new ActivityStarter(clientActivity);
+                            try {
+                                sdk.startActivity(activityStarter1);
+                                // Wait for the activity to start and send confirmation back
+                                Thread.sleep(1000);
+                                assertThat(activityStarter1.isActivityStarted()).isTrue();
+                            } catch (Exception e) {
+                                fail(
+                                        "Exception is thrown while starting activity: "
+                                                + e.getMessage());
+                            }
+
+                            // Start another sandbox activity is important, to make sure that the
+                            // system is not restarting the sandbox activities after test is done.
+                            ActivityStarter activityStarter2 = new ActivityStarter(clientActivity);
+                            try {
+                                sdk.startActivity(activityStarter2);
+                                // Wait for the activity to start and send confirmation back
+                                Thread.sleep(1000);
+                                assertThat(activityStarter2.isActivityStarted()).isTrue();
+                            } catch (Exception e) {
+                                fail(
+                                        "Exception is thrown while starting activity: "
+                                                + e.getMessage());
+                            }
+                        });
+    }
+
+    @Test
+    public void testStartSdkSandboxedActivityFailIfTheHandlerUnregistered() {
         assumeTrue(SdkLevel.isAtLeastU());
 
         // Load SDK in sandbox
@@ -607,10 +645,10 @@ public class SdkSandboxManagerTest {
                         activity -> {
                             ActivityStarter activityStarter = new ActivityStarter(activity);
                             try {
-                                sdk.startActivity(activityStarter);
-                                // Wait for the activity to start and send confirmation back
+                                sdk.startActivityAfterUnregisterHandler(activityStarter);
+                                // Wait for the activity to be initiated and destroyed.
                                 Thread.sleep(1000);
-                                assertThat(activityStarter.isActivityStarted()).isTrue();
+                                assertThat(activityStarter.isActivityStarted()).isFalse();
                             } catch (Exception e) {
                                 fail(
                                         "Exception is thrown while starting activity: "
@@ -686,7 +724,7 @@ public class SdkSandboxManagerTest {
         mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, callback);
         killSandbox();
 
-        return callback.isSdkSandboxDeathDetected();
+        return callback.getSdkSandboxDeathCount() > 0;
     }
 
     private void killSandbox() throws Exception {

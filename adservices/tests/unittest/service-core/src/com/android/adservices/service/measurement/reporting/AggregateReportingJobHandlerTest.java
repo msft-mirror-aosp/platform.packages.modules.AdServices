@@ -101,6 +101,11 @@ public class AggregateReportingJobHandlerTest {
         public IMeasurementDao getMeasurementDao() {
             return mMeasurementDao;
         }
+
+        @Override
+        protected int getDataStoreVersion() {
+            return 0;
+        }
     }
 
     @Before
@@ -162,7 +167,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -203,7 +210,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyDebugAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markAggregateDebugReportDelivered(any());
         verify(mTransaction, times(2)).begin();
@@ -243,7 +252,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -283,7 +294,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -324,7 +337,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_SUCCESS,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(2)).begin();
@@ -359,7 +374,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_IO_ERROR,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
@@ -381,7 +398,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_INVALID_ARGUMENT,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();
@@ -504,7 +523,9 @@ public class AggregateReportingJobHandlerTest {
         Assert.assertEquals(
                 AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
                 mSpyAggregateReportingJobHandler.performReport(
-                        aggregateReport.getId(), AggregateCryptoFixture.getKey()));
+                        aggregateReport.getId(),
+                        AggregateCryptoFixture.getKey(),
+                        new ReportingStatus()));
 
         verify(mMeasurementDao, never()).markAggregateReportStatus(any(), anyInt());
         verify(mTransaction, times(1)).begin();

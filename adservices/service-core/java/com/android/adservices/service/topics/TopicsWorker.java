@@ -27,7 +27,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.service.Flags;
@@ -56,6 +56,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 @WorkerThread
 public class TopicsWorker {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Object SINGLETON_LOCK = new Object();
 
     // Singleton instance of the TopicsWorker.
@@ -119,7 +120,7 @@ public class TopicsWorker {
      */
     @NonNull
     public ImmutableList<Topic> getKnownTopicsWithConsent() {
-        LogUtil.v("TopicsWorker.getKnownTopicsWithConsent");
+        sLogger.v("TopicsWorker.getKnownTopicsWithConsent");
         mReadWriteLock.readLock().lock();
         try {
             return mCacheManager.getKnownTopicsWithConsent(mEpochManager.getCurrentEpochId());
@@ -135,10 +136,10 @@ public class TopicsWorker {
      */
     @NonNull
     public ImmutableList<Topic> getTopicsWithRevokedConsent() {
-        LogUtil.v("TopicsWorker.getTopicsWithRevokedConsent");
+        sLogger.v("TopicsWorker.getTopicsWithRevokedConsent");
         mReadWriteLock.readLock().lock();
         try {
-            return mCacheManager.getTopicsWithRevokedConsent();
+            return ImmutableList.copyOf(mBlockedTopicsManager.retrieveAllBlockedTopics());
         } finally {
             mReadWriteLock.readLock().unlock();
         }
@@ -151,7 +152,7 @@ public class TopicsWorker {
      * @param topic {@link Topic} to block.
      */
     public void revokeConsentForTopic(@NonNull Topic topic) {
-        LogUtil.v("TopicsWorker.revokeConsentForTopic");
+        sLogger.v("TopicsWorker.revokeConsentForTopic");
         mReadWriteLock.writeLock().lock();
         try {
             mBlockedTopicsManager.blockTopic(topic);
@@ -170,7 +171,7 @@ public class TopicsWorker {
      * @param topic {@link Topic} to restore consent for.
      */
     public void restoreConsentForTopic(@NonNull Topic topic) {
-        LogUtil.v("TopicsWorker.restoreConsentForTopic");
+        sLogger.v("TopicsWorker.restoreConsentForTopic");
         mReadWriteLock.writeLock().lock();
         try {
             mBlockedTopicsManager.unblockTopic(topic);
@@ -191,7 +192,7 @@ public class TopicsWorker {
      */
     @NonNull
     public GetTopicsResult getTopics(@NonNull String app, @NonNull String sdk) {
-        LogUtil.v("TopicsWorker.getTopics for %s, %s", app, sdk);
+        sLogger.v("TopicsWorker.getTopics for %s, %s", app, sdk);
 
         // We will generally handle the App and SDK topics assignment through
         // PackageChangedReceiver. However, this is to catch the case we miss the broadcast.
@@ -223,7 +224,7 @@ public class TopicsWorker {
                             .setModelVersions(modelVersions)
                             .setTopics(topicIds)
                             .build();
-            LogUtil.v(
+            sLogger.v(
                     "The result of TopicsWorker.getTopics for %s, %s is %s",
                     app, sdk, result.toString());
             return result;
@@ -291,19 +292,15 @@ public class TopicsWorker {
         // Here we use Write lock to block Read during that computation time.
         mReadWriteLock.writeLock().lock();
         try {
-            // Clear data for TopicContributors Table only when feature flag is supported
-            if (!mEpochManager.supportsTopicContributorFeature()) {
-                tablesToExclude.add(TopicsTables.TopicContributorsContract.TABLE);
-            }
             mCacheManager.clearAllTopicsData(tablesToExclude);
 
             // If clearing all Topics data, clear preserved blocked topics in system server.
             if (!tablesToExclude.contains(TopicsTables.BlockedTopicsContract.TABLE)) {
-                mBlockedTopicsManager.clearAllBlockedTopicsInSystemServiceIfNeeded();
+                mBlockedTopicsManager.clearAllBlockedTopics();
             }
 
             loadCache();
-            LogUtil.v(
+            sLogger.v(
                     "All derived data are cleaned for Topics API except: %s",
                     tablesToExclude.toString());
         } finally {
@@ -330,7 +327,7 @@ public class TopicsWorker {
             loadCache();
         } finally {
             mReadWriteLock.writeLock().unlock();
-            LogUtil.d("App Update Reconciliation is done!");
+            sLogger.d("App Update Reconciliation is done!");
         }
     }
 
@@ -346,7 +343,7 @@ public class TopicsWorker {
                     packageUri, mEpochManager.getCurrentEpochId());
 
             loadCache();
-            LogUtil.v("Derived data is cleared for %s", packageUri.toString());
+            sLogger.v("Derived data is cleared for %s", packageUri.toString());
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -364,7 +361,7 @@ public class TopicsWorker {
                     packageUri, mEpochManager.getCurrentEpochId());
 
             loadCache();
-            LogUtil.v(
+            sLogger.v(
                     "Topics have been assigned to newly installed %s and cache" + "is reloaded",
                     packageUri);
         } finally {
@@ -386,7 +383,7 @@ public class TopicsWorker {
             if (mAppUpdateManager.assignTopicsToSdkForAppInstallation(
                     app, sdk, mEpochManager.getCurrentEpochId())) {
                 loadCache();
-                LogUtil.v(
+                sLogger.v(
                         "Topics have been assigned to sdk %s as app %s is newly installed in"
                                 + " current epoch",
                         sdk, app);

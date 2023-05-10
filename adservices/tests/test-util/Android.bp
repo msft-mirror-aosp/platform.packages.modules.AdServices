@@ -42,5 +42,5 @@ android_library {
         "androidx.test.runner",
         "compatibility-device-util-axt",
     ],
-    apex_available: ["com.android.adservices"],
+    apex_available: ["com.android.adservices", "com.android.extservices"],
 }

@@ -64,6 +64,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -124,11 +125,14 @@ public class JSScriptEngineTest {
     public static void initJavaScriptSandbox() {
         when(sMockProfiler.start(JSScriptEngineLogConstants.SANDBOX_INIT_TIME))
                 .thenReturn(sSandboxInitWatch);
-        sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+        if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
+            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sContext, sMockProfiler);
+        }
     }
 
     @Before
     public void setup() {
+        Assume.assumeTrue(JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable());
         MockitoAnnotations.initMocks(this);
 
         reset(sMockProfiler);

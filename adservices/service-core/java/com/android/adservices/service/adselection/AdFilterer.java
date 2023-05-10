@@ -16,9 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
-import android.adservices.common.AdTechIdentifier;
+import android.adservices.adselection.ContextualAds;
 
-import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import java.util.List;
@@ -38,11 +37,11 @@ public interface AdFilterer {
      */
     List<DBCustomAudience> filterCustomAudiences(List<DBCustomAudience> cas);
     /**
-     * Determines if the given contextual ad should be removed from the auction.
+     * Takes in a {@link ContextualAds} object and filters out ads from it that should not be in the
+     * auction
      *
-     * @param ad The ad to evaluate.
-     * @param buyer The buyer adtech who is trying to display the ad.
-     * @return True if ad should be kept and false otherwise.
+     * @param contextualAds An object containing contextual ads corresponding to a buyer
+     * @return A list of object identical to the input, but without any ads that should be filtered
      */
-    List<DBAdData> filterContextualAds(List<DBAdData> ad, AdTechIdentifier buyer);
+    ContextualAds filterContextualAds(ContextualAds contextualAds);
 }

@@ -16,12 +16,29 @@
 
 package android.adservices.common;
 
+import static android.adservices.common.AdDataFixture.APP_INSTALL_ENABLED;
+import static android.adservices.common.AdDataFixture.FCAP_ENABLED;
+
 public class AdFiltersFixture {
-    public static final AdFilters VALID_AD_FILTERS = getValidAdFiltersBuilder().build();
+
+    public static AdFilters getValidUnhiddenFilters() {
+        AdFilters.Builder builder = new AdFilters.Builder();
+        if (APP_INSTALL_ENABLED) {
+            builder.setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
+        }
+        if (FCAP_ENABLED) {
+            builder.setFrequencyCapFilters(FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS);
+        }
+        return builder.build();
+    }
 
     public static AdFilters.Builder getValidAdFiltersBuilder() {
         return new AdFilters.Builder()
                 .setFrequencyCapFilters(FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
                 .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS);
+    }
+
+    public static AdFilters getValidAdFilters() {
+        return getValidAdFiltersBuilder().build();
     }
 }

@@ -26,15 +26,23 @@ import android.adservices.common.AdDataFixture;
 import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
+
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.Collections;
 import java.util.HashSet;
 
+@RunWith(MockitoJUnitRunner.class)
 public class DBAdDataTest {
 
     private static final AdData SAMPLE_AD_DATA =
             AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 1);
+    private static final AdDataConversionStrategy CONVERSION_STRATEGY =
+            AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
 
     @Test
     public void testConstructor() {
@@ -89,8 +97,22 @@ public class DBAdDataTest {
 
     @Test
     public void testFromServiceObject() {
-        DBAdData dbAdData = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
         assertEqualsServiceObject(SAMPLE_AD_DATA, dbAdData);
+    }
+
+    @Test
+    public void testFromServiceObjectFilteringDisabled() {
+        AdData original = AdDataFixture.getValidFilterAdDataByBuyer(CommonFixture.VALID_BUYER_1, 1);
+        DBAdData dbAdData =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(false)
+                        .fromServiceObject(original);
+        AdData noFilters =
+                new AdData.Builder()
+                        .setRenderUri(original.getRenderUri())
+                        .setMetadata(original.getMetadata())
+                        .build();
+        assertEqualsServiceObject(noFilters, dbAdData);
     }
 
     @Test
@@ -100,7 +122,7 @@ public class DBAdDataTest {
         size[0] += SAMPLE_AD_DATA.getMetadata().getBytes().length;
         SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += x.getBytes().length);
         size[0] += SAMPLE_AD_DATA.getAdFilters().getSizeInBytes();
-        assertEquals(size[0], DBAdData.fromServiceObject(SAMPLE_AD_DATA).size());
+        assertEquals(size[0], CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).size());
     }
 
     @Test
@@ -119,14 +141,14 @@ public class DBAdDataTest {
 
     @Test
     public void testEquals() {
-        DBAdData dbAdData1 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
-        DBAdData dbAdData2 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
         assertEquals(dbAdData1, dbAdData2);
     }
 
     @Test
     public void testNotEqual() {
-        DBAdData dbAdData1 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
         DBAdData dbAdData2 =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),
@@ -138,8 +160,8 @@ public class DBAdDataTest {
 
     @Test
     public void testHashEquals() {
-        DBAdData dbAdData1 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
-        DBAdData dbAdData2 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData2 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
         assertEquals(dbAdData1.hashCode(), dbAdData2.hashCode());
     }
 
@@ -147,7 +169,7 @@ public class DBAdDataTest {
     public void testHashNotEqual() {
         // Technically there are values for SAMPLE_AD_DATA that could produce a collision, but it's
         // deterministic so there's no flake risk.
-        DBAdData dbAdData1 = DBAdData.fromServiceObject(SAMPLE_AD_DATA);
+        DBAdData dbAdData1 = CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA);
         DBAdData dbAdData2 =
                 new DBAdData(
                         SAMPLE_AD_DATA.getRenderUri(),

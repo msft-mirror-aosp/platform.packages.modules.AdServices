@@ -33,6 +33,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.sdksandbox.cts.provider.mediationtest.IMediationTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,6 +68,18 @@ public class SdkSandboxMediationTestApp {
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
+        // unload SDK to fix flakiness
+        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+    }
+
+    @After
+    public void tearDown() {
+        // unload SDK to fix flakiness
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_NAME);
+            mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+        }
     }
 
     @Test

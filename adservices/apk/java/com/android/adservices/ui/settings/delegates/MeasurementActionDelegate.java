@@ -16,13 +16,16 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasurementFragment;
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
@@ -34,13 +37,12 @@ import com.android.settingslib.widget.MainSwitchBar;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class MeasurementActionDelegate extends BaseActionDelegate {
+public class MeasurementActionDelegate {
     private final MeasurementActivity mMeasurementActivity;
     private final MeasurementViewModel mMeasurementViewModel;
 
     public MeasurementActionDelegate(
             MeasurementActivity measurementActivity, MeasurementViewModel measurementViewModel) {
-        super(measurementActivity);
         this.mMeasurementActivity = measurementActivity;
         this.mMeasurementViewModel = measurementViewModel;
         listenToMeasurementViewModelUiEvents();
@@ -61,7 +63,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
                                 mMeasurementViewModel.setMeasurementConsent(false);
                                 break;
                             case RESET_MEASUREMENT:
-                                logUIAction(ActionEnum.RESET_TOPIC_SELECTED);
+                                UiStatsLogger.logResetMeasurementSelected(mMeasurementActivity);
                                 mMeasurementViewModel.resetMeasurement();
                                 Toast.makeText(
                                                 mMeasurementActivity,
@@ -85,6 +87,7 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         mMeasurementActivity.setTitle(R.string.settingsUI_measurement_view_title);
         configureMeasurementConsentSwitch(fragment);
         configureResetMeasurementButton(fragment);
+        configurePrivacyPolicyLink();
     }
 
     private void configureResetMeasurementButton(AdServicesSettingsMeasurementFragment fragment) {
@@ -104,5 +107,10 @@ public class MeasurementActionDelegate extends BaseActionDelegate {
         measurementSwitchBar.setOnClickListener(
                 switchBar ->
                         mMeasurementViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
+    }
+
+    private void configurePrivacyPolicyLink() {
+        TextView measurementFooter = mMeasurementActivity.findViewById(R.id.measurement_footer);
+        measurementFooter.setMovementMethod(LinkMovementMethod.getInstance());
     }
 }

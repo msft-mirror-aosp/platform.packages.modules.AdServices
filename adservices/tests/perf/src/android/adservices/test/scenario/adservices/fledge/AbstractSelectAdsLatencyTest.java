@@ -25,7 +25,6 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
-import android.adservices.test.scenario.adservices.utils.CompatTestUtils;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
@@ -37,6 +36,8 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -98,25 +99,30 @@ public class AbstractSelectAdsLatencyTest {
     // Per-test method rules, run in the given order.
     @Rule
     public RuleChain rules =
-            RuleChain.outerRule(new CleanPackageRule(CompatTestUtils.getAdServicesPackageName()))
-                    .around(new KillAppsRule(CompatTestUtils.getAdServicesPackageName()))
+            RuleChain.outerRule(
+                            // CleanPackageRule should not execute after each test method because
+                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
+                            // at the end of the test, impacting collection of memory metrics for
+                            // AdServices process.
+                            new CleanPackageRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
+                                    /* clearOnStarting = */ true,
+                                    /* clearOnFinished = */ false))
+                    .around(
+                            new KillAppsRule(
+                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass
     public static void setupBeforeClass() {
         StaticAdTechServerUtils.warmupServers();
         sCustomAudiences = new ArrayList<>();
-        // Extra flags need to be set when test is executed on S- for service to run (e.g.
-        // to avoid invoking system-server related code).
-        if (!SdkLevel.isAtLeastT()) {
-            CompatTestUtils.setFlags();
-        }
     }
 
     @AfterClass
     public static void tearDownAfterClass() throws Exception {
         if (!SdkLevel.isAtLeastT()) {
-            CompatTestUtils.resetFlagsToDefault();
+            CompatAdServicesTestUtils.resetFlagsToDefault();
         }
     }
 

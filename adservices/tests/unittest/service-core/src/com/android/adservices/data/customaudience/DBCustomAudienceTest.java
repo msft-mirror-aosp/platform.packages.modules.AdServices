@@ -55,7 +55,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test
@@ -68,7 +69,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test
@@ -80,7 +82,8 @@ public class DBCustomAudienceTest {
                                 null,
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                FLAGS));
     }
 
     @Test
@@ -94,7 +97,8 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 null,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                FLAGS));
     }
 
     @Test
@@ -108,7 +112,8 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 CustomAudienceFixture.VALID_OWNER,
                                 null,
-                                DEFAULT_EXPIRE_IN));
+                                DEFAULT_EXPIRE_IN,
+                                FLAGS));
     }
 
     @Test
@@ -122,6 +127,22 @@ public class DBCustomAudienceTest {
                                         .build(),
                                 CustomAudienceFixture.VALID_OWNER,
                                 CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                                null,
+                                FLAGS));
+    }
+
+    @Test
+    public void testFromServiceObject_nullFlags() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        DBCustomAudience.fromServiceObject(
+                                CustomAudienceFixture.getValidBuilderForBuyer(
+                                                CommonFixture.VALID_BUYER_1)
+                                        .build(),
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
+                                DEFAULT_EXPIRE_IN,
                                 null));
     }
 
@@ -139,7 +160,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test
@@ -157,7 +179,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test
@@ -173,7 +196,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test
@@ -190,7 +214,8 @@ public class DBCustomAudienceTest {
                                 .build(),
                         CustomAudienceFixture.VALID_OWNER,
                         CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI,
-                        DEFAULT_EXPIRE_IN));
+                        DEFAULT_EXPIRE_IN,
+                        FLAGS));
     }
 
     @Test

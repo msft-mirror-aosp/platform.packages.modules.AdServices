@@ -21,12 +21,12 @@ import static java.util.function.Predicate.not;
 import android.database.Cursor;
 import android.net.Uri;
 
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -88,6 +88,11 @@ public class SqliteObjectMapper {
                 cursor, MeasurementTables.EventReportContract.SOURCE_ID, builder::setSourceId);
         setTextColumn(
                 cursor, MeasurementTables.EventReportContract.TRIGGER_ID, builder::setTriggerId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -106,16 +111,6 @@ public class SqliteObjectMapper {
                 builder::setPublisher);
         setIntColumn(cursor, MeasurementTables.SourceContract.PUBLISHER_TYPE,
                 builder::setPublisherType);
-        setTextColumn(
-                cursor,
-                MeasurementTables.SourceContract.APP_DESTINATION,
-                (destinations) ->
-                        builder.setAppDestinations(destinationsStringToList(destinations)));
-        setTextColumn(
-                cursor,
-                MeasurementTables.SourceContract.WEB_DESTINATION,
-                (destinations) ->
-                        builder.setWebDestinations(destinationsStringToList(destinations)));
         setTextColumn(cursor, MeasurementTables.SourceContract.SOURCE_TYPE,
                 (enumValue) -> builder.setSourceType(Source.SourceType.valueOf(enumValue)));
         setLongColumn(cursor, MeasurementTables.SourceContract.EXPIRY_TIME,
@@ -176,8 +171,17 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.REGISTRATION_ID,
                 builder::setRegistrationId);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
         setLongColumn(
                 cursor, MeasurementTables.SourceContract.INSTALL_TIME, builder::setInstallTime);
+        setTextColumn(
+                cursor, MeasurementTables.SourceContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.SourceContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
         return builder.build();
     }
 
@@ -235,6 +239,16 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 builder::setAdtechBitMapping);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.DEBUG_JOIN_KEY, builder::setDebugJoinKey);
+        setTextColumn(
+                cursor, MeasurementTables.TriggerContract.PLATFORM_AD_ID, builder::setPlatformAdId);
+        setTextColumn(cursor, MeasurementTables.TriggerContract.DEBUG_AD_ID, builder::setDebugAdId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -275,6 +289,13 @@ public class SqliteObjectMapper {
                 builder::setTriggerDebugKey);
         setTextColumn(cursor, MeasurementTables.AggregateReport.SOURCE_ID, builder::setSourceId);
         setTextColumn(cursor, MeasurementTables.AggregateReport.TRIGGER_ID, builder::setTriggerId);
+        setUnsignedLongColumn(
+                cursor, MeasurementTables.AggregateReport.DEDUP_KEY, builder::setDedupKey);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                registration_origin ->
+                        builder.setRegistrationOrigin(Uri.parse(registration_origin)));
         return builder.build();
     }
 
@@ -312,10 +333,6 @@ public class SqliteObjectMapper {
     public static AsyncRegistration constructAsyncRegistration(Cursor cursor) {
         AsyncRegistration.Builder builder = new AsyncRegistration.Builder();
         setTextColumn(cursor, MeasurementTables.AsyncRegistrationContract.ID, builder::setId);
-        setTextColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID,
-                builder::setEnrollmentId);
         setUriColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.WEB_DESTINATION,
@@ -338,14 +355,6 @@ public class SqliteObjectMapper {
                 builder::setTopOrigin);
         setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_TYPE,
-                builder::setRedirectType);
-        setIntColumn(
-                cursor,
-                MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT,
-                builder::setRedirectCount);
-        setIntColumn(
-                cursor,
                 MeasurementTables.AsyncRegistrationContract.SOURCE_TYPE,
                 (enumValue) ->
                         builder.setSourceType(
@@ -362,11 +371,14 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.RETRY_COUNT,
                 builder::setRetryCount);
-        setLongColumn(
+        setIntColumn(
                 cursor,
-                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME,
-                builder::setLastProcessingTime);
-        setIntColumn(cursor, MeasurementTables.AsyncRegistrationContract.TYPE, builder::setType);
+                MeasurementTables.AsyncRegistrationContract.TYPE,
+                (enumValue) ->
+                        builder.setType(
+                                enumValue == null
+                                        ? null
+                                        : AsyncRegistration.RegistrationType.values()[enumValue]));
         setBooleanColumn(
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.DEBUG_KEY_ALLOWED,
@@ -379,7 +391,19 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_ID,
                 builder::setRegistrationId);
+        setTextColumn(
+                cursor,
+                MeasurementTables.AsyncRegistrationContract.PLATFORM_AD_ID,
+                builder::setPlatformAdId);
         return builder.build();
+    }
+
+    static List<Uri> destinationsStringToList(String destinations) {
+        return Arrays.stream(destinations.split(" "))
+                .map(String::trim)
+                .filter(not(String::isEmpty))
+                .map(destination -> Uri.parse(destination))
+                .collect(Collectors.toList());
     }
 
     private static <BuilderType> void setUriColumn(Cursor cursor, String column, Function<Uri,
@@ -432,14 +456,6 @@ public class SqliteObjectMapper {
                 .map(String::trim)
                 .filter(not(String::isEmpty))
                 .map(UnsignedLong::new)
-                .collect(Collectors.toList());
-    }
-
-    private static List<Uri> destinationsStringToList(String destinations) {
-        return Arrays.stream(destinations.split(" "))
-                .map(String::trim)
-                .filter(not(String::isEmpty))
-                .map(destination -> Uri.parse(destination))
                 .collect(Collectors.toList());
     }
 }

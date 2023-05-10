@@ -28,6 +28,8 @@ android_test {
         "androidx.test.ext.junit",
         "androidx.test.runner",
         "SdkSandboxTestUtils",
+        "truth-prebuilt",
+        "UiProviderApi",
     ],
     data: [":SdkSandboxUiProvider"],
     asset_dirs: ["assets"],

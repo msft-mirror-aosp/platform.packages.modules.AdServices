@@ -27,7 +27,7 @@ import android.os.LimitExceededException;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -41,6 +41,7 @@ import java.util.function.Supplier;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AbstractFledgeServiceFilter {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final Flags mFlags;
@@ -154,12 +155,12 @@ public abstract class AbstractFledgeServiceFilter {
      */
     protected void assertCallerNotThrottled(final String callerPackageName, Throttler.ApiKey apiKey)
             throws LimitExceededException {
-        LogUtil.v("Checking if API is throttled for package: %s ", callerPackageName);
+        sLogger.v("Checking if API is throttled for package: %s ", callerPackageName);
         Throttler throttler = mThrottlerSupplier.get();
         boolean isThrottled = !throttler.tryAcquire(apiKey, callerPackageName);
 
         if (isThrottled) {
-            LogUtil.e(String.format("Rate Limit Reached for API: %s", apiKey));
+            sLogger.e(String.format("Rate Limit Reached for API: %s", apiKey));
             throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
         }
     }

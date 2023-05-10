@@ -21,16 +21,23 @@ import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HEIGHT_IN_PIXELS;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_HOST_TOKEN;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SURFACE_PACKAGE;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_WIDTH_IN_PIXELS;
+import static android.util.Log.DEBUG;
+import static android.util.Log.ERROR;
+import static android.util.Log.INFO;
+import static android.util.Log.VERBOSE;
+import static android.util.Log.WARN;
 
 import android.annotation.NonNull;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.sdksandbox.AppOwnedSdkSandboxInterface;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -39,22 +46,29 @@ import android.os.Looper;
 import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.StrictMode;
-import android.preference.PreferenceManager;
 import android.text.InputType;
 import android.util.Log;
 import android.view.SurfaceControlViewHost.SurfacePackage;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceManager;
+
+import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Set;
+import java.util.concurrent.Executors;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
     // TODO(b/253202014): Add toggle button
     private static final Boolean IS_WEBVIEW_TESTING_ENABLED = false;
     private static final String SDK_NAME =
@@ -67,101 +81,168 @@ public class MainActivity extends Activity {
     private static final String VIEW_TYPE_KEY = "view-type";
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIDEO_URL_KEY = "video-url";
+    private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
 
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
+    private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
+    private static final String DROPDOWN_KEY_SDK_APP = "SDK_IN_APP";
+    private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
 
-    private static String sVideoUrl;
+    // Saved instance state keys
+    private static final String SDKS_LOADED_KEY = "sdks_loaded";
 
     private boolean mSdksLoaded = false;
-    private boolean mSdkSdkCommEnabled = false;
+    private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
 
-    private Button mLoadButton;
-    private Button mRenderButton;
+    private Button mLoadSdksButton;
+    private Button mDeathCallbackButton;
+    private Button mNewBannerAdButton;
+    private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
-    private Button mPlayVideoButton;
     private Button mSyncKeysButton;
-    private Button mSdkSdkCommButton;
-    private Button mStartActivity;
+    private Button mSdkToSdkCommButton;
+    private Button mDumpSandboxButton;
+    private Button mNewFullScreenAd;
 
-    private SurfaceView mRenderedView;
+    private SurfaceView mBottomView;
 
     private SandboxedSdk mSandboxedSdk;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         enableStrictMode();
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            sVideoUrl = extras.getString(VIDEO_URL_KEY);
+
+        if (savedInstanceState != null) {
+            mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
         }
 
-        mRenderedView = findViewById(R.id.rendered_view);
-        mRenderedView.setZOrderOnTop(true);
-        mRenderedView.setVisibility(View.INVISIBLE);
+        Executors.newSingleThreadExecutor()
+                .execute(
+                        () -> {
+                            Looper.prepare();
+                            mSharedPreferences =
+                                    PreferenceManager.getDefaultSharedPreferences(
+                                            MainActivity.this);
 
-        mLoadButton = findViewById(R.id.load_code_button);
-        mRenderButton = findViewById(R.id.request_surface_button);
+                            handleExtras();
+                            PreferenceManager.setDefaultValues(
+                                    this, R.xml.banner_preferences, false);
+                        });
+
+        setContentView(R.layout.activity_main);
+        mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
+
+        mBottomView = findViewById(R.id.bottom_view);
+        mBottomView.setZOrderOnTop(true);
+        mBottomView.setVisibility(View.INVISIBLE);
+
+        mLoadSdksButton = findViewById(R.id.load_sdks_button);
+        mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
+
+        mNewBannerAdButton = findViewById(R.id.new_banner_ad_button);
+        mBannerAdOptionsButton = findViewById(R.id.banner_ad_options_button);
+        mNewFullScreenAd = findViewById(R.id.new_fullscreen_ad_button);
+
         mCreateFileButton = findViewById(R.id.create_file_button);
-        mPlayVideoButton = findViewById(R.id.play_video_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
-        mSdkSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
-        mStartActivity = findViewById(R.id.start_activity);
+        mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
+        mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
 
-        registerLoadSdkProviderButton();
-        registerLoadSurfacePackageButton();
+        registerLoadSdksButton();
+        registerDeathCallbackButton();
+
+        registerNewBannerAdButton();
+        registerBannerAdOptionsButton();
+        registerNewFullscreenAdButton();
+
         registerCreateFileButton();
-        registerPlayVideoButton();
         registerSyncKeysButton();
-        registerSdkSdkButton();
-        registerStartActivityButton();
+        registerSdkToSdkButton();
+        registerDumpSandboxButton();
+
+        if (savedInstanceState == null) {
+            // Register AppOwnedSdkInterface when activity first created
+            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                    new AppOwnedSdkSandboxInterface(
+                            APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
+        }
+
+        refreshLoadSdksButtonText();
     }
 
-    private void registerLoadSdkProviderButton() {
-        mLoadButton.setOnClickListener(
+    private void handleExtras() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            final String videoUrl = extras.getString(VIDEO_URL_KEY);
+            mSharedPreferences.edit().putString("banner_video_url", videoUrl).apply();
+        }
+    }
+
+    private void refreshLoadSdksButtonText() {
+        if (mSdksLoaded) {
+            mLoadSdksButton.setText("Unload SDKs");
+        } else {
+            mLoadSdksButton.setText("Load SDKs");
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
+    }
+
+    private void registerDeathCallbackButton() {
+        mDeathCallbackButton.setOnClickListener(
+                v -> {
+                    // Register for sandbox death event.
+                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                            Runnable::run, () -> makeToast("Sdk Sandbox process died"));
+                    makeToast("Registered death callback");
+                });
+    }
+
+    private void registerLoadSdksButton() {
+        mLoadSdksButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
                         resetStateForLoadSdkButton();
                         return;
                     }
-                    // Register for sandbox death event.
-                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                            Runnable::run, () -> makeToast("Sdk Sandbox process died"));
 
                     Bundle params = new Bundle();
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
                             new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
-                                    mSdksLoaded = true;
                                     mSandboxedSdk = sandboxedSdk;
-                                    makeToast("First SDK Loaded successfully!");
+                                    toastAndLog(INFO, "First SDK Loaded successfully!");
                                 }
 
                                 @Override
                                 public void onError(LoadSdkException error) {
-                                    makeToast("Failed: " + error);
+                                    toastAndLog(ERROR, "Failed to load first SDK: %s", error);
                                 }
                             };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
                             new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
-                                    makeToast("All SDKs Loaded successfully!");
-                                    Log.d(TAG, "All SDKs Loaded successfully!");
-                                    mLoadButton.setText("Unload SDKs");
+                                    toastAndLog(INFO, "All SDKs Loaded successfully!");
+                                    mSdksLoaded = true;
+                                    refreshLoadSdksButtonText();
                                 }
 
                                 @Override
                                 public void onError(LoadSdkException error) {
-                                    makeToast("Failed: " + error);
-                                    resetStateForLoadSdkButton();
+                                    toastAndLog(ERROR, "Failed to load all SDKs: %s", error);
                                 }
                             };
+                    Log.i(TAG, "Loading SDKs " + SDK_NAME + " and " + MEDIATEE_SDK_NAME);
                     mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
                     mSdkSandboxManager.loadSdk(
                             MEDIATEE_SDK_NAME, params, Runnable::run, mediateeReceiver);
@@ -169,114 +250,166 @@ public class MainActivity extends Activity {
     }
 
     private void resetStateForLoadSdkButton() {
+        Log.i(TAG, "Unloading SDKs " + SDK_NAME + " and " + MEDIATEE_SDK_NAME);
         mSdkSandboxManager.unloadSdk(SDK_NAME);
         mSdkSandboxManager.unloadSdk(MEDIATEE_SDK_NAME);
-        mLoadButton.setText("Load SDKs");
         mSdksLoaded = false;
+        refreshLoadSdksButtonText();
     }
 
-    private void registerLoadSurfacePackageButton() {
+    private void registerNewBannerAdButton() {
         OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
                 new RequestSurfacePackageReceiver();
-        mRenderButton.setOnClickListener(
+        mNewBannerAdButton.setOnClickListener(
                 v -> {
                     if (mSdksLoaded) {
+                        final BannerOptions options =
+                                BannerOptions.fromSharedPreferences(mSharedPreferences);
+                        Log.i(TAG, options.toString());
+                        final Bundle params = getRequestSurfacePackageParams(null);
+
+                        switch (options.getViewType()) {
+                            case INFLATED -> {
+                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
+                            }
+                            case VIDEO -> {
+                                params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
+                                params.putString(VIDEO_URL_KEY, options.getVideoUrl());
+                            }
+                        }
                         sHandler.post(
                                 () -> {
                                     mSdkSandboxManager.requestSurfacePackage(
-                                            SDK_NAME,
-                                            getRequestSurfacePackageParams(),
-                                            Runnable::run,
-                                            receiver);
+                                            SDK_NAME, params, Runnable::run, receiver);
                                 });
                     } else {
-                        makeToast("Sdk is not loaded");
+                        toastAndLog(WARN, "Sdk is not loaded");
                     }
                 });
+    }
+
+    private void registerBannerAdOptionsButton() {
+        mBannerAdOptionsButton.setOnClickListener(
+                v -> startActivity(new Intent(MainActivity.this, BannerOptionsActivity.class)));
     }
 
     private void registerCreateFileButton() {
         mCreateFileButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        makeToast("Sdk is not loaded");
+                        toastAndLog(WARN, "Sdk is not loaded");
                         return;
                     }
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Set size in MB");
+                    builder.setTitle("Set size in MB (1-100)");
                     final EditText input = new EditText(this);
                     input.setInputType(InputType.TYPE_CLASS_NUMBER);
                     builder.setView(input);
                     builder.setPositiveButton(
                             "Create",
                             (dialog, which) -> {
-                                int sizeInMb = -1;
-                                try {
-                                    sizeInMb = Integer.parseInt(input.getText().toString());
-                                } catch (Exception ignore) {
-                                }
+                                final int sizeInMb = Integer.parseInt(input.getText().toString());
                                 if (sizeInMb <= 0 || sizeInMb > 100) {
-                                    makeToast("Please provide a value between 1 and 100");
+                                    toastAndLog(WARN, "Please provide a value between 1 and 100");
                                     return;
                                 }
                                 IBinder binder = mSandboxedSdk.getInterface();
                                 ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                                try {
-                                    String response = sdkApi.createFile(sizeInMb);
-                                    makeToast(response);
-                                } catch (RemoteException e) {
-                                    throw new RuntimeException(e);
-                                }
+
+                                BackgroundThread.getExecutor()
+                                        .execute(
+                                                () -> {
+                                                    try {
+                                                        String response =
+                                                                sdkApi.createFile(sizeInMb);
+                                                        toastAndLog(INFO, response);
+                                                    } catch (Exception e) {
+                                                        toastAndLog(
+                                                                e,
+                                                                "Failed to create file with %d Mb",
+                                                                sizeInMb);
+                                                    }
+                                                });
                             });
                     builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
                     builder.show();
                 });
     }
 
-    private void registerPlayVideoButton() {
-        if (sVideoUrl == null) {
-            mPlayVideoButton.setVisibility(View.GONE);
-            return;
-        }
-
-        OutcomeReceiver<Bundle, RequestSurfacePackageException> receiver =
-                new RequestSurfacePackageReceiver();
-        mPlayVideoButton.setOnClickListener(
+    private void registerSdkToSdkButton() {
+        mSdkToSdkCommButton.setOnClickListener(
                 v -> {
-                    if (mSdksLoaded) {
-                        sHandler.post(
-                                () -> {
-                                    Bundle params = getRequestSurfacePackageParams();
-                                    params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
-                                    params.putString(VIDEO_URL_KEY, sVideoUrl);
+                    mSdkToSdkCommEnabled = !mSdkToSdkCommEnabled;
+                    if (mSdkToSdkCommEnabled) {
+                        mSdkToSdkCommButton.setText("Disable SDK to SDK comm");
+                        toastAndLog(INFO, "Sdk Sdk Comm Enabled");
+                        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                        builder.setTitle("Choose winning SDK");
+
+                        String[] items =
+                                new String[] {DROPDOWN_KEY_SDK_SANDBOX, DROPDOWN_KEY_SDK_APP};
+                        ArrayAdapter<String> adapter =
+                                new ArrayAdapter<>(
+                                        this, android.R.layout.simple_spinner_dropdown_item, items);
+                        final Spinner dropdown = new Spinner(this);
+                        dropdown.setAdapter(adapter);
+
+                        LinearLayout linearLayout = new LinearLayout(this);
+                        linearLayout.setOrientation(1); // 1 is for vertical orientation
+                        linearLayout.addView(dropdown);
+                        builder.setView(linearLayout);
+
+                        builder.setPositiveButton(
+                                "Request SP",
+                                (dialog, which) -> {
+                                    OutcomeReceiver<Bundle, RequestSurfacePackageException>
+                                            receiver = new RequestSurfacePackageReceiver();
                                     mSdkSandboxManager.requestSurfacePackage(
-                                            SDK_NAME, params, Runnable::run, receiver);
+                                            SDK_NAME,
+                                            getRequestSurfacePackageParams(
+                                                    dropdown.getSelectedItem().toString()),
+                                            Runnable::run,
+                                            receiver);
                                 });
+                        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+                        builder.show();
                     } else {
-                        makeToast("Sdk is not loaded");
+                        mSdkToSdkCommButton.setText("Enable SDK to SDK comm");
+                        toastAndLog(INFO, "Sdk Sdk Comm Disabled");
                     }
                 });
     }
 
-    private void registerSdkSdkButton() {
-        mSdkSdkCommButton.setOnClickListener(
+    private void registerDumpSandboxButton() {
+        mDumpSandboxButton.setOnClickListener(
                 v -> {
-                    mSdkSdkCommEnabled = !mSdkSdkCommEnabled;
-                    if (mSdkSdkCommEnabled) {
-                        mSdkSdkCommButton.setText("Disable SDK SDK comm");
-                        makeToast("Sdk Sdk Comm Enabled");
-                    } else {
-                        mSdkSdkCommButton.setText("Enable SDK SDK comm");
-                        makeToast("Sdk Sdk Comm Disabled");
+                    if (!mSdksLoaded) {
+                        toastAndLog(WARN, "Sdk is not loaded");
+                        return;
                     }
-                });
+
+                    IBinder binder = mSandboxedSdk.getInterface();
+                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                    String sandboxDump = "";
+                    try {
+                        sandboxDump = sdkApi.getSandboxDump();
+                    } catch (RemoteException e) {
+                        // Do nothing, the correct text won't be displayed.
+                    }
+                    new AlertDialog.Builder(this)
+                            .setTitle("Information provided by the sandbox")
+                            .setMessage(sandboxDump)
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                }
+        );
     }
 
     private void registerSyncKeysButton() {
         mSyncKeysButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        makeToast("Sdk is not loaded");
+                        toastAndLog(WARN, "Sdk is not loaded");
                         return;
                     }
 
@@ -286,7 +419,9 @@ public class MainActivity extends Activity {
                     LinearLayout linearLayout = new LinearLayout(this);
                     linearLayout.setOrientation(1); // 1 is for vertical orientation
                     final EditText inputKey = new EditText(this);
+                    inputKey.setText("key");
                     final EditText inputValue = new EditText(this);
+                    inputValue.setText("value");
                     linearLayout.addView(inputKey);
                     linearLayout.addView(inputValue);
                     alert.setView(linearLayout);
@@ -294,77 +429,112 @@ public class MainActivity extends Activity {
                     alert.setPositiveButton(
                             "Sync",
                             (dialog, which) -> {
-                                sHandler.post(
-                                        () -> {
-                                            final SharedPreferences pref =
-                                                    PreferenceManager.getDefaultSharedPreferences(
-                                                            getApplicationContext());
-                                            String keyToSync = inputKey.getText().toString();
-                                            String valueToSync = inputValue.getText().toString();
-                                            pref.edit().putString(keyToSync, valueToSync).commit();
-                                            mSdkSandboxManager.addSyncedSharedPreferencesKeys(
-                                                    Set.of(keyToSync));
-                                            IBinder binder = mSandboxedSdk.getInterface();
-                                            ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
-                                            try {
-                                                // Allow some time for data to sync
-                                                Thread.sleep(1000);
-                                                String syncedKeysValue =
-                                                        sdkApi.getSyncedSharedPreferencesString(
-                                                                keyToSync);
-                                                if (syncedKeysValue.equals(valueToSync)) {
-                                                    makeToast(
-                                                            "Key was synced successfully\n"
-                                                                    + "Key is : "
-                                                                    + keyToSync
-                                                                    + " Value is : "
-                                                                    + syncedKeysValue);
-                                                } else {
-                                                    makeToast("Key was not synced");
-                                                }
-                                            } catch (Exception e) {
-                                                throw new RuntimeException(e);
-                                            }
-                                        });
+                                onSyncKeyPressed(inputKey, inputValue);
                             });
                     alert.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
                     alert.show();
                 });
     }
 
-    private void registerStartActivityButton() {
-        mStartActivity.setOnClickListener(
+    private void onSyncKeyPressed(EditText inputKey, EditText inputValue) {
+        BackgroundThread.getHandler()
+                .post(
+                        () -> {
+                            final SharedPreferences pref =
+                                    PreferenceManager.getDefaultSharedPreferences(
+                                            getApplicationContext());
+                            String keyToSync = inputKey.getText().toString();
+                            String valueToSync = inputValue.getText().toString();
+                            pref.edit().putString(keyToSync, valueToSync).commit();
+                            mSdkSandboxManager.addSyncedSharedPreferencesKeys(Set.of(keyToSync));
+                            IBinder binder = mSandboxedSdk.getInterface();
+                            ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                            try {
+                                // Allow some time for data to sync
+                                Thread.sleep(1000);
+                                String syncedKeysValue =
+                                        sdkApi.getSyncedSharedPreferencesString(keyToSync);
+                                if (syncedKeysValue.equals(valueToSync)) {
+                                    toastAndLog(
+                                            INFO,
+                                            "Key was synced successfully\n"
+                                                    + "Key is : %s Value is : %s",
+                                            keyToSync,
+                                            syncedKeysValue);
+                                } else {
+                                    toastAndLog(WARN, "Key was not synced");
+                                }
+                            } catch (Exception e) {
+                                toastAndLog(e, "Failed to sync keys (%s)", keyToSync);
+                            }
+                        });
+    }
+
+    private void registerNewFullscreenAdButton() {
+        mNewFullScreenAd.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        makeToast("Sdk is not loaded");
+                        toastAndLog(WARN, "Sdk is not loaded");
                         return;
                     }
                     if (!SdkLevel.isAtLeastU()) {
-                        makeToast("Device should have Android U or above!");
+                        toastAndLog(WARN, "Device should have Android U or above!");
                         return;
                     }
                     IBinder binder = mSandboxedSdk.getInterface();
                     ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                    ActivityStarter starter = new ActivityStarter(this, mSdkSandboxManager);
                     try {
-                        sdkApi.startActivity(new ActivityStarter(this, mSdkSandboxManager));
+                        sdkApi.startActivity(starter);
+                        toastAndLog(INFO, "Started activity %s", starter);
+
                     } catch (RemoteException e) {
-                        makeToast("Failed to startActivity: " + e.getMessage());
-                        Log.e(TAG, "Failed to startActivity: " + e.getMessage(), e);
+                        toastAndLog(e, "Failed to startActivity (%s)", starter);
                     }
                 });
     }
 
-    private Bundle getRequestSurfacePackageParams() {
+    private Bundle getRequestSurfacePackageParams(String commType) {
         Bundle params = new Bundle();
-        params.putInt(EXTRA_WIDTH_IN_PIXELS, mRenderedView.getWidth());
-        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mRenderedView.getHeight());
+        params.putInt(EXTRA_WIDTH_IN_PIXELS, mBottomView.getWidth());
+        params.putInt(EXTRA_HEIGHT_IN_PIXELS, mBottomView.getHeight());
         params.putInt(EXTRA_DISPLAY_ID, getDisplay().getDisplayId());
-        params.putBinder(EXTRA_HOST_TOKEN, mRenderedView.getHostToken());
-        params.putBoolean(EXTRA_SDK_SDK_ENABLED_KEY, mSdkSdkCommEnabled);
+        params.putBinder(EXTRA_HOST_TOKEN, mBottomView.getHostToken());
+        params.putString(EXTRA_SDK_SDK_ENABLED_KEY, commType);
         return params;
     }
 
-    private void makeToast(String message) {
+    private void toastAndLog(int logLevel, String fmt, Object... args) {
+        String message = String.format(fmt, args);
+        switch (logLevel) {
+            case DEBUG:
+                Log.d(TAG, message);
+                break;
+            case ERROR:
+                Log.e(TAG, message);
+                break;
+            case INFO:
+                Log.i(TAG, message);
+                break;
+            case VERBOSE:
+                Log.v(TAG, message);
+                break;
+            case WARN:
+                Log.w(TAG, message);
+                break;
+            default:
+                Log.w(TAG, "Invalid log level " + logLevel + " for message: " + message);
+        }
+        makeToast(message);
+    }
+
+    private void toastAndLog(Exception e, String fmt, Object... args) {
+        String message = String.format(fmt, args);
+        Log.e(TAG, message, e);
+        makeToast(message);
+    }
+
+    private void makeToast(CharSequence message) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
     }
 
@@ -377,20 +547,19 @@ public class MainActivity extends Activity {
                     () -> {
                         SurfacePackage surfacePackage =
                                 result.getParcelable(EXTRA_SURFACE_PACKAGE, SurfacePackage.class);
-                        mRenderedView.setChildSurfacePackage(surfacePackage);
-                        mRenderedView.setVisibility(View.VISIBLE);
+                        mBottomView.setChildSurfacePackage(surfacePackage);
+                        mBottomView.setVisibility(View.VISIBLE);
                     });
-            makeToast("Rendered surface view");
+            toastAndLog(INFO, "Rendered surface view");
         }
 
         @Override
         public void onError(@NonNull RequestSurfacePackageException error) {
-            makeToast("Failed: " + error.getMessage());
-            Log.e(TAG, error.getMessage(), error);
+            toastAndLog(ERROR, "Failed: %s", error.getMessage());
         }
     }
 
-    private static class ActivityStarter extends IActivityStarter.Stub {
+    private static final class ActivityStarter extends IActivityStarter.Stub {
         private final Activity mActivity;
         private final SdkSandboxManager mSdkSandboxManager;
 
@@ -402,6 +571,11 @@ public class MainActivity extends Activity {
         @Override
         public void startActivity(IBinder token) throws RemoteException {
             mSdkSandboxManager.startSdkSandboxActivity(mActivity, token);
+        }
+
+        @Override
+        public String toString() {
+            return mActivity.getComponentName().flattenToShortString();
         }
     }
 

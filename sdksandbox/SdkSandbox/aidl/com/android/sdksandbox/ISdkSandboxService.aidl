@@ -37,7 +37,7 @@ oneway interface ISdkSandboxService {
     // TODO(b/228045863): Wrap parameters in a parcelable
     void loadSdk(in String callingPackageName, in ApplicationInfo info,
                   in String sdkName, in String sdkProviderClassName,
-                  in String sdkCeDataDir, in String sdkDeDataDir,
+                  in ApplicationInfo customizedInfo,
                   in Bundle params, in ILoadSdkInSandboxCallback callback,
                   in SandboxLatencyInfo sandboxLatencyInfo);
     void unloadSdk(in String sdkName, in IUnloadSdkCallback callback, in SandboxLatencyInfo sandboxLatencyInfo);

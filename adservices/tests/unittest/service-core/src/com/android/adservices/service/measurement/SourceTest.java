@@ -81,6 +81,9 @@ public class SourceTest {
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
+        String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
+        String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -117,6 +120,10 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -153,6 +160,10 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .build());
     }
 
@@ -301,6 +312,22 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain1.example.test"))
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .build());
     }
 
     @Test
@@ -324,7 +351,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -345,32 +373,12 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
     public void testSourceBuilder_validateArgumentAttributionDestination() {
-        assertInvalidSourceArguments(
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
-                SourceFixture.ValidSourceParams.PUBLISHER,
-                null,
-                null,
-                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                SourceFixture.ValidSourceParams.REGISTRANT,
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
-                SourceFixture.ValidSourceParams.EXPIRY_TIME,
-                SourceFixture.ValidSourceParams.PRIORITY,
-                SourceFixture.ValidSourceParams.SOURCE_TYPE,
-                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
-                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
-                SourceFixture.ValidSourceParams.DEBUG_KEY,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
-                SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
-                SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
-
         // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -391,7 +399,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Invalid web Uri
         assertInvalidSourceArguments(
@@ -413,7 +422,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty app destinations list
         assertInvalidSourceArguments(
@@ -435,7 +445,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty web destinations list
         assertInvalidSourceArguments(
@@ -457,7 +468,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Too many app destinations
         assertInvalidSourceArguments(
@@ -481,7 +493,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -505,7 +518,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -529,7 +543,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -550,7 +565,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -574,7 +590,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -1081,6 +1098,32 @@ public class SourceTest {
         assertEquals(
                 source.getAttributionDestinations(EventSurfaceType.WEB),
                 source.getWebDestinations());
+    }
+
+    @Test
+    public void fakeReports_flexEventReport_generatesFromStaticReportStates() throws JSONException {
+        Source source = spy(SourceFixture.getValidSourceWithFlexEventReport());
+        // Increase the probability of random attribution.
+        doReturn(0.50D).when(source).getRandomAttributionProbability();
+        int falseCount = 0;
+        int neverCount = 0;
+        int truthCount = 0;
+        for (int i = 0; i < 500; i++) {
+            List<Source.FakeReport> fakeReports =
+                    source.assignAttributionModeAndGenerateFakeReports();
+            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
+                falseCount++;
+                assertNotEquals(0, fakeReports.size());
+            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
+                neverCount++;
+                assertEquals(0, fakeReports.size());
+            } else {
+                truthCount++;
+            }
+        }
+        assertNotEquals(0, falseCount);
+        assertNotEquals(0, neverCount);
+        assertNotEquals(0, truthCount);
     }
 
     @Test
@@ -1595,7 +1638,8 @@ public class SourceTest {
             @Nullable String filterData,
             @Nullable String registrationId,
             @Nullable String sharedAggregationKeys,
-            @Nullable Long installTime) {
+            @Nullable Long installTime,
+            Uri registrationOrigin) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1619,6 +1663,7 @@ public class SourceTest {
                                 .setRegistrationId(registrationId)
                                 .setSharedAggregationKeys(sharedAggregationKeys)
                                 .setInstallTime(installTime)
+                                .setRegistrationOrigin(registrationOrigin)
                                 .build());
     }
 }

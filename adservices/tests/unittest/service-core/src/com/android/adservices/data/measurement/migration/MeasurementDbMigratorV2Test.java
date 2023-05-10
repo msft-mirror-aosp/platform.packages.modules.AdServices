@@ -35,7 +35,7 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class MeasurementDbMigratorV2Test extends AbstractMeasurementDbMigratorTestBase {
+public class MeasurementDbMigratorV2Test extends MeasurementDbMigratorTestBaseDeprecated {
 
     @Test
     public void performMigration_success() {

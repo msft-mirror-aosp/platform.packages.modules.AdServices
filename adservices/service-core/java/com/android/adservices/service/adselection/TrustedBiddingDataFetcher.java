@@ -23,7 +23,7 @@ import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 
 /** Data fetcher of Trusted Bidding data grouped by base URI. */
 public class TrustedBiddingDataFetcher {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final DevContext mDevContext;
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
@@ -100,7 +101,7 @@ public class TrustedBiddingDataFetcher {
             List<DBCustomAudience> customAudiences) {
         List<DBCustomAudience> customAudiencesWithoutOverride;
         if (mDevContext.getDevOptionsEnabled()) {
-            LogUtil.v("Filtering CA with dev override.");
+            sLogger.v("Filtering CA with dev override.");
             customAudiencesWithoutOverride =
                     customAudiences.stream()
                             .filter(
@@ -158,7 +159,7 @@ public class TrustedBiddingDataFetcher {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.v(
+                            sLogger.v(
                                     "Error fetching trusted bidding data for %s: %s",
                                     trustedBiddingUriWithKeys, e);
                             return null;
@@ -170,7 +171,7 @@ public class TrustedBiddingDataFetcher {
                                         .map(
                                                 r -> {
                                                     try {
-                                                        LogUtil.v("Keys are: %s", r);
+                                                        sLogger.v("Keys are: %s", r);
                                                         return new JSONObject(r);
                                                     } catch (JSONException e) {
                                                         return null;
@@ -181,7 +182,7 @@ public class TrustedBiddingDataFetcher {
                 .catching(
                         Exception.class,
                         e -> {
-                            LogUtil.v(
+                            sLogger.v(
                                     "Error parsing trusted bidding data for %s: %s",
                                     trustedBiddingUriWithKeys, e);
                             return null;

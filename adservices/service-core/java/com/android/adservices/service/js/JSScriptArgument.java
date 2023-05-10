@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 /** Represent an argument to supply to an JS script. */
 public abstract class JSScriptArgument {
-    private final String mName;
+    protected final String mName;
 
     protected JSScriptArgument(String name) {
         mName = name;

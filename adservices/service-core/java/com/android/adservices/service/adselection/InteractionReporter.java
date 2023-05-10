@@ -19,7 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
@@ -28,7 +28,6 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -36,7 +35,7 @@ import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -56,6 +55,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -65,11 +65,18 @@ import java.util.concurrent.ExecutorService;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class InteractionReporter {
+    public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
+            "Could not find a match in the database for this adSelectionId and callerPackageName!";
+    public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
+            "Interaction data max size exceeded!";
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final int LOGGING_API_NAME =
+            AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+
     @ReportInteractionRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
-    @NonNull private final Context mContext;
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
     @NonNull private final ListeningExecutorService mLightweightExecutorService;
@@ -81,7 +88,6 @@ public class InteractionReporter {
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
 
     public InteractionReporter(
-            @NonNull Context context,
             @NonNull AdSelectionEntryDao adSelectionEntryDao,
             @NonNull AdServicesHttpsClient adServicesHttpsClient,
             @NonNull ExecutorService lightweightExecutorService,
@@ -91,7 +97,6 @@ public class InteractionReporter {
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(lightweightExecutorService);
@@ -101,7 +106,6 @@ public class InteractionReporter {
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
 
-        mContext = context;
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAdServicesHttpsClient = adServicesHttpsClient;
         mLightweightExecutorService = MoreExecutors.listeningDecorator(lightweightExecutorService);
@@ -135,7 +139,7 @@ public class InteractionReporter {
                                 () -> {
                                     try {
                                         Trace.beginSection(Tracing.VALIDATE_REQUEST);
-                                        LogUtil.v("Starting filtering and validation.");
+                                        sLogger.v("Starting filtering and validation.");
                                         mAdSelectionServiceFilter.filterRequest(
                                                 null,
                                                 callerPackageName,
@@ -143,14 +147,20 @@ public class InteractionReporter {
                                                         .getEnforceForegroundStatusForFledgeReportInteraction(),
                                                 true,
                                                 mCallerUid,
-                                                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                                                LOGGING_API_NAME,
                                                 Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
                                         Preconditions.checkArgument(
                                                 mAdSelectionEntryDao
                                                         .doesAdSelectionMatchingCallerPackageNameExist(
-                                                                adSelectionId, callerPackageName));
+                                                                adSelectionId, callerPackageName),
+                                                NO_MATCH_FOUND_IN_AD_SELECTION_DB);
+                                        Preconditions.checkArgument(
+                                                inputParams.getInteractionData().getBytes().length
+                                                        <= mFlags
+                                                                .getFledgeReportInteractionMaxInteractionDataSizeB(),
+                                                INTERACTION_DATA_SIZE_MAX_EXCEEDED);
                                     } finally {
-                                        LogUtil.v("Completed filtering and validation.");
+                                        sLogger.v("Completed filtering and validation.");
                                         Trace.endSection();
                                     }
                                 },
@@ -165,7 +175,7 @@ public class InteractionReporter {
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e(t, "Report Interaction failed!");
+                        sLogger.e(t, "Report Interaction failed!");
                         if (t instanceof FilterException
                                 && t.getCause() instanceof ConsentManager.RevokedConsentException) {
                             // Skip logging if a FilterException occurs.
@@ -192,22 +202,27 @@ public class InteractionReporter {
                         new FutureCallback<List<Void>>() {
                             @Override
                             public void onSuccess(List<Void> result) {
-                                LogUtil.d("Report Interaction succeeded!");
+                                sLogger.d("Report Interaction succeeded!");
                                 mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                        AdServicesStatusUtils.STATUS_SUCCESS,
-                                        0);
+                                        LOGGING_API_NAME, AdServicesStatusUtils.STATUS_SUCCESS, 0);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
-                                LogUtil.e(
+                                sLogger.e(
                                         t,
                                         "Report Interaction failure encountered during reporting!");
-                                mAdServicesLogger.logFledgeApiCallStats(
-                                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                                        AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                                        0);
+                                if (t instanceof IOException) {
+                                    mAdServicesLogger.logFledgeApiCallStats(
+                                            LOGGING_API_NAME,
+                                            AdServicesStatusUtils.STATUS_IO_ERROR,
+                                            0);
+                                } else {
+                                    mAdServicesLogger.logFledgeApiCallStats(
+                                            LOGGING_API_NAME,
+                                            AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
+                                            0);
+                                }
                             }
                         },
                         mLightweightExecutorService);
@@ -216,12 +231,12 @@ public class InteractionReporter {
     private FluentFuture<List<Uri>> getReportingUris(ReportInteractionInput inputParams) {
         return fetchReportingUris(inputParams)
                 .transformAsync(
-                        reportingUris -> filterReportingUris(inputParams, reportingUris),
+                        reportingUris -> filterReportingUris(reportingUris),
                         mLightweightExecutorService);
     }
 
     private FluentFuture<List<Uri>> fetchReportingUris(ReportInteractionInput inputParams) {
-        LogUtil.v(
+        sLogger.v(
                 "Fetching ad selection entry ID %d for caller \"%s\"",
                 inputParams.getAdSelectionId(), inputParams.getCallerPackageName());
         long adSelectionId = inputParams.getAdSelectionId();
@@ -249,8 +264,7 @@ public class InteractionReporter {
                         }));
     }
 
-    private FluentFuture<List<Uri>> filterReportingUris(
-            ReportInteractionInput inputParams, List<Uri> reportingUris) {
+    private FluentFuture<List<Uri>> filterReportingUris(List<Uri> reportingUris) {
         return FluentFuture.from(
                 mLightweightExecutorService.submit(
                         () -> {
@@ -258,21 +272,18 @@ public class InteractionReporter {
                                 return reportingUris;
                             } else {
                                 // Do enrollment check and only add Uris that pass enrollment
-                                String callerPackageName = inputParams.getCallerPackageName();
                                 ArrayList<Uri> validatedUris = new ArrayList<>();
 
                                 for (Uri uri : reportingUris) {
                                     try {
-                                        mFledgeAuthorizationFilter.assertAdTechAllowed(
-                                                mContext,
-                                                callerPackageName,
+                                        mFledgeAuthorizationFilter.assertAdTechEnrolled(
                                                 AdTechIdentifier.fromString(uri.getHost()),
-                                                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                                                LOGGING_API_NAME);
                                         validatedUris.add(uri);
                                     } catch (
                                             FledgeAuthorizationFilter.AdTechNotAllowedException
                                                     exception) {
-                                        LogUtil.d(
+                                        sLogger.d(
                                                 String.format(
                                                         "Enrollment check failed! Skipping"
                                                                 + " reporting for %s:",
@@ -294,7 +305,7 @@ public class InteractionReporter {
                             .setErrorMessage(errorMessage)
                             .build());
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send failed result to the callback");
+            sLogger.e(e, "Unable to send failed result to the callback");
         }
     }
 
@@ -302,7 +313,7 @@ public class InteractionReporter {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
-            LogUtil.e(e, "Unable to send successful result to the callback");
+            sLogger.e(e, "Unable to send successful result to the callback");
         }
     }
 
@@ -324,8 +335,7 @@ public class InteractionReporter {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
         if (!isFilterException) {
-            mAdServicesLogger.logFledgeApiCallStats(
-                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, resultCode, 0);
+            mAdServicesLogger.logFledgeApiCallStats(LOGGING_API_NAME, resultCode, 0);
         }
 
         invokeFailure(callback, resultCode, t.getMessage());
@@ -339,7 +349,7 @@ public class InteractionReporter {
 
     private ListenableFuture<List<Void>> doReport(
             List<Uri> reportingUris, ReportInteractionInput inputParams) {
-        LogUtil.i(reportingUris.toString());
+        sLogger.i(reportingUris.toString());
         List<ListenableFuture<Void>> reportingFuturesList = new ArrayList<>();
         String interactionData = inputParams.getInteractionData();
 

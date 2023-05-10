@@ -42,8 +42,8 @@ public class AdDataTempHideTest {
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
 
         Parcel targetParcel = Parcel.obtain();
@@ -54,21 +54,21 @@ public class AdDataTempHideTest {
         assertThat(adDataFromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(adDataFromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
         assertThat(adDataFromParcel.getAdCounterKeys())
-                .containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
-        assertThat(adDataFromParcel.getAdFilters()).isEqualTo(AdFiltersFixture.VALID_AD_FILTERS);
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+        assertThat(adDataFromParcel.getAdFilters()).isEqualTo(AdFiltersFixture.getValidAdFilters());
     }
 
     @Test
     public void testEqualsIdentical_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
         final AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
 
         assertThat(originalAdData.equals(identicalAdData)).isTrue();
@@ -78,8 +78,8 @@ public class AdDataTempHideTest {
     public void testEqualsDifferent_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
         final AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -94,8 +94,8 @@ public class AdDataTempHideTest {
     public void testEqualsNull_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
         final AdData nullAdData = null;
 
@@ -106,13 +106,13 @@ public class AdDataTempHideTest {
     public void testHashCodeIdentical_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
         final AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
 
         assertThat(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
@@ -122,8 +122,8 @@ public class AdDataTempHideTest {
     public void testHashCodeDifferent_success() {
         final AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
         final AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
@@ -145,13 +145,13 @@ public class AdDataTempHideTest {
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
-                        .setAdFilters(AdFiltersFixture.VALID_AD_FILTERS)
+                        .setAdFilters(AdFiltersFixture.getValidAdFilters())
                         .build();
 
         assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
         assertThat(validAdData.getAdCounterKeys()).isEmpty();
-        assertThat(validAdData.getAdFilters()).isEqualTo(AdFiltersFixture.VALID_AD_FILTERS);
+        assertThat(validAdData.getAdFilters()).isEqualTo(AdFiltersFixture.getValidAdFilters());
     }
 
     @Test
@@ -160,13 +160,13 @@ public class AdDataTempHideTest {
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
-                        .setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS)
+                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
         assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
         assertThat(validAdData.getAdCounterKeys())
-                .containsExactlyElementsIn(AdDataFixture.AD_COUNTER_KEYS);
+                .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
         assertThat(validAdData.getAdFilters()).isNull();
     }
 
@@ -182,5 +182,110 @@ public class AdDataTempHideTest {
         assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
         assertThat(validAdData.getAdCounterKeys()).isEmpty();
         assertThat(validAdData.getAdFilters()).isNull();
+    }
+
+    @Test
+    public void testParcelWithFilters_success() {
+        final AdData originalAdData =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setMetadata(AdDataFixture.VALID_METADATA)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+
+        Parcel targetParcel = Parcel.obtain();
+        originalAdData.writeToParcel(targetParcel, 0);
+        targetParcel.setDataPosition(0);
+        final AdData adDataFromParcel = AdData.CREATOR.createFromParcel(targetParcel);
+
+        assertThat(adDataFromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        assertThat(adDataFromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        assertThat(adDataFromParcel.getAdFilters()).isEqualTo(getValidAppInstallOnlyFilters());
+    }
+
+    @Test
+    public void testEqualsIdenticalFilters_success() {
+        final AdData originalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+        final AdData identicalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+
+        assertThat(originalAdData.equals(identicalAdData)).isTrue();
+    }
+
+    @Test
+    public void testEqualsDifferentFilters_success() {
+        final AdData originalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+        final AdData differentAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(null)
+                        .build();
+
+        assertThat(originalAdData.equals(differentAdData)).isFalse();
+    }
+
+    @Test
+    public void testEqualsNullFilters_success() {
+        final AdData originalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+        final AdData nullAdData = null;
+
+        assertThat(originalAdData.equals(nullAdData)).isFalse();
+    }
+
+    @Test
+    public void testHashCodeIdenticalFilters_success() {
+        final AdData originalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+        final AdData identicalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+
+        assertThat(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
+    }
+
+    @Test
+    public void testHashCodeDifferentFilters_success() {
+        final AdData originalAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(getValidAppInstallOnlyFilters())
+                        .build();
+        final AdData differentAdData =
+                AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
+                        .setAdFilters(null)
+                        .build();
+
+        assertThat(originalAdData.hashCode()).isNotEqualTo(differentAdData.hashCode());
+    }
+
+    @Test
+    public void testBuildValidAdDataWithUnsetFiltersOnly_success() {
+        final AdData validAdData =
+                new AdData.Builder()
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setMetadata(AdDataFixture.VALID_METADATA)
+                        .build();
+
+        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        assertThat(validAdData.getAdFilters()).isNull();
+    }
+
+    private AdFilters getValidAppInstallOnlyFilters() {
+        return new AdFilters.Builder()
+                .setAppInstallFilters(AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
+                .build();
     }
 }

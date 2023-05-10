@@ -349,6 +349,60 @@ public class AggregateCryptoConverterTest {
     }
 
     @Test
+    public void testEncodeWithCbor_withAndWithoutSignedBits_ignoreSignedBits() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        byte[] withoutSignedBit = new byte[] {10};
+        byte[] withSignedBit = new byte[] {0, 20};
+        byte[] withEmptyBucket = new byte[] {0};
+
+        final AggregateHistogramContribution firstContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(withoutSignedBit))
+                        .setValue(1)
+                        .build();
+        final AggregateHistogramContribution secondContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(withSignedBit))
+                        .setValue(2)
+                        .build();
+        final AggregateHistogramContribution thirdContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger(withEmptyBucket))
+                        .setValue(0)
+                        .build();
+        contributions.add(firstContribution);
+        contributions.add(secondContribution);
+        contributions.add(thirdContribution);
+
+        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+        assertEquals(3, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", "10")
+                                                && isFound((Map) i, "value", "1")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", "20")
+                                                && isFound((Map) i, "value", "2")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, "bucket", "0")
+                                                && isFound((Map) i, "value", "0")));
+    }
+
+    @Test
     public void testEncryptWithHpke_successfully() {
         byte[] encoded =
                 AggregateCryptoConverter.encryptWithHpke(

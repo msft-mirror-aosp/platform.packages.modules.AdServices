@@ -197,6 +197,11 @@ public class AppsViewModel extends AndroidViewModel {
             mConsentManager.disable(getApplication(), AdServicesApiType.FLEDGE);
         }
         mAppsConsent.postValue(getAppsConsentFromConsentManager());
+        if (FlagsFactory.getFlags().getRecordManualInteractionEnabled()) {
+            ConsentManager.getInstance(getApplication())
+                    .recordUserManualInteractionWithConsent(
+                            ConsentManager.MANUAL_INTERACTIONS_RECORDED);
+        }
     }
     /**
      * Triggers opt out process for Privacy Sandbox. Also reverts the switch state, since

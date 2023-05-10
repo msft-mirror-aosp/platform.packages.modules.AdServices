@@ -237,14 +237,14 @@ public class PerBuyerBiddingRunnerTest {
 
             switch (i % 4) {
                 case 0:
-                    builder.setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS);
+                    builder.setAdCounterKeys(AdDataFixture.getAdCounterKeys());
                     break;
                 case 1:
-                    builder.setAdFilters(AdFiltersFixture.VALID_AD_FILTERS);
+                    builder.setAdFilters(AdFiltersFixture.getValidAdFilters());
                     break;
                 case 2:
-                    builder.setAdCounterKeys(AdDataFixture.AD_COUNTER_KEYS);
-                    builder.setAdFilters(AdFiltersFixture.VALID_AD_FILTERS);
+                    builder.setAdCounterKeys(AdDataFixture.getAdCounterKeys());
+                    builder.setAdFilters(AdFiltersFixture.getValidAdFilters());
                     break;
             }
             ads.add(builder.build());

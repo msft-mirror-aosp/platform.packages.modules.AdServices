@@ -43,12 +43,12 @@ public class Sdk1 extends SandboxedSdkProvider {
     // Expected Taxonomy version and Model version. This should be changed along with corresponding
     // model and taxonomy change.
     private static final long TAXONOMY_VERSION = 2L;
-    private static final long MODEL_VERSION = 3L;
+    private static final long MODEL_VERSION = 4L;
 
     // Set of classification topics for the Test App. The returned topic should be one of these
     // Topics.
     private static final ImmutableSet<Integer> TOPIC_ID_SET =
-            ImmutableSet.of(10147, 10253, 10175, 10254, 10333);
+            ImmutableSet.of(10175, 10147, 10254, 10333, 10253);
 
     @Override
     public SandboxedSdk onLoadSdk(Bundle params) throws LoadSdkException {
@@ -72,14 +72,20 @@ public class Sdk1 extends SandboxedSdkProvider {
                     // Return a response to tell the Test App that the second Topics
                     // API call got back some topic which is expected. This will tell the Test
                     // App to pass the test.
-                    Log.i(TAG, "Get correct returned topic: " + topic.getTopicId());
+                    Log.i(TAG, "Got correct returned topic: " + topic.getTopicId());
                     return new SandboxedSdk(new Binder());
                 } else {
                     // Throw an exception to tell the test app that we received
                     // a wrong topic. This will tell the Test App to fail the test.
-                    Log.e(TAG, "Get wrong returned topic: " + topic.getTopicId());
-                    throw new LoadSdkException(
-                            new Exception("Failed. Wrong topics!"), new Bundle());
+                    String errorMessage =
+                            String.format(
+                                    "Got incorrect returned topic: %d, taxonomy version: %d, model"
+                                            + " version: %d",
+                                    topic.getTopicId(),
+                                    topic.getTaxonomyVersion(),
+                                    topic.getModelVersion());
+                    Log.e(TAG, errorMessage);
+                    throw new LoadSdkException(new Exception(errorMessage), new Bundle());
                 }
             }
         } catch (Exception e) {

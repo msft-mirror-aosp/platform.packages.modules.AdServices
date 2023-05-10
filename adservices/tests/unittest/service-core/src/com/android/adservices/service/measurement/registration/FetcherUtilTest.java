@@ -33,26 +33,31 @@ import android.net.Uri;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.measurement.AsyncRegistration;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.WebUtil;
-import com.android.adservices.service.measurement.util.AsyncRedirect;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.MockitoSession;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -65,9 +70,35 @@ public final class FetcherUtilTest {
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
 
+    private MockitoSession mStaticMockSession;
+
+    public static final int UNKNOWN_SOURCE_TYPE = 0;
+    public static final int UNKNOWN_REGISTRATION_SURFACE_TYPE = 0;
+    public static final int APP_REGISTRATION_SURFACE_TYPE = 2;
+    public static final int UNKNOWN_STATUS = 0;
+    public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+
+    @Before
+    public void setup() {
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .strictness(Strictness.WARN)
+                        .startMocking();
+        ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+    }
+
+    @After
+    public void cleanup() throws InterruptedException {
+        mStaticMockSession.finishMocking();
+    }
+
     @Test
     public void testIsSuccess() {
         assertTrue(FetcherUtil.isSuccess(200));
+        assertTrue(FetcherUtil.isSuccess(201));
+        assertTrue(FetcherUtil.isSuccess(202));
+        assertTrue(FetcherUtil.isSuccess(204));
         assertFalse(FetcherUtil.isSuccess(404));
         assertFalse(FetcherUtil.isSuccess(500));
         assertFalse(FetcherUtil.isSuccess(0));
@@ -88,48 +119,55 @@ public final class FetcherUtilTest {
 
     @Test
     public void parseRedirects_noRedirectHeaders_returnsEmpty() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(), AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
-        assertEquals(0, asyncRedirect.getRedirects().size());
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(Map.of());
+        assertEquals(2, redirectMap.size());
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LIST).isEmpty());
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LOCATION).isEmpty());
     }
 
     @Test
-    public void parseRedirects_bothHeaderTypes_choosesListType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(
-                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
-                        "Location", List.of("baz.test")),
-                AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.NONE, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
+    public void parseRedirects_bothHeaderTypes() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(
+                        Map.of(
+                                "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
+                                "Location", List.of("baz.test")));
+        assertEquals(2, redirectMap.size());
+        // Verify List Redirects
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LIST);
         assertEquals(2, redirects.size());
         assertEquals(Uri.parse("foo.test"), redirects.get(0));
         assertEquals(Uri.parse("bar.test"), redirects.get(1));
-    }
-
-    @Test
-    public void parseRedirects_locationHeaderOnly_choosesLocationType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of("Location", List.of("foo.test")),
-                AsyncRegistration.RedirectType.ANY);
-        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
-        assertEquals(1, redirects.size());
-        assertEquals(Uri.parse("foo.test"), redirects.get(0));
-    }
-
-    @Test
-    public void parseRedirects_bothHeaderTypes_providedLocationType_choosesLocationType() {
-        AsyncRedirect asyncRedirect = FetcherUtil.parseRedirects(
-                Map.of(
-                        "Attribution-Reporting-Redirect", List.of("foo.test", "bar.test"),
-                        "Location", List.of("baz.test")),
-                AsyncRegistration.RedirectType.DAISY_CHAIN);
-        assertEquals(AsyncRegistration.RedirectType.DAISY_CHAIN, asyncRedirect.getRedirectType());
-        List<Uri> redirects = asyncRedirect.getRedirects();
+        // Verify Location Redirect
+        redirects = redirectMap.get(AsyncRegistration.RedirectType.LOCATION);
         assertEquals(1, redirects.size());
         assertEquals(Uri.parse("baz.test"), redirects.get(0));
+    }
+
+    @Test
+    public void parseRedirects_locationHeaderOnly() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(Map.of("Location", List.of("baz.test")));
+        assertEquals(2, redirectMap.size());
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LOCATION);
+        assertEquals(1, redirects.size());
+        assertEquals(Uri.parse("baz.test"), redirects.get(0));
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LIST).isEmpty());
+    }
+
+    @Test
+    public void parseRedirects_lsitHeaderOnly() {
+        Map<AsyncRegistration.RedirectType, List<Uri>> redirectMap =
+                FetcherUtil.parseRedirects(
+                        Map.of("Attribution-Reporting-Redirect", List.of("foo.test", "bar.test")));
+        assertEquals(2, redirectMap.size());
+        // Verify List Redirects
+        List<Uri> redirects = redirectMap.get(AsyncRegistration.RedirectType.LIST);
+        assertEquals(2, redirects.size());
+        assertEquals(Uri.parse("foo.test"), redirects.get(0));
+        assertEquals(Uri.parse("bar.test"), redirects.get(1));
+        assertTrue(redirectMap.get(AsyncRegistration.RedirectType.LOCATION).isEmpty());
     }
 
     @Test
@@ -323,8 +361,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 28;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -333,7 +381,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -350,8 +403,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 28;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -360,7 +423,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
                                         .build()));
     }
@@ -380,8 +448,18 @@ public final class FetcherUtilTest {
         int headersMapSize = 18;
 
         // Execution
-        FetcherUtil.emitHeaderMetrics(
-                mFlags, mLogger, registrationType, headersMap, REGISTRATION_URI);
+        AsyncRegistration asyncRegistration =
+                new AsyncRegistration.Builder()
+                        .setRegistrationId(UUID.randomUUID().toString())
+                        .setType(AsyncRegistration.RegistrationType.APP_SOURCE)
+                        .setRegistrationUri(REGISTRATION_URI)
+                        .build();
+
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headersMap));
+
+        FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
 
         // Verify
         verify(mLogger)
@@ -390,7 +468,12 @@ public final class FetcherUtilTest {
                                 new MeasurementRegistrationResponseStats.Builder(
                                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                                 registrationType,
-                                                headersMapSize)
+                                                headersMapSize,
+                                                UNKNOWN_SOURCE_TYPE,
+                                                APP_REGISTRATION_SURFACE_TYPE,
+                                                UNKNOWN_STATUS,
+                                                UNKNOWN_REGISTRATION_FAILURE_TYPE,
+                                                0)
                                         .setAdTechDomain(null)
                                         .build()));
     }
@@ -409,6 +492,11 @@ public final class FetcherUtilTest {
     public void isValidAggregateDeduplicationKey_success() {
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("18446744073709551615"));
         assertTrue(FetcherUtil.isValidAggregateDeduplicationKey("0"));
+    }
+
+    @Test
+    public void isValidAggregateDeduplicationKey_nullValue_success() {
+        assertFalse(FetcherUtil.isValidAggregateDeduplicationKey(null));
     }
 
     private Map<String, List<String>> createHeadersMap() {
