@@ -69,12 +69,7 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
-    // TODO(b/253202014): Add toggle button
-    private static final Boolean IS_WEBVIEW_TESTING_ENABLED = false;
-    private static final String SDK_NAME =
-            IS_WEBVIEW_TESTING_ENABLED
-                    ? "com.android.sdksandboxcode_webview"
-                    : "com.android.sdksandboxcode";
+    private static final String SDK_NAME = "com.android.sdksandboxcode";
     private static final String MEDIATEE_SDK_NAME = "com.android.sdksandboxcode_mediatee";
     private static final String TAG = "SdkSandboxClientMainActivity";
 
@@ -82,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
+    private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
 
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
@@ -275,6 +271,9 @@ public class MainActivity extends AppCompatActivity {
                             case VIDEO -> {
                                 params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
                                 params.putString(VIDEO_URL_KEY, options.getVideoUrl());
+                            }
+                            case WEBVIEW -> {
+                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_WEBVIEW);
                             }
                         }
                         sHandler.post(
