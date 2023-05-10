@@ -29,6 +29,11 @@
             android:entryValues="@array/banner_view_type_values"
             android:defaultValue="RANDOM_COLOUR"
         />
+        <EditTextPreference
+            app:key="banner_video_url"
+            app:title="@string/video_url"
+            app:useSimpleSummaryProvider="true"
+        />
     </PreferenceCategory>
 
     <PreferenceCategory
