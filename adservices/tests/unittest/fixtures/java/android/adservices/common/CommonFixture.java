@@ -18,6 +18,7 @@ package android.adservices.common;
 
 import android.net.Uri;
 import android.os.Process;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -38,6 +39,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class CommonFixture {
+    private static final String LOG_TAG = "adservices";
+
     public static final String TEST_PACKAGE_NAME = processName();
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final String TEST_PACKAGE_NAME_2 = "android.adservices.tests2";
@@ -56,8 +59,6 @@ public class CommonFixture {
             AdTechIdentifier.fromString("notenrolled.com");
     public static final AdTechIdentifier VALID_BUYER_1 = AdTechIdentifier.fromString("test.com");
     public static final AdTechIdentifier VALID_BUYER_2 = AdTechIdentifier.fromString("test2.com");
-    public static final AdTechIdentifier VALID_BUYER_3 = AdTechIdentifier.fromString("test3.com");
-
     public static final AdTechIdentifier INVALID_EMPTY_BUYER = AdTechIdentifier.fromString("");
     public static final Set<AdTechIdentifier> BUYER_SET =
             new HashSet<>(Arrays.asList(VALID_BUYER_1, VALID_BUYER_2));
@@ -80,6 +81,22 @@ public class CommonFixture {
     public static <T> void assertDifferentHashCode(T... objs) {
         Set<T> helperSet = new HashSet<>(Arrays.asList(objs));
         Truth.assertThat(helperSet).hasSize(objs.length);
+    }
+
+    public static void doSleep(long timeout) {
+        Log.i(LOG_TAG, "Starting to sleep for " + timeout + " ms");
+        long currentTime = System.currentTimeMillis();
+        long wakeupTime = currentTime + timeout;
+        while (wakeupTime - currentTime > 0) {
+            Log.i(LOG_TAG, "Time left to sleep: " + (wakeupTime - currentTime) + " ms");
+            try {
+                Thread.sleep(wakeupTime - currentTime);
+            } catch (InterruptedException ignored) {
+
+            }
+            currentTime = System.currentTimeMillis();
+        }
+        Log.i(LOG_TAG, "Done sleeping");
     }
 
     private static String processName() {

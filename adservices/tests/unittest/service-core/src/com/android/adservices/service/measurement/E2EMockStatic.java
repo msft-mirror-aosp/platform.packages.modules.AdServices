@@ -17,7 +17,12 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.StaticMockFixtureRule;
@@ -43,6 +48,7 @@ public final class E2EMockStatic implements StaticMockFixture {
             StaticMockitoSessionBuilder sessionBuilder) {
         sessionBuilder.spyStatic(PrivacyParams.class);
         sessionBuilder.spyStatic(SystemHealthParams.class);
+        sessionBuilder.spyStatic(AppManifestConfigHelper.class);
         return sessionBuilder;
     }
 
@@ -80,6 +86,12 @@ public final class E2EMockStatic implements StaticMockFixture {
         doAnswer((Answer<Integer>) invocation ->
                 mParams.getMaxAggregateReportsPerDestination())
                     .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
+        // Pass manifest checks
+        doReturn(true)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedAttributionAccess(
+                                        any(), any(), anyString()));
     }
 
     /**

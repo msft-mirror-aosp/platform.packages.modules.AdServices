@@ -19,7 +19,6 @@ import static com.android.adservices.service.measurement.SystemHealthParams.MAX_
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_DEDUPLICATION_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_AGGREGATE_KEYS_PER_REGISTRATION;
 import static com.android.adservices.service.measurement.SystemHealthParams.MAX_ATTRIBUTION_EVENT_TRIGGER_DATA;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -39,6 +38,7 @@ import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -70,16 +70,20 @@ public class AsyncTriggerFetcher {
     private final EnrollmentDao mEnrollmentDao;
     private final Flags mFlags;
     private final AdServicesLogger mLogger;
+    private final Context mContext;
 
     public AsyncTriggerFetcher(Context context) {
         this(
+                context,
                 EnrollmentDao.getInstance(context),
                 FlagsFactory.getFlags(),
                 AdServicesLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public AsyncTriggerFetcher(EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+    public AsyncTriggerFetcher(
+            Context context, EnrollmentDao enrollmentDao, Flags flags, AdServicesLogger logger) {
+        mContext = context;
         mEnrollmentDao = enrollmentDao;
         mFlags = flags;
         mLogger = logger;
@@ -94,6 +98,8 @@ public class AsyncTriggerFetcher {
             String enrollmentId,
             Map<String, List<String>> headers,
             AsyncFetchStatus asyncFetchStatus) {
+        boolean arDebugPermission = asyncRegistration.getDebugKeyAllowed();
+        LogUtil.d("Trigger ArDebug permission enabled %b", arDebugPermission);
         Trigger.Builder builder = new Trigger.Builder();
         builder.setEnrollmentId(enrollmentId);
         builder.setAttributionDestination(
@@ -101,10 +107,20 @@ public class AsyncTriggerFetcher {
                         asyncRegistration.getTopOrigin(), asyncRegistration.getType()));
         builder.setRegistrant(asyncRegistration.getRegistrant());
         builder.setAdIdPermission(asyncRegistration.hasAdIdPermission());
-        builder.setArDebugPermission(asyncRegistration.getDebugKeyAllowed());
+        builder.setArDebugPermission(arDebugPermission);
         builder.setDestinationType(
                 asyncRegistration.isWebRequest() ? EventSurfaceType.WEB : EventSurfaceType.APP);
         builder.setTriggerTime(asyncRegistration.getRequestTime());
+        Optional<Uri> registrationUriOrigin =
+                Web.originAndScheme(asyncRegistration.getRegistrationUri());
+        if (!registrationUriOrigin.isPresent()) {
+            LogUtil.d(
+                    "AsyncTriggerFetcher: "
+                            + "Invalid or empty registration uri - "
+                            + asyncRegistration.getRegistrationUri());
+            return Optional.empty();
+        }
+        builder.setRegistrationOrigin(registrationUriOrigin.get());
         List<String> field =
                 headers.get(TriggerHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER);
         if (field == null || field.size() != 1) {
@@ -269,12 +285,7 @@ public class AsyncTriggerFetcher {
             urlConnection.setRequestMethod("POST");
             urlConnection.setInstanceFollowRedirects(false);
             headers = urlConnection.getHeaderFields();
-            FetcherUtil.emitHeaderMetrics(
-                    mFlags,
-                    mLogger,
-                    AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                    headers,
-                    asyncRegistration.getRegistrationUri());
+            asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
             LogUtil.d("Response code = " + responseCode);
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
@@ -307,11 +318,15 @@ public class AsyncTriggerFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.maybeGetEnrollmentId(
-                        asyncRegistration.getRegistrationUri(), mEnrollmentDao);
+                Enrollment.getValidEnrollmentId(
+                        asyncRegistration.getRegistrationUri(),
+                        asyncRegistration.getRegistrant().getAuthority(),
+                        mEnrollmentDao,
+                        mContext,
+                        mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
-                    "fetchTrigger: unable to find enrollment ID. Registration URI: %s",
+                    "fetchTrigger: Valid enrollment id not found. Registration URI: %s",
                     asyncRegistration.getRegistrationUri());
             asyncFetchStatus.setEntityStatus(AsyncFetchStatus.EntityStatus.INVALID_ENROLLMENT);
             return Optional.empty();
@@ -478,11 +493,12 @@ public class AsyncTriggerFetcher {
         for (int i = 0; i < aggregateDeduplicationKeys.length(); i++) {
             JSONObject aggregateDedupKey = new JSONObject();
             JSONObject deduplication_key = aggregateDeduplicationKeys.getJSONObject(i);
+
             String deduplicationKey = deduplication_key.optString("deduplication_key");
-            if (!FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
-                return Optional.empty();
+            if (!deduplication_key.isNull("deduplication_key")
+                    && FetcherUtil.isValidAggregateDeduplicationKey(deduplicationKey)) {
+                aggregateDedupKey.put("deduplication_key", deduplicationKey);
             }
-            aggregateDedupKey.put("deduplication_key", deduplicationKey);
             if (!deduplication_key.isNull("filters")) {
                 JSONArray filters = Filter.maybeWrapFilters(deduplication_key, "filters");
                 if (!FetcherUtil.areValidAttributionFilters(filters)) {

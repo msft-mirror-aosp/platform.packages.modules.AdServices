@@ -27,6 +27,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CallerMetadata;
@@ -43,9 +47,10 @@ import android.text.TextUtils;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -74,6 +79,7 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class TopicsServiceImpl extends ITopicsService.Stub {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
     private final Context mContext;
     private final TopicsWorker mTopicsWorker;
@@ -151,7 +157,11 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                     topicsParam.getAppPackageName(), topicsParam.getSdkName());
                         }
                     } catch (RemoteException e) {
-                        LogUtil.e(e, "Unable to send result to the callback");
+                        sLogger.e(e, "Unable to send result to the callback");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
                         resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -160,14 +170,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                         long binderLatency = (startServiceTime - binderCallStartTimeMillis) * 2;
 
                         final int apiLatency = (int) (serviceLatency + binderLatency);
+                        final int apiName =
+                                topicsParam.shouldRecordObservation()
+                                        ? AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS
+                                        : AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
                         mAdServicesLogger.logApiCallStats(
                                 new ApiCallStats.Builder()
                                         .setCode(AdServicesStatsLog.AD_SERVICES_API_CALLED)
                                         .setApiClass(AD_SERVICES_API_CALLED__API_CLASS__TARGETING)
-                                        .setApiName(
-                                                topicsParam.shouldRecordObservation()
-                                                    ? AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS
-                                        : AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API)
+                                        .setApiName(apiName)
                                         .setAppPackageName(packageName)
                                         .setSdkPackageName(sdkName)
                                         .setLatencyMillisecond(apiLatency)
@@ -193,11 +204,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                 Throttler.ApiKey.TOPICS_API_SDK_NAME, topicsParam.getSdkName());
 
         if (throttled) {
-            LogUtil.e("Rate Limit Reached for TOPICS_API");
+            sLogger.e("Rate Limit Reached for TOPICS_API");
             try {
                 callback.onFailure(STATUS_RATE_LIMIT_REACHED);
             } catch (RemoteException e) {
-                LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+                sLogger.e(e, "Fail to call the callback on Rate Limit Reached.");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             }
             return true;
         }
@@ -320,11 +335,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
             IGetTopicsCallback callback,
             @AdServicesStatusUtils.StatusCode int statusCode,
             String message) {
-        LogUtil.e(message);
+        sLogger.e(message);
         try {
             callback.onFailure(statusCode);
         } catch (RemoteException e) {
-            LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+            sLogger.e(e, String.format("Fail to call the callback. %s", message));
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
         }
     }
 
@@ -335,11 +354,15 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
         try {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
-            LogUtil.e(e, callingPackage + " not found");
+            sLogger.e(e, callingPackage + " not found");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
-            LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+            sLogger.e(callingPackage + " does not belong to uid " + callingUid);
             return STATUS_UNAUTHORIZED;
         }
         return STATUS_SUCCESS;

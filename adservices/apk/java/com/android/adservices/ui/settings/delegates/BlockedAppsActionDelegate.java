@@ -26,6 +26,8 @@ import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedAppsFragment;
@@ -39,13 +41,12 @@ import java.io.IOException;
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class BlockedAppsActionDelegate extends BaseActionDelegate {
+public class BlockedAppsActionDelegate {
     private final BlockedAppsActivity mBlockedAppsActivity;
     private final BlockedAppsViewModel mBlockedAppsViewModel;
 
     public BlockedAppsActionDelegate(
             BlockedAppsActivity blockedAppsActivity, BlockedAppsViewModel blockedAppsViewModel) {
-        super(blockedAppsActivity);
         mBlockedAppsActivity = blockedAppsActivity;
         mBlockedAppsViewModel = blockedAppsViewModel;
         listenToBlockedAppsViewModelUiEvents();
@@ -64,10 +65,15 @@ public class BlockedAppsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         if (event == BlockedAppsViewModelUiEvent.RESTORE_APP) {
-                            logUIAction(ActionEnum.UNBLOCK_APP_SELECTED);
+                            UiStatsLogger.logUnblockAppSelected(mBlockedAppsActivity);
                             mBlockedAppsViewModel.restoreAppConsent(app);
                             if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                DialogManager.showUnblockAppDialog(mBlockedAppsActivity, app);
+                                if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                    DialogFragmentManager.showUnblockAppDialog(
+                                            mBlockedAppsActivity, app);
+                                } else {
+                                    DialogManager.showUnblockAppDialog(mBlockedAppsActivity, app);
+                                }
                             }
                         } else {
                             Log.e("AdservicesUI", "Unknown Action for UI Logging");

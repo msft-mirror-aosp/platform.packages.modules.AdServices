@@ -15,6 +15,8 @@
  */
 package com.android.adservices.ohttp;
 
+import android.annotation.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -63,6 +65,9 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     /** Returns a reference to the AEAD algorithm AES-256-GCM */
     public native long hpkeAeadAes256Gcm();
 
+    /** Returns a reference to the HKDF_SHA256 message digest (i.e., SHA256) */
+    public native long hkdfSha256MessageDigest();
+
     /**
      * Returns reference to a newly-allocated EVP_HPKE_CTX BoringSSL object. Object thus created
      * must be freed by calling {@link #hpkeCtxFree(long)}
@@ -70,7 +75,7 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
     public native long hpkeCtxNew();
 
     /**
-     * Calls the boringSSL EVP_HPKE_CTX_setup_sender_with_seed method which implements the
+     * Calls the boringSSL {@code EVP_HPKE_CTX_setup_sender_with_seed} method which implements the
      * SetupBaseS HPKE operation.
      *
      * <p>It encapsulates and returns the sharedSecret for publicKey and sets up ctx as sender
@@ -82,38 +87,180 @@ class OhttpJniWrapper implements IOhttpJniWrapper {
      * @param kdfNativeRef The reference to the KDF algorithm
      * @param aeadNativeRef The reference to the AEAD algorithm
      * @param publicKey The server's public key
-     * @param info Info for AEAD encryption
-     * @param seed A randomly generated seed used for KEM shared secret
-     * @return The encapsulated shared secret
+     * @param info Optional info parameter used by the KDF algorithm. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-encryption-to-a-public-key
+     * @param seed Seed to deterministically generate the KEM ephemeral key. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @return The encapsulated shared secret that can be decrypted by the server using their
+     *     private key and will also be required on the client to decrypt server's response
      */
-    public byte[] hpkeCtxSetupSenderWithSeed(
+    public EncapsulatedSharedSecret hpkeCtxSetupSenderWithSeed(
             HpkeContextNativeRef hpkeContextNativeRef,
             KemNativeRef kemNativeRef,
             KdfNativeRef kdfNativeRef,
             AeadNativeRef aeadNativeRef,
             byte[] publicKey,
-            byte[] info,
+            @Nullable byte[] info,
             byte[] seed) {
         Objects.requireNonNull(hpkeContextNativeRef);
         Objects.requireNonNull(kemNativeRef);
         Objects.requireNonNull(kdfNativeRef);
         Objects.requireNonNull(aeadNativeRef);
-        return hpkeCtxSetupSenderWithSeed(
-                hpkeContextNativeRef.getAddress(),
-                kemNativeRef.getAddress(),
-                kdfNativeRef.getAddress(),
-                aeadNativeRef.getAddress(),
-                publicKey,
-                info,
-                seed);
+        Objects.requireNonNull(publicKey);
+        Objects.requireNonNull(seed);
+        byte[] encapsulatedSharedSecret =
+                hpkeCtxSetupSenderWithSeed(
+                        hpkeContextNativeRef.getAddress(),
+                        kemNativeRef.getAddress(),
+                        kdfNativeRef.getAddress(),
+                        aeadNativeRef.getAddress(),
+                        publicKey,
+                        info,
+                        seed);
+        return EncapsulatedSharedSecret.create(encapsulatedSharedSecret);
     }
 
+    /**
+     * Calls HPKE setupSender and Seal operations. These two operations combined make up HPKE
+     * encryption.
+     *
+     * <p>{@link #hpkeCtxSeal(HpkeContextNativeRef, byte[], byte[])} should never be called without
+     * calling {@link #hpkeCtxSetupSenderWithSeed(HpkeContextNativeRef, KemNativeRef, KdfNativeRef,
+     * AeadNativeRef, byte[], byte[], byte[])} first. Hence, we provide a public method that calls
+     * both.
+     *
+     * @param hpkeContextNativeRef Reference to the HPKE context object
+     * @param kemNativeRef Reference to the KEM object
+     * @param kdfNativeRef Reference to the KDF object
+     * @param aeadNativeRef Reference to the AEAD object
+     * @param publicKey Server's public key used to encapsulate shared secret
+     * @param info Optional info parameter used by the KDF algorithm during setupSender operation.
+     *     See https://www.rfc-editor.org/rfc/rfc9180#name-encryption-to-a-public-key
+     * @param seed Seed to deterministically generate the KEM ephemeral key. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @param plainText The plain text to be encrypted
+     * @param aad An optional additional info parameter that provides additional authenticated data
+     *     to the AEAD algorithm in use. See
+     *     https://www.rfc-editor.org/rfc/rfc9180#name-derivekeypair
+     * @return {@link HpkeEncryptResponse} containing the encrypted cipher text and the encapsulated
+     *     shared secret that would later be useful for decryption.
+     */
+    public HpkeEncryptResponse hpkeEncrypt(
+            HpkeContextNativeRef hpkeContextNativeRef,
+            KemNativeRef kemNativeRef,
+            KdfNativeRef kdfNativeRef,
+            AeadNativeRef aeadNativeRef,
+            byte[] publicKey,
+            @Nullable byte[] info,
+            byte[] seed,
+            @Nullable byte[] plainText,
+            @Nullable byte[] aad) {
+        EncapsulatedSharedSecret encapsulatedSharedSecret =
+                hpkeCtxSetupSenderWithSeed(
+                        hpkeContextNativeRef,
+                        kemNativeRef,
+                        kdfNativeRef,
+                        aeadNativeRef,
+                        publicKey,
+                        info,
+                        seed);
+        byte[] cipherText = hpkeCtxSeal(hpkeContextNativeRef, plainText, aad);
+
+        return HpkeEncryptResponse.create(encapsulatedSharedSecret, cipherText);
+    }
+
+    /**
+     * Computes and returns a HKDF PseudoRandomKey (as specified by RFC 5869) from initial keying
+     * material {@code secret} and {@code salt} using a digest method referenced by {@code
+     * hkdfMessageDigestNativeRef}
+     */
+    public HkdfExtractResponse hkdfExtract(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef, byte[] secret, byte[] salt) {
+        Objects.requireNonNull(hkdfMessageDigestNativeRef);
+        byte[] extractResponse = hkdfExtract(hkdfMessageDigestNativeRef.getAddress(), secret, salt);
+        return HkdfExtractResponse.create(extractResponse);
+    }
+
+    /**
+     * Uses the HPKE context to export a secret of length {@code secretLength}. This function uses
+     * contextual information in the form of a {@code contextString} for the secret. This is
+     * necessary to separate different uses of exported secrets and bind relevant caller-specific
+     * context into the output.
+     */
+    public HpkeExportResponse hpkeExport(
+            HpkeContextNativeRef hpkeContext, byte[] contextString, int secretLength) {
+        Objects.requireNonNull(hpkeContext);
+        byte[] exportResponse = hpkeExport(hpkeContext.getAddress(), contextString, secretLength);
+        return HpkeExportResponse.create(exportResponse);
+    }
+
+    /**
+     * Computes and returns a HKDF Output Keying Material (as specified by RFC 5869) of length
+     * {@code keyLength} from the PseudoRandomKey ({@code prkArray}) and {@code info} using a digest
+     * referenced by {@code hkdfMessageDigestNativeRef}
+     */
+    public HkdfExpandResponse hkdfExpand(
+            HkdfMessageDigestNativeRef hkdfMessageDigestNativeRef,
+            byte[] prkArray,
+            byte[] infoArray,
+            int keyLength) {
+        Objects.requireNonNull(hkdfMessageDigestNativeRef);
+        byte[] expandResponse =
+                hkdfExpand(hkdfMessageDigestNativeRef.getAddress(), prkArray, infoArray, keyLength);
+        return HkdfExpandResponse.create(expandResponse);
+    }
+
+    /**
+     * Decrypts the {@code cipherTextArray} using the symmetric key {@code keyArray} and the
+     * single-use {@code nonceArray} that were used at the time of encryption.
+     */
+    public byte[] aeadOpen(
+            AeadNativeRef aeadNativeRef,
+            byte[] keyArray,
+            byte[] nonceArray,
+            byte[] cipherTextArray) {
+        Objects.requireNonNull(aeadNativeRef);
+        return aeadOpen(aeadNativeRef.getAddress(), keyArray, nonceArray, cipherTextArray);
+    }
+
+    /**
+     * Calls the boringSSL method {@code EVP_HPKE_CTX_seal} to encrypt the {@code plainText} using
+     * optional {@code aad}
+     *
+     * <p>This method must be preceded by {@link #hpkeCtxSetupSenderWithSeed(HpkeContextNativeRef,
+     * KemNativeRef, KdfNativeRef, AeadNativeRef, byte[], byte[], byte[])} or it will lead to a
+     * SIGSEGV fault. Hence, we do not provide a public interface for this method.
+     *
+     * @return encrypted ciphertext
+     */
+    @Nullable
+    private byte[] hpkeCtxSeal(
+            HpkeContextNativeRef hpkeContextNativeRef,
+            @Nullable byte[] plaintText,
+            @Nullable byte[] aad) {
+        Objects.requireNonNull(hpkeContextNativeRef);
+        return hpkeCtxSeal(hpkeContextNativeRef.getAddress(), plaintText, aad);
+    }
+
+    @Nullable
     private native byte[] hpkeCtxSetupSenderWithSeed(
             long ctx,
             long kemNativeRef,
             long kdfNativeRef,
             long aeadNativeRef,
             byte[] publicKey,
-            byte[] info,
+            @Nullable byte[] info,
             byte[] seed);
+
+    private native byte[] hpkeCtxSeal(long ctx, @Nullable byte[] plaintText, @Nullable byte[] aad);
+
+    private native byte[] aeadOpen(
+            long aeadNativeRef, byte[] keyArray, byte[] nonceArray, byte[] cipherTextArray);
+
+    private native byte[] hkdfExpand(
+            long hkdfMessageDigestNativeRef, byte[] prkArray, byte[] infoArray, int keyLength);
+
+    private native byte[] hkdfExtract(long hkdfMessageDigestNativeRef, byte[] secret, byte[] salt);
+
+    private native byte[] hpkeExport(long hpkeContext, byte[] contextString, int secretLength);
 }

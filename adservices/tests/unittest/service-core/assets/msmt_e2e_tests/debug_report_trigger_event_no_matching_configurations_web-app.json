@@ -1,7 +1,7 @@
 {
   "description": "W2A test: given trigger has adid permission enabled, source and trigger join key match. Expected source-success and trigger-event-no-matching-configurations debug report",
   "phflags_override": {
-    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.com"
+    "measurement_debug_join_key_enrollment_allowlist" : "enrollment-id-www.ad-tech1.test"
   },
   "input": {
     "web_sources": [{
@@ -25,7 +25,6 @@
             "web_destination": "https://example.1d1.test",
             "priority": "100",
             "expiry": "172801",
-            "debug_reporting": true,
             "debug_key": "347982378",
             "debug_join_key": "sample-debug-join-key",
             "filter_data": {
@@ -68,31 +67,22 @@
     }]
   },
   "output": {
-    "event_level_results": [],
-    "aggregatable_results": [],
-    "debug_report_results": [{
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-      "payload": {
-        "type": "trigger-event-no-matching-configurations",
-        "body": {
-          "attribution_destination": "android-app://com.example.2d1",
-          "trigger_debug_key": "8971346783",
-          "source_debug_key": "347982378",
-          "source_event_id": "1",
-          "source_site": "android-app://example.1s1.test"
-        }
+    "debug_report_results": [
+      {
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
+        "payload": [
+          {
+            "type": "trigger-event-no-matching-configurations",
+            "body": {
+              "attribution_destination": "android-app://com.example.2d1",
+              "trigger_debug_key": "8971346783",
+              "source_debug_key": "347982378",
+              "source_event_id": "1",
+              "source_site": "android-app://example.1s1.test"
+            }
+          }
+        ]
       }
-    }, {
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-      "payload": {
-        "type": "source-success",
-        "body": {
-          "source_event_id": "1",
-          "attribution_destination": "https://1d1.test",
-          "source_site": "android-app://example.1s1.test",
-          "source_debug_key": "347982378"
-        }
-      }
-    }]
+    ]
   }
 }

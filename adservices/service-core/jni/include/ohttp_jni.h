@@ -27,15 +27,16 @@ extern "C" {
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKemDhkemX25519HkdfSha256(JNIEnv *,
-                                                                  jclass);
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKemDhkemX25519HkdfSha256(
+    JNIEnv *, jclass);
 /*
  * Class:     OhttpJniWrapper
  * Method:    hpkeKdfHkdfSha256
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *, jclass);
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *,
+                                                                    jclass);
 
 /*
  * Class:     OhttpJniWrapper
@@ -43,7 +44,8 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeKdfHkdfSha256(JNIEnv *, jc
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes128Gcm(JNIEnv *, jclass);
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes128Gcm(JNIEnv *,
+                                                                    jclass);
 
 /*
  * Class:     OhttpJniWrapper
@@ -51,15 +53,27 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes128Gcm(JNIEnv *, jc
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes256Gcm(JNIEnv *, jclass);
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeAeadAes256Gcm(JNIEnv *,
+                                                                    jclass);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hkdfSha256MessageDigest
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hkdfSha256MessageDigest(
+    JNIEnv *env, jclass);
 
 /*
  * Class:     OhttpJniWrapper
  * Method:    hpkeCtxFree
  * Signature: (J)
  */
-JNIEXPORT void JNICALL Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxFree(
-    JNIEnv *env, jclass, jlong hpkeCtxRef);
+JNIEXPORT void JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxFree(JNIEnv *env,
+                                                              jclass,
+                                                              jlong hpkeCtxRef);
 
 /*
  * Class:     OhttpJniWrapper
@@ -67,7 +81,8 @@ JNIEXPORT void JNICALL Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtx
  * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxNew(JNIEnv *env, jclass);
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxNew(JNIEnv *env,
+                                                             jclass);
 
 /*
  * Class:     OhttpJniWrapper
@@ -79,6 +94,54 @@ Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSetupSenderWithSeed(
     JNIEnv *env, jclass, jlong senderHpkeCtxRef, jlong evpKemRef,
     jlong evpKdfRef, jlong evpAeadRef, jbyteArray publicKeyArray,
     jbyteArray infoArray, jbyteArray seedArray);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hpkeCtxSeal
+ * Signature: (J[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeCtxSeal(
+    JNIEnv *env, jclass, jlong senderHpkeCtxRef, jbyteArray plaintextArray,
+    jbyteArray aadArray);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hpkeExport
+ * Signature: (J[BI)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hpkeExport(JNIEnv* env, jclass, jlong hpkeCtxRef,
+                                                       jbyteArray exporterCtxArray, jint length);
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hkdfExtract
+ * Signature: (J[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hkdfExtract(
+    JNIEnv *env, jclass, jlong hkdfMd, jbyteArray secret, jbyteArray salt);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    hkdfExpand
+ * Signature: (J[B[BI)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_hkdfExpand(
+    JNIEnv *env, jclass, jlong hkdfMd, jbyteArray prkArray,
+    jbyteArray infoArray, jint key_len);
+
+/*
+ * Class:     OhttpJniWrapper
+ * Method:    aeadOpen
+ * Signature: (J[B[B[B)[B
+ */
+JNIEXPORT jbyteArray JNICALL
+Java_com_android_adservices_ohttp_OhttpJniWrapper_aeadOpen(
+    JNIEnv *env, jclass, jlong evpAeadRef, jbyteArray keyArray,
+    jbyteArray nonceArray, jbyteArray cipherTextArray);
+
 #ifdef __cplusplus
 }
 #endif

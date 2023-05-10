@@ -24,6 +24,7 @@ import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.os.Process;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -62,6 +63,9 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (SdkLevel.isAtLeastT()) {
             assertForegroundActivityStarted();
         } else {
@@ -88,6 +92,9 @@ public class AdSelectionManagerDebuggableTest extends ForegroundDebuggableCtsTes
 
     @After
     public void tearDown() {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
         if (!SdkLevel.isAtLeastT()) {
             CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();

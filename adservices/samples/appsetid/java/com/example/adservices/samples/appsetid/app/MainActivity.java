@@ -17,11 +17,10 @@ package com.example.adservices.samples.appsetid.app;
 
 import android.adservices.appsetid.AppSetId;
 import android.adservices.appsetid.AppSetIdManager;
+import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.OutcomeReceiver;
-import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -39,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mAppSetIdButton;
     private TextView mAppSetIdTextView;
     private AppSetIdManager mAppSetIdManager;
-    private Executor mExecutor = Executors.newCachedThreadPool();
+    private final Executor mExecutor = Executors.newCachedThreadPool();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void registerAppSetIdButton() {
-        OutcomeReceiver appSetIdCallback =
+        OutcomeReceiver<AppSetId, Exception> appSetIdCallback =
                 new OutcomeReceiver<AppSetId, Exception>() {
                     @Override
                     public void onResult(@NonNull AppSetId appSetId) {
@@ -68,29 +67,27 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
 
-        mAppSetIdButton.setOnClickListener(
-                new OnClickListener() {
-                    public void onClick(View v) {
-                        mAppSetIdManager.getAppSetId(mExecutor, appSetIdCallback);
-                    }
-                });
+        mAppSetIdButton.setOnClickListener(v -> getAppSetId(mExecutor, appSetIdCallback));
+    }
+
+    @TargetApi(Build.VERSION_CODES.S)
+    @SuppressWarnings("NewApi")
+    private void getAppSetId(Executor executor, OutcomeReceiver<AppSetId, Exception> callback) {
+        // getService() in AdIdManager throws on main thread and doesn't offload the error to the
+        // callback. Catch it to avoid app to crash.
+        try {
+            mAppSetIdManager.getAppSetId(executor, callback);
+        } catch (IllegalStateException e) {
+            callback.onError(e);
+        }
     }
 
     private void setAppSetIdText(String text) {
-        runOnUiThread(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        mAppSetIdTextView.setText(text);
-                    }
-                });
+        runOnUiThread(() -> mAppSetIdTextView.setText(text));
     }
 
+    @SuppressWarnings("NewApi")
     private String getAppSetIdDisplayString(AppSetId appSetId) {
-        return "AppSetId: "
-                + appSetId.getId()
-                + "\n"
-                + "AppSetId Scope: "
-                + String.valueOf(appSetId.getScope());
+        return "AppSetId: " + appSetId.getId() + "\n" + "AppSetId Scope: " + appSetId.getScope();
     }
 }

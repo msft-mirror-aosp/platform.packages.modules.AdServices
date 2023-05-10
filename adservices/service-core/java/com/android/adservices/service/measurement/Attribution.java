@@ -32,6 +32,7 @@ public class Attribution {
     private final String mDestinationSite;
     private final String mDestinationOrigin;
     private final String mEnrollmentId;
+    // TODO: b/276638412 rename to source time
     private final long mTriggerTime;
     private final String mRegistrant;
     private final String mSourceId;

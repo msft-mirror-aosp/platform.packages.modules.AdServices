@@ -27,14 +27,18 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
+import com.android.adservices.service.PhFlagsFixture;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -63,18 +67,31 @@ public class PermissionsAppOptOutTest {
 
     @Before
     public void setup() {
+        // Skip the test if it runs on unsupported platforms
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
+
         if (!SdkLevel.isAtLeastT()) {
             overridePpapiAppAllowList();
             CompatAdServicesTestUtils.setFlags();
         }
+
+        // TODO: Remove once b/277790129 has been resolved
+        final String flags = ShellUtils.runShellCommand("device_config list adservices");
+        Log.d("Adservices", flags);
     }
 
     @After
     public void tearDown() throws Exception {
+        if (!AdservicesTestHelper.isDeviceSupported()) {
+            return;
+        }
+
         if (!SdkLevel.isAtLeastT()) {
             setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
+        CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
 
     private void setPpapiAppAllowList(String allowList) {
