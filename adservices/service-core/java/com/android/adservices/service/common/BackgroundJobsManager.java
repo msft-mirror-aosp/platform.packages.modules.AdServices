@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
+
 import android.annotation.NonNull;
 import android.app.job.JobScheduler;
 import android.content.Context;
@@ -195,7 +200,7 @@ public class BackgroundJobsManager {
 
         unscheduleMaintenanceJobs(jobScheduler);
 
-        jobScheduler.cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
+        jobScheduler.cancel(CONSENT_NOTIFICATION_JOB.getJobId());
 
         MddJobService.unscheduleAllJobs(jobScheduler);
     }
@@ -226,7 +231,7 @@ public class BackgroundJobsManager {
     public static void unscheduleTopicsBackgroundJobs(@NonNull JobScheduler jobScheduler) {
         Objects.requireNonNull(jobScheduler);
 
-        jobScheduler.cancel(AdServicesConfig.TOPICS_EPOCH_JOB_ID);
+        jobScheduler.cancel(TOPICS_EPOCH_JOB.getJobId());
     }
 
     /**
@@ -237,7 +242,7 @@ public class BackgroundJobsManager {
     public static void unscheduleFledgeBackgroundJobs(@NonNull JobScheduler jobScheduler) {
         Objects.requireNonNull(jobScheduler);
 
-        jobScheduler.cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
+        jobScheduler.cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
     }
 
     /**
@@ -248,6 +253,6 @@ public class BackgroundJobsManager {
     public static void unscheduleMaintenanceJobs(@NonNull JobScheduler jobScheduler) {
         Objects.requireNonNull(jobScheduler);
 
-        jobScheduler.cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
+        jobScheduler.cancel(MAINTENANCE_JOB.getJobId());
     }
 }
