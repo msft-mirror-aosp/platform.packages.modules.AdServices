@@ -211,7 +211,7 @@ public class NotificationActivityUiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+    public void privacyPolicyLinkTest() throws Exception {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
         Assume.assumeTrue(SdkLevel.isAtLeastT());
@@ -350,17 +350,21 @@ public class NotificationActivityUiAutomatorTest {
 
     private boolean isDefaultBrowserOpenedAfterClicksOnTheBottomOfSentence(
             String packageNameOfDefaultBrowser, UiObject sentence, int countOfClicks)
-            throws UiObjectNotFoundException {
+            throws Exception {
         int right = sentence.getBounds().right,
                 bottom = sentence.getBounds().bottom,
                 left = sentence.getBounds().left;
         for (int x = left; x < right; x += (right - left) / countOfClicks) {
             sDevice.click(x, bottom - 2);
-            if (!sentence.exists()) {
-                sDevice.pressBack();
-                return true;
-            }
+            Thread.sleep(200);
         }
+
+        if (!sentence.exists()) {
+            sDevice.pressBack();
+            ApkTestUtil.killDefaultBrowserPkgName(sDevice, mContext);
+            return true;
+        }
+
         return false;
     }
 }
