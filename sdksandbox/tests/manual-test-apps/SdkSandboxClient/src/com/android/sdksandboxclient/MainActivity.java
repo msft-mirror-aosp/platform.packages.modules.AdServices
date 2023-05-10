@@ -101,9 +101,9 @@ public class MainActivity extends AppCompatActivity {
     private Button mNewBannerAdButton;
     private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
-    private Button mPlayVideoButton;
     private Button mSyncKeysButton;
     private Button mSdkToSdkCommButton;
+    private Button mDumpSandboxButton;
     private Button mNewFullScreenAd;
 
     private SurfaceView mBottomView;
@@ -150,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
         mCreateFileButton = findViewById(R.id.create_file_button);
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
+        mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
 
         registerLoadSdksButton();
         registerDeathCallbackButton();
@@ -161,6 +162,7 @@ public class MainActivity extends AppCompatActivity {
         registerCreateFileButton();
         registerSyncKeysButton();
         registerSdkToSdkButton();
+        registerDumpSandboxButton();
 
         if (savedInstanceState == null) {
             // Register AppOwnedSdkInterface when activity first created
@@ -376,6 +378,31 @@ public class MainActivity extends AppCompatActivity {
                         toastAndLog(INFO, "Sdk to Sdk Comm Disabled");
                     }
                 });
+    }
+
+    private void registerDumpSandboxButton() {
+        mDumpSandboxButton.setOnClickListener(
+                v -> {
+                    if (!mSdksLoaded) {
+                        toastAndLog(WARN, "Sdk is not loaded");
+                        return;
+                    }
+
+                    IBinder binder = mSandboxedSdk.getInterface();
+                    ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                    String sandboxDump = "";
+                    try {
+                        sandboxDump = sdkApi.getSandboxDump();
+                    } catch (RemoteException e) {
+                        // Do nothing, the correct text won't be displayed.
+                    }
+                    new AlertDialog.Builder(this)
+                            .setTitle("Information provided by the sandbox")
+                            .setMessage(sandboxDump)
+                            .setNegativeButton("Cancel", null)
+                            .show();
+                }
+        );
     }
 
     private void registerSyncKeysButton() {

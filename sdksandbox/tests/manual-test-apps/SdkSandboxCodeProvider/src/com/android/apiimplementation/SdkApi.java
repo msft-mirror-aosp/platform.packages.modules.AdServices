@@ -24,6 +24,7 @@ import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -85,6 +86,15 @@ public class SdkApi extends ISdkApi.Stub {
     @Override
     public String getSyncedSharedPreferencesString(String key) {
         return getClientSharedPreferences().getString(key, "");
+    }
+
+    @Override
+    public String getSandboxDump() {
+        // Check if the SDK can access device volume.
+        AudioManager audioManager = mContext.getSystemService(AudioManager.class);
+        int curVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+        int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        return "Current music volume: " + curVolume + ", max music volume: " + maxVolume;
     }
 
     @Override

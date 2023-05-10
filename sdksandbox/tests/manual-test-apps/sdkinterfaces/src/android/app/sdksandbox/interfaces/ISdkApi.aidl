@@ -23,4 +23,5 @@ interface ISdkApi {
     // sdks for example, to loadAd for a given adDetail
     String getMessage();
     void startActivity(IActivityStarter callback);
+    String getSandboxDump();
 }
