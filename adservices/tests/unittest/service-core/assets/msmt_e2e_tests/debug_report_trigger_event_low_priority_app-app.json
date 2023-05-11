@@ -222,10 +222,11 @@
             "type":"trigger-event-low-priority",
             "body": {
               "attribution_destination": "android-app://example.2d1.test",
-              "scheduled_report_time": "1643411973000",
+              "scheduled_report_time": "1643411973",
               "source_event_id": "1",
               "source_type": "navigation",
               "randomized_trigger_rate": 0.0024263,
+              "trigger_data": "4",
               "source_debug_key": "347982378",
               "trigger_debug_key": "8971346784"
             }
