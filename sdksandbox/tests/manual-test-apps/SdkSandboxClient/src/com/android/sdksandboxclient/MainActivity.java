@@ -39,6 +39,8 @@ import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -113,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
         enableStrictMode();
         super.onCreate(savedInstanceState);
 
+        setAppTitle();
+
         if (savedInstanceState != null) {
             mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
         }
@@ -173,6 +177,20 @@ public class MainActivity extends AppCompatActivity {
         }
 
         refreshLoadSdksButtonText();
+    }
+
+    private void setAppTitle() {
+        try {
+            final PackageInfo packageInfo =
+                    getPackageManager().getPackageInfo(getPackageName(), /*flags=*/ 0);
+            final String versionName = packageInfo.versionName;
+            setTitle(
+                    String.format(
+                            "%s (%s)",
+                            getResources().getString(R.string.title_activity_main), versionName));
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Could not find package " + getPackageName());
+        }
     }
 
     private void handleExtras() {
