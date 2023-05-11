@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,6 +35,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -42,7 +45,8 @@ import java.util.concurrent.Executor;
  * {@link AggregateReportingJobHandler}
  */
 public final class AggregateReportingJobService extends JobService {
-
+    private static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID =
+            MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB.getJobId();
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
@@ -52,16 +56,23 @@ public final class AggregateReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
+
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling AggregateReportingJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
 
         if (FlagsFactory.getFlags().getMeasurementJobAggregateReportingKillSwitch()) {
             LogUtil.e("AggregateReportingJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         LogUtil.d("AggregateReportingJobService.onStartJob");
@@ -79,6 +90,11 @@ public final class AggregateReportingJobService extends JobService {
                                             System.currentTimeMillis()
                                                     - maxAggregateReportUploadRetryWindowMs,
                                             System.currentTimeMillis());
+
+                    AdservicesJobServiceLogger.getInstance(AggregateReportingJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID, success, !success);
+
                     jobFinished(params, !success);
                 });
 
@@ -88,7 +104,11 @@ public final class AggregateReportingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AggregateReportingJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link AggregateReportingJobService} */
@@ -96,7 +116,7 @@ public final class AggregateReportingJobService extends JobService {
     static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                AdServicesConfig.MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
+                                MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID,
                                 new ComponentName(context, AggregateReportingJobService.class))
                         .setRequiresDeviceIdle(true)
                         .setRequiresBatteryNotLow(true)
@@ -136,11 +156,14 @@ public final class AggregateReportingJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID, skipReason);
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, false);

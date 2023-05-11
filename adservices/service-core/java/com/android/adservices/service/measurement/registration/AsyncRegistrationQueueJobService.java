@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.registration;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -30,6 +32,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -37,19 +40,28 @@ import java.time.Instant;
 
 /** Job Service for servicing queued registration requests */
 public class AsyncRegistrationQueueJobService extends JobService {
+    private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
+            MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
+
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling AsyncRegistrationQueueJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
 
         if (FlagsFactory.getFlags().getAsyncRegistrationJobQueueKillSwitch()) {
             LogUtil.e("AsyncRegistrationQueueJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         Instant jobStartTime = Clock.systemUTC().instant();
@@ -62,7 +74,16 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 .execute(
                         () -> {
                             asyncQueueRunner.runAsyncRegistrationQueueWorker();
-                            jobFinished(params, false);
+
+                            boolean shouldRetry = false;
+                            AdservicesJobServiceLogger.getInstance(
+                                            AsyncRegistrationQueueJobService.this)
+                                    .recordJobFinished(
+                                            MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
+                                            /* isSuccessful */ true,
+                                            shouldRetry);
+
+                            jobFinished(params, shouldRetry);
                             // jobFinished is asynchronous, so forcing scheduling avoiding
                             // concurrency issue
                             scheduleIfNeeded(this, /* forceSchedule */ true);
@@ -73,7 +94,11 @@ public class AsyncRegistrationQueueJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AsyncRegistrationQueueJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     @VisibleForTesting
@@ -123,11 +148,15 @@ public class AsyncRegistrationQueueJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID, skipReason);
+
         // Tell the JobScheduler that the job is done and does not need to be rescheduled
         jobFinished(params, false);
 
