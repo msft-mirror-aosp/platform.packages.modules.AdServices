@@ -41,6 +41,8 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.MediaController;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -57,6 +59,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
     private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
+    private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
@@ -87,6 +90,37 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             return view;
         } else if (VIEW_TYPE_WEBVIEW.equals(type)) {
             return new TestWebView(windowContext);
+        } else if (VIEW_TYPE_AD_REFRESH.equals(type)) {
+            final LayoutInflater inflater =
+                    (LayoutInflater)
+                            windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            final View view = inflater.inflate(R.layout.sample_layout, null);
+            view.setOnClickListener(new OpenBrowserOnClickListener(getContext()));
+            view.postDelayed(
+                    () -> {
+                        final Random random = new Random();
+                        final TextView textView = (TextView) view.findViewById(R.id.textViewItem);
+                        textView.setBackgroundColor(
+                                Color.rgb(
+                                        random.nextInt(256),
+                                        random.nextInt(256),
+                                        random.nextInt(256)));
+
+                        view.postDelayed(
+                                () -> {
+                                    final RelativeLayout rl =
+                                            (RelativeLayout) view.findViewById(R.id.item);
+                                    rl.setBackgroundColor(
+                                            Color.rgb(
+                                                    random.nextInt(256),
+                                                    random.nextInt(256),
+                                                    random.nextInt(256)));
+                                },
+                                2000);
+                    },
+                    1000);
+
+            return view;
         }
         mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
         return new TestView(windowContext, getContext(), mSdkSdkCommEnabled);
