@@ -17,26 +17,24 @@
 package com.android.apiimplementation;
 
 import android.app.Activity;
-import android.app.Application;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.view.View;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.VideoView;
-import android.window.OnBackInvokedCallback;
-import android.window.OnBackInvokedDispatcher;
 
 import com.android.modules.utils.build.SdkLevel;
 
@@ -47,12 +45,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class SdkApi extends ISdkApi.Stub {
+    private static final String WEB_VIEW_LINK = "https://youtu.be/pQdzFbmlvOo";
     private static final String VIDEO_URL_KEY = "video-url";
 
     private final Context mContext;
 
+    private WebView mWebView;
+
     public SdkApi(Context sdkContext) {
         mContext = sdkContext;
+        preloadWebViewForActivity(sdkContext);
     }
 
     @Override
@@ -110,91 +112,24 @@ public class SdkApi extends ISdkApi.Stub {
             throw new IllegalStateException("Starting activity requires Android U or above!");
         }
 
-        String videoUrl = params.getString(VIDEO_URL_KEY, null);
+        final String videoUrl = params.getString(VIDEO_URL_KEY, null);
         SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
         IBinder token =
                 controller.registerSdkSandboxActivityHandler(
-                        activity -> populateView(activity, videoUrl));
+                        activity -> {
+                            View mediaView;
+                            if (videoUrl != null) {
+                                mediaView = createVideoAd(activity, videoUrl);
+                            } else {
+                                mediaView = mWebView;
+                            }
+                            new ActivityHandler(activity, mContext, mediaView).buildLayout();
+                        });
         iActivityStarter.startActivity(token);
     }
 
-    private void populateView(Activity activity, String videoUrl) {
-        // creating LinearLayout
-        LinearLayout linLayout = new LinearLayout(activity);
-        // specifying vertical orientation
-        linLayout.setOrientation(LinearLayout.VERTICAL);
-        // creating LayoutParams
-        LinearLayout.LayoutParams linLayoutParam =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.MATCH_PARENT);
-        TextView textView = new TextView(activity);
-        textView.setText("This is an Activity running inside the sandbox process!");
-        linLayout.addView(textView);
-
-        final Button toggleBackNavigationButton = createToggleBackNavigationButton(activity);
-        linLayout.addView(toggleBackNavigationButton);
-
-        final Button portraitOrientationButton = createRequestPortraitOrientationButton(activity);
-        final Button landscapeOrientationButton = createRequestLandscapeOrientationButton(activity);
-        linLayout.addView(portraitOrientationButton);
-        linLayout.addView(landscapeOrientationButton);
-
-        final Button finishActivityButton = createFinishActivityButton(activity);
-        linLayout.addView(finishActivityButton);
-
-        if (videoUrl != null) {
-            final VideoView videoAd = createVideoAd(activity, videoUrl);
-            linLayout.addView(videoAd);
-        }
-
-        final TextView statesChangeLog = createStatesChangeLog(activity);
-        linLayout.addView(statesChangeLog);
-
-        // set LinearLayout as a root element of the screen
-        activity.setContentView(linLayout, linLayoutParam);
-    }
-
-    private Button createToggleBackNavigationButton(Activity activity) {
-        final Button button = new Button(activity);
-        final BackNavigationDisabler disabler = new BackNavigationDisabler(activity);
-        button.setOnClickListener(
-                v -> {
-                    disabler.toggle();
-                    button.setText(
-                            toggleBackNavigationButtonText(disabler.isBackNavigationDisabled()));
-                });
-        button.setText(toggleBackNavigationButtonText(disabler.isBackNavigationDisabled()));
-        return button;
-    }
-
-    private Button createRequestLandscapeOrientationButton(Activity activity) {
-        final Button button = new Button(activity);
-        button.setText("Set SCREEN_ORIENTATION_LANDSCAPE");
-
-        button.setOnClickListener(
-                v -> activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE));
-
-        return button;
-    }
-
-    private Button createRequestPortraitOrientationButton(Activity activity) {
-        final Button button = new Button(activity);
-        button.setText("Set SCREEN_ORIENTATION_PORTRAIT");
-
-        button.setOnClickListener(
-                v -> activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT));
-
-        return button;
-    }
-
-    private Button createFinishActivityButton(Activity activity) {
-        final Button button = new Button(activity);
-        button.setText("Finish Activity");
-
-        button.setOnClickListener(v -> activity.finish());
-
-        return button;
+    private SharedPreferences getClientSharedPreferences() {
+        return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
     }
 
     private VideoView createVideoAd(Activity activity, String videoUrl) {
@@ -210,14 +145,11 @@ public class SdkApi extends ISdkApi.Stub {
                     public void onCompletion(MediaPlayer mp) {
                         videoView.setOnTouchListener(
                                 (view, event) -> {
-                                    Context context = view.getContext();
-
-                                    String url = "https://www.google.com";
                                     Intent visitUrl = new Intent(Intent.ACTION_VIEW);
-                                    visitUrl.setData(Uri.parse(url));
+                                    visitUrl.setData(Uri.parse("https://www.google.com"));
                                     visitUrl.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-                                    context.startActivity(visitUrl);
+                                    activity.startActivity(visitUrl);
                                     return true;
                                 });
                     }
@@ -225,97 +157,34 @@ public class SdkApi extends ISdkApi.Stub {
         return videoView;
     }
 
-    private TextView createStatesChangeLog(Activity activity) {
-        final TextView textView = new TextView(activity);
-
-        activity.registerActivityLifecycleCallbacks(
-                new Application.ActivityLifecycleCallbacks() {
+    private void preloadWebViewForActivity(Context sdkContext) {
+        mWebView = new WebView(sdkContext);
+        initializeSettings(mWebView.getSettings());
+        // Handle Urls locally
+        mWebView.setWebViewClient(
+                new WebViewClient() {
                     @Override
-                    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityCreated");
-                    }
-
-                    @Override
-                    public void onActivityStarted(Activity activity) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityStarted");
-                    }
-
-                    @Override
-                    public void onActivityResumed(Activity activity) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityResumed");
-                    }
-
-                    @Override
-                    public void onActivityPaused(Activity activity) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityPaused");
-                    }
-
-                    @Override
-                    public void onActivityStopped(Activity activity) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityStopped");
-                    }
-
-                    @Override
-                    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivitySaveInstanceState");
-                    }
-
-                    @Override
-                    public void onActivityDestroyed(Activity activity) {
-                        textView.append(System.lineSeparator());
-                        textView.append("onActivityDestroyed");
+                    public boolean shouldOverrideUrlLoading(
+                            WebView view, WebResourceRequest request) {
+                        return false;
                     }
                 });
-
-        return textView;
+        mWebView.loadUrl(WEB_VIEW_LINK);
     }
 
-    private String toggleBackNavigationButtonText(boolean isBackNavigationDisabled) {
-        if (isBackNavigationDisabled) {
-            return "Enable Back Navigation";
-        } else {
-            return "Disable Back Navigation";
-        }
-    }
+    private void initializeSettings(WebSettings settings) {
+        settings.setJavaScriptEnabled(true);
 
-    private SharedPreferences getClientSharedPreferences() {
-        return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
-    }
+        settings.setGeolocationEnabled(true);
+        settings.setSupportZoom(true);
+        settings.setDatabaseEnabled(true);
+        settings.setDomStorageEnabled(true);
+        settings.setAllowFileAccess(true);
+        settings.setAllowContentAccess(true);
 
-    private static class BackNavigationDisabler {
-
-        private final OnBackInvokedDispatcher mDispatcher;
-
-        private final OnBackInvokedCallback mBackNavigationDisablingCallback;
-
-        private boolean mBackNavigationDisabled;
-
-        BackNavigationDisabler(Activity activity) {
-            mDispatcher = activity.getOnBackInvokedDispatcher();
-            mBackNavigationDisablingCallback =
-                    () -> {
-                        // do nothing
-                    };
-        }
-
-        public void toggle() {
-            if (mBackNavigationDisabled) {
-                mDispatcher.unregisterOnBackInvokedCallback(mBackNavigationDisablingCallback);
-            } else {
-                mDispatcher.registerOnBackInvokedCallback(
-                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, mBackNavigationDisablingCallback);
-            }
-            mBackNavigationDisabled = !mBackNavigationDisabled;
-        }
-
-        public boolean isBackNavigationDisabled() {
-            return mBackNavigationDisabled;
-        }
+        // Default layout behavior for chrome on android.
+        settings.setUseWideViewPort(true);
+        settings.setLoadWithOverviewMode(true);
+        settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
     }
 }
