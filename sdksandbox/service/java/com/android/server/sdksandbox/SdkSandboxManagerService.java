@@ -33,6 +33,7 @@ import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirI
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.RequiresPermission;
 import android.annotation.WorkerThread;
 import android.app.ActivityManager;
@@ -121,6 +122,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String SANDBOX_NOT_AVAILABLE_MSG = "Sandbox is unavailable";
     private static final String SANDBOX_DISABLED_MSG = "SDK sandbox is disabled";
+
+    private static final String DUMP_ARG_AD_SERVICES = "--AdServices";
 
     private final Context mContext;
 
@@ -226,6 +229,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             "DeveloperModeContentProvider";
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
+
+    // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
+    // SystemServer.
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String POST_UDC_DUMP_AD_SERVICES_MESSAGE =
+            "Don't need to dump AdServices on UDC+ - use "
+                    + "'dumpsys system_server_dumper --name AdServices instead'";
 
     static class Injector {
         private final Context mContext;
@@ -1163,6 +1173,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mContext.enforceCallingPermission(android.Manifest.permission.DUMP,
                 "Can't dump " + TAG);
 
+        if (args != null && args.length > 0 && args[0].equals(DUMP_ARG_AD_SERVICES)) {
+            dumpAdServices(fd, writer, args, /* quiet= */ false);
+            return;
+        }
+
         // TODO(b/211575098): Use IndentingPrintWriter for better formatting
         synchronized (mLock) {
             writer.println("Checked Webview visibility patch exists: " + mCheckedVisibilityPatch);
@@ -1191,6 +1206,41 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
         writer.println("mServiceProvider:");
         mServiceProvider.dump(writer);
+        writer.println();
+
+        dumpAdServices(fd, writer, args, /* quiet= */ true);
+    }
+
+    private void dumpAdServices(
+            @Nullable FileDescriptor fd, PrintWriter writer, String[] args, boolean quiet) {
+        if (SdkLevel.isAtLeastU()) {
+            // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as
+            // part of SystemServer, hence this special arg option is not needed
+            if (quiet) {
+                Log.d(TAG, POST_UDC_DUMP_AD_SERVICES_MESSAGE);
+            } else {
+                writer.println(POST_UDC_DUMP_AD_SERVICES_MESSAGE);
+            }
+            return;
+        }
+        writer.print("AdServices:");
+        IBinder adServicesManager = getAdServicesManager();
+        if (adServicesManager == null) {
+            // Should not happen on "real life", but it could on unit tests.
+            Log.e(TAG, "dumpAdServices(): mAdServicesManager not set");
+            writer.println(" N/A");
+            return;
+        }
+        writer.println();
+        writer.println();
+        writer.flush(); // must flush, other raw dump on fd below will be printed before it
+        try {
+            adServicesManager.dump(fd, args);
+        } catch (RemoteException e) {
+            Log.e(TAG, "Failed to dump AdServices", e);
+            // Shouldn't happen, but it doesn't hurt to catch
+            writer.printf("Failed to dump Adservices: %s\n", e);
+        }
         writer.println();
     }
 
@@ -1522,7 +1572,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         }
     }
 
-    private void registerAdServicesManagerService(IBinder iBinder) {
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    void registerAdServicesManagerService(IBinder iBinder) {
         synchronized (mLock) {
             mAdServicesManager = iBinder;
         }
