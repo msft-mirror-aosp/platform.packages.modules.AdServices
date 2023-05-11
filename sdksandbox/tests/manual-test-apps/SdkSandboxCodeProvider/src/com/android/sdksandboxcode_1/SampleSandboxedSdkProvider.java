@@ -40,6 +40,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.widget.EditText;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -60,6 +61,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
     private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
     private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
+    private static final String VIEW_TYPE_EDITTEXT = "view-type-edittext";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
@@ -103,7 +105,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                     (LayoutInflater)
                             windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final View view = inflater.inflate(R.layout.sample_layout, null);
-            view.setOnClickListener(new OpenBrowserOnClickListener(getContext()));
+            view.setOnClickListener(getOnClickListener(getContext()));
             view.postDelayed(
                     () -> {
                         final Random random = new Random();
@@ -129,6 +131,15 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
                     1000);
 
             return view;
+        } else if (VIEW_TYPE_EDITTEXT.equals(type)) {
+            EditText editText = new EditText(windowContext);
+            editText.setWidth(width);
+            editText.setHeight(height);
+            editText.setOnClickListener(getOnClickListener(getContext()));
+            editText.setBackgroundColor(Color.BLUE);
+            editText.setTextColor(Color.WHITE);
+            editText.setText("Enter text: ");
+            return editText;
         }
         mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
 
