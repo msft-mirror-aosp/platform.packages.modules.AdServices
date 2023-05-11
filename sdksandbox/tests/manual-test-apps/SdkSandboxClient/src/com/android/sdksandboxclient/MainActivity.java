@@ -60,6 +60,7 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -91,7 +92,9 @@ public class MainActivity extends AppCompatActivity {
 
     // Saved instance state keys
     private static final String SDKS_LOADED_KEY = "sdks_loaded";
+    private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED = "customized_sdk_context_enabled";
 
+    private Bundle mSavedInstanceState = new Bundle();
     private boolean mSdksLoaded = false;
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
@@ -120,6 +123,7 @@ public class MainActivity extends AppCompatActivity {
         setAppTitle();
 
         if (savedInstanceState != null) {
+            mSavedInstanceState.putAll(savedInstanceState);
             mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
         }
 
@@ -157,6 +161,8 @@ public class MainActivity extends AppCompatActivity {
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
         mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
+
+        configureFeatureFlagSection();
 
         registerLoadSdksButton();
         registerDeathCallbackButton();
@@ -203,17 +209,42 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void configureFeatureFlagSection() {
+        TextView featureFlagStatus = findViewById(R.id.feature_flags_status);
+        if(!mSdksLoaded) {
+            featureFlagStatus.setText("Load SDK to fetch status of feature flags");
+            return;
+        }
+
+        if (!mSavedInstanceState.containsKey(CUSTOMIZED_SDK_CONTEXT_ENABLED)) {
+            try {
+                IBinder binder = mSandboxedSdk.getInterface();
+                ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
+                boolean result = sdkApi.isCustomizedSdkContextEnabled();
+                mSavedInstanceState.putBoolean(CUSTOMIZED_SDK_CONTEXT_ENABLED, result);
+            } catch (RemoteException e) {
+                toastAndLog(e, "Failed to fetch feature flag status: %s", e);
+            }
+        }
+
+        boolean result = mSavedInstanceState.getBoolean(CUSTOMIZED_SDK_CONTEXT_ENABLED);
+        featureFlagStatus.post(() -> {
+            featureFlagStatus.setText("CustomizedSdkContext Enabled: " + result);
+        });
+    }
+
     private void refreshLoadSdksButtonText() {
         if (mSdksLoaded) {
-            mLoadSdksButton.setText("Unload SDKs");
+            mLoadSdksButton.post(() -> mLoadSdksButton.setText("Unload SDKs"));
         } else {
-            mLoadSdksButton.setText("Load SDKs");
+            mLoadSdksButton.post(() -> mLoadSdksButton.setText("Load SDKs"));
         }
     }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putAll(mSavedInstanceState);
         outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
     }
 
@@ -243,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
                                     toastAndLog(INFO, "All SDKs Loaded successfully!");
                                     mSdksLoaded = true;
                                     refreshLoadSdksButtonText();
+                                    configureFeatureFlagSection();
                                 }
 
                                 @Override
