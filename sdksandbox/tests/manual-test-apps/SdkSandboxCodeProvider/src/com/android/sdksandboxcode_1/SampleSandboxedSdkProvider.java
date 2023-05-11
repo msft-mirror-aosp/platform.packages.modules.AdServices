@@ -38,6 +38,8 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
 import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -54,6 +56,7 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
     private static final String VIEW_TYPE_KEY = "view-type";
     private static final String VIDEO_VIEW_VALUE = "video-view";
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
+    private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
     private static final String APP_OWNED_SDK_NAME = "app-sdk-1";
@@ -79,7 +82,11 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             final LayoutInflater inflater =
                     (LayoutInflater)
                             windowContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            return inflater.inflate(R.layout.sample_layout, null);
+            View view = inflater.inflate(R.layout.sample_layout, null);
+            view.setOnClickListener(new OpenBrowserOnClickListener(getContext()));
+            return view;
+        } else if (VIEW_TYPE_WEBVIEW.equals(type)) {
+            return new TestWebView(windowContext);
         }
         mSdkSdkCommEnabled = params.getString(EXTRA_SDK_SDK_ENABLED_KEY, null);
         return new TestView(windowContext, getContext(), mSdkSdkCommEnabled);
@@ -164,10 +171,20 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
             int c = Color.rgb(random.nextInt(256), random.nextInt(256), random.nextInt(256));
             canvas.drawColor(c);
             canvas.drawText(message, 75, 75, paint);
-            setOnClickListener(this::onClickListener);
+            setOnClickListener(new OpenBrowserOnClickListener(mSdkContext));
+        }
+    }
+
+    private static class OpenBrowserOnClickListener implements View.OnClickListener {
+
+        private final Context mSdkContext;
+
+        private OpenBrowserOnClickListener(Context sdkContext) {
+            mSdkContext = sdkContext;
         }
 
-        private void onClickListener(View view) {
+        @Override
+        public void onClick(View view) {
             Context context = view.getContext();
             Toast.makeText(context, "Opening url", Toast.LENGTH_LONG).show();
 
@@ -221,6 +238,27 @@ public class SampleSandboxedSdkProvider extends SandboxedSdkProvider {
         public void start() {
             super.start();
             Log.i(TAG, "Video was started.");
+        }
+    }
+
+    private static class TestWebView extends WebView {
+        TestWebView(Context windowContext) {
+            super(windowContext);
+            initializeSettings(getSettings());
+            loadUrl("https://www.google.com/");
+        }
+
+        private void initializeSettings(WebSettings settings) {
+            settings.setJavaScriptEnabled(true);
+            settings.setGeolocationEnabled(true);
+            settings.setSupportZoom(true);
+            settings.setDatabaseEnabled(true);
+            settings.setDomStorageEnabled(true);
+            settings.setAllowFileAccess(true);
+            settings.setAllowContentAccess(true);
+            settings.setUseWideViewPort(true);
+            settings.setLoadWithOverviewMode(true);
+            settings.setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
         }
     }
 }

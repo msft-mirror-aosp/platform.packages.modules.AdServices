@@ -55,6 +55,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private final Executor mExecutor = Executors.newSingleThreadExecutor();
         private EditTextPreference mVideoUrlPreference;
+        private ListPreference mOnClickPreference;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -77,6 +78,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private void configurePreferences() {
             mVideoUrlPreference = (EditTextPreference) findPreferenceOrFail("banner_video_url");
+            mOnClickPreference = (ListPreference) findPreferenceOrFail("banner_on_click");
             final ListPreference viewTypePreference =
                     (ListPreference) findPreferenceOrFail("banner_view_type");
 
@@ -84,16 +86,39 @@ public class BannerOptionsActivity extends AppCompatActivity {
                     (preference, object) -> {
                         final String selection = (String) object;
                         refreshVideoPreferenceVisibility(selection);
+                        refreshOnClickEnabled(selection);
                         return true;
                     });
 
             final String viewTypeSelection = viewTypePreference.getValue();
             refreshVideoPreferenceVisibility(viewTypeSelection);
+            refreshOnClickEnabled(viewTypeSelection);
         }
 
         private void refreshVideoPreferenceVisibility(String viewTypeSelection) {
             BannerOptions.ViewType viewType = BannerOptions.ViewType.valueOf(viewTypeSelection);
             mVideoUrlPreference.setVisible(viewType == BannerOptions.ViewType.VIDEO);
+        }
+
+        private void refreshOnClickEnabled(String viewTypeSelection) {
+            BannerOptions.ViewType viewType = BannerOptions.ViewType.valueOf(viewTypeSelection);
+            switch (viewType) {
+                case VIDEO -> {
+                    mOnClickPreference.setEnabled(false);
+                    mOnClickPreference.setSummaryProvider(null);
+                    mOnClickPreference.setSummary("Video controls");
+                }
+                case WEBVIEW -> {
+                    mOnClickPreference.setEnabled(false);
+                    mOnClickPreference.setSummaryProvider(null);
+                    mOnClickPreference.setSummary("WebView receives clicks");
+                }
+                default -> {
+                    mOnClickPreference.setEnabled(true);
+                    mOnClickPreference.setSummaryProvider(
+                            ListPreference.SimpleSummaryProvider.getInstance());
+                }
+            }
         }
     }
 }

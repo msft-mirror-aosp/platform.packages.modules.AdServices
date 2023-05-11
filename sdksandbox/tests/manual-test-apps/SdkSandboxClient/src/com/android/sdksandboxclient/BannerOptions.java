@@ -23,7 +23,8 @@ public class BannerOptions {
     public enum ViewType {
         RANDOM_COLOUR,
         INFLATED,
-        VIDEO
+        VIDEO,
+        WEBVIEW
     }
 
     public enum OnClick {
@@ -31,7 +32,8 @@ public class BannerOptions {
     }
 
     public enum Placement {
-        BOTTOM
+        BOTTOM,
+        SCROLL_VIEW
     }
 
     private final ViewType mViewType;

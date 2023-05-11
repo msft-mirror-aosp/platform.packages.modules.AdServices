@@ -21,23 +21,27 @@
         <item>Random colour</item>
         <item>Inflated from layout</item>
         <item>Video</item>
+        <item>Webview</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
     </array>
     <array name="banner_placement">
         <item>Bottom of screen</item>
+        <item>In Scroll View</item>
     </array>
     <!-- Values for the options, matching the enum names. -->
     <array name="banner_view_type_values">
         <item>RANDOM_COLOUR</item>
         <item>INFLATED</item>
         <item>VIDEO</item>
+        <item>WEBVIEW</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>
     </array>
     <array name="banner_placement_values">
         <item>BOTTOM</item>
+        <item>SCROLL_VIEW</item>
     </array>
 </resources>

@@ -15,6 +15,7 @@
 package android.app.sdksandbox.interfaces;
 
 import android.app.sdksandbox.interfaces.IActivityStarter;
+import android.os.Bundle;
 
 interface ISdkApi {
     String createFile(int sizeInMb);
@@ -22,6 +23,6 @@ interface ISdkApi {
     // Representative method for SDK-SDK communication. This can be any method called by other
     // sdks for example, to loadAd for a given adDetail
     String getMessage();
-    void startActivity(IActivityStarter callback);
+    void startActivity(IActivityStarter callback, in Bundle params);
     String getSandboxDump();
 }
