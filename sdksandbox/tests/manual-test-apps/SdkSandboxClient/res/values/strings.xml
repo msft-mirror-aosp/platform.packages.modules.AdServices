@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Copyright (C) 2023 The Android Open Source Project
+  ~ Copyright (C) 2021 The Android Open Source Project
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
     <string name="new_banner_ad">New Banner Ad</string>
     <string name="new_fullscreen_ad">New Fullscreen Ad</string>
     <string name="extra" description="Extra title">Extra</string>
+    <string name="get_filedescriptor">Get File Descriptor</string>
     <string name="create_file">Create File</string>
     <string name="sync_keys">Sync Keys</string>
     <string name="enable_sdk_sdk">Enable SDK to SDK comm</string>
