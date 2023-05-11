@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services Permissions E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesPermissionsValidEndToEndTests"/>
+    <option name="test-tag" value="CtsAdExtServicesPermissionsValidEndToEndTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -38,7 +38,7 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CtsExtAdServicesPermissionsValidEndToEndTests.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesPermissionsValidEndToEndTests.apk"/>
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 
@@ -78,6 +78,12 @@
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+
+        <!-- Temporarily enable enrollment seed for testing -->
+        <option name="run-command"
+                value="device_config put adservices enable_enrollment_test_seed true" />
+        <option name="teardown-command"
+                value="device_config put adservices enable_enrollment_test_seed false" />
     </target_preparer>
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">

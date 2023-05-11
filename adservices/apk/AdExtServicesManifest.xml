@@ -300,9 +300,14 @@
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
-        <!-- Attribution Job.-->
+        <!-- Measurement Attribution Job.-->
         <service android:name=
                      "com.android.adservices.service.measurement.attribution.AttributionJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE">
+        </service>
+        <!-- Measurement Attribution Fallback Job.-->
+        <service android:name=
+                     "com.android.adservices.service.measurement.attribution.AttributionFallbackJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 
@@ -338,14 +343,14 @@
         <provider
             android:name=
                 "com.android.adservices.service.measurement.attribution.TriggerContentProvider"
-            android:authorities="com.android.adservices.provider.trigger"
+            android:authorities="com.android.ext.adservices.provider.trigger"
             android:exported="false"
         />
 
         <provider
             android:name=
                 "com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider"
-            android:authorities="com.android.adservices.provider.asyncregistration"
+            android:authorities="com.android.ext.adservices.provider.asyncregistration"
             android:exported="false"
         />
 

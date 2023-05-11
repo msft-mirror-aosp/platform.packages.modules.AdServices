@@ -25,6 +25,7 @@ import static com.android.adservices.ui.settings.activities.AdServicesSettingsMa
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,6 +108,11 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
 
                     setInfoViewState(!mIsInfoViewExpanded);
                 });
+        // Row Policy link is on screen 1, Eu on screen 2
+        if (!mIsEUDevice) {
+            ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        }
 
         Button leftControlButton =
                 requireActivity().findViewById(R.id.leftControlButton);
@@ -220,7 +226,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
                         R.string.notificationUI_confirmation_right_control_button_text);
             } else {
                 mLeftControlButton.setVisibility(View.INVISIBLE);
-                mRightControlButton.setText(R.string.notificationUI_next_button_text);
+                mRightControlButton.setText(R.string.notificationUI_more_button_text);
             }
         }
 

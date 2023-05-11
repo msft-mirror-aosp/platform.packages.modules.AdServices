@@ -278,7 +278,7 @@ public class TopicsEpochComputationOnDeviceClassifier {
                         Arrays.asList(
                                 "logcat",
                                 "-s",
-                                "adservices:V",
+                                "adservices.topics:V",
                                 "-t",
                                 LOG_TIME_FORMATTER.format(startTime),
                                 "|",
@@ -355,6 +355,7 @@ public class TopicsEpochComputationOnDeviceClassifier {
 
     private void overridingAdservicesLoggingLevel(String loggingLevel) {
         ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
+        ShellUtils.runShellCommand("setprop log.tag.adservices.topics %s", loggingLevel);
     }
 
     // Override global_kill_switch to ignore the effect of actual PH values.

@@ -53,7 +53,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/** MeasurementManager. */
+/** MeasurementManager provides APIs to manage source and trigger registrations. */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementManager {
@@ -91,6 +91,10 @@ public class MeasurementManager {
     private ServiceBinder<IMeasurementService> mServiceBinder;
     private AdIdManager mAdIdManager;
     private Executor mAdIdExecutor = Executors.newCachedThreadPool();
+
+    private static final String DEBUG_API_WARNING_MESSAGE =
+            "To enable debug api, include ACCESS_ADSERVICES_AD_ID "
+                    + "permission and enable advertising ID under device settings";
 
     /**
      * Factory method for creating an instance of MeasurementManager.
@@ -656,14 +660,21 @@ public class MeasurementManager {
                     @Override
                     public void onResult(AdId adId) {
                         isAdIdEnabled.set(isAdIdPermissionEnabled(adId));
+                        LogUtil.d("AdId permission enabled %b", isAdIdEnabled.get());
                         countDownLatch.countDown();
                     }
 
                     @Override
                     public void onError(Exception error) {
-                        LogUtil.w(
-                                "To enable debug api, include ACCESS_ADSERVICES_AD_ID permission"
-                                        + " and enable advertising ID under device settings");
+                        boolean isExpected =
+                                error instanceof IllegalStateException
+                                        || error instanceof SecurityException;
+                        if (isExpected) {
+                            LogUtil.w(DEBUG_API_WARNING_MESSAGE);
+                        } else {
+                            LogUtil.w(error, DEBUG_API_WARNING_MESSAGE);
+                        }
+
                         countDownLatch.countDown();
                     }
                 });

@@ -39,6 +39,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
 import com.google.common.annotations.VisibleForTesting;
@@ -118,6 +119,11 @@ public class MddJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
+        // TODO(b/278790270): Move this to the start of this method so that we can log all latency
+        // executing the background job and add more result codes for Background job Logging.
+        int jobId = getMddTaskJobId(getMddTag(params));
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
+
         // This service executes each incoming job on a Handler running on the application's
         // main thread. This means that we must offload the execution logic to background executor.
         ListenableFuture<Void> handleTaskFuture =
@@ -142,19 +148,37 @@ public class MddJobService extends JobService {
                                 () -> {
                                     EnrollmentDataDownloadManager.getInstance(MddJobService.this)
                                             .readAndInsertEnrolmentDataFromMdd();
+
+                                    // Logging has to happen before jobFinished() is called. Due to
+                                    // JobScheduler infra, the JobService instance will end its
+                                    // lifecycle (call onDestroy()) once jobFinished() is invoked.
+                                    //
                                     // Tell the JobScheduler that the job has completed and does not
-                                    // need to be
-                                    // rescheduled.
-                                    jobFinished(params, /* wantsReschedule = */ false);
+                                    // need to be rescheduled.
+                                    boolean shouldRetry = false;
+                                    AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                            .recordJobFinished(
+                                                    jobId, /* isSuccessful= */ true, shouldRetry);
+
+                                    jobFinished(params, shouldRetry);
                                 });
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
                         LogUtil.e("Failed to handle JobService: " + params.getJobId(), t);
-                        //  When failure, also tell the JobScheduler that the job has completed and
+
+                        // Logging has to happen before jobFinished() is called. Due to
+                        // JobScheduler infra, the JobService instance will end its
+                        // lifecycle (call onDestroy()) once jobFinished() is invoked.
+                        //
+                        // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                .recordJobFinished(jobId, /* isSuccessful= */ true, shouldRetry);
+
+                        jobFinished(params, shouldRetry);
                     }
                 },
                 directExecutor());
@@ -167,14 +191,20 @@ public class MddJobService extends JobService {
         if (null == extras) {
             throw new IllegalArgumentException("Can't find MDD Tasks Tag!");
         }
-        String mddTag = extras.getString(KEY_MDD_TASK_TAG);
-        return mddTag;
+        return extras.getString(KEY_MDD_TASK_TAG);
     }
 
     @Override
-    public boolean onStopJob(@NonNull JobParameters job) {
+    public boolean onStopJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStopJob");
-        return false;
+
+        // Tell JobScheduler not to reschedule the job because it's unknown at this stage if the
+        // execution is completed or not to avoid executing the task twice.
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, getMddTaskJobId(getMddTag(params)), shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedule MDD background tasks. */

@@ -26,7 +26,6 @@ import com.android.adservices.service.measurement.actions.RegisterTrigger;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.util.Enrollment;
 
 import org.json.JSONException;
@@ -47,8 +46,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop
- *
- * <p>Saturday, March 24, 2023
+ * April 2, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -99,27 +97,13 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : sourceRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            Source source =
-                    getSource(
-                            sourceRegistration.getPublisher(),
-                            sourceRegistration.mTimestamp,
-                            uri,
-                            sourceRegistration.mArDebugPermission,
-                            request,
-                            getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri));
-            Assert.assertTrue(
-                    "measurementDao.insertSource failed",
-                    sDatastoreManager.runInTransaction(
-                            measurementDao -> {
-                                if (AsyncRegistrationQueueRunner.isSourceAllowedToInsert(
-                                        source,
-                                        source.getPublisher(),
-                                        EventSurfaceType.WEB,
-                                        measurementDao,
-                                        mDebugReportApi)) {
-                                    measurementDao.insertSource(source);
-                                }
-                            }));
+            insertSource(
+                    sourceRegistration.getPublisher(),
+                    sourceRegistration.mTimestamp,
+                    uri,
+                    sourceRegistration.mArDebugPermission,
+                    request,
+                    getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri));
         }
     }
 
@@ -130,18 +114,13 @@ public class E2EInteropMockTest extends E2EMockTest {
         // redirects, partly due to differences in redirect handling across attribution APIs.
         for (String uri : triggerRegistration.mUriToResponseHeadersMap.keySet()) {
             updateEnrollment(uri);
-            Trigger trigger =
-                    getTrigger(
-                            triggerRegistration.getDestination(),
-                            triggerRegistration.mTimestamp,
-                            uri,
-                            triggerRegistration.mArDebugPermission,
-                            request,
-                            getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri));
-            Assert.assertTrue(
-                    "measurementDao.insertTrigger failed",
-                    sDatastoreManager.runInTransaction(
-                            measurementDao -> measurementDao.insertTrigger(trigger)));
+            insertTrigger(
+                    triggerRegistration.getDestination(),
+                    triggerRegistration.mTimestamp,
+                    uri,
+                    triggerRegistration.mArDebugPermission,
+                    request,
+                    getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri));
         }
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
@@ -150,14 +129,21 @@ public class E2EInteropMockTest extends E2EMockTest {
         processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
     }
 
-    private Source getSource(
+    private void insertSource(
             String publisher,
             long timestamp,
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -171,20 +157,34 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setAdIdPermission(true)
                         .setDebugKeyAllowed(arDebugPermission)
                         .build();
-
-        return mAsyncSourceFetcher
+        Source source = mAsyncSourceFetcher
                 .parseSource(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
                 .orElseThrow();
+        Assert.assertTrue(
+                "mAsyncRegistrationQueueRunner.storeSource failed",
+                sDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                mAsyncRegistrationQueueRunner.storeSource(
+                                        source,
+                                        asyncRegistration,
+                                        measurementDao)));
     }
 
-    private Trigger getTrigger(
+    private void insertTrigger(
             String destination,
             long timestamp,
             String uri,
             boolean arDebugPermission,
             RegistrationRequest request,
             Map<String, List<String>> headers) {
-        String enrollmentId = Enrollment.maybeGetEnrollmentId(Uri.parse(uri), mEnrollmentDao).get();
+        String enrollmentId =
+                Enrollment.getValidEnrollmentId(
+                                Uri.parse(uri),
+                                request.getAppPackageName(),
+                                mEnrollmentDao,
+                                sContext,
+                                mFlags)
+                        .get();
         AsyncRegistration asyncRegistration =
                 new AsyncRegistration.Builder()
                         .setRegistrationId(UUID.randomUUID().toString())
@@ -195,10 +195,16 @@ public class E2EInteropMockTest extends E2EMockTest {
                         .setAdIdPermission(true)
                         .setDebugKeyAllowed(arDebugPermission)
                         .build();
-
-        return mAsyncTriggerFetcher
+        Trigger trigger = mAsyncTriggerFetcher
                 .parseTrigger(asyncRegistration, enrollmentId, headers, new AsyncFetchStatus())
                 .orElseThrow();
+        Assert.assertTrue(
+                "mAsyncRegistrationQueueRunner.storeTrigger failed",
+                sDatastoreManager.runInTransaction(
+                        measurementDao ->
+                                mAsyncRegistrationQueueRunner.storeTrigger(
+                                        trigger,
+                                        measurementDao)));
     }
 
     private static Source.SourceType getSourceType(RegistrationRequest request) {

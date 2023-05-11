@@ -1375,16 +1375,11 @@ class MeasurementDao implements IMeasurementDao {
                 MeasurementTables.TriggerContract.TABLE,
                 MeasurementTables.TriggerContract.TRIGGER_TIME + " < ?",
                 new String[] {earliestValidInsertionStr});
-        // EventReport table
-        db.delete(
-                MeasurementTables.EventReportContract.TABLE,
-                MeasurementTables.EventReportContract.STATUS
-                        + " = ? OR "
-                        + MeasurementTables.EventReportContract.REPORT_TIME
-                        + " < ?",
-                new String[] {
-                    String.valueOf(EventReport.Status.DELIVERED), earliestValidInsertionStr
-                });
+        // Event Reports
+        // TODO(b/277362712): Optimize Deletion of event reports
+        // We rely on source/trigger deletion to delete event reports because delivered event
+        // reports are used for calculating total event reports for a Source during Attribution.
+
         // AggregateReport table
         db.delete(
                 MeasurementTables.AggregateReport.TABLE,
@@ -1885,6 +1880,8 @@ class MeasurementDao implements IMeasurementDao {
                                 MeasurementTables.DebugReportContract.TABLE,
                                 /* nullColumnHack= */ null,
                                 values);
+        LogUtil.d("MeasurementDao: insertDebugReport: rowId=" + rowId);
+
         if (rowId == -1) {
             throw new DatastoreException("Debug report payload insertion failed.");
         }

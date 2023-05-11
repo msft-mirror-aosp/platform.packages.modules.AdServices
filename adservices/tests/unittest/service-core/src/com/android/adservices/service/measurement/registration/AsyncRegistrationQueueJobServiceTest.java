@@ -281,11 +281,7 @@ public class AsyncRegistrationQueueJobServiceTest {
                     .when(() -> AsyncRegistrationQueueJobService.schedule(any(), any()));
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-            ExtendedMockito.doReturn(false)
-                    .when(
-                            () ->
-                                    ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
-                                            any(Context.class)));
+
             // Execute
             execute.run();
         } finally {
