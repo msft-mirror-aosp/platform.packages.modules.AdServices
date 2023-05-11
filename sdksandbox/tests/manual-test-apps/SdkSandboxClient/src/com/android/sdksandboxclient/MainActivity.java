@@ -234,21 +234,8 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     Bundle params = new Bundle();
-                    OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
-                            new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
-                                @Override
-                                public void onResult(SandboxedSdk sandboxedSdk) {
-                                    mSandboxedSdk = sandboxedSdk;
-                                    toastAndLog(INFO, "First SDK Loaded successfully!");
-                                }
-
-                                @Override
-                                public void onError(LoadSdkException error) {
-                                    toastAndLog(ERROR, "Failed to load first SDK: %s", error);
-                                }
-                            };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> mediateeReceiver =
-                            new OutcomeReceiver<SandboxedSdk, LoadSdkException>() {
+                            new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
                                     toastAndLog(INFO, "All SDKs Loaded successfully!");
@@ -261,10 +248,25 @@ public class MainActivity extends AppCompatActivity {
                                     toastAndLog(ERROR, "Failed to load all SDKs: %s", error);
                                 }
                             };
+                    OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
+                            new OutcomeReceiver<>() {
+                                @Override
+                                public void onResult(SandboxedSdk sandboxedSdk) {
+                                    mSandboxedSdk = sandboxedSdk;
+                                    mSdkSandboxManager.loadSdk(
+                                            MEDIATEE_SDK_NAME,
+                                            params,
+                                            Runnable::run,
+                                            mediateeReceiver);
+                                }
+
+                                @Override
+                                public void onError(LoadSdkException error) {
+                                    toastAndLog(ERROR, "Failed to load first SDK: %s", error);
+                                }
+                            };
                     Log.i(TAG, "Loading SDKs " + SDK_NAME + " and " + MEDIATEE_SDK_NAME);
                     mSdkSandboxManager.loadSdk(SDK_NAME, params, Runnable::run, receiver);
-                    mSdkSandboxManager.loadSdk(
-                            MEDIATEE_SDK_NAME, params, Runnable::run, mediateeReceiver);
                 });
     }
 
