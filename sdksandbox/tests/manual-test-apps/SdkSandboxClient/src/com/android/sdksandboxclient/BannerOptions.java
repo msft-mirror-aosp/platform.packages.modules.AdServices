@@ -24,7 +24,8 @@ public class BannerOptions {
         RANDOM_COLOUR,
         INFLATED,
         VIDEO,
-        WEBVIEW
+        WEBVIEW,
+        AD_REFRESH,
     }
 
     public enum OnClick {

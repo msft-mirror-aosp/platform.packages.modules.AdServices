@@ -82,6 +82,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String VIDEO_URL_KEY = "video-url";
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
     private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
+    private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
 
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
@@ -308,6 +309,9 @@ public class MainActivity extends AppCompatActivity {
                             }
                             case WEBVIEW -> {
                                 params.putString(VIEW_TYPE_KEY, VIEW_TYPE_WEBVIEW);
+                            }
+                            case AD_REFRESH -> {
+                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
                             }
                         }
                         sHandler.post(
