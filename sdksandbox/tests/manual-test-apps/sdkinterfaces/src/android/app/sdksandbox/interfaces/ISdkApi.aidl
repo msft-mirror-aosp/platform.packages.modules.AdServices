@@ -26,4 +26,5 @@ interface ISdkApi {
     String getMessage();
     void startActivity(IActivityStarter callback, in Bundle params);
     String getSandboxDump();
+    boolean isCustomizedSdkContextEnabled();
 }
