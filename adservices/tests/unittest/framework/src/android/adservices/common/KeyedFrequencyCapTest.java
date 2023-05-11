@@ -148,25 +148,11 @@ public class KeyedFrequencyCapTest {
 
         final String expectedString =
                 String.format(
-                        "KeyedFrequencyCap{mAdCounterKey='%s', mMaxCount=%s, mInterval=%s}",
+                        "KeyedFrequencyCap{mAdCounterKey=%d, mMaxCount=%d, mInterval=%s}",
                         KeyedFrequencyCapFixture.KEY1,
                         KeyedFrequencyCapFixture.VALID_COUNT,
                         KeyedFrequencyCapFixture.ONE_DAY_DURATION);
         assertThat(originalCap.toString()).isEqualTo(expectedString);
-    }
-
-    @Test
-    public void testBuildNullKey_throws() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new KeyedFrequencyCap.Builder().setAdCounterKey(null));
-    }
-
-    @Test
-    public void testBuildEmptyKey_throws() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setAdCounterKey(""));
     }
 
     @Test
@@ -219,7 +205,7 @@ public class KeyedFrequencyCapTest {
     @Test
     public void testGetSizeInBytes() {
         assertEquals(
-                KeyedFrequencyCapFixture.KEY1.getBytes().length + 16,
+                20,
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY1)
                         .build()
@@ -236,7 +222,7 @@ public class KeyedFrequencyCapTest {
     }
 
     @Test
-    public void testJsonSerializationNonStringKey() throws JSONException {
+    public void testJsonSerializationInvalidKeyThrows() throws JSONException {
         KeyedFrequencyCap toSerialize =
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY1)
@@ -244,7 +230,6 @@ public class KeyedFrequencyCapTest {
         JSONObject json = toSerialize.toJson();
         json.put(KeyedFrequencyCap.AD_COUNTER_KEY_FIELD_NAME, new Object());
         assertThrows(
-                KeyedFrequencyCap.AD_COUNTER_KEY_FIELD_NAME + KeyedFrequencyCap.JSON_ERROR_POSTFIX,
                 JSONException.class,
                 () -> KeyedFrequencyCap.fromJson(json));
     }

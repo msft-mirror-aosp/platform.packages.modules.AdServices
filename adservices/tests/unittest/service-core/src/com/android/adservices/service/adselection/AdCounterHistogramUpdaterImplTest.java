@@ -46,7 +46,7 @@ public class AdCounterHistogramUpdaterImplTest {
     private static final int ABSOLUTE_MAX_EVENT_COUNT = 20;
     private static final int LOWER_MAX_EVENT_COUNT = 15;
     private static final String SERIALIZED_AD_COUNTER_KEYS =
-            FledgeRoomConverters.serializeStringSet(AdDataFixture.getAdCounterKeys());
+            FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
 
     @Rule public MockitoRule mMockitoRule = MockitoJUnit.rule();
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
@@ -236,7 +236,7 @@ public class AdCounterHistogramUpdaterImplTest {
                         .setBuyer(CommonFixture.VALID_BUYER_1)
                         .setTimestamp(CommonFixture.FIXED_NOW);
 
-        for (String key : AdDataFixture.getAdCounterKeys()) {
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
             verify(mFrequencyCapDaoMock)
                     .insertHistogramEvent(
                             eq(expectedEventBuilder.setAdCounterKey(key).build()),

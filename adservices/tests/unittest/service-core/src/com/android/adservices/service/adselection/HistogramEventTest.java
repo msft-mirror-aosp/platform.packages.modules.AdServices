@@ -174,12 +174,6 @@ public class HistogramEventTest {
     }
 
     @Test
-    public void testSetNullAdCounterKey_throws() {
-        assertThrows(
-                NullPointerException.class, () -> HistogramEvent.builder().setAdCounterKey(null));
-    }
-
-    @Test
     public void testSetNullBuyer_throws() {
         assertThrows(NullPointerException.class, () -> HistogramEvent.builder().setBuyer(null));
     }

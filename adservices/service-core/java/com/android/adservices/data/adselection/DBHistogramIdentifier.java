@@ -59,11 +59,15 @@ public abstract class DBHistogramIdentifier {
     /**
      * Returns the arbitrary String representing a grouping that a buyer adtech has assigned to an
      * ad or histogram.
+     *
+     * @deprecated This is an old field which should no longer be populated and is only kept for
+     *     Room DB backwards compatibility; please use {@link
+     *     DBHistogramEventData#getAdCounterIntKey()} instead
      */
     @AutoValue.CopyAnnotations
     @ColumnInfo(name = "ad_counter_key", index = true)
     @NonNull
-    public abstract String getAdCounterKey();
+    abstract String getAdCounterKey();
 
     /** Returns the histogram's buyer adtech's {@link AdTechIdentifier}. */
     @AutoValue.CopyAnnotations
@@ -87,6 +91,8 @@ public abstract class DBHistogramIdentifier {
     @NonNull
     public static Builder builder() {
         return new AutoValue_DBHistogramIdentifier.Builder()
+                // The string ad counter key has been deprecated and moved to DBHistogramEventData
+                .setAdCounterKey("")
                 .setHistogramIdentifierForeignKey(
                         SharedStorageDatabase.FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE);
     }
@@ -123,8 +129,8 @@ public abstract class DBHistogramIdentifier {
     public static DBHistogramIdentifier fromHistogramEvent(@NonNull HistogramEvent event) {
         Objects.requireNonNull(event);
 
-        Builder tempBuilder =
-                builder().setAdCounterKey(event.getAdCounterKey()).setBuyer(event.getBuyer());
+        // The string ad counter key has been deprecated and moved to DBHistogramEventData
+        Builder tempBuilder = builder().setAdCounterKey("").setBuyer(event.getBuyer());
 
         // Only win-typed events must be scoped to a custom audience, so leave them null otherwise
         if (event.getAdEventType() == FrequencyCapFilters.AD_EVENT_TYPE_WIN) {
@@ -153,9 +159,12 @@ public abstract class DBHistogramIdentifier {
         /**
          * Sets the arbitrary String representing a grouping that a buyer adtech has assigned to an
          * ad or histogram.
+         *
+         * @deprecated This is an old field which should no longer be populated; please use {@link
+         *     DBHistogramEventData.Builder#setAdCounterIntKey(int)} instead
          */
         @NonNull
-        public abstract Builder setAdCounterKey(@NonNull String value);
+        abstract Builder setAdCounterKey(@NonNull String value);
 
         /** Sets the histogram's buyer adtech's {@link AdTechIdentifier}. */
         @NonNull

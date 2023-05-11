@@ -2588,7 +2588,7 @@ public class OnDeviceAdSelectionRunnerTest {
                                         .getRenderUri())
                         .setBiddingLogicUri(mAdScoringOutcomeForBuyer1.getBiddingLogicUri())
                         .setContextualSignals("{}")
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys());
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys());
 
         doReturn(dbAdSelectionBuilder)
                 .when(mAdCounterKeyCopierMock)

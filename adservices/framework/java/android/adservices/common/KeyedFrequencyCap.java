@@ -47,11 +47,10 @@ public final class KeyedFrequencyCap implements Parcelable {
     @VisibleForTesting public static final String MAX_COUNT_FIELD_NAME = "max_count";
     /** @hide */
     @VisibleForTesting public static final String INTERVAL_FIELD_NAME = "interval_in_seconds";
-    /** @hide */
-    @VisibleForTesting public static final String JSON_ERROR_POSTFIX = " must be a String.";
-    // 12 bytes for the duration and 4 for the maxCount
-    private static final int SIZE_OF_FIXED_FIELDS = 16;
-    @NonNull private final String mAdCounterKey;
+
+    // 4 bytes for the key, 12 bytes for the duration, and 4 for the maxCount
+    private static final int SIZE_OF_FIXED_FIELDS = 20;
+    private final int mAdCounterKey;
     private final int mMaxCount;
     @NonNull private final Duration mInterval;
 
@@ -81,7 +80,7 @@ public final class KeyedFrequencyCap implements Parcelable {
     private KeyedFrequencyCap(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
-        mAdCounterKey = in.readString();
+        mAdCounterKey = in.readInt();
         mMaxCount = in.readInt();
         mInterval = Duration.ofSeconds(in.readLong());
     }
@@ -89,13 +88,13 @@ public final class KeyedFrequencyCap implements Parcelable {
     /**
      * Returns the ad counter key that the frequency cap is applied to.
      *
-     * <p>The ad counter key is defined by an adtech and is an arbitrary string which defines any
-     * criteria which may have previously been counted and persisted on the device. If the on-device
-     * count exceeds the maximum count within a certain time interval, the frequency cap has been
-     * exceeded.
+     * <p>The ad counter key is defined by an adtech and is an arbitrary numeric identifier which
+     * defines any criteria which may have previously been counted and persisted on the device. If
+     * the on-device count exceeds the maximum count within a certain time interval, the frequency
+     * cap has been exceeded.
      */
     @NonNull
-    public String getAdCounterKey() {
+    public int getAdCounterKey() {
         return mAdCounterKey;
     }
 
@@ -134,7 +133,7 @@ public final class KeyedFrequencyCap implements Parcelable {
      * @hide
      */
     public int getSizeInBytes() {
-        return mAdCounterKey.getBytes().length + SIZE_OF_FIXED_FIELDS;
+        return SIZE_OF_FIXED_FIELDS;
     }
 
     /**
@@ -160,12 +159,8 @@ public final class KeyedFrequencyCap implements Parcelable {
      * @hide
      */
     public static KeyedFrequencyCap fromJson(JSONObject json) throws JSONException {
-        Object adCounterKey = json.get(AD_COUNTER_KEY_FIELD_NAME);
-        if (!(adCounterKey instanceof String)) {
-            throw new JSONException(AD_COUNTER_KEY_FIELD_NAME + JSON_ERROR_POSTFIX);
-        }
         return new Builder()
-                .setAdCounterKey((String) adCounterKey)
+                .setAdCounterKey(json.getInt(AD_COUNTER_KEY_FIELD_NAME))
                 .setMaxCount(json.getInt(MAX_COUNT_FIELD_NAME))
                 .setInterval(Duration.ofSeconds(json.getLong(INTERVAL_FIELD_NAME)))
                 .build();
@@ -174,7 +169,7 @@ public final class KeyedFrequencyCap implements Parcelable {
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
-        dest.writeString(mAdCounterKey);
+        dest.writeInt(mAdCounterKey);
         dest.writeInt(mMaxCount);
         dest.writeLong(mInterval.getSeconds());
     }
@@ -193,7 +188,7 @@ public final class KeyedFrequencyCap implements Parcelable {
         KeyedFrequencyCap that = (KeyedFrequencyCap) o;
         return mMaxCount == that.mMaxCount
                 && mInterval.equals(that.mInterval)
-                && mAdCounterKey.equals(that.mAdCounterKey);
+                && mAdCounterKey == that.mAdCounterKey;
     }
 
     /** Returns the hash of the {@link KeyedFrequencyCap} object's data. */
@@ -205,9 +200,8 @@ public final class KeyedFrequencyCap implements Parcelable {
     @Override
     public String toString() {
         return "KeyedFrequencyCap{"
-                + "mAdCounterKey='"
+                + "mAdCounterKey="
                 + mAdCounterKey
-                + '\''
                 + ", mMaxCount="
                 + mMaxCount
                 + ", mInterval="
@@ -217,7 +211,7 @@ public final class KeyedFrequencyCap implements Parcelable {
 
     /** Builder for creating {@link KeyedFrequencyCap} objects. */
     public static final class Builder {
-        @Nullable private String mAdCounterKey;
+        private int mAdCounterKey;
         private int mMaxCount;
         @Nullable private Duration mInterval;
 
@@ -229,9 +223,7 @@ public final class KeyedFrequencyCap implements Parcelable {
          * <p>See {@link #getAdCounterKey()} for more information.
          */
         @NonNull
-        public Builder setAdCounterKey(@NonNull String adCounterKey) {
-            Objects.requireNonNull(adCounterKey, "Ad counter key must not be null");
-            Preconditions.checkStringNotEmpty(adCounterKey, "Ad counter key must not be empty");
+        public Builder setAdCounterKey(int adCounterKey) {
             mAdCounterKey = adCounterKey;
             return this;
         }
@@ -272,7 +264,6 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public KeyedFrequencyCap build() throws NullPointerException, IllegalArgumentException {
-            Objects.requireNonNull(mAdCounterKey, "Event key must be set");
             Preconditions.checkArgument(mMaxCount >= 0, "Max count must be non-negative");
             Objects.requireNonNull(mInterval, "Interval must not be null");
 

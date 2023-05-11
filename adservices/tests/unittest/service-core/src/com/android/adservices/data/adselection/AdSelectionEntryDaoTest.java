@@ -110,7 +110,7 @@ public class AdSelectionEntryDaoTest {
                     .setWinningAdBid(BID)
                     .setCreationTimestamp(ACTIVATION_TIME)
                     .setCallerPackageName(CALLER_PACKAGE_NAME_1)
-                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
     public static final DBAdSelection DB_AD_SELECTION_2 =
@@ -1239,7 +1239,8 @@ public class AdSelectionEntryDaoTest {
                         DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getCustomAudienceSignals().getBuyer());
         assertThat(histogramInfo.getAdCounterKeys()).isNotNull();
         assertThat(histogramInfo.getAdCounterKeys())
-                .containsExactlyElementsIn(DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterKeys());
+                .containsExactlyElementsIn(
+                        DB_AD_SELECTION_WITH_AD_COUNTER_KEYS.getAdCounterIntKeys());
     }
 
     @Test

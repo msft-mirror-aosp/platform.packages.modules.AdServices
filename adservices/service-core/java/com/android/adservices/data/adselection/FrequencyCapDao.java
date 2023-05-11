@@ -71,8 +71,7 @@ public abstract class FrequencyCapDao {
      */
     @Query(
             "SELECT foreign_key_id FROM fcap_histogram_ids "
-                    + "WHERE ad_counter_key = :adCounterKey "
-                    + "AND buyer = :buyer "
+                    + "WHERE buyer = :buyer "
                     // Note that the IS operator in SQLite specifically is equivalent to = for value
                     // matching except that it also matches NULL
                     + "AND custom_audience_owner IS :customAudienceOwner "
@@ -81,7 +80,6 @@ public abstract class FrequencyCapDao {
                     + "LIMIT 1")
     @Nullable
     protected abstract Long getHistogramIdentifierForeignKeyIfExists(
-            @NonNull String adCounterKey,
             @NonNull AdTechIdentifier buyer,
             @Nullable String customAudienceOwner,
             @Nullable String customAudienceName);
@@ -134,7 +132,6 @@ public abstract class FrequencyCapDao {
         DBHistogramIdentifier identifier = DBHistogramIdentifier.fromHistogramEvent(event);
         Long foreignKeyId =
                 getHistogramIdentifierForeignKeyIfExists(
-                        identifier.getAdCounterKey(),
                         identifier.getBuyer(),
                         identifier.getCustomAudienceOwner(),
                         identifier.getCustomAudienceName());
@@ -165,12 +162,12 @@ public abstract class FrequencyCapDao {
             "SELECT COUNT(DISTINCT data.row_id) FROM fcap_histogram_data AS data "
                     + "INNER JOIN fcap_histogram_ids AS ids "
                     + "ON data.foreign_key_id = ids.foreign_key_id "
-                    + "WHERE ids.ad_counter_key = :adCounterKey "
+                    + "WHERE data.ad_counter_int_key = :adCounterIntKey "
                     + "AND ids.buyer = :buyer "
                     + "AND data.ad_event_type = :adEventType "
                     + "AND data.timestamp >= :startTime")
     public abstract int getNumEventsForBuyerAfterTime(
-            @NonNull String adCounterKey,
+            int adCounterIntKey,
             @NonNull AdTechIdentifier buyer,
             @FrequencyCapFilters.AdEventType int adEventType,
             @NonNull Instant startTime);
@@ -185,14 +182,14 @@ public abstract class FrequencyCapDao {
             "SELECT COUNT(DISTINCT data.row_id) FROM fcap_histogram_data AS data "
                     + "INNER JOIN fcap_histogram_ids AS ids "
                     + "ON data.foreign_key_id = ids.foreign_key_id "
-                    + "WHERE ids.ad_counter_key = :adCounterKey "
+                    + "WHERE data.ad_counter_int_key = :adCounterIntKey "
                     + "AND ids.buyer = :buyer "
                     + "AND ids.custom_audience_owner = :customAudienceOwner "
                     + "AND ids.custom_audience_name = :customAudienceName "
                     + "AND data.ad_event_type = :adEventType "
                     + "AND data.timestamp >= :startTime")
     public abstract int getNumEventsForCustomAudienceAfterTime(
-            @NonNull String adCounterKey,
+            int adCounterIntKey,
             @NonNull AdTechIdentifier buyer,
             @NonNull String customAudienceOwner,
             @NonNull String customAudienceName,

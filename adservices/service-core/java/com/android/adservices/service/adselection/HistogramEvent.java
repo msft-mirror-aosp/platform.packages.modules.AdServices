@@ -36,11 +36,11 @@ import java.util.Objects;
 @AutoValue
 public abstract class HistogramEvent {
     /**
-     * Returns the arbitrary String representing a grouping that a buyer adtech has assigned to an
-     * ad or histogram.
+     * Returns the arbitrary int representing a grouping that a buyer adtech has assigned to an ad
+     * or histogram.
      */
     @NonNull
-    public abstract String getAdCounterKey();
+    public abstract int getAdCounterKey();
 
     /** Returns the histogram's buyer adtech's {@link AdTechIdentifier}. */
     @NonNull
@@ -72,11 +72,11 @@ public abstract class HistogramEvent {
     @AutoValue.Builder
     public abstract static class Builder {
         /**
-         * Sets the arbitrary String representing a grouping that a buyer adtech has assigned to an
-         * ad or histogram.
+         * Sets the arbitrary int representing a grouping that a buyer adtech has assigned to an ad
+         * or histogram.
          */
         @NonNull
-        public abstract Builder setAdCounterKey(@NonNull String adCounterKey);
+        public abstract Builder setAdCounterKey(int adCounterKey);
 
         /** Sets the histogram's buyer adtech's {@link AdTechIdentifier}. */
         @NonNull

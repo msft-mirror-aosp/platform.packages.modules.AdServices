@@ -27,6 +27,7 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashSet;
 
 /** Unit tests for temporarily hidden public APIs in {@link AdData}. */
@@ -135,8 +136,15 @@ public class AdDataTempHideTest {
     }
 
     @Test
-    public void testBuildNullKeys_throws() {
+    public void testSetNullAdCounterKeys_throws() {
         assertThrows(NullPointerException.class, () -> new AdData.Builder().setAdCounterKeys(null));
+    }
+
+    @Test
+    public void testSetAdCounterKeysWithNullValue_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new AdData.Builder().setAdCounterKeys(Collections.singleton(null)));
     }
 
     @Test

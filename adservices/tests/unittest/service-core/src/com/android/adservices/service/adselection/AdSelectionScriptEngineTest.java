@@ -1194,7 +1194,7 @@ public class AdSelectionScriptEngineTest {
     }
 
     private static AdData getAdDataWithResult(
-            String renderUriSuffix, String resultValue, Set<String> adCounterKeys) {
+            String renderUriSuffix, String resultValue, Set<Integer> adCounterKeys) {
         Objects.requireNonNull(renderUriSuffix, "Suffix must not be null");
         Objects.requireNonNull(resultValue, "Result value must not be null");
         return new AdData.Builder()

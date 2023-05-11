@@ -297,7 +297,7 @@ public abstract class AdSelectionEntryDao {
      *     the ad selection, or {@code null} if no match is found
      */
     @Query(
-            "SELECT custom_audience_signals_buyer, ad_counter_keys FROM ad_selection "
+            "SELECT custom_audience_signals_buyer, ad_counter_int_keys FROM ad_selection "
                     + "WHERE ad_selection_id = :adSelectionId "
                     + "AND caller_package_name = :callerPackageName")
     @Nullable
