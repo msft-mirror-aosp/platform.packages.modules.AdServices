@@ -47,6 +47,11 @@
             android:entryValues="@array/banner_on_click_values"
             android:defaultValue="OPEN_CHROME"
         />
+        <EditTextPreference
+            app:key="package_to_open"
+            app:title="@string/on_click_package"
+            app:useSimpleSummaryProvider="true"
+        />
     </PreferenceCategory>
 
     <PreferenceCategory

@@ -55,6 +55,8 @@ public class BannerOptionsActivity extends AppCompatActivity {
 
         private final Executor mExecutor = Executors.newSingleThreadExecutor();
         private EditTextPreference mVideoUrlPreference;
+
+        private EditTextPreference mPackageToOpen;
         private ListPreference mOnClickPreference;
 
         @Override
@@ -79,6 +81,7 @@ public class BannerOptionsActivity extends AppCompatActivity {
         private void configurePreferences() {
             mVideoUrlPreference = (EditTextPreference) findPreferenceOrFail("banner_video_url");
             mOnClickPreference = (ListPreference) findPreferenceOrFail("banner_on_click");
+            mPackageToOpen = (EditTextPreference) findPreferenceOrFail("package_to_open");
             final ListPreference viewTypePreference =
                     (ListPreference) findPreferenceOrFail("banner_view_type");
 
@@ -103,20 +106,26 @@ public class BannerOptionsActivity extends AppCompatActivity {
         private void refreshOnClickEnabled(String viewTypeSelection) {
             BannerOptions.ViewType viewType = BannerOptions.ViewType.valueOf(viewTypeSelection);
             switch (viewType) {
-                case VIDEO -> {
+                case VIDEO:
+                {
                     mOnClickPreference.setEnabled(false);
                     mOnClickPreference.setSummaryProvider(null);
                     mOnClickPreference.setSummary("Video controls");
+                    break;
                 }
-                case WEBVIEW -> {
+                case WEBVIEW:
+                {
                     mOnClickPreference.setEnabled(false);
                     mOnClickPreference.setSummaryProvider(null);
                     mOnClickPreference.setSummary("WebView receives clicks");
+                    break;
                 }
-                default -> {
+                default:
+                {
                     mOnClickPreference.setEnabled(true);
                     mOnClickPreference.setSummaryProvider(
                             ListPreference.SimpleSummaryProvider.getInstance());
+                    break;
                 }
             }
         }

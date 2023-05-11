@@ -29,7 +29,8 @@ public class BannerOptions {
     }
 
     public enum OnClick {
-        OPEN_CHROME
+        OPEN_CHROME,
+        OPEN_PACKAGE,
     }
 
     public enum Placement {
@@ -41,6 +42,8 @@ public class BannerOptions {
     private final String mVideoUrl;
     private final OnClick mOnClick;
     private final Placement mPlacement;
+
+    private final String mPackageToOpen;
 
     public ViewType getViewType() {
         return mViewType;
@@ -58,6 +61,10 @@ public class BannerOptions {
         return mVideoUrl;
     }
 
+    public String getmPackageToOpen() {
+        return mPackageToOpen;
+    }
+
     @Override
     public String toString() {
         return String.format(
@@ -66,11 +73,16 @@ public class BannerOptions {
     }
 
     private BannerOptions(
-            ViewType viewType, String videoUrl, OnClick onClick, Placement placement) {
+            ViewType viewType,
+            String videoUrl,
+            OnClick onClick,
+            String packageToOpen,
+            Placement placement) {
         mViewType = viewType;
         mVideoUrl = videoUrl;
         mOnClick = onClick;
         mPlacement = placement;
+        mPackageToOpen = packageToOpen;
     }
 
     public static BannerOptions fromSharedPreferences(SharedPreferences sharedPreferences) {
@@ -78,6 +90,7 @@ public class BannerOptions {
                 ViewType.valueOf(sharedPreferences.getString("banner_view_type", "")),
                 sharedPreferences.getString("banner_video_url", ""),
                 OnClick.valueOf(sharedPreferences.getString("banner_on_click", "")),
+                sharedPreferences.getString("package_to_open", ""),
                 Placement.valueOf(sharedPreferences.getString("banner_placement", "")));
     }
 }
