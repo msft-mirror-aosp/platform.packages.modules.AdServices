@@ -20,7 +20,6 @@
               "destination": "android-app://example.1d1.test",
               "web_destination": "https://example.1d1.test",
               "event_report_window": "86400",
-              "debug_reporting": true,
               "debug_key": "347982378",
               "debug_join_key": "sample-debug-join-key"
             }
@@ -117,20 +116,6 @@
       }
     }],
     "debug_report_results": [
-      {
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-        "payload": [
-          {
-            "type": "source-success",
-            "body": {
-              "source_event_id": "1",
-              "attribution_destination": "android-app://example.1d1.test",
-              "source_site": "android-app://example.1s1.test",
-              "source_debug_key": "347982378"
-            }
-          }
-        ]
-      },
       {
         "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
         "payload": [

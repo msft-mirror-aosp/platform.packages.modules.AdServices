@@ -33,9 +33,6 @@ public class CompatAdServicesTestUtils {
      */
     public static void setFlags() {
         setEnableBackCompatFlag(true);
-        setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
-        setConsentSourceOfTruth(APPSEARCH_ONLY);
-        setEnableAppSearchConsentData(true);
         // Measurement rollback check requires loading AdServicesManagerService's Binder from the
         // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
         // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
@@ -45,9 +42,6 @@ public class CompatAdServicesTestUtils {
     /** Reset back-compat related flags to their default values after test execution. */
     public static void resetFlagsToDefault() {
         setEnableBackCompatFlag(false);
-        setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
-        setEnableAppSearchConsentData(false);
         setMeasurementRollbackDeleteKillSwitch(false);
     }
 
@@ -63,16 +57,6 @@ public class CompatAdServicesTestUtils {
         return mPreviousAppAllowList;
     }
 
-    private static void setConsentSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + source);
-    }
-
-    private static void setBlockedTopicsSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices blocked_topics_source_of_truth " + source);
-    }
-
     private static void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled) {
         ShellUtils.runShellCommand(
                 "device_config put adservices measurement_rollback_deletion_kill_switch "
@@ -83,8 +67,4 @@ public class CompatAdServicesTestUtils {
         ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
     }
 
-    private static void setEnableAppSearchConsentData(boolean isEnabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data " + isEnabled);
-    }
 }
