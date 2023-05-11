@@ -61,7 +61,8 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
      */
     public void logError(
             int errorCode, int ppapiName, @NonNull String className, @NonNull String methodName) {
-        if (!mFlags.getAdServicesErrorLoggingEnabled()) {
+        if (!mFlags.getAdServicesErrorLoggingEnabled()
+                || mFlags.getErrorCodeLoggingDenyList().contains(errorCode)) {
             return;
         }
         AdServicesErrorStats errorData =
@@ -79,7 +80,8 @@ public class AdServicesErrorLoggerImpl implements AdServicesErrorLogger {
      * logs AdServices error/exceptions if flag enabled.
      */
     public void logErrorWithExceptionInfo(@NonNull Throwable tr, int errorCode, int ppapiName) {
-        if (!mFlags.getAdServicesErrorLoggingEnabled()) {
+        if (!mFlags.getAdServicesErrorLoggingEnabled()
+                || mFlags.getErrorCodeLoggingDenyList().contains(errorCode)) {
             return;
         }
         AdServicesErrorStats.Builder builder =
