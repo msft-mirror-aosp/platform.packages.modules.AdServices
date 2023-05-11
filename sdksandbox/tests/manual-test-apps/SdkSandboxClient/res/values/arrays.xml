@@ -22,6 +22,7 @@
         <item>Inflated from layout</item>
         <item>Video</item>
         <item>Webview</item>
+        <item>Ad Refresh</item>
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
@@ -36,6 +37,7 @@
         <item>INFLATED</item>
         <item>VIDEO</item>
         <item>WEBVIEW</item>
+        <item>AD_REFRESH</item>
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>
