@@ -71,6 +71,7 @@ import com.android.modules.utils.build.SdkLevel;
 
 import java.io.FileInputStream;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
@@ -105,7 +106,9 @@ public class MainActivity extends AppCompatActivity {
     private boolean mSdksLoaded = false;
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
+    private final Executor mExecutor = Executors.newSingleThreadExecutor();
 
+    private Button mResetPreferencesButton;
     private Button mLoadSdksButton;
     private Button mDeathCallbackButton;
     private Button mNewBannerAdButton;
@@ -134,18 +137,15 @@ public class MainActivity extends AppCompatActivity {
             mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
         }
 
-        Executors.newSingleThreadExecutor()
-                .execute(
-                        () -> {
-                            Looper.prepare();
-                            mSharedPreferences =
-                                    PreferenceManager.getDefaultSharedPreferences(
-                                            MainActivity.this);
+        mExecutor.execute(
+                () -> {
+                    Looper.prepare();
+                    mSharedPreferences =
+                            PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
-                            handleExtras();
-                            PreferenceManager.setDefaultValues(
-                                    this, R.xml.banner_preferences, false);
-                        });
+                    handleExtras();
+                    PreferenceManager.setDefaultValues(this, R.xml.banner_preferences, false);
+                });
 
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
         mInScrollBannerView.setZOrderOnTop(true);
         mInScrollBannerView.setVisibility(View.INVISIBLE);
 
+        mResetPreferencesButton = findViewById(R.id.reset_preferences_button);
         mLoadSdksButton = findViewById(R.id.load_sdks_button);
         mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
 
@@ -171,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
 
         configureFeatureFlagSection();
 
+        registerResetPreferencesButton();
         registerLoadSdksButton();
         registerDeathCallbackButton();
 
@@ -192,6 +194,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         refreshLoadSdksButtonText();
+    }
+
+    private void registerResetPreferencesButton() {
+        mResetPreferencesButton.setOnClickListener(
+                v ->
+                        mExecutor.execute(
+                                () -> {
+                                    mSharedPreferences.edit().clear().commit();
+                                    PreferenceManager.setDefaultValues(
+                                            this, R.xml.banner_preferences, true);
+                                }));
     }
 
     private void setAppTitle() {
