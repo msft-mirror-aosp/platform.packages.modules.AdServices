@@ -149,6 +149,15 @@ public class SdkApi extends ISdkApi.Stub {
         iActivityStarter.startActivity(token);
     }
 
+    @Override
+    public boolean isCustomizedSdkContextEnabled() throws RemoteException {
+        // If customized-sdk-context is enabled, then per-sdk storage should be returned for all
+        // storage apis on Context object
+        final String filesDir = mContext.getFilesDir().getAbsolutePath();
+        final String perSdkDir = mContext.getDataDir().getAbsolutePath();
+        return filesDir.startsWith(perSdkDir);
+    }
+
     private SharedPreferences getClientSharedPreferences() {
         return mContext.getSystemService(SdkSandboxController.class).getClientSharedPreferences();
     }
