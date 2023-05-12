@@ -19,6 +19,7 @@ import android.os.Bundle;
 
 interface ISdkApi {
     ParcelFileDescriptor getFileDescriptor(String inputValue);
+    String parseFileDescriptor(in ParcelFileDescriptor pFd);
     String createFile(int sizeInMb);
     String getSyncedSharedPreferencesString(String key);
     // Representative method for SDK-SDK communication. This can be any method called by other
