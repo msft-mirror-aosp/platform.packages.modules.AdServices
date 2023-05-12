@@ -18,6 +18,7 @@ package com.android.server.sdksandbox;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE;
+import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 import static android.app.sdksandbox.SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY;
 import static android.app.sdksandbox.SdkSandboxManager.EXTRA_SANDBOXED_ACTIVITY_HANDLER;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
@@ -136,6 +137,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     @GuardedBy("mLock")
     private IBinder mAdServicesManager;
 
+    // TODO(b/282239822): temporary guard to define if dump() should handle the --AdServices otpion
+    @GuardedBy("mLock")
+    private boolean mAdServicesManagerPublished;
+
     private final Object mLock = new Object();
 
     private static final String PACKAGE_MIME_TYPE = "application/vnd.android.package-archive";
@@ -232,8 +237,15 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as part of
     // SystemServer.
+    // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static final String POST_UDC_DUMP_AD_SERVICES_MESSAGE =
+    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
+            "Don't need to dump AdServices as it's available as " + AD_SERVICES_SYSTEM_SERVICE;
+
+    // On UDC, if AdServices register itself as binder service, dump() will ignore the --AdServices
+    // option because AdServices could be dumped as part of SystemService
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE =
             "Don't need to dump AdServices on UDC+ - use "
                     + "'dumpsys system_server_dumper --name AdServices instead'";
 
@@ -1202,6 +1214,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 }
             }
             writer.println();
+
+            writer.println("AdServicesManager binder published: " + mAdServicesManagerPublished);
         }
 
         writer.println("mServiceProvider:");
@@ -1213,13 +1227,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void dumpAdServices(
             @Nullable FileDescriptor fd, PrintWriter writer, String[] args, boolean quiet) {
+
+        synchronized (mLock) {
+            if (mAdServicesManagerPublished) {
+                // AdServices registered itself as binder service
+                if (quiet) {
+                    Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF);
+                } else {
+                    writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF);
+                }
+                return;
+            }
+        }
+
         if (SdkLevel.isAtLeastU()) {
-            // On UDC, AdServicesManagerService.Lifecycle implements dumpable so it's dumped as
-            // part of SystemServer, hence this special arg option is not needed
+            // AdServices didn't register itself as binder service, but
+            // AdServicesManagerService.Lifecycle implements Dumpable so it's dumped as
+            // part of SystemServer
             if (quiet) {
-                Log.d(TAG, POST_UDC_DUMP_AD_SERVICES_MESSAGE);
+                Log.d(TAG, DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
             } else {
-                writer.println(POST_UDC_DUMP_AD_SERVICES_MESSAGE);
+                writer.println(DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE);
             }
             return;
         }
@@ -1573,9 +1601,11 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    void registerAdServicesManagerService(IBinder iBinder) {
+    void registerAdServicesManagerService(IBinder iBinder, boolean published) {
+        Log.d(TAG, "registerAdServicesManagerService(): published=" + published);
         synchronized (mLock) {
             mAdServicesManager = iBinder;
+            mAdServicesManagerPublished = published;
         }
     }
 
@@ -2252,8 +2282,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private class LocalImpl implements SdkSandboxManagerLocal {
         @Override
-        public void registerAdServicesManagerService(IBinder iBinder) {
-            SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder);
+        public void registerAdServicesManagerService(IBinder iBinder, boolean published) {
+            SdkSandboxManagerService.this.registerAdServicesManagerService(iBinder, published);
         }
 
         @NonNull
