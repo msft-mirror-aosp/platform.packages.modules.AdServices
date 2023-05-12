@@ -32,8 +32,10 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
+        <!-- Disable kill switches to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_select_ads_kill_switch false" />
+        <option name="run-command" value="device_config put adservices fledge_custom_audience_service_kill_switch false" />
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop debug.adservices.sdk_request_permits_per_second 3" />
