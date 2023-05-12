@@ -137,6 +137,17 @@ public abstract class E2ETest {
     interface DebugReportPayloadKeys {
         String TYPE = "type";
         String BODY = "body";
+        List<String> BODY_KEYS =
+                ImmutableList.of(
+                        "attribution_destination",
+                        "limit",
+                        "randomized_trigger_rate",
+                        "scheduled_report_time",
+                        "source_debug_key",
+                        "source_event_id",
+                        "source_site",
+                        "source_type",
+                        "trigger_debug_key");
     }
 
     interface AggregateHistogramKeys {
@@ -600,9 +611,14 @@ public abstract class E2ETest {
                         ? url
                         : getReportUrl(ReportType.DEBUG_REPORT_API, url));
         JSONArray payloads = obj.optJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
-        for (int i = 0; i < payloads.length(); i++) {
-            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.TYPE, ""));
-            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.BODY, ""));
+        if (payloads != null) {
+            for (int i = 0; i < payloads.length(); i++) {
+                for (int j = 0; j < DebugReportPayloadKeys.BODY_KEYS.size(); j++) {
+                    objectList.add(
+                            payloads.getJSONObject(i)
+                                    .optString(DebugReportPayloadKeys.BODY_KEYS.get(j), ""));
+                }
+            }
         }
         return objectList.hashCode();
     }
@@ -717,16 +733,30 @@ public abstract class E2ETest {
                 JSONObject payload2 = payloads2.getJSONObject(j);
                 if (type.equals(payload2.optString(DebugReportPayloadKeys.TYPE, ""))) {
                     hasSameType = true;
-                    if (!payload1.optString(DebugReportPayloadKeys.BODY, "")
-                            .equals(payload2.optString(DebugReportPayloadKeys.BODY, ""))) {
-                        log("Debug report body mismatch");
+                    JSONObject body1 = payload1.getJSONObject(DebugReportPayloadKeys.BODY);
+                    JSONObject body2 = payload2.getJSONObject(DebugReportPayloadKeys.BODY);
+                    if (body1.length() != body2.length()) {
+                        log(
+                                "Verbose debug report payload body key-value pair not equal for"
+                                        + " type: "
+                                        + type);
                         return false;
+                    }
+                    for (String key : DebugReportPayloadKeys.BODY_KEYS) {
+                        if (!body1.optString(key, "").equals(body2.optString(key, ""))) {
+                            log(
+                                    "Verbose debug report payload body mismatch for type: "
+                                            + type
+                                            + ", body key: "
+                                            + key);
+                            return false;
+                        }
                     }
                     break;
                 }
             }
             if (!hasSameType) {
-                log("Debug report type mismatch");
+                log("Debug report type mismatch.");
                 return false;
             }
         }
