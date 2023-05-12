@@ -4432,10 +4432,12 @@ public class MeasurementDaoTest {
                         db, AsyncRegistrationContract.TABLE, /* selection */ null);
         assertEquals(2, count);
 
+        long earliestValidInsertion = System.currentTimeMillis() - 2;
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
                         .runInTransaction(
-                                measurementDao -> measurementDao.deleteExpiredRecords(2)));
+                                measurementDao -> measurementDao.deleteExpiredRecords(
+                                        earliestValidInsertion)));
 
         count =
                 DatabaseUtils.queryNumEntries(
@@ -4501,7 +4503,9 @@ public class MeasurementDaoTest {
                         datastoreManager.runInTransaction(
                                 dao -> dao.insertAsyncRegistration(asyncRegistration)));
 
-        assertTrue(datastoreManager.runInTransaction((dao) -> dao.deleteExpiredRecords(60000)));
+        long earliestValidInsertion = System.currentTimeMillis() - 60000;
+        assertTrue(datastoreManager.runInTransaction((dao) ->
+                  dao.deleteExpiredRecords(earliestValidInsertion)));
 
         Cursor cursor =
                 db.query(
@@ -4639,11 +4643,11 @@ public class MeasurementDaoTest {
                 EventReportContract.TRIGGER_ID, triggerExpired.getAsString(TriggerContract.ID));
         db.insert(EventReportContract.TABLE, null, eventReport_expiredTrigger);
 
+        long earliestValidInsertion = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(10);
         DatastoreManagerFactory.getDatastoreManager(sContext)
                 .runInTransaction(
-                        measurementDao -> {
-                            measurementDao.deleteExpiredRecords(TimeUnit.DAYS.toMillis(10));
-                        });
+                        measurementDao ->
+                                measurementDao.deleteExpiredRecords(earliestValidInsertion));
 
         List<ContentValues> deletedReports =
                 List.of(eventReport_expiredSource, eventReport_expiredTrigger);
