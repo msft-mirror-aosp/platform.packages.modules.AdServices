@@ -56,6 +56,7 @@ import org.mockito.quality.Strictness;
 public final class DebugReportApiTest {
 
     private static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong("7213872");
+    private static final UnsignedLong TRIGGER_DATA = new UnsignedLong(1L);
     private static final String LIMIT = "100";
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private DebugReportApi mDebugReportApi;
@@ -1156,7 +1157,7 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
+                source, trigger, TRIGGER_DATA, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -1180,7 +1181,7 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
+                source, trigger, TRIGGER_DATA, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
     }
 
@@ -1206,7 +1207,7 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
+                source, trigger, TRIGGER_DATA, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -1232,7 +1233,7 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
+                source, trigger, TRIGGER_DATA, mMeasurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -1257,7 +1258,11 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -1281,7 +1286,11 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, times(1)).insertDebugReport(any());
     }
 
@@ -1307,7 +1316,11 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
@@ -1334,7 +1347,11 @@ public final class DebugReportApiTest {
                                         any(), anyBoolean(), anyBoolean()));
 
         mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                source, trigger, mMeasurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+                source,
+                trigger,
+                TRIGGER_DATA,
+                mMeasurementDao,
+                Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
         verify(mMeasurementDao, never()).insertDebugReport(any());
     }
 
