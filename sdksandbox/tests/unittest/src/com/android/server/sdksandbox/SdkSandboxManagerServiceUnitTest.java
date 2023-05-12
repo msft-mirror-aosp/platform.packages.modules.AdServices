@@ -1725,10 +1725,10 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testDump_preU() throws Exception {
+    public void testDump_preU_notPublished() throws Exception {
         requiresAtLeastU(false);
         mockGrantedPermission(DUMP);
-        mService.registerAdServicesManagerService(mAdServicesManager);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
 
         String dump;
         try (StringWriter stringWriter = new StringWriter()) {
@@ -1754,10 +1754,29 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testDump_atLeastU() throws Exception {
+    public void testDump_preU_published() throws Exception {
+        requiresAtLeastU(false);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ true);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
+
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump).contains("FakeDump");
+
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testDump_atLeastU_notPublished() throws Exception {
         requiresAtLeastU(true);
         mockGrantedPermission(DUMP);
-        mService.registerAdServicesManagerService(mAdServicesManager);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
 
         String dump;
         try (StringWriter stringWriter = new StringWriter()) {
@@ -1772,10 +1791,28 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testDump_adServices_preU() throws Exception {
+    public void testDump_atLeastU_published() throws Exception {
+        requiresAtLeastU(true);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ true);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump).contains("FakeDump");
+
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testDump_adServices_preU_notPublished() throws Exception {
         requiresAtLeastU(false);
         mockGrantedPermission(DUMP);
-        mService.registerAdServicesManagerService(mAdServicesManager);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
 
         String dump;
         try (StringWriter stringWriter = new StringWriter()) {
@@ -1800,10 +1837,10 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testDump_adServices_atLeastU() throws Exception {
-        requiresAtLeastU(true);
+    public void testDump_adServices_preU_published() throws Exception {
+        requiresAtLeastU(false);
         mockGrantedPermission(DUMP);
-        mService.registerAdServicesManagerService(mAdServicesManager);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ true);
 
         String dump;
         try (StringWriter stringWriter = new StringWriter()) {
@@ -1815,7 +1852,58 @@ public class SdkSandboxManagerServiceUnitTest {
         }
 
         assertThat(dump)
-                .isEqualTo(SdkSandboxManagerService.POST_UDC_DUMP_AD_SERVICES_MESSAGE + "\n");
+                .isEqualTo(
+                        SdkSandboxManagerService
+                                        .DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF
+                                + "\n");
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testDump_adServices_atLeastU_notPublished() throws Exception {
+        requiresAtLeastU(true);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ false);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(
+                    new FileDescriptor(),
+                    new PrintWriter(stringWriter),
+                    new String[] {"--AdServices"});
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump)
+                .isEqualTo(
+                        SdkSandboxManagerService.DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_SYSTEM_SERVICE
+                                + "\n");
+
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testDump_adServices_atLeastU_published() throws Exception {
+        requiresAtLeastU(true);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager, /* published= */ true);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(
+                    new FileDescriptor(),
+                    new PrintWriter(stringWriter),
+                    new String[] {"--AdServices"});
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump)
+                .isEqualTo(
+                        SdkSandboxManagerService
+                                        .DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF
+                                + "\n");
 
         Mockito.verify(mAdServicesManager, Mockito.never())
                 .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
