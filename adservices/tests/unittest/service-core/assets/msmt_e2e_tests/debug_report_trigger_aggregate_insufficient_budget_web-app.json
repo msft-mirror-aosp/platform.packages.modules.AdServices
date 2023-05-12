@@ -145,7 +145,7 @@
             "body": {
               "attribution_destination": "android-app://com.example.2d1",
               "trigger_debug_key": "8971346781",
-              "limit" : "65537",
+              "limit" : "65536",
               "source_debug_key": "347982378",
               "source_event_id": "1",
               "source_site": "android-app://example.1s1.test"

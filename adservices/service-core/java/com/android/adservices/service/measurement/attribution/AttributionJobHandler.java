@@ -156,13 +156,7 @@ class AttributionJobHandler {
                     Source source = sourceOpt.get().first;
                     List<Source> remainingMatchingSources = sourceOpt.get().second;
 
-                    if (!doTopLevelFiltersMatch(source, trigger)) {
-                        mDebugReportApi.scheduleTriggerDebugReport(
-                                source,
-                                trigger,
-                                /* limit = */ null,
-                                measurementDao,
-                                Type.TRIGGER_NO_MATCHING_FILTER_DATA);
+                    if (!doTopLevelFiltersMatch(source, trigger, measurementDao)) {
                         ignoreTrigger(trigger, measurementDao);
                         return;
                     }
@@ -477,19 +471,8 @@ class AttributionJobHandler {
         }
 
         Optional<EventTrigger> matchingEventTrigger =
-                findFirstMatchingEventTrigger(source, trigger);
+                findFirstMatchingEventTrigger(source, trigger, measurementDao);
         if (!matchingEventTrigger.isPresent()) {
-            // trigger-no-matching-configurations verbose debug report is generated when trigger
-            // "filters/not_filters" field doesn't match source "filter_data" field, it won't be
-            // generated when source doesn't have "filter_data" field.
-            if (source.getFilterDataString() != null) {
-                mDebugReportApi.scheduleTriggerDebugReport(
-                        source,
-                        trigger,
-                        /* limit = */ null,
-                        measurementDao,
-                        Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
-            }
             return TriggeringStatus.DROPPED;
         }
 
@@ -575,16 +558,21 @@ class AttributionJobHandler {
                         .collect(Collectors.toList());
 
         if (relevantEventReports.isEmpty()) {
+            UnsignedLong triggerData = newEventReport.getTriggerData();
             mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                    source, trigger, measurementDao, Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
+                    source,
+                    trigger,
+                    triggerData,
+                    measurementDao,
+                    Type.TRIGGER_EVENT_EXCESSIVE_REPORTS);
             return false;
         }
 
         EventReport lowestPriorityEventReport = relevantEventReports.get(0);
-        if (lowestPriorityEventReport.getTriggerPriority()
-                >= newEventReport.getTriggerPriority()) {
+        if (lowestPriorityEventReport.getTriggerPriority() >= newEventReport.getTriggerPriority()) {
+            UnsignedLong triggerData = newEventReport.getTriggerData();
             mDebugReportApi.scheduleTriggerDebugReportWithAllFields(
-                    source, trigger, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
+                    source, trigger, triggerData, measurementDao, Type.TRIGGER_EVENT_LOW_PRIORITY);
             return false;
         }
 
@@ -679,14 +667,26 @@ class AttributionJobHandler {
      *
      * @return true for a match, false otherwise
      */
-    private static boolean doTopLevelFiltersMatch(@NonNull Source source,
-            @NonNull Trigger trigger) {
+    private boolean doTopLevelFiltersMatch(
+            @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao) {
         try {
             FilterMap sourceFilters = source.getFilterData();
             List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
             List<FilterMap> triggerNotFilterSet = extractFilterSet(trigger.getNotFilters());
-            return Filter.isFilterMatch(sourceFilters, triggerFilterSet, true)
-                    && Filter.isFilterMatch(sourceFilters, triggerNotFilterSet, false);
+            boolean isFilterMatch =
+                    Filter.isFilterMatch(sourceFilters, triggerFilterSet, true)
+                            && Filter.isFilterMatch(sourceFilters, triggerNotFilterSet, false);
+            if (!isFilterMatch
+                    && !sourceFilters.getAttributionFilterMap().isEmpty()
+                    && (!triggerFilterSet.isEmpty() || !triggerNotFilterSet.isEmpty())) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_NO_MATCHING_FILTER_DATA);
+            }
+            return isFilterMatch;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
             LogUtil.e(e, "doTopLevelFiltersMatch: JSON parse failed.");
@@ -694,16 +694,30 @@ class AttributionJobHandler {
         }
     }
 
-    private static Optional<EventTrigger> findFirstMatchingEventTrigger(Source source,
-            Trigger trigger) {
+    private Optional<EventTrigger> findFirstMatchingEventTrigger(
+            Source source, Trigger trigger, IMeasurementDao measurementDao) {
         try {
             FilterMap sourceFiltersData = source.getFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
-            return eventTriggers.stream()
-                    .filter(
-                            eventTrigger ->
-                                    doEventLevelFiltersMatch(sourceFiltersData, eventTrigger))
-                    .findFirst();
+            Optional<EventTrigger> matchingEventTrigger =
+                    eventTriggers.stream()
+                            .filter(
+                                    eventTrigger ->
+                                            doEventLevelFiltersMatch(
+                                                    sourceFiltersData, eventTrigger))
+                            .findFirst();
+            // trigger-no-matching-configurations verbose debug report is generated when event
+            // trigger "filters/not_filters" field doesn't match source "filter_data" field. It
+            // won't be generated when trigger doesn't have event_trigger_data field.
+            if (!matchingEventTrigger.isPresent() && !eventTriggers.isEmpty()) {
+                mDebugReportApi.scheduleTriggerDebugReport(
+                        source,
+                        trigger,
+                        /* limit = */ null,
+                        measurementDao,
+                        Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS);
+            }
+            return matchingEventTrigger;
         } catch (JSONException e) {
             // If JSON is malformed, we shall consider as not matched.
             LogUtil.e(e, "Malformed JSON string.");
@@ -759,7 +773,7 @@ class AttributionJobHandler {
                     mDebugReportApi.scheduleTriggerDebugReport(
                             source,
                             trigger,
-                            String.valueOf(newAggregateContributions),
+                            String.valueOf(PrivacyParams.MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE),
                             measurementDao,
                             Type.TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET);
                 }

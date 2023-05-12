@@ -70,7 +70,7 @@ public final class DebugReportingJobService extends JobService {
         }
         boolean isDebugReportApi = params.getExtras().getBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API);
 
-        LogUtil.d("DebugReportingJobService.onStartJob: ");
+        LogUtil.d("DebugReportingJobService.onStartJob: isDebugReportApi " + isDebugReportApi);
         sBlockingExecutor.execute(
                 () -> {
                     sendReports(isDebugReportApi);
@@ -123,7 +123,7 @@ public final class DebugReportingJobService extends JobService {
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler, isDebugReportApi);
-            LogUtil.d("Scheduled DebugReportingJobService");
+            LogUtil.d("Scheduled DebugReportingJobService: isDebugReportApi " + isDebugReportApi);
         } else {
             LogUtil.d("DebugReportingJobService already scheduled, skipping reschedule");
         }
