@@ -36,6 +36,7 @@
     <string name="video_url">Video URL</string>
     <string name="behaviour">Behaviour</string>
     <string name="on_click">On Click</string>
+    <string name="on_click_package">Package To Open</string>
     <string name="positioning">Positioning</string>
     <string name="placement">Placement</string>
     <string name="feature_flags">Feature Flags</string>
