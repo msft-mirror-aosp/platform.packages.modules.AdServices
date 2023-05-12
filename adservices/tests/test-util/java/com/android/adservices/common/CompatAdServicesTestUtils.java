@@ -63,16 +63,6 @@ public class CompatAdServicesTestUtils {
         return mPreviousAppAllowList;
     }
 
-    private static void setConsentSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_source_of_truth " + source);
-    }
-
-    private static void setBlockedTopicsSourceOfTruth(int source) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices blocked_topics_source_of_truth " + source);
-    }
-
     private static void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled) {
         ShellUtils.runShellCommand(
                 "device_config put adservices measurement_rollback_deletion_kill_switch "
@@ -81,6 +71,16 @@ public class CompatAdServicesTestUtils {
 
     private static void setEnableBackCompatFlag(boolean isEnabled) {
         ShellUtils.runShellCommand("device_config put adservices enable_back_compat " + isEnabled);
+    }
+
+    private static void setConsentSourceOfTruth(int source) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices consent_source_of_truth " + source);
+    }
+
+    private static void setBlockedTopicsSourceOfTruth(int source) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices blocked_topics_source_of_truth " + source);
     }
 
     private static void setEnableAppSearchConsentData(boolean isEnabled) {
