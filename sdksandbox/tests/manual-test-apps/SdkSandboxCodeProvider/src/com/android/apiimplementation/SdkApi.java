@@ -40,6 +40,7 @@ import android.widget.VideoView;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -77,6 +78,25 @@ public class SdkApi extends ISdkApi.Stub {
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    @Override
+    public String parseFileDescriptor(ParcelFileDescriptor pFd) {
+        String value = "";
+
+        try {
+            FileInputStream fis = new FileInputStream(pFd.getFileDescriptor());
+            // Reading fileInputStream and adding its value to a string
+            while (fis.available() != 0) {
+                value += (char) fis.read();
+            }
+            fis.close();
+            pFd.close();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
+
+        return value;
     }
 
     @Override
