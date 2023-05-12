@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_JOB_ID;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -164,9 +164,9 @@ public final class DebugReportingJobService extends JobService {
 
     private static int getJobId(boolean isDebugReportApi) {
         if (isDebugReportApi) {
-            return MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
         } else {
-            return MEASUREMENT_DEBUG_REPORT_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
         }
     }
 
