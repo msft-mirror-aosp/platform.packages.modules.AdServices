@@ -17,8 +17,8 @@
 package com.android.adservices.service.stats;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__UNSET;
 
@@ -32,8 +32,8 @@ import java.util.Objects;
 
 /**
  * Class for logging the run ad bidding per CA process. It provides the functions to collect the
- * process and its subcomponent processes and log the data into the de-identified WestWorld logs.
- * This class collect data for the telemetry atoms:
+ * process and its subcomponent processes and log the data into the statsd logs. This class collects
+ * data for the telemetry atoms:
  *
  * <ul>
  *   <li>RunAdBiddingPerCAProcessReportedStats for bidding per CA stage:
@@ -49,8 +49,7 @@ import java.util.Objects;
  * </ul>
  *
  * <p>Only the runAdBiddingPerCA process should call the close method to record the end state
- * regardless success or failure and log the generated atom proto into the WestWorld de-identified
- * logger.
+ * regardless success or failure and log the generated atom proto into the statsd logger.
  *
  * <p>Each subprocess should call its corresponding start method if it starts, and only call the end
  * method for successful completion. In failure cases, the exceptions thrown should propagate to the
@@ -59,82 +58,6 @@ import java.util.Objects;
  */
 public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculator {
     @VisibleForTesting
-    static final String MISSING_START_GET_BUYER_DECISION_LOGIC =
-            "The logger should set the start of the get-buyer-decision-logic process. ";
-
-    @VisibleForTesting
-    static final String MISSING_END_GET_BUYER_DECISION_LOGIC =
-            "The logger should set the end of the get-buyer-decision-logic process.";
-
-    @VisibleForTesting
-    static final String MISSING_START_GET_TRUSTED_BIDDING_SIGNALS =
-            "The logger should set the start of the get-trusted-bidding-signals process.";
-
-    @VisibleForTesting
-    static final String MISSING_START_RUN_BIDDING =
-            "The logger should set the start of the run-bidding process.";
-
-    @VisibleForTesting
-    static final String MISSING_END_GET_TRUSTED_BIDDING_SIGNALS =
-            "The logger should set the end of the get-trusted-bidding-signals process.";
-
-    @VisibleForTesting
-    static final String MISSING_START_GENERATE_BIDS =
-            "The logger should set the start of the generate-bids process.";
-
-    @VisibleForTesting
-    static final String MISSING_END_GENERATE_BIDS =
-            "The logger should set the end of the generate-bids process.";
-
-    @VisibleForTesting
-    static final String MISSING_END_RUN_BIDDING =
-            "The logger should set the end of the run-bidding process.";
-
-    @VisibleForTesting
-    static final String MISSING_START_RUN_AD_BIDDING_PER_CA =
-            "The logger should set the start of the run-ad-bidding-per-ca process.";
-
-    @VisibleForTesting
-    static final String REPEATED_END_RUN_AD_BIDDING_PER_CA =
-            "The logger has already set the end of the run-ad-bidding-per-ca process.";
-
-    @VisibleForTesting
-    static final String REPEATED_END_GET_BUYER_DECISION_LOGIC =
-            "The logger has already set the end of the get-buyer-decision-logic process.";
-
-    @VisibleForTesting
-    static final String REPEATED_START_GET_BUYER_DECISION_LOGIC =
-            "The logger has already set the start of the get-buyer-decision-logic process.";
-
-    @VisibleForTesting
-    static final String REPEATED_START_TRUSTED_BIDDING_SIGNALS =
-            "The logger have already set the start of the get-trusted-bidding-signals process.";
-
-    @VisibleForTesting
-    static final String REPEATED_END_GET_TRUSTED_BIDDING_SIGNALS =
-            "The logger have already set the end of the get-trusted-bidding-signals process.";
-
-    @VisibleForTesting
-    static final String REPEATED_START_GENERATE_BIDS =
-            "The logger have already set the start of the generate-bids process.";
-
-    @VisibleForTesting
-    static final String REPEATED_END_GENERATE_BIDS =
-            "The logger have already set the end of the generate-bids process.";
-
-    @VisibleForTesting
-    static final String REPEATED_START_RUN_AD_BIDDING_PER_CA =
-            "The logger has already set the start of the run-ad-bidding-per-ca process.";
-
-    @VisibleForTesting
-    static final String REPEATED_END_RUN_BIDDING =
-            "The logger have already set the end of the run-bidding process.";
-
-    @VisibleForTesting
-    static final String REPEATED_START_RUN_BIDDING =
-            "The logger has set the start of the run-bidding process.";
-
-    @VisibleForTesting
     public static final int SCRIPT_JAVASCRIPT =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__JAVASCRIPT;
 
@@ -142,6 +65,64 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
     public static final int SCRIPT_UNSET =
             RUN_AD_SCORING_PROCESS_REPORTED__GET_AD_SELECTION_LOGIC_SCRIPT_TYPE__UNSET;
 
+    @VisibleForTesting
+    static final String MISSING_START_GET_BUYER_DECISION_LOGIC =
+            "The logger should set the start of the get-buyer-decision-logic process. ";
+
+    @VisibleForTesting
+    static final String MISSING_END_GET_BUYER_DECISION_LOGIC =
+            "The logger should set the end of the get-buyer-decision-logic process.";
+    @VisibleForTesting
+    static final String MISSING_START_GET_TRUSTED_BIDDING_SIGNALS =
+            "The logger should set the start of the get-trusted-bidding-signals process.";
+    @VisibleForTesting
+    static final String MISSING_START_RUN_BIDDING =
+            "The logger should set the start of the run-bidding process.";
+    @VisibleForTesting
+    static final String MISSING_END_GET_TRUSTED_BIDDING_SIGNALS =
+            "The logger should set the end of the get-trusted-bidding-signals process.";
+    @VisibleForTesting
+    static final String MISSING_START_GENERATE_BIDS =
+            "The logger should set the start of the generate-bids process.";
+    @VisibleForTesting
+    static final String MISSING_END_GENERATE_BIDS =
+            "The logger should set the end of the generate-bids process.";
+    @VisibleForTesting
+    static final String MISSING_END_RUN_BIDDING =
+            "The logger should set the end of the run-bidding process.";
+    @VisibleForTesting
+    static final String MISSING_START_RUN_AD_BIDDING_PER_CA =
+            "The logger should set the start of the run-ad-bidding-per-ca process.";
+    @VisibleForTesting
+    static final String REPEATED_END_RUN_AD_BIDDING_PER_CA =
+            "The logger has already set the end of the run-ad-bidding-per-ca process.";
+    @VisibleForTesting
+    static final String REPEATED_END_GET_BUYER_DECISION_LOGIC =
+            "The logger has already set the end of the get-buyer-decision-logic process.";
+    @VisibleForTesting
+    static final String REPEATED_START_GET_BUYER_DECISION_LOGIC =
+            "The logger has already set the start of the get-buyer-decision-logic process.";
+    @VisibleForTesting
+    static final String REPEATED_START_TRUSTED_BIDDING_SIGNALS =
+            "The logger have already set the start of the get-trusted-bidding-signals process.";
+    @VisibleForTesting
+    static final String REPEATED_END_GET_TRUSTED_BIDDING_SIGNALS =
+            "The logger have already set the end of the get-trusted-bidding-signals process.";
+    @VisibleForTesting
+    static final String REPEATED_START_GENERATE_BIDS =
+            "The logger have already set the start of the generate-bids process.";
+    @VisibleForTesting
+    static final String REPEATED_END_GENERATE_BIDS =
+            "The logger have already set the end of the generate-bids process.";
+    @VisibleForTesting
+    static final String REPEATED_START_RUN_AD_BIDDING_PER_CA =
+            "The logger has already set the start of the run-ad-bidding-per-ca process.";
+    @VisibleForTesting
+    static final String REPEATED_END_RUN_BIDDING =
+            "The logger have already set the end of the run-bidding process.";
+    @VisibleForTesting
+    static final String REPEATED_START_RUN_BIDDING =
+            "The logger has set the start of the run-bidding process.";
     private final AdServicesLogger mAdServicesLogger;
     private int mNumOfAdsForBidding;
     private long mGetBuyerDecisionLogicStartTimestamp;
@@ -202,7 +183,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
         this.mFetchedBuyerDecisionLogicScriptSizeInBytes =
                 Objects.nonNull(buyerDecisionLogicJs)
                         ? buyerDecisionLogicJs.getBytes().length
-                        : STATUS_UNSET;
+                        : FIELD_UNSET;
     }
 
     /** Start the run-bidding process. */
@@ -244,7 +225,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
         this.mFetchedTrustedBiddingSignalsDataSizeInBytes =
                 Objects.nonNull(trustedBiddingSignals)
                         ? trustedBiddingSignals.getSizeInBytes()
-                        : STATUS_UNSET;
+                        : FIELD_UNSET;
     }
 
     /** Record the start of the generate-bids process. */
@@ -340,7 +321,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getRunBiddingResultCode(int resultCode) {
         if (mRunBiddingStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         }
         if (mRunBiddingEndTimestamp == 0L) {
             return resultCode;
@@ -350,7 +331,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getRunBiddingLatencyInMs() {
         if (mRunBiddingStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         }
         if (mRunBiddingEndTimestamp == 0L) {
             return (int) (mRunAdBiddingPerCAEndTimestamp - mRunBiddingStartTimestamp);
@@ -360,7 +341,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getGenerateBidsLatencyInMs() {
         if (mGenerateBidsStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         }
         if (mGenerateBidsEndTimestamp == 0L) {
             return (int) (mRunAdBiddingPerCAEndTimestamp - mGenerateBidsStartTimestamp);
@@ -370,7 +351,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getTrustedBiddingSignalsResultCode(int resultCode) {
         if (mGetTrustedBiddingSignalsStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         } else if (mGetTrustedBiddingSignalsEndTimestamp == 0L) {
             return resultCode;
         }
@@ -379,7 +360,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getTrustedBiddingSignalsLatencyInMs() {
         if (mGetTrustedBiddingSignalsStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         } else if (mGetTrustedBiddingSignalsEndTimestamp == 0L) {
             return (int) (mRunAdBiddingPerCAEndTimestamp - mGetTrustedBiddingSignalsStartTimestamp);
         }
@@ -391,26 +372,26 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
         if (mGetTrustedBiddingSignalsEndTimestamp > 0L) {
             return mFetchedTrustedBiddingSignalsDataSizeInBytes;
         }
-        return STATUS_UNSET;
+        return FIELD_UNSET;
     }
 
     private int getNumOfKeysOfTrustedBiddingSignals() {
         if (mGetTrustedBiddingSignalsStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         }
         return mNumOfKeysOfTrustedBiddingSignals;
     }
 
     private int getFetchedBuyerDecisionLogicScriptSizeInBytes() {
         if (mGetBuyerDecisionLogicEndTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         }
         return mFetchedBuyerDecisionLogicScriptSizeInBytes;
     }
 
     private int getBuyerDecisionLogicResultCode(int resultCode) {
         if (mGetBuyerDecisionLogicStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         } else if (mGetBuyerDecisionLogicEndTimestamp == 0L) {
             return resultCode;
         }
@@ -419,7 +400,7 @@ public class RunAdBiddingPerCAExecutionLogger extends ApiServiceLatencyCalculato
 
     private int getBuyerDecisionLogicLatencyInMs() {
         if (mGetBuyerDecisionLogicStartTimestamp == 0L) {
-            return STATUS_UNSET;
+            return FIELD_UNSET;
         } else if (mGetBuyerDecisionLogicEndTimestamp == 0L) {
             return (int) (mRunAdBiddingPerCAEndTimestamp - mGetBuyerDecisionLogicStartTimestamp);
         }

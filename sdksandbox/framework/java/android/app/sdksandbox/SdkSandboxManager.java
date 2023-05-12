@@ -259,7 +259,7 @@ public final class SdkSandboxManager {
      * Adds a callback which gets registered for SDK sandbox lifecycle events, such as SDK sandbox
      * death. If the sandbox has not yet been created when this is called, the request will be
      * stored until a sandbox is created, at which point it is activated for that sandbox. Multiple
-     * callbacks can be added to detect death.
+     * callbacks can be added to detect death and will not be removed when the sandbox dies.
      *
      * @param callbackExecutor the {@link Executor} on which to invoke the callback
      * @param callback the {@link SdkSandboxProcessDeathCallback} which will receive SDK sandbox
@@ -390,7 +390,6 @@ public final class SdkSandboxManager {
      * background will result in a {@link SecurityException} being thrown.
      *
      * @param sdkName name of the SDK to be unloaded.
-     * @throws IllegalArgumentException if the SDK is not loaded.
      */
     public void unloadSdk(@NonNull String sdkName) {
         Objects.requireNonNull(sdkName, "sdkName should not be null");
@@ -685,6 +684,19 @@ public final class SdkSandboxManager {
                                 + "Error: "
                                 + e.getMessage());
             }
+        }
+    }
+
+    /**
+     * Return the AdServicesManager
+     *
+     * @hide
+     */
+    public IBinder getAdServicesManager() {
+        try {
+            return mService.getAdServicesManager();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
         }
     }
 }

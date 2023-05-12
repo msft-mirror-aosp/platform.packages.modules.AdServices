@@ -25,17 +25,22 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.consent.AppConsentDao;
+import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -43,6 +48,8 @@ import java.util.concurrent.Executor;
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**
@@ -65,8 +72,12 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
+    private static final int DEFAULT_PACKAGE_UID = -1;
+    private static boolean sFilteringEnabled;
+
     /** Enable the PackageChangedReceiver */
-    public static boolean enableReceiver(@NonNull Context context) {
+    public static boolean enableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        sFilteringEnabled = BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
         try {
             context.getPackageManager()
                     .setComponentEnabledSetting(
@@ -80,31 +91,61 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         return true;
     }
 
+    /**
+     * This receiver will be used for both T+ and S-. For T+, the AdServices System Service will
+     * listen to the system broadcasts and rebroadcast to this receiver. For S-, since we don't have
+     * AdServices in System Service, we have to listen to system broadcasts directly. Note: This is
+     * best effort since AdServices process is not a persistent process, so any processing that
+     * happens here should be verified in a background job. TODO(b/263904417): Register for
+     * PACKAGE_ADDED receiver for S-.
+     */
     @Override
     public void onReceive(Context context, Intent intent) {
         LogUtil.d("PackageChangedReceiver received a broadcast: " + intent.getAction());
+        Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
+        int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
         switch (intent.getAction()) {
+                // The broadcast is received from the system. On S- devices, we do this because
+                // there is no service running in the system server.
+            case Intent.ACTION_PACKAGE_FULLY_REMOVED:
+                handlePackageFullyRemoved(context, packageUri, packageUid);
+                break;
+            case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                handlePackageDataCleared(context, packageUri);
+                break;
+                // The broadcast is received from the system service. On T+ devices, we do this so
+                // that the PP API process is not woken up if the flag is disabled.
             case PACKAGE_CHANGED_BROADCAST:
-                Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
-                int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                 switch (intent.getStringExtra(ACTION_KEY)) {
                     case PACKAGE_FULLY_REMOVED:
-                        measurementOnPackageFullyRemoved(context, packageUri);
-                        topicsOnPackageFullyRemoved(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
-                        consentOnPackageFullyRemoved(context, packageUri, packageUid);
+                        handlePackageFullyRemoved(context, packageUri, packageUid);
                         break;
                     case PACKAGE_ADDED:
-                        measurementOnPackageAdded(context, packageUri);
-                        topicsOnPackageAdded(context, packageUri);
+                        handlePackageAdded(context, packageUri);
                         break;
                     case PACKAGE_DATA_CLEARED:
-                        measurementOnPackageDataCleared(context, packageUri);
-                        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+                        handlePackageDataCleared(context, packageUri);
                         break;
                 }
                 break;
         }
+    }
+
+    private void handlePackageFullyRemoved(Context context, Uri packageUri, int packageUid) {
+        measurementOnPackageFullyRemoved(context, packageUri);
+        topicsOnPackageFullyRemoved(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
+        consentOnPackageFullyRemoved(context, packageUri, packageUid);
+    }
+
+    private void handlePackageAdded(Context context, Uri packageUri) {
+        measurementOnPackageAdded(context, packageUri);
+        topicsOnPackageAdded(context, packageUri);
+    }
+
+    private void handlePackageDataCleared(Context context, Uri packageUri) {
+        measurementOnPackageDataCleared(context, packageUri);
+        fledgeOnPackageFullyRemovedOrDataCleared(context, packageUri);
     }
 
     @VisibleForTesting
@@ -128,7 +169,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
 
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
-                () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+                () -> {
+                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                });
     }
 
     @VisibleForTesting
@@ -183,27 +226,79 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                         getCustomAudienceDatabase(context)
                                 .customAudienceDao()
                                 .deleteCustomAudienceDataByOwner(packageUri.toString()));
+        if (sFilteringEnabled) {
+            LogUtil.d("Deleting app install data for package: " + packageUri);
+            sBackgroundExecutor.execute(
+                    () ->
+                            getSharedStorageDatabase(context)
+                                    .appInstallDao()
+                                    .deleteByPackageName(packageUri.toString()));
+        }
     }
 
-    /** Deletes a consent setting for the given application and UID. */
+    /**
+     * Deletes a consent setting for the given application and UID. If the UID is equal to
+     * DEFAULT_PACKAGE_UID, all consent data is deleted.
+     */
     @VisibleForTesting
     void consentOnPackageFullyRemoved(
             @NonNull Context context, @NonNull Uri packageUri, int packageUid) {
         Objects.requireNonNull(context);
         Objects.requireNonNull(packageUri);
 
-        LogUtil.d(
-                "Deleting consent data for package %s with UID %d",
-                packageUri.toString(), packageUid);
+        String packageName = packageUri.toString();
+        LogUtil.d("Deleting consent data for package %s with UID %d", packageName, packageUid);
         sBackgroundExecutor.execute(
                 () -> {
-                    try {
-                        AppConsentDao.getInstance(context)
-                                .clearConsentForUninstalledApp(packageUri.toString(), packageUid);
-                    } catch (IOException e) {
-                        LogUtil.e("Failed to initialize or write to the app consent datastore");
+                    ConsentManager instance = ConsentManager.getInstance(context);
+                    if (packageUid == DEFAULT_PACKAGE_UID) {
+                        // There can be multiple instances of PackageChangedReceiver, e.g. in
+                        // different user profiles. The system broadcasts a package change
+                        // notification when any package is installed/uninstalled/cleared on any
+                        // profile, to all PackageChangedReceivers. However, if the
+                        // uninstallation is in a different user profile than the one this
+                        // instance of PackageChangedReceiver is in, it should ignore that
+                        // notification.
+                        // Because the Package UID is absent, we need to figure out
+                        // if this package was deleted in the current profile or a different one.
+                        // We can do that by querying the list of installed packages and checking
+                        // if the package name appears there. If it does, then this package was
+                        // uninstalled in a different profile, and so the method should no-op.
+
+                        if (!isPackageStillInstalled(context, packageName)) {
+                            instance.clearConsentForUninstalledApp(packageName);
+                            LogUtil.d("Deleted all consent data for package %s", packageName);
+                        } else {
+                            LogUtil.d(
+                                    "Uninstalled package %s is present in list of installed"
+                                            + " packages; ignoring",
+                                    packageName);
+                        }
+                    } else {
+                        instance.clearConsentForUninstalledApp(packageName, packageUid);
+                        LogUtil.d(
+                                "Deleted consent data for package %s with UID %d",
+                                packageName, packageUid);
                     }
                 });
+    }
+
+    /**
+     * Checks if the removed package name is still present in the list of installed packages
+     *
+     * @param context the context passed along with the package notification
+     * @param packageName the name of the package that was removed
+     * @return {@code true} if the removed package name still exists in the list of installed
+     *     packages on the system retrieved from {@code PackageManager.getInstalledPackages}; {@code
+     *     false} otherwise.
+     */
+    @VisibleForTesting
+    boolean isPackageStillInstalled(@NonNull Context context, @NonNull String packageName) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(packageName);
+        PackageManager packageManager = context.getPackageManager();
+        return PackageManagerCompatUtils.getInstalledPackages(packageManager, 0).stream()
+                .anyMatch(s -> packageName.equals(s.packageName));
     }
 
     /**
@@ -216,5 +311,17 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return CustomAudienceDatabase.getInstance(context);
+    }
+
+    /**
+     * Returns an instance of the {@link SharedStorageDatabase}.
+     *
+     * <p>This is split out for testing/mocking purposes only, since the {@link
+     * SharedStorageDatabase} is abstract and therefore unmockable.
+     */
+    @VisibleForTesting
+    SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        return SharedStorageDatabase.getInstance(context);
     }
 }

@@ -22,6 +22,7 @@ import static com.android.adservices.service.common.JsonUtils.getStringFromJson;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
@@ -29,12 +30,21 @@ import org.junit.Test;
 public class JsonUtilsTest {
     private static final String KEY = "key";
     private static final String VALID_VALUE = "valid_value";
+    private static final String CUSTOM_ERROR = "This is a custom error message";
 
     @Test
     public void testGetStringFromJsonSuccess() throws Exception {
         JSONObject jsonObject = new JSONObject().put(KEY, VALID_VALUE);
 
         assertEquals(getStringFromJson(jsonObject, KEY), VALID_VALUE);
+    }
+
+    @Test
+    public void testGetStringFromJsonArraySuccess() throws Exception {
+        JSONArray jsonArray = new JSONArray().put(VALID_VALUE);
+
+        assertEquals(
+                JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR), VALID_VALUE);
     }
 
     @Test
@@ -58,6 +68,31 @@ public class JsonUtilsTest {
                 JSONException.class,
                 () -> {
                     getStringFromJson(jsonObject, KEY);
+                });
+    }
+
+    @Test
+    public void testGetStringFromJsonArrayThrowsJSONExceptionWhenValueIsNotString() {
+        JSONArray jsonArray = new JSONArray().put(1);
+
+        assertThrows(
+                CUSTOM_ERROR,
+                JSONException.class,
+                () -> {
+                    JsonUtils.getStringFromJsonArrayAtIndex(jsonArray, 0, CUSTOM_ERROR);
+                });
+    }
+
+    @Test
+    public void testGetStringFromJsonThrowsJSONExceptionWhenValueIsNotStringCustomError()
+            throws Exception {
+        JSONObject jsonObject = new JSONObject().put(KEY, 1);
+
+        assertThrows(
+                CUSTOM_ERROR,
+                JSONException.class,
+                () -> {
+                    getStringFromJson(jsonObject, KEY, CUSTOM_ERROR);
                 });
     }
 

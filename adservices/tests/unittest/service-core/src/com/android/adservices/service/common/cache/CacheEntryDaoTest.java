@@ -26,11 +26,15 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
 import org.junit.Before;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @SmallTest
@@ -39,12 +43,21 @@ public class CacheEntryDaoTest {
     private static final String URL = "https://google.com";
     private static final String BODY = "This is the Google home page";
     private static final long MAX_AGE_SECONDS = 1000;
+    private static final ImmutableMap<String, List<String>> RESPONSE_HEADERS =
+            ImmutableMap.<String, List<String>>builder()
+                    .build()
+                    .of(
+                            "header_1",
+                            ImmutableList.of("h1_value1", "h1_value2"),
+                            "header_2",
+                            ImmutableList.of("h2_value1", "h2_value2"));
     private CacheEntryDao mCacheEntryDao;
     private final DBCacheEntry mCacheEntry =
             DBCacheEntry.builder()
                     .setUrl(URL)
                     .setResponseBody(BODY)
                     .setCreationTimestamp(Instant.now())
+                    .setResponseHeaders(RESPONSE_HEADERS)
                     .setMaxAgeSeconds(MAX_AGE_SECONDS)
                     .build();
 
@@ -88,6 +101,10 @@ public class CacheEntryDaoTest {
                 "Both entries' body should have been the same",
                 fetchedEntry.getResponseBody(),
                 mCacheEntry.getResponseBody());
+        assertEquals(
+                "Both entries' response headers should have been same",
+                fetchedEntry.getResponseHeaders(),
+                mCacheEntry.getResponseHeaders());
     }
 
     @Test
@@ -101,6 +118,7 @@ public class CacheEntryDaoTest {
                         .setResponseBody(BODY)
                         .setCreationTimestamp(Instant.now())
                         .setMaxAgeSeconds(smallEntryMaxAgeSeconds)
+                        .setResponseHeaders(RESPONSE_HEADERS)
                         .build();
         mCacheEntryDao.persistCacheEntry(cacheEntry);
         Thread.sleep(2 * 1000 * smallEntryMaxAgeSeconds);
@@ -133,6 +151,7 @@ public class CacheEntryDaoTest {
                         .setResponseBody(BODY)
                         .setCreationTimestamp(Instant.now())
                         .setMaxAgeSeconds(smallEntryMaxAgeSeconds)
+                        .setResponseHeaders(RESPONSE_HEADERS)
                         .build();
         mCacheEntryDao.persistCacheEntry(cacheEntry);
         assertEquals(
@@ -157,6 +176,7 @@ public class CacheEntryDaoTest {
                             .setResponseBody(BODY)
                             .setCreationTimestamp(fewMinutesAgo.plus(Duration.ofSeconds(i)))
                             .setMaxAgeSeconds(MAX_AGE_SECONDS)
+                            .setResponseHeaders(RESPONSE_HEADERS)
                             .build();
             mCacheEntryDao.persistCacheEntry(entry);
         }

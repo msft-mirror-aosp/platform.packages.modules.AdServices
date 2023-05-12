@@ -29,6 +29,7 @@ import android.app.sdksandbox.SharedPreferencesUpdate;
 /** @hide */
 interface ISdkSandboxManager {
     /**
+    * TODO(b/267994332): Add enum for method calls from SDK for latency metrics
     * List of methods for which latencies are logged with logLatencyFromSystemServerToApp
     */
     const String LOAD_SDK = "LOAD_SDK";
@@ -44,4 +45,7 @@ interface ISdkSandboxManager {
     oneway void syncDataFromClient(in String callingPackageName, long timeAppCalledSystemServer, in SharedPreferencesUpdate update, in ISharedPreferencesSyncCallback callback);
     void stopSdkSandbox(in String callingPackageName);
     void logLatencyFromSystemServerToApp(in String method, int latency);
+
+    // TODO(b/263119223): Remove this is a workaround for b/262282035.
+    IBinder getAdServicesManager();
 }

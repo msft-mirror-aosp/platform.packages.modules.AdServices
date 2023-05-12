@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -31,17 +33,21 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.SystemHealthParams;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
 
 /**
  * Fallback service for scheduling reporting jobs (runs less frequently than the main service
- * without a network type requirement).
- * The actual job execution logic is part of {@link EventReportingJobHandler}
+ * without a network type requirement). The actual job execution logic is part of {@link
+ * EventReportingJobHandler}
  */
 public final class EventFallbackReportingJobService extends JobService {
+    private static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID =
+            MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB.getJobId();
 
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
@@ -52,32 +58,61 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling EventFallbackReportingJobService job because it's running in"
+                            + " ExtServices on T+");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
             LogUtil.e("EventFallbackReportingJobService Job is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         LogUtil.d("EventFallbackReportingJobService.onStartJob");
-        sBlockingExecutor.execute(() -> {
-            boolean success = new EventReportingJobHandler(
-                    EnrollmentDao.getInstance(getApplicationContext()),
-                    DatastoreManagerFactory.getDatastoreManager(
-                            getApplicationContext()))
-                    .performScheduledPendingReportsInWindow(
-                            System.currentTimeMillis()
-                                    - SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS,
-                            System.currentTimeMillis()
-                                    - AdServicesConfig
-                                    .getMeasurementEventMainReportingJobPeriodMs());
-            jobFinished(params, !success);
-        });
+        sBlockingExecutor.execute(
+                () -> {
+                    long maxEventReportUploadRetryWindowMs =
+                            SystemHealthParams.MAX_EVENT_REPORT_UPLOAD_RETRY_WINDOW_MS;
+                    long eventMainReportingJobPeriodMs =
+                            AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
+                    boolean success =
+                            new EventReportingJobHandler(
+                                            EnrollmentDao.getInstance(getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(
+                                                    getApplicationContext()),
+                                            ReportingStatus.UploadMethod.FALLBACK)
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis()
+                                                    - eventMainReportingJobPeriodMs);
+
+                    AdservicesJobServiceLogger.getInstance(EventFallbackReportingJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, success, !success);
+
+                    jobFinished(params, !success);
+                });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("EventFallbackReportingJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedules {@link EventFallbackReportingJobService} */
@@ -85,7 +120,7 @@ public final class EventFallbackReportingJobService extends JobService {
     static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                AdServicesConfig.MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
+                                MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                                 new ComponentName(context, EventFallbackReportingJobService.class))
                         .setRequiresDeviceIdle(true)
                         .setRequiresBatteryNotLow(true)
@@ -124,11 +159,14 @@ public final class EventFallbackReportingJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, skipReason);
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, false);

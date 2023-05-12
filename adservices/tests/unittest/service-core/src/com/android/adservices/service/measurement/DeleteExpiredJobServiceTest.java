@@ -16,13 +16,17 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -37,11 +41,17 @@ import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.Context;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.Clock;
+import com.android.adservices.service.stats.StatsdAdServicesLogger;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -58,6 +68,9 @@ import java.util.concurrent.TimeUnit;
  * Unit test for {@link DeleteExpiredJobService
  */
 public class DeleteExpiredJobServiceTest {
+    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+    private static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID =
+            MEASUREMENT_DELETE_EXPIRED_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
 
     private DatastoreManager mMockDatastoreManager;
@@ -65,52 +78,123 @@ public class DeleteExpiredJobServiceTest {
 
     private DeleteExpiredJobService mSpyService;
 
+    private AdservicesJobServiceLogger mSpyLogger;
+    private Flags mMockFlags;
+
     @Before
     public void setUp() {
         mSpyService = spy(new DeleteExpiredJobService());
         mMockDatastoreManager = mock(DatastoreManager.class);
         mMockJobScheduler = mock(JobScheduler.class);
+
+        StatsdAdServicesLogger mockStatsdLogger = mock(StatsdAdServicesLogger.class);
+        mSpyLogger =
+                spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mockStatsdLogger));
+        mMockFlags = mock(Flags.class);
     }
 
     @Test
-    public void onStartJob_killSwitchOn() throws Exception {
+    public void onStartJob_killSwitchOn_withoutLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Setup
-                    enableKillSwitch();
+                    // Logging killswitch is on.
+                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
-                    // Execute
-                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    onStartJob_killSwitchOn();
 
-                    // Validate
-                    assertFalse(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mMockDatastoreManager, never()).runInTransaction(any());
-                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
-                    verify(mMockJobScheduler, times(1))
-                            .cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+                    // Verify logging methods are not invoked.
+                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
+                    verify(mSpyLogger, never())
+                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
                 });
     }
 
     @Test
-    public void onStartJob_killSwitchOff() throws Exception {
+    public void onStartJob_killSwitchOn_withLogging() throws Exception {
         runWithMocks(
                 () -> {
-                    // Setup
-                    disableKillSwitch();
+                    // Logging killswitch is off.
+                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
-                    // Execute
-                    boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+                    onStartJob_killSwitchOn();
 
-                    // Validate
-                    assertTrue(result);
-                    // Allow background thread to execute
-                    Thread.sleep(WAIT_IN_MILLIS);
-                    verify(mMockDatastoreManager, times(1)).runInTransaction(any());
-                    verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
-                    verify(mMockJobScheduler, never())
-                            .cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+                    // Verify logging methods are invoked.
+                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
+                    verify(mSpyLogger)
+                            .logExecutionStats(
+                                    anyInt(),
+                                    anyLong(),
+                                    eq(
+                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
+                                    anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_killSwitchOff_withoutLogging() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Logging killswitch is on.
+                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+
+                    onStartJob_killSwitchOff();
+
+                    // Verify logging methods are not invoked.
+                    verify(mSpyLogger, never()).persistJobExecutionData(anyInt(), anyLong());
+                    verify(mSpyLogger, never())
+                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_killSwitchOff_withLogging() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Logging killswitch is off.
+                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+
+                    onStartJob_killSwitchOff();
+
+                    // Verify logging methods are invoked.
+                    verify(mSpyLogger).persistJobExecutionData(anyInt(), anyLong());
+                    verify(mSpyLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_shouldDisableJobTrue_withoutLogging() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Logging killswitch is on.
+                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+                    Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+
+                    onStartJob_shouldDisableJobTrue();
+
+                    // Verify logging method is not invoked.
+                    verify(mSpyLogger, never())
+                            .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+                });
+    }
+
+    @Test
+    public void onStartJob_shouldDisableJobTrue_withLogging() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Logging killswitch is off.
+                    ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+                    Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+
+                    onStartJob_shouldDisableJobTrue();
+
+                    // Verify logging has happened
+                    verify(mSpyLogger)
+                            .logExecutionStats(
+                                    anyInt(),
+                                    anyLong(),
+                                    eq(
+                                            AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
+                                    anyInt());
                 });
     }
 
@@ -242,6 +326,59 @@ public class DeleteExpiredJobServiceTest {
         assertTrue(captor.getValue().isPersisted());
     }
 
+    private void onStartJob_killSwitchOn() throws Exception {
+        // Setup
+        enableKillSwitch();
+
+        // Execute
+        boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+        // Validate
+        assertFalse(result);
+        // Allow background thread to execute
+        Thread.sleep(WAIT_IN_MILLIS);
+        verify(mMockDatastoreManager, never()).runInTransaction(any());
+        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+    }
+
+    private void onStartJob_killSwitchOff() throws Exception {
+        // Setup
+        disableKillSwitch();
+
+        // Execute
+        boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+        // Validate
+        assertTrue(result);
+        // Allow background thread to execute
+        Thread.sleep(WAIT_IN_MILLIS);
+        verify(mMockDatastoreManager, times(1)).runInTransaction(any());
+        verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
+        verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+    }
+
+    private void onStartJob_shouldDisableJobTrue() throws Exception {
+
+        // Setup
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                        any(Context.class)));
+
+        // Execute
+        boolean result = mSpyService.onStartJob(Mockito.mock(JobParameters.class));
+
+        // Validate
+        assertFalse(result);
+        // Allow background thread to execute
+        Thread.sleep(WAIT_IN_MILLIS);
+        verify(mMockDatastoreManager, never()).runInTransaction(any());
+        verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DELETE_EXPIRED_JOB_ID));
+    }
+
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
@@ -249,6 +386,8 @@ public class DeleteExpiredJobServiceTest {
                         .spyStatic(DatastoreManagerFactory.class)
                         .spyStatic(DeleteExpiredJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .spyStatic(AdservicesJobServiceLogger.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {
@@ -262,6 +401,13 @@ public class DeleteExpiredJobServiceTest {
             ExtendedMockito.doReturn(mMockDatastoreManager)
                     .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
             ExtendedMockito.doNothing().when(() -> DeleteExpiredJobService.schedule(any(), any()));
+
+            // Mock AdservicesJobServiceLogger to not actually log the stats to server
+            Mockito.doNothing()
+                    .when(mSpyLogger)
+                    .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+            ExtendedMockito.doReturn(mSpyLogger)
+                    .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
             // Execute
             execute.run();
@@ -279,8 +425,7 @@ public class DeleteExpiredJobServiceTest {
     }
 
     private void toggleKillSwitch(boolean value) {
-        Flags mockFlags = Mockito.mock(Flags.class);
-        ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(value).when(mockFlags).getMeasurementJobDeleteExpiredKillSwitch();
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        ExtendedMockito.doReturn(value).when(mMockFlags).getMeasurementJobDeleteExpiredKillSwitch();
     }
 }

@@ -16,7 +16,6 @@
 package com.android.server.adservices;
 
 import android.annotation.NonNull;
-import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 
 /**
@@ -42,18 +41,10 @@ public final class PhFlags implements Flags {
 
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
-        // Enabled if the device is an emulator. Otherwise the priority of applying the flag values:
-        // PH (DeviceConfig) and then hard-coded value.
-        return isEmulator()
-                ? true
-                : DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        /* flagName */ KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                        /* defaultValue */ ADSERVICES_SYSTEM_SERVICE_ENABLED);
-    }
-
-    // Return if the device is an emulator or not.
-    private boolean isEmulator() {
-        return SystemProperties.getBoolean("ro.boot.qemu", false);
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
+                /* defaultValue */ ADSERVICES_SYSTEM_SERVICE_ENABLED);
     }
 }

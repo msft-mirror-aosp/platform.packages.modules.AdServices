@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_JOB_ID;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,6 +33,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -56,6 +57,13 @@ public final class DebugReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling DebugReportingJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(params);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobDebugReportingKillSwitch()) {
             LogUtil.e("DebugReportingJobService is disabled");
             return skipAndCancelBackgroundJob(params);
@@ -143,10 +151,12 @@ public final class DebugReportingJobService extends JobService {
             new DebugReportingJobHandler(enrollmentDao, datastoreManager)
                     .performScheduledPendingReports();
         } else {
-            new EventReportingJobHandler(enrollmentDao, datastoreManager)
+            new EventReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
-            new AggregateReportingJobHandler(enrollmentDao, datastoreManager)
+            new AggregateReportingJobHandler(
+                            enrollmentDao, datastoreManager, ReportingStatus.UploadMethod.UNKNOWN)
                     .setIsDebugInstance(true)
                     .performScheduledPendingReportsInWindow(0, 0);
         }
@@ -154,9 +164,9 @@ public final class DebugReportingJobService extends JobService {
 
     private static int getJobId(boolean isDebugReportApi) {
         if (isDebugReportApi) {
-            return MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
         } else {
-            return MEASUREMENT_DEBUG_REPORT_JOB_ID;
+            return MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
         }
     }
 

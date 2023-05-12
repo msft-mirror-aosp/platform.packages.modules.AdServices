@@ -16,16 +16,17 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.adselection.AdSelectionFromOutcomesConfigFixture.SAMPLE_SELLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesConfigValidator.AD_SELECTION_IDS_DONT_EXIST;
-import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlagsFixture.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -36,10 +37,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.only;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
@@ -59,25 +58,20 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
-import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.common.AppImportanceFilter;
-import com.android.adservices.service.common.FledgeAllowListsFilter;
-import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
-import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -89,13 +83,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
-import org.mockito.stubbing.Answer;
 
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class OutcomeSelectionRunnerTest {
@@ -135,38 +127,13 @@ public class OutcomeSelectionRunnerTest {
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private Flags mFlags =
-            new Flags() {
-                @Override
-                public long getAdSelectionSelectingOutcomeTimeoutMs() {
-                    return 300;
-                }
-
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return true;
-                }
-
-                @Override
-                public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-                    return 1000;
-                }
-            };
+    private Flags mFlags = new OutcomeSelectionRunnerTestFlags();
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private final FledgeAuthorizationFilter mFledgeAuthorizationFilter =
-            new FledgeAuthorizationFilter(
-                    mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest()),
-                    mAdServicesLoggerMock);
-    @Mock private AppImportanceFilter mAppImportanceFilter;
-    @Mock private ConsentManager mConsentManagerMock;
-    @Mock private Throttler mMockThrottler;
-    private Supplier<Throttler> mThrottlerSupplier = () -> mMockThrottler;
-    private final FledgeAllowListsFilter mFledgeAllowListsFilter =
-            new FledgeAllowListsFilter(mFlags, mAdServicesLoggerMock);
     private MockitoSession mStaticMockSession = null;
     private ListeningExecutorService mBlockingExecutorService;
+
+    @Mock private AdSelectionServiceFilter mAdSelectionServiceFilter;
 
     @Before
     public void setup() {
@@ -195,13 +162,20 @@ public class OutcomeSelectionRunnerTest {
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
-                        mFledgeAuthorizationFilter,
-                        mAppImportanceFilter,
-                        mThrottlerSupplier,
-                        mFledgeAllowListsFilter,
-                        mConsentManagerMock,
                         mContext,
-                        mFlags);
+                        mFlags,
+                        mAdSelectionServiceFilter);
+
+        doNothing()
+                .when(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
     }
 
     @After
@@ -212,50 +186,7 @@ public class OutcomeSelectionRunnerTest {
     }
 
     @Test
-    public void testRunOutcomeSelectionSuccess() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(true).when(mMockThrottler).tryAcquire(eq(UNKNOWN), anyString());
-
-        List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
-                List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
-        for (AdSelectionIdWithBidAndRenderUri idWithBid : adSelectionIdWithBidAndRenderUris) {
-            persistAdSelectionEntry(idWithBid, MY_APP_PACKAGE_NAME);
-        }
-
-        List<Long> adOutcomesConfigParam =
-                adSelectionIdWithBidAndRenderUris.stream()
-                        .map(AdSelectionIdWithBidAndRenderUri::getAdSelectionId)
-                        .collect(Collectors.toList());
-
-        AdSelectionFromOutcomesConfig config =
-                AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig(
-                        adOutcomesConfigParam);
-
-        GenericListMatcher matcher = new GenericListMatcher(adSelectionIdWithBidAndRenderUris);
-        doReturn(FluentFuture.from(Futures.immediateFuture(AD_SELECTION_ID_1)))
-                .when(mAdOutcomeSelectorMock)
-                .runAdOutcomeSelector(argThat(matcher), eq(config));
-
-        AdSelectionTestCallback resultsCallback =
-                invokeRunAdSelectionFromOutcomes(
-                        mOutcomeSelectionRunner, config, MY_APP_PACKAGE_NAME);
-
-        verify(mAdOutcomeSelectorMock, only()).runAdOutcomeSelector(argThat(matcher), eq(config));
-        assertTrue(resultsCallback.mIsSuccess);
-        assertEquals(AD_SELECTION_ID_1, resultsCallback.mAdSelectionResponse.getAdSelectionId());
-        assertEquals(RENDER_URI_1, resultsCallback.mAdSelectionResponse.getRenderUri());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
-                        eq(STATUS_SUCCESS),
-                        anyInt());
-    }
-
-    @Test
-    public void testRunOutcomeSelectionAdSelectionIdOwnedByDifferentAppFailure() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(true).when(mMockThrottler).tryAcquire(eq(UNKNOWN), anyString());
-
+    public void testRunOutcomeSelectionInvalidAdSelectionConfigFromOutcomes() {
         List<AdSelectionIdWithBidAndRenderUri> AdSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
         persistAdSelectionEntry(AdSelectionIdWithBidAndRenderUris.get(0), MY_APP_PACKAGE_NAME);
@@ -280,14 +211,6 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
         assertFalse(resultsCallback.mIsSuccess);
         assertEquals(STATUS_INVALID_ARGUMENT, resultsCallback.mFledgeErrorResponse.getStatusCode());
-        assertTrue(
-                resultsCallback
-                        .mFledgeErrorResponse
-                        .getErrorMessage()
-                        .contains(
-                                String.format(
-                                        AD_SELECTION_IDS_DONT_EXIST,
-                                        List.of(AD_SELECTION_ID_2, AD_SELECTION_ID_3))));
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
@@ -297,8 +220,16 @@ public class OutcomeSelectionRunnerTest {
 
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult() {
-        doReturn(AdServicesApiConsent.REVOKED).when(mConsentManagerMock).getConsent();
-        doReturn(true).when(mMockThrottler).tryAcquire(eq(UNKNOWN), anyString());
+        doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
+                .when(mAdSelectionServiceFilter)
+                .filterRequest(
+                        SAMPLE_SELLER,
+                        MY_APP_PACKAGE_NAME,
+                        true,
+                        true,
+                        CALLER_UID,
+                        AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        Throttler.ApiKey.FLEDGE_API_SELECT_ADS);
 
         List<AdSelectionIdWithBidAndRenderUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
@@ -322,7 +253,10 @@ public class OutcomeSelectionRunnerTest {
         verify(mAdOutcomeSelectorMock, never()).runAdOutcomeSelector(any(), any());
         assertTrue(resultsCallback.mIsSuccess);
         assertNull(resultsCallback.mAdSelectionResponse);
-        verify(mAdServicesLoggerMock)
+
+        // Confirm a duplicate log entry does not exist.
+        // AdSelectionServiceFilter ensures the failing assertion is logged internally.
+        verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
                         eq(STATUS_USER_CONSENT_REVOKED),
@@ -331,9 +265,6 @@ public class OutcomeSelectionRunnerTest {
 
     @Test
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
-        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent();
-        doReturn(true).when(mMockThrottler).tryAcquire(eq(UNKNOWN), anyString());
-
         mFlags =
                 new Flags() {
                     @Override
@@ -381,13 +312,9 @@ public class OutcomeSelectionRunnerTest {
                         AdServicesExecutors.getLightWeightExecutor(),
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
-                        mFledgeAuthorizationFilter,
-                        mAppImportanceFilter,
-                        mThrottlerSupplier,
-                        mFledgeAllowListsFilter,
-                        mConsentManagerMock,
                         mContext,
-                        mFlags);
+                        mFlags,
+                        mAdSelectionServiceFilter);
 
         AdSelectionTestCallback resultsCallback =
                 invokeRunAdSelectionFromOutcomes(
@@ -431,20 +358,10 @@ public class OutcomeSelectionRunnerTest {
             AdSelectionFromOutcomesConfig config,
             String callerPackageName) {
 
-        // Counted down in 1) callback and 2) logApiCall
-        CountDownLatch countDownLatch = new CountDownLatch(2);
+        // Counted down in the callback
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         OutcomeSelectionRunnerTest.AdSelectionTestCallback adSelectionTestCallback =
                 new OutcomeSelectionRunnerTest.AdSelectionTestCallback(countDownLatch);
-
-        // Wait for the logging call, which happens after the callback
-        Answer<Void> countDownAnswer =
-                unused -> {
-                    countDownLatch.countDown();
-                    return null;
-                };
-        doAnswer(countDownAnswer)
-                .when(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(anyInt(), anyInt(), anyInt());
 
         AdSelectionFromOutcomesInput input =
                 new AdSelectionFromOutcomesInput.Builder()
@@ -510,6 +427,18 @@ public class OutcomeSelectionRunnerTest {
         public boolean matches(List<AdSelectionIdWithBidAndRenderUri> argument) {
             return mTruth.size() == argument.size()
                     && new HashSet<>(mTruth).equals(new HashSet<>(argument));
+        }
+    }
+
+    private static class OutcomeSelectionRunnerTestFlags implements Flags {
+        @Override
+        public long getAdSelectionSelectingOutcomeTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+        }
+
+        @Override
+        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
+            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
         }
     }
 }

@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_EXPIRED_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -28,41 +30,72 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
 
-/**
- * Service for scheduling delete-expired-records job.
- */
+/** Service for scheduling delete-expired-records job. */
 public final class DeleteExpiredJobService extends JobService {
+    private static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID =
+            MEASUREMENT_DELETE_EXPIRED_JOB.getJobId();
 
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling DeleteExpiredJobService job because it's running in ExtServices on"
+                            + " T+");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+        }
+
         if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
             LogUtil.e("DeleteExpiredJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         LogUtil.d("DeleteExpiredJobService.onStartJob");
-        sBackgroundExecutor.execute(() -> {
-            DatastoreManagerFactory
-                    .getDatastoreManager(this)
-                    .runInTransaction(IMeasurementDao::deleteExpiredRecords);
-            jobFinished(params, false);
-        });
+        sBackgroundExecutor.execute(
+                () -> {
+                    DatastoreManagerFactory.getDatastoreManager(this)
+                            .runInTransaction(
+                                    dao ->
+                                            dao.deleteExpiredRecords(
+                                                    FlagsFactory.getFlags()
+                                                            .getMeasurementDataExpiryWindowMs()));
+
+                    boolean shouldRetry = false;
+                    AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_DELETE_EXPIRED_JOB_ID,
+                                    /* isSuccessful */ true,
+                                    shouldRetry);
+
+                    jobFinished(params, shouldRetry);
+                });
         return true;
     }
 
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("DeleteExpiredJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_DELETE_EXPIRED_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedule the job. */
@@ -107,11 +140,15 @@ public final class DeleteExpiredJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_DELETE_EXPIRED_JOB_ID, skipReason);
+
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, false);
 

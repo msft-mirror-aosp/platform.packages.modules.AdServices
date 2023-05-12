@@ -16,9 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_API_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DEBUG_REPORT_JOB_ID;
 import static com.android.adservices.service.measurement.reporting.DebugReportingJobService.EXTRA_BUNDLE_IS_DEBUG_REPORT_API;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_API_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DEBUG_REPORT_JOB;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +45,7 @@ import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -60,6 +61,10 @@ import java.util.Optional;
  * Unit test for {@link DebugReportingJobService
  */
 public class DebugReportingJobServiceTest {
+    private static final int MEASUREMENT_DEBUG_REPORT_JOB_ID =
+            MEASUREMENT_DEBUG_REPORT_JOB.getJobId();
+    private static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID =
+            MEASUREMENT_DEBUG_REPORT_API_JOB.getJobId();
 
     private static final long WAIT_IN_MILLIS = 1000L;
 
@@ -179,6 +184,34 @@ public class DebugReportingJobServiceTest {
                     verify(mSpyService, times(1)).jobFinished(any(), anyBoolean());
                     verify(mMockJobScheduler, never())
                             .cancel(eq(MEASUREMENT_DEBUG_REPORT_API_JOB_ID));
+                });
+    }
+
+    @Test
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        runWithMocks(
+                () -> {
+                    // Setup
+                    ExtendedMockito.doReturn(true)
+                            .when(
+                                    () ->
+                                            ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
+                                                    any(Context.class)));
+
+                    mBundle.putBoolean(EXTRA_BUNDLE_IS_DEBUG_REPORT_API, false);
+                    doReturn(mBundle).when(mJobParameters).getExtras();
+                    // Execute
+                    boolean result = mSpyService.onStartJob(mJobParameters);
+
+                    // Validate
+                    assertFalse(result);
+                    // Allow background thread to execute
+                    Thread.sleep(WAIT_IN_MILLIS);
+                    verify(mMockDatastoreManager, never()).runInTransactionWithResult(any());
+                    verify(mSpyService, times(1)).jobFinished(any(), eq(false));
+                    verify(mMockJobScheduler, times(1)).cancel(eq(MEASUREMENT_DEBUG_REPORT_JOB_ID));
+                    ExtendedMockito.verifyZeroInteractions(
+                            ExtendedMockito.staticMockMarker(FlagsFactory.class));
                 });
     }
 
@@ -426,6 +459,7 @@ public class DebugReportingJobServiceTest {
                         .spyStatic(EnrollmentDao.class)
                         .spyStatic(DebugReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
+                        .mockStatic(ServiceCompatUtils.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
         try {

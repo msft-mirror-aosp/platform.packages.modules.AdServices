@@ -19,6 +19,7 @@ package android.adservices.measurement;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.view.InputEvent;
@@ -30,6 +31,7 @@ import java.util.Objects;
 /** Class to hold input to measurement source registration calls from web context. */
 public final class WebSourceRegistrationRequest implements Parcelable {
     private static final String ANDROID_APP_SCHEME = "android-app";
+    private static final int WEB_SOURCE_PARAMS_MAX_COUNT = 20;
 
     /** Creator for Paracelable (via reflection). */
     @NonNull
@@ -84,8 +86,14 @@ public final class WebSourceRegistrationRequest implements Parcelable {
     private WebSourceRegistrationRequest(@NonNull Parcel in) {
         Objects.requireNonNull(in);
         ArrayList<WebSourceParams> sourceRegistrations = new ArrayList<>();
-        in.readList(
-                sourceRegistrations, WebSourceParams.class.getClassLoader(), WebSourceParams.class);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            in.readList(sourceRegistrations, WebSourceParams.class.getClassLoader());
+        } else {
+            in.readList(
+                    sourceRegistrations,
+                    WebSourceParams.class.getClassLoader(),
+                    WebSourceParams.class);
+        }
         mWebSourceParams = sourceRegistrations;
         mTopOriginUri = Uri.CREATOR.createFromParcel(in);
         if (in.readBoolean()) {
@@ -249,8 +257,10 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         public Builder(@NonNull List<WebSourceParams> webSourceParams, @NonNull Uri topOriginUri) {
             Objects.requireNonNull(webSourceParams);
             Objects.requireNonNull(topOriginUri);
-            if (webSourceParams.isEmpty()) {
-                throw new IllegalArgumentException("web source params list is empty");
+            if (webSourceParams.isEmpty() || webSourceParams.size() > WEB_SOURCE_PARAMS_MAX_COUNT) {
+                throw new IllegalArgumentException(
+                        "web source params size is not within bounds, size: "
+                                + webSourceParams.size());
             }
             mWebSourceParams = webSourceParams;
             mTopOriginUri = topOriginUri;
@@ -327,10 +337,6 @@ public final class WebSourceRegistrationRequest implements Parcelable {
         /** Pre-validates parameters and builds {@link WebSourceRegistrationRequest}. */
         @NonNull
         public WebSourceRegistrationRequest build() {
-            if (mAppDestination == null && mWebDestination == null) {
-                throw new IllegalArgumentException(
-                        "At least one of appDestination or webDestination needs to be provided");
-            }
             return new WebSourceRegistrationRequest(this);
         }
     }

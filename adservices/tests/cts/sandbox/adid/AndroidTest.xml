@@ -26,10 +26,6 @@
         <option name="test-file-name" value="CtsSandboxedAdIdManagerTests.apk"/>
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-        <option name="force-skip-system-props" value="true" />
-    </target_preparer>
-
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false"/>
         <option name="package" value="com.android.tests.sandbox.adid"/>

@@ -25,6 +25,7 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
@@ -46,11 +47,11 @@ public final class AggregateReportTest {
             "{"
                     + "\"operation\": \"histogram\","
                     + "\"data\": [{"
-                    + "\"bucket\": 1369,"
+                    + "\"bucket\": \"1369\","
                     + "\"value\": 32768"
                     + "},"
                     + "{"
-                    + "\"bucket\": 3461,"
+                    + "\"bucket\": \"3461\","
                     + "\"value\": 1664"
                     + "}]"
                     + "}";
@@ -72,6 +73,8 @@ public final class AggregateReportTest {
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(
+                        AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -91,6 +94,8 @@ public final class AggregateReportTest {
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(
+                        AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -110,6 +115,8 @@ public final class AggregateReportTest {
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
                 .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(
+                        AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -134,6 +141,9 @@ public final class AggregateReportTest {
         assertEquals(TRIGGER_DEBUG_KEY, attributionReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, attributionReport.getSourceId());
         assertEquals(TRIGGER_ID, attributionReport.getTriggerId());
+        assertEquals(
+                AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
+                attributionReport.getRegistrationOrigin());
     }
 
     @Test
@@ -158,6 +168,9 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, attributionReport.getSourceId());
         assertEquals(TRIGGER_ID, attributionReport.getTriggerId());
+        assertEquals(
+                AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
+                attributionReport.getRegistrationOrigin());
     }
 
     @Test
@@ -181,6 +194,9 @@ public final class AggregateReportTest {
         assertEquals(TRIGGER_DEBUG_KEY, attributionReport.getTriggerDebugKey());
         assertEquals(SOURCE_ID, attributionReport.getSourceId());
         assertEquals(TRIGGER_ID, attributionReport.getTriggerId());
+        assertEquals(
+                AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN,
+                attributionReport.getRegistrationOrigin());
     }
 
     @Test
@@ -203,6 +219,7 @@ public final class AggregateReportTest {
         assertNull(attributionReport.getTriggerDebugKey());
         assertNull(attributionReport.getSourceId());
         assertNull(attributionReport.getTriggerId());
+        assertNull(attributionReport.getRegistrationOrigin());
     }
 
     @Test
@@ -235,6 +252,7 @@ public final class AggregateReportTest {
                         .setApiVersion("1452")
                         .setSourceId(SOURCE_ID)
                         .setTriggerId(TRIGGER_ID)
+                        .setRegistrationOrigin(WebUtil.validUri("https://adtech2.test"))
                         .build();
         Set<AggregateReport> attributionReportSet1 = Set.of(attributionReport1);
         Set<AggregateReport> attributionReportSet2 = Set.of(attributionReport2);
@@ -288,6 +306,9 @@ public final class AggregateReportTest {
                         .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                         .setSourceId(SOURCE_ID)
                         .setTriggerId(TRIGGER_ID)
+                        .setRegistrationOrigin(
+                                AggregateReportFixture.ValidAggregateReportParams
+                                        .REGISTRATION_ORIGIN)
                         .build();
 
         // Execution

@@ -16,13 +16,19 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.icu.text.MessageFormat;
+import android.os.Build;
 import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity;
 import com.android.adservices.ui.settings.activities.AppsActivity;
@@ -32,19 +38,23 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsMainFragme
 import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 import com.android.settingslib.widget.MainSwitchBar;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-public class MainActionDelegate extends BaseActionDelegate {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class MainActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;
     private final MainViewModel mMainViewModel;
 
     public MainActionDelegate(
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
-        super(mainSettingsActivity);
         mAdServicesSettingsMainActivity = mainSettingsActivity;
         mMainViewModel = mainViewModel;
-
         listenToMainViewModelUiEvents();
     }
 
@@ -61,28 +71,36 @@ public class MainActionDelegate extends BaseActionDelegate {
                                 break;
                             case SWITCH_OFF_PRIVACY_SANDBOX_BETA:
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showOptOutDialog(
-                                            mAdServicesSettingsMainActivity, mMainViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showOptOutDialogFragment(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    } else {
+                                        DialogManager.showOptOutDialog(
+                                                mAdServicesSettingsMainActivity, mMainViewModel);
+                                    }
                                 } else {
                                     mMainViewModel.setConsent(false);
                                 }
                                 break;
                             case DISPLAY_APPS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_APPS_SELECTED);
+                                UiStatsLogger.logManageAppsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 AppsActivity.class));
                                 break;
                             case DISPLAY_TOPICS_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_TOPICS_SELECTED);
+                                UiStatsLogger.logManageTopicsSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
                                                 TopicsActivity.class));
                                 break;
                             case DISPLAY_MEASUREMENT_FRAGMENT:
-                                logUIAction(ActionEnum.MANAGE_MEASUREMENT_SELECTED);
+                                UiStatsLogger.logManageMeasurementSelected(
+                                        mAdServicesSettingsMainActivity);
                                 mAdServicesSettingsMainActivity.startActivity(
                                         new Intent(
                                                 mAdServicesSettingsMainActivity,
@@ -102,26 +120,53 @@ public class MainActionDelegate extends BaseActionDelegate {
      * @param fragment the fragment to be initialized.
      */
     public void initMainFragment(AdServicesSettingsMainFragment fragment) {
-        mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
         // Hide the main toggle and the entry point of Measurement
         // in Main page behind the GaUxFeature Flag
+
+        int[] betaLayout =
+                new int[] {
+                    R.id.main_switch_bar,
+                    R.id.above_pic_paragraph,
+                    R.id.main_view_pic,
+                    R.id.main_view_footer
+                };
+
+        int[] gaUxLayout = new int[] {R.id.main_view_ga_pic, R.id.main_view_ga_footer};
+
         if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            MainSwitchBar mainSwitchBar =
-                    mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-            mainSwitchBar.setVisibility(View.GONE);
-            configureMeasurementButton(fragment);
+            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_ga_title);
+            setLayoutVisibility(betaLayout, View.GONE);
+            setLayoutVisibility(gaUxLayout, View.VISIBLE);
         } else {
-            configureConsentSwitch(fragment);
+            mAdServicesSettingsMainActivity.setTitle(R.string.settingsUI_main_view_title);
+            setLayoutVisibility(betaLayout, View.VISIBLE);
+            setLayoutVisibility(gaUxLayout, View.GONE);
         }
 
+        configureConsentSwitch(fragment);
+        configureMeasurementButton(fragment);
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
+        configureSubtitles(fragment);
+    }
+
+    private void setLayoutVisibility(int[] layoutList, int visibility) {
+        for (int each : layoutList) {
+            mAdServicesSettingsMainActivity.findViewById(each).setVisibility(visibility);
+        }
     }
 
     private void configureConsentSwitch(AdServicesSettingsMainFragment fragment) {
         MainSwitchBar mainSwitchBar =
                 mAdServicesSettingsMainActivity.findViewById(R.id.main_switch_bar);
-        mainSwitchBar.setVisibility(View.VISIBLE);
+
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mainSwitchBar.setVisibility(View.GONE);
+            return;
+        } else {
+            mainSwitchBar.setVisibility(View.VISIBLE);
+        }
+
         mMainViewModel.getConsent().observe(fragment, mainSwitchBar::setChecked);
 
         mainSwitchBar.setOnClickListener(
@@ -129,21 +174,144 @@ public class MainActionDelegate extends BaseActionDelegate {
     }
 
     private void configureTopicsButton(AdServicesSettingsMainFragment fragment) {
-        View topicsButton = fragment.requireView().findViewById(R.id.topics_preference);
+        TextView topicsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.topics_preference_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            topicsPreferenceTitle.setText(R.string.settingsUI_topics_ga_title);
+        } else {
+            topicsPreferenceTitle.setText(R.string.settingsUI_topics_title);
+        }
 
+        View topicsButton = fragment.requireView().findViewById(R.id.topics_preference);
         topicsButton.setOnClickListener(preference -> mMainViewModel.topicsButtonClickHandler());
     }
 
     private void configureAppsButton(AdServicesSettingsMainFragment fragment) {
-        View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
+        TextView appsPreferenceTitle =
+                fragment.requireView().findViewById(R.id.apps_preference_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            appsPreferenceTitle.setText(R.string.settingsUI_apps_ga_title);
+        } else {
+            appsPreferenceTitle.setText(R.string.settingsUI_apps_title);
+        }
 
+        View appsButton = fragment.requireView().findViewById(R.id.apps_preference);
         appsButton.setOnClickListener(preference -> mMainViewModel.appsButtonClickHandler());
     }
 
     private void configureMeasurementButton(AdServicesSettingsMainFragment fragment) {
         View measurementButton = fragment.requireView().findViewById(R.id.measurement_preference);
-        measurementButton.setVisibility(View.VISIBLE);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementButton.setVisibility(View.VISIBLE);
+        } else {
+            measurementButton.setVisibility(View.GONE);
+            return;
+        }
         measurementButton.setOnClickListener(
                 preference -> mMainViewModel.measurementClickHandler());
+    }
+
+    /**
+     * Configure the subtitles of topics/apps/measurement that can display the state of their
+     * preferences (ON or OFF of the consent of topics/apps/measurement and the number of
+     * topics/apps with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    public void configureSubtitles(AdServicesSettingsMainFragment fragment) {
+        configureMeasurementSubtitle(fragment);
+        configureAppsSubtitle(fragment);
+        configureTopicsSubtitle(fragment);
+    }
+
+    /**
+     * Configure the subtitle of measurement that can display the state (ON or OFF) of the
+     * measurement consent on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureMeasurementSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView measurementSubtitle =
+                fragment.requireView().findViewById(R.id.measurement_preference_subtitle);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            measurementSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            measurementSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
+        if (mMainViewModel.getMeasurementConsentFromConsentManager()) {
+            measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_on);
+        } else {
+            measurementSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
+    }
+
+    /**
+     * Configure the subtitle of topics that can display the state of topics preference (ON or OFF
+     * of the topic consent and the number of topics with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureTopicsSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView topicsSubtitle =
+                fragment.requireView().findViewById(R.id.topics_preference_subtitle);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            topicsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            topicsSubtitle.setVisibility(View.GONE);
+            return;
+        }
+        if (mMainViewModel.getTopicsConsentFromConsentManager()) {
+            topicsSubtitle.setText(
+                    getQuantityString(
+                            mMainViewModel.getCountOfTopics(),
+                            R.string.settingsUI_topics_subtitle_plural));
+        } else {
+            topicsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
+    }
+
+    /**
+     * Configure the subtitle of apps that can display the state of apps preference (ON or OFF of
+     * the topic consent and the number of topics with consent) on the Settings main page
+     *
+     * @param fragment the fragment to be initialized.
+     */
+    private void configureAppsSubtitle(AdServicesSettingsMainFragment fragment) {
+        TextView appsSubtitle = fragment.requireView().findViewById(R.id.apps_preference_subtitle);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            appsSubtitle.setVisibility(View.VISIBLE);
+        } else {
+            appsSubtitle.setVisibility(View.GONE);
+            return;
+        }
+
+        if (mMainViewModel.getAppsConsentFromConsentManager()) {
+            appsSubtitle.setText(
+                    getQuantityString(
+                            mMainViewModel.getCountOfApps(),
+                            R.string.settingsUI_apps_subtitle_plural));
+        } else {
+            appsSubtitle.setText(R.string.settingsUI_subtitle_consent_off);
+        }
+    }
+
+    /**
+     * An alternative getQuantity method of Android <plurals> using
+     * Locale.getDefault(Locale.Category.FORMAT)
+     *
+     * @param count the count that determines the format
+     * @param stringId the id of the quantity string
+     * @return String in format (plural or singular) according to the count
+     */
+    private String getQuantityString(int count, int stringId) {
+        MessageFormat msgFormat =
+                new MessageFormat(
+                        mAdServicesSettingsMainActivity.getResources().getString(stringId),
+                        Locale.getDefault(Locale.Category.FORMAT));
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("count", count);
+        return msgFormat.format(arguments);
     }
 }

@@ -78,7 +78,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         Mockito.doReturn(isEnrolled ? ENROLLMENT : null)
                 .when(mEnrollmentDao).getEnrollmentData(Mockito.any());
         DatastoreManager datastoreManager =
-                new SQLDatastoreManager(DbTestUtil.getDbHelperForTest());
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(new EventReportingJobHandler(mEnrollmentDao, datastoreManager));
         try {
@@ -102,7 +102,9 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                 final int result = ((Number) Objects.requireNonNull(get("result"))).intValue();
                 final String id = (String) get("id");
                 Assert.assertEquals(
-                        "Event report failed.", result, spyReportingService.performReport(id));
+                        "Event report failed.",
+                        result,
+                        spyReportingService.performReport(id, new ReportingStatus()));
                 break;
         }
     }

@@ -40,6 +40,8 @@ import com.android.sdksandbox.IUnloadSdkCallback;
 import com.android.sdksandbox.SandboxLatencyInfo;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private long mTimeSystemServerCalledSandbox = -1;
@@ -58,12 +60,16 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private int mInitializationCount = 0;
 
     boolean mIsDisabledResponse = false;
+    boolean mWasVisibilityPatchChecked = false;
     public boolean dieOnLoad = false;
 
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
+    private final CountDownLatch mLatch;
+
     public FakeSdkSandboxService() {
         mManagerToSdkCallback = new FakeManagerToSdkCallback();
+        mLatch = new CountDownLatch(5);
     }
 
     public void setTimeValues(
@@ -80,7 +86,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     }
 
     @Override
-    public void initialize(ISdkToServiceCallback sdkToServiceCallback) {
+    public void initialize(
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
         mInitializationCount++;
     }
 
@@ -116,6 +123,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     @Override
     public void isDisabled(ISdkSandboxDisabledCallback callback) {
         try {
+            mWasVisibilityPatchChecked = true;
             callback.onResult(mIsDisabledResponse);
         } catch (RemoteException e) {
             e.rethrowAsRuntimeException();
@@ -127,6 +135,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             List<String> cePackagePaths,
             List<String> dePackagePaths,
             IComputeSdkStorageCallback callback) {
+        mLatch.countDown();
         mComputeSdkStorageCallback = callback;
     }
 
@@ -160,7 +169,8 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
         return mUnloadSdkCallback != null;
     }
 
-    public void sendStorageInfoToSystemServer() throws RemoteException {
+    public void sendStorageInfoToSystemServer() throws Exception {
+        mLatch.await(5, TimeUnit.SECONDS);
         mComputeSdkStorageCallback.onStorageInfoComputed(0, 0);
     }
 
@@ -196,6 +206,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
         callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+    }
+
+    public boolean wasVisibilityPatchChecked() {
+        return mWasVisibilityPatchChecked;
     }
 
     public void setIsDisabledResponse(boolean response) {

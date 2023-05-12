@@ -16,33 +16,41 @@
 package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
+import android.os.Build;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.TextView;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.AppsActivity;
 import com.android.adservices.ui.settings.activities.BlockedAppsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsAppsFragment;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import com.android.adservices.ui.settings.viewmodels.AppsViewModel.AppsViewModelUiEvent;
+import com.android.settingslib.widget.MainSwitchBar;
 
 import java.io.IOException;
 
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-public class AppsActionDelegate extends BaseActionDelegate {
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
+public class AppsActionDelegate {
     private final AppsActivity mAppsActivity;
     private final AppsViewModel mAppsViewModel;
 
     public AppsActionDelegate(AppsActivity appsActivity, AppsViewModel appsViewModel) {
-        super(appsActivity);
         mAppsActivity = appsActivity;
         mAppsViewModel = appsViewModel;
         listenToAppsViewModelUiEvents();
@@ -61,19 +69,38 @@ public class AppsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         switch (event) {
+                            case SWITCH_ON_APPS:
+                                mAppsViewModel.setAppsConsent(true);
+                                mAppsViewModel.refresh();
+                                break;
+                            case SWITCH_OFF_APPS:
+                                mAppsViewModel.setAppsConsent(false);
+                                mAppsViewModel.refresh();
+                                break;
                             case BLOCK_APP:
-                                logUIAction(ActionEnum.BLOCK_APP_SELECTED);
+                                UiStatsLogger.logBlockAppSelected(mAppsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showBlockAppDialog(
-                                            mAppsActivity, mAppsViewModel, app);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    } else {
+                                        DialogManager.showBlockAppDialog(
+                                                mAppsActivity, mAppsViewModel, app);
+                                    }
                                 } else {
                                     mAppsViewModel.revokeAppConsent(app);
                                 }
                                 break;
                             case RESET_APPS:
-                                logUIAction(ActionEnum.RESET_APP_SELECTED);
+                                UiStatsLogger.logResetAppSelected(mAppsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetAppDialog(mAppsActivity, mAppsViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    } else {
+                                        DialogManager.showResetAppDialog(
+                                                mAppsActivity, mAppsViewModel);
+                                    }
                                 } else {
                                     mAppsViewModel.resetApps();
                                 }
@@ -102,9 +129,57 @@ public class AppsActionDelegate extends BaseActionDelegate {
      * handle user actions.
      */
     public void initAppsFragment(AdServicesSettingsAppsFragment fragment) {
-        mAppsActivity.setTitle(R.string.settingsUI_apps_view_title);
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            mAppsActivity.setTitle(R.string.settingsUI_apps_ga_title);
+
+            configureAppsConsentSwitch(fragment);
+            setGaUxLayoutVisibilities(View.VISIBLE);
+            setBetaLayoutVisibilities(View.GONE);
+
+            setGaUxAppsViewText();
+        } else {
+            mAppsActivity.setTitle(R.string.settingsUI_apps_view_title);
+
+            setGaUxLayoutVisibilities(View.GONE);
+            setBetaLayoutVisibilities(View.VISIBLE);
+
+            setBetaAppsViewText();
+        }
         configureBlockedAppsFragmentButton(fragment);
         configureResetAppsButton(fragment);
+    }
+
+    private void setGaUxAppsViewText() {
+        ((TextView) mAppsActivity.findViewById(R.id.reset_apps_button_child))
+                .setText(R.string.settingsUI_reset_apps_ga_title);
+        ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
+                .setText(R.string.settingsUI_apps_view_no_apps_ga_text);
+    }
+
+    private void setBetaAppsViewText() {
+        ((TextView) mAppsActivity.findViewById(R.id.reset_apps_button_child))
+                .setText(R.string.settingsUI_reset_apps_title);
+        ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
+                .setText(R.string.settingsUI_apps_view_no_apps_text);
+    }
+
+    private void setBetaLayoutVisibilities(int visibility) {
+        mAppsActivity.findViewById(R.id.apps_introduction).setVisibility(visibility);
+        mAppsActivity.findViewById(R.id.apps_view_footer).setVisibility(visibility);
+    }
+
+    private void setGaUxLayoutVisibilities(int visibility) {
+        mAppsActivity.findViewById(R.id.apps_ga_introduction).setVisibility(visibility);
+        mAppsActivity.findViewById(R.id.apps_view_ga_footer).setVisibility(visibility);
+    }
+
+    private void configureAppsConsentSwitch(AdServicesSettingsAppsFragment fragment) {
+        MainSwitchBar appsSwitchBar = mAppsActivity.findViewById(R.id.apps_switch_bar);
+        appsSwitchBar.setVisibility(View.VISIBLE);
+
+        mAppsViewModel.getAppsConsent().observe(fragment, appsSwitchBar::setChecked);
+        appsSwitchBar.setOnClickListener(
+                switchBar -> mAppsViewModel.consentSwitchClickHandler((MainSwitchBar) switchBar));
     }
 
     private void configureBlockedAppsFragmentButton(AdServicesSettingsAppsFragment fragment) {

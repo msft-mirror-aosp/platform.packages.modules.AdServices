@@ -23,6 +23,8 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Preconditions;
@@ -36,14 +38,20 @@ import java.util.stream.Collectors;
 /**
  * Data access object for the App Consent datastore serving the Privacy Sandbox Consent Manager and
  * the FLEDGE Custom Audience and Ad Selection APIs.
+ *
+ * <p>This class is not thread safe. It's methods are not synchronized.
  */
 public class AppConsentDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
     @VisibleForTesting public static final String DATASTORE_NAME = "adservices.appconsent.xml";
 
+    private static final Object SINGLETON_LOCK = new Object();
+
     @VisibleForTesting static final String DATASTORE_KEY_SEPARATOR = "  ";
 
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile AppConsentDao sAppConsentDao;
+
     private volatile boolean mInitialized = false;
 
     /**
@@ -71,7 +79,7 @@ public class AppConsentDao {
         Objects.requireNonNull(context, "Context must be provided.");
 
         if (sAppConsentDao == null) {
-            synchronized (AppConsentDao.class) {
+            synchronized (SINGLETON_LOCK) {
                 if (sAppConsentDao == null) {
                     BooleanFileDatastore datastore =
                             new BooleanFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
@@ -94,7 +102,7 @@ public class AppConsentDao {
     @VisibleForTesting
     void initializeDatastoreIfNeeded() throws IOException {
         if (!mInitialized) {
-            synchronized (this) {
+            synchronized (SINGLETON_LOCK) {
                 if (!mInitialized) {
                     mDatastore.initialize();
                     mInitialized = true;
@@ -111,12 +119,7 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetFalse();
-        Set<String> installedPackages =
-                mPackageManager
-                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
-                        .stream()
-                        .map(applicationInfo -> applicationInfo.packageName)
-                        .collect(Collectors.toSet());
+        Set<String> installedPackages = getInstalledPackages();
         for (String key : datastoreKeys) {
             String packageName = datastoreKeyToPackageName(key);
             if (installedPackages.contains(packageName)) {
@@ -135,12 +138,7 @@ public class AppConsentDao {
         initializeDatastoreIfNeeded();
         Set<String> apps = new HashSet<>();
         Set<String> datastoreKeys = mDatastore.keySetTrue();
-        Set<String> installedPackages =
-                mPackageManager
-                        .getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0))
-                        .stream()
-                        .map(applicationInfo -> applicationInfo.packageName)
-                        .collect(Collectors.toSet());
+        Set<String> installedPackages = getInstalledPackages();
         for (String key : datastoreKeys) {
             String packageName = datastoreKeyToPackageName(key);
             if (installedPackages.contains(packageName)) {
@@ -234,6 +232,30 @@ public class AppConsentDao {
     }
 
     /**
+     * Removes the consent setting for an application (if it exists in the datastore). <strong>All
+     * entries matching this package name will be removed.</strong>
+     *
+     * <p>This method is meant for backwards-compatibility to Android R & S, and should only be
+     * invoked on Android versions prior to T, where the package UID is not available when the
+     * package is uninstalled.
+     *
+     * @throws IllegalArgumentException if the package name is invalid
+     * @throws IOException if the operation fails
+     */
+    public void clearConsentForUninstalledApp(@NonNull String packageName) throws IOException {
+        Objects.requireNonNull(packageName, "Package name must be provided");
+        Preconditions.checkArgument(!packageName.isEmpty(), "Invalid package name");
+
+        initializeDatastoreIfNeeded();
+
+        // It's not possible to use the toDatastoreKey method to look up the key because the
+        // package has been uninstalled. Instead, ask the datastore to clear data for all entries
+        // beginning with the package name + separator, since the datastore stores keys in the
+        // form of package name + separator + package uid.
+        mDatastore.removeByPrefix(packageName + DATASTORE_KEY_SEPARATOR);
+    }
+
+    /**
      * Returns the key that corresponds to the given package name and UID.
      *
      * <p>The given package name and UID are not checked for installation status.
@@ -263,13 +285,7 @@ public class AppConsentDao {
     String toDatastoreKey(@NonNull String packageName) throws IllegalArgumentException {
         Objects.requireNonNull(packageName);
 
-        int packageUid;
-        try {
-            packageUid = getUidForInstalledPackageName(mPackageManager, packageName);
-        } catch (PackageManager.NameNotFoundException exception) {
-            LogUtil.e(exception, "Package name not found");
-            throw new IllegalArgumentException(exception);
-        }
+        int packageUid = getUidForInstalledPackageName(packageName);
 
         return toDatastoreKey(packageName, packageUid);
     }
@@ -297,14 +313,23 @@ public class AppConsentDao {
      * UID if so.
      *
      * @return the UID for the installed application, if found
-     * @throws PackageManager.NameNotFoundException if the package name could not be found
      */
-    @VisibleForTesting
-    static int getUidForInstalledPackageName(
-            @NonNull PackageManager packageManager, @NonNull String packageName)
-            throws PackageManager.NameNotFoundException {
-        Objects.requireNonNull(packageManager);
+    public int getUidForInstalledPackageName(@NonNull String packageName) {
         Objects.requireNonNull(packageName);
-        return packageManager.getPackageUid(packageName, PackageManager.PackageInfoFlags.of(0L));
+
+        try {
+            return PackageManagerCompatUtils.getPackageUid(mPackageManager, packageName, 0);
+        } catch (PackageManager.NameNotFoundException exception) {
+            LogUtil.e(exception, "Package name not found");
+            throw new IllegalArgumentException(exception);
+        }
+    }
+
+    /** Returns the list of packages installed on the device of the user. */
+    @NonNull
+    public Set<String> getInstalledPackages() {
+        return PackageManagerCompatUtils.getInstalledApplications(mPackageManager, 0).stream()
+                .map(applicationInfo -> applicationInfo.packageName)
+                .collect(Collectors.toSet());
     }
 }

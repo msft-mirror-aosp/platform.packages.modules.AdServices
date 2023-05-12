@@ -30,6 +30,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule;
 
 import com.android.sdksandbox.cts.provider.dataisolationtest.IDataIsolationTestSdkApi;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,6 +72,17 @@ public class SdkSandboxDataIsolationTestApp {
                 ApplicationProvider.getApplicationContext()
                         .getSystemService(SdkSandboxManager.class);
         assertThat(mSdkSandboxManager).isNotNull();
+
+        // unload SDK to fix flakiness
+        mSdkSandboxManager.unloadSdk(SDK_NAME);
+    }
+
+    @After
+    public void tearDown() {
+        // unload SDK to fix flakiness
+        if (mSdkSandboxManager != null) {
+            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        }
     }
 
     @Test
@@ -93,7 +105,7 @@ public class SdkSandboxDataIsolationTestApp {
     private void loadSdk() {
         FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), Runnable::run, callback);
-        assertThat(callback.isLoadSdkSuccessful()).isTrue();
+        callback.assertLoadSdkIsSuccessful();
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IDataIsolationTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());

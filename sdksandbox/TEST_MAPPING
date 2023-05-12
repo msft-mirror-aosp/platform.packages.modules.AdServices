@@ -2,7 +2,12 @@
    "mainline-presubmit": [
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
-      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
+      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
     },
     {
       "name": "CtsSdkSandboxInprocessTests[com.google.android.adservices.apex]"
@@ -37,6 +42,14 @@
       ]
     },
     {
+      "name": "CtsSdkSandboxWebkitTestCases[com.google.android.adservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "SdkSandboxManagerDisabledTests[com.google.android.adservices.apex]"
     },
     {
@@ -47,14 +60,30 @@
     // Install com.google.android.adservices.apex and run the corresponding test.
     {
       "name": "SdkSandboxStorageHostTest[com.google.android.adservices.apex]"
+    },
+    {
+      "name": "CtsSdkSandboxHostSideTests[com.google.android.adservices.apex]"
     }
   ],
   "presubmit": [
     {
-      "name": "CtsSdkSandboxHostSideTests"
+      "name": "CtsSdkSandboxHostSideTests",
+      "options": [
+        {
+          "exclude-annotation": "android.platform.test.annotations.LargeTest"
+        }
+      ]
     },
     {
       "name": "CtsSdkSandboxInprocessTests"
+    },
+    {
+      "name": "CtsSdkSandboxWebkitTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
     },
     {
       "name": "SdkSandboxManagerServiceUnitTests"
@@ -78,6 +107,9 @@
       "name": "SdkSandboxRestrictionsHostTest"
     },
     {
+      "name": "BroadcastRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
@@ -98,6 +130,9 @@
   "postsubmit": [
     {
       "name": "SdkSandboxStorageHostTest"
+    },
+    {
+      "name": "CtsSdkSandboxHostSideTests"
     }
   ]
 }

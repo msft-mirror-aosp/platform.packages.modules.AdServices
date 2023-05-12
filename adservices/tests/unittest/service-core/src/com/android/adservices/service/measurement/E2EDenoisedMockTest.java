@@ -16,7 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
-import com.android.adservices.data.measurement.DatastoreException;
+import android.os.RemoteException;
+
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.ReportObjects;
 
@@ -26,6 +27,7 @@ import org.junit.runners.Parameterized;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -40,17 +42,21 @@ public class E2EDenoisedMockTest extends E2EMockTest {
         return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EDenoisedMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            PrivacyParamsProvider privacyParamsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, privacyParamsProvider, name);
-        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager);
+    public E2EDenoisedMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
+        mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
-                        mFlags,
                         mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        mMockContentResolver);
 
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
@@ -58,7 +64,6 @@ public class E2EDenoisedMockTest extends E2EMockTest {
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
                         mDebugReportApi);
     }
 }

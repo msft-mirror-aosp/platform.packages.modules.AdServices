@@ -25,6 +25,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
 import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.IAdIdService;
@@ -35,11 +39,11 @@ import android.annotation.NonNull;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
-import android.os.Process;
 import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -47,6 +51,7 @@ import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApp
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.compat.ProcessCompatUtils;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -108,21 +113,27 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         // permission is declared in the manifest of that package name.
         boolean hasAdIdPermission =
                 PermissionHelper.hasAdIdPermission(
-                        mContext, Process.isSdkSandboxUid(callingUid), sdkPackageName);
+                        mContext, ProcessCompatUtils.isSdkSandboxUid(callingUid), sdkPackageName);
 
         sBackgroundExecutor.execute(
                 () -> {
                     int resultCode = STATUS_SUCCESS;
 
                     try {
-                        if (!canCallerInvokeAdIdService(
-                                hasAdIdPermission, adIdParam, callingUid, callback)) {
+                        resultCode =
+                                canCallerInvokeAdIdService(
+                                        hasAdIdPermission, adIdParam, callingUid, callback);
+                        if (resultCode != STATUS_SUCCESS) {
                             return;
                         }
                         mAdIdWorker.getAdId(packageName, callingUid, callback);
 
                     } catch (Exception e) {
                         LogUtil.e(e, "Unable to send result to the callback");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                         resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -158,6 +169,11 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 callback.onError(STATUS_RATE_LIMIT_REACHED);
             } catch (RemoteException e) {
                 LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+
             } finally {
                 return true;
             }
@@ -169,7 +185,8 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
     private void enforceForeground(int callingUid) {
         // If caller calls Topics API from Sandbox, regard it as foreground.
         // Also enable a flag to force switch on/off this enforcing.
-        if (Process.isSdkSandboxUid(callingUid) || !mFlags.getEnforceForegroundStatusForAdId()) {
+        if (ProcessCompatUtils.isSdkSandboxUid(callingUid)
+                || !mFlags.getEnforceForegroundStatusForAdId()) {
             return;
         }
 
@@ -191,9 +208,9 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
      * @param sufficientPermission boolean which tells whether caller has sufficient permissions.
      * @param adIdParam {@link GetAdIdParam} to get information about the request.
      * @param callback {@link IGetAdIdCallback} to invoke when caller is not allowed.
-     * @return true if caller is allowed to invoke AdId API, false otherwise.
+     * @return API response status code..
      */
-    private boolean canCallerInvokeAdIdService(
+    private int canCallerInvokeAdIdService(
             boolean sufficientPermission,
             GetAdIdParam adIdParam,
             int callingUid,
@@ -204,7 +221,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
         } catch (WrongCallingApplicationStateException backgroundCaller) {
             invokeCallbackWithStatus(
                     callback, STATUS_BACKGROUND_CALLER, backgroundCaller.getMessage());
-            return false;
+            return STATUS_BACKGROUND_CALLER;
         }
 
         if (!sufficientPermission) {
@@ -212,7 +229,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_PERMISSION_NOT_REQUESTED,
                     "Unauthorized caller. Permission not requested.");
-            return false;
+            return STATUS_PERMISSION_NOT_REQUESTED;
         }
         // This needs to access PhFlag which requires READ_DEVICE_CONFIG which
         // is not granted for binder thread. So we have to check it with one
@@ -225,7 +242,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                     callback,
                     STATUS_CALLER_NOT_ALLOWED,
                     "Unauthorized caller. Caller is not allowed.");
-            return false;
+            return STATUS_CALLER_NOT_ALLOWED;
         }
 
         // Check whether calling package belongs to the callingUid
@@ -233,9 +250,9 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 enforceCallingPackageBelongsToUid(adIdParam.getAppPackageName(), callingUid);
         if (resultCode != STATUS_SUCCESS) {
             invokeCallbackWithStatus(callback, resultCode, "Caller is not authorized.");
-            return false;
+            return resultCode;
         }
-        return true;
+        return STATUS_SUCCESS;
     }
 
     private void invokeCallbackWithStatus(
@@ -247,6 +264,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             callback.onError(statusCode);
         } catch (RemoteException e) {
             LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
         }
     }
 
@@ -258,10 +279,15 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, callingPackage + " not found");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
             return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+
             return STATUS_UNAUTHORIZED;
         }
         return STATUS_SUCCESS;

@@ -15,8 +15,10 @@
  */
 package com.android.adservices.ui.settings.activities;
 
+import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.android.adservices.api.R;
@@ -28,6 +30,8 @@ import com.android.adservices.ui.settings.viewmodels.BlockedAppsViewModel;
  * Android application activity for controlling applications which are blocked from interacting with
  * FLEDGE (Remarketing) APIs.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class BlockedAppsActivity extends AdServicesBaseActivity {
     private BlockedAppsActionDelegate mActionDelegate;
 

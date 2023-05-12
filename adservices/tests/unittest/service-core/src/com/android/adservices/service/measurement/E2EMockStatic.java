@@ -17,7 +17,12 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+
+import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
 import com.android.modules.utils.testing.StaticMockFixtureRule;
@@ -30,10 +35,10 @@ import org.mockito.stubbing.Answer;
  */
 public final class E2EMockStatic implements StaticMockFixture {
 
-    private final E2ETest.PrivacyParamsProvider mPrivacyParams;
+    private final E2ETest.ParamsProvider mParams;
 
-    public E2EMockStatic(E2ETest.PrivacyParamsProvider privacyParamsProvider) {
-        mPrivacyParams = privacyParamsProvider;
+    public E2EMockStatic(E2ETest.ParamsProvider paramsProvider) {
+        mParams = paramsProvider;
     }
     /**
      * {@inheritDoc}
@@ -42,6 +47,8 @@ public final class E2EMockStatic implements StaticMockFixture {
     public StaticMockitoSessionBuilder setUpMockedClasses(
             StaticMockitoSessionBuilder sessionBuilder) {
         sessionBuilder.spyStatic(PrivacyParams.class);
+        sessionBuilder.spyStatic(SystemHealthParams.class);
+        sessionBuilder.spyStatic(AppManifestConfigHelper.class);
         return sessionBuilder;
     }
 
@@ -50,24 +57,41 @@ public final class E2EMockStatic implements StaticMockFixture {
      */
     @Override
     public void setUpMockBehaviors() {
+        // Privacy params
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxAttributionPerRateLimitWindow())
+                mParams.getMaxAttributionPerRateLimitWindow())
                     .when(() -> PrivacyParams.getMaxAttributionPerRateLimitWindow());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getNavigationTriggerDataCardinality())
+                mParams.getNavigationTriggerDataCardinality())
                     .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution())
+                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution())
                     .when(() -> PrivacyParams
                             .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource())
+                mParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource())
                     .when(() -> PrivacyParams
                             .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource());
         doAnswer((Answer<Integer>) invocation ->
-                mPrivacyParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
+                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
                     .when(() -> PrivacyParams
                             .getMaxDistinctEnrollmentsPerPublisherXDestinationInSource());
+        // System health params
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxSourcesPerPublisher())
+                    .when(() -> SystemHealthParams.getMaxSourcesPerPublisher());
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxEventReportsPerDestination())
+                    .when(() -> SystemHealthParams.getMaxEventReportsPerDestination());
+        doAnswer((Answer<Integer>) invocation ->
+                mParams.getMaxAggregateReportsPerDestination())
+                    .when(() -> SystemHealthParams.getMaxAggregateReportsPerDestination());
+        // Pass manifest checks
+        doReturn(true)
+                .when(
+                        () ->
+                                AppManifestConfigHelper.isAllowedAttributionAccess(
+                                        any(), any(), anyString()));
     }
 
     /**
@@ -77,8 +101,8 @@ public final class E2EMockStatic implements StaticMockFixture {
     public void tearDown() { }
 
     public static class E2EMockStaticRule extends StaticMockFixtureRule {
-        public E2EMockStaticRule(E2ETest.PrivacyParamsProvider privacyParamsProvider) {
-            super(TestableDeviceConfig::new, () -> new E2EMockStatic(privacyParamsProvider));
+        public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {
+            super(TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
         }
     }
 }

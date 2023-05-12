@@ -21,7 +21,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 import android.content.Context;
 
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
@@ -43,6 +43,7 @@ import java.util.Objects;
  * <p>This class is thread safe.
  */
 public class CustomAudienceImpl {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Object SINGLETON_LOCK = new Object();
 
     @GuardedBy("SINGLETON_LOCK")
@@ -112,9 +113,9 @@ public class CustomAudienceImpl {
         Objects.requireNonNull(callerPackageName);
         Instant currentTime = mClock.instant();
 
-        LogUtil.v("Validating CA limits");
+        sLogger.v("Validating CA limits");
         mCustomAudienceQuantityChecker.check(customAudience, callerPackageName);
-        LogUtil.v("Validating CA");
+        sLogger.v("Validating CA");
         mCustomAudienceValidator.validate(customAudience);
 
         Duration customAudienceDefaultExpireIn =
@@ -125,9 +126,10 @@ public class CustomAudienceImpl {
                         customAudience,
                         callerPackageName,
                         currentTime,
-                        customAudienceDefaultExpireIn);
+                        customAudienceDefaultExpireIn,
+                        mFlags);
 
-        LogUtil.v("Inserting CA in the DB");
+        sLogger.v("Inserting CA in the DB");
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUri());
     }

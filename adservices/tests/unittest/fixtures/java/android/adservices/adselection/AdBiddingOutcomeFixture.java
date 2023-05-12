@@ -33,11 +33,13 @@ public class AdBiddingOutcomeFixture {
             AdTechIdentifier buyer, Double bid) {
 
         final AdData adData =
-                new AdData(
-                        new Uri.Builder()
-                                .path("valid.example.com/testing/hello/" + buyer.toString())
-                                .build(),
-                        "{'example': 'metadata', 'valid': true}");
+                new AdData.Builder()
+                        .setRenderUri(
+                                new Uri.Builder()
+                                        .path("valid.example.com/testing/hello/" + buyer.toString())
+                                        .build())
+                        .setMetadata("{'example': 'metadata', 'valid': true}")
+                        .build();
         final double testBid = bid;
 
         return AdBiddingOutcome.builder()
@@ -45,7 +47,8 @@ public class AdBiddingOutcomeFixture {
                 .setCustomAudienceBiddingInfo(
                         CustomAudienceBiddingInfo.builder()
                                 .setBiddingLogicUri(
-                                        CustomAudienceBiddingInfoFixture.VALID_BIDDING_LOGIC_URI)
+                                        CustomAudienceBiddingInfoFixture.getValidBiddingLogicUri(
+                                                buyer))
                                 .setBuyerDecisionLogicJs(
                                         CustomAudienceBiddingInfoFixture.BUYER_DECISION_LOGIC_JS)
                                 .setCustomAudienceSignals(

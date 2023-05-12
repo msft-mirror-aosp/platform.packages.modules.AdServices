@@ -16,10 +16,12 @@
 
 package com.android.adservices.download;
 
-import static com.android.adservices.service.AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
-import static com.android.adservices.service.AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -30,11 +32,16 @@ import android.app.job.JobScheduler;
 import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
+import android.os.Build;
 import android.os.PersistableBundle;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures;
 import com.google.common.annotations.VisibleForTesting;
@@ -45,6 +52,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.Executor;
 
 /** MDD JobService. This will download MDD files in background tasks. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class MddJobService extends JobService {
     static final String KEY_MDD_TASK_TAG = "mdd_task_tag";
 
@@ -66,7 +75,7 @@ public class MddJobService extends JobService {
 
     /**
      * Tag for mdd task that runs on cellular network. This is used to primarily download file
-     * groups that can be download on cellular network.
+     * groups that can be downloaded on cellular network.
      *
      * <p>By default, this task runs on charging once every 6 hours. This task can be skipped if
      * nothing is downloaded on cellular.
@@ -74,11 +83,11 @@ public class MddJobService extends JobService {
     static final String CELLULAR_CHARGING_PERIODIC_TASK = "MDD.CELLULAR.CHARGING.PERIODIC.TASK";
 
     /**
-     * Tag for mdd task that runs on wifi network. This is used to primarily download file groups
-     * that can be download only on wifi network.
+     * Tag for mdd task that runs on Wi-Fi network. This is used to primarily download file groups
+     * that can be downloaded only on Wi-Fi network.
      *
      * <p>By default, this task runs on charging once every 6 hours. This task can be skipped if
-     * nothing is restricted to wifi.
+     * nothing is restricted to Wi-Fi.
      */
     static final String WIFI_CHARGING_PERIODIC_TASK = "MDD.WIFI.CHARGING.PERIODIC.TASK";
 
@@ -102,9 +111,24 @@ public class MddJobService extends JobService {
     public boolean onStartJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStartJob");
 
+        // Record the invocation of onStartJob() for logging purpose.
+        int jobId = getMddTaskJobId(getMddTag(params));
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(jobId);
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d("Disabling MddJobService job because it's running in ExtServices on T+");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    jobId,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+        }
+
         if (FlagsFactory.getFlags().getMddBackgroundTaskKillSwitch()) {
             LogUtil.e("MDD background task is disabled, skipping and cancelling MddJobService");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    jobId,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -131,19 +155,37 @@ public class MddJobService extends JobService {
                                 () -> {
                                     EnrollmentDataDownloadManager.getInstance(MddJobService.this)
                                             .readAndInsertEnrolmentDataFromMdd();
+
+                                    // Logging has to happen before jobFinished() is called. Due to
+                                    // JobScheduler infra, the JobService instance will end its
+                                    // lifecycle (call onDestroy()) once jobFinished() is invoked.
+                                    //
                                     // Tell the JobScheduler that the job has completed and does not
-                                    // need to be
-                                    // rescheduled.
-                                    jobFinished(params, /* wantsReschedule = */ false);
+                                    // need to be rescheduled.
+                                    boolean shouldRetry = false;
+                                    AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                            .recordJobFinished(
+                                                    jobId, /* isSuccessful= */ true, shouldRetry);
+
+                                    jobFinished(params, shouldRetry);
                                 });
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
-                        LogUtil.e("Failed to handle JobService: " + params.getJobId(), t);
-                        //  When failure, also tell the JobScheduler that the job has completed and
+                        LogUtil.e(t, "Failed to handle JobService: " + params.getJobId());
+
+                        // Logging has to happen before jobFinished() is called. Due to
+                        // JobScheduler infra, the JobService instance will end its
+                        // lifecycle (call onDestroy()) once jobFinished() is invoked.
+                        //
+                        // When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
-                        jobFinished(params, /* wantsReschedule = */ false);
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(MddJobService.this)
+                                .recordJobFinished(jobId, /* isSuccessful= */ false, shouldRetry);
+
+                        jobFinished(params, shouldRetry);
                     }
                 },
                 directExecutor());
@@ -151,46 +193,17 @@ public class MddJobService extends JobService {
         return true;
     }
 
-    private String getMddTag(JobParameters params) {
-        PersistableBundle extras = params.getExtras();
-        if (null == extras) {
-            throw new IllegalArgumentException("Can't find MDD Tasks Tag!");
-        }
-        String mddTag = extras.getString(KEY_MDD_TASK_TAG);
-        return mddTag;
-    }
-
     @Override
-    public boolean onStopJob(@NonNull JobParameters job) {
+    public boolean onStopJob(@NonNull JobParameters params) {
         LogUtil.d("MddJobService.onStopJob");
-        return false;
-    }
 
-    /** Schedule MDD background tasks. */
-    private static void schedule(
-            Context context,
-            @NonNull JobScheduler jobScheduler,
-            long jobPeriodMs,
-            @NonNull String mddTag,
-            @NonNull NetworkState networkState) {
+        // Tell JobScheduler not to reschedule the job because it's unknown at this stage if the
+        // execution is completed or not to avoid executing the task twice.
+        boolean shouldRetry = false;
 
-        // We use Extra to pass the MDD Task Tag.
-        PersistableBundle extras = new PersistableBundle();
-        extras.putString(KEY_MDD_TASK_TAG, mddTag);
-
-        final JobInfo job =
-                new JobInfo.Builder(
-                                getMddTaskJobId(mddTag),
-                                new ComponentName(context, MddJobService.class))
-                        .setRequiresCharging(true)
-                        .setPersisted(true)
-                        .setPeriodic(jobPeriodMs)
-                        .setRequiredNetworkType(getNetworkConstraints(networkState))
-                        .setExtras(extras)
-                        .build();
-
-        jobScheduler.schedule(job);
-        LogUtil.d("Scheduling MDD %s job...", mddTag);
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, getMddTaskJobId(getMddTag(params)), shouldRetry);
+        return shouldRetry;
     }
 
     /**
@@ -253,10 +266,10 @@ public class MddJobService extends JobService {
      * @param jobScheduler Job scheduler to cancel the jobs
      */
     public static void unscheduleAllJobs(@NonNull JobScheduler jobScheduler) {
-        jobScheduler.cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
-        jobScheduler.cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+        jobScheduler.cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        jobScheduler.cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
     }
 
     /**
@@ -312,8 +325,11 @@ public class MddJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(
+            final JobParameters params, int jobId, int skipReason) {
         this.getSystemService(JobScheduler.class).cancel(getMddTaskJobId(getMddTag(params)));
+
+        AdservicesJobServiceLogger.getInstance(this).recordJobSkipped(jobId, skipReason);
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.
@@ -323,22 +339,58 @@ public class MddJobService extends JobService {
         return false;
     }
 
+    private String getMddTag(JobParameters params) {
+        PersistableBundle extras = params.getExtras();
+        if (null == extras) {
+            // TODO(b/279231865): Log CEL with SPE_FAIL_TO_FIND_MDD_TASKS_TAG.
+            throw new IllegalArgumentException("Can't find MDD Tasks Tag!");
+        }
+        return extras.getString(KEY_MDD_TASK_TAG);
+    }
+
+    /** Schedule MDD background tasks. */
+    private static void schedule(
+            Context context,
+            @NonNull JobScheduler jobScheduler,
+            long jobPeriodMs,
+            @NonNull String mddTag,
+            @NonNull NetworkState networkState) {
+
+        // We use Extra to pass the MDD Task Tag.
+        PersistableBundle extras = new PersistableBundle();
+        extras.putString(KEY_MDD_TASK_TAG, mddTag);
+
+        final JobInfo job =
+                new JobInfo.Builder(
+                                getMddTaskJobId(mddTag),
+                                new ComponentName(context, MddJobService.class))
+                        .setRequiresCharging(true)
+                        .setPersisted(true)
+                        .setPeriodic(jobPeriodMs)
+                        .setRequiredNetworkType(getNetworkConstraints(networkState))
+                        .setExtras(extras)
+                        .build();
+
+        jobScheduler.schedule(job);
+        LogUtil.d("Scheduling MDD %s job...", mddTag);
+    }
+
     // Convert from MDD Task Tag to the corresponding JobService ID.
-    static int getMddTaskJobId(String mddTag) {
+    private static int getMddTaskJobId(String mddTag) {
         switch (mddTag) {
             case MAINTENANCE_PERIODIC_TASK:
-                return MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID;
+                return MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId();
             case CHARGING_PERIODIC_TASK:
-                return MDD_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_CHARGING_PERIODIC_TASK_JOB.getJobId();
             case CELLULAR_CHARGING_PERIODIC_TASK:
-                return MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId();
             default:
-                return MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID;
+                return MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
         }
     }
 
     // Maps from the MDD-supplied NetworkState to the JobInfo equivalent int code.
-    static int getNetworkConstraints(NetworkState networkState) {
+    private static int getNetworkConstraints(NetworkState networkState) {
         switch (networkState) {
             case NETWORK_STATE_ANY:
                 // Network not required.

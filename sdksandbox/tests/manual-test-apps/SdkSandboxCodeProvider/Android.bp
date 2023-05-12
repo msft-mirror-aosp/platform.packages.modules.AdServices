@@ -20,7 +20,10 @@ java_defaults {
     name: "SdkSandboxCodeDefaults",
     min_sdk_version: "33",
     target_sdk_version: "33",
-    static_libs: ["SdkInterfaces"],
+    static_libs: [
+        "SdkInterfaces",
+        "modules-utils-build",
+    ],
     resource_dirs: ["res"],
     certificate: ":sdksandbox-test",
 }

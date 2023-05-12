@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection;
 
+import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -30,22 +32,17 @@ import com.android.internal.util.Preconditions;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 
 /**
- * This POJO represents the AdSelection data in the ad_selection table entity. TODO(b/228114258):
- * Add foreign key on the bidding_logic_uri column to enforce the mapping between AdSelection and
- * BuyerDecisionLogic, so that entries in the buyer_decision_logic table will not be deleted as long
- * as there is mapping exists in the ad_selection table.
+ * This POJO represents the AdSelection data in the ad_selection table entity.
  *
  * @hide
  */
-// TODO (b/229660121): Ad unit tests for this class
 @Entity(
         tableName = "ad_selection",
         indices = {@Index(value = {"bidding_logic_uri"})})
 public final class DBAdSelection {
-    private static final int UNSET = 0;
-
     @ColumnInfo(name = "ad_selection_id")
     @PrimaryKey
     private final long mAdSelectionId;
@@ -77,6 +74,10 @@ public final class DBAdSelection {
     @NonNull
     private final String mCallerPackageName;
 
+    @ColumnInfo(name = "ad_counter_keys")
+    @Nullable
+    private final Set<String> mAdCounterKeys;
+
     public DBAdSelection(
             long adSelectionId,
             @Nullable CustomAudienceSignals customAudienceSignals,
@@ -85,7 +86,8 @@ public final class DBAdSelection {
             @NonNull Uri winningAdRenderUri,
             double winningAdBid,
             @NonNull Instant creationTimestamp,
-            @NonNull String callerPackageName) {
+            @NonNull String callerPackageName,
+            @Nullable Set<String> adCounterKeys) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
@@ -94,6 +96,7 @@ public final class DBAdSelection {
         this.mWinningAdBid = winningAdBid;
         this.mCreationTimestamp = creationTimestamp;
         this.mCallerPackageName = callerPackageName;
+        this.mAdCounterKeys = adCounterKeys;
     }
 
     @Override
@@ -108,7 +111,8 @@ public final class DBAdSelection {
                     && Objects.equals(mWinningAdRenderUri, adSelection.mWinningAdRenderUri)
                     && mWinningAdBid == adSelection.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp)
-                    && mCallerPackageName.equals(adSelection.mCallerPackageName);
+                    && mCallerPackageName.equals(adSelection.mCallerPackageName)
+                    && Objects.equals(mAdCounterKeys, adSelection.mAdCounterKeys);
         }
         return false;
     }
@@ -123,7 +127,8 @@ public final class DBAdSelection {
                 mWinningAdRenderUri,
                 mWinningAdBid,
                 mCreationTimestamp,
-                mCallerPackageName);
+                mCallerPackageName,
+                mAdCounterKeys);
     }
 
     /**
@@ -185,9 +190,15 @@ public final class DBAdSelection {
         return mCallerPackageName;
     }
 
+    /** @return the winning ad's set of counter keys */
+    @Nullable
+    public Set<String> getAdCounterKeys() {
+        return mAdCounterKeys;
+    }
+
     /** Builder for {@link DBAdSelection} object. */
     public static final class Builder {
-        private long mAdSelectionId = UNSET;
+        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         private CustomAudienceSignals mCustomAudienceSignals;
         private String mContextualSignals;
         private Uri mBiddingLogicUri;
@@ -195,13 +206,15 @@ public final class DBAdSelection {
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mCallerPackageName;
+        private Set<String> mAdCounterKeys;
 
         public Builder() {}
 
         /** Sets the ad selection id. */
         @NonNull
         public DBAdSelection.Builder setAdSelectionId(long adSelectionId) {
-            Preconditions.checkArgument(adSelectionId != 0, "Ad selection Id should not be zero.");
+            Preconditions.checkArgument(
+                    adSelectionId != UNSET_AD_SELECTION_ID, "Ad selection Id should not be zero.");
             this.mAdSelectionId = adSelectionId;
             return this;
         }
@@ -266,6 +279,20 @@ public final class DBAdSelection {
         }
 
         /**
+         * Sets the winning ad's set of counter keys, which are used to update ad counter histograms
+         * for frequency cap filtering.
+         */
+        @NonNull
+        public Builder setAdCounterKeys(@NonNull Set<String> adCounterKeys) {
+            if (adCounterKeys == null || adCounterKeys.isEmpty()) {
+                mAdCounterKeys = null;
+            } else {
+                mAdCounterKeys = adCounterKeys;
+            }
+            return this;
+        }
+
+        /**
          * Builds an {@link DBAdSelection} instance.
          *
          * @throws NullPointerException if any non-null params are null.
@@ -275,13 +302,11 @@ public final class DBAdSelection {
         @NonNull
         public DBAdSelection build() {
             Preconditions.checkArgument(
-                    mAdSelectionId != UNSET, "Ad selection Id should not be zero.");
+                    mAdSelectionId != UNSET_AD_SELECTION_ID, "Ad selection Id should not be zero.");
             Preconditions.checkArgument(
                     mWinningAdBid > 0, "A winning ad should not have non-positive bid.");
-            boolean oneNull =
-                    Objects.isNull(mCustomAudienceSignals) ^ Objects.isNull(mBiddingLogicUri);
             Preconditions.checkArgument(
-                    !oneNull, "Buyer fields must both be null in case of contextual ad.");
+                    mBiddingLogicUri != null, "Buyer decision logic uri should not be null.");
             Objects.requireNonNull(mContextualSignals);
             Objects.requireNonNull(mWinningAdRenderUri);
             Objects.requireNonNull(mCreationTimestamp);
@@ -295,7 +320,8 @@ public final class DBAdSelection {
                     mWinningAdRenderUri,
                     mWinningAdBid,
                     mCreationTimestamp,
-                    mCallerPackageName);
+                    mCallerPackageName,
+                    mAdCounterKeys);
         }
     }
 }

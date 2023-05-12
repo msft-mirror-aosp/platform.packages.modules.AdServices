@@ -4,7 +4,7 @@
     "taxonomy_type": "chrome_and_mobile_taxonomy",
     "taxonomy_version": "12",
     "build_id" : "8",
-    "updated_date": "2022-08-10"
+    "updated_date": "2022-09-10"
   },
   {
     "asset_name": "labels_topics",
@@ -32,7 +32,7 @@
     "asset_version": "2",
     "path": "assets/classifier/model.tflite",
     "checksum": "fb34b05e1cd4081f3c2bb882092f617efb19266b3353d51b3790a172cae09784",
-    "updated_date": "2022-08-10"
+    "updated_date": "2022-09-10"
   },
   {
     "asset_name": "test_asset1",
