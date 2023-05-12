@@ -51,7 +51,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
             // If this is not an S- device, disable the activities, services, and do not
             // register the broadcast receivers.
             updateAdExtServicesActivities(context, /* shouldEnable= */ false);
-            disableAdExtServicesServices(context);
+            updateAdExtServicesServices(context, /* shouldEnable= */ false);
             return;
         }
         // If this is an S- device but the flags are disabled, do nothing.
@@ -63,6 +63,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
         registerPackagedChangedBroadcastReceivers(context);
         updateAdExtServicesActivities(context, /* shouldEnable= */ true);
+        updateAdExtServicesServices(context, /* shouldEnable= */ true);
     }
 
     /**
@@ -101,10 +102,10 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
 
     /**
      * Disables services with intent filters defined in AdExtServicesManifest to avoid dupes on T+
-     * devices.
+     * devices, or enables the same services on S to make sure they are re-enabled after OTA from R.
      */
     @VisibleForTesting
-    void disableAdExtServicesServices(@NonNull Context context) {
+    void updateAdExtServicesServices(@NonNull Context context, boolean shouldEnable) {
         Objects.requireNonNull(context);
 
         PackageManager packageManager = context.getPackageManager();
@@ -114,10 +115,10 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
                     context,
                     PackageManagerCompatUtils.SERVICE_CLASSES,
                     packageInfo.packageName,
-                    /* shouldEnable= */ false);
-            LogUtil.d("Disabled AdExtServices services.");
+                    shouldEnable);
+            LogUtil.d("Updated state of AdExtServices services: [enable=" + shouldEnable + "]");
         } catch (Exception e) {
-            LogUtil.e("Error when disabling services: " + e.getMessage());
+            LogUtil.e("Error when updating services: " + e.getMessage());
             e.printStackTrace();
         }
     }
