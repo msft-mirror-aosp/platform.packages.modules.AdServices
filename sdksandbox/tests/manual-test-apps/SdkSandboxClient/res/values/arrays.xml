@@ -26,6 +26,7 @@
     </array>
     <array name="banner_on_click">
         <item>Open Chrome</item>
+        <item>Open Package</item>
     </array>
     <array name="banner_placement">
         <item>Bottom of screen</item>
@@ -41,6 +42,7 @@
     </array>
     <array name="banner_on_click_values">
         <item>OPEN_CHROME</item>
+        <item>OPEN_PACKAGE</item>
     </array>
     <array name="banner_placement_values">
         <item>BOTTOM</item>

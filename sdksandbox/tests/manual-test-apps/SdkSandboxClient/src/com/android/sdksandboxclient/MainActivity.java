@@ -85,6 +85,11 @@ public class MainActivity extends AppCompatActivity {
     private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
     private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
 
+    private static final String ON_CLICK_BEHAVIOUR_TYPE_KEY = "on-click-behavior";
+    private static final String ON_CLICK_OPEN_CHROME = "on-click-open-chrome";
+    private static final String ON_CLICK_OPEN_PACKAGE = "on-click-open-package";
+    private static final String PACKAGE_TO_OPEN_KEY = "package-to-open";
+
     private static final Handler sHandler = new Handler(Looper.getMainLooper());
     private static final String EXTRA_SDK_SDK_ENABLED_KEY = "sdkSdkCommEnabled";
     private static final String DROPDOWN_KEY_SDK_SANDBOX = "SDK_IN_SANDBOX";
@@ -207,6 +212,8 @@ public class MainActivity extends AppCompatActivity {
         if (extras != null) {
             final String videoUrl = extras.getString(VIDEO_URL_KEY);
             mSharedPreferences.edit().putString("banner_video_url", videoUrl).apply();
+            final String packageToOpen = extras.getString(PACKAGE_TO_OPEN_KEY);
+            mSharedPreferences.edit().putString("package_to_open", packageToOpen).apply();
         }
     }
 
@@ -332,19 +339,44 @@ public class MainActivity extends AppCompatActivity {
                         final Bundle params = getRequestSurfacePackageParams(null, surfaceView);
 
                         switch (options.getViewType()) {
-                            case INFLATED -> {
-                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
-                            }
-                            case VIDEO -> {
-                                params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
-                                params.putString(VIDEO_URL_KEY, options.getVideoUrl());
-                            }
-                            case WEBVIEW -> {
-                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_WEBVIEW);
-                            }
-                            case AD_REFRESH -> {
-                                params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
-                            }
+                            case INFLATED:
+                                {
+                                    params.putString(VIEW_TYPE_KEY, VIEW_TYPE_INFLATED_VIEW);
+                                    break;
+                                }
+                            case VIDEO:
+                                {
+                                    params.putString(VIEW_TYPE_KEY, VIDEO_VIEW_VALUE);
+                                    params.putString(VIDEO_URL_KEY, options.getVideoUrl());
+                                    break;
+                                }
+                            case WEBVIEW:
+                                {
+                                    params.putString(VIEW_TYPE_KEY, VIEW_TYPE_WEBVIEW);
+                                    break;
+                                }
+                          case AD_REFRESH:
+                                {
+                                     params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
+                                     break;
+                                }
+                        }
+
+                        switch (options.getOnClick()) {
+                            case OPEN_CHROME:
+                                {
+                                    params.putString(
+                                            ON_CLICK_BEHAVIOUR_TYPE_KEY, ON_CLICK_OPEN_CHROME);
+                                    break;
+                                }
+                            case OPEN_PACKAGE:
+                                {
+                                    params.putString(
+                                            ON_CLICK_BEHAVIOUR_TYPE_KEY, ON_CLICK_OPEN_PACKAGE);
+                                    params.putString(
+                                            PACKAGE_TO_OPEN_KEY, options.getmPackageToOpen());
+                                    break;
+                                }
                         }
                         sHandler.post(
                                 () -> {
