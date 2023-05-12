@@ -84,8 +84,9 @@ public class MainActivity extends AppCompatActivity {
     private static final String VIEW_TYPE_INFLATED_VIEW = "view-type-inflated-view";
     private static final String VIEW_TYPE_WEBVIEW = "view-type-webview";
     private static final String VIEW_TYPE_AD_REFRESH = "view-type-ad-refresh";
+    private static final String VIEW_TYPE_EDITTEXT = "view-type-edittext";
 
-    private static final String ON_CLICK_BEHAVIOUR_TYPE_KEY = "on-click-behavior";
+  private static final String ON_CLICK_BEHAVIOUR_TYPE_KEY = "on-click-behavior";
     private static final String ON_CLICK_OPEN_CHROME = "on-click-open-chrome";
     private static final String ON_CLICK_OPEN_PACKAGE = "on-click-open-package";
     private static final String PACKAGE_TO_OPEN_KEY = "package-to-open";
@@ -360,6 +361,11 @@ public class MainActivity extends AppCompatActivity {
                                      params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
                                      break;
                                 }
+                          case EDITTEXT:
+                               {
+                                    params.putString(VIEW_TYPE_KEY, VIEW_TYPE_EDITTEXT);
+                                    break;
+                               }
                         }
 
                         switch (options.getOnClick()) {
