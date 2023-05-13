@@ -97,12 +97,11 @@ public class OTAResourcesManager {
             return;
         }
         if (!resourcesFile.hasFileUri()) {
-            LogUtil.e("Failed to get downloaded OTA file URI");
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
-                    "OTAResourcesManager",
-                    "refreshOTAResources");
+                    OTAResourcesManager.class.getSimpleName(),
+                    new Object() {}.getClass().getEnclosingMethod().getName());
             return;
         }
         File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());

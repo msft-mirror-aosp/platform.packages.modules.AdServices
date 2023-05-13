@@ -1893,7 +1893,8 @@ public class ConsentManager {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
                     ConsentManager.class.getSimpleName(),
-                    ConsentManager.class.getEnclosingMethod().getName());
+                    new Object() {
+                    }.getClass().getEnclosingMethod().getName());
         }
     }
 
