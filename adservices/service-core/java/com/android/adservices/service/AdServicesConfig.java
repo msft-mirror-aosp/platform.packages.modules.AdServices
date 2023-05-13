@@ -16,8 +16,6 @@
 
 package com.android.adservices.service;
 
-import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
-
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,30 +24,10 @@ import java.util.concurrent.TimeUnit;
  * <p>For Feature Flags that are backed by PH, please see {@link PhFlags}
  */
 public class AdServicesConfig {
-    /** Job ID for idle maintenance job ({@link MaintenanceJobService}). */
-    public static final int MAINTENANCE_JOB_ID = 1;
-
-    /**
-     * Job ID for Topics Epoch Computation Job ({@link
-     * com.android.adservices.service.topics.EpochJobService})
-     */
-    public static final int TOPICS_EPOCH_JOB_ID = 2;
-
-    /**
-     * Job ID for Measurement Event Main Reporting Job ({@link
-     * com.android.adservices.service.measurement.EventReportingJobService})
-     */
-    public static final int MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID = 3;
 
     public static long getMeasurementEventMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventMainReportingJobPeriodMs();
     }
-
-    /**
-     * Job ID for Measurement Delete Expired Records Job ({@link
-     * com.android.adservices.service.measurement.DeleteExpiredJobService})
-     */
-    public static final int MEASUREMENT_DELETE_EXPIRED_JOB_ID = 4;
 
     public static long MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
@@ -61,18 +39,6 @@ public class AdServicesConfig {
         return MEASUREMENT_DELETE_EXPIRED_JOB_PERIOD_MS;
     }
 
-    /**
-     * Job ID for Measurement Attribution Job ({@link
-     * com.android.adservices.service.measurement.attribution.AttributionJobService}).
-     */
-    public static final int MEASUREMENT_ATTRIBUTION_JOB_ID = 5;
-
-    /**
-     * Job ID for Measurement Fallback Reporting Job ({@link
-     * com.android.adservices.service.measurement.EventFallbackReportingJobService})
-     */
-    public static final int MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID = 6;
-
     /** Returns the min time period (in millis) between each event fallback reporting job run. */
     public static long getMeasurementEventFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementEventFallbackReportingJobPeriodMs();
@@ -83,22 +49,10 @@ public class AdServicesConfig {
         return FlagsFactory.getFlags().getMeasurementAggregateEncryptionKeyCoordinatorUrl();
     }
 
-    /**
-     * Job ID for Measurement Aggregate Main Reporting Job ({@link
-     * com.android.adservices.service.measurement.AggregateReportingJobService})
-     */
-    public static final int MEASUREMENT_AGGREGATE_MAIN_REPORTING_JOB_ID = 7;
-
     /** Returns the min time period (in millis) between each aggregate main reporting job run. */
     public static long getMeasurementAggregateMainReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementAggregateMainReportingJobPeriodMs();
     }
-
-    /**
-     * Job ID for Measurement Aggregate Fallback Reporting Job ({@link
-     * com.android.adservices.service.measurement.AggregateFallbackReportingJobService})
-     */
-    public static final int MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID = 8;
 
     /**
      * Returns the min time period (in millis) between each aggregate fallback reporting job run.
@@ -106,40 +60,6 @@ public class AdServicesConfig {
     public static long getMeasurementAggregateFallbackReportingJobPeriodMs() {
         return FlagsFactory.getFlags().getMeasurementAggregateFallbackReportingJobPeriodMs();
     }
-
-    /**
-     * Job ID for FLEDGE Background Fetch Job ({@link
-     * com.android.adservices.service.customaudience.BackgroundFetchJobService})
-     */
-    public static final int FLEDGE_BACKGROUND_FETCH_JOB_ID = 9;
-
-    /** Job ID for Consent Notification Job. */
-    public static final int CONSENT_NOTIFICATION_JOB_ID = 10;
-
-    // TODO(b/271268475): Clean up deprecated job IDs.
-    /**
-     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
-     * com.android.adservices.spe.AdservicesJobInfo}
-     */
-    public static final int DEPRECATED_MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID = 11;
-
-    /**
-     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
-     * com.android.adservices.spe.AdservicesJobInfo}
-     */
-    public static final int DEPRECATED_MDD_CHARGING_PERIODIC_TASK_JOB_ID = 12;
-
-    /**
-     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
-     * com.android.adservices.spe.AdservicesJobInfo}
-     */
-    public static final int DEPRECATED_MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID = 13;
-
-    /**
-     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
-     * com.android.adservices.spe.AdservicesJobInfo}
-     */
-    public static final int DEPRECATED_MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
 
     /**
      * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
@@ -150,47 +70,4 @@ public class AdServicesConfig {
     }
 
     public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
-
-    /**
-     * @deprecated
-     * Old Job ID for Async Registration Queue JobService
-     * DO NOT REUSE
-     */
-    @Deprecated
-    private static final int DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
-
-    /**
-     * Job ID for Measurement Delete Records From UninstalledApps Job ({@link
-     * com.android.adservices.service.measurement.DeleteUninstalledJobService})
-     */
-    public static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID = 16;
-
-    /**
-     * Job ID for Measurement Debug Reporting Job ({@link
-     * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
-     */
-    public static final int MEASUREMENT_DEBUG_REPORT_JOB_ID = 17;
-
-    /**
-     * Job ID for Measurement Debug Report API JobService ({@link
-     * com.android.adservices.service.measurement.reporting.DebugReportingJobService})
-     */
-    public static final int MEASUREMENT_DEBUG_REPORT_API_JOB_ID = 18;
-
-    /**
-     * Job ID for the Async Registration Fallback JobService ({@link
-     * AsyncRegistrationQueueJobService})
-     */
-    public static final int MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID = 19;
-
-    /**
-     * Job ID for the Async Registration Queue JobService ({@link AsyncRegistrationQueueJobService})
-     */
-    public static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID = 20;
-
-    /**
-     * Job ID for Measurement Attribution Fallback JobService ({@link
-     * com.android.adservices.service.measurement.attribution.AttributionFallbackJobService})
-     */
-    public static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID = 21;
 }
