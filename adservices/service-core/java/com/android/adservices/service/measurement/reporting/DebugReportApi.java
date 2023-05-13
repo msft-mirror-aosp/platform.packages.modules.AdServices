@@ -217,6 +217,11 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
+            return;
+        }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
@@ -237,6 +242,11 @@ public class DebugReportApi {
             return;
         }
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return;
+        }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -262,6 +272,11 @@ public class DebugReportApi {
             return;
         }
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return;
+        }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -336,6 +351,30 @@ public class DebugReportApi {
                 return PermissionState.GRANTED;
             } else {
                 LogUtil.d("Source doesn't have ArDebug permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
+    private PermissionState getAdIdPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
+            if (trigger.hasAdIdPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have AdId permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
+    private PermissionState getArDebugPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.WEB) {
+            if (trigger.hasArDebugPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have ArDebug permission");
                 return PermissionState.DENIED;
             }
         }
