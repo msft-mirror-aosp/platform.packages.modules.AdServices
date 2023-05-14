@@ -139,6 +139,19 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Gets the count of sources in the source table in a time period before event time with
+     * matching publisher, enrollment, excluding the given registration origin.
+     */
+    Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+            Uri registrationOrigin,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            long eventTime,
+            long timePeriodInMs)
+            throws DatastoreException;
+
+    /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */

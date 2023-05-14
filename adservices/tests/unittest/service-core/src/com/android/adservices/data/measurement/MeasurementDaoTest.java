@@ -146,6 +146,8 @@ public class MeasurementDaoTest {
     private MockitoSession mStaticMockSession;
     public static final Uri REGISTRATION_ORIGIN =
             WebUtil.validUri("https://subdomain.example.test");
+    public static final Uri REGISTRATION_ORIGIN_2 =
+            WebUtil.validUri("https://subdomain_2.example.test");
 
     @Before
     public void before() {
@@ -838,7 +840,8 @@ public class MeasurementDaoTest {
                         6000000000L,
                         publisher,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                        Source.Status.ACTIVE);
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
         for (Source source : activeSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
@@ -1394,6 +1397,225 @@ public class MeasurementDaoTest {
                                             EventSurfaceType.WEB,
                                             4000000000L,
                                             6000000000L));
+                });
+    }
+
+    // Tests countSourcesPerPublisherXEnrollmentExcludingRegistrationOriginSinceTime
+    @Test
+    public void testCountSourcesExclRegOrigin_forSameOrigin_returnsZero() {
+        // Positive case. For same registration origin we always pass the 1 origin
+        // per site limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sourcesMoreThanOneDayOld =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+
+        List<Source> sourcesRecent =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+
+        for (Source source : sourcesMoreThanOneDayOld) {
+            insertSource(source);
+        }
+        for (Source source : sourcesRecent) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentAppPublisher_returnsZero() {
+        // Positive case. For different publisher we always pass the 1 origin
+        // per site limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        Uri appPublisher2 = Uri.parse("android-app://publisher2.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher2,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentWebPublisher_returnsZero() {
+        // Positive case. For different publisher we always pass the 1 origin
+        // per site limit and return 0
+        Uri publisher = WebUtil.validUri("https://publisher.test");
+        Uri publisher2 = WebUtil.validUri("https://publisher2.test");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    publisher2,
+                                    EventSurfaceType.WEB,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentEnrollment_returnsZero() {
+        // Positive case. For different enrollment (aka reporting site)
+        // we always pass the 1 origin per site limit and return 0
+        String differentEnrollment = "new-enrollment";
+        Uri differentSite = WebUtil.validUri("https://subdomain.different-site.test");
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    differentSite,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    differentEnrollment,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentOriginMoreThanTimeWindow_returnsZero() {
+        // Positive case. For different origin with same enrollment
+        // more than time window of 1 day we always pass the 1 origin per site
+        // limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+    // Tests countSourcesPerPublisherXEnrollmentExcludingRegistrationOriginSinceTime
+    @Test
+    public void testCountSources_forDifferentOriginWithinTimeWindow_returnsNumOfSources() {
+        // Negative case. For different origin with same enrollment
+        // we always fail the 1 origin per site limit and return 1
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(5),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
                 });
     }
 
@@ -4897,6 +5119,31 @@ public class MeasurementDaoTest {
             long eventTime,
             Uri publisher,
             String enrollmentId,
+            @Source.Status int sourceStatus,
+            Uri registrationOrigin) {
+        long expiryTime =
+                eventTime
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        return getSourcesWithDifferentDestinations(
+                numSources,
+                hasAppDestinations,
+                hasWebDestinations,
+                eventTime,
+                expiryTime,
+                publisher,
+                enrollmentId,
+                sourceStatus,
+                registrationOrigin);
+    }
+
+    private static List<Source> getSourcesWithDifferentDestinations(
+            int numSources,
+            boolean hasAppDestinations,
+            boolean hasWebDestinations,
+            long eventTime,
+            Uri publisher,
+            String enrollmentId,
             @Source.Status int sourceStatus) {
         long expiryTime =
                 eventTime
@@ -4910,7 +5157,8 @@ public class MeasurementDaoTest {
                 expiryTime,
                 publisher,
                 enrollmentId,
-                sourceStatus);
+                sourceStatus,
+                REGISTRATION_ORIGIN);
     }
 
     private static List<Source> getSourcesWithDifferentDestinations(
@@ -4921,7 +5169,8 @@ public class MeasurementDaoTest {
             long expiryTime,
             Uri publisher,
             String enrollmentId,
-            @Source.Status int sourceStatus) {
+            @Source.Status int sourceStatus,
+            Uri registrationOrigin) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder =
@@ -4933,7 +5182,7 @@ public class MeasurementDaoTest {
                             .setEnrollmentId(enrollmentId)
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                             .setStatus(sourceStatus)
-                            .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                            .setRegistrationOrigin(registrationOrigin);
             if (hasAppDestinations) {
                 sourceBuilder.setAppDestinations(
                         List.of(Uri.parse("android-app://app-destination-" + String.valueOf(i))));

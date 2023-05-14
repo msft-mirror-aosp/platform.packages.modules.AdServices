@@ -1076,6 +1076,40 @@ class MeasurementDao implements IMeasurementDao {
                         });
     }
 
+    public Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+            Uri registrationOrigin,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            long eventTime,
+            long timePeriodInMs)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT (*) FROM %1$s "
+                                + "WHERE %2$s AND "
+                                + "%3$s = ? AND "
+                                + "%4$s != ? AND "
+                                + "%5$s > ?",
+                        MeasurementTables.SourceContract.TABLE,
+                        getPublisherWhereStatement(publisher, publisherType),
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                        MeasurementTables.SourceContract.EVENT_TIME);
+
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            enrollmentId,
+                            registrationOrigin.toString(),
+                            String.valueOf(eventTime - timePeriodInMs)
+                        });
+    }
+
     @Override
     public Integer countDistinctEnrollmentsPerPublisherXDestinationInSource(
             Uri publisher,

@@ -1821,6 +1821,38 @@ public class AsyncRegistrationQueueRunnerTest {
     }
 
     @Test
+    public void testRegister_registrationTypeSource_exceedsOneOriginPerPublisherXEnrollmentLimit()
+            throws DatastoreException {
+        // setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                spy(
+                        new AsyncRegistrationQueueRunner(
+                                mContentResolver,
+                                mAsyncSourceFetcher,
+                                mAsyncTriggerFetcher,
+                                new FakeDatastoreManager(),
+                                mDebugReportApi));
+
+        // Execution
+        when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(), any(), anyInt(), any(), anyLong(), anyLong()))
+                .thenReturn(3);
+        boolean status =
+                asyncRegistrationQueueRunner.isSourceAllowedToInsert(
+                        SOURCE_1,
+                        SOURCE_1.getPublisher(),
+                        EventSurfaceType.APP,
+                        mMeasurementDao,
+                        mDebugReportApi);
+
+        // Assert
+        assertFalse(status);
+        verify(mMeasurementDao, times(1))
+                .countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                        any(), any(), anyInt(), any(), anyLong(), anyLong());
+    }
+
+    @Test
     public void testRegister_registrationTypeSource_exceedsMaxSourcesLimit()
             throws DatastoreException {
         // setup
