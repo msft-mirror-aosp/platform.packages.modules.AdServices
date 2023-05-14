@@ -174,6 +174,9 @@ public final class PrivacyParams {
      */
     public static final long MAX_POST_INSTALL_EXCLUSIVITY_WINDOW = TimeUnit.DAYS.toSeconds(30);
 
+    /** Minimum time window after which reporting origin can be migrated */
+    public static final long MIN_REPORTING_ORIGIN_UPDATE_WINDOW = TimeUnit.DAYS.toMillis(1);
+
     /**
      * L1, the maximum sum of the contributions (values) across all buckets for a given source
      * event.
