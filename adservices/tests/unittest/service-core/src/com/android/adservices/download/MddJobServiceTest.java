@@ -18,6 +18,7 @@ package com.android.adservices.download;
 
 import static com.android.adservices.download.MddJobService.KEY_MDD_TASK_TAG;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
 import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
@@ -101,7 +102,7 @@ public class MddJobServiceTest {
     @Mock Flags mMockFlags;
     @Mock MddFlags mMockMddFlags;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
-    private AdservicesJobServiceLogger mMockLogger;
+    private AdservicesJobServiceLogger mLogger;
 
     @Before
     public void setup() {
@@ -130,12 +131,12 @@ public class MddJobServiceTest {
                 .getSystemService(JobScheduler.class);
 
         // Mock AdservicesJobServiceLogger to not actually log the stats to server
-        mMockLogger =
+        mLogger =
                 spy(new AdservicesJobServiceLogger(CONTEXT, Clock.SYSTEM_CLOCK, mMockStatsdLogger));
         Mockito.doNothing()
-                .when(mMockLogger)
+                .when(mLogger)
                 .logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
-        ExtendedMockito.doReturn(mMockLogger)
+        ExtendedMockito.doReturn(mLogger)
                 .when(() -> AdservicesJobServiceLogger.getInstance(any(Context.class)));
 
         // MDD Task Tag.
@@ -158,8 +159,8 @@ public class MddJobServiceTest {
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are not invoked.
-        verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
+        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -170,43 +171,38 @@ public class MddJobServiceTest {
         testOnStartJob_killswitchIsOff();
 
         // Verify logging methods are invoked.
-        verify(mMockLogger).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger).persistJobExecutionData(anyInt(), anyLong());
+        verify(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOn() {
-        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        // Killswitch is on.
-        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
-        // Logging killswitch is off.
-        doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+    public void testOnStartJob_killswitchIsOn_withoutLogging() {
+        // Logging killswitch is on.
+        Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
-        doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
-
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo =
-                new JobInfo.Builder(
-                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
-                                new ComponentName(CONTEXT, MddJobService.class))
-                        .setRequiresCharging(true)
-                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
-                        .build();
-        JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
-
-        // Now verify that when the Job starts, it will unschedule itself.
-        assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
-
-        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
-
-        verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
-        verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
+        testOnStartJob_killswitchIsOn();
 
         // Verify logging methods are not invoked.
-        verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
+        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void testOnStartJob_killSwitchOn_withLogging() {
+        // Logging killswitch is off.
+        Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
+
+        testOnStartJob_killswitchIsOn();
+
+        // Verify logging methods are invoked.
+        verify(mLogger).persistJobExecutionData(anyInt(), anyLong());
+        verify(mLogger)
+                .logExecutionStats(
+                        anyInt(),
+                        anyLong(),
+                        eq(
+                                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
+                        anyInt());
     }
 
     @Test
@@ -256,8 +252,8 @@ public class MddJobServiceTest {
         testOnStopJob();
 
         // Verify logging methods are not invoked.
-        verify(mMockLogger, never()).persistJobExecutionData(anyInt(), anyLong());
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
+        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -270,7 +266,7 @@ public class MddJobServiceTest {
         testOnStopJob();
 
         // Verify logging methods are invoked.
-        verify(mMockLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -467,7 +463,7 @@ public class MddJobServiceTest {
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify logging method is not invoked.
-        verify(mMockLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
     }
 
     @Test
@@ -479,13 +475,41 @@ public class MddJobServiceTest {
         testOnStartJob_shouldDisableJobTrue();
 
         // Verify logging has happened
-        verify(mMockLogger)
+        verify(mLogger)
                 .logExecutionStats(
                         anyInt(),
                         anyLong(),
                         eq(
                                 AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
                         anyInt());
+    }
+
+    private void testOnStartJob_killswitchIsOn() {
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Killswitch is on.
+        doReturn(true).when(mMockFlags).getMddBackgroundTaskKillSwitch();
+
+        doNothing().when(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+
+        // Schedule the job to assert after starting that the scheduled job has been cancelled
+        JobInfo existingJobInfo =
+                new JobInfo.Builder(
+                                MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID,
+                                new ComponentName(CONTEXT, MddJobService.class))
+                        .setRequiresCharging(true)
+                        .setPeriodic(/* periodMs */ 10000, /* flexMs */ 1000)
+                        .build();
+        JOB_SCHEDULER.schedule(existingJobInfo);
+        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        // Now verify that when the Job starts, it will unschedule itself.
+        assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
+
+        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+
+        verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
+        verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));
     }
 
     private void testOnStartJob_killswitchIsOff() throws InterruptedException {
