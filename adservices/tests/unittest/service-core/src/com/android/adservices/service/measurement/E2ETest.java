@@ -178,7 +178,7 @@ public abstract class E2ETest {
         String AGGREGATE_REPORT_OBJECTS_KEY = "aggregatable_results";
         String DEBUG_EVENT_REPORT_OBJECTS_KEY = "debug_event_level_results";
         String DEBUG_AGGREGATE_REPORT_OBJECTS_KEY = "debug_aggregatable_results";
-        String DEBUG_REPORT_API_OBJECTS_KEY = "debug_report_results";
+        String DEBUG_REPORT_API_OBJECTS_KEY = "verbose_debug_reports";
         String INSTALLS_KEY = "installs";
         String UNINSTALLS_KEY = "uninstalls";
         String INSTALLS_URI_KEY = "uri";
@@ -591,22 +591,6 @@ public abstract class E2ETest {
         return Arrays.hashCode(objArray);
     }
 
-    private static int hashForDebugReportObject(OutputType outputType, JSONObject obj)
-            throws JSONException {
-        List<Object> objectList = new ArrayList<>();
-        String url = obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, "");
-        objectList.add(
-                outputType == OutputType.EXPECTED
-                        ? url
-                        : getReportUrl(ReportType.DEBUG_REPORT_API, url));
-        JSONArray payloads = obj.optJSONArray(TestFormatJsonMapping.PAYLOAD_KEY);
-        for (int i = 0; i < payloads.length(); i++) {
-            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.TYPE, ""));
-            objectList.add(payloads.getJSONObject(i).optString(DebugReportPayloadKeys.BODY, ""));
-        }
-        return objectList.hashCode();
-    }
-
     private static long reportTimeFrom(JSONObject obj) {
         return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
     }
@@ -770,17 +754,12 @@ public abstract class E2ETest {
                 Comparator.comparing(obj -> hashForAggregateReportObject(outputType, obj)));
     }
 
-    private static void sortDebugReportObjects(
-            OutputType outputType, List<JSONObject> debugReportObjects) {
-        debugReportObjects.sort(
-                Comparator.comparing(
-                        obj -> {
-                            try {
-                                return hashForDebugReportObject(outputType, obj);
-                            } catch (JSONException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }));
+    private static void sortDebugReportObjects(List<JSONObject> debugReportObjects) {
+        List<String> debugReportList = new ArrayList<>();
+        for (int i = 0; i < debugReportObjects.size(); i++) {
+            debugReportList.add(debugReportObjects.get(i).toString());
+        }
+        Collections.sort(debugReportList);
     }
 
     private boolean areEqual(ReportObjects p1, ReportObjects p2) throws JSONException {
@@ -1332,8 +1311,8 @@ public abstract class E2ETest {
         sortAggregateReportObjects(
                 OutputType.EXPECTED, mExpectedOutput.mDebugAggregateReportObjects);
         sortAggregateReportObjects(OutputType.ACTUAL, mActualOutput.mDebugAggregateReportObjects);
-        sortDebugReportObjects(OutputType.EXPECTED, mExpectedOutput.mDebugReportObjects);
-        sortDebugReportObjects(OutputType.ACTUAL, mActualOutput.mDebugReportObjects);
+        sortDebugReportObjects(mExpectedOutput.mDebugReportObjects);
+        sortDebugReportObjects(mActualOutput.mDebugReportObjects);
         Assert.assertTrue(getTestFailureMessage(mExpectedOutput, mActualOutput),
                 areEqual(mExpectedOutput, mActualOutput));
     }
