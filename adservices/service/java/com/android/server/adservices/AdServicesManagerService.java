@@ -176,16 +176,15 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             boolean published = false;
 
             try {
-                publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
+                publishBinderService();
                 published = true;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 LogUtil.w(
                         e,
                         "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
                         AD_SERVICES_SYSTEM_SERVICE);
             }
 
-            // TODO(b/282239822): add unit test (will require a new test class for Lifecycle)
             // TODO(b/282239822): Remove this workaround (and try-catch above) on Android VIC
 
             // Register the AdServicesManagerService with the SdkSandboxManagerService.
@@ -200,6 +199,15 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 throw new IllegalStateException(
                         "SdkSandboxManagerLocal not found when registering AdServicesManager!");
             }
+        }
+
+        // Need to encapsulate call to publishBinderService(...) because:
+        // - Superclass method is protected final (hence it cannot be mocked or extended)
+        // - Underlying method calls ServiceManager.addService(), which is hidden (and hence cannot
+        //   be mocked by our tests)
+        @VisibleForTesting
+        void publishBinderService() {
+            publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
         }
 
         @Override
