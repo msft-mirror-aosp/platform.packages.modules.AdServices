@@ -20,6 +20,8 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchCustomAudienceCallback;
+import android.adservices.customaudience.FetchCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.net.Uri;
 
@@ -31,6 +33,8 @@ import android.net.Uri;
 interface ICustomAudienceService {
     void joinCustomAudience(in CustomAudience customAudience, in String ownerPackageName,
             in ICustomAudienceCallback callback);
+    void fetchCustomAudience(in FetchCustomAudienceInput fetchCustomAudienceInput,
+            in FetchCustomAudienceCallback fetchCustomAudienceCallback);
     void leaveCustomAudience(in String ownerPackageName, in AdTechIdentifier buyer, in String name,
             in ICustomAudienceCallback callback);
 
