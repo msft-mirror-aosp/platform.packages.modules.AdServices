@@ -37,6 +37,7 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /** Class used to send debug reports to Ad-Tech {@link DebugReport} */
 public class DebugReportApi {
@@ -50,8 +51,8 @@ public class DebugReportApi {
         String SOURCE_UNKNOWN_ERROR = "source-unknown-error";
         String TRIGGER_AGGREGATE_DEDUPLICATED = "trigger-aggregate-deduplicated";
         String TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET = "trigger-aggregate-insufficient-budget";
-        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_AGGREGATE_NO_CONTRIBUTIONS = "trigger-aggregate-no-contributions";
+        String TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED = "trigger-aggregate-report-window-passed";
         String TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT =
                 "trigger-attributions-per-source-destination-limit";
         String TRIGGER_EVENT_DEDUPLICATED = "trigger-event-deduplicated";
@@ -78,6 +79,7 @@ public class DebugReportApi {
         String SOURCE_EVENT_ID = "source_event_id";
         String SOURCE_SITE = "source_site";
         String SOURCE_TYPE = "source_type";
+        String TRIGGER_DATA = "trigger_data";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
     }
 
@@ -215,6 +217,11 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
+            return;
+        }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
@@ -237,6 +244,11 @@ public class DebugReportApi {
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
+            return;
+        }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
@@ -251,18 +263,28 @@ public class DebugReportApi {
      * trigger-event-excessive-reports.
      */
     public void scheduleTriggerDebugReportWithAllFields(
-            Source source, Trigger trigger, IMeasurementDao dao, String type) {
+            Source source,
+            Trigger trigger,
+            UnsignedLong triggerData,
+            IMeasurementDao dao,
+            String type) {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
         if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
+        if (getAdIdPermissionFromTrigger(trigger) == PermissionState.DENIED
+                || getArDebugPermissionFromTrigger(trigger) == PermissionState.DENIED) {
+            LogUtil.d("Skipping trigger debug report %s", type);
+            return;
+        }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
-                generateTriggerDebugReportBodyWithAllFields(source, trigger, debugKeyPair),
+                generateTriggerDebugReportBodyWithAllFields(
+                        source, trigger, triggerData, debugKeyPair),
                 source.getEnrollmentId(),
                 dao);
     }
@@ -335,6 +357,30 @@ public class DebugReportApi {
         return PermissionState.NONE;
     }
 
+    private PermissionState getAdIdPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
+            if (trigger.hasAdIdPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have AdId permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
+    private PermissionState getArDebugPermissionFromTrigger(Trigger trigger) {
+        if (trigger.getDestinationType() == EventSurfaceType.WEB) {
+            if (trigger.hasArDebugPermission()) {
+                return PermissionState.GRANTED;
+            } else {
+                LogUtil.d("Trigger doesn't have ArDebug permission");
+                return PermissionState.DENIED;
+            }
+        }
+        return PermissionState.NONE;
+    }
+
     /** Get is Ad tech not op-in and log */
     private boolean isAdTechNotOptIn(boolean optIn, String type) {
         if (!optIn) {
@@ -400,6 +446,7 @@ public class DebugReportApi {
     private JSONObject generateTriggerDebugReportBodyWithAllFields(
             @NonNull Source source,
             @NonNull Trigger trigger,
+            @Nullable UnsignedLong triggerData,
             @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
         JSONObject body = new JSONObject();
         try {
@@ -410,11 +457,16 @@ public class DebugReportApi {
             body.put(
                     Body.SCHEDULED_REPORT_TIME,
                     String.valueOf(
-                            source.getReportingTime(
-                                    trigger.getTriggerTime(), trigger.getDestinationType())));
+                            TimeUnit.MILLISECONDS.toSeconds(
+                                    source.getReportingTime(
+                                            trigger.getTriggerTime(),
+                                            trigger.getDestinationType()))));
             body.put(Body.SOURCE_EVENT_ID, source.getEventId());
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
             body.put(Body.RANDOMIZED_TRIGGER_RATE, source.getRandomAttributionProbability());
+            if (triggerData != null) {
+                body.put(Body.TRIGGER_DATA, triggerData.toString());
+            }
             if (debugKeyPair.first != null) {
                 body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
             }
