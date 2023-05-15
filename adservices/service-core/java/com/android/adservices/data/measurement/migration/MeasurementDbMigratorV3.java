@@ -220,7 +220,7 @@ public class MeasurementDbMigratorV3 extends AbstractMeasurementDbMigrator {
                 db,
                 MeasurementTables.EventReportContract.TABLE,
                 EVENT_REPORT_CONTRACT_BACKUP,
-                MeasurementTables.CREATE_TABLE_EVENT_REPORT_LATEST);
+                MeasurementTables.CREATE_TABLE_EVENT_REPORT_V3);
     }
 
     private static void alterTriggerTable(SQLiteDatabase db) {

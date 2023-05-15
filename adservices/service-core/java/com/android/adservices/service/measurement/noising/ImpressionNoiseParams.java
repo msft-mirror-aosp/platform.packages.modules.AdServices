@@ -25,17 +25,17 @@ public class ImpressionNoiseParams {
     private final int mReportCount;
     private final int mTriggerDataCardinality;
     private final int mReportingWindowCount;
-    private final int mDestinationMultiplier;
+    private final int mDestinationTypeMultiplier;
 
     public ImpressionNoiseParams(
             int reportCount,
             int triggerDataCardinality,
             int reportingWindowCount,
-            int destinationMultiplier) {
+            int destinationTypeMultiplier) {
         mReportCount = reportCount;
         mTriggerDataCardinality = triggerDataCardinality;
         mReportingWindowCount = reportingWindowCount;
-        mDestinationMultiplier = destinationMultiplier;
+        mDestinationTypeMultiplier = destinationTypeMultiplier;
     }
 
     @Override
@@ -47,8 +47,8 @@ public class ImpressionNoiseParams {
                 + mTriggerDataCardinality
                 + ", mReportingWindowCount="
                 + mReportingWindowCount
-                + ", mDestinationMultiplier="
-                + mDestinationMultiplier
+                + ", mDestinationTypeMultiplier="
+                + mDestinationTypeMultiplier
                 + '}';
     }
 
@@ -59,7 +59,7 @@ public class ImpressionNoiseParams {
         ImpressionNoiseParams that = (ImpressionNoiseParams) o;
         return mReportCount == that.mReportCount
                 && mTriggerDataCardinality == that.mTriggerDataCardinality
-                && mDestinationMultiplier == that.mDestinationMultiplier
+                && mDestinationTypeMultiplier == that.mDestinationTypeMultiplier
                 && mReportingWindowCount == that.mReportingWindowCount;
     }
 
@@ -93,7 +93,7 @@ public class ImpressionNoiseParams {
      * Its value depends on number of destinations to consider for report generation. Helps to
      * increase possible states count accordingly.
      */
-    public int getDestinationMultiplier() {
-        return mDestinationMultiplier;
+    public int getDestinationTypeMultiplier() {
+        return mDestinationTypeMultiplier;
     }
 }

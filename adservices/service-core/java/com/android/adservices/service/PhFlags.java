@@ -422,6 +422,8 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOGS_FEATURE_ENABLED = "ui_dialogs_feature_enabled";
 
+    static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
+
     static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
@@ -452,6 +454,11 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST =
             "measurement_debug_join_key_enrollment_allowlist";
+
+    static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT =
+            "measurement_debug_key_ad_id_matching_limit";
+    static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
+            "measurement_debug_key_ad_id_matching_enrollment_blocklist";
 
     static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
@@ -1643,6 +1650,14 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST);
     }
 
+    @Override
+    public String getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist() {
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST,
+                /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST);
+    }
+
     // ADID Killswitches
     @Override
     public boolean getAdIdKillSwitch() {
@@ -2239,6 +2254,17 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getUiDialogFragmentEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_UI_DIALOG_FRAGMENT_ENABLED),
+                /* defaultValue */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* flagName */ KEY_UI_DIALOG_FRAGMENT_ENABLED,
+                        /* defaultValue */ UI_DIALOG_FRAGMENT));
+    }
+
+    @Override
     public boolean isEeaDeviceFeatureEnabled() {
         return DeviceConfig.getBoolean(
                 NAMESPACE_ADSERVICES,
@@ -2588,6 +2614,16 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT
                         + " = "
                         + getMeasurementDebugJoinKeyHashLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT
+                        + " = "
+                        + getMeasurementPlatformDebugAdIdMatchingLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST
+                        + " = "
+                        + getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist());
         writer.println(
                 "\t"
                         + KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED
@@ -3110,6 +3146,14 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT,
                 /* defaultValue */ DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT);
+    }
+
+    @Override
+    public long getMeasurementPlatformDebugAdIdMatchingLimit() {
+        return DeviceConfig.getLong(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_LIMIT,
+                /* defaultValue */ DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
     }
 
     static final String KEY_EU_NOTIF_FLOW_CHANGE_ENABLED = "eu_notif_flow_change_enabled";

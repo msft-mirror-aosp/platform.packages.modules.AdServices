@@ -21,7 +21,6 @@
                 "destination": "android-app://example.2d1.test",
                 "priority": "100",
                 "expiry": "172801",
-                "debug_reporting": true,
                 "debug_key": "347982378"
               }
             }
@@ -45,7 +44,6 @@
                 "destination": "android-app://example.2d1.test",
                 "priority": "100",
                 "expiry": "172801",
-                "debug_reporting": true,
                 "debug_key": "347982378"
               }
             }
@@ -126,7 +124,6 @@
         }
       }
     ],
-    "aggregatable_results": [],
     "debug_event_level_results": [
       {
         "report_time": "800000600001",
@@ -143,44 +140,21 @@
         }
       }
     ],
-    "debug_aggregatable_results": [],
     "debug_report_results": [
       {
-        "payload": {
-          "type": "source-success",
-          "body": {
-            "source_event_id": "1",
-            "attribution_destination": "android-app://example.2d1.test",
-            "source_site": "android-app://example.1s1.test",
-            "source_debug_key": "347982378"
+        "payload": [
+          {
+            "type": "trigger-reporting-origin-limit",
+            "body": {
+              "attribution_destination": "android-app://example.2d1.test",
+              "trigger_debug_key": "8971346784",
+              "limit": "1",
+              "source_debug_key": "347982378",
+              "source_event_id": "2",
+              "source_site": "android-app://example.1s1.test"
+            }
           }
-        },
-        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
-      },
-      {
-        "payload": {
-          "type": "source-success",
-          "body": {
-            "source_event_id": "2",
-            "attribution_destination": "android-app://example.2d1.test",
-            "source_site": "android-app://example.1s1.test",
-            "source_debug_key": "347982378"
-          }
-        },
-        "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/debug/verbose"
-      },
-      {
-        "payload": {
-          "type": "trigger-reporting-origin-limit",
-          "body": {
-            "attribution_destination": "android-app://example.2d1.test",
-            "trigger_debug_key": "8971346784",
-            "limit": "1",
-            "source_debug_key": "347982378",
-            "source_event_id": "2",
-            "source_site": "android-app://example.1s1.test"
-          }
-        },
+        ],
         "report_url": "https://www.ad-tech2.test/.well-known/attribution-reporting/debug/verbose"
       }
     ]

@@ -164,8 +164,10 @@ public abstract class AbstractDbIntegrationTest {
                 && Objects.equals(
                         aggregateReport.getSourceDebugKey(), aggregateReport1.getSourceDebugKey())
                 && Objects.equals(
-                        aggregateReport.getTriggerDebugKey(),
-                        aggregateReport1.getTriggerDebugKey());
+                        aggregateReport.getTriggerDebugKey(), aggregateReport1.getTriggerDebugKey())
+                && Objects.equals(
+                        aggregateReport.getRegistrationOrigin(),
+                        aggregateReport1.getRegistrationOrigin());
     }
 
     /**
@@ -335,7 +337,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.SourceContract.SHARED_AGGREGATION_KEYS,
                 source.getSharedAggregationKeys());
-
+        values.put(
+                MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                source.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.SourceContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Source insertion failed");
@@ -385,6 +389,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(
                 MeasurementTables.TriggerContract.X_NETWORK_KEY_MAPPING,
                 trigger.getAdtechKeyMapping());
+        values.put(
+                MeasurementTables.TriggerContract.REGISTRATION_ORIGIN,
+                trigger.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.TriggerContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("Trigger insertion failed");
@@ -419,6 +426,9 @@ public abstract class AbstractDbIntegrationTest {
                 report.getRandomizedTriggerRate());
         values.put(MeasurementTables.EventReportContract.SOURCE_ID, report.getSourceId());
         values.put(MeasurementTables.EventReportContract.TRIGGER_ID, report.getTriggerId());
+        values.put(
+                MeasurementTables.EventReportContract.REGISTRATION_ORIGIN,
+                report.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.EventReportContract.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("EventReport insertion failed");
@@ -478,6 +488,9 @@ public abstract class AbstractDbIntegrationTest {
         values.put(MeasurementTables.AggregateReport.API_VERSION, aggregateReport.getApiVersion());
         values.put(MeasurementTables.AggregateReport.SOURCE_ID, aggregateReport.getSourceId());
         values.put(MeasurementTables.AggregateReport.TRIGGER_ID, aggregateReport.getTriggerId());
+        values.put(
+                MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                aggregateReport.getRegistrationOrigin().toString());
         long row = db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
         if (row == -1) {
             throw new SQLiteException("AggregateReport insertion failed");

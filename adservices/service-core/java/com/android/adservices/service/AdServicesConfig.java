@@ -26,14 +26,15 @@ import java.util.concurrent.TimeUnit;
  * <p>For Feature Flags that are backed by PH, please see {@link PhFlags}
  */
 public class AdServicesConfig {
+    // TODO(b/271268475): Clean up deprecated job IDs.
     /** Job ID for idle maintenance job ({@link MaintenanceJobService}). */
-    public static final int MAINTENANCE_JOB_ID = 1;
+    public static final int DEPRECATED_MAINTENANCE_JOB_ID = 1;
 
     /**
      * Job ID for Topics Epoch Computation Job ({@link
      * com.android.adservices.service.topics.EpochJobService})
      */
-    public static final int TOPICS_EPOCH_JOB_ID = 2;
+    public static final int DEPRECATED_TOPICS_EPOCH_JOB_ID = 2;
 
     /**
      * Job ID for Measurement Event Main Reporting Job ({@link
@@ -111,26 +112,34 @@ public class AdServicesConfig {
      * Job ID for FLEDGE Background Fetch Job ({@link
      * com.android.adservices.service.customaudience.BackgroundFetchJobService})
      */
-    public static final int FLEDGE_BACKGROUND_FETCH_JOB_ID = 9;
+    public static final int DEPRECATED_FLEDGE_BACKGROUND_FETCH_JOB_ID = 9;
 
     /** Job ID for Consent Notification Job. */
-    public static final int CONSENT_NOTIFICATION_JOB_ID = 10;
-
-    /** Job ID for Mdd Maintenance Task ({@link com.android.adservices.download.MddJobService}) */
-    public static final int MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID = 11;
+    public static final int DEPRECATED_CONSENT_NOTIFICATION_JOB_ID = 10;
 
     /**
-     * Job ID for Mdd Charging Periodic Task ({@link com.android.adservices.download.MddJobService})
+     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
+     * com.android.adservices.spe.AdservicesJobInfo}
      */
-    public static final int MDD_CHARGING_PERIODIC_TASK_JOB_ID = 12;
+    public static final int DEPRECATED_MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID = 11;
 
     /**
-     * Job ID for Mdd Cellular Charging Task ({@link com.android.adservices.download.MddJobService})
+     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
+     * com.android.adservices.spe.AdservicesJobInfo}
      */
-    public static final int MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID = 13;
+    public static final int DEPRECATED_MDD_CHARGING_PERIODIC_TASK_JOB_ID = 12;
 
-    /** Job ID for Mdd Wifi Charging Task ({@link com.android.adservices.download.MddJobService}) */
-    public static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
+    /**
+     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
+     * com.android.adservices.spe.AdservicesJobInfo}
+     */
+    public static final int DEPRECATED_MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID = 13;
+
+    /**
+     * Deprecated ID. Will be removed once all job IDs are migrated to {@link
+     * com.android.adservices.spe.AdservicesJobInfo}
+     */
+    public static final int DEPRECATED_MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID = 14;
 
     /**
      * Returns the min time period (in millis) between each uninstalled-record deletion maintenance
@@ -142,13 +151,8 @@ public class AdServicesConfig {
 
     public static long MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(24);
 
-    /**
-     * @deprecated
-     * Old Job ID for Async Registration Queue JobService
-     * DO NOT REUSE
-     */
-    @Deprecated
-    private static final int DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
+    /** @deprecated Old Job ID for Async Registration Queue JobService DO NOT REUSE */
+    @Deprecated private static final int DEPRECATED_ASYNC_REGISTRATION_QUEUE_JOB_ID = 15;
 
     /**
      * Job ID for Measurement Delete Records From UninstalledApps Job ({@link

@@ -97,6 +97,7 @@ public class SettingsActivityUiAutomatorTest {
                         .startMocking();
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();

@@ -38,5 +38,6 @@ public class KemAlgorithmSpecTest {
         Assert.assertEquals(
                 kemAlgorithmSpec.identifier(),
                 KemAlgorithmSpec.DHKEM_X25519_HKDF_SHA256_IDENTIFIER);
+        Assert.assertNotNull(kemAlgorithmSpec.kemNativeRefSupplier().get().getAddress());
     }
 }

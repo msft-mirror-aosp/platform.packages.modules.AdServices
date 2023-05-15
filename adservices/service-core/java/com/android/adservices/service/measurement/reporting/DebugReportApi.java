@@ -66,6 +66,7 @@ public class DebugReportApi {
         String TRIGGER_REPORTING_ORIGIN_LIMIT = "trigger-reporting-origin-limit";
         String TRIGGER_EVENT_STORAGE_LIMIT = "trigger-event-storage-limit";
         String TRIGGER_UNKNOWN_ERROR = "trigger-unknown-error";
+        String TRIGGER_AGGREGATE_STORAGE_LIMIT = "trigger-aggregate-storage-limit";
     }
 
     private interface Body {
@@ -233,8 +234,7 @@ public class DebugReportApi {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -255,8 +255,7 @@ public class DebugReportApi {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)
-                || isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =

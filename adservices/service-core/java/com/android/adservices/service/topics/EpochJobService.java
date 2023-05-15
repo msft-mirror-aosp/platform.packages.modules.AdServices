@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.topics;
 
-import static com.android.adservices.service.AdServicesConfig.TOPICS_EPOCH_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
@@ -35,6 +37,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FutureCallback;
@@ -45,20 +48,27 @@ import com.google.common.util.concurrent.ListenableFuture;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
+    private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     @Override
     public boolean onStartJob(JobParameters params) {
         sLogger.d("EpochJobService.onStartJob");
 
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
+
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             sLogger.d("Disabling EpochJobService job because it's running in ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             sLogger.e("Topics API is disabled, skipping and cancelling EpochJobService");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -77,18 +87,32 @@ public final class EpochJobService extends JobService {
                     @Override
                     public void onSuccess(Void result) {
                         sLogger.d("Epoch Computation succeeded!");
+
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(EpochJobService.this)
+                                .recordJobFinished(
+                                        TOPICS_EPOCH_JOB_ID, /* isSuccessful= */ true, shouldRetry);
+
                         // Tell the JobScheduler that the job has completed and does not need to be
                         // rescheduled.
-                        jobFinished(params, /* wantsReschedule= */ false);
+                        jobFinished(params, shouldRetry);
                     }
 
                     @Override
                     public void onFailure(Throwable t) {
                         sLogger.e(t, "Failed to handle JobService: " + params.getJobId());
+
+                        boolean shouldRetry = false;
+                        AdservicesJobServiceLogger.getInstance(EpochJobService.this)
+                                .recordJobFinished(
+                                        TOPICS_EPOCH_JOB_ID,
+                                        /* isSuccessful= */ false,
+                                        shouldRetry);
+
                         //  When failure, also tell the JobScheduler that the job has completed and
                         // does not need to be rescheduled.
                         // TODO(b/225909845): Revisit this. We need a retry policy.
-                        jobFinished(params, /* wantsReschedule= */ false);
+                        jobFinished(params, shouldRetry);
                     }
                 },
                 directExecutor());
@@ -99,7 +123,14 @@ public final class EpochJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         sLogger.d("EpochJobService.onStopJob");
-        return false;
+
+        // Tell JobScheduler not to reschedule the job because it's unknown at this stage if the
+        // execution is completed or not to avoid executing the task twice.
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, TOPICS_EPOCH_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     @VisibleForTesting
@@ -162,8 +193,11 @@ public final class EpochJobService extends JobService {
         return true;
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         this.getSystemService(JobScheduler.class).cancel(TOPICS_EPOCH_JOB_ID);
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(TOPICS_EPOCH_JOB_ID, skipReason);
 
         // Tell the JobScheduler that the job has completed and does not need to be
         // rescheduled.

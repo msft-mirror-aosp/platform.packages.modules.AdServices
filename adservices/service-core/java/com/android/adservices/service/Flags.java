@@ -140,7 +140,7 @@ public interface Flags {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.1f;
+    float CLASSIFIER_THRESHOLD = 0.2f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
@@ -912,7 +912,7 @@ public interface Flags {
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -926,7 +926,7 @@ public interface Flags {
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : PPAPI_ONLY;
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -1413,7 +1413,7 @@ public interface Flags {
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
      */
-    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = !SdkLevel.isAtLeastT();
 
     /** @return value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
@@ -1820,6 +1820,13 @@ public interface Flags {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /** UI Dialog Fragment feature enabled. */
+    boolean UI_DIALOG_FRAGMENT = false;
+    /** Returns if the UI Dialog Fragment is enabled. */
+    default boolean getUiDialogFragmentEnabled() {
+        return UI_DIALOG_FRAGMENT;
+    }
+
     /** The EEA device region feature is off by default. */
     boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
 
@@ -2002,6 +2009,13 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
     }
 
+    /** Returns the limit to the number of unique AdIDs attempted to match for debug keys. */
+    long DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT = 5L;
+
+    default long getMeasurementPlatformDebugAdIdMatchingLimit() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
@@ -2038,6 +2052,19 @@ public interface Flags {
      */
     default String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+    }
+
+    /**
+     * Default blocklist of the enrollments for whom debug key insertion based on AdID matching is
+     * blocked.
+     */
+    String DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST = "*";
+
+    /**
+     * Blocklist of the enrollments for whom debug key insertion based on AdID matching is blocked.
+     */
+    default String getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
     }
 
     /** Default Determines whether EU notification flow change is enabled. */

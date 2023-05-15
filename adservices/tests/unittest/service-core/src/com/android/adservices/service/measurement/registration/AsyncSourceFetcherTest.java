@@ -102,7 +102,8 @@ import javax.net.ssl.HttpsURLConnection;
 public final class AsyncSourceFetcherTest {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static final String ANDROID_APP_SCHEME_URI_PREFIX = ANDROID_APP_SCHEME + "://";
-    private static final String DEFAULT_REGISTRATION = WebUtil.validUrl("https://foo.test");
+    private static final String DEFAULT_REGISTRATION =
+            WebUtil.validUrl("https://subdomain.foo.test");
     private static final String ENROLLMENT_ID = "enrollment-id";
     private static final String DEFAULT_TOP_ORIGIN =
             "https://com.android.adservices.servicecoretest";
@@ -120,8 +121,8 @@ public final class AsyncSourceFetcherTest {
             WebUtil.validUrl("https://example.test");
     private static final long ALT_EVENT_ID = 123456789;
     private static final long ALT_EXPIRY = 456790;
-    private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test");
-    private static final Uri REGISTRATION_URI_2 = WebUtil.validUri("https://foo2.test");
+    private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://subdomain.foo.test");
+    private static final Uri REGISTRATION_URI_2 = WebUtil.validUri("https://subdomain.foo2.test");
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri OS_DESTINATION = Uri.parse("android-app://com.os-destination");
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
@@ -241,6 +242,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(SHARED_AGGREGATION_KEYS, result.getSharedAggregationKeys());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         assertNotNull(result.getRegistrationId());
         assertEquals(asyncRegistration.getRegistrationId(), result.getRegistrationId());
         FetcherUtil.emitHeaderMetrics(mFlags, mLogger, asyncRegistration, asyncFetchStatus);
@@ -354,6 +356,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -395,6 +398,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -510,6 +514,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(TimeUnit.SECONDS.toMillis(272800), result.getInstallAttributionWindow());
         assertEquals(TimeUnit.SECONDS.toMillis(987654L), result.getInstallCooldownWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -553,6 +558,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(TimeUnit.SECONDS.toMillis(2592000L), result.getInstallAttributionWindow());
         // fallback to default value - 0 days
         assertEquals(0L, result.getInstallCooldownWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -600,6 +606,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(TimeUnit.SECONDS.toMillis(86400), result.getInstallAttributionWindow());
         // Adjusted to maximum allowed value
         assertEquals(TimeUnit.SECONDS.toMillis((2592000L)), result.getInstallCooldownWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -750,6 +757,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -785,6 +793,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -823,6 +832,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -860,6 +870,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -897,6 +908,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -933,6 +945,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -968,6 +981,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1008,6 +1022,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
 
     @Test
@@ -1047,6 +1062,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1087,6 +1103,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(2),
                 result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1128,6 +1145,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(2),
                 result.getAggregatableReportWindow());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1267,6 +1285,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertNull(result.getSharedAggregationKeys());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
 
     @Test
@@ -1303,6 +1322,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1344,6 +1364,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1386,6 +1407,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1427,6 +1449,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1468,6 +1491,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1508,6 +1532,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1549,6 +1574,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MIN_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1590,6 +1616,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1630,6 +1657,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1670,6 +1698,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1710,6 +1739,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1750,6 +1780,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1789,6 +1820,7 @@ public final class AsyncSourceFetcherTest {
                         + TimeUnit.SECONDS.toMillis(
                                 MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -1914,6 +1946,7 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         assertEquals(1, asyncRedirect.getRedirects().size());
         assertEquals(LIST_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
@@ -1955,7 +1988,7 @@ public final class AsyncSourceFetcherTest {
                         .getRedirectsByType(AsyncRegistration.RedirectType.LOCATION)
                         .get(0)
                         .toString());
-
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
@@ -1983,7 +2016,7 @@ public final class AsyncSourceFetcherTest {
         assertDefaultSourceRegistration(result);
         assertEquals(1, asyncRedirect.getRedirects().size());
         assertEquals(LOCATION_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
-
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
 
@@ -2010,7 +2043,7 @@ public final class AsyncSourceFetcherTest {
         assertDefaultSourceRegistration(result);
         assertEquals(1, asyncRedirect.getRedirects().size());
         assertEquals(LIST_TYPE_REDIRECT_URI, asyncRedirect.getRedirects().get(0).toString());
-
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection, times(1)).setRequestMethod("POST");
     }
     // End tests for redirect types
@@ -2053,6 +2086,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 "{\"product\":[\"1234\",\"2345\"],\"ctid\":[\"id\"]}",
                 result.getFilterDataString());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2309,6 +2343,7 @@ public final class AsyncSourceFetcherTest {
                 new JSONObject("{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}")
                         .toString(),
                 result.getAggregateSource());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2553,6 +2588,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2596,6 +2632,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2640,6 +2677,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(432000), result.getExpiryTime());
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -2795,6 +2833,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -2832,6 +2871,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -2869,6 +2909,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -2905,6 +2946,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -2940,6 +2982,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -2980,6 +3023,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -3020,6 +3064,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(
                 result.getEventTime() + TimeUnit.DAYS.toMillis(1),
                 result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -3057,6 +3102,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -3095,6 +3141,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
     }
 
     @Test
@@ -3144,6 +3191,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -3193,6 +3241,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getFilterDataString());
         assertNull(result.getAggregateSource());
     }
@@ -3294,6 +3343,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
                 result.getExpiryTime());
         assertEquals(new JSONObject(aggregateSource).toString(), result.getAggregateSource());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -3354,6 +3404,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
                 result.getExpiryTime());
         assertEquals(new JSONObject(aggregateSource).toString(), result.getAggregateSource());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
         verify(mFetcher, times(1)).openUrl(any());
     }
@@ -3455,6 +3506,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getExpiryTime());
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3512,6 +3564,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(expiry, result.getEventReportWindow());
         assertEquals(expiry, result.getAggregatableReportWindow());
         assertNull(result.getDebugJoinKey());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -3619,6 +3672,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L),
                 result.getExpiryTime());
         assertNull(result.getAggregateSource());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -3672,6 +3726,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3723,6 +3778,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(new UnsignedLong(987654321L), result.getEventId());
         assertEquals(
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(456789L), result.getExpiryTime());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3809,6 +3865,7 @@ public final class AsyncSourceFetcherTest {
                 result.getEventTime() + TimeUnit.SECONDS.toMillis(
                         MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS),
                 result.getExpiryTime());
+        assertEquals(REGISTRATION_URI_1, result.getRegistrationOrigin());
         assertNull(result.getAggregateSource());
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -3898,7 +3955,7 @@ public final class AsyncSourceFetcherTest {
                                                 SUCCESS_STATUS,
                                                 UNKNOWN_REGISTRATION_FAILURE_TYPE,
                                                 0)
-                                        .setAdTechDomain(DEFAULT_REGISTRATION)
+                                        .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()));
     }
 
@@ -3953,6 +4010,7 @@ public final class AsyncSourceFetcherTest {
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
         assertEquals(DEBUG_JOIN_KEY, result.getDebugJoinKey());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
     }
 
     @Test
@@ -4007,7 +4065,80 @@ public final class AsyncSourceFetcherTest {
                 result.getExpiryTime());
         assertEquals(DEFAULT_EVENT_ID, result.getEventId());
         assertEquals(DEBUG_KEY, result.getDebugKey());
+        assertEquals(DEFAULT_REGISTRATION, result.getRegistrationOrigin().toString());
         assertNull(result.getDebugJoinKey());
+    }
+
+    @Test
+    public void fetchSource_setsRegistrationOriginWithoutPath_forRegistrationURIWithPath()
+            throws Exception {
+        String uri = "https://test1.example.com/path1";
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, new AsyncRedirect());
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals("https://test1.example.com", result.getRegistrationOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchSource_setsRegistrationOriginWithPort_forRegistrationURIWithPort()
+            throws Exception {
+        String uri = "https://test1.example.com:8081";
+        RegistrationRequest request = buildRequest(uri);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + DEFAULT_EVENT_ID
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, new AsyncRedirect());
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals("https://test1.example.com:8081", result.getRegistrationOrigin().toString());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(DEFAULT_DESTINATION, result.getAppDestinations().get(0).toString());
+        assertEquals(DEFAULT_EVENT_ID, result.getEventId());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

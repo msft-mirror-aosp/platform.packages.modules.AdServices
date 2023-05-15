@@ -27,6 +27,17 @@ import static com.android.adservices.service.consent.ConsentConstants.SHARED_PRE
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 import static com.android.adservices.service.consent.ConsentManager.resetSharedPreference;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_MAINTENANCE_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB;
+import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyBoolean;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -82,6 +93,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.download.MddJobService;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -174,6 +186,7 @@ public class ConsentManagerTest {
                         .spyStatic(DeleteUninstalledJobService.class)
                         .spyStatic(DeviceRegionProvider.class)
                         .spyStatic(EpochJobService.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .spyStatic(EventFallbackReportingJobService.class)
                         .spyStatic(EventReportingJobService.class)
                         .spyStatic(FlagsFactory.class)
@@ -542,8 +555,8 @@ public class ConsentManagerTest {
 
         ExtendedMockito.verify(() -> UiStatsLogger.logOptOutSelected(mContextSpy));
 
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.MAINTENANCE_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.TOPICS_EPOCH_JOB_ID);
+        verify(mJobSchedulerMock).cancel(MAINTENANCE_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(TOPICS_EPOCH_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_EVENT_MAIN_REPORTING_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_DELETE_EXPIRED_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
@@ -555,13 +568,12 @@ public class ConsentManagerTest {
         verify(mJobSchedulerMock)
                 .cancel(AdServicesConfig.MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID);
         verify(mJobSchedulerMock).cancel(AdServicesConfig.MEASUREMENT_ASYNC_REGISTRATION_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.FLEDGE_BACKGROUND_FETCH_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_MAINTENANCE_PERIODIC_TASK_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_CHARGING_PERIODIC_TASK_JOB_ID);
-        verify(mJobSchedulerMock)
-                .cancel(AdServicesConfig.MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB_ID);
-        verify(mJobSchedulerMock).cancel(AdServicesConfig.MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID);
+        verify(mJobSchedulerMock).cancel(FLEDGE_BACKGROUND_FETCH_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(CONSENT_NOTIFICATION_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MDD_MAINTENANCE_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MDD_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
@@ -2876,6 +2888,7 @@ public class ConsentManagerTest {
     @Test
     public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer()
             throws RemoteException, IOException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -2896,6 +2909,12 @@ public class ConsentManagerTest {
         verify(spyConsentManager)
                 .setConsentPerApiToPpApi(eq(AdServicesApiType.TOPICS), eq(/* isGiven */ true));
         verify(spyConsentManager).resetTopicsAndBlockedTopics();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 
     @Test
@@ -3405,10 +3424,17 @@ public class ConsentManagerTest {
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
-
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         assertThat(spyConsentManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
         verify(mMockIAdServicesManager).getCurrentPrivacySandboxFeature();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
 
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name())
                 .when(mMockIAdServicesManager)
@@ -3450,6 +3476,7 @@ public class ConsentManagerTest {
 
     @Test
     public void testCurrentPrivacySandboxFeature_PpApiAndSystemServer() throws RemoteException {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3458,6 +3485,13 @@ public class ConsentManagerTest {
         assertThat(spyConsentManager.getCurrentPrivacySandboxFeature())
                 .isEqualTo(PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
         verify(mMockIAdServicesManager).getCurrentPrivacySandboxFeature();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
 
         doReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name())
                 .when(mMockIAdServicesManager)

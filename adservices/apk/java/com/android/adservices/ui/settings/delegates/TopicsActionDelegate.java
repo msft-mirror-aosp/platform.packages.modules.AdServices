@@ -29,6 +29,7 @@ import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.activities.TopicsActivity;
@@ -76,8 +77,13 @@ public class TopicsActionDelegate {
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showBlockTopicDialog(
-                                            mTopicsActivity, mTopicsViewModel, topic);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showBlockTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel, topic);
+                                    } else {
+                                        DialogManager.showBlockTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel, topic);
+                                    }
                                 } else {
                                     mTopicsViewModel.revokeTopicConsent(topic);
                                 }
@@ -85,8 +91,13 @@ public class TopicsActionDelegate {
                             case RESET_TOPICS:
                                 UiStatsLogger.logResetTopicSelected(mTopicsActivity);
                                 if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                    DialogManager.showResetTopicDialog(
-                                            mTopicsActivity, mTopicsViewModel);
+                                    if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                        DialogFragmentManager.showResetTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel);
+                                    } else {
+                                        DialogManager.showResetTopicDialog(
+                                                mTopicsActivity, mTopicsViewModel);
+                                    }
                                 } else {
                                     mTopicsViewModel.resetTopics();
                                 }

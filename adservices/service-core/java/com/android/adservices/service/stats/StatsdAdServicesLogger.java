@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
@@ -39,6 +40,7 @@ import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.spe.stats.ExecutionReportedStats;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
@@ -315,6 +317,17 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getMethodName(),
                 stats.getLineNumber(),
                 stats.getLastObservedExceptionName());
+    }
+
+    /** Logging method for AdServices background job execution stats. */
+    public void logExecutionReportedStats(ExecutionReportedStats stats) {
+        AdServicesStatsLog.write(
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED,
+                stats.getJobId(),
+                stats.getExecutionLatencyMs(),
+                stats.getExecutionPeriodMinute(),
+                stats.getExecutionResultCode(),
+                stats.getStopReason());
     }
 
     @NonNull

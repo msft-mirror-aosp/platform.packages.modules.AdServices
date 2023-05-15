@@ -316,17 +316,21 @@
         "report_time": "1643237474925"
       }
     ],
-    "debug_report_results": [{
-      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
-      "payload": {
-        "type": "source-success",
-        "body": {
-          "source_event_id": "123",
-          "attribution_destination": "android-app://example.2d1.test",
-          "source_site": "android-app://example.1s1.test",
-          "source_debug_key": "111"
-        }
+    "debug_report_results": [
+      {
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "123",
+              "attribution_destination": "android-app://example.2d1.test",
+              "source_site": "android-app://example.1s1.test",
+              "source_debug_key": "111"
+            }
+          }
+        ]
       }
-    }]
+    ]
   }
 }
