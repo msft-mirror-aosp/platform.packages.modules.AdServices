@@ -66,8 +66,10 @@ import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -140,12 +142,15 @@ public class MeasurementDaoTest {
     // Differs from WEB_PUBLISHER_ONE by scheme.
     private static final Uri WEB_PUBLISHER_THREE = WebUtil.validUri("http://not.example.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
+    private static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
     private MockitoSession mStaticMockSession;
-    public static final Uri REGISTRATION_ORIGIN =
-            WebUtil.validUri("https://subdomain.example.test");
+    private Flags mFlags;
+    public static final Uri REGISTRATION_ORIGIN_2 =
+            WebUtil.validUri("https://subdomain_2.example.test");
 
     @Before
     public void before() {
@@ -155,6 +160,7 @@ public class MeasurementDaoTest {
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     @After
@@ -6387,7 +6393,13 @@ public class MeasurementDaoTest {
             String reportId, Source source, Trigger trigger) throws JSONException {
         return new EventReport.Builder()
                 .setId(reportId)
-                .populateFromSourceAndTrigger(source, trigger, trigger.parseEventTriggers().get(0))
+                .populateFromSourceAndTrigger(
+                        source,
+                        trigger,
+                        trigger.parseEventTriggers().get(0),
+                        new Pair<>(null, null),
+                        new EventReportWindowCalcDelegate(mFlags),
+                        new SourceNoiseHandler(mFlags))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())

@@ -37,6 +37,9 @@ import android.provider.DeviceConfig;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
@@ -89,6 +92,9 @@ public final class EventReportTest {
                     + "}"
                     + "]\n";
 
+    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private SourceNoiseHandler mSourceNoiseHandler;
+
     @Before
     public void setup() {
         final String phOverridingValue = ValidSourceParams.ENROLLMENT_ID;
@@ -96,6 +102,16 @@ public final class EventReportTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "measurement_debug_join_key_enrollment_allowlist",
                 phOverridingValue,
+                /* makeDefault */ false);
+        mEventReportWindowCalcDelegate =
+                new EventReportWindowCalcDelegate(FlagsFactory.getFlagsForTest());
+        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlagsForTest());
+
+        final String phOverridingValueAdIdMatching = "";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                "measurement_debug_key_ad_id_matching_enrollment_blocklist",
+                phOverridingValueAdIdMatching,
                 /* makeDefault */ false);
     }
 
@@ -203,7 +219,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -237,7 +259,13 @@ public final class EventReportTest {
         when(eventTrigger.getTriggerData()).thenReturn(new UnsignedLong(-50003L));
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTrigger,
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -274,7 +302,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -305,7 +339,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -337,7 +377,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -367,7 +413,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -401,7 +453,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -412,7 +470,8 @@ public final class EventReportTest {
         assertEquals(trigger.getAttributionDestination(),
                 report.getAttributionDestinations().get(0));
         assertEquals(
-                source.getReportingTime(trigger.getTriggerTime(), EventSurfaceType.WEB),
+                mEventReportWindowCalcDelegate.getReportingTime(
+                        source, trigger.getTriggerTime(), EventSurfaceType.WEB),
                 report.getReportTime());
         assertEquals(source.getSourceType(), report.getSourceType());
         assertEquals(
@@ -434,7 +493,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -473,7 +538,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(TRIGGER_PRIORITY, report.getTriggerPriority());
@@ -817,7 +888,13 @@ public final class EventReportTest {
         List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
         EventReport report =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTriggers.get(0))
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTriggers.get(0),
+                                sDebugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         assertEquals(triggerRegistrationUrl, report.getRegistrationOrigin());

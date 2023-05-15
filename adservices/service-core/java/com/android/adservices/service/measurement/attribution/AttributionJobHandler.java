@@ -46,9 +46,11 @@ import com.android.adservices.service.measurement.aggregation.AggregateDeduplica
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
@@ -78,6 +80,8 @@ class AttributionJobHandler {
     private static final String API_VERSION = "0.1";
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
+    private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     private final Flags mFlags;
 
@@ -87,16 +91,25 @@ class AttributionJobHandler {
     }
 
     AttributionJobHandler(DatastoreManager datastoreManager, DebugReportApi debugReportApi) {
-        mDatastoreManager = datastoreManager;
-        mFlags = FlagsFactory.getFlags();
-        mDebugReportApi = debugReportApi;
+        this(
+                datastoreManager,
+                FlagsFactory.getFlags(),
+                debugReportApi,
+                new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
+                new SourceNoiseHandler(FlagsFactory.getFlags()));
     }
 
     AttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags, DebugReportApi debugReportApi) {
+            DatastoreManager datastoreManager,
+            Flags flags,
+            DebugReportApi debugReportApi,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /**
@@ -517,7 +530,13 @@ class AttributionJobHandler {
 
         EventReport newEventReport =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTrigger,
+                                debugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         // Call provisionEventReportQuota since it has side-effects affecting source and
@@ -649,9 +668,16 @@ class AttributionJobHandler {
         return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
     }
 
-    private static boolean isWithinReportLimit(
+    private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return source.getMaxReportCount(destinationType) > existingReportCount;
+        return mEventReportWindowCalcDelegate.getMaxReportCount(
+                        source, hasAppInstallAttributionOccurred(source, destinationType))
+                > existingReportCount;
+    }
+
+    private static boolean hasAppInstallAttributionOccurred(
+            Source source, @EventSurfaceType int destinationType) {
+        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
