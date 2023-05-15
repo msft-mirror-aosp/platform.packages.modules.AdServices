@@ -200,6 +200,8 @@ public final class PhFlags implements Flags {
             "fledge_ad_selection_expiration_window_s";
     static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
             "fledge_ad_selection_filtering_enabled";
+    static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
+            "fledge_fetch_custom_audience_enabled";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
             "fledge_report_impression_overall_timeout_ms";
     static final String KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT =
@@ -1195,6 +1197,15 @@ public final class PhFlags implements Flags {
                 // The key deliberately kept same as Filtering as the two features are coupled
                 /* flagName */ KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED,
                 /* defaultValue */ FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED);
+    }
+
+    @Override
+    public boolean getFledgeFetchCustomAudienceEnabled() {
+        // The priority of applying the flag values: PH (DeviceConfig), then hard-coded value.
+        return DeviceConfig.getBoolean(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED,
+                /* defaultValue */ FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED);
     }
 
     @Override
@@ -2912,6 +2923,11 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED
                         + " = "
                         + getFledgeAdSelectionContextualAdsEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED
+                        + " = "
+                        + getFledgeFetchCustomAudienceEnabled());
         writer.println(
                 "\t"
                         + KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION
