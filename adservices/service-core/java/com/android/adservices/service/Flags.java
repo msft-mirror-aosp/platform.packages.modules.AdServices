@@ -768,6 +768,14 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
     }
 
+    // Enable FLEDGE fetchCustomAudience API.
+    boolean FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED = false;
+
+    /** Returns {@code true} if FLEDGE fetchCustomAudience API is enabled. */
+    default boolean getFledgeFetchCustomAudienceEnabled() {
+        return FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
