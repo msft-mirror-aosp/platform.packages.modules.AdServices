@@ -47,13 +47,14 @@ public class SourceNoiseHandlerTest {
 
     private Flags mFlags;
     private SourceNoiseHandler mSourceNoiseHandler;
-    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 
     @Before
     public void setup() {
         mFlags = spy(FlagsFactory.getFlags());
-        mEventReportWindowCalcDelegate = spy(new EventReportWindowCalcDelegate(mFlags));
-        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, mEventReportWindowCalcDelegate));
+        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
+                spy(new EventReportWindowCalcDelegate(mFlags));
+        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, eventReportWindowCalcDelegate));
     }
 
     @Test

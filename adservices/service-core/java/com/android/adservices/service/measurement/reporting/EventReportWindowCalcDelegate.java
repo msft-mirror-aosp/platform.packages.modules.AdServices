@@ -16,11 +16,21 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.EVENT_SOURCE_MAX_REPORTS;
+import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS;
+import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
+import static com.android.adservices.service.measurement.PrivacyParams.MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS;
+import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
+import static com.android.adservices.service.measurement.PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
+
 import android.annotation.NonNull;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
-import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.ReportSpec;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
@@ -28,14 +38,18 @@ import com.android.adservices.service.measurement.Trigger;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 /** Does event report window related calculations, e.g. count, reporting time. */
 public class EventReportWindowCalcDelegate {
     private static final long ONE_HOUR_IN_MILLIS = TimeUnit.HOURS.toMillis(1);
+    private static final String EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER = ",";
 
-    private Flags mFlags;
+    private final Flags mFlags;
 
     public EventReportWindowCalcDelegate(@NonNull Flags flags) {
         mFlags = flags;
@@ -50,12 +64,12 @@ public class EventReportWindowCalcDelegate {
     public int getMaxReportCount(@NonNull Source source, boolean isInstallCase) {
         if (isInstallCase) {
             return source.getSourceType() == Source.SourceType.EVENT
-                    ? PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
-                    : PrivacyParams.INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
+                    ? INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS
+                    : INSTALL_ATTR_NAVIGATION_SOURCE_MAX_REPORTS;
         }
         return source.getSourceType() == Source.SourceType.EVENT
-                ? PrivacyParams.EVENT_SOURCE_MAX_REPORTS
-                : PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS;
+                ? EVENT_SOURCE_MAX_REPORTS
+                : NAVIGATION_SOURCE_MAX_REPORTS;
     }
 
     /**
@@ -107,37 +121,6 @@ public class EventReportWindowCalcDelegate {
         return getEarlyReportingWindows(source, isInstallCase).size() + 1;
     }
 
-    private boolean isAppInstalled(Source source, int destinationType) {
-        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
-    }
-
-    private ImmutableList<Long> getEarlyReportingWindows(Source source, boolean installState) {
-        long[] earlyWindows;
-        if (installState) {
-            earlyWindows =
-                    source.getSourceType() == Source.SourceType.EVENT
-                            ? PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                            : PrivacyParams
-                                    .INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        } else {
-            earlyWindows =
-                    source.getSourceType() == Source.SourceType.EVENT
-                            ? PrivacyParams.EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
-                            : PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
-        }
-
-        List<Long> windowList = new ArrayList<>();
-
-        for (long windowDelta : earlyWindows) {
-            long window = source.getEventTime() + windowDelta;
-            if (source.getEventReportWindow() <= window) {
-                continue;
-            }
-            windowList.add(window);
-        }
-        return ImmutableList.copyOf(windowList);
-    }
-
     /**
      * Returns reporting time for noising with flex event API.
      *
@@ -148,5 +131,95 @@ public class EventReportWindowCalcDelegate {
     public long getReportingTimeForNoisingFlexEventAPI(
             int windowIndex, int triggerDataIndex, ReportSpec reportSpec) {
         return reportSpec.getWindowEndTime(triggerDataIndex, windowIndex) + ONE_HOUR_IN_MILLIS;
+    }
+
+    private boolean isAppInstalled(Source source, int destinationType) {
+        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
+    }
+
+    private List<Long> getEarlyReportingWindows(Source source, boolean installState) {
+        List<Long> earlyWindows;
+        List<Long> defaultEarlyWindows = getDefaultEarlyReportingWindows(source, installState);
+        earlyWindows = getConfiguredOrDefaultEarlyReportingWindows(source, defaultEarlyWindows);
+
+        List<Long> windowList = new ArrayList<>();
+        for (long windowDelta : earlyWindows) {
+            long window = source.getEventTime() + windowDelta;
+            if (source.getEventReportWindow() <= window) {
+                continue;
+            }
+            windowList.add(window);
+        }
+        return ImmutableList.copyOf(windowList);
+    }
+
+    private static List<Long> getDefaultEarlyReportingWindows(Source source, boolean installState) {
+        long[] earlyWindows;
+        if (installState) {
+            earlyWindows =
+                    source.getSourceType() == Source.SourceType.EVENT
+                            ? INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
+                            : INSTALL_ATTR_NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
+        } else {
+            earlyWindows =
+                    source.getSourceType() == Source.SourceType.EVENT
+                            ? EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS
+                            : NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS;
+        }
+        return LongStream.of(earlyWindows).boxed().collect(Collectors.toList());
+    }
+
+    private List<Long> getConfiguredOrDefaultEarlyReportingWindows(
+            Source source, List<Long> defaultEarlyWindows) {
+        if (!mFlags.getMeasurementEnableConfigurableEventReportingWindows()) {
+            return defaultEarlyWindows;
+        }
+
+        String earlyReportingWindowsString =
+                pickEarlyReportingWindowsConfig(mFlags, source.getSourceType());
+
+        if (earlyReportingWindowsString == null) {
+            LogUtil.d("Invalid configurable early reporting windows; null");
+            return defaultEarlyWindows;
+        }
+
+        if (earlyReportingWindowsString.isEmpty()) {
+            // No early reporting windows specified. It needs to be handled separately because
+            // splitting an empty string results into an array containing a single element,
+            // i.e. "". We want to handle it as an array having no element.
+
+            if (Source.SourceType.EVENT.equals(source.getSourceType())) {
+                // We need to add a reporting window at 2d for post-install case. Non-install case
+                // has no early reporting window by default.
+                return defaultEarlyWindows;
+            }
+            return Collections.emptyList();
+        }
+
+        ImmutableList.Builder<Long> earlyWindows = new ImmutableList.Builder<>();
+        String[] split =
+                earlyReportingWindowsString.split(EARLY_REPORTING_WINDOWS_CONFIG_DELIMITER);
+        if (split.length > MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS) {
+            LogUtil.d(
+                    "Invalid configurable early reporting window; more than allowed size: "
+                            + MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS);
+            return defaultEarlyWindows;
+        }
+
+        for (String window : split) {
+            try {
+                earlyWindows.add(TimeUnit.SECONDS.toMillis(Long.parseLong(window)));
+            } catch (NumberFormatException e) {
+                LogUtil.d(e, "Configurable early reporting window parsing failed.");
+                return defaultEarlyWindows;
+            }
+        }
+        return earlyWindows.build();
+    }
+
+    private String pickEarlyReportingWindowsConfig(Flags flags, Source.SourceType sourceType) {
+        return sourceType == Source.SourceType.EVENT
+                ? flags.getMeasurementEventReportsVtcEarlyReportingWindows()
+                : flags.getMeasurementEventReportsCtcEarlyReportingWindows();
     }
 }
