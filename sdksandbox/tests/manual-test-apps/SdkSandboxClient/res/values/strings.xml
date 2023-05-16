@@ -23,6 +23,7 @@
     <string name="ads" description="Ads title">Ads</string>
     <string name="new_banner_ad">New Banner Ad</string>
     <string name="new_fullscreen_ad">New Fullscreen Ad</string>
+    <string name="new_app_webview">New App WebView</string>
     <string name="extra" description="Extra title">Extra</string>
     <string name="get_filedescriptor">Get File Descriptor</string>
     <string name="send_filedescriptor">Send File Descriptor</string>

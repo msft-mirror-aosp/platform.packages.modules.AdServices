@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
     // Saved instance state keys
     private static final String SDKS_LOADED_KEY = "sdks_loaded";
     private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED = "customized_sdk_context_enabled";
+    private static final String SANDBOXED_SDK_BINDER = "com.android.sdksandboxclient.SANDBOXED_SDK";
 
     private Bundle mSavedInstanceState = new Bundle();
     private boolean mSdksLoaded = false;
@@ -121,6 +122,7 @@ public class MainActivity extends AppCompatActivity {
     private Button mSdkToSdkCommButton;
     private Button mDumpSandboxButton;
     private Button mNewFullScreenAd;
+    private Button mNewAppWebviewButton;
 
     private SurfaceView mInScrollBannerView;
     private SurfaceView mBottomBannerView;
@@ -173,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
         mSyncKeysButton = findViewById(R.id.sync_keys_button);
         mSdkToSdkCommButton = findViewById(R.id.enable_sdk_sdk_button);
         mDumpSandboxButton = findViewById(R.id.dump_sandbox_button);
+        mNewAppWebviewButton = findViewById(R.id.new_app_webview_button);
 
         configureFeatureFlagSection();
 
@@ -189,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
         registerSyncKeysButton();
         registerSdkToSdkButton();
         registerDumpSandboxButton();
+        registerNewAppWebviewButton();
 
         if (savedInstanceState == null) {
             // Register AppOwnedSdkInterface when activity first created
@@ -751,6 +755,20 @@ public class MainActivity extends AppCompatActivity {
                     } catch (RemoteException e) {
                         toastAndLog(e, "Failed to startActivity (%s)", starter);
                     }
+                });
+    }
+
+    private void registerNewAppWebviewButton() {
+        mNewAppWebviewButton.setOnClickListener(
+                v -> {
+                    if (!mSdksLoaded) {
+                        toastAndLog(WARN, "Sdk is not loaded");
+                        return;
+                    }
+                    IBinder binder = mSandboxedSdk.getInterface();
+                    Intent intent = new Intent(this, AppWebViewActivity.class);
+                    intent.putExtra(SANDBOXED_SDK_BINDER, binder);
+                    startActivity(intent);
                 });
     }
 
