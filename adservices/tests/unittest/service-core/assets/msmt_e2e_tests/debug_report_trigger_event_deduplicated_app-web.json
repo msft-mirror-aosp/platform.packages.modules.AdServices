@@ -92,7 +92,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -108,7 +108,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
