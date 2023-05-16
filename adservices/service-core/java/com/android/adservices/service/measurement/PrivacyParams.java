@@ -116,7 +116,7 @@ public final class PrivacyParams {
      * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
      * available on the source.
      */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
 
     /**
      * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
