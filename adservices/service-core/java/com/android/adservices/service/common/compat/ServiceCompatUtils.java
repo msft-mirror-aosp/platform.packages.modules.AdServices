@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common.compat;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -29,8 +31,6 @@ import java.util.Objects;
  * to be handled in a backward-compatible manner.
  */
 public final class ServiceCompatUtils {
-    private static final String ADSERVICES_PACKAGE_NAME_S = "com.google.android.ext.adservices.api";
-
     private ServiceCompatUtils() {
         // Prevent instantiation
     }
@@ -45,10 +45,15 @@ public final class ServiceCompatUtils {
      */
     public static boolean shouldDisableExtServicesJobOnTPlus(@NonNull Context context) {
         Objects.requireNonNull(context);
+
         // On S or lower, do not disable the job because it's the only one running.
+        if (!SdkLevel.isAtLeastT()) {
+            return false;
+        }
+
         // On T+, check if the job is in the ExtServices apk. This indicates that it's a holdover
         // from an OTA from R/S, and should therefore be disabled.
-        return SdkLevel.isAtLeastT()
-                && Objects.equals(context.getPackageName(), ADSERVICES_PACKAGE_NAME_S);
+        String packageName = context.getPackageName();
+        return packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX);
     }
 }
