@@ -111,7 +111,8 @@ public class EventReportWindowCalcDelegate {
     }
 
     /**
-     * Returns event reporting windows count for noising cases.
+     * Returns effective, i.e. the ones that occur before {@link Source#getEventReportWindow()},
+     * event reporting windows count for noising cases.
      *
      * @param source source for which the count is requested
      * @param isInstallCase true of cooldown window was specified
@@ -137,6 +138,13 @@ public class EventReportWindowCalcDelegate {
         return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
+    /**
+     * If the flag is enabled and the specified report windows are valid, picks from flag controlled
+     * configurable early reporting windows. Otherwise, falls back to the statical {@link
+     * com.android.adservices.service.measurement.PrivacyParams} values. It curtails the windows
+     * that occur after {@link Source#getEventReportWindow()} because they would effectively be
+     * unusable.
+     */
     private List<Long> getEarlyReportingWindows(Source source, boolean installState) {
         List<Long> earlyWindows;
         List<Long> defaultEarlyWindows = getDefaultEarlyReportingWindows(source, installState);
