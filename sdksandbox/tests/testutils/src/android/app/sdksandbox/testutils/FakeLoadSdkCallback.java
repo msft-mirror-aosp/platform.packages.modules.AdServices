@@ -24,6 +24,8 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.os.OutcomeReceiver;
 
+import androidx.annotation.Nullable;
+
 import com.google.common.base.Preconditions;
 
 public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSdkException> {
@@ -65,10 +67,15 @@ public class FakeLoadSdkCallback implements OutcomeReceiver<SandboxedSdk, LoadSd
     }
 
     public void assertLoadSdkIsSuccessful() {
-        mLoadSdkLatch.waitForLatch();
+        assertLoadSdkIsSuccessful("Load SDK");
+    }
+
+    public void assertLoadSdkIsSuccessful(@Nullable String message) {
+        mLoadSdkLatch.waitForLatch(message);
         if (mLoadSdkException != null) {
             fail(
-                    "Load SDK was not successful. errorCode: "
+                    message
+                            + " was not successful. errorCode: "
                             + this.getLoadSdkErrorCode()
                             + ", errorMsg: "
                             + this.getLoadSdkErrorMsg());
