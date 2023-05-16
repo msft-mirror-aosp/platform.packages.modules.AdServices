@@ -66,10 +66,15 @@ public class ContentProviderRestrictionsTestApp {
         assertThat(mSdkSandboxManager).isNotNull();
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.READ_DEVICE_CONFIG);
         mInitialContentProviderRestrictionValue =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+
+        // Greedily unload SDK to reduce flakiness
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
     }
 
     @After
@@ -79,6 +84,13 @@ public class ContentProviderRestrictionsTestApp {
                 ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
                 mInitialContentProviderRestrictionValue,
                 false);
+
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .dropShellPermissionIdentity();
+
+        // Greedily unload SDK to reduce flakiness
+        mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
     }
 
     @Test
