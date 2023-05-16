@@ -123,7 +123,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346781",
-          "randomized_trigger_rate": 0.017022
+          "randomized_trigger_rate": 0.0170218
         }
       },
       {
@@ -137,7 +137,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346782",
-          "randomized_trigger_rate": 0.017022
+          "randomized_trigger_rate": 0.0170218
         }
       }],
     "debug_event_level_results": [
@@ -152,7 +152,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346781",
-          "randomized_trigger_rate": 0.017022
+          "randomized_trigger_rate": 0.0170218
         }
       },
       {
@@ -166,7 +166,7 @@
           "source_type": "navigation",
           "source_debug_key": "347982378",
           "trigger_debug_key": "8971346782",
-          "randomized_trigger_rate": 0.017022
+          "randomized_trigger_rate": 0.0170218
         }
       }],
     "aggregatable_results": [
