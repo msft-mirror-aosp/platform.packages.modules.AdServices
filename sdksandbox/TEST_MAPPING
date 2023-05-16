@@ -116,6 +116,9 @@
       "name": "BroadcastRestrictionsHostTest"
     },
     {
+      "name": "ContentProviderRestrictionsHostTest"
+    },
+    {
       "name": "SdkSandboxStorageHostTest",
       "options": [
         {
