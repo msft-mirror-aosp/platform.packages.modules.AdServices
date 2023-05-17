@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
@@ -29,12 +30,14 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Web;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -129,10 +132,8 @@ public class DebugReportApi {
         try {
             JSONObject body = new JSONObject();
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.LIMIT, limit);
             if (getAdIdPermissionFromSource(source) == PermissionState.GRANTED
                     || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
@@ -395,10 +396,8 @@ public class DebugReportApi {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
         } catch (JSONException e) {
@@ -407,10 +406,26 @@ public class DebugReportApi {
         return body;
     }
 
-    private static Object serializeSourceDestinations(Source source) throws JSONException {
-        return source.getPublisherType() == EventSurfaceType.APP
-                ? ReportUtil.serializeAttributionDestinations(source.getAppDestinations())
-                : ReportUtil.serializeAttributionDestinations(source.getWebDestinations());
+    private static Object generateSourceDestinations(Source source) throws JSONException {
+        if (source.getPublisherType() == EventSurfaceType.APP) {
+            return ReportUtil.serializeAttributionDestinations(source.getAppDestinations());
+        } else {
+            List<Uri> webAttributionDestinations = new ArrayList<>();
+            for (int i = 0; i < source.getWebDestinations().size(); i++) {
+                webAttributionDestinations.add(
+                        Web.topPrivateDomainAndScheme(source.getWebDestinations().get(i))
+                                .orElse(null));
+            }
+            return ReportUtil.serializeAttributionDestinations(webAttributionDestinations);
+        }
+    }
+
+    private static Uri generateSourceSite(Source source) {
+        if (source.getPublisherType() == EventSurfaceType.APP) {
+            return source.getPublisher();
+        } else {
+            return Web.topPrivateDomainAndScheme(source.getPublisher()).orElse(null);
+        }
     }
 
     /** Generates trigger debug report body */
@@ -422,7 +437,7 @@ public class DebugReportApi {
             boolean isTriggerNoMatchingSource) {
         JSONObject body = new JSONObject();
         try {
-            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestination());
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
             body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
             if (isTriggerNoMatchingSource) {
                 return body;
@@ -430,9 +445,7 @@ public class DebugReportApi {
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
         } catch (JSONException e) {
             LogUtil.e(e, "Json error while generating trigger debug report body.");
         }
@@ -450,10 +463,7 @@ public class DebugReportApi {
             @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
         JSONObject body = new JSONObject();
         try {
-            body.put(
-                    Body.ATTRIBUTION_DESTINATION,
-                    ReportUtil.serializeAttributionDestinations(
-                            source.getAttributionDestinations(trigger.getDestinationType())));
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
             body.put(
                     Body.SCHEDULED_REPORT_TIME,
                     String.valueOf(
