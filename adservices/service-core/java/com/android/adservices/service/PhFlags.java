@@ -479,6 +479,15 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
+    static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
+            "measurement_enable_configurable_event_reporting_windows";
+
+    static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
+            "measurement_event_reports_vtc_early_reporting_windows";
+
+    static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
+            "measurement_event_reports_ctc_early_reporting_windows";
+
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
     private static final PhFlags sSingleton = new PhFlags();
@@ -2395,6 +2404,33 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableConfigurableEventReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS);
+    }
+
+    @Override
+    public String getMeasurementEventReportsVtcEarlyReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+    }
+
+    @Override
+    public String getMeasurementEventReportsCtcEarlyReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -2727,6 +2763,21 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
                         + " = "
                         + getMeasurementMaxEventReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEnableConfigurableEventReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEventReportsVtcEarlyReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEventReportsCtcEarlyReportingWindows());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
