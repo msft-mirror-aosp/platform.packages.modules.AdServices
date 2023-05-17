@@ -17,6 +17,7 @@
 package com.android.adservices.tests.cts.measurement;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -256,6 +257,21 @@ public class MeasurementManagerCtsTest {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
         ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
         assertNull(result.get());
+        overrideDisableMeasurementEnrollmentCheck("0");
+    }
+
+    @Test
+    public void
+            testDeleteRegistrations_multiple_withRequest_noOrigin_noRange_withCallback_NoErrors()
+                    throws Exception {
+        overrideDisableMeasurementEnrollmentCheck("1");
+        DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
+        ListenableFuture<Void> result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertWithMessage("first deleteRegistrations result").that(result.get()).isNull();
+        // Call it once more to ensure that there is no error when recording deletions back-to-back
+        TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
+        result = mMeasurementClient.deleteRegistrations(deletionRequest);
+        assertWithMessage("second deleteRegistrations result").that(result.get()).isNull();
         overrideDisableMeasurementEnrollmentCheck("0");
     }
 
