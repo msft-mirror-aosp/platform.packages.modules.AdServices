@@ -58,6 +58,7 @@ public final class RegistrationRequest implements Parcelable {
     private final String mSdkPackageName;
     private final long mRequestTime;
     private final boolean mIsAdIdPermissionGranted;
+    private final String mAdIdValue;
 
     private RegistrationRequest(@NonNull Builder builder) {
         mRegistrationType = builder.mRegistrationType;
@@ -67,6 +68,7 @@ public final class RegistrationRequest implements Parcelable {
         mSdkPackageName = builder.mSdkPackageName;
         mRequestTime = builder.mRequestTime;
         mIsAdIdPermissionGranted = builder.mIsAdIdPermissionGranted;
+        mAdIdValue = builder.mAdIdValue;
     }
 
     /**
@@ -85,6 +87,12 @@ public final class RegistrationRequest implements Parcelable {
         }
         mRequestTime = in.readLong();
         mIsAdIdPermissionGranted = in.readBoolean();
+        boolean hasAdIdValue = in.readBoolean();
+        if (hasAdIdValue) {
+            mAdIdValue = in.readString();
+        } else {
+            mAdIdValue = null;
+        }
     }
 
     /** Creator for Parcelable (via reflection). */
@@ -126,6 +134,12 @@ public final class RegistrationRequest implements Parcelable {
         }
         out.writeLong(mRequestTime);
         out.writeBoolean(mIsAdIdPermissionGranted);
+        if (mAdIdValue != null) {
+            out.writeBoolean(true);
+            out.writeString(mAdIdValue);
+        } else {
+            out.writeBoolean(false);
+        }
     }
 
     /** Type of the registration. */
@@ -163,10 +177,17 @@ public final class RegistrationRequest implements Parcelable {
     public long getRequestTime() {
         return mRequestTime;
     }
+
     /** Ad ID Permission */
     @NonNull
     public boolean isAdIdPermissionGranted() {
         return mIsAdIdPermissionGranted;
+    }
+
+    /** Ad ID Value */
+    @Nullable
+    public String getAdIdValue() {
+        return mAdIdValue;
     }
 
     /**
@@ -180,6 +201,7 @@ public final class RegistrationRequest implements Parcelable {
         private InputEvent mInputEvent;
         private long mRequestTime;
         private boolean mIsAdIdPermissionGranted;
+        private String mAdIdValue;
 
         /**
          * Builder constructor for {@link RegistrationRequest}.
@@ -225,6 +247,13 @@ public final class RegistrationRequest implements Parcelable {
         @NonNull
         public Builder setAdIdPermissionGranted(boolean adIdPermissionGranted) {
             mIsAdIdPermissionGranted = adIdPermissionGranted;
+            return this;
+        }
+
+        /** See {@link RegistrationRequest#getAdIdValue()}. */
+        @NonNull
+        public Builder setAdIdValue(@Nullable String adIdValue) {
+            mAdIdValue = adIdValue;
             return this;
         }
 
