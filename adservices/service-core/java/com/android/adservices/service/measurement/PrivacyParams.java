@@ -45,16 +45,6 @@ public final class PrivacyParams {
     public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
 
     /**
-     * Maximum attributions per rate limit window.
-     * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
-     */
-    private static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    public static int getMaxAttributionPerRateLimitWindow() {
-        return MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-    }
-
-    /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
      * 30 days.
      */
@@ -199,27 +189,6 @@ public final class PrivacyParams {
      * Max distinct web destinations in a source registration.
      */
     public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
-
-    /**
-     * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
-            10;
-
-    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
-        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
-    }
-
-    /**
-     * Max distinct advertisers with pending impressions per
-     * { Publisher X Enrollment X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
-            100;
-
-    public static int getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource() {
-        return MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
-    }
 
     /**
      * Max distinct enrollments with source registration per

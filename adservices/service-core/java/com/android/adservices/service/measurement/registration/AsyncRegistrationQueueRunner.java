@@ -334,8 +334,9 @@ public class AsyncRegistrationQueueRunner {
                         destinationType,
                         windowStartTime,
                         requestTime);
-        if (destinationCount + destinations.size()
-                > PrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
+        int maxDistinctDestinations =
+                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
+        if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LogUtil.d(
                     "AsyncRegistrationQueueRunner: "
                             + (destinationType == EventSurfaceType.APP ? "App" : "Web")
