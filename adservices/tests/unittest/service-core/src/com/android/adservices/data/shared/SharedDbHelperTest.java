@@ -16,19 +16,35 @@
 
 package com.android.adservices.data.shared;
 
+import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
+import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
 import static com.android.adservices.data.shared.migration.MigrationTestHelper.createReferenceDbAtVersion;
 
+import static org.junit.Assert.assertEquals;
+
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbHelperTest;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.enrollment.EnrollmentTables;
+import com.android.adservices.data.measurement.DbHelperV1;
+import com.android.adservices.data.shared.migration.ContentValueFixtures;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class SharedDbHelperTest {
@@ -37,6 +53,7 @@ public class SharedDbHelperTest {
             "adservices_shared_db_migrate_reference.db";
     private static final String OLD_TEST_DB_NAME = "old_test_db.db";
     private static final String SHARED_DB_NAME = "adservices_shared_db_test.db";
+    private static final int ENROLLMENT_OLD_DB_FINAL_VERSION = 7;
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
 
     @Before
@@ -62,5 +79,100 @@ public class SharedDbHelperTest {
                         MIGRATION_DB_REFERENCE_NAME,
                         SharedDbHelper.CURRENT_DATABASE_VERSION);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, db);
+    }
+
+    @Test
+    public void testEnrollmentTableMigrationFromOldDatabase() {
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+
+        DbHelper dbHelper =
+                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+        SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
+
+        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+
+        SharedDbHelper sharedDbHelper =
+                new SharedDbHelper(
+                        sContext,
+                        SHARED_DB_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION,
+                        dbHelper);
+        SQLiteDatabase actualMigratedDb = sharedDbHelper.safeGetWritableDatabase();
+
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, actualMigratedDb);
+        DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
+    }
+
+    @Test
+    public void testMigrationDataIntegrityToV1FromOldDatabase() {
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+
+        DbHelper dbHelper =
+                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+        SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
+
+        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+        // Sorted map because in case we need to add in order to avoid FK Constraints
+        Map<String, List<ContentValues>> preFakeData = createMigrationFakeDataWithDupeSites();
+        Map<String, List<ContentValues>> postFakeData = createMigrationFakeDataNoDupeSites();
+
+        populateDb(oldDb, preFakeData);
+        SharedDbHelper sharedDbHelper =
+                new SharedDbHelper(
+                        sContext,
+                        SHARED_DB_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION,
+                        dbHelper);
+        SQLiteDatabase newDb = sharedDbHelper.safeGetWritableDatabase();
+        DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
+        assertEquals(SharedDbHelper.CURRENT_DATABASE_VERSION, newDb.getVersion());
+        verifyDataInDb(newDb, postFakeData);
+        emptyTables(newDb, EnrollmentTables.ENROLLMENT_TABLES);
+    }
+
+    private Map<String, List<ContentValues>> createMigrationFakeDataWithDupeSites() {
+        Map<String, List<ContentValues>> tableRowsMap = createMigrationFakeDataNoDupeSites();
+        List<ContentValues> enrollmentRows =
+                tableRowsMap.get(EnrollmentTables.EnrollmentDataContract.TABLE);
+
+        ContentValues enrollmentDupe = ContentValueFixtures.generateEnrollmentContentValuesV1();
+        enrollmentDupe.put(
+                EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
+                UUID.randomUUID().toString());
+        enrollmentRows.add(enrollmentDupe);
+        tableRowsMap.put(EnrollmentTables.EnrollmentDataContract.TABLE, enrollmentRows);
+
+        return tableRowsMap;
+    }
+
+    private Map<String, List<ContentValues>> createMigrationFakeDataNoDupeSites() {
+        Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
+        List<ContentValues> enrollmentRows = new ArrayList<>();
+
+        enrollmentRows.add(ContentValueFixtures.generateEnrollmentContentValuesV1());
+        tableRowsMap.put(EnrollmentTables.EnrollmentDataContract.TABLE, enrollmentRows);
+
+        return tableRowsMap;
+    }
+
+    private void emptyTables(SQLiteDatabase db, String[] tables) {
+        Arrays.stream(tables).forEach((table) -> db.delete(table, null, null));
     }
 }
