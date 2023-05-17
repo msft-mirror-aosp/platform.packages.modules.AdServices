@@ -20,6 +20,9 @@ import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import android.adservices.topics.Topic;
 
 import org.junit.After;
@@ -27,6 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 
@@ -175,5 +179,20 @@ public class TopicsDaoTest {
         assertThat(mTopicsDao.retrieveAllBlockedTopics(user0)).isEmpty();
         assertThat(blockedTopics1).hasSize(1);
         assertThat(blockedTopics1).containsExactly(topicToBlock1);
+    }
+
+    @Test
+    public void testDump() {
+        // Currently, TopicsDao just delegates to helper, so we're being pragmactic and just
+        // testing that
+        PrintWriter writer = mock(PrintWriter.class);
+        String prefix = "TOPICS DAO";
+        String[] args = new String[] {"Y", "U", "NO", "FAKE?"};
+        TopicsDbHelper mockTopicsDbHelper = mock(TopicsDbHelper.class);
+        TopicsDao topicsDao = new TopicsDao(mockTopicsDbHelper);
+
+        topicsDao.dump(writer, prefix, args);
+
+        verify(mockTopicsDbHelper).dump(writer, prefix, args);
     }
 }
