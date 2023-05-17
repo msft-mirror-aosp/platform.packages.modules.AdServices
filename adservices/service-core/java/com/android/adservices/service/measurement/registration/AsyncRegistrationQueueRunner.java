@@ -340,7 +340,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         requestTime);
         int maxDistinctDestinations =
-                PrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
+                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LogUtil.d(
                     "AsyncRegistrationQueueRunner: "
