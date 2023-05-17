@@ -1314,6 +1314,23 @@ public interface Flags {
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
+    /**
+     * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
+     * value is false which means storing the rollback handling data in App Search is enabled. This
+     * flag is used for emergency turning off measurement rollback data deletion handling on Android
+     * S.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for storing Measurement rollback deletion handling data in App
+     * Search. The rollback deletion handling on Android S will be disabled if this kill switch
+     * value is true.
+     */
+    default boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        return MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
