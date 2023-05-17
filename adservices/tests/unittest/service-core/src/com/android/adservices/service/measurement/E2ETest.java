@@ -227,7 +227,7 @@ public abstract class E2ETest {
                         ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTIONS);
             } else {
                 mMaxAttributionPerRateLimitWindow =
-                        PrivacyParams.getMaxAttributionPerRateLimitWindow();
+                        Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
             }
             if (!json.isNull(ApiConfigKeys.NAVIGATION_SOURCE_TRIGGER_DATA_CARDINALITY)) {
                 mNavigationTriggerDataCardinality = json.getInt(
@@ -242,8 +242,7 @@ public abstract class E2ETest {
                         ApiConfigKeys.RATE_LIMIT_MAX_ATTRIBUTION_REPORTING_ORIGINS);
             } else {
                 mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution =
-                        PrivacyParams
-                                .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
+                        Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
             }
             if (!json.isNull(ApiConfigKeys
                     .MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN)) {
@@ -251,8 +250,7 @@ public abstract class E2ETest {
                         ApiConfigKeys.MAX_DESTINATIONS_PER_SOURCE_SITE_REPORTING_ORIGIN);
             } else {
                 mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource =
-                        PrivacyParams
-                                .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
+                        Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
             }
             if (!json.isNull(ApiConfigKeys
                     .RATE_LIMIT_MAX_SOURCE_REGISTRATION_REPORTING_ORIGINS)) {
@@ -294,11 +292,11 @@ public abstract class E2ETest {
             return mNavigationTriggerDataCardinality;
         }
 
-        public Integer getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
+        public Integer getMaxDistinctEnrollmentsInAttribution() {
             return mMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution;
         }
 
-        public Integer getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource() {
+        public Integer getMaxDistinctDestinationsInActiveSource() {
             return mMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource;
         }
 
