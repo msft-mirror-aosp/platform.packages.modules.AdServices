@@ -73,6 +73,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 false,
                                 adIdPermission,
+                                registrationRequest.getAdIdValue(),
                                 UUID.randomUUID().toString(),
                                 dao,
                                 contentResolver));
@@ -111,6 +112,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 webSourceParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                /* adIdValue */ null, // null for web
                                 registrationId,
                                 dao,
                                 contentResolver);
@@ -150,6 +152,7 @@ public class EnqueueAsyncRegistration {
                                 requestTime,
                                 webTriggerParams.isDebugKeyAllowed(),
                                 adIdPermission,
+                                /* adIdValue */ null, // null for web
                                 registrationId,
                                 dao,
                                 contentResolver);
@@ -170,6 +173,7 @@ public class EnqueueAsyncRegistration {
             long mRequestTime,
             boolean debugKeyAllowed,
             boolean adIdPermission,
+            String platformAdIdValue,
             String registrationId,
             IMeasurementDao dao,
             ContentResolver contentResolver)
@@ -189,6 +193,7 @@ public class EnqueueAsyncRegistration {
                         .setRetryCount(0)
                         .setDebugKeyAllowed(debugKeyAllowed)
                         .setAdIdPermission(adIdPermission)
+                        .setPlatformAdId(platformAdIdValue)
                         .setRegistrationId(registrationId)
                         .build();
 

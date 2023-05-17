@@ -322,6 +322,10 @@ public class AsyncSourceFetcher {
             return Optional.empty();
         }
         builder.setRegistrationOrigin(registrationUriOrigin.get());
+
+        builder.setPlatformAdId(
+                FetcherUtil.getEncryptedPlatformAdIdIfPresent(asyncRegistration, enrollmentId));
+
         List<String> field =
                 headers.get(SourceHeaderContract.HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE);
         if (field == null || field.size() != 1) {
