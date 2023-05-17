@@ -675,10 +675,18 @@ public class SdkSandboxManagerServiceUnitTest {
                 new Bundle(),
                 callback);
 
-        // If initialization failed, the sandbox should have died and a reference to the sandbox
-        // service should not have been set.
+        // If initialization failed, the sandbox would be unbound.
         final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
-        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isEqualTo(null);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
+
+        // Call binderDied() on the sandbox to apply the effects of sandbox death detection after
+        // unbinding.
+        killSandbox();
+
+        mSdkSandboxService.failInitialization = false;
+        // SDK loading should succeed afterwards.
+        loadSdk(SDK_NAME);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
     }
 
     @Test
