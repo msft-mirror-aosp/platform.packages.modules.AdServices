@@ -156,18 +156,18 @@
         "report_time": "1643235575000"
       }
     ],
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "payload": [
           {
             "type": "trigger-reporting-origin-limit",
             "body": {
-              "attribution_destination": "https://example.2d1.test",
+              "attribution_destination": "https://2d1.test",
               "trigger_debug_key": "8971346782",
               "limit": "1",
               "source_debug_key": "347982378",
               "source_event_id": "1",
-              "source_site": "android-app://example.1s1.test"
+              "source_site": "android-app://1s1.test"
             }
           }
         ],
