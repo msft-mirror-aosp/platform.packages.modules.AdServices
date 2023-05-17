@@ -81,6 +81,8 @@ public class EnqueueAsyncRegistrationTest {
 
     private static final List<WebTriggerParams> sTriggerParamsList = new ArrayList<>();
 
+    private static final String PLATFORM_AD_ID_VALUE = "PLATFORM_AD_ID_VALUE";
+
     static {
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_1);
         sSourceParamsList.add(INPUT_SOURCE_REGISTRATION_2);
@@ -291,6 +293,51 @@ public class EnqueueAsyncRegistrationTest {
             Assert.assertEquals(
                     Uri.parse("android-app://test.destination"), asyncRegistration.getRegistrant());
             Assert.assertNull(asyncRegistration.getSourceType());
+        }
+    }
+
+    @Test
+    public void testAppRegistrationRequestWithAdId_isValid() {
+        DatastoreManager datastoreManager =
+                new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
+        RegistrationRequest registrationRequest =
+                new RegistrationRequest.Builder(
+                                RegistrationRequest.REGISTER_TRIGGER,
+                                Uri.parse("http://baz.test"),
+                                sDefaultContext.getAttributionSource().getPackageName(),
+                                SDK_PACKAGE_NAME)
+                        .setAdIdValue(PLATFORM_AD_ID_VALUE)
+                        .setAdIdPermissionGranted(true)
+                        .build();
+
+        Assert.assertTrue(
+                EnqueueAsyncRegistration.appSourceOrTriggerRegistrationRequest(
+                        registrationRequest,
+                        registrationRequest.isAdIdPermissionGranted(),
+                        Uri.parse("android-app://test.destination"),
+                        System.currentTimeMillis(),
+                        null,
+                        datastoreManager,
+                        mContentResolver));
+
+        try (Cursor cursor =
+                DbTestUtil.getMeasurementDbHelperForTest()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AsyncRegistrationContract.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            Assert.assertTrue(cursor.moveToNext());
+            AsyncRegistration asyncRegistration =
+                    SqliteObjectMapper.constructAsyncRegistration(cursor);
+            Assert.assertNotNull(asyncRegistration);
+            Assert.assertTrue(asyncRegistration.hasAdIdPermission());
+            Assert.assertNotNull(asyncRegistration.getPlatformAdId());
+            Assert.assertEquals(PLATFORM_AD_ID_VALUE, asyncRegistration.getPlatformAdId());
         }
     }
 
