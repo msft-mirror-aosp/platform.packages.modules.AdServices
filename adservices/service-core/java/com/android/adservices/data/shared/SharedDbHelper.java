@@ -29,12 +29,16 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.enrollment.EnrollmentTables;
+import com.android.adservices.data.enrollment.SqliteObjectMapper;
 import com.android.adservices.data.shared.migration.ISharedDbMigrator;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.util.Web;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -42,7 +46,10 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,10 +58,7 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     private static final String DATABASE_NAME = "adservices_shared.db";
-
     public static final int CURRENT_DATABASE_VERSION = 1;
-    public static final int OLD_DATABASE_FINAL_VERSION = 1;
-
     private static SharedDbHelper sSingleton = null;
     private final File mDbFile;
     private final int mDbVersion;
@@ -89,21 +93,22 @@ public class SharedDbHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         sLogger.d(
                 "SharedDbHelper.onCreate with version %d. Name: %s", mDbVersion, mDbFile.getName());
-        SQLiteDatabase oldDb = mDbHelper.safeGetWritableDatabase();
-        if (hasAllTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES)) {
-            sLogger.d("SharedDbHelper.onCreate copying data from old db");
-            // Migrate Data:
-            // 1. Create V1 (old DbHelper's last database version) version of tables
-            createV1Schema(db);
-            // 2. TODO(b/277964933) Copy data from old database
-            // migrateOldDataToNewDatabase(oldDb, db);
-            // 3. TODO(b/277964933) Delete tables from old database
-            // 4. TODO(b/277964933) Upgrade schema to the latest version
-            // upgradeSchema(db, OLD_DATABASE_FINAL_VERSION, eDbVersion);
+        SQLiteDatabase oldEnrollmentDb = mDbHelper.safeGetWritableDatabase();
+        if (hasAllTables(oldEnrollmentDb, EnrollmentTables.ENROLLMENT_TABLES)) {
+            migrateEnrollmentTables(db, oldEnrollmentDb);
         } else {
             sLogger.d("SharedDbHelper.onCreate creating empty database");
             createSchema(db);
         }
+    }
+
+    private void migrateEnrollmentTables(SQLiteDatabase db, SQLiteDatabase oldDb) {
+        sLogger.d("SharedDbHelper.migrateEnrollmentTables copying Enrollment data from old db");
+        // Migrate Data:
+        // 1. Create V1 (old DbHelper's last database version) version of tables
+        createEnrollmentV1Schema(db);
+        // 2. Copy data from old database
+        migrateOldDataToNewDatabase(oldDb, db, EnrollmentTables.ENROLLMENT_TABLES);
     }
 
     @Override
@@ -171,42 +176,68 @@ public class SharedDbHelper extends SQLiteOpenHelper {
         }
     }
 
-    public long getDbFileSize() {
-        return mDbFile != null && mDbFile.exists() ? mDbFile.length() : -1;
-    }
-
-    private void createV1Schema(SQLiteDatabase db) {
-        EnrollmentTables.CREATE_STATEMENTS.forEach(db::execSQL);
+    private void createEnrollmentV1Schema(SQLiteDatabase db) {
+        EnrollmentTables.CREATE_STATEMENTS_V1.forEach(db::execSQL);
     }
 
     private void createSchema(SQLiteDatabase db) {
-        if (mDbVersion == CURRENT_DATABASE_VERSION) {
-            EnrollmentTables.CREATE_STATEMENTS.forEach(db::execSQL);
-        } else {
-            // If the provided DB version is not the latest, create the starting schema and upgrade
-            // to that. This branch is primarily for testing purpose.
-            createV1Schema(db);
-            upgradeSchema(db, OLD_DATABASE_FINAL_VERSION, mDbVersion);
-        }
+        EnrollmentTables.CREATE_STATEMENTS.forEach(db::execSQL);
     }
 
-    private void migrateOldDataToNewDatabase(SQLiteDatabase oldDb, SQLiteDatabase db) {
+    private void migrateOldDataToNewDatabase(
+            SQLiteDatabase oldDb, SQLiteDatabase db, String[] tables) {
         // Ordered iteration to populate tables to avoid
         // foreign key constraint failures.
-        Arrays.stream(EnrollmentTables.ENROLLMENT_TABLES)
-                .forEachOrdered((table) -> copyTable(oldDb, db, table));
+        Arrays.stream(tables).forEachOrdered((table) -> copyOrMigrateTable(oldDb, db, table));
+    }
+
+    private void copyOrMigrateTable(SQLiteDatabase oldDb, SQLiteDatabase newDb, String table) {
+        // We are moving from Origin-Based Enrollment to Site-Based Enrollment as part of this
+        // migration
+        //
+        switch (table) {
+            case EnrollmentTables.EnrollmentDataContract.TABLE:
+                migrateEnrollmentTable(oldDb, newDb, table);
+                return;
+            default:
+                copyTable(oldDb, newDb, table);
+        }
     }
 
     private void copyTable(SQLiteDatabase oldDb, SQLiteDatabase newDb, String table) {
         try (Cursor cursor = oldDb.query(table, null, null, null, null, null, null, null)) {
-            // TODO(b/277964933) Filter out Duplicate Site Records
-            // Set<String> site = new Set<String>();
-
             while (cursor.moveToNext()) {
                 ContentValues contentValues = new ContentValues();
                 DatabaseUtils.cursorRowToContentValues(cursor, contentValues);
                 newDb.insert(table, null, contentValues);
             }
+        }
+    }
+
+    private void migrateEnrollmentTable(SQLiteDatabase oldDb, SQLiteDatabase newDb, String table) {
+        try (Cursor cursor = oldDb.query(table, null, null, null, null, null, null, null)) {
+            // Enrollment table is moving to Site based enrollment.
+            // We are filtering out records with duplicated sites.
+            Set<Uri> sites = new HashSet<>();
+            while (cursor.moveToNext()) {
+                Optional<Uri> site = tryGetSiteFromEnrollmentRow(cursor);
+                if (site.isEmpty() || sites.add(site.get())) {
+                    ContentValues contentValues = new ContentValues();
+                    DatabaseUtils.cursorRowToContentValues(cursor, contentValues);
+                    newDb.insert(table, null, contentValues);
+                }
+            }
+        }
+    }
+
+    private Optional<Uri> tryGetSiteFromEnrollmentRow(Cursor cursor) {
+        try {
+            EnrollmentData enrollmentData =
+                    SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+            Uri uri = Uri.parse(enrollmentData.getAttributionReportingUrl().get(0));
+            return Web.topPrivateDomainAndScheme(uri);
+        } catch (IndexOutOfBoundsException ex) {
+            return Optional.empty();
         }
     }
 
