@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mAdIdTextView = findViewById(R.id.adIdTextView);
         mAdIdButton = findViewById(R.id.adIdButton);
+
+        // AdIdManager can not be called on R until OutcomeReceiver dependencies are removed.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            setAdIdText("Service is not available.");
+            return;
+        }
+
         mAdIdManager =
                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                         ? this.getSystemService(AdIdManager.class)

@@ -184,6 +184,14 @@ public class SdkSandboxServiceImpl extends Service {
             SandboxLatencyInfo sandboxLatencyInfo) {
         enforceCallerIsSystemServer();
 
+        if (!mInitialized) {
+            sendLoadError(
+                    callback,
+                    ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR,
+                    "Sandbox was not properly initialized",
+                    sandboxLatencyInfo);
+            return;
+        }
         loadSdkInternal(
                 callingPackageName,
                 applicationInfo,

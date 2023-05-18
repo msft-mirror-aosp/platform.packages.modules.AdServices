@@ -15,6 +15,10 @@
  */
 package com.android.adservices.ui;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
@@ -22,6 +26,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 
 import android.content.Context;
@@ -31,6 +37,7 @@ import android.os.ParcelFileDescriptor;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.ui.util.ApkTestUtil;
@@ -56,11 +63,16 @@ import java.io.File;
 import java.util.concurrent.ExecutionException;
 
 public class OTAResourcesManagerTest {
-    @Mock MobileDataDownload mMockMdd;
-    @Mock Flags mMockFlags;
-    @Mock MobileDataDownloadFactory mMockMddFactory;
-    @Mock ResourcesProvider mResourcesProvider;
-    @Mock ParcelFileDescriptor mMockParcelFileDescriptor;
+    @Mock
+    MobileDataDownload mMockMdd;
+    @Mock
+    Flags mMockFlags;
+    @Mock
+    MobileDataDownloadFactory mMockMddFactory;
+    @Mock
+    ResourcesProvider mResourcesProvider;
+    @Mock
+    ParcelFileDescriptor mMockParcelFileDescriptor;
     private Context mContext;
     private MockitoSession mStaticMockSession = null;
 
@@ -73,6 +85,7 @@ public class OTAResourcesManagerTest {
         MockitoAnnotations.initMocks(this);
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
+                        .spyStatic(ErrorLogUtil.class)
                         .spyStatic(MobileDataDownloadFactory.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(ParcelFileDescriptor.class)
@@ -94,15 +107,22 @@ public class OTAResourcesManagerTest {
         }
     }
 
-    /** * Verify that MDD throws an ExecutionException, getDownloadedFiles return a null object. */
+    /** Verify that MDD throws an ExecutionException, getDownloadedFiles return a null object. */
     @Test
     public void testGetDownloadedFiles_futureExecutionException() throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ListenableFuture<ClientFileGroup> testFuture =
                 Futures.immediateFailedFuture(
                         new ExecutionException("mockExecutionException", new Throwable()));
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
         assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 
     /**
@@ -110,11 +130,18 @@ public class OTAResourcesManagerTest {
      */
     @Test
     public void testGetDownloadedFiles_futureInterruptedException() throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ListenableFuture<ClientFileGroup> testFuture =
                 Futures.immediateFailedFuture(new InterruptedException("mockInterruptedException"));
         doReturn(testFuture).when(mMockMdd).getFileGroup(any(GetFileGroupRequest.class));
 
         assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).isNull();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 
     /**
@@ -143,7 +170,7 @@ public class OTAResourcesManagerTest {
         assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).hasSize(0);
     }
 
-    /** * Verify that when MDD download is pending, getDownloadedFiles returns null. */
+    /** Verify that when MDD download is pending, getDownloadedFiles returns null. */
     @Test
     public void testGetDownloadedFiles_pendingClientFileGroup() throws Exception {
         ClientFileGroup testCfg =
@@ -182,7 +209,7 @@ public class OTAResourcesManagerTest {
         assertThat(OTAResourcesManager.getDownloadedFiles(mContext)).hasSize(1);
     }
 
-    /** * Verify that when an empty file group was downloaded, file descriptor was never used. */
+    /** Verify that when an empty file group was downloaded, file descriptor was never used. */
     @Test
     public void testRefreshOTAResources_emptyClientFileGroup() throws Exception {
         ClientFileGroup testCfg =
@@ -227,6 +254,8 @@ public class OTAResourcesManagerTest {
      */
     @Test
     public void testRefreshOTAResources_nonUriClientFile() throws Exception {
+        ExtendedMockito.doNothing().when(
+                () -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         ClientFile testCf = ClientFile.newBuilder().setFileId("resources.arsc").build();
 
         ClientFileGroup testCfg =
@@ -244,6 +273,13 @@ public class OTAResourcesManagerTest {
         OTAResourcesManager.refreshOTAResources(mContext);
 
         verify(mMockParcelFileDescriptor, times(0)).close();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX),
+                                eq(OTAResourcesManager.class.getSimpleName()),
+                                eq("refreshOTAResources")));
     }
 
     /**
@@ -252,6 +288,7 @@ public class OTAResourcesManagerTest {
      */
     @Test
     public void testRefreshOTAResources_nullResource() throws Exception {
+        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         ClientFile testCf =
                 ClientFile.newBuilder().setFileId("resources.arsc").setFileUri("testUrl").build();
 
@@ -272,5 +309,11 @@ public class OTAResourcesManagerTest {
         OTAResourcesManager.refreshOTAResources(mContext);
 
         verify(mMockParcelFileDescriptor, times(0)).close();
+        ExtendedMockito.verify(
+                () ->
+                        ErrorLogUtil.e(
+                                any(Throwable.class),
+                                eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR),
+                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)));
     }
 }

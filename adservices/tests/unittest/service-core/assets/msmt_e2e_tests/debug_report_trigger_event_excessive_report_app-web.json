@@ -240,10 +240,11 @@
             "type": "trigger-event-excessive-reports",
             "body": {
               "attribution_destination": "https://1d1.test",
-              "scheduled_report_time": "1643843973000",
+              "scheduled_report_time": "1643843973",
               "source_event_id": "1",
               "source_type": "navigation",
               "randomized_trigger_rate": 0.017022,
+              "trigger_data": "7",
               "source_debug_key": "347982378",
               "trigger_debug_key": "8971346781"
             }

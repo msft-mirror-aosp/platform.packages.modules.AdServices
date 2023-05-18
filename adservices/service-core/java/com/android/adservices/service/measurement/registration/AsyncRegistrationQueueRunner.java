@@ -319,15 +319,16 @@ public class AsyncRegistrationQueueRunner {
                         destinationType,
                         windowStartTime,
                         requestTime);
-        if (destinationCount + destinations.size()
-                > PrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource()) {
+        int maxDistinctDestinations =
+                PrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
+        if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LogUtil.d(
                     "AsyncRegistrationQueueRunner: "
                             + (destinationType == EventSurfaceType.APP ? "App" : "Web")
                             + " destination count >= "
                             + "MaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource");
             debugReportApi.scheduleSourceDestinationLimitDebugReport(
-                    source, String.valueOf(destinationCount), dao);
+                    source, String.valueOf(maxDistinctDestinations), dao);
             return false;
         }
 

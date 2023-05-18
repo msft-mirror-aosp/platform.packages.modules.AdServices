@@ -135,6 +135,7 @@ class LoadSdkSession {
     private final Object mLock = new Object();
 
     private final Context mContext;
+    private final SdkSandboxManagerService mSdkSandboxManagerService;
     private final SdkSandboxManagerService.Injector mInjector;
 
     final String mSdkName;
@@ -173,12 +174,14 @@ class LoadSdkSession {
 
     LoadSdkSession(
             Context context,
+            SdkSandboxManagerService service,
             SdkSandboxManagerService.Injector injector,
             String sdkName,
             CallingInfo callingInfo,
             Bundle loadParams,
             ILoadSdkCallback loadCallback) {
         mContext = context;
+        mSdkSandboxManagerService = service;
         mInjector = injector;
         mSdkName = sdkName;
         mCallingInfo = callingInfo;
@@ -591,6 +594,10 @@ class LoadSdkSession {
                     SdkSandboxStatsLog.SANDBOX_API_CALLED__METHOD__LOAD_SDK,
                     sandboxLatencyInfo);
 
+            if (exception.getLoadSdkErrorCode()
+                    == ILoadSdkInSandboxCallback.LOAD_SDK_INSTANTIATION_ERROR) {
+                mSdkSandboxManagerService.handleFailedSandboxInitialization(mCallingInfo);
+            }
             handleLoadFailure(
                     updateLoadSdkErrorCode(exception),
                     /*startTimeOfErrorStage=*/ timeSystemServerReceivedCallFromSandbox,

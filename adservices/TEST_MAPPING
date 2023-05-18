@@ -25,6 +25,14 @@
       "name": "AdExtServicesApkUITestsAppConsent[com.google.android.extservices.apex]"
     },
     {
+      // Install com.google.android.adservices.apex and run AdServicesApkUISettingsGaOtaTests.
+      "name": "AdServicesApkUISettingsGaOtaTests[com.google.android.adservices.apex]"
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesApkUISettingsGaOtaTests.
+      "name": "AdExtServicesApkUISettingsGaOtaTests[com.google.android.extservices.apex]"
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesApkUnitTests.
       "name": "AdServicesApkUnitTests[com.google.android.adservices.apex]"
     },
@@ -213,6 +221,15 @@
     },
     {
       "name": "AdServicesApkUISettingsTests",
+      "options": [
+        {
+          // Exclude tests that are marked flaky
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsGaOtaTests",
       "options": [
         {
           // Exclude tests that are marked flaky

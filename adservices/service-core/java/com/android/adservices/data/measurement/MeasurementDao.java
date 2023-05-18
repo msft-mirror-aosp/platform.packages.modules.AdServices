@@ -705,6 +705,7 @@ class MeasurementDao implements IMeasurementDao {
         if (rows != 1) {
             throw new DatastoreException("DebugReport deletion failed.");
         }
+        LogUtil.d("MeasurementDao: deleteDebugReport: row deleted: " + rows);
     }
 
     @Override

@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.attribution;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB;
+
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
@@ -26,12 +30,12 @@ import android.content.Context;
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.measurement.DatastoreManagerFactory;
-import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -41,6 +45,8 @@ import java.util.concurrent.Executor;
  * AttributionJobHandler}.
  */
 public class AttributionFallbackJobService extends JobService {
+    private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
+            MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
@@ -51,16 +57,23 @@ public class AttributionFallbackJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
+
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling AttributionFallbackJobService job because it's running in"
                             + " ExtServices on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
 
         if (FlagsFactory.getFlags().getMeasurementAttributionFallbackJobKillSwitch()) {
             LogUtil.e("AttributionFallbackJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         LogUtil.d("AttributionFallbackJobService.onStartJob");
@@ -78,6 +91,11 @@ public class AttributionFallbackJobService extends JobService {
                             getApplicationContext(),
                             /* forceSchedule */ true,
                             /* isDebugReportApi */ false);
+
+                    AdservicesJobServiceLogger.getInstance(AttributionFallbackJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, success, !success);
+
                     jobFinished(params, !success);
                 });
         return true;
@@ -86,7 +104,11 @@ public class AttributionFallbackJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("AttributionFallbackJobService.onStopJob");
-        return true;
+        boolean shouldRetry = true;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /**
@@ -97,7 +119,7 @@ public class AttributionFallbackJobService extends JobService {
     static void schedule(Context context, JobScheduler jobScheduler) {
         final JobInfo job =
                 new JobInfo.Builder(
-                                AdServicesConfig.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
+                                MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID,
                                 new ComponentName(context, AttributionJobService.class))
                         .setPeriodic(
                                 FlagsFactory.getFlags()
@@ -125,9 +147,7 @@ public class AttributionFallbackJobService extends JobService {
             return;
         }
 
-        final JobInfo job =
-                jobScheduler.getPendingJob(
-                        AdServicesConfig.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
+        final JobInfo job = jobScheduler.getPendingJob(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
         // Schedule if it hasn't been scheduled already or force rescheduling
         if (job == null || forceSchedule) {
             schedule(context, jobScheduler);
@@ -137,11 +157,14 @@ public class AttributionFallbackJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
-            jobScheduler.cancel(AdServicesConfig.MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
+            jobScheduler.cancel(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID, skipReason);
 
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, false);

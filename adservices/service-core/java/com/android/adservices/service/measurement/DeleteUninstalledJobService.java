@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.measurement;
 
-import static com.android.adservices.service.AdServicesConfig.MEASUREMENT_DELETE_UNINSTALLED_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.spe.AdservicesJobInfo.MEASUREMENT_DELETE_UNINSTALLED_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -33,6 +35,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.concurrent.Executor;
@@ -43,6 +46,8 @@ import java.util.concurrent.Executor;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class DeleteUninstalledJobService extends JobService {
+    private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
+            MEASUREMENT_DELETE_UNINSTALLED_JOB.getJobId();
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
@@ -52,23 +57,37 @@ public final class DeleteUninstalledJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
+
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling DeleteUninstalledJobService job because it's running in ExtServices"
                             + " on T+");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
             LogUtil.e("DeleteUninstalledJobService is disabled");
-            return skipAndCancelBackgroundJob(params);
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
         }
 
         LogUtil.d("DeleteUninstalledJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
                     MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
-                    jobFinished(params, /* wantsReschedule */ false);
+
+                    boolean shouldRetry = false;
+                    AdservicesJobServiceLogger.getInstance(DeleteUninstalledJobService.this)
+                            .recordJobFinished(
+                                    MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
+                                    /* isSuccessful */ true,
+                                    shouldRetry);
+                    jobFinished(params, shouldRetry);
                 });
         return true;
     }
@@ -76,7 +95,11 @@ public final class DeleteUninstalledJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("DeleteUninstalledJobService.onStopJob");
-        return false;
+        boolean shouldRetry = false;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, shouldRetry);
+        return shouldRetry;
     }
 
     /** Schedule the job. */
@@ -121,11 +144,15 @@ public final class DeleteUninstalledJobService extends JobService {
         }
     }
 
-    private boolean skipAndCancelBackgroundJob(final JobParameters params) {
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
         final JobScheduler jobScheduler = this.getSystemService(JobScheduler.class);
         if (jobScheduler != null) {
             jobScheduler.cancel(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, skipReason);
+
         // Tell the JobScheduler that the job has completed and does not need to be rescheduled.
         jobFinished(params, /* wantsReschedule */ false);
 

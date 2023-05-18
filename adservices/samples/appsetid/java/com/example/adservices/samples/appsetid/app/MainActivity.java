@@ -46,6 +46,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mAppSetIdTextView = findViewById(R.id.appSetIdTextView);
         mAppSetIdButton = findViewById(R.id.appSetIdButton);
+
+        // AppSetIdManager can not be called on R until OutcomeReceiver dependencies are removed.
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+            setAppSetIdText("Service is not available.");
+            return;
+        }
+
         mAppSetIdManager =
                 (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                         ? this.getSystemService(AppSetIdManager.class)
