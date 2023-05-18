@@ -660,7 +660,7 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
-        if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
+        if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -668,7 +668,7 @@ class AttributionJobHandler {
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
-        return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
+        return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
     }
 
     private boolean isWithinReportLimit(
@@ -836,9 +836,7 @@ class AttributionJobHandler {
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
-            if (count
-                    >= PrivacyParams
-                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution()) {
+            if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
@@ -847,8 +845,7 @@ class AttributionJobHandler {
                         Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
             }
 
-            return count < PrivacyParams
-                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
+            return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
         } else {
             LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
