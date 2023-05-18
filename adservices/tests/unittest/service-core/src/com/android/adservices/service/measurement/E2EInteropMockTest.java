@@ -45,8 +45,7 @@ import java.util.concurrent.TimeUnit;
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
- * src/content/test/data/attribution_reporting/interop
- * April 2, 2023
+ * src/content/test/data/attribution_reporting/interop April 20, 2023
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EMockTest {
@@ -91,7 +90,7 @@ public class E2EInteropMockTest extends E2EMockTest {
     }
 
     @Override
-    void processAction(RegisterSource sourceRegistration) {
+    void processAction(RegisterSource sourceRegistration) throws JSONException, IOException {
         RegistrationRequest request = sourceRegistration.mRegistrationRequest;
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
@@ -104,6 +103,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     sourceRegistration.mArDebugPermission,
                     request,
                     getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri));
+        }
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
         }
     }
 
@@ -122,11 +125,15 @@ public class E2EInteropMockTest extends E2EMockTest {
                     request,
                     getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri));
         }
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        if (triggerRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     private void insertSource(
