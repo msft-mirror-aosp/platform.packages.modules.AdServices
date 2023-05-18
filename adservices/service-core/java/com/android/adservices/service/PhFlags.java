@@ -2423,6 +2423,7 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println("\t" + KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
                 "\t"
@@ -3244,5 +3245,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_NOTIFICATION_DISMISSED_ON_CLICK,
                 /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
+    }
+
+    static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
+
+    @Override
+    public boolean getU18UxEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_U18_UX_ENABLED,
+                /* defaultValue */ DEFAULT_U18_UX_ENABLED);
     }
 }
