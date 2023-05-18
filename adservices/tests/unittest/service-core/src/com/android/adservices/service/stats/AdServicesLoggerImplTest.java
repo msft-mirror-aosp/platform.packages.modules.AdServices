@@ -25,6 +25,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__ACTION__OPT_OUT_SELECTED;
@@ -85,6 +86,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
+import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 
 import org.junit.Before;
@@ -527,5 +529,24 @@ public class AdServicesLoggerImplTest {
         assertEquals(argumentCaptor.getValue().isSourceDerived(), false);
         assertEquals(argumentCaptor.getValue().isInstallAttribution(), true);
         assertEquals(argumentCaptor.getValue().getAttributionDelay(), 100L);
+    }
+
+    @Test
+    public void testLogMeasurementWipeoutStats() {
+        MeasurementWipeoutStats stats =
+                new MeasurementWipeoutStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                        .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementWipeoutStats(stats);
+        ArgumentCaptor<MeasurementWipeoutStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementWipeoutStats.class);
+        verify(mStatsdLoggerMock).logMeasurementWipeoutStats(argumentCaptor.capture());
+        assertEquals(argumentCaptor.getValue().getCode(), AD_SERVICES_MEASUREMENT_WIPEOUT);
+        assertEquals(
+                argumentCaptor.getValue().getWipeoutType(),
+                WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal());
     }
 }
