@@ -566,7 +566,7 @@ public abstract class E2ETest {
         objArray[0] =
                 outputType == OutputType.EXPECTED ? url : getReportUrl(ReportType.EVENT, url);
         JSONObject payload = obj.optJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        objArray[1] = normaliseDouble(payload.optDouble(EventReportPayloadKeys.DOUBLE, 0));
+        objArray[1] = payload.optDouble(EventReportPayloadKeys.DOUBLE, 0);
         // Try string then JSONArray in order so as to override the string if the array parsing is
         // successful.
         objArray[2] = null;
@@ -623,11 +623,6 @@ public abstract class E2ETest {
         return objectList.hashCode();
     }
 
-    // Used in interop tests, where we have known discrepancies.
-    private static double normaliseDouble(double d) {
-        return d == 0.0024263D ? 0.0024D : d;
-    }
-
     private static long reportTimeFrom(JSONObject obj) {
         return obj.optLong(TestFormatJsonMapping.REPORT_TIME_KEY, 0);
     }
@@ -672,8 +667,8 @@ public abstract class E2ETest {
             JSONObject obj2) throws JSONException {
         JSONObject payload1 = obj1.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
         JSONObject payload2 = obj2.getJSONObject(TestFormatJsonMapping.PAYLOAD_KEY);
-        if (normaliseDouble(payload1.getDouble(EventReportPayloadKeys.DOUBLE))
-                != normaliseDouble(payload2.getDouble(EventReportPayloadKeys.DOUBLE))) {
+        if (payload1.getDouble(EventReportPayloadKeys.DOUBLE)
+                != payload2.getDouble(EventReportPayloadKeys.DOUBLE)) {
             log("Event payload double mismatch. Report type: " + reportType.name());
             return false;
         }
