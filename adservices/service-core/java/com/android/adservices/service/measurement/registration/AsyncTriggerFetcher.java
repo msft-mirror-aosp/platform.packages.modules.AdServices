@@ -332,12 +332,14 @@ public class AsyncTriggerFetcher {
         }
 
         Optional<String> enrollmentId =
-                Enrollment.getValidEnrollmentId(
-                        asyncRegistration.getRegistrationUri(),
-                        asyncRegistration.getRegistrant().getAuthority(),
-                        mEnrollmentDao,
-                        mContext,
-                        mFlags);
+                mFlags.isDisableMeasurementEnrollmentCheck()
+                        ? Optional.of(Enrollment.FAKE_ENROLLMENT)
+                        : Enrollment.getValidEnrollmentId(
+                                asyncRegistration.getRegistrationUri(),
+                                asyncRegistration.getRegistrant().getAuthority(),
+                                mEnrollmentDao,
+                                mContext,
+                                mFlags);
         if (enrollmentId.isEmpty()) {
             LogUtil.d(
                     "fetchTrigger: Valid enrollment id not found. Registration URI: %s",
