@@ -26,7 +26,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.measurement.EventReport;
-import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
@@ -152,18 +151,9 @@ public class EventReportingJobHandler {
             return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
         }
         try {
-            Optional<Uri> reportingOrigin = Enrollment.maybeGetReportingOrigin(
-                    eventReport.getEnrollmentId(), mEnrollmentDao);
-            if (!reportingOrigin.isPresent()) {
-                // We do not know here what the cause is of the failure to retrieve the reporting
-                // origin. INTERNAL_ERROR seems the closest to a "catch-all" error code.
-                LogUtil.d("Report origin not present");
-                reportingStatus.setFailureStatus(
-                        ReportingStatus.FailureStatus.ENROLLMENT_NOT_FOUND);
-                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
+            Uri reportingOrigin = eventReport.getRegistrationOrigin();
             JSONObject eventReportJsonPayload = createReportJsonPayload(eventReport);
-            int returnCode = makeHttpPostRequest(reportingOrigin.get(), eventReportJsonPayload);
+            int returnCode = makeHttpPostRequest(reportingOrigin, eventReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK
                     && returnCode <= 299) {
