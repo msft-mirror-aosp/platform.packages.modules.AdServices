@@ -41,7 +41,9 @@ import android.os.HandlerThread;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
+import android.util.Dumpable;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
@@ -49,7 +51,9 @@ import com.android.server.adservices.data.topics.TopicsDao;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -88,16 +92,30 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     private final Context mContext;
 
+    @GuardedBy("mRegisterReceiverLock")
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
+
+    @GuardedBy("mRegisterReceiverLock")
     private BroadcastReceiver mSystemServiceUserActionReceiver;
 
+    @GuardedBy("mRegisterReceiverLock")
     private HandlerThread mHandlerThread;
+
+    @GuardedBy("mRegisterReceiverLock")
     private Handler mHandler;
 
+    @GuardedBy("mSetPackageVersionLock")
     private int mAdServicesModuleVersion;
+
+    @GuardedBy("mSetPackageVersionLock")
     private String mAdServicesModuleName;
-    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+
+    @GuardedBy("mRollbackCheckLock")
+    private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom =
+            new ArrayMap<>();
+
+    @GuardedBy("mRollbackCheckLock")
+    private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
@@ -128,8 +146,8 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     /** @hide */
-    public static class Lifecycle extends SystemService {
-        private AdServicesManagerService mService;
+    public static final class Lifecycle extends SystemService implements Dumpable {
+        private final AdServicesManagerService mService;
 
         /** @hide */
         public Lifecycle(Context context) {
@@ -138,6 +156,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             mService =
                     new AdServicesManagerService(
                             context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
+            LogUtil.d("AdServicesManagerService constructed!");
         }
 
         /** @hide */
@@ -161,6 +180,17 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 throw new IllegalStateException(
                         "SdkSandboxManagerLocal not found when registering AdServicesManager!");
             }
+        }
+
+        @Override
+        public String getDumpableName() {
+            return "AdServices";
+        }
+
+        @Override
+        public void dump(PrintWriter writer, String[] args) {
+            // Usage: adb shell dumpsys system_server_dumper --name AdServices
+            mService.dump(/* fd= */ null, writer, args);
         }
     }
 
@@ -761,6 +791,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(android.Manifest.permission.DUMP)
+    protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+        mContext.enforceCallingPermission(android.Manifest.permission.DUMP, /* message= */ null);
+
+        synchronized (mSetPackageVersionLock) {
+            pw.printf("mAdServicesModuleName: %s\n", mAdServicesModuleName);
+            pw.printf("mAdServicesModuleVersion: %d\n", mAdServicesModuleVersion);
+        }
+        synchronized (mRegisterReceiverLock) {
+            pw.printf("mHandlerThread: %s\n", mHandlerThread);
+        }
+        synchronized (mRollbackCheckLock) {
+            pw.printf("mAdServicesPackagesRolledBackFrom: %s\n", mAdServicesPackagesRolledBackFrom);
+            pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
+        }
+        mUserInstanceManager.dump(pw, args);
+    }
+
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public void recordAdServicesDeletionOccurred(
             @AdServicesManager.DeletionApiType int deletionType) {
@@ -939,16 +988,14 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         synchronized (mRollbackCheckLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
-                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                resetRollbackArraysRCLocked();
                 return;
             }
 
             RollbackManager rollbackManager = mContext.getSystemService(RollbackManager.class);
             if (rollbackManager == null) {
                 LogUtil.d("Failed to get the RollbackManager service.");
-                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                resetRollbackArraysRCLocked();
                 return;
             }
             List<RollbackInfo> recentlyCommittedRollbacks =
@@ -972,6 +1019,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 }
             }
         }
+    }
+
+    @GuardedBy("mRollbackCheckLock")
+    private void resetRollbackArraysRCLocked() {
+        mAdServicesPackagesRolledBackFrom.clear();
+        mAdServicesPackagesRolledBackTo.clear();
     }
 
     @VisibleForTesting
