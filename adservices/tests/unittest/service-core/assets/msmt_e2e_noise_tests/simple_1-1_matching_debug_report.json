@@ -74,7 +74,7 @@
       }
     }],
 
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "report_url": "https://www.ad-tech1.com/.well-known/attribution-reporting/debug/verbose",
         "payload": [{

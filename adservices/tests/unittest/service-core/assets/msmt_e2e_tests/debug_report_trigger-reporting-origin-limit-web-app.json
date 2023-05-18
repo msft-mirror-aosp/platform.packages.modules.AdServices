@@ -157,7 +157,7 @@
         "report_time": "1643235575000"
       }
     ],
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "payload": [
           {
@@ -167,7 +167,7 @@
               "trigger_debug_key": "8971346782",
               "limit": "1",
               "source_event_id": "1",
-              "source_site": "android-app://example.1s1.test"
+              "source_site": "android-app://1s1.test"
             }
           }
         ],
