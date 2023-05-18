@@ -20,6 +20,7 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.util.Pair;
 
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -37,21 +38,27 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /** Util class for DebugKeys */
 public class DebugKeyAccessor {
     @NonNull private final Flags mFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
+    @NonNull private final DatastoreManager mDatastoreManager;
 
-    public DebugKeyAccessor() {
-        this(FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance());
+    public DebugKeyAccessor(DatastoreManager datastoreManager) {
+        this(FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance(), datastoreManager);
     }
 
     @VisibleForTesting
-    DebugKeyAccessor(@NonNull Flags flags, @NonNull AdServicesLogger adServicesLogger) {
+    DebugKeyAccessor(
+            @NonNull Flags flags,
+            @NonNull AdServicesLogger adServicesLogger,
+            @NonNull DatastoreManager datastoreManager) {
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
+        mDatastoreManager = datastoreManager;
     }
 
     /**
@@ -81,6 +88,10 @@ public class DebugKeyAccessor {
                 new HashSet<>(
                         AllowLists.splitAllowList(
                                 mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        String blockedEnrollmentsAdIdMatchingString =
+                mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+        Set<String> blockedEnrollmentsAdIdMatching =
+                new HashSet<>(AllowLists.splitAllowList(blockedEnrollmentsAdIdMatchingString));
         UnsignedLong sourceDebugKey = null;
         UnsignedLong triggerDebugKey = null;
         Long joinKeyHash = null;
@@ -96,6 +107,7 @@ public class DebugKeyAccessor {
                 }
                 break;
             case AttributionType.SOURCE_WEB_TRIGGER_WEB:
+                // TODO(b/280323940): Web<>Web Debug Keys AdID option
                 if (trigger.getRegistrant().equals(source.getRegistrant())) {
                     if (source.hasArDebugPermission()) {
                         sourceDebugKey = source.getDebugKey();
@@ -115,8 +127,36 @@ public class DebugKeyAccessor {
                 }
                 break;
             case AttributionType.SOURCE_APP_TRIGGER_WEB:
-                // fall-through
+                if (canMatchAdIdAppSourceToWebTrigger(source, trigger)
+                        && canMatchAdIdEnrollments(
+                                source,
+                                trigger,
+                                blockedEnrollmentsAdIdMatchingString,
+                                blockedEnrollmentsAdIdMatching)) {
+                    if (source.getPlatformAdId().equals(trigger.getDebugAdId())
+                            && isEnrollmentIdWithinUniqueAdIdLimit(trigger.getEnrollmentId())) {
+                        sourceDebugKey = source.getDebugKey();
+                        triggerDebugKey = trigger.getDebugKey();
+                    }
+                    // TODO(b/280322027): Record result for metrics emission.
+                    break;
+                }
+                // fall-through for join key matching
             case AttributionType.SOURCE_WEB_TRIGGER_APP:
+                if (canMatchAdIdWebSourceToAppTrigger(source, trigger)
+                        && canMatchAdIdEnrollments(
+                                source,
+                                trigger,
+                                blockedEnrollmentsAdIdMatchingString,
+                                blockedEnrollmentsAdIdMatching)) {
+                    if (trigger.getPlatformAdId().equals(source.getDebugAdId())
+                            && isEnrollmentIdWithinUniqueAdIdLimit(source.getEnrollmentId())) {
+                        sourceDebugKey = source.getDebugKey();
+                        triggerDebugKey = trigger.getDebugKey();
+                    }
+                    // TODO(b/280322027): Record result for metrics emission.
+                    break;
+                }
                 if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
                     // Attempted to match, so assigning a non-null value to emit metric
                     joinKeyHash = 0L;
@@ -156,6 +196,10 @@ public class DebugKeyAccessor {
                 new HashSet<>(
                         AllowLists.splitAllowList(
                                 mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist()));
+        String blockedEnrollmentsAdIdMatchingString =
+                mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist();
+        Set<String> blockedEnrollmentsAdIdMatching =
+                new HashSet<>(AllowLists.splitAllowList(blockedEnrollmentsAdIdMatchingString));
         UnsignedLong sourceDebugKey = null;
         UnsignedLong triggerDebugKey = null;
         Long joinKeyHash = null;
@@ -202,7 +246,18 @@ public class DebugKeyAccessor {
                 }
                 triggerDebugKey = trigger.getDebugKey();
                 // Send source_debug_key when condition meets.
-                if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
+                if (canMatchAdIdAppSourceToWebTrigger(source, trigger)
+                        && canMatchAdIdEnrollments(
+                                source,
+                                trigger,
+                                blockedEnrollmentsAdIdMatchingString,
+                                blockedEnrollmentsAdIdMatching)) {
+                    if (source.getPlatformAdId().equals(trigger.getDebugAdId())
+                            && isEnrollmentIdWithinUniqueAdIdLimit(trigger.getEnrollmentId())) {
+                        sourceDebugKey = source.getDebugKey();
+                    }
+                    // TODO(b/280322027): Record result for metrics emission.
+                } else if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
                     // Attempted to match, so assigning a non-null value to emit metric
                     joinKeyHash = 0L;
                     if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -219,7 +274,18 @@ public class DebugKeyAccessor {
                 }
                 triggerDebugKey = trigger.getDebugKey();
                 // Send source_debug_key when condition meets.
-                if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
+                if (canMatchAdIdWebSourceToAppTrigger(source, trigger)
+                        && canMatchAdIdEnrollments(
+                                source,
+                                trigger,
+                                blockedEnrollmentsAdIdMatchingString,
+                                blockedEnrollmentsAdIdMatching)) {
+                    if (trigger.getPlatformAdId().equals(source.getDebugAdId())
+                            && isEnrollmentIdWithinUniqueAdIdLimit(source.getEnrollmentId())) {
+                        sourceDebugKey = source.getDebugKey();
+                    }
+                    // TODO(b/280322027): Record result for metrics emission.
+                } else if (canMatchJoinKeys(source, trigger, allowedEnrollmentsString)) {
                     // Attempted to match, so assigning a non-null value to emit metric
                     joinKeyHash = 0L;
                     if (source.getDebugJoinKey().equals(trigger.getDebugJoinKey())) {
@@ -266,6 +332,39 @@ public class DebugKeyAccessor {
                 && allowedEnrollmentsString.contains(source.getEnrollmentId())
                 && Objects.nonNull(source.getDebugJoinKey())
                 && Objects.nonNull(trigger.getDebugJoinKey());
+    }
+
+    private boolean canMatchAdIdEnrollments(
+            Source source,
+            Trigger trigger,
+            String blockedEnrollmentsString,
+            Set<String> blockedEnrollments) {
+        return !AllowLists.doesAllowListAllowAll(blockedEnrollmentsString)
+                && !blockedEnrollments.contains(source.getEnrollmentId())
+                && !blockedEnrollments.contains(trigger.getEnrollmentId());
+    }
+
+    private static boolean canMatchAdIdAppSourceToWebTrigger(Source source, Trigger trigger) {
+        return trigger.hasArDebugPermission()
+                && Objects.nonNull(source.getPlatformAdId())
+                && Objects.nonNull(trigger.getDebugAdId());
+    }
+
+    private static boolean canMatchAdIdWebSourceToAppTrigger(Source source, Trigger trigger) {
+        return source.hasArDebugPermission()
+                && Objects.nonNull(source.getDebugAdId())
+                && Objects.nonNull(trigger.getPlatformAdId());
+    }
+
+    private boolean isEnrollmentIdWithinUniqueAdIdLimit(String enrollmentId) {
+        Optional<Long> numUniqueOpt =
+                mDatastoreManager.runInTransactionWithResult(
+                        dao -> dao.countDistinctDebugAdIdsUsedByEnrollment(enrollmentId));
+        if (!numUniqueOpt.isPresent()) {
+            return false;
+        }
+        long numUnique = numUniqueOpt.get();
+        return numUnique < mFlags.getMeasurementPlatformDebugAdIdMatchingLimit();
     }
 
     @AttributionType
