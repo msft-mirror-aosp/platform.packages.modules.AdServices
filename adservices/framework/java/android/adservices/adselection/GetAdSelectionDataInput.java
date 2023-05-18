@@ -28,7 +28,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class GetAdSelectionDataInput implements Parcelable {
+public final class GetAdSelectionDataInput implements Parcelable {
     @Nullable private final GetAdSelectionDataRequest mGetAdSelectionDataRequest;
     @Nullable private final String mCallerPackageName;
 

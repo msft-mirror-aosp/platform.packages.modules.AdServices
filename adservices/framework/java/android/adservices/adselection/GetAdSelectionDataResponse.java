@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class GetAdSelectionDataResponse implements Parcelable {
+public final class GetAdSelectionDataResponse implements Parcelable {
     private final long mAdSelectionId;
     @Nullable private final String mAdSelectionData;
 
