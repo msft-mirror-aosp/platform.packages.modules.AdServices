@@ -16,11 +16,15 @@
 
 package android.adservices.adselection;
 
+import android.adservices.adselection.ProcessAdSelectionResultCallback;
+import android.adservices.adselection.ProcessAdSelectionResultInput;
 import android.adservices.adselection.AdSelectionCallback;
+import android.adservices.adselection.GetAdSelectionDataCallback;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesInput;
 import android.adservices.adselection.AdSelectionInput;
+import android.adservices.adselection.GetAdSelectionDataInput;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.BuyersDecisionLogic;
@@ -43,14 +47,30 @@ import java.util.List;
 /**
  * This is the Ad Selection Service, which defines the interface used for the Ad selection workflow
  * to orchestrate the on-device execution of
- * 1. Ad selection.
- * 2. Impression reporting.
- * 3. Interaction reporting.
- * 4. Ad event counting.
+ * 1. Ad selection data collection.
+ * 2. Ad selection.
+ * 3. Impression reporting.
+ * 4. Interaction reporting.
+ * 5. Ad event counting.
  *
  * @hide
  */
 interface AdSelectionService {
+
+    /**
+     * This method collects data from device for ad selection
+     *
+     * {@hide}
+     */
+    void getAdSelectionData(in GetAdSelectionDataInput request, in CallerMetadata callerMetadata, in GetAdSelectionDataCallback callback);
+
+    /**
+     * This method processes the results from a finished ad selection on servers
+     *
+     * {@hide}
+     */
+    void processAdSelectionResult(in ProcessAdSelectionResultInput request, in CallerMetadata callerMetadata, in ProcessAdSelectionResultCallback callback);
+
     /**
      * This method orchestrates the buyer and seller side logic to pick the winning ad amongst all
      * the on-device remarketing ad candidates and seller provided contextual ad candidates. It will
