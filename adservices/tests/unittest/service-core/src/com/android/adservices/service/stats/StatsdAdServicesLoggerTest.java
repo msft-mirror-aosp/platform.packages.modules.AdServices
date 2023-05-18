@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.PrecomputedClassifierStatus;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
@@ -450,6 +452,30 @@ public class StatsdAdServicesLoggerTest {
                                 eq(false),
                                 eq(true),
                                 eq(100L));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementWipeout_success() {
+        MeasurementWipeoutStats stats =
+                new MeasurementWipeoutStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                        .setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal())
+                        .build();
+        ExtendedMockito.doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
+
+        // Invoke logging call
+        mLogger.logMeasurementWipeoutStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_WIPEOUT),
+                                eq(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal()));
 
         ExtendedMockito.verify(writeInvocation);
 
