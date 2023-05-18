@@ -32,8 +32,11 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,11 +100,28 @@ public class DebugReportApi {
     private final Context mContext;
     private final Flags mFlags;
     private final DatastoreManager mDatastoreManager;
+    private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     public DebugReportApi(Context context, Flags flags) {
+        this(
+                context,
+                flags,
+                new EventReportWindowCalcDelegate(flags),
+                new SourceNoiseHandler(flags));
+    }
+
+    @VisibleForTesting
+    DebugReportApi(
+            Context context,
+            Flags flags,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /** Schedules the Source Success Debug Report */
@@ -490,12 +510,15 @@ public class DebugReportApi {
                     Body.SCHEDULED_REPORT_TIME,
                     String.valueOf(
                             TimeUnit.MILLISECONDS.toSeconds(
-                                    source.getReportingTime(
+                                    mEventReportWindowCalcDelegate.getReportingTime(
+                                            source,
                                             trigger.getTriggerTime(),
                                             trigger.getDestinationType()))));
             body.put(Body.SOURCE_EVENT_ID, source.getEventId());
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
-            body.put(Body.RANDOMIZED_TRIGGER_RATE, source.getRandomAttributionProbability());
+            body.put(
+                    Body.RANDOMIZED_TRIGGER_RATE,
+                    mSourceNoiseHandler.getRandomAttributionProbability(source));
             if (triggerData != null) {
                 body.put(Body.TRIGGER_DATA, triggerData.toString());
             }
