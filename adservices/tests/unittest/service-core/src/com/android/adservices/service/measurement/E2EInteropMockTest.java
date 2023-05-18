@@ -90,7 +90,7 @@ public class E2EInteropMockTest extends E2EMockTest {
     }
 
     @Override
-    void processAction(RegisterSource sourceRegistration) {
+    void processAction(RegisterSource sourceRegistration) throws JSONException, IOException {
         RegistrationRequest request = sourceRegistration.mRegistrationRequest;
         // For interop tests, we currently expect only one HTTPS response per registration with no
         // redirects, partly due to differences in redirect handling across attribution APIs.
@@ -103,6 +103,10 @@ public class E2EInteropMockTest extends E2EMockTest {
                     sourceRegistration.mArDebugPermission,
                     request,
                     getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri));
+        }
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+        if (sourceRegistration.mDebugReporting) {
+            processDebugReportApiJob();
         }
     }
 
@@ -121,11 +125,15 @@ public class E2EInteropMockTest extends E2EMockTest {
                     request,
                     getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri));
         }
+        mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        if (triggerRegistration.mDebugReporting) {
+            processDebugReportApiJob();
+        }
     }
 
     private void insertSource(
