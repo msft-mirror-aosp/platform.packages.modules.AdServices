@@ -283,7 +283,7 @@ class AttributionJobHandler {
                                                     - AGGREGATE_MIN_REPORT_DELAY))
                                     + AGGREGATE_MIN_REPORT_DELAY);
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor().getDebugKeys(source, trigger);
+                    new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
@@ -515,9 +515,12 @@ class AttributionJobHandler {
         source.setAppDestinations(destinations.first);
         source.setWebDestinations(destinations.second);
 
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+
         EventReport newEventReport =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .populateFromSourceAndTrigger(source, trigger, eventTrigger, debugKeyPair)
                         .build();
 
         // Call provisionEventReportQuota since it has side-effects affecting source and
