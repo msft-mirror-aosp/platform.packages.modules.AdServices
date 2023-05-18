@@ -325,6 +325,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID,
                 builder::setEnrollmentId);
+        setUriColumn(
+                cursor,
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                builder::setRegistrationOrigin);
 
         return builder.build();
     }
