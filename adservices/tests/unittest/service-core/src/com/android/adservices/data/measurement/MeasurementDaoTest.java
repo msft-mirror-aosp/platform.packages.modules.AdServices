@@ -472,6 +472,7 @@ public class MeasurementDaoTest {
             assertEquals(debugReport.getType(), report.getType());
             assertEquals(debugReport.getBody().toString(), report.getBody().toString());
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
+            assertEquals(debugReport.getRegistrationOrigin(), report.getRegistrationOrigin());
         }
     }
 
@@ -4324,6 +4325,9 @@ public class MeasurementDaoTest {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
 
         long count =
@@ -4354,6 +4358,9 @@ public class MeasurementDaoTest {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
 
         long count =
@@ -6405,6 +6412,7 @@ public class MeasurementDaoTest {
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
                 .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 

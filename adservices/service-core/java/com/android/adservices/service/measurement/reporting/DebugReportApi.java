@@ -117,6 +117,7 @@ public class DebugReportApi {
                 Type.SOURCE_SUCCESS,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -139,7 +140,12 @@ public class DebugReportApi {
                     || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
                 body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
             }
-            scheduleReport(Type.SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
+            scheduleReport(
+                    Type.SOURCE_DESTINATION_LIMIT,
+                    body,
+                    source.getEnrollmentId(),
+                    source.getRegistrationOrigin(),
+                    dao);
         } catch (JSONException e) {
             LogUtil.e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
         }
@@ -162,6 +168,7 @@ public class DebugReportApi {
                 Type.SOURCE_NOISED,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -183,6 +190,7 @@ public class DebugReportApi {
                 Type.SOURCE_STORAGE_LIMIT,
                 generateSourceDebugReportBody(source, limit),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -203,6 +211,7 @@ public class DebugReportApi {
                 Type.SOURCE_UNKNOWN_ERROR,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -229,6 +238,7 @@ public class DebugReportApi {
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
                 trigger.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -256,6 +266,7 @@ public class DebugReportApi {
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -287,6 +298,7 @@ public class DebugReportApi {
                 generateTriggerDebugReportBodyWithAllFields(
                         source, trigger, triggerData, debugKeyPair),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -296,12 +308,14 @@ public class DebugReportApi {
      * @param type The type of the debug report
      * @param body The body of the debug report
      * @param enrollmentId Ad Tech enrollment ID
+     * @param registrationOrigin Reporting origin of the report
      * @param dao Measurement DAO
      */
     private void scheduleReport(
             @NonNull String type,
             @NonNull JSONObject body,
             @NonNull String enrollmentId,
+            @NonNull Uri registrationOrigin,
             @NonNull IMeasurementDao dao) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(body);
@@ -321,6 +335,7 @@ public class DebugReportApi {
                         .setType(type)
                         .setBody(body)
                         .setEnrollmentId(enrollmentId)
+                        .setRegistrationOrigin(registrationOrigin)
                         .build();
         try {
             dao.insertDebugReport(debugReport);
