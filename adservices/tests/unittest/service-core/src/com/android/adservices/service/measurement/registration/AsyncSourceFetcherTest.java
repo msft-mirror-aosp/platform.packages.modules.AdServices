@@ -154,6 +154,7 @@ public final class AsyncSourceFetcherTest {
     private static final int SUCCESS_STATUS = 1;
     private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
+    private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
     AsyncSourceFetcher mFetcher;
 
     @Mock HttpsURLConnection mUrlConnection;
@@ -184,6 +185,7 @@ public final class AsyncSourceFetcherTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
     }
 
     @After
@@ -4196,6 +4198,173 @@ public final class AsyncSourceFetcherTest {
         String expectedAdIdHash =
                 AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
         assertEquals(expectedAdIdHash, result.getPlatformAdId());
+    }
+
+    @Test
+    public void fetchWebSource_withDebugAdIdValue_getsParsed() throws IOException {
+        // Setup
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_ad_id\": \""
+                                                + DEBUG_AD_ID_VALUE
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertEquals(DEBUG_AD_ID_VALUE, result.getDebugAdId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_withDebugAdIdValue_enrollmentBlockListed_doesNotGetParsed()
+            throws IOException {
+        // Setup
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn(ENROLLMENT_ID);
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_ad_id\": \""
+                                                + DEBUG_AD_ID_VALUE
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertNull(result.getDebugAdId());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebSource_withDebugAdIdValue_blockListMatchesAll_doesNotGetParsed()
+            throws IOException {
+        // Setup
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+        WebSourceRegistrationRequest request =
+                buildWebSourceRegistrationRequest(
+                        Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "\"destination\": \""
+                                                + DEFAULT_DESTINATION
+                                                + "\",\n"
+                                                + "\"source_event_id\": \""
+                                                + EVENT_ID_1
+                                                + "\",\n"
+                                                + "  \"debug_key\": \""
+                                                + DEBUG_KEY
+                                                + "\",\n"
+                                                + "  \"debug_ad_id\": \""
+                                                + DEBUG_AD_ID_VALUE
+                                                + "\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        webSourceRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertEquals(0, asyncRedirect.getRedirects().size());
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(Uri.parse(DEFAULT_DESTINATION), result.getAppDestinations().get(0));
+        assertEquals(EVENT_ID_1, result.getEventId());
+        long expiry =
+                result.getEventTime()
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        assertEquals(expiry, result.getExpiryTime());
+        assertEquals(expiry, result.getEventReportWindow());
+        assertEquals(expiry, result.getAggregatableReportWindow());
+        assertNull(result.getDebugAdId());
+        verify(mUrlConnection).setRequestMethod("POST");
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {
