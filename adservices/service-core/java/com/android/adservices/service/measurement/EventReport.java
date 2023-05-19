@@ -23,7 +23,6 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -382,7 +381,10 @@ public class EventReport {
 
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
-                Source source, Trigger trigger, EventTrigger eventTrigger) {
+                Source source,
+                Trigger trigger,
+                EventTrigger eventTrigger,
+                Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
             mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
@@ -399,8 +401,6 @@ public class EventReport {
                             trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
             mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor().getDebugKeys(source, trigger);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
