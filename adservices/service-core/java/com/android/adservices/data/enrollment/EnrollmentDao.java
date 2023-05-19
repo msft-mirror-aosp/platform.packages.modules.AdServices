@@ -104,7 +104,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                         mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
-                edit.apply();
+                if (!edit.commit()) {
+                    // TODO(b/280579966): Add logging using CEL.
+                    LogUtil.e(
+                            "Saving shared preferences - %s , %s failed",
+                            ENROLLMENT_SHARED_PREF, IS_SEEDED);
+                }
             }
         }
     }
@@ -114,7 +119,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                 mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
-        edit.apply();
+        if (!edit.commit()) {
+            // TODO(b/280579966): Add logging using CEL.
+            LogUtil.e(
+                    "Saving shared preferences - %s , %s failed",
+                    ENROLLMENT_SHARED_PREF, IS_SEEDED);
+        }
     }
 
     @Override
