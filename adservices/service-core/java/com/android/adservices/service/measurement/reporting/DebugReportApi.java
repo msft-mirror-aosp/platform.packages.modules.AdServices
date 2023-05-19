@@ -25,6 +25,8 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -94,10 +96,12 @@ public class DebugReportApi {
 
     private final Context mContext;
     private final Flags mFlags;
+    private final DatastoreManager mDatastoreManager;
 
     public DebugReportApi(Context context, Flags flags) {
         mContext = context;
         mFlags = flags;
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
     }
 
     /** Schedules the Source Success Debug Report */
@@ -117,6 +121,7 @@ public class DebugReportApi {
                 Type.SOURCE_SUCCESS,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -139,7 +144,12 @@ public class DebugReportApi {
                     || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
                 body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
             }
-            scheduleReport(Type.SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
+            scheduleReport(
+                    Type.SOURCE_DESTINATION_LIMIT,
+                    body,
+                    source.getEnrollmentId(),
+                    source.getRegistrationOrigin(),
+                    dao);
         } catch (JSONException e) {
             LogUtil.e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
         }
@@ -162,6 +172,7 @@ public class DebugReportApi {
                 Type.SOURCE_NOISED,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -183,6 +194,7 @@ public class DebugReportApi {
                 Type.SOURCE_STORAGE_LIMIT,
                 generateSourceDebugReportBody(source, limit),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -203,6 +215,7 @@ public class DebugReportApi {
                 Type.SOURCE_UNKNOWN_ERROR,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -224,11 +237,13 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
                 trigger.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -251,11 +266,13 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -281,12 +298,14 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBodyWithAllFields(
                         source, trigger, triggerData, debugKeyPair),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -296,12 +315,14 @@ public class DebugReportApi {
      * @param type The type of the debug report
      * @param body The body of the debug report
      * @param enrollmentId Ad Tech enrollment ID
+     * @param registrationOrigin Reporting origin of the report
      * @param dao Measurement DAO
      */
     private void scheduleReport(
             @NonNull String type,
             @NonNull JSONObject body,
             @NonNull String enrollmentId,
+            @NonNull Uri registrationOrigin,
             @NonNull IMeasurementDao dao) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(body);
@@ -321,6 +342,7 @@ public class DebugReportApi {
                         .setType(type)
                         .setBody(body)
                         .setEnrollmentId(enrollmentId)
+                        .setRegistrationOrigin(registrationOrigin)
                         .build();
         try {
             dao.insertDebugReport(debugReport);
