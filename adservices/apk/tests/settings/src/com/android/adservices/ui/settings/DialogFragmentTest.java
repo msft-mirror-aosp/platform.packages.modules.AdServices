@@ -21,7 +21,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
@@ -42,7 +41,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -74,7 +72,6 @@ public class DialogFragmentTest {
 
     private String mTestName;
     private MockitoSession mStaticMockSession;
-    private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -86,7 +83,6 @@ public class DialogFragmentTest {
         // Static mocking
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(ConsentManager.class)
@@ -98,6 +94,7 @@ public class DialogFragmentTest {
         doReturn(false).when(mMockFlags).getGaUxFeatureEnabled();
         // UiDialogFragmentEnable flag should be on for this test
         doReturn(true).when(mMockFlags).getUiDialogFragmentEnabled();
+        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
@@ -140,9 +137,6 @@ public class DialogFragmentTest {
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        mPhFlags = spy(PhFlags.getInstance());
-        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
