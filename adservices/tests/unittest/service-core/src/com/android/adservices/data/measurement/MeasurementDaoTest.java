@@ -3446,6 +3446,153 @@ public class MeasurementDaoTest {
         assertEquals(sWeb2.getId(), result.get(0).getId());
     }
 
+    @Test
+    public void testGetMatchingActiveDelayedSources() {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance(sContext).safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        String enrollmentId = "enrollment-id";
+        Uri appDestination = Uri.parse("android-app://com.example.abc");
+        Uri webDestination = WebUtil.validUri("https://example.test");
+        Source sApp1 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("1")
+                        .setEventTime(10)
+                        .setExpiryTime(20)
+                        .setAppDestinations(List.of(appDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sApp2 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("2")
+                        .setEventTime(140)
+                        .setExpiryTime(200)
+                        .setAppDestinations(List.of(appDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sApp3 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("3")
+                        .setEventTime(20)
+                        .setExpiryTime(50)
+                        .setAppDestinations(List.of(appDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sApp4 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("4")
+                        .setEventTime(16)
+                        .setExpiryTime(50)
+                        .setAppDestinations(List.of(appDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sWeb5 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("5")
+                        .setEventTime(13)
+                        .setExpiryTime(20)
+                        .setWebDestinations(List.of(webDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sWeb6 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("6")
+                        .setEventTime(14)
+                        .setExpiryTime(50)
+                        .setWebDestinations(List.of(webDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sAppWeb7 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("7")
+                        .setEventTime(10)
+                        .setExpiryTime(20)
+                        .setAppDestinations(List.of(appDestination))
+                        .setWebDestinations(List.of(webDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+        Source sAppWeb8 =
+                SourceFixture.getValidSourceBuilder()
+                        .setId("8")
+                        .setEventTime(15)
+                        .setExpiryTime(25)
+                        .setAppDestinations(List.of(appDestination))
+                        .setWebDestinations(List.of(webDestination))
+                        .setEnrollmentId(enrollmentId)
+                        .build();
+
+        List<Source> sources =
+                Arrays.asList(sApp1, sApp2, sApp3, sApp4, sWeb5, sWeb6, sAppWeb7, sAppWeb8);
+        sources.forEach(source -> insertInDb(db, source));
+
+        Function<Trigger, Optional<Source>> runFunc =
+                trigger -> {
+                    Optional<Source> result =
+                            DatastoreManagerFactory.getDatastoreManager(sContext)
+                                    .runInTransactionWithResult(
+                                            measurementDao ->
+                                                    measurementDao
+                                                            .getNearestDelayedMatchingActiveSource(
+                                                                    trigger))
+                                    .orElseThrow();
+                    return result;
+                };
+
+        // sApp1's eventTime <= Trigger Time
+        // Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW > sApp2's eventTime
+        // Trigger Time < sApp3's eventTime <= Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
+        // Trigger Time < sApp4's eventTime <= Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
+        // sWeb5 and sWeb6 don't have app destination
+        // sAppWeb7's eventTime <= Trigger Time
+        // Trigger Time < sAppWeb8's eventTime <= Trigger Time +
+        // MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
+        // Expected: Match with sAppWeb8
+        Trigger trigger1MatchSource8 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        Optional<Source> result1 = runFunc.apply(trigger1MatchSource8);
+        assertEquals(sAppWeb8.getId(), result1.get().getId());
+
+        // sApp1's eventTime <= Trigger Time
+        // Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW > sApp2's eventTime
+        // Trigger Time < sApp3's eventTime <= Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
+        // Trigger Time < sApp4's eventTime <= Trigger Time + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW
+        // sWeb5 and sWeb6 don't have app destination
+        // sAppWeb7's eventTime <= Trigger Time
+        // sAppWeb8's eventTime <= Trigger Time
+        // Expected: Match with sApp4
+        Trigger trigger2MatchSource4 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(15)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        Optional<Source> result2 = runFunc.apply(trigger2MatchSource4);
+        assertEquals(sApp4.getId(), result2.get().getId());
+
+        // sApp1's eventTime <= Trigger Time
+        // sApp2's eventTime <= Trigger Time
+        // sApp3's eventTime <= Trigger Time
+        // sApp4's eventTime <= Trigger Time
+        // sWeb5 and sWeb6 don't have app destination
+        // sAppWeb7's eventTime <= Trigger Time
+        // sAppWeb8's eventTime <= Trigger Time
+        // Expected: no match
+        Trigger trigger3NoMatchingSource =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(150)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        Optional<Source> result3 = runFunc.apply(trigger3NoMatchingSource);
+        assertFalse(result3.isPresent());
+    }
+
     private void insertInDb(SQLiteDatabase db, Source source) {
         ContentValues values = new ContentValues();
         values.put(SourceContract.ID, source.getId());
