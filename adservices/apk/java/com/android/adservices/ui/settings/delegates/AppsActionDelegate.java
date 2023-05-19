@@ -27,7 +27,6 @@ import androidx.lifecycle.Observer;
 
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
@@ -79,7 +78,7 @@ public class AppsActionDelegate {
                                 break;
                             case BLOCK_APP:
                                 UiStatsLogger.logBlockAppSelected(mAppsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockAppDialog(
                                                 mAppsActivity, mAppsViewModel, app);
@@ -93,7 +92,7 @@ public class AppsActionDelegate {
                                 break;
                             case RESET_APPS:
                                 UiStatsLogger.logResetAppSelected(mAppsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetAppDialog(
                                                 mAppsActivity, mAppsViewModel);
