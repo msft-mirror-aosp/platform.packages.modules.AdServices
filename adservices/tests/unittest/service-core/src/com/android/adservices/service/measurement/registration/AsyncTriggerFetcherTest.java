@@ -59,6 +59,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.util.AdIdEncryption;
 import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -158,6 +159,8 @@ public final class AsyncTriggerFetcherTest {
     private static final int UNKNOWN_STATUS = 0;
     private static final int SUCCESS_STATUS = 1;
     private static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
+    private static final String PLATFORM_AD_ID_VALUE = "SAMPLE_PLATFORM_AD_ID_VALUE";
+    private static final String DEBUG_AD_ID_VALUE = "SAMPLE_DEBUG_AD_ID_VALUE";
 
     AsyncTriggerFetcher mFetcher;
 
@@ -189,6 +192,7 @@ public final class AsyncTriggerFetcherTest {
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
         when(mFlags.getMeasurementDebugJoinKeyEnrollmentAllowlist())
                 .thenReturn(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("");
     }
 
     @After
@@ -4301,12 +4305,188 @@ public final class AsyncTriggerFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
+    @Test
+    public void fetchTrigger_appRegistrationWithAdId_encodedAdIdAddedToTrigger() throws Exception {
+        RegistrationRequest request = buildRequestWithAdId(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{\"event_trigger_data\":"
+                                + EVENT_TRIGGERS_1
+                                + ",\"debug_key\":\""
+                                + DEBUG_KEY
+                                + "\"}"));
+
+        when(mUrlConnection.getHeaderFields()).thenReturn(headersRequest);
+
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequestWithAdId(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_KEY, result.getDebugKey());
+        verify(mUrlConnection).setRequestMethod("POST");
+
+        String expectedAdIdHash =
+                AdIdEncryption.encryptAdIdAndEnrollmentSha256(PLATFORM_AD_ID_VALUE, ENROLLMENT_ID);
+        assertEquals(expectedAdIdHash, result.getPlatformAdId());
+    }
+
+    @Test
+    public void fetchWebTrigger_withDebugAdIdValue_getsParsed() throws IOException, JSONException {
+        // Setup
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + ", \"debug_ad_id\": \""
+                                + DEBUG_AD_ID_VALUE
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertEquals(DEBUG_AD_ID_VALUE, result.getDebugAdId());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTrigger_withDebugAdIdValue_enrollmentBlockListed_doesNotGetParsed()
+            throws IOException, JSONException {
+        // Setup
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist())
+                .thenReturn(ENROLLMENT_ID);
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + ", \"debug_ad_id\": \""
+                                + DEBUG_AD_ID_VALUE
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertNull(result.getDebugAdId());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchWebTrigger_withDebugAdIdValue_blockListMatchesAll_doesNotGetParsed()
+            throws IOException, JSONException {
+        // Setup
+        when(mFlags.getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist()).thenReturn("*");
+        WebTriggerRegistrationRequest request =
+                buildWebTriggerRegistrationRequest(
+                        Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
+        doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
+        when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mFlags.getWebContextClientAppAllowList()).thenReturn("");
+        Map<String, List<String>> headersRequest = new HashMap<>();
+        headersRequest.put(
+                "Attribution-Reporting-Register-Trigger",
+                List.of(
+                        "{"
+                                + "\"event_trigger_data\": "
+                                + EVENT_TRIGGERS_1
+                                + ", \"debug_key\": \""
+                                + DEBUG_KEY
+                                + "\""
+                                + ", \"debug_ad_id\": \""
+                                + DEBUG_AD_ID_VALUE
+                                + "\""
+                                + "}"));
+        when(mUrlConnection1.getHeaderFields()).thenReturn(headersRequest);
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        webTriggerRegistrationRequest(request, true),
+                        asyncFetchStatus,
+                        asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Trigger result = fetch.get();
+        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
+        assertNull(result.getDebugAdId());
+        verify(mUrlConnection1).setRequestMethod("POST");
+    }
+
     private RegistrationRequest buildRequest(String triggerUri) {
         return new RegistrationRequest.Builder(
                         RegistrationRequest.REGISTER_TRIGGER,
                         Uri.parse(triggerUri),
                         CONTEXT.getAttributionSource().getPackageName(),
                         SDK_PACKAGE_NAME)
+                .build();
+    }
+
+    private RegistrationRequest buildRequestWithAdId(String triggerUri) {
+        return new RegistrationRequest.Builder(
+                        RegistrationRequest.REGISTER_TRIGGER,
+                        Uri.parse(triggerUri),
+                        CONTEXT.getAttributionSource().getPackageName(),
+                        SDK_PACKAGE_NAME)
+                .setAdIdPermissionGranted(true)
+                .setAdIdValue(PLATFORM_AD_ID_VALUE)
                 .build();
     }
 
@@ -4352,7 +4532,50 @@ public final class AsyncTriggerFetcherTest {
                 null,
                 System.currentTimeMillis(),
                 0,
-                false);
+                false,
+                false,
+                null);
+    }
+
+    private static AsyncRegistration appTriggerRegistrationRequestWithAdId(
+            RegistrationRequest registrationRequest) {
+        // Necessary for testing
+        String enrollmentId = "";
+        if (EnrollmentDao.getInstance(CONTEXT)
+                        .getEnrollmentDataFromMeasurementUrl(
+                                registrationRequest
+                                        .getRegistrationUri()
+                                        .buildUpon()
+                                        .clearQuery()
+                                        .build())
+                != null) {
+            enrollmentId =
+                    EnrollmentDao.getInstance(CONTEXT)
+                            .getEnrollmentDataFromMeasurementUrl(
+                                    registrationRequest
+                                            .getRegistrationUri()
+                                            .buildUpon()
+                                            .clearQuery()
+                                            .build())
+                            .getEnrollmentId();
+        }
+        return createAsyncRegistration(
+                UUID.randomUUID().toString(),
+                registrationRequest.getRegistrationUri(),
+                null,
+                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                null,
+                Uri.parse(ANDROID_APP_SCHEME_URI_PREFIX + CONTEXT.getPackageName()),
+                registrationRequest.getRegistrationType() == RegistrationRequest.REGISTER_SOURCE
+                        ? AsyncRegistration.RegistrationType.APP_SOURCE
+                        : AsyncRegistration.RegistrationType.APP_TRIGGER,
+                null,
+                System.currentTimeMillis(),
+                0,
+                false,
+                true,
+                PLATFORM_AD_ID_VALUE);
     }
 
     private static AsyncRegistration webTriggerRegistrationRequest(
@@ -4395,7 +4618,9 @@ public final class AsyncTriggerFetcherTest {
                     null,
                     System.currentTimeMillis(),
                     0,
-                    arDebugPermission);
+                    arDebugPermission,
+                    false,
+                    null);
         }
         return null;
     }
@@ -4412,7 +4637,9 @@ public final class AsyncTriggerFetcherTest {
             Source.SourceType sourceType,
             long mRequestTime,
             long mRetryCount,
-            boolean debugKeyAllowed) {
+            boolean debugKeyAllowed,
+            boolean adIdPermission,
+            String adIdValue) {
         return new AsyncRegistration.Builder()
                 .setId(iD)
                 .setRegistrationUri(registrationUri)
@@ -4427,6 +4654,8 @@ public final class AsyncTriggerFetcherTest {
                 .setRetryCount(mRetryCount)
                 .setDebugKeyAllowed(debugKeyAllowed)
                 .setRegistrationId(UUID.randomUUID().toString())
+                .setAdIdPermission(adIdPermission)
+                .setPlatformAdId(adIdValue)
                 .build();
     }
 
