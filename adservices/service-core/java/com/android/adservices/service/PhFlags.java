@@ -1966,7 +1966,7 @@ public final class PhFlags implements Flags {
             return false;
         }
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_FEATURE_ENABLED),
                 /* defaultValue */ DeviceConfig.getBoolean(
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
