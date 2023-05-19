@@ -725,4 +725,14 @@
     <public type="string" name="notificationUI_how_it_works_row_body6_v2" id="0x7f017d3c" />
     <public type="string" name="notificationUI_how_it_works_row_body7_v2" id="0x7f017d3b" />
     <public type="string" name="notificationUI_next_button_text" id="0x7f017d3a" />
+    <public type="string" name="notificationUI_u18_notification_title" id="0x7f017d39" />
+    <public type="string" name="notificationUI_u18_notification_content" id="0x7f017d38" />
+    <public type="string" name="notificationUI_u18_header_title" id="0x7f017d37" />
+    <public type="string" name="notificationUI_u18_body1" id="0x7f017d36" />
+    <public type="string" name="notificationUI_u18_body2" id="0x7f017d35" />
+    <public type="string" name="notificationUI_u18_body3" id="0x7f017d34" />
+    <public type="string" name="notificationUI_u18_left_control_button_text" id="0x7f017d33" />
+    <public type="string" name="notificationUI_u18_right_control_button_text" id="0x7f017d32" />
+    <public type="string" name="settingsUI_u18_measurement_view_title" id="0x7f017d31" />
+    <public type="string" name="settingsUI_u18_main_view_measurement_info" id="0x7f017d30" />
 </resources>
