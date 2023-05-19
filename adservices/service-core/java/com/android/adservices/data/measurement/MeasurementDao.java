@@ -1488,13 +1488,6 @@ class MeasurementDao implements IMeasurementDao {
         validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        // Handle no-op case
-        // Preserving everything => Do Nothing
-        if (domains.isEmpty()
-                && origins.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            return ImmutableList.of();
-        }
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
         Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
@@ -1541,13 +1534,6 @@ class MeasurementDao implements IMeasurementDao {
         validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        // Handle no-op case
-        // Preserving everything => Do Nothing
-        if (domains.isEmpty()
-                && origins.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            return ImmutableList.of();
-        }
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
         Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
@@ -1610,15 +1596,16 @@ class MeasurementDao implements IMeasurementDao {
             List<Uri> origins,
             List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior) {
-        if (origins.isEmpty()
-                && domains.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            throw new IllegalStateException("No-op conditions");
-        }
 
         return (String columnName) -> {
             if (origins.isEmpty() && domains.isEmpty()) {
-                return "";
+                if (matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
+                    // MATCH EVERYTHING
+                    return "";
+                } else {
+                    // MATCH NOTHING
+                    return columnName + " IN ()";
+                }
             }
             StringBuilder whereBuilder = new StringBuilder();
             boolean started = false;
