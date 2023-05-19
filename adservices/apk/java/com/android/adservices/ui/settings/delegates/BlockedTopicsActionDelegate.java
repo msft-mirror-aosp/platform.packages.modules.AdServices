@@ -25,7 +25,6 @@ import androidx.lifecycle.Observer;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
@@ -66,7 +65,7 @@ public class BlockedTopicsActionDelegate {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
                             UiStatsLogger.logUnblockTopicSelected(mBlockedTopicsActivity);
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
-                            if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                            if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                 if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                     DialogFragmentManager.showUnblockTopicDialog(
                                             mBlockedTopicsActivity, topic);
