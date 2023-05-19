@@ -6209,7 +6209,8 @@ public class MeasurementDaoTest {
                 .runInTransaction(
                         dao -> {
                             // --- DELETE behaviour ---
-                            // 1,2,3 & 4 are match registrant1
+                            // Delete Nothing
+                            // No matches
                             List<String> actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
@@ -6218,7 +6219,7 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(4, actualSources.size());
+                            assertEquals(0, actualSources.size());
 
                             // 1 & 2 match registrant1 and "https://subdomain1.site1.test" publisher
                             // origin
@@ -6274,8 +6275,8 @@ public class MeasurementDaoTest {
                             assertEquals(2, actualSources.size());
 
                             // --- PRESERVE (anti-match exception registrant) behaviour ---
-                            // all registrant1 registrant based sources are matched to returns 0 as
-                            // anti-match
+                            // Preserve Nothing
+                            // 1,2,3 & 4 are match registrant1
                             actualSources =
                                     dao.fetchMatchingSources(
                                             Uri.parse("android-app://com.registrant1"),
@@ -6284,7 +6285,7 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(0, actualSources.size());
+                            assertEquals(4, actualSources.size());
 
                             // 3 & 4 match registrant1 and don't match
                             // "https://subdomain1.site1.test" publisher origin
@@ -6407,7 +6408,8 @@ public class MeasurementDaoTest {
                 .runInTransaction(
                         dao -> {
                             // --- DELETE behaviour ---
-                            // 1,2,3 & 4 are match registrant1
+                            // Delete Nothing
+                            // No Matches
                             List<String> actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
@@ -6416,7 +6418,7 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_DELETE);
-                            assertEquals(4, actualSources.size());
+                            assertEquals(0, actualSources.size());
 
                             // 1 & 2 match registrant1 and "https://subdomain1.site1.test" publisher
                             // origin
@@ -6472,8 +6474,8 @@ public class MeasurementDaoTest {
                             assertEquals(2, actualSources.size());
 
                             // --- PRESERVE (anti-match exception registrant) behaviour ---
-                            // all registrant1 registrant based sources are matched to returns 0 as
-                            // anti-match
+                            // Preserve Nothing
+                            // 1,2,3 & 4 are match registrant1
                             actualSources =
                                     dao.fetchMatchingTriggers(
                                             Uri.parse("android-app://com.registrant1"),
@@ -6482,7 +6484,7 @@ public class MeasurementDaoTest {
                                             List.of(),
                                             List.of(),
                                             DeletionRequest.MATCH_BEHAVIOR_PRESERVE);
-                            assertEquals(0, actualSources.size());
+                            assertEquals(4, actualSources.size());
 
                             // 3 & 4 match registrant1 and don't match
                             // "https://subdomain1.site1.test" publisher origin
