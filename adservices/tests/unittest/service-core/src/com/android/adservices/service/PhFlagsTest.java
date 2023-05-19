@@ -204,6 +204,7 @@ import static com.android.adservices.service.Flags.UI_DIALOG_FRAGMENT;
 import static com.android.adservices.service.Flags.UI_EEA_COUNTRIES;
 import static com.android.adservices.service.Flags.UI_FEATURE_TYPE_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.PhFlags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.PhFlags.DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.PhFlags.DEFAULT_U18_UX_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_ADID_KILL_SWITCH;
@@ -230,6 +231,7 @@ import static com.android.adservices.service.PhFlags.KEY_DISABLE_TOPICS_ENROLLME
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_MAX_DOWNLOAD_THREADS;
 import static com.android.adservices.service.PhFlags.KEY_DOWNLOADER_READ_TIMEOUT_MS;
+import static com.android.adservices.service.PhFlags.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED;
@@ -5355,5 +5357,22 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getU18UxEnabled()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnableAdServicesSystemApi() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getEnableAdServicesSystemApi())
+                .isEqualTo(DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
+
+        boolean phOverridingValue = !DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getEnableAdServicesSystemApi()).isEqualTo(phOverridingValue);
     }
 }
