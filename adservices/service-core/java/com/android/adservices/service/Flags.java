@@ -2209,4 +2209,12 @@ public interface Flags {
     default boolean getU18UxEnabled() {
         return DEFAULT_U18_UX_ENABLED;
     }
+
+    /** Default enableAdServices system API feature flag.. */
+    boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
+
+    /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi() {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
 }
