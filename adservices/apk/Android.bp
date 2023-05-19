@@ -126,7 +126,7 @@ android_app {
 android_library {
     name: "adservices-assets",
     sdk_version: "module_current",
-    min_sdk_version: "31",
+    min_sdk_version: "30",
     static_libs: [
         "androidx-constraintlayout_constraintlayout",
         "SettingsLibSettingsTheme",
@@ -140,7 +140,7 @@ android_library {
     ],
     // Must use EmptyManifest.xml since "adservices-assets" will also be used by the
     // service-core tests. If we use the normal "AndroidManifest.xml", we will redeclare permissions
-    // in the tests
+    // in the tests.
     // See b/228270294 for the error about duplicated permissions.
     manifest: "EmptyManifest.xml",
 }

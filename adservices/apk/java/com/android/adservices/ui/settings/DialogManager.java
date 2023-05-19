@@ -17,8 +17,8 @@ package com.android.adservices.ui.settings;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnDismissListener;
 import android.os.Build;
 import android.widget.Toast;
 
@@ -234,7 +234,7 @@ public class DialogManager {
         return (dialogInterface, buttonId) -> sSemaphore.release();
     }
 
-    private static DialogInterface.OnDismissListener getOnDismissListener() {
+    private static OnDismissListener getOnDismissListener() {
         return dialogInterface -> sSemaphore.release();
     }
 }

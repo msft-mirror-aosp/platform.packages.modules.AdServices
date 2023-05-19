@@ -324,4 +324,30 @@ public class FledgeAuthorizationFilterTest {
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
     }
+
+    @Test
+    public void testAdTechNotEnrolled_throwSecurityException() {
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(null);
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mChecker.assertAdTechEnrolled(
+                                CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
+    }
+
+    @Test
+    public void testAdTechEnrolled_isEnrolled() {
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(ENROLLMENT_DATA);
+
+        mChecker.assertAdTechEnrolled(CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
+
+        verify(mEnrollmentDao)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
+        verifyNoMoreInteractions(mEnrollmentDao);
+    }
 }

@@ -21,12 +21,15 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
-import static com.android.adservices.service.measurement.attribution.TriggerContentProvider.TRIGGER_URI;
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -57,12 +60,17 @@ import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
+import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationContentProvider;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +92,7 @@ public final class MeasurementImplTest {
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
+
     private static final Context DEFAULT_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Uri DEFAULT_URI = Uri.parse("android-app://com.example.abc");
     private static final Uri REGISTRATION_URI_1 = WebUtil.validUri("https://foo.test/bar?ad=134");
@@ -113,22 +122,21 @@ public final class MeasurementImplTest {
     private DatastoreManager mDatastoreManager =
             new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest());
 
-    @Mock
-    private ContentProviderClient mMockContentProviderClient;
-    @Mock
-    private ContentResolver mContentResolver;
+    @Mock private ContentProviderClient mMockContentProviderClient;
+    @Mock private ContentResolver mContentResolver;
     @Mock private ClickVerifier mClickVerifier;
     private MeasurementImpl mMeasurementImpl;
-    @Mock
-    EnrollmentDao mEnrollmentDao;
+    @Mock EnrollmentDao mEnrollmentDao;
     @Mock MeasurementDataDeleter mMeasurementDataDeleter;
 
     private static EnrollmentData getEnrollment(String enrollmentId) {
         return new EnrollmentData.Builder().setEnrollmentId(enrollmentId).build();
     }
+
     public static InputEvent getInputEvent() {
         return MotionEvent.obtain(0, 0, ACTION_BUTTON_PRESS, 0, 0, 0);
     }
+
     private static WebTriggerRegistrationRequestInternal createWebTriggerRegistrationRequest(
             Uri destination) {
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -143,11 +151,13 @@ public final class MeasurementImplTest {
                         SDK_PACKAGE_NAME)
                 .build();
     }
+
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
             Uri appDestination, Uri webDestination, Uri verifiedDestination) {
         return createWebSourceRegistrationRequest(
                 appDestination, webDestination, verifiedDestination, DEFAULT_URI);
     }
+
     private static WebSourceRegistrationRequestInternal createWebSourceRegistrationRequest(
             Uri appDestination, Uri webDestination, Uri verifiedDestination, Uri topOriginUri) {
         WebSourceRegistrationRequest sourceRegistrationRequest =
@@ -166,12 +176,20 @@ public final class MeasurementImplTest {
                         REQUEST_TIME)
                 .build();
     }
+
     @Before
     public void before() throws RemoteException {
         MockitoAnnotations.initMocks(this);
-        when(mContentResolver.acquireContentProviderClient(TRIGGER_URI))
+        when(mContentResolver.acquireContentProviderClient(TriggerContentProvider.TRIGGER_URI))
                 .thenReturn(mMockContentProviderClient);
-        when(mMockContentProviderClient.insert(any(), any())).thenReturn(TRIGGER_URI);
+        when(mContentResolver.acquireContentProviderClient(
+                        AsyncRegistrationContentProvider.TRIGGER_URI))
+                .thenReturn(mMockContentProviderClient);
+        when(mMockContentProviderClient.insert(eq(TriggerContentProvider.TRIGGER_URI), any()))
+                .thenReturn(TriggerContentProvider.TRIGGER_URI);
+        when(mMockContentProviderClient.insert(
+                        eq(AsyncRegistrationContentProvider.TRIGGER_URI), any()))
+                .thenReturn(AsyncRegistrationContentProvider.TRIGGER_URI);
         mMeasurementImpl =
                 spy(
                         new MeasurementImpl(
@@ -179,7 +197,7 @@ public final class MeasurementImplTest {
                                 mDatastoreManager,
                                 mClickVerifier,
                                 mMeasurementDataDeleter,
-                                mEnrollmentDao));
+                                mContentResolver));
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
         when(mEnrollmentDao.getEnrollmentDataFromMeasurementUrl(any()))
                 .thenReturn(getEnrollment(DEFAULT_ENROLLMENT));
@@ -193,7 +211,7 @@ public final class MeasurementImplTest {
                         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest()),
                         mClickVerifier,
                         mMeasurementDataDeleter,
-                        mEnrollmentDao);
+                        mContentResolver);
         doReturn(true).when(mMeasurementDataDeleter).delete(any());
         final int result =
                 measurement.deleteRegistrations(
@@ -272,7 +290,7 @@ public final class MeasurementImplTest {
                                 .setDeletionMode(DeletionRequest.DELETION_MODE_ALL)
                                 .build());
         assertEquals(STATUS_INTERNAL_ERROR, result);
-        }
+    }
 
     @Test
     public void testRegisterWebSource_invalidWebDestination() {
@@ -293,6 +311,7 @@ public final class MeasurementImplTest {
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
+
     @Test
     public void testRegisterWebSource_verifiedDestination_appDestinationMismatch() {
         final int result =
@@ -303,6 +322,7 @@ public final class MeasurementImplTest {
                         System.currentTimeMillis());
         assertEquals(STATUS_INVALID_ARGUMENT, result);
     }
+
     @Test
     public void testGetSourceType_verifiedInputEvent_returnsNavigationSourceType() {
         doReturn(true).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
@@ -310,10 +330,12 @@ public final class MeasurementImplTest {
                 Source.SourceType.NAVIGATION,
                 mMeasurementImpl.getSourceType(getInputEvent(), 1000L));
     }
+
     @Test
     public void testGetSourceType_noInputEventGiven() {
         assertEquals(Source.SourceType.EVENT, mMeasurementImpl.getSourceType(null, 1000L));
     }
+
     @Test
     public void testGetSourceType_inputEventNotVerifiable_returnsEventSourceType() {
         doReturn(false).when(mClickVerifier).isInputEventVerifiable(any(), anyLong());
@@ -341,7 +363,7 @@ public final class MeasurementImplTest {
                             mDatastoreManager,
                             mockClickVerifier,
                             mMeasurementDataDeleter,
-                            mEnrollmentDao);
+                            mContentResolver);
 
             // Because click verification is disabled, the SourceType is NAVIGATION even if the
             // input event is not verifiable.
@@ -357,6 +379,7 @@ public final class MeasurementImplTest {
 
     @Test
     public void testDeleteRegistrations_success_recordsDeletionInSystemServer() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -364,37 +387,88 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        doReturn(true).when(mMeasurementDataDeleter).delete(any());
-        measurement.deleteRegistrations(
-                new DeletionParam.Builder(
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                Instant.ofEpochMilli(Long.MIN_VALUE),
-                                Instant.ofEpochMilli(Long.MAX_VALUE),
-                                DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
-                        .build());
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            doReturn(true).when(mMeasurementDataDeleter).delete(any());
+            measurement.deleteRegistrations(
+                    new DeletionParam.Builder(
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Instant.ofEpochMilli(Long.MIN_VALUE),
+                                    Instant.ofEpochMilli(Long.MAX_VALUE),
+                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    SDK_PACKAGE_NAME)
+                            .build());
 
-        Mockito.verify(mockAdServicesManager, Mockito.times(1))
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+            Mockito.verify(mockAdServicesManager)
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        session.finishMocking();
+    @Test
+    public void testDeleteRegistrations_success_recordsDeletionInAppSearch() {
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
+
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+
+            AppSearchMeasurementRollbackManager mockRollbackManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockRollbackManager)
+                    .when(
+                            () ->
+                                    AppSearchMeasurementRollbackManager.getInstance(
+                                            any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            doReturn(true).when(mMeasurementDataDeleter).delete(any());
+            measurement.deleteRegistrations(
+                    new DeletionParam.Builder(
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Instant.ofEpochMilli(Long.MIN_VALUE),
+                                    Instant.ofEpochMilli(Long.MAX_VALUE),
+                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    SDK_PACKAGE_NAME)
+                            .build());
+
+            Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
+
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
@@ -406,41 +480,93 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(true).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(true).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        doReturn(true).when(mMeasurementDataDeleter).delete(any());
-        measurement.deleteRegistrations(
-                new DeletionParam.Builder(
-                                Collections.emptyList(),
-                                Collections.emptyList(),
-                                Instant.ofEpochMilli(Long.MIN_VALUE),
-                                Instant.ofEpochMilli(Long.MAX_VALUE),
-                                DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
-                                SDK_PACKAGE_NAME)
-                        .build());
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            doReturn(true).when(mMeasurementDataDeleter).delete(any());
+            measurement.deleteRegistrations(
+                    new DeletionParam.Builder(
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Instant.ofEpochMilli(Long.MIN_VALUE),
+                                    Instant.ofEpochMilli(Long.MAX_VALUE),
+                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    SDK_PACKAGE_NAME)
+                            .build());
 
-        Mockito.verify(mockAdServicesManager, Mockito.never())
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+            Mockito.verify(mockAdServicesManager, Mockito.never())
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        session.finishMocking();
+    @Test
+    public void testDeleteRegistrations_success_recordsDeletionInAppSearch_flagOff() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .mockStatic(AppSearchMeasurementRollbackManager.class)
+                        .mockStatic(SdkLevel.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+            Flags mockFlags = Mockito.mock(Flags.class);
+
+            doReturn(true).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+
+            AppSearchMeasurementRollbackManager mockRollbackManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockRollbackManager)
+                    .when(
+                            () ->
+                                    AppSearchMeasurementRollbackManager.getInstance(
+                                            any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            doReturn(true).when(mMeasurementDataDeleter).delete(any());
+            measurement.deleteRegistrations(
+                    new DeletionParam.Builder(
+                                    Collections.emptyList(),
+                                    Collections.emptyList(),
+                                    Instant.ofEpochMilli(Long.MIN_VALUE),
+                                    Instant.ofEpochMilli(Long.MAX_VALUE),
+                                    DEFAULT_CONTEXT.getAttributionSource().getPackageName(),
+                                    SDK_PACKAGE_NAME)
+                            .build());
+
+            Mockito.verify(mockRollbackManager, Mockito.never()).recordAdServicesDeletionOccurred();
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
     public void testDeletePackageRecords_success_recordsDeletionInSystemServer() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -448,31 +574,75 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+            doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        measurement.deletePackageRecords(DEFAULT_URI);
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deletePackageRecords(DEFAULT_URI);
 
-        Mockito.verify(mockAdServicesManager, Mockito.times(1))
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+            Mockito.verify(mockAdServicesManager)
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        session.finishMocking();
+    @Test
+    public void testDeletePackageRecords_success_recordsDeletionInAppSearch() {
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
+
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+
+            AppSearchMeasurementRollbackManager mockRollbackManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockRollbackManager)
+                    .when(
+                            () ->
+                                    AppSearchMeasurementRollbackManager.getInstance(
+                                            any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+            doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deletePackageRecords(DEFAULT_URI);
+
+            Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
@@ -484,35 +654,38 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(false)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+            doReturn(Optional.of(false)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        measurement.deletePackageRecords(DEFAULT_URI);
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deletePackageRecords(DEFAULT_URI);
 
-        Mockito.verify(mockAdServicesManager, Mockito.never())
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
-
-        session.finishMocking();
+            Mockito.verify(mockAdServicesManager, Mockito.never())
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
     public void testDeleteAllMeasurementData_success_recordsDeletionInSystemServer() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
@@ -520,64 +693,151 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        measurement.deleteAllMeasurementData(Collections.EMPTY_LIST);
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deleteAllMeasurementData(Collections.EMPTY_LIST);
 
-        Mockito.verify(mockAdServicesManager, Mockito.times(1))
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+            Mockito.verify(mockAdServicesManager)
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        session.finishMocking();
+    @Test
+    public void testDeleteAllMeasurementData_success_recordsDeletionInAppSearch() {
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
+
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+
+            AppSearchMeasurementRollbackManager mockRollbackManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockRollbackManager)
+                    .when(
+                            () ->
+                                    AppSearchMeasurementRollbackManager.getInstance(
+                                            any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deleteAllMeasurementData(Collections.EMPTY_LIST);
+
+            Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
+
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
     public void testDeleteAllUninstalledMeasurementData_success_recordsDeletionInSystemServer() {
+        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MockitoSession session =
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(AdServicesManager.class)
                         .strictness(Strictness.LENIENT)
                         .startMocking();
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deleteAllUninstalledMeasurementData();
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        measurement.deleteAllUninstalledMeasurementData();
+            Mockito.verify(mockAdServicesManager)
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        Mockito.verify(mockAdServicesManager, Mockito.times(1))
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    @Test
+    public void testDeleteAllUninstalledMeasurementData_success_recordsDeletionInAppSearch() {
+        Assume.assumeTrue(!SdkLevel.isAtLeastT());
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
 
-        session.finishMocking();
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
+
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+
+            AppSearchMeasurementRollbackManager mockRollbackManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockRollbackManager)
+                    .when(
+                            () ->
+                                    AppSearchMeasurementRollbackManager.getInstance(
+                                            any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+            doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deleteAllUninstalledMeasurementData();
+
+            Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
+        } finally {
+            session.finishMocking();
+        }
     }
 
     @Test
@@ -589,30 +849,177 @@ public final class MeasurementImplTest {
                         .strictness(Strictness.LENIENT)
                         .startMocking();
 
-        Flags mockFlags = Mockito.mock(Flags.class);
+        try {
+            Flags mockFlags = Mockito.mock(Flags.class);
 
-        doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
-        ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(() -> FlagsFactory.getFlags());
 
-        AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
-        ExtendedMockito.doReturn(mockAdServicesManager)
-                .when(() -> AdServicesManager.getInstance(any()));
+            AdServicesManager mockAdServicesManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockAdServicesManager)
+                    .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(false)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+            doReturn(Optional.of(false)).when(mDatastoreManager).runInTransactionWithResult(any());
+            doReturn(true).when(mDatastoreManager).runInTransaction(any());
 
-        MeasurementImpl measurement =
-                new MeasurementImpl(
-                        DEFAULT_CONTEXT,
-                        mDatastoreManager,
-                        mClickVerifier,
-                        mMeasurementDataDeleter,
-                        mEnrollmentDao);
-        measurement.deleteAllUninstalledMeasurementData();
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            measurement.deleteAllUninstalledMeasurementData();
 
-        Mockito.verify(mockAdServicesManager, Mockito.never())
-                .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+            Mockito.verify(mockAdServicesManager, Mockito.never())
+                    .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+        } finally {
+            session.finishMocking();
+        }
+    }
 
-        session.finishMocking();
+    @Test
+    public void testCheckIfNeedsToHandleReconciliation() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+
+            Flags mockFlags = Mockito.mock(Flags.class);
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+
+            AppSearchMeasurementRollbackManager mockManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockManager)
+                    .when(() -> AppSearchMeasurementRollbackManager.getInstance(any(), anyInt()));
+
+            doReturn(false).when(mockManager).needsToHandleRollbackReconciliation();
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            assertThat(measurement.checkIfNeedsToHandleReconciliation()).isFalse();
+            Mockito.verify(mockManager).needsToHandleRollbackReconciliation();
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testCheckIfNeedsToHandleReconciliation_clearsData() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+
+            Flags mockFlags = Mockito.mock(Flags.class);
+            doReturn(false).when(mockFlags).getMeasurementRollbackDeletionKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+
+            AppSearchMeasurementRollbackManager mockManager =
+                    Mockito.mock(AppSearchMeasurementRollbackManager.class);
+            ExtendedMockito.doReturn(mockManager)
+                    .when(() -> AppSearchMeasurementRollbackManager.getInstance(any(), anyInt()));
+
+            doReturn(true).when(mockManager).needsToHandleRollbackReconciliation();
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            assertThat(measurement.checkIfNeedsToHandleReconciliation()).isTrue();
+            Mockito.verify(mockManager).needsToHandleRollbackReconciliation();
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testCheckIfNeedsToHandleReconciliation_flagOff() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AppSearchMeasurementRollbackManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            ExtendedMockito.doReturn(false).when(SdkLevel::isAtLeastT);
+
+            Flags mockFlags = Mockito.mock(Flags.class);
+            doReturn(true).when(mockFlags).getMeasurementRollbackDeletionAppSearchKillSwitch();
+            ExtendedMockito.doReturn(mockFlags).when(FlagsFactory::getFlags);
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+            assertThat(measurement.checkIfNeedsToHandleReconciliation()).isFalse();
+            ExtendedMockito.verify(
+                    () -> AppSearchMeasurementRollbackManager.getInstance(any(), anyInt()),
+                    never());
+        } finally {
+            session.finishMocking();
+        }
+    }
+
+    @Test
+    public void testCheckIfNeedsToHandleReconciliation_TPlus() {
+        MockitoSession session =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkLevel.class)
+                        .spyStatic(FlagsFactory.class)
+                        .spyStatic(AdServicesManager.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+
+        try {
+            ExtendedMockito.doReturn(true).when(SdkLevel::isAtLeastT);
+
+            AdServicesManager mockManager = Mockito.mock(AdServicesManager.class);
+            ExtendedMockito.doReturn(mockManager).when(() -> AdServicesManager.getInstance(any()));
+
+            doReturn(true).when(mockManager).needsToHandleRollbackReconciliation(anyInt());
+
+            MeasurementImpl measurement =
+                    new MeasurementImpl(
+                            DEFAULT_CONTEXT,
+                            mDatastoreManager,
+                            mClickVerifier,
+                            mMeasurementDataDeleter,
+                            mContentResolver);
+
+            assertThat(measurement.checkIfNeedsToHandleReconciliation()).isTrue();
+            Mockito.verify(mockManager)
+                    .needsToHandleRollbackReconciliation(
+                            eq(AdServicesManager.MEASUREMENT_DELETION));
+
+            // Verify that the code doesn't accidentally fall through into the Android S part.
+            ExtendedMockito.verify(FlagsFactory::getFlags, never());
+        } finally {
+            session.finishMocking();
+        }
     }
 }

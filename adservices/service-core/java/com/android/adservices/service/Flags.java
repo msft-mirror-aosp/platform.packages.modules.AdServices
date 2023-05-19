@@ -26,6 +26,8 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -139,7 +141,7 @@ public interface Flags {
     }
 
     /** Threshold value for classification values. */
-    float CLASSIFIER_THRESHOLD = 0.1f;
+    float CLASSIFIER_THRESHOLD = 0.2f;
 
     /** Returns the threshold value for classification values. */
     default float getClassifierThreshold() {
@@ -298,11 +300,118 @@ public interface Flags {
         return MEASUREMENT_ENABLE_XNA;
     }
 
+    boolean MEASUREMENT_ENABLE_DEBUG_REPORT = true;
+
+    /** Returns whether verbose debug report generation is enabled. */
+    default boolean getMeasurementEnableDebugReport() {
+        return MEASUREMENT_ENABLE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT = true;
+
+    /** Returns whether source debug report generation is enabled. */
+    default boolean getMeasurementEnableSourceDebugReport() {
+        return MEASUREMENT_ENABLE_SOURCE_DEBUG_REPORT;
+    }
+
+    boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT = true;
+
+    /** Returns whether trigger debug report generation is enabled. */
+    default boolean getMeasurementEnableTriggerDebugReport() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT;
+    }
+
     long MEASUREMENT_DATA_EXPIRY_WINDOW_MS = TimeUnit.DAYS.toMillis(37);
 
     /** Returns the data expiry window in milliseconds. */
     default long getMeasurementDataExpiryWindowMs() {
         return MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+    }
+
+    int MEASUREMENT_MAX_REGISTRATION_REDIRECTS = 20;
+
+    /** Returns the number of maximum registration redirects allowed. */
+    default int getMeasurementMaxRegistrationRedirects() {
+        return MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
+    }
+
+    int MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION = 100;
+
+    /** Returns the number of maximum registration per job invocation. */
+    default int getMeasurementMaxRegistrationsPerJobInvocation() {
+        return MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
+    }
+
+    int MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST = 5;
+
+    /** Returns the number of maximum retires per registration request. */
+    default int getMeasurementMaxRetriesPerRegistrationRequest() {
+        return MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
+
+    /**
+     * Returns the delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_DELAY_MS;
+    }
+
+    long MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    /**
+     * Returns the maximum delay (in milliseconds) in job triggering after a registration request is
+     * received.
+     */
+    default long getMeasurementRegistrationJobTriggerMaxDelayMs() {
+        return MEASUREMENT_REGISTRATION_JOB_TRIGGER_MAX_DELAY_MS;
+    }
+
+    boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /** Returns the kill switch for Attribution Fallback Job . */
+    default boolean getMeasurementAttributionFallbackJobKillSwitch() {
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+    }
+
+    long MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS = TimeUnit.HOURS.toMillis(1);
+
+    /** Returns the job period in millis for Attribution Fallback Job . */
+    default long getMeasurementAttributionFallbackJobPeriodMs() {
+        return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
+
+    /**
+     * Returns max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+        return MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE = 100;
+
+    /**
+     * Returns max distinct advertisers with pending impressions per { Publisher X Enrollment X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctDestinationsInActiveSource() {
+        return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -528,6 +637,22 @@ public interface Flags {
         return FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
     }
 
+    int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT = 1000;
+    int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT = 950;
+
+    /** Returns the maximum allowed number of events in the frequency cap histogram table. */
+    default int getFledgeAdCounterHistogramAbsoluteMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
+    }
+
+    /**
+     * Returns the number of events that the frequency cap histogram table should be trimmed to, if
+     * there are too many entries.
+     */
+    default int getFledgeAdCounterHistogramLowerMaxEventCount() {
+        return FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
+    }
+
     int FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT = 6;
 
     /** Returns the number of CA that can be bid in parallel for one Ad Selection */
@@ -545,7 +670,7 @@ public interface Flags {
     long FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS = 10000;
     long FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS = 20_000;
     long FLEDGE_AD_SELECTION_OFF_DEVICE_OVERALL_TIMEOUT_MS = 10_000;
-    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 3;
+    long FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION = 2L;
 
     long FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS = 2000;
 
@@ -671,7 +796,7 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED;
     }
 
-    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = true;
+    boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
 
     /** @return whether to call trusted servers for off device ad selection. */
     default boolean getFledgeAdSelectionPrebuiltUriEnabled() {
@@ -689,6 +814,13 @@ public interface Flags {
 
     default boolean getAdServicesEnabled() {
         return ADSERVICES_ENABLED;
+    }
+
+    boolean ADSERVICES_ERROR_LOGGING_ENABLED = false;
+
+    /** Return {@code true} if error logging is enabled */
+    default boolean getAdServicesErrorLoggingEnabled() {
+        return ADSERVICES_ERROR_LOGGING_ENABLED;
     }
 
     /** Dump some debug info for the flags */
@@ -785,6 +917,7 @@ public interface Flags {
                 SYSTEM_SERVER_ONLY,
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
+                APPSEARCH_ONLY,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -795,9 +928,21 @@ public interface Flags {
     int PPAPI_ONLY = 1;
     /** Write consent to both PPAPI and system server. Read consent from system server only. */
     int PPAPI_AND_SYSTEM_SERVER = 2;
+    /**
+     * Write consent data to AppSearch only. To store consent data in AppSearch the flag
+     * enable_appsearch_consent_data must also be true. This ensures that both writes and reads can
+     * happen to/from AppSearch. The writes are done by code on S-, while reads are done from code
+     * running on S- for all consent requests and on T+ once after OTA.
+     */
+    int APPSEARCH_ONLY = 3;
 
-    /* Consent source of truth intended to be used by default. */
-    @ConsentSourceOfTruth int DEFAULT_CONSENT_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+    /**
+     * Consent source of truth intended to be used by default. On S- devices, there is no AdServices
+     * code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -805,13 +950,32 @@ public interface Flags {
         return DEFAULT_CONSENT_SOURCE_OF_TRUTH;
     }
 
-    /* Blocked topics source of truth intended to be used by default */
-    @ConsentSourceOfTruth int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH = PPAPI_AND_SYSTEM_SERVER;
+    /**
+     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
+     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
+     */
+    @ConsentSourceOfTruth
+    int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
     default int getBlockedTopicsSourceOfTruth() {
         return DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
+    }
+
+    /**
+     * The SHA certificates of the AdServices and the AdExtServices APKs. This is required when
+     * writing consent data to AppSearch in order to allow reads from T+ APK. This is a comma
+     * searpated list.
+     */
+    // TODO: Add the release key signed cert.
+    String ADSERVICES_APK_SHA_CERTIFICATE =
+            "686d5c450e00ebe600f979300a29234644eade42f24ede07a073f2bc6b94a3a2";
+
+    /** Only App signatures belonging to this Allow List can use PP APIs. */
+    default String getAdservicesApkShaCertificate() {
+        return ADSERVICES_APK_SHA_CERTIFICATE;
     }
 
     // Group of All Killswitches
@@ -1162,6 +1326,23 @@ public interface Flags {
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
+    /**
+     * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
+     * value is false which means storing the rollback handling data in App Search is enabled. This
+     * flag is used for emergency turning off measurement rollback data deletion handling on Android
+     * S.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for storing Measurement rollback deletion handling data in App
+     * Search. The rollback deletion handling on Android S will be disabled if this kill switch
+     * value is true.
+     */
+    default boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        return MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -1198,6 +1379,17 @@ public interface Flags {
     default boolean getTopicsKillSwitch() {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch() || TOPICS_KILL_SWITCH;
+    }
+
+    /**
+     * Topics on-device classifier Kill Switch. The default value is false which means the on-device
+     * classifier in enabled. This flag is used for emergency turning off the on-device classifier.
+     */
+    boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
+
+    /** @return value of Topics on-device classifier kill switch. */
+    default boolean getTopicsOnDeviceClassifierKillSwitch() {
+        return TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
     }
 
     // MDD Killswitches
@@ -1268,7 +1460,7 @@ public interface Flags {
      * AppSearch is not considered as source of truth after OTA. This flag should be enabled for OTA
      * support of consent data on T+ devices.
      */
-    boolean ENABLE_APPSEARCH_CONSENT_DATA = false;
+    boolean ENABLE_APPSEARCH_CONSENT_DATA = !SdkLevel.isAtLeastT();
 
     /** @return value of enable appsearch consent data flag */
     default boolean getEnableAppsearchConsentData() {
@@ -1447,6 +1639,7 @@ public interface Flags {
     boolean DISABLE_TOPICS_ENROLLMENT_CHECK = false;
     boolean DISABLE_FLEDGE_ENROLLMENT_CHECK = false;
     boolean DISABLE_MEASUREMENT_ENROLLMENT_CHECK = false;
+    boolean ENABLE_ENROLLMENT_TEST_SEED = false;
 
     /** @return {@code true} if the Topics API should disable the ad tech enrollment check */
     default boolean isDisableTopicsEnrollmentCheck() {
@@ -1461,6 +1654,14 @@ public interface Flags {
     /** @return {@code true} if the Measurement APIs should disable the ad tech enrollment check */
     default boolean isDisableMeasurementEnrollmentCheck() {
         return DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
+    }
+
+    /**
+     * @return {@code true} if the Enrollment seed is disabled. (Enrollment seed is only needed for
+     *     testing)
+     */
+    default boolean isEnableEnrollmentTestSeed() {
+        return ENABLE_ENROLLMENT_TEST_SEED;
     }
 
     boolean ENFORCE_FOREGROUND_STATUS_ADID = true;
@@ -1518,6 +1719,7 @@ public interface Flags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = true;
 
     /**
      * @return true if Measurement Delete Registrations API should require that the calling API is
@@ -1565,6 +1767,11 @@ public interface Flags {
      */
     default boolean getEnforceForegroundStatusForMeasurementStatus() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS;
+    }
+
+    /** @return true if the Enrollment match is based on url origin matching */
+    default boolean getEnforceEnrollmentOriginMatch() {
+        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
     }
 
     /** @return true if Topics API should require that the calling API is running in foreground. */
@@ -1660,6 +1867,13 @@ public interface Flags {
         return UI_DIALOGS_FEATURE_ENABLED;
     }
 
+    /** UI Dialog Fragment feature enabled. */
+    boolean UI_DIALOG_FRAGMENT = false;
+    /** Returns if the UI Dialog Fragment is enabled. */
+    default boolean getUiDialogFragmentEnabled() {
+        return UI_DIALOG_FRAGMENT;
+    }
+
     /** The EEA device region feature is off by default. */
     boolean IS_EEA_DEVICE_FEATURE_ENABLED = false;
 
@@ -1690,6 +1904,14 @@ public interface Flags {
     /** Returns if the manual interaction feature is enabled. */
     default boolean getRecordManualInteractionEnabled() {
         return RECORD_MANUAL_INTERACTION_ENABLED;
+    }
+
+    /** Default is that the notification should be dismissed on click. */
+    boolean DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK = true;
+
+    /** Determines whether the notification should be dismissed on click. */
+    default boolean getNotificationDismissedOnClick() {
+        return DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
     }
 
     /**
@@ -1792,7 +2014,7 @@ public interface Flags {
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
-     * Returns the kill switch value for Registration Job Queue. The API will be disabled if either
+     * Returns the kill switch value for Registration Job Queue. The job will be disabled if either
      * the Global Kill Switch, Measurement Kill Switch, or the Registration Job Queue Kill Switch
      * value is true.
      */
@@ -1801,6 +2023,20 @@ public interface Flags {
         return getGlobalKillSwitch()
                 || getMeasurementKillSwitch()
                 || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+    }
+
+    boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for Registration Fallback Job. The Job will be disabled if
+     * either the Global Kill Switch, Measurement Kill Switch, or the Registration Fallback Job Kill
+     * Switch value is true.
+     */
+    default boolean getAsyncRegistrationFallbackJobKillSwitch() {
+        // We check the Global Killswitch first. As a result, it overrides all other killswitches.
+        return getGlobalKillSwitch()
+                || getMeasurementKillSwitch()
+                || MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
     }
 
     /** Returns true if the given enrollmentId is blocked from using PP-API. */
@@ -1820,12 +2056,27 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT;
     }
 
+    /** Returns the limit to the number of unique AdIDs attempted to match for debug keys. */
+    long DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT = 5L;
+
+    default long getMeasurementPlatformDebugAdIdMatchingLimit() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
     /** Returns true if backward-compatible logging should be disabled; false otherwise. */
     default boolean getCompatLoggingKillSwitch() {
         return COMPAT_LOGGING_KILL_SWITCH;
+    }
+
+    /** Kill switch to guard background jobs logging. */
+    boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
+
+    /** Returns true if background jobs logging should be disabled; false otherwise */
+    default boolean getBackgroundJobsLoggingKillSwitch() {
+        return BACKGROUND_JOBS_LOGGING_KILL_SWITCH;
     }
 
     // New Feature Flags
@@ -1850,11 +2101,120 @@ public interface Flags {
         return DEFAULT_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
     }
 
-    /** Default Determines whether EU notification flow change is enabled.. */
+    /**
+     * Default blocklist of the enrollments for whom debug key insertion based on AdID matching is
+     * blocked.
+     */
+    String DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST = "*";
+
+    /**
+     * Blocklist of the enrollments for whom debug key insertion based on AdID matching is blocked.
+     */
+    default String getMeasurementPlatformDebugAdIdMatchingEnrollmentBlocklist() {
+        return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_BLOCKLIST;
+    }
+
+    /** Default Determines whether EU notification flow change is enabled. */
     boolean DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED = true;
 
-    /** Determines whether EU notification flow change is enabled.. */
+    /** Determines whether EU notification flow change is enabled. */
     default boolean getEuNotifFlowChangeEnabled() {
         return DEFAULT_EU_NOTIF_FLOW_CHANGE_ENABLED;
+    }
+
+    /** Default value for flexible event reporting API */
+    boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
+
+    /** Returns whether to enable flexible event reporting API */
+    default boolean getMeasurementFlexibleEventReportingAPIEnabled() {
+        return MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED;
+    }
+
+    /** Default maximum sources per publisher */
+    int MEASUREMENT_MAX_SOURCES_PER_PUBLISHER = 1024;
+
+    /** Returns maximum sources per publisher */
+    default int getMeasurementMaxSourcesPerPublisher() {
+        return MEASUREMENT_MAX_SOURCES_PER_PUBLISHER;
+    }
+
+    /** Default maximum triggers per destination */
+    int MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION = 1024;
+
+    /** Returns maximum triggers per destination */
+    default int getMeasurementMaxTriggersPerDestination() {
+        return MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION;
+    }
+
+    /** Default maximum Aggregate Reports per destination */
+    int MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Aggregate Reports per publisher */
+    default int getMeasurementMaxAggregateReportsPerDestination() {
+        return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+    }
+
+    /** Default maximum Event Reports per destination */
+    int MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION = 1024;
+
+    /** Returns maximum Event Reports per destination */
+    default int getMeasurementMaxEventReportsPerDestination() {
+        return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
+    }
+
+    /** Disable early reporting windows configurability by default. */
+    boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
+
+    /** Returns true if event reporting windows configurability is enabled, false otherwise. */
+    default boolean getMeasurementEnableConfigurableEventReportingWindows() {
+        return MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for VTC type source. Derived from {@link
+     * PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS = "";
+
+    /**
+     * Returns configured comma separated early VTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsVtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for CTC type source. Derived from {@link
+     * PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
+            String.join(
+                    ",",
+                    Long.toString(TimeUnit.DAYS.toSeconds(2)),
+                    Long.toString(TimeUnit.DAYS.toSeconds(7)));
+
+    /**
+     * Returns configured comma separated early CTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsCtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /** Default U18 UX feature flag.. */
+    boolean DEFAULT_U18_UX_ENABLED = false;
+
+    /** U18 UX feature flag.. */
+    default boolean getU18UxEnabled() {
+        return DEFAULT_U18_UX_ENABLED;
+    }
+
+    /** Default enableAdServices system API feature flag.. */
+    boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
+
+    /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi() {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
     }
 }

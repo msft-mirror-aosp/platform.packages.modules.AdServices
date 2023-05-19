@@ -20,6 +20,10 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
+import com.android.adservices.service.measurement.ReportSpec;
+import com.android.adservices.service.measurement.SourceFixture;
+
+import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -52,6 +56,20 @@ public class ImpressionNoiseUtilTest {
                         List<int[]> actualReports =
                                 ImpressionNoiseUtil.selectRandomStateAndGenerateReportConfigs(
                                         noiseParams, rand);
+                        assertReportEquality(expectedReports, actualReports);
+                    };
+
+    private interface FourArgumentConsumer<T1, T2, T3, T4> {
+        void apply(T1 t1, T2 t2, T3 t3, T4 t4);
+    }
+
+    private final FourArgumentConsumer<ReportSpec, Integer, List<int[]>, Random>
+            mStateSelectionTesterFlexEvent =
+                    (noiseParams, destinationMultiplier, expectedReports, rand) -> {
+                        List<int[]> actualReports =
+                                ImpressionNoiseUtil
+                                        .selectFlexEventReportRandomStateAndGenerateReportConfigs(
+                                                noiseParams, destinationMultiplier, rand);
                         assertReportEquality(expectedReports, actualReports);
                     };
 
@@ -284,6 +302,41 @@ public class ImpressionNoiseUtilTest {
                 /*impressionNoise=*/ eventWithInstallAttributionNoiseParams,
                 /*expectedReports=*/ Collections.singletonList(new int[] {1, 1, 0}),
                 /*sequenceIndex=*/ 10);
+    }
+
+    @Test
+    public void
+            selectFlexEventReportRandomStateAndGenerateReportConfigs_singleDestinationType_equal()
+                    throws JSONException {
+        ReportSpec testReportSpecObject = SourceFixture.getValidReportSpec();
+        Random rand = new Random(12);
+        mStateSelectionTesterFlexEvent.apply(
+                testReportSpecObject,
+                1,
+                /*expectedReports=*/ Collections.singletonList(new int[] {1, 0, 0}),
+                rand);
+        mStateSelectionTesterFlexEvent.apply(
+                testReportSpecObject,
+                1,
+                /*expectedReports=*/ Arrays.asList(new int[] {1, 0, 0}, new int[] {0, 1, 0}),
+                rand);
+    }
+
+    @Test
+    public void
+            selectFlexEventReportRandomStateAndGenerateReportConfigs_doubleDestinationType_equal()
+                    throws JSONException {
+        Random rand = new Random(12);
+        mStateSelectionTesterFlexEvent.apply(
+                SourceFixture.getValidReportSpec(),
+                2,
+                /*expectedReports=*/ Arrays.asList(new int[] {1, 1, 0}, new int[] {0, 0, 0}),
+                rand);
+        mStateSelectionTesterFlexEvent.apply(
+                SourceFixture.getValidReportSpec(),
+                2,
+                /*expectedReports=*/ Arrays.asList(new int[] {1, 0, 1}, new int[] {0, 0, 1}),
+                rand);
     }
 
     @Test

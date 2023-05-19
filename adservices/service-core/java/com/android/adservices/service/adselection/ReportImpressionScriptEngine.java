@@ -169,7 +169,7 @@ public class ReportImpressionScriptEngine {
         ImmutableList<JSScriptArgument> arguments =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
-                                AdSelectionConfigArgument.asScriptArgument(
+                                AdSelectionConfigArgumentUtil.asScriptArgument(
                                         adSelectionConfig, AD_SELECTION_CONFIG_ARG_NAME))
                         .add(stringArg(RENDER_URI_ARG_NAME, renderUri.toString()))
                         .add(numericArg(BID_ARG_NAME, bid))
@@ -225,7 +225,7 @@ public class ReportImpressionScriptEngine {
                         .add(jsonArg(SIGNALS_FOR_BUYER_ARG_NAME, signalsForBuyer.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceReportingSignalsArgument.asScriptArgument(
+                                CustomAudienceReportingSignalsArgumentUtil.asScriptArgument(
                                         CUSTOM_AUDIENCE_REPORTING_SIGNALS_ARG_NAME,
                                         customAudienceSignals))
                         .build();

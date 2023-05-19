@@ -78,6 +78,25 @@ public class DBAdSelectionTest {
     }
 
     @Test
+    public void testFailsToBuildRemarketingAdWithNullBiddingLogicUri() {
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    new DBAdSelection.Builder()
+                            .setAdSelectionId(AD_SELECTION_ID)
+                            .setCustomAudienceSignals(CUSTOM_AUDIENCE_SIGNALS)
+                            .setContextualSignals(CONTEXTUAL_SIGNALS)
+                            .setWinningAdRenderUri(RENDER_URI)
+                            .setWinningAdBid(BID)
+                            .setCreationTimestamp(ACTIVATION_TIME)
+                            .setCallerPackageName(CALLER_PACKAGE_NAME)
+                            .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                            .build();
+                });
+    }
+
+    @Test
     public void testFailsToBuildContextualAdWithNullBiddingLogicUri() {
 
         assertThrows(

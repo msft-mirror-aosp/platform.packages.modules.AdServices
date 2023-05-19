@@ -208,14 +208,19 @@ public class AdSelectionScriptEngine {
     private final Executor mExecutor = MoreExecutors.directExecutor();
     private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
+    private final AdWithBidArgumentUtil mAdWithBidArgumentUtil;
+    private final AdDataArgumentUtil mAdDataArgumentUtil;
 
     public AdSelectionScriptEngine(
             Context context,
             Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
-            Supplier<Long> maxHeapSizeBytesSupplier) {
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            AdCounterKeyCopier adCounterKeyCopier) {
         mJsEngine = JSScriptEngine.getInstance(context);
         mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
+        mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
+        mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
     }
 
     /**
@@ -254,7 +259,7 @@ public class AdSelectionScriptEngine {
                                         trustedBiddingSignals.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceBiddingSignalsArgument.asScriptArgument(
+                                CustomAudienceBiddingSignalsArgumentUtil.asScriptArgument(
                                         CUSTOM_AUDIENCE_BIDDING_SIGNALS_ARG_NAME,
                                         customAudienceSignals))
                         .build();
@@ -262,7 +267,7 @@ public class AdSelectionScriptEngine {
         ImmutableList.Builder<JSScriptArgument> adDataArguments = new ImmutableList.Builder<>();
         for (AdData currAd : ads) {
             // Ads are going to be in an array their individual name is ignored.
-            adDataArguments.add(AdDataArgument.asScriptArgument("ignored", currAd));
+            adDataArguments.add(mAdDataArgumentUtil.asScriptArgument("ignored", currAd));
         }
         runAdBiddingPerCAExecutionLogger.startGenerateBids();
 
@@ -372,7 +377,7 @@ public class AdSelectionScriptEngine {
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
                         .add(
-                                AdSelectionConfigArgument.asScriptArgument(
+                                AdSelectionConfigArgumentUtil.asScriptArgument(
                                         adSelectionConfig, AUCTION_CONFIG_ARG_NAME))
                         .add(jsonArg(SELLER_SIGNALS_ARG_NAME, sellerSignals.toString()))
                         .add(
@@ -381,7 +386,7 @@ public class AdSelectionScriptEngine {
                                         trustedScoringSignals.toString()))
                         .add(jsonArg(CONTEXTUAL_SIGNALS_ARG_NAME, contextualSignals.toString()))
                         .add(
-                                CustomAudienceScoringSignalsArgument.asScriptArgument(
+                                CustomAudienceScoringSignalsArgumentUtil.asScriptArgument(
                                         CUSTOM_AUDIENCE_SCORING_SIGNALS_ARG_NAME,
                                         customAudienceSignalsList))
                         .build();
@@ -390,7 +395,7 @@ public class AdSelectionScriptEngine {
         for (AdWithBid currAdWithBid : adsWithBid) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adWithBidArguments.add(
-                    AdWithBidArgument.asScriptArgument(
+                    mAdWithBidArgumentUtil.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, currAdWithBid));
         }
         // Start scoreAds script execution process.
@@ -432,7 +437,7 @@ public class AdSelectionScriptEngine {
         for (AdSelectionIdWithBidAndRenderUri curr : adSelectionIdWithBidAndRenderUris) {
             // Ad with bids are going to be in an array their individual name is ignored.
             adSelectionIdWithBidArguments.add(
-                    SelectAdsFromOutcomesArgument.asScriptArgument(
+                    SelectAdsFromOutcomesArgumentUtil.asScriptArgument(
                             SCRIPT_ARGUMENT_NAME_IGNORED, curr));
         }
         ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
@@ -460,7 +465,7 @@ public class AdSelectionScriptEngine {
                 ImmutableList.Builder<AdWithBid> result = ImmutableList.builder();
                 for (int i = 0; i < batchBidResult.results.length(); i++) {
                     result.add(
-                            AdWithBidArgument.parseJsonResponse(
+                            mAdWithBidArgumentUtil.parseJsonResponse(
                                     batchBidResult.results.optJSONObject(i)));
                 }
                 return result.build();
@@ -533,7 +538,7 @@ public class AdSelectionScriptEngine {
             JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
             // Use Long class to parse from string
             return Long.valueOf(
-                    resultOutcomeJson.optString(SelectAdsFromOutcomesArgument.ID_FIELD_NAME));
+                    resultOutcomeJson.optString(SelectAdsFromOutcomesArgumentUtil.ID_FIELD_NAME));
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             sLogger.v(errorMsg);
@@ -895,9 +900,9 @@ public class AdSelectionScriptEngine {
                         String.format(
                                 "%s.%s, %s.%s",
                                 AD_VAR_NAME,
-                                AdWithBidArgument.AD_FIELD_NAME,
+                                AdWithBidArgumentUtil.AD_FIELD_NAME,
                                 AD_VAR_NAME,
-                                AdWithBidArgument.BID_FIELD_NAME));
+                                AdWithBidArgumentUtil.BID_FIELD_NAME));
         for (JSScriptArgument currArg : otherArgs) {
             callArgs.append(String.format(",%s", currArg.name()));
         }
@@ -925,7 +930,7 @@ public class AdSelectionScriptEngine {
     JSScriptArgument translateCustomAudience(DBCustomAudience customAudience) throws JSONException {
         ImmutableList.Builder<JSScriptArgument> adsArg = ImmutableList.builder();
         for (DBAdData ad : customAudience.getAds()) {
-            adsArg.add(AdDataArgument.asRecordArgument("ignored", ad));
+            adsArg.add(mAdDataArgumentUtil.asRecordArgument("ignored", ad));
         }
         // TODO(b/273357664): Verify with product on the set of fields we want to include.
         return recordArg(

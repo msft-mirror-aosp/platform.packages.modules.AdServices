@@ -29,6 +29,8 @@ import androidx.room.Transaction;
 
 import com.android.adservices.service.adselection.HistogramEvent;
 
+import com.google.common.base.Preconditions;
+
 import java.time.Instant;
 import java.util.Objects;
 
@@ -47,7 +49,7 @@ public abstract class FrequencyCapDao {
      * rolled back.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #insertHistogramEvent(HistogramEvent)} instead.
+     * #insertHistogramEvent(HistogramEvent, int, int)} instead.
      *
      * @return the row ID of the identifier in the table, or {@code -1} if the specified row ID is
      *     already occupied
@@ -63,7 +65,7 @@ public abstract class FrequencyCapDao {
      * returned.
      *
      * <p>This method is not intended to be called on its own. It should only be used in {@link
-     * #insertHistogramEvent(HistogramEvent)}.
+     * #insertHistogramEvent(HistogramEvent, int, int)}.
      *
      * @return the row ID of the identifier in the table, or {@code null} if not found
      */
@@ -91,7 +93,7 @@ public abstract class FrequencyCapDao {
      * transaction is canceled and rolled back.
      *
      * <p>This method is not intended to be called on its own. Please use {@link
-     * #insertHistogramEvent(HistogramEvent)} instead.
+     * #insertHistogramEvent(HistogramEvent, int, int)} instead.
      *
      * @return the row ID of the event data in the table, or -1 if the event data already exists
      */
@@ -102,11 +104,31 @@ public abstract class FrequencyCapDao {
      * Attempts to insert a {@link HistogramEvent} into the histogram tables in a single
      * transaction.
      *
+     * <p>If the current number of events in the histogram table is larger than the given {@code
+     * absoluteMaxHistogramEventCount}, then the oldest events in the table will be evicted so that
+     * the count of events is the given {@code lowerMaxHistogramEventCount}.
+     *
      * @throws IllegalStateException if an error was encountered adding the event
      */
     @Transaction
-    public void insertHistogramEvent(@NonNull HistogramEvent event) throws IllegalStateException {
+    public void insertHistogramEvent(
+            @NonNull HistogramEvent event,
+            int absoluteMaxHistogramEventCount,
+            int lowerMaxHistogramEventCount)
+            throws IllegalStateException {
         Objects.requireNonNull(event);
+        Preconditions.checkArgument(absoluteMaxHistogramEventCount > 0);
+        Preconditions.checkArgument(lowerMaxHistogramEventCount > 0);
+        Preconditions.checkArgument(absoluteMaxHistogramEventCount > lowerMaxHistogramEventCount);
+
+        // TODO(b/275581841): Collect and send telemetry on frequency cap eviction
+        // Check the table size first and evict older events if necessary
+        int currentHistogramEventCount = getTotalNumHistogramEvents();
+        if (currentHistogramEventCount >= absoluteMaxHistogramEventCount) {
+            int numEventsToDelete = currentHistogramEventCount - lowerMaxHistogramEventCount;
+            deleteOldestHistogramEventData(numEventsToDelete);
+            deleteUnpairedHistogramIdentifiers();
+        }
 
         // Converting to DBHistogramIdentifier drops custom audience fields if the type is WIN
         DBHistogramIdentifier identifier = DBHistogramIdentifier.fromHistogramEvent(event);
@@ -186,7 +208,22 @@ public abstract class FrequencyCapDao {
      * @return the number of deleted events
      */
     @Query("DELETE FROM fcap_histogram_data WHERE timestamp < :expiryTime")
-    protected abstract int deleteHistogramEventsBeforeTime(@NonNull Instant expiryTime);
+    protected abstract int deleteHistogramEventDataBeforeTime(@NonNull Instant expiryTime);
+
+    /**
+     * Deletes the oldest N histogram events, where N is at most {@code numEventsToDelete}, and
+     * returns the number of entries deleted.
+     *
+     * <p>This method is not meant to be called on its own. Please use {@link
+     * #insertHistogramEvent(HistogramEvent, int, int)} to evict data when the table is full.
+     */
+    @Query(
+            "DELETE FROM fcap_histogram_data "
+                    + "WHERE row_id IN "
+                    + "(SELECT row_id FROM fcap_histogram_data "
+                    + "ORDER BY timestamp ASC "
+                    + "LIMIT :numEventsToDelete)")
+    protected abstract int deleteOldestHistogramEventData(int numEventsToDelete);
 
     /**
      * Deletes histogram identifiers which have no associated event data.
@@ -217,8 +254,12 @@ public abstract class FrequencyCapDao {
     public int deleteAllExpiredHistogramData(@NonNull Instant expiryTime) {
         Objects.requireNonNull(expiryTime);
 
-        int numDeletedEvents = deleteHistogramEventsBeforeTime(expiryTime);
+        int numDeletedEvents = deleteHistogramEventDataBeforeTime(expiryTime);
         deleteUnpairedHistogramIdentifiers();
         return numDeletedEvents;
     }
+
+    /** Returns the current total number of histogram events in the data table. */
+    @Query("SELECT COUNT(DISTINCT row_id) FROM fcap_histogram_data")
+    public abstract int getTotalNumHistogramEvents();
 }

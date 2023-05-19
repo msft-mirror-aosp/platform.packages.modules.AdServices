@@ -27,7 +27,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -52,7 +52,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 import android.os.LimitExceededException;
 import android.os.Process;
@@ -109,7 +108,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class InteractionReporterTest {
     private static final int MY_UID = Process.myUid();
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
     private static final int BID = 6;
     private static final Instant ACTIVATION_TIME = Instant.now();
@@ -189,7 +187,6 @@ public class InteractionReporterTest {
 
         mInteractionReporter =
                 new InteractionReporter(
-                        CONTEXT,
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -289,7 +286,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -363,7 +360,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
@@ -433,7 +430,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_INTERNAL_ERROR),
                         anyInt());
 
@@ -491,7 +488,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -549,7 +546,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -581,7 +578,6 @@ public class InteractionReporterTest {
         // Re init interaction reporter
         mInteractionReporter =
                 new InteractionReporter(
-                        CONTEXT,
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -596,11 +592,8 @@ public class InteractionReporterTest {
         doNothing()
                 .doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechAllowed(
-                        CONTEXT,
-                        TEST_PACKAGE_NAME,
-                        mAdTech,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                .assertAdTechEnrolled(
+                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -635,7 +628,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -668,7 +661,6 @@ public class InteractionReporterTest {
         // Re init interaction reporter
         mInteractionReporter =
                 new InteractionReporter(
-                        CONTEXT,
                         mAdSelectionEntryDao,
                         mHttpClient,
                         mLightweightExecutorService,
@@ -681,11 +673,8 @@ public class InteractionReporterTest {
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
-                .assertAdTechAllowed(
-                        CONTEXT,
-                        TEST_PACKAGE_NAME,
-                        mAdTech,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+                .assertAdTechEnrolled(
+                        mAdTech, AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION);
 
         mMockWebServerRule.startMockWebServer(
                 new Dispatcher() {
@@ -712,7 +701,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }
@@ -742,7 +731,7 @@ public class InteractionReporterTest {
                         true,
                         true,
                         MY_UID,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
 
         mMockWebServerRule.startMockWebServer(
@@ -776,7 +765,7 @@ public class InteractionReporterTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_UNAUTHORIZED),
                         anyInt());
     }
@@ -808,7 +797,7 @@ public class InteractionReporterTest {
                         true,
                         true,
                         MY_UID,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
 
         mMockWebServerRule.startMockWebServer(
@@ -841,7 +830,7 @@ public class InteractionReporterTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_BACKGROUND_CALLER),
                         anyInt());
     }
@@ -901,7 +890,7 @@ public class InteractionReporterTest {
                         true,
                         true,
                         MY_UID,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
 
         // Immediately made subsequent call should fail
@@ -918,7 +907,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
 
@@ -934,7 +923,7 @@ public class InteractionReporterTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_RATE_LIMIT_REACHED),
                         anyInt());
     }
@@ -964,7 +953,7 @@ public class InteractionReporterTest {
                         true,
                         true,
                         MY_UID,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
 
         mMockWebServerRule.startMockWebServer(
@@ -994,7 +983,7 @@ public class InteractionReporterTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_CALLER_NOT_ALLOWED),
                         anyInt());
     }
@@ -1024,7 +1013,7 @@ public class InteractionReporterTest {
                         true,
                         true,
                         MY_UID,
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
+                        AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION,
                         Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION);
 
         mMockWebServerRule.startMockWebServer(
@@ -1053,7 +1042,7 @@ public class InteractionReporterTest {
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         verify(mAdServicesLoggerMock, never())
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_USER_CONSENT_REVOKED),
                         anyInt());
     }
@@ -1100,7 +1089,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
     }
@@ -1136,7 +1125,7 @@ public class InteractionReporterTest {
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
-                        eq(AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN),
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(STATUS_SUCCESS),
                         anyInt());
     }

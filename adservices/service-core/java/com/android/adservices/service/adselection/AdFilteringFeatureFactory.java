@@ -24,7 +24,7 @@ import com.android.adservices.service.common.BinderFlagReader;
 
 import java.time.Clock;
 
-/** Factory for implementations of the {@link AdFilterer} interface */
+/** Factory for implementations of the ad filtering feature interfaces. */
 public final class AdFilteringFeatureFactory {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();

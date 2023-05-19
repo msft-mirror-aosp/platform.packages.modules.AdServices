@@ -16,6 +16,7 @@
 
 package com.android.server.sdksandbox;
 
+import static android.Manifest.permission.DUMP;
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND;
 import static android.app.sdksandbox.ISharedPreferencesSyncCallback.PREFERENCES_SYNC_INTERNAL_ERROR;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
@@ -35,6 +36,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -44,6 +47,7 @@ import android.app.sdksandbox.ISharedPreferencesSyncCallback;
 import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
 import android.app.sdksandbox.testutils.FakeSdkSandboxManagerLocal;
@@ -68,6 +72,7 @@ import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -86,6 +91,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 
@@ -103,15 +109,19 @@ import java.util.Objects;
  */
 public class SdkSandboxManagerServiceUnitTest {
 
+    private static final String TAG = SdkSandboxManagerServiceUnitTest.class.getSimpleName();
+
     private SdkSandboxManagerService mService;
     private ActivityManager mAmSpy;
     private FakeSdkSandboxService mSdkSandboxService;
-    private MockitoSession mStaticMockSession = null;
+    private MockitoSession mStaticMockSession;
     private Context mSpyContext;
     private SdkSandboxManagerService.Injector mInjector;
     private int mClientAppUid;
     private PackageManagerLocal mPmLocal;
     private SdkSandboxStorageManagerUtility mSdkSandboxStorageManagerUtility;
+
+    @Mock private IBinder mAdServicesManager;
 
     private static FakeSdkSandboxProvider sProvider;
     private static SdkSandboxPulledAtoms sSdkSandboxPulledAtoms;
@@ -147,9 +157,13 @@ public class SdkSandboxManagerServiceUnitTest {
 
     @Before
     public void setup() {
+        assumeTrue(
+                DeviceSupportUtils.isSdkSandboxSupported(
+                        InstrumentationRegistry.getInstrumentation().getContext()));
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .mockStatic(SdkSandboxStatsLog.class)
+                        .initMocks(this)
                         .startMocking();
 
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
@@ -465,6 +479,32 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
+    public void testLoadSdk_sandboxInitializationFails() throws Exception {
+        disableNetworkPermissionChecks();
+        disableForegroundCheck();
+        disableKillUid();
+
+        mSdkSandboxService.failInitialization = true;
+
+        FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
+        mService.loadSdk(
+                TEST_PACKAGE, SDK_NAME, TIME_APP_CALLED_SYSTEM_SERVER, new Bundle(), callback);
+
+        // If initialization failed, the sandbox would be unbound.
+        final CallingInfo callingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNull();
+
+        // Call binderDied() on the sandbox to apply the effects of sandbox death detection after
+        // unbinding.
+        killSandbox();
+
+        mSdkSandboxService.failInitialization = false;
+        // SDK loading should succeed afterwards.
+        loadSdk(SDK_NAME);
+        assertThat(sProvider.getSdkSandboxServiceForApp(callingInfo)).isNotNull();
+    }
+
+    @Test
     public void testLoadSdk_sdkDataPrepared_onlyOnce() throws Exception {
         loadSdk(SDK_NAME);
         loadSdk(SDK_PROVIDER_RESOURCES_SDK_NAME);
@@ -681,7 +721,7 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -698,7 +738,7 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -711,7 +751,7 @@ public class SdkSandboxManagerServiceUnitTest {
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback1);
         killSandbox();
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
 
         restartAndSetSandboxService();
 
@@ -720,9 +760,9 @@ public class SdkSandboxManagerServiceUnitTest {
                 new FakeSdkSandboxProcessDeathCallbackBinder();
         mService.addSdkSandboxProcessDeathCallback(
                 TEST_PACKAGE, TIME_APP_CALLED_SYSTEM_SERVER, lifecycleCallback2);
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isFalse();
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(0);
         killSandbox();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -745,8 +785,8 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isTrue();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(1);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -773,13 +813,8 @@ public class SdkSandboxManagerServiceUnitTest {
         killSandbox();
 
         // Check that death is recorded correctly
-        assertThat(lifecycleCallback1.isSdkSandboxDeathDetected()).isFalse();
-        assertThat(lifecycleCallback2.isSdkSandboxDeathDetected()).isTrue();
-    }
-
-    @Test(expected = SecurityException.class)
-    public void testDumpWithoutPermission() {
-        mService.dump(new FileDescriptor(), new PrintWriter(new StringWriter()), new String[0]);
+        assertThat(lifecycleCallback1.getSdkSandboxDeathCount()).isEqualTo(0);
+        assertThat(lifecycleCallback2.getSdkSandboxDeathCount()).isEqualTo(1);
     }
 
     @Test
@@ -1129,15 +1164,100 @@ public class SdkSandboxManagerServiceUnitTest {
     }
 
     @Test
-    public void testDump() throws Exception {
-        Mockito.doNothing()
-                .when(mSpyContext)
-                .enforceCallingPermission(
-                        Mockito.eq("android.permission.DUMP"), Mockito.anyString());
+    public void testDump_preU() throws Exception {
+        requiresAtLeastU(false);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager);
 
-        final StringWriter stringWriter = new StringWriter();
-        mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), null);
-        assertThat(stringWriter.toString()).contains("FakeDump");
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            // Mock call to mAdServicesManager.dump();
+            FileDescriptor fd = new FileDescriptor();
+            PrintWriter writer = new PrintWriter(stringWriter);
+            String[] args = new String[0];
+            Mockito.doAnswer(
+                    (inv) -> {
+                        writer.println("FakeAdServiceDump");
+                        return null;
+                    })
+                    .when(mAdServicesManager)
+                    .dump(fd, args);
+
+            mService.dump(fd, writer, args);
+
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump).contains("FakeDump");
+        assertThat(dump).contains("FakeAdServiceDump");
+    }
+
+    @Test
+    public void testDump_atLeastU() throws Exception {
+        requiresAtLeastU(true);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(new FileDescriptor(), new PrintWriter(stringWriter), new String[0]);
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump).contains("FakeDump");
+
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
+    }
+
+    @Test
+    public void testDump_adServices_preU() throws Exception {
+        requiresAtLeastU(false);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            // Mock call to mAdServicesManager.dump();
+            FileDescriptor fd = new FileDescriptor();
+            PrintWriter writer = new PrintWriter(stringWriter);
+            String[] args = new String[] {"--AdServices"};
+            Mockito.doAnswer(
+                    (inv) -> {
+                        writer.println("FakeAdServiceDump");
+                        return null;
+                    })
+                    .when(mAdServicesManager)
+                    .dump(fd, args);
+
+            mService.dump(fd, writer, args);
+
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump).isEqualTo("AdServices:\n\nFakeAdServiceDump\n\n");
+    }
+
+    @Test
+    public void testDump_adServices_atLeastU() throws Exception {
+        requiresAtLeastU(true);
+        mockGrantedPermission(DUMP);
+        mService.registerAdServicesManagerService(mAdServicesManager);
+
+        String dump;
+        try (StringWriter stringWriter = new StringWriter()) {
+            mService.dump(
+                    new FileDescriptor(),
+                    new PrintWriter(stringWriter),
+                    new String[] {"--AdServices"});
+            dump = stringWriter.toString();
+        }
+
+        assertThat(dump)
+                .isEqualTo(SdkSandboxManagerService.POST_UDC_DUMP_AD_SERVICES_MESSAGE + "\n");
+
+        Mockito.verify(mAdServicesManager, Mockito.never())
+                .dump(ArgumentMatchers.any(), ArgumentMatchers.any());
     }
 
     @Test(expected = SecurityException.class)
@@ -2325,6 +2445,29 @@ public class SdkSandboxManagerServiceUnitTest {
     // Restart sandbox which creates a new sandbox service binder.
     private void restartAndSetSandboxService() throws Exception {
         mSdkSandboxService = sProvider.restartSandbox();
+    }
+
+    private void mockGrantedPermission(String permission) {
+        Log.d(TAG, "mockGrantedPermission(" + permission + ")");
+        Mockito.doNothing()
+                .when(mSpyContext)
+                .enforceCallingPermission(Mockito.eq(permission), Mockito.anyString());
+    }
+
+    private void requiresAtLeastU(boolean required) {
+        Log.d(
+                TAG,
+                "requireAtLeastU("
+                        + required
+                        + "): SdkLevel.isAtLeastU()="
+                        + SdkLevel.isAtLeastU());
+        // TODO(b/280677793): rather than assuming it's the given version, mock it:
+        //     ExtendedMockito.doReturn(required).when(() -> SdkLevel.isAtLeastU());
+        if (required) {
+            assumeTrue("Device must be at least U", SdkLevel.isAtLeastU());
+        } else {
+            assumeFalse("Device must be less than U", SdkLevel.isAtLeastU());
+        }
     }
 
     /** Fake service provider that returns local instance of {@link SdkSandboxServiceProvider} */

@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.actions;
 
 import static com.android.adservices.service.measurement.E2ETest.getAttributionSource;
+import static com.android.adservices.service.measurement.E2ETest.getUriConfigMap;
 import static com.android.adservices.service.measurement.E2ETest.getUriToResponseHeadersMap;
 import static com.android.adservices.service.measurement.E2ETest.hasAdIdPermission;
 import static com.android.adservices.service.measurement.E2ETest.hasArDebugPermission;
@@ -41,6 +42,7 @@ import java.util.Map;
 public final class RegisterWebTrigger implements Action {
     public final WebTriggerRegistrationRequestInternal mRegistrationRequest;
     public final Map<String, List<Map<String, List<String>>>> mUriToResponseHeadersMap;
+    public final Map<String, UriConfig> mUriConfigMap;
     public final long mTimestamp;
     public final boolean mDebugReporting;
     public final boolean mAdIdPermission;
@@ -74,6 +76,7 @@ public final class RegisterWebTrigger implements Action {
         mTimestamp = obj.getLong(TestFormatJsonMapping.TIMESTAMP_KEY);
         mDebugReporting = hasTriggerDebugReportingPermission(obj);
         mAdIdPermission = hasAdIdPermission(obj);
+        mUriConfigMap = getUriConfigMap(obj);
     }
 
     @Override

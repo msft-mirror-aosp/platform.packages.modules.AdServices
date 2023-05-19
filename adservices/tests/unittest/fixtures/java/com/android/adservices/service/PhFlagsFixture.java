@@ -30,6 +30,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STAT
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
+import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_BACKGROUND_FETCH_ELIGIBLE_UPDATE_BASE_INTERVAL_S;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
@@ -163,6 +164,19 @@ public class PhFlagsFixture {
     }
 
     /**
+     * Allows tests to override seed enrollment data flag thereby seeding data into enrollment table
+     *
+     * @param enable disable enrollment seed
+     */
+    public static void overrideEnableEnrollmentSeed(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_ENABLE_ENROLLMENT_TEST_SEED,
+                Boolean.toString(enable),
+                false);
+    }
+
+    /**
      * Enables test to override the flag enabling the enrollment check for callers of Fledge APIs.
      *
      * @param enable whether enable or disable the check
@@ -240,6 +254,15 @@ public class PhFlagsFixture {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
+                Boolean.toString(value),
+                false);
+    }
+
+    /** Overrides whether the {@code prebuilt Uri} feature is enabled. */
+    public static void overrideFledgeAdSelectionPrebuiltUriEnabled(boolean value) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED,
                 Boolean.toString(value),
                 false);
     }

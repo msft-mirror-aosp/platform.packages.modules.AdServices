@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services Connection E2E tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesTopicsConnectionTests"/>
+    <option name="test-tag" value="CtsAdExtServicesTopicsConnectionTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -35,7 +35,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <!-- The test apps to be installed and uninstalled -->
-        <option name="test-file-name" value="CtsExtAdServicesTopicsConnectionTests.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesTopicsConnectionTests.apk"/>
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 

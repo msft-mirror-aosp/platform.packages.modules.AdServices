@@ -16,7 +16,7 @@
   -->
 <configuration description="Config for Cts Ad Services App Update tests in ExtServices">
     <option name="test-suite-tag" value="cts"/>
-    <option name="test-tag" value="CtsExtAdServicesTopicsAppUpdateTests"/>
+    <option name="test-tag" value="CtsAdExtServicesTopicsAppUpdateTests"/>
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
@@ -35,7 +35,7 @@
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
         <!-- The test apps to be installed and uninstalled -->
-        <option name="test-file-name" value="CtsExtAdServicesTopicsAppUpdateTests.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesTopicsAppUpdateTests.apk"/>
         <option name="check-min-sdk" value="true"/>
     </target_preparer>
 
@@ -48,6 +48,7 @@
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false"/>
         <option name="run-command" value="device_config put adservices topics_kill_switch false"/>
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
         <!-- Enable adservices system service-->
         <option name="run-command"
                 value="device_config put adservices adservice_system_service_enabled true"/>

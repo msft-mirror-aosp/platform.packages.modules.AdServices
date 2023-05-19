@@ -62,6 +62,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -578,6 +579,7 @@ public class CustomAudienceServiceEndToEndTest {
                         BUYER_1,
                         NAME_1,
                         BIDDING_LOGIC_JS,
+                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                         TRUSTED_BIDDING_DATA,
                         mService);
 
@@ -604,6 +606,7 @@ public class CustomAudienceServiceEndToEndTest {
                         BUYER_1,
                         NAME_1,
                         BIDDING_LOGIC_JS,
+                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                         TRUSTED_BIDDING_DATA,
                         mService);
 
@@ -632,6 +635,7 @@ public class CustomAudienceServiceEndToEndTest {
                         BUYER_1,
                         NAME_1,
                         BIDDING_LOGIC_JS,
+                        JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                         TRUSTED_BIDDING_DATA,
                         mService);
 
@@ -653,6 +657,7 @@ public class CustomAudienceServiceEndToEndTest {
                                 BUYER_1,
                                 NAME_1,
                                 BIDDING_LOGIC_JS,
+                                JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                                 TRUSTED_BIDDING_DATA,
                                 mService));
 
@@ -1092,6 +1097,7 @@ public class CustomAudienceServiceEndToEndTest {
             AdTechIdentifier buyer,
             String name,
             String biddingLogicJs,
+            Long biddingLogicJsVersion,
             AdSelectionSignals trustedBiddingData,
             CustomAudienceServiceImpl customAudienceService)
             throws Exception {
@@ -1100,7 +1106,13 @@ public class CustomAudienceServiceEndToEndTest {
                 new CustomAudienceOverrideTestCallback(resultLatch);
 
         customAudienceService.overrideCustomAudienceRemoteInfo(
-                owner, buyer, name, biddingLogicJs, trustedBiddingData, callback);
+                owner,
+                buyer,
+                name,
+                biddingLogicJs,
+                biddingLogicJsVersion,
+                trustedBiddingData,
+                callback);
         resultLatch.await();
         return callback;
     }

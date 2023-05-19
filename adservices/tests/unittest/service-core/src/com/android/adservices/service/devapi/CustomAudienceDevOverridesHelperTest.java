@@ -24,10 +24,14 @@ import android.adservices.common.AdTechIdentifier;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
+import com.android.adservices.service.adselection.JsVersionHelper;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -38,6 +42,7 @@ public class CustomAudienceDevOverridesHelperTest {
     private static final String NAME = "name";
     private static final String APP_PACKAGE_NAME = "appPackageName";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final Long BIDDING_LOGIC_JS_VERSION = 2L;
     private static final String TRUSTED_BIDDING_DATA = "{\"trusted_bidding_data\":1}";
 
     @Before
@@ -60,6 +65,7 @@ public class CustomAudienceDevOverridesHelperTest {
                         .setName(NAME)
                         .setAppPackageName(APP_PACKAGE_NAME)
                         .setBiddingLogicJS(BIDDING_LOGIC_JS)
+                        .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION)
                         .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
                         .build());
 
@@ -73,7 +79,39 @@ public class CustomAudienceDevOverridesHelperTest {
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
 
         assertThat(helper.getBiddingLogicOverride(APP_PACKAGE_NAME, BUYER, NAME))
-                .isEqualTo(BIDDING_LOGIC_JS);
+                .isEqualTo(
+                        DecisionLogic.create(
+                                BIDDING_LOGIC_JS,
+                                ImmutableMap.of(
+                                        JsVersionHelper.JS_PAYLOAD_TYPE_BUYER_BIDDING_LOGIC_JS,
+                                        BIDDING_LOGIC_JS_VERSION)));
+        assertThat(helper.getTrustedBiddingSignalsOverride(APP_PACKAGE_NAME, BUYER, NAME))
+                .isEqualTo(AdSelectionSignals.fromString(TRUSTED_BIDDING_DATA));
+    }
+
+    @Test
+    public void testGetOverridesFindsMatchingOverride_nullJsVersion() {
+        mCustomAudienceDao.persistCustomAudienceOverride(
+                DBCustomAudienceOverride.builder()
+                        .setOwner(APP_PACKAGE_NAME)
+                        .setBuyer(BUYER)
+                        .setName(NAME)
+                        .setAppPackageName(APP_PACKAGE_NAME)
+                        .setBiddingLogicJS(BIDDING_LOGIC_JS)
+                        .setTrustedBiddingData(TRUSTED_BIDDING_DATA)
+                        .build());
+
+        DevContext devContext =
+                DevContext.builder()
+                        .setCallingAppPackageName(APP_PACKAGE_NAME)
+                        .setDevOptionsEnabled(true)
+                        .build();
+
+        CustomAudienceDevOverridesHelper helper =
+                new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
+
+        assertThat(helper.getBiddingLogicOverride(APP_PACKAGE_NAME, BUYER, NAME))
+                .isEqualTo(DecisionLogic.create(BIDDING_LOGIC_JS, ImmutableMap.of()));
         assertThat(helper.getTrustedBiddingSignalsOverride(APP_PACKAGE_NAME, BUYER, NAME))
                 .isEqualTo(AdSelectionSignals.fromString(TRUSTED_BIDDING_DATA));
     }

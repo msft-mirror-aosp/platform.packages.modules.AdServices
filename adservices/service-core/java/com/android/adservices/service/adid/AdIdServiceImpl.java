@@ -25,6 +25,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
 import android.adservices.adid.GetAdIdParam;
 import android.adservices.adid.IAdIdService;
@@ -39,6 +43,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -125,6 +130,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
 
                     } catch (Exception e) {
                         LogUtil.e(e, "Unable to send result to the callback");
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                         resultCode = STATUS_INTERNAL_ERROR;
                     } finally {
                         long binderCallStartTimeMillis = callerMetadata.getBinderElapsedTimestamp();
@@ -160,6 +169,11 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 callback.onError(STATUS_RATE_LIMIT_REACHED);
             } catch (RemoteException e) {
                 LogUtil.e(e, "Fail to call the callback on Rate Limit Reached.");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RATE_LIMIT_CALLBACK_FAILURE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
+
             } finally {
                 return true;
             }
@@ -250,6 +264,10 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             callback.onError(statusCode);
         } catch (RemoteException e) {
             LogUtil.e(e, String.format("Fail to call the callback. %s", message));
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
         }
     }
 
@@ -261,10 +279,15 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
             packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
         } catch (PackageManager.NameNotFoundException e) {
             LogUtil.e(e, callingPackage + " not found");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
             return STATUS_UNAUTHORIZED;
         }
         if (packageUid != appCallingUid) {
             LogUtil.e(callingPackage + " does not belong to uid " + callingUid);
+
             return STATUS_UNAUTHORIZED;
         }
         return STATUS_SUCCESS;

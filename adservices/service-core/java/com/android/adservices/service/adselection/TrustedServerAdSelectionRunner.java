@@ -125,7 +125,8 @@ public class TrustedServerAdSelectionRunner extends AdSelectionRunner {
                 new JsFetcher(
                         mBackgroundExecutorService,
                         mLightweightExecutorService,
-                        adServicesHttpsClient);
+                        adServicesHttpsClient,
+                        flags);
     }
 
     @VisibleForTesting

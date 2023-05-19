@@ -16,15 +16,23 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 public class CustomAudienceBiddingInfoFixture {
 
-    public static final Uri VALID_BIDDING_LOGIC_URI =
-            new Uri.Builder().path("https://valid-buyer.example.com/bidding/logic/here/").build();
+    public static final String VALID_BIDDING_LOGIC_URI_FORMAT = "https://%s/bidding/logic/here/";
 
     public static final String BUYER_DECISION_LOGIC_JS =
             "function runBidding(ad_selection_signals, per_buyer_signals, signals_for_buyer,"
                     + ") {;\n"
                     + "}";
+
+    public static Uri getValidBiddingLogicUri(String buyer) {
+        return Uri.parse(String.format(VALID_BIDDING_LOGIC_URI_FORMAT, buyer));
+    }
+
+    public static Uri getValidBiddingLogicUri(AdTechIdentifier buyer) {
+        return getValidBiddingLogicUri(buyer.toString());
+    }
 }

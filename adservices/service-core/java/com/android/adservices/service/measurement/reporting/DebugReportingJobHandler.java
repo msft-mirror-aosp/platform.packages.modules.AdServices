@@ -26,13 +26,12 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.measurement.util.Enrollment;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -84,15 +83,9 @@ public class DebugReportingJobHandler {
         DebugReport debugReport = debugReportOpt.get();
 
         try {
-            Optional<Uri> reportingOrigin =
-                    Enrollment.maybeGetReportingOrigin(
-                            debugReport.getEnrollmentId(), mEnrollmentDao);
-            if (!reportingOrigin.isPresent()) {
-                LogUtil.d("Reading Enrollment failed");
-                return AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
-            }
-            JSONObject debugReportJsonPayload = createReportJsonPayload(debugReport);
-            int returnCode = makeHttpPostRequest(reportingOrigin.get(), debugReportJsonPayload);
+            Uri reportingOrigin = debugReport.getRegistrationOrigin();
+            JSONArray debugReportJsonPayload = createReportJsonPayload(debugReport);
+            int returnCode = makeHttpPostRequest(reportingOrigin, debugReportJsonPayload);
 
             if (returnCode >= HttpURLConnection.HTTP_OK && returnCode <= 299) {
                 boolean success =
@@ -118,13 +111,15 @@ public class DebugReportingJobHandler {
 
     /** Creates the JSON payload for the POST request from the DebugReport. */
     @VisibleForTesting
-    JSONObject createReportJsonPayload(DebugReport debugReport) throws JSONException {
-        return debugReport.toPayloadJson();
+    JSONArray createReportJsonPayload(DebugReport debugReport) throws JSONException {
+        JSONArray debugReportJsonPayload = new JSONArray();
+        debugReportJsonPayload.put(debugReport.toPayloadJson());
+        return debugReportJsonPayload;
     }
 
     /** Makes the POST request to the reporting URL. */
     @VisibleForTesting
-    public int makeHttpPostRequest(Uri adTechDomain, JSONObject debugReportPayload)
+    public int makeHttpPostRequest(Uri adTechDomain, JSONArray debugReportPayload)
             throws IOException {
         DebugReportSender debugReportSender = new DebugReportSender();
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);

@@ -20,6 +20,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.GetAdIdResult;
@@ -33,6 +35,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
@@ -126,6 +129,10 @@ public class AdIdWorker {
                 callback.onResult(result);
             } catch (RemoteException e) {
                 LogUtil.e("RemoteException");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
             } finally {
                 return;
             }
@@ -150,6 +157,10 @@ public class AdIdWorker {
                                 callback.onResult(result);
                             } catch (RemoteException e) {
                                 LogUtil.e("RemoteException");
+                                ErrorLogUtil.e(
+                                        e,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                             } finally {
                                 // Since we are sure, the provider service api has returned,
                                 // we can safely unbind the adId provider service.
@@ -163,6 +174,10 @@ public class AdIdWorker {
                                 callback.onError(STATUS_INTERNAL_ERROR);
                             } catch (RemoteException e) {
                                 LogUtil.e("RemoteException");
+                                ErrorLogUtil.e(
+                                        e,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                             } finally {
                                 // Since we are sure, the provider service api has returned,
                                 // we can safely unbind the adId provider service.
@@ -173,10 +188,18 @@ public class AdIdWorker {
 
         } catch (RemoteException e) {
             LogUtil.e(e, "RemoteException");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
             try {
                 callback.onError(STATUS_INTERNAL_ERROR);
             } catch (RemoteException err) {
                 LogUtil.e("RemoteException");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
             } finally {
                 unbindFromService();
             }

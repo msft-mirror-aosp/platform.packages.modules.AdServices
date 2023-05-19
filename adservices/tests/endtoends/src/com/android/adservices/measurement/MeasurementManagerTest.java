@@ -19,13 +19,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import android.adservices.adid.AdId;
 import android.adservices.adid.AdIdManager;
@@ -44,10 +47,12 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.content.Context;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
+import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -104,14 +109,21 @@ public class MeasurementManagerTest {
 
     @Before
     public void setUp() throws TimeoutException {
-        mPreviousAppAllowList =
-                CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
-                        sContext.getPackageName());
+        if (!SdkLevel.isAtLeastT()) {
+            mPreviousAppAllowList =
+                    CompatAdServicesTestUtils.getAndOverridePpapiAppAllowList(
+                            sContext.getPackageName());
+            CompatAdServicesTestUtils.setFlags();
+        }
     }
 
     @After
     public void tearDown() {
-        CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+        if (!SdkLevel.isAtLeastT()) {
+            CompatAdServicesTestUtils.setPpapiAppAllowList(mPreviousAppAllowList);
+            CompatAdServicesTestUtils.resetFlagsToDefault();
+        }
+
         resetOverrideConsentManagerDebugMode();
     }
 
@@ -119,7 +131,7 @@ public class MeasurementManagerTest {
     public void testRegisterSource_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -144,7 +156,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
         measurementManager.registerSource(
                 Uri.parse("https://example.com"),
@@ -161,7 +173,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -190,6 +202,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -198,7 +211,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -235,7 +248,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -264,6 +277,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -272,7 +286,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -305,7 +319,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerTrigger(
@@ -319,7 +333,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebSource_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebSource(
@@ -333,7 +347,7 @@ public class MeasurementManagerTest {
     @Test
     public void testRegisterWebTrigger_BindServiceFailure_propagateErrorCallback() {
         MeasurementManager measurementManager = getMeasurementManager();
-        when(measurementManager.getService()).thenThrow(new IllegalStateException());
+        doThrow(new IllegalStateException()).when(measurementManager).getService();
         OutcomeReceiver callback = mock(OutcomeReceiver.class);
 
         measurementManager.registerWebTrigger(
@@ -350,7 +364,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -416,7 +430,7 @@ public class MeasurementManagerTest {
     public void testRegisterWebSource_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -443,7 +457,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -493,7 +507,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -521,6 +535,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -529,7 +544,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -565,7 +580,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -593,6 +608,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -601,7 +617,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebSourceRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebSourceRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -645,7 +661,7 @@ public class MeasurementManagerTest {
     public void testRegisterWebTrigger_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -672,7 +688,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -722,7 +738,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -750,6 +766,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -758,7 +775,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -794,7 +811,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -822,6 +839,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -830,7 +848,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<WebTriggerRegistrationRequestInternal> captor =
                 ArgumentCaptor.forClass(WebTriggerRegistrationRequestInternal.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -863,7 +881,7 @@ public class MeasurementManagerTest {
     public void testRegisterTrigger_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -888,7 +906,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -936,7 +954,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -962,6 +980,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertTrue(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class), never()).w(anyString());
     }
 
     @Test
@@ -970,7 +989,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1004,7 +1023,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1030,6 +1049,7 @@ public class MeasurementManagerTest {
         assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
         assertFalse(captor.getValue().isAdIdPermissionGranted());
         Assert.assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        verify(mock(LogUtil.class)).w(anyString());
     }
 
     @Test
@@ -1038,7 +1058,7 @@ public class MeasurementManagerTest {
         MeasurementManager measurementManager = spy(MeasurementManager.get(sContext, adIdManager));
 
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(measurementManager.getService()).thenReturn(mockService);
+        doReturn(mockService).when(measurementManager).getService();
         ArgumentCaptor<RegistrationRequest> captor =
                 ArgumentCaptor.forClass(RegistrationRequest.class);
         CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -1069,7 +1089,7 @@ public class MeasurementManagerTest {
     public void testDeleteRegistrations_callingApp_expectedAttributionSource() throws Exception {
         MeasurementManager mm = getMeasurementManager();
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
         doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
@@ -1088,7 +1108,7 @@ public class MeasurementManagerTest {
         MeasurementManager mm =
                 spy(sSandboxedSdkContext.getSystemService(MeasurementManager.class));
         IMeasurementService mockService = mock(IMeasurementService.class);
-        when(mm.getService()).thenReturn(mockService);
+        doReturn(mockService).when(mm).getService();
         ArgumentCaptor<DeletionParam> captor = ArgumentCaptor.forClass(DeletionParam.class);
         doNothing().when(mockService).deleteRegistrations(captor.capture(), any(), any());
 
@@ -1129,26 +1149,9 @@ public class MeasurementManagerTest {
 
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
-        MeasurementManager mm = getMeasurementManager();
-        overrideConsentManagerDebugMode();
-
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-        OutcomeReceiver<Integer, Exception> callback =
-                new OutcomeReceiver<Integer, Exception>() {
-                    @Override
-                    public void onResult(Integer result) {
-                        future.complete(result);
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                    }
-                };
-
-        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
-        Assert.assertEquals(
-                Integer.valueOf(MeasurementManager.MEASUREMENT_API_STATE_ENABLED), future.get());
+        final MeasurementManager mm = getMeasurementManager();
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, response);
     }
 
     @Test
@@ -1169,6 +1172,100 @@ public class MeasurementManagerTest {
         assertThrows(
                 NullPointerException.class,
                 () -> mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, /* callback */ null));
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_getServiceThrowsIllegalState_returnDisabled()
+            throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        doThrow(new IllegalStateException()).when(mm).getService();
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_getServiceThrowsRuntimeException_propagateOnError()
+            throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        doThrow(new RuntimeException()).when(mm).getService();
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+
+        mm.getMeasurementApiStatus(
+                CALLBACK_EXECUTOR,
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(error);
+                    }
+                });
+
+        Exception exception = future.get();
+        Assert.assertTrue(exception instanceof RuntimeException);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_remoteException_returnDisabled() throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
+        doReturn(mockMeasurementService).when(mm).getService();
+        doThrow(new RemoteException())
+                .when(mockMeasurementService)
+                .getMeasurementApiStatus(any(), any(), any());
+        final int response = callMeasurementApiStatus(mm);
+        Assert.assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatus_RuntimeException_propagateOnError() throws Exception {
+        final MeasurementManager mm = getMeasurementManager();
+        IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
+        doReturn(mockMeasurementService).when(mm).getService();
+        doThrow(new RuntimeException())
+                .when(mockMeasurementService)
+                .getMeasurementApiStatus(any(), any(), any());
+
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+        mm.getMeasurementApiStatus(
+                CALLBACK_EXECUTOR,
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        future.complete(error);
+                    }
+                });
+
+        Exception exception = future.get();
+        Assert.assertTrue(exception instanceof RuntimeException);
+    }
+
+    private int callMeasurementApiStatus(MeasurementManager mm) throws Exception {
+        overrideConsentManagerDebugMode();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        OutcomeReceiver<Integer, Exception> callback =
+                new OutcomeReceiver<Integer, Exception>() {
+                    @Override
+                    public void onResult(Integer result) {
+                        future.complete(result);
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                    }
+                };
+
+        mm.getMeasurementApiStatus(CALLBACK_EXECUTOR, callback);
+        return future.get();
     }
 
     // Override the Consent Manager behaviour - Consent Given

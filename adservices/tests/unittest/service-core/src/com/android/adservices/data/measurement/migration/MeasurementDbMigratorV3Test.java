@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -33,9 +34,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 
 import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.service.measurement.AsyncRegistration;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.registration.AsyncRegistration;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -53,6 +55,7 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     private static final String AGGREGATE_TRIGGER_DATA_V2;
     private static final String EVENT_TRIGGERS_V3;
     private static final String AGGREGATE_TRIGGER_DATA_V3;
+    private static final String AD_TECH_DOMAIN = "ad_tech_domain";
 
     static {
         EVENT_TRIGGERS_V2 =
@@ -221,6 +224,60 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     }
 
     @Test
+    public void performMigration_insertionCantHappenDueToColumnsMismatch_createsNewTable() {
+        // Setup
+        DbHelper dbHelper = getDbHelper(1);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        new MeasurementDbMigratorV2().performMigration(db, 1, 2);
+        // Create an old DB when ad_tech_domain column existed
+        String createEventReportWithOldDeprecatedColumn =
+                "CREATE TABLE "
+                        + MeasurementTables.EventReportContract.TABLE
+                        + " ("
+                        + MeasurementTables.EventReportContract.ID
+                        + " TEXT PRIMARY KEY NOT NULL, "
+                        + MeasurementTables.EventReportContract.SOURCE_ID
+                        + " INTEGER, "
+                        + AD_TECH_DOMAIN // doesn't exist in the current codebase, existed before
+                        + " TEXT, "
+                        + MeasurementTables.EventReportContract.ENROLLMENT_ID
+                        + " TEXT, "
+                        + MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION
+                        + " TEXT, "
+                        + MeasurementTables.EventReportContract.REPORT_TIME
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.TRIGGER_DATA
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.TRIGGER_PRIORITY
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.TRIGGER_DEDUP_KEY
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.TRIGGER_TIME
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.STATUS
+                        + " INTEGER, "
+                        + MeasurementTables.EventReportContract.SOURCE_TYPE
+                        + " TEXT, "
+                        + MeasurementTables.EventReportContract.RANDOMIZED_TRIGGER_RATE
+                        + " DOUBLE "
+                        + ")";
+
+        db.execSQL("DROP TABLE " + MeasurementTables.EventReportContract.TABLE);
+        db.execSQL(createEventReportWithOldDeprecatedColumn);
+
+        // Execution
+        new MeasurementDbMigratorV3().performMigration(db, 2, 3);
+        db.close();
+
+        // Assertion
+        db = dbHelper.safeGetWritableDatabase();
+        assertNotNull(db);
+        DbTestUtil.doesTableExistAndColumnCountMatch(
+                db, MeasurementTables.EventReportContract.TABLE, 17);
+    }
+
+    @Test
     public void performMigration_success_checkAllFields_V2toV3() {
         // Setup
         DbHelper dbHelper = getDbHelper(1);
@@ -384,7 +441,7 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     private static ContentValues getAsyncRegistrationEntry() {
         ContentValues values = new ContentValues();
         values.put(MeasurementTables.AsyncRegistrationContract.ID, "id");
-        values.put(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID, "enrollment_id");
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID, "enrollment_id");
         values.put(
                 MeasurementTables.AsyncRegistrationContract.REGISTRATION_URI,
                 WebUtil.validUri("https://foo.test/bar?ad=134").toString());
@@ -403,10 +460,10 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TOP_ORIGIN,
                 WebUtil.validUri("https://example.test").toString());
-        values.put(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT, 0);
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT, 0);
         values.put(MeasurementTables.AsyncRegistrationContract.REQUEST_TIME, 0L);
         values.put(MeasurementTables.AsyncRegistrationContract.RETRY_COUNT, 0L);
-        values.put(MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME, 0L);
+        values.put(MeasurementTablesDeprecated.AsyncRegistration.LAST_PROCESSING_TIME, 0L);
         values.put(
                 MeasurementTables.AsyncRegistrationContract.TYPE,
                 AsyncRegistration.RegistrationType.APP_SOURCE.ordinal());
@@ -434,8 +491,9 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getString(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID)))
-                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.ENROLLMENT_ID));
+                                        MeasurementTablesDeprecated.AsyncRegistration
+                                                .ENROLLMENT_ID)))
+                .isEqualTo(values.get(MeasurementTablesDeprecated.AsyncRegistration.ENROLLMENT_ID));
         assertThat(
                         cursor.getString(
                                 cursor.getColumnIndex(
@@ -476,9 +534,10 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getInt(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract
+                                        MeasurementTablesDeprecated.AsyncRegistration
                                                 .REDIRECT_COUNT)))
-                .isEqualTo(values.get(MeasurementTables.AsyncRegistrationContract.REDIRECT_COUNT));
+                .isEqualTo(
+                        values.get(MeasurementTablesDeprecated.AsyncRegistration.REDIRECT_COUNT));
         assertThat(
                         cursor.getLong(
                                 cursor.getColumnIndex(
@@ -492,11 +551,12 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
         assertThat(
                         cursor.getLong(
                                 cursor.getColumnIndex(
-                                        MeasurementTables.AsyncRegistrationContract
+                                        MeasurementTablesDeprecated.AsyncRegistration
                                                 .LAST_PROCESSING_TIME)))
                 .isEqualTo(
                         values.get(
-                                MeasurementTables.AsyncRegistrationContract.LAST_PROCESSING_TIME));
+                                MeasurementTablesDeprecated.AsyncRegistration
+                                        .LAST_PROCESSING_TIME));
         assertThat(
                         cursor.getInt(
                                 cursor.getColumnIndex(
@@ -517,16 +577,20 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     }
 
     private static void assertEventReportMigration(SQLiteDatabase db) {
-        Cursor cursor = db.query(
-                MeasurementTables.EventReportContract.TABLE,
-                new String[] {
-                    MeasurementTables.EventReportContract.ID,
-                    MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
-                    MeasurementTables.EventReportContract.SOURCE_EVENT_ID
-                },
-                null, null, null, null,
-                /* orderBy */ MeasurementTables.EventReportContract.ID,
-                null);
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.EventReportContract.TABLE,
+                        new String[] {
+                            MeasurementTables.EventReportContract.ID,
+                            MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION,
+                            MeasurementTables.EventReportContract.SOURCE_EVENT_ID
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        /* orderBy */ MeasurementTables.EventReportContract.ID,
+                        null);
         int count = 0;
         while (cursor.moveToNext()) {
             assertEventReportMigrated(cursor);
@@ -536,17 +600,21 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
     }
 
     private static void assertTriggerMigration(SQLiteDatabase db) {
-        Cursor cursor = db.query(
-                MeasurementTables.TriggerContract.TABLE,
-                new String[] {
-                    MeasurementTables.TriggerContract.ID,
-                    MeasurementTables.TriggerContract.EVENT_TRIGGERS,
-                    MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
-                    MeasurementTables.TriggerContract.FILTERS
-                },
-                null, null, null, null,
-                /* orderBy */ MeasurementTables.TriggerContract.ID,
-                null);
+        Cursor cursor =
+                db.query(
+                        MeasurementTables.TriggerContract.TABLE,
+                        new String[] {
+                            MeasurementTables.TriggerContract.ID,
+                            MeasurementTables.TriggerContract.EVENT_TRIGGERS,
+                            MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA,
+                            MeasurementTables.TriggerContract.FILTERS
+                        },
+                        null,
+                        null,
+                        null,
+                        null,
+                        /* orderBy */ MeasurementTables.TriggerContract.ID,
+                        null);
         int count = 0;
         while (cursor.moveToNext()) {
             assertTriggerMigrated(cursor);
@@ -609,24 +677,38 @@ public class MeasurementDbMigratorV3Test extends MeasurementDbMigratorTestBaseDe
 
     private static void assertEventReportMigrated(Cursor cursor) {
         int i = cursor.getPosition();
-        assertEquals(MIGRATED_EVENT_REPORT_DATA[i][0], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.EventReportContract.ID)));
-        assertEquals(MIGRATED_EVENT_REPORT_DATA[i][1], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION)));
-        assertEquals(MIGRATED_EVENT_REPORT_DATA[i][2], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.EventReportContract.SOURCE_EVENT_ID)));
+        assertEquals(
+                MIGRATED_EVENT_REPORT_DATA[i][0],
+                cursor.getString(cursor.getColumnIndex(MeasurementTables.EventReportContract.ID)));
+        assertEquals(
+                MIGRATED_EVENT_REPORT_DATA[i][1],
+                cursor.getString(
+                        cursor.getColumnIndex(
+                                MeasurementTables.EventReportContract.ATTRIBUTION_DESTINATION)));
+        assertEquals(
+                MIGRATED_EVENT_REPORT_DATA[i][2],
+                cursor.getString(
+                        cursor.getColumnIndex(
+                                MeasurementTables.EventReportContract.SOURCE_EVENT_ID)));
     }
 
     private static void assertTriggerMigrated(Cursor cursor) {
         int i = cursor.getPosition();
-        assertEquals(MIGRATED_TRIGGER_DATA[i][0], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.ID)));
-        assertEquals(MIGRATED_TRIGGER_DATA[i][1], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
-        assertEquals(MIGRATED_TRIGGER_DATA[i][2], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA)));
-        assertEquals(MIGRATED_TRIGGER_DATA[i][3], cursor.getString(cursor.getColumnIndex(
-                MeasurementTables.TriggerContract.FILTERS)));
+        assertEquals(
+                MIGRATED_TRIGGER_DATA[i][0],
+                cursor.getString(cursor.getColumnIndex(MeasurementTables.TriggerContract.ID)));
+        assertEquals(
+                MIGRATED_TRIGGER_DATA[i][1],
+                cursor.getString(
+                        cursor.getColumnIndex(MeasurementTables.TriggerContract.EVENT_TRIGGERS)));
+        assertEquals(
+                MIGRATED_TRIGGER_DATA[i][2],
+                cursor.getString(
+                        cursor.getColumnIndex(
+                                MeasurementTables.TriggerContract.AGGREGATE_TRIGGER_DATA)));
+        assertEquals(
+                MIGRATED_TRIGGER_DATA[i][3],
+                cursor.getString(cursor.getColumnIndex(MeasurementTables.TriggerContract.FILTERS)));
     }
 
     private void verifyAsyncRegistrationAllFieldsV2(SQLiteDatabase db) {

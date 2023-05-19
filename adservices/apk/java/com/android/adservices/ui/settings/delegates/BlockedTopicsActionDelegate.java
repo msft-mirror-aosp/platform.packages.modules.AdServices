@@ -26,6 +26,8 @@ import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
+import com.android.adservices.service.stats.UiStatsLogger;
+import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
 import com.android.adservices.ui.settings.activities.BlockedTopicsActivity;
 import com.android.adservices.ui.settings.fragments.AdServicesSettingsBlockedTopicsFragment;
@@ -37,14 +39,13 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.Bloc
  */
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
-public class BlockedTopicsActionDelegate extends BaseActionDelegate {
+public class BlockedTopicsActionDelegate {
     private final BlockedTopicsActivity mBlockedTopicsActivity;
     private final BlockedTopicsViewModel mBlockedTopicsViewModel;
 
     public BlockedTopicsActionDelegate(
             BlockedTopicsActivity blockedTopicsActivity,
             BlockedTopicsViewModel blockedTopicsViewModel) {
-        super(blockedTopicsActivity);
         mBlockedTopicsActivity = blockedTopicsActivity;
         mBlockedTopicsViewModel = blockedTopicsViewModel;
         listenToBlockedTopicsViewModelUiEvents();
@@ -63,10 +64,16 @@ public class BlockedTopicsActionDelegate extends BaseActionDelegate {
                     }
                     try {
                         if (event == BlockedTopicsViewModelUiEvent.RESTORE_TOPIC) {
-                            logUIAction(ActionEnum.UNBLOCK_TOPIC_SELECTED);
+                            UiStatsLogger.logUnblockTopicSelected(mBlockedTopicsActivity);
                             mBlockedTopicsViewModel.restoreTopicConsent(topic);
                             if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
-                                DialogManager.showUnblockTopicDialog(mBlockedTopicsActivity, topic);
+                                if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
+                                    DialogFragmentManager.showUnblockTopicDialog(
+                                            mBlockedTopicsActivity, topic);
+                                } else {
+                                    DialogManager.showUnblockTopicDialog(
+                                            mBlockedTopicsActivity, topic);
+                                }
                             }
                         } else {
                             Log.e("AdservicesUI", "Unknown Action for UI Logging");

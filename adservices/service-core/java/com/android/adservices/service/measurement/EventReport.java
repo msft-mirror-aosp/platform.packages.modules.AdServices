@@ -17,12 +17,14 @@
 package com.android.adservices.service.measurement;
 
 import android.annotation.IntDef;
+import android.annotation.NonNull;
 import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -55,6 +57,7 @@ public class EventReport {
     @Nullable private UnsignedLong mTriggerDebugKey;
     private String mSourceId;
     private String mTriggerId;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -91,8 +94,8 @@ public class EventReport {
                 && mDebugReportStatus == eventReport.mDebugReportStatus
                 && mReportTime == eventReport.mReportTime
                 && Objects.equals(mAttributionDestinations, eventReport.mAttributionDestinations)
-                && ImmutableMultiset.copyOf(mAttributionDestinations).equals(
-                        ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
+                && ImmutableMultiset.copyOf(mAttributionDestinations)
+                        .equals(ImmutableMultiset.copyOf(eventReport.mAttributionDestinations))
                 && Objects.equals(mEnrollmentId, eventReport.mEnrollmentId)
                 && mTriggerTime == eventReport.mTriggerTime
                 && Objects.equals(mTriggerData, eventReport.mTriggerData)
@@ -104,7 +107,8 @@ public class EventReport {
                 && Objects.equals(mSourceDebugKey, eventReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, eventReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, eventReport.mSourceId)
-                && Objects.equals(mTriggerId, eventReport.mTriggerId);
+                && Objects.equals(mTriggerId, eventReport.mTriggerId)
+                && Objects.equals(mRegistrationOrigin, eventReport.mRegistrationOrigin);
     }
 
     @Override
@@ -125,7 +129,8 @@ public class EventReport {
                 mSourceDebugKey,
                 mTriggerDebugKey,
                 mSourceId,
-                mTriggerId);
+                mTriggerId,
+                mRegistrationOrigin);
     }
 
     /** Unique identifier for the report. */
@@ -233,6 +238,11 @@ public class EventReport {
     /** Trigger ID */
     public String getTriggerId() {
         return mTriggerId;
+    }
+
+    /** Returns registration origin used to register the source and trigger */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
     }
 
     /** Builder for {@link EventReport} */
@@ -364,9 +374,21 @@ public class EventReport {
             return this;
         }
 
+        /** See {@link Source#getRegistrationOrigin()} ()} */
+        @NonNull
+        public Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mBuilding.mRegistrationOrigin = registrationOrigin;
+            return this;
+        }
+
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
-                Source source, Trigger trigger, EventTrigger eventTrigger) {
+                @NonNull Source source,
+                @NonNull Trigger trigger,
+                @NonNull EventTrigger eventTrigger,
+                @Nullable Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+                @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+                @NonNull SourceNoiseHandler sourceNoiseHandler) {
             mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
@@ -378,13 +400,11 @@ public class EventReport {
             mBuilding.mAttributionDestinations =
                     source.getAttributionDestinations(trigger.getDestinationType());
             mBuilding.mReportTime =
-                    source.getReportingTime(
-                            trigger.getTriggerTime(),
-                            trigger.getDestinationType());
+                    eventReportWindowCalcDelegate.getReportingTime(
+                            source, trigger.getTriggerTime(), trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
-            mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor().getDebugKeys(source, trigger);
+            mBuilding.mRandomizedTriggerRate =
+                    sourceNoiseHandler.getRandomAttributionProbability(source);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
@@ -394,6 +414,7 @@ public class EventReport {
             }
             mBuilding.mSourceId = source.getId();
             mBuilding.mTriggerId = trigger.getId();
+            mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
             return this;
         }
 

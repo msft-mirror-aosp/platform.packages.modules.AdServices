@@ -66,11 +66,12 @@ class AdServicesUiUtil:
         if not os.path.exists(strings_xml_dir):
             return
 
-        new_strings = set(node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot())
+        new_strings = [node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot()]
         root, mapping = self._get_existing_tree(public_xml_dir)
 
-        added_strings = set(string for string in new_strings if string not in mapping)
+        added_strings = [string for string in new_strings if string not in mapping]
         # TO-DO: add code to remove exsting elements when needed.
+        new_strings = set(new_strings)
         deleted_strings = set(string for string in mapping if string not in new_strings)
 
         if not added_strings:

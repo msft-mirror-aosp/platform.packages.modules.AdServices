@@ -32,6 +32,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnScrollChangeListener;
@@ -102,6 +103,7 @@ public class ConsentNotificationGaFragment extends Fragment {
     }
 
     private void setupListeners(Bundle savedInstanceState) {
+        // set up how it works expander
         TextView howItWorksExpander = requireActivity().findViewById(R.id.how_it_works_expander);
         if (savedInstanceState != null) {
             setInfoViewState(
@@ -114,6 +116,11 @@ public class ConsentNotificationGaFragment extends Fragment {
                             LANDING_PAGE_ADDITIONAL_INFO_CLICKED, getContext());
                 });
 
+        // set up privacy policy link movement
+        ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy))
+                .setMovementMethod(LinkMovementMethod.getInstance());
+
+        // set up left control button and right control button
         Button leftControlButton = requireActivity().findViewById(R.id.leftControlButton);
         leftControlButton.setOnClickListener(
                 view -> {

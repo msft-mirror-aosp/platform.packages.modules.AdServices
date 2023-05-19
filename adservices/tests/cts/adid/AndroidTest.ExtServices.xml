@@ -16,11 +16,15 @@
   -->
 <configuration description="Config for Cts Ad Id end-to-end test in ExtServices">
     <option name="test-suite-tag" value="cts" />
-    <option name="test-tag" value="CtsExtAdIdEndToEndTest" />
+    <option name="test-tag" value="CtsAdExtServicesAdIdEndToEndTest" />
     <option name="config-descriptor:metadata" key="component" value="framework"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_instant_app" />
     <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi" />
     <option name="config-descriptor:metadata" key="parameter" value="secondary_user" />
+
+    <!-- For this test suite to get picked up in presubmit -->
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.extservices.apex" />
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
@@ -34,13 +38,14 @@
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
         <option name="cleanup-apks" value="true"/>
-        <option name="test-file-name" value="CtsExtAdIdEndToEndTest.apk"/>
+        <option name="test-file-name" value="CtsAdExtServicesAdIdEndToEndTest.apk"/>
         <option name="check-min-sdk" value="true" />
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
 
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />

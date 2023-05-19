@@ -26,7 +26,6 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
 
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -152,7 +151,7 @@ public class LimitPerfTests extends AbstractPerfTest {
                 getValidTrustedBiddingUriByBuyer(AdTechIdentifier.fromString(BUYER));
         return new CustomAudience.Builder()
                 // CA names are limited to 200 bytes
-                .setName(nameStart + "a".repeat(200 - nameStart.length()))
+                .setName(nameStart + repeatCompatImpl("a", 200 - nameStart.length()))
                 .setActivationTime(Instant.now())
                 .setExpirationTime(Instant.now().plus(Duration.ofDays(1)))
                 // Daily update and bidding URLS are limited to 400 bytes
@@ -194,7 +193,7 @@ public class LimitPerfTests extends AbstractPerfTest {
         if (n < 8) {
             throw new IllegalArgumentException("n too small");
         }
-        return "{\"a\":\"" + "a".repeat(n - 8) + "\"}";
+        return "{\"a\":\"" + repeatCompatImpl("a", n - 8) + "\"}";
     }
 
     private String nBitJsonWithFields(int n, String fields) {
@@ -202,7 +201,11 @@ public class LimitPerfTests extends AbstractPerfTest {
             throw new IllegalArgumentException("n too small");
         }
 
-        return "{" + fields + ",\"a\":\"" + "a".repeat(n - (9 + fields.length())) + "\"}";
+        return "{"
+                + fields
+                + ",\"a\":\""
+                + repeatCompatImpl("a", n - (9 + fields.length()))
+                + "\"}";
     }
 
     private Uri nBitUriFromAdtech(String adtech, int n) {
@@ -212,7 +215,7 @@ public class LimitPerfTests extends AbstractPerfTest {
         } else if (n == uriStart.length()) {
             return Uri.parse(uriStart);
         } else {
-            return Uri.parse(uriStart + "#" + "a".repeat(n - 3 - uriStart.length()));
+            return Uri.parse(uriStart + "#" + repeatCompatImpl("a", n - 3 - uriStart.length()));
         }
     }
 
@@ -222,7 +225,22 @@ public class LimitPerfTests extends AbstractPerfTest {
         } else if (n == uri.toString().length()) {
             return uri;
         } else {
-            return Uri.parse(uri + "#" + "a".repeat(n - 3 - uri.toString().length()));
+            return Uri.parse(uri + "#" + repeatCompatImpl("a", n - 3 - uri.toString().length()));
         }
+    }
+
+    /**
+     * Since we run the test on both Android S and T, this util method provides a
+     * backward-compatible way to concatenate a string N times without using Java 11 repeat String
+     * method.
+     */
+    private static String repeatCompatImpl(String str, int numTimes) {
+        StringBuilder sb = new StringBuilder();
+
+        for (int num = 0; num < numTimes; num++) {
+            sb.append(str);
+        }
+
+        return sb.toString();
     }
 }

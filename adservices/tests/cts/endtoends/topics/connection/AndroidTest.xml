@@ -39,6 +39,7 @@
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
         <!-- Forces using bundled model files. -->

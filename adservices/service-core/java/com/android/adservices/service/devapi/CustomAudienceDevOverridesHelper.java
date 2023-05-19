@@ -28,7 +28,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * Helper class to support the persistence and retrieval of dev overrides for the Custom Audience
@@ -64,7 +63,7 @@ public class CustomAudienceDevOverridesHelper {
      * DevContext#getCallingAppPackageName()}.
      */
     @Nullable
-    public String getBiddingLogicOverride(
+    public DecisionLogic getBiddingLogicOverride(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
@@ -84,7 +83,7 @@ public class CustomAudienceDevOverridesHelper {
                 "Override for app '%s' and key (%s,%s,%s): is %s",
                 appPackageName, owner, buyer, name, result);
 
-        return Optional.ofNullable(result).map(DecisionLogic::getPayload).orElse(null);
+        return result;
     }
 
     /**
@@ -129,6 +128,7 @@ public class CustomAudienceDevOverridesHelper {
             @NonNull AdTechIdentifier buyer,
             @NonNull String name,
             @NonNull String biddingLogicJS,
+            long biddingLogicJsVersion,
             @NonNull AdSelectionSignals trustedBiddingSignals) {
         Objects.requireNonNull(owner);
         Objects.requireNonNull(buyer);
@@ -160,6 +160,7 @@ public class CustomAudienceDevOverridesHelper {
                             .setBuyer(buyer)
                             .setName(name)
                             .setBiddingLogicJS(biddingLogicJS)
+                            .setBiddingLogicJsVersion(biddingLogicJsVersion)
                             .setTrustedBiddingData(trustedBiddingSignals.toString())
                             .setAppPackageName(appPackageName)
                             .build());

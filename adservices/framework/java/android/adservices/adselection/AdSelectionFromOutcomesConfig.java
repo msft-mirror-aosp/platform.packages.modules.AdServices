@@ -196,7 +196,32 @@ public final class AdSelectionFromOutcomesConfig implements Parcelable {
         }
 
         /**
-         * Sets the {@code SelectionLogicUri} to download the JS script that consumes the list of
+         * Sets the {@code SelectionLogicUri}. Selection URI could be either of the two schemas:
+         *
+         * <ul>
+         *   <li><b>HTTPS:</b> HTTPS URIs have to be absolute URIs where the host matches the {@code
+         *       seller}
+         *   <li><b>Ad Selection Prebuilt:</b> Ad Selection Service URIs follow {@code
+         *       ad-selection-prebuilt://ad-selection-from-outcomes/<name>?<script-generation-parameters>}
+         *       format. FLEDGE generates the appropriate JS script without the need for a network
+         *       call.
+         *       <p>Available prebuilt scripts:
+         *       <ul>
+         *         <li><b>{@code waterfall-mediation-truncation} for {@code selectOutcome}:</b> This
+         *             JS implements Waterfall mediation truncation logic. Mediation SDK's ad is
+         *             returned if its bid greater than or equal to the bid floor. Below
+         *             parameter(s) are required to use this prebuilt:
+         *             <ul>
+         *               <li><b>{@code bidFloor}:</b> Key of the bid floor value passed in the
+         *                   {@link AdSelectionFromOutcomesConfig#getSelectionSignals()} that will
+         *                   be compared against mediation SDK's winner ad.
+         *             </ul>
+         *             <p>Ex. If your selection signals look like {@code {"bid_floor": 10}} then,
+         *             {@code
+         *             ad-selection-prebuilt://ad-selection-from-outcomes/waterfall-mediation-truncation/?bidFloor=bid_floor}
+         *       </ul>
+         * </ul>
+         *
          * {@code AdSelectionIds} and {@code SelectionSignals}.
          */
         @NonNull

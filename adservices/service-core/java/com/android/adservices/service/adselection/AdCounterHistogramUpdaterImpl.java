@@ -38,14 +38,24 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final AdSelectionEntryDao mAdSelectionEntryDao;
     private final FrequencyCapDao mFrequencyCapDao;
+    private final int mAbsoluteMaxHistogramEventCount;
+    private final int mLowerMaxHistogramEventCount;
 
     public AdCounterHistogramUpdaterImpl(
-            AdSelectionEntryDao adSelectionEntryDao, FrequencyCapDao frequencyCapDao) {
+            @NonNull AdSelectionEntryDao adSelectionEntryDao,
+            @NonNull FrequencyCapDao frequencyCapDao,
+            int absoluteMaxHistogramEventCount,
+            int lowerMaxHistogramEventCount) {
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(frequencyCapDao);
+        Preconditions.checkArgument(absoluteMaxHistogramEventCount > 0);
+        Preconditions.checkArgument(lowerMaxHistogramEventCount > 0);
+        Preconditions.checkArgument(absoluteMaxHistogramEventCount > lowerMaxHistogramEventCount);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mFrequencyCapDao = frequencyCapDao;
+        mAbsoluteMaxHistogramEventCount = absoluteMaxHistogramEventCount;
+        mLowerMaxHistogramEventCount = lowerMaxHistogramEventCount;
     }
 
     @Override
@@ -89,8 +99,14 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
                         .setBuyer(histogramInfo.getBuyer())
                         .setTimestamp(eventTimestamp);
 
+        sLogger.v("Inserting %d histogram events", adCounterKeys.size());
         for (String key : adCounterKeys) {
-            mFrequencyCapDao.insertHistogramEvent(eventBuilder.setAdCounterKey(key).build());
+            // TODO(b/276528814): Insert in bulk instead of in multiple transactions
+            //  and handle eviction only once
+            mFrequencyCapDao.insertHistogramEvent(
+                    eventBuilder.setAdCounterKey(key).build(),
+                    mAbsoluteMaxHistogramEventCount,
+                    mLowerMaxHistogramEventCount);
         }
     }
 }
