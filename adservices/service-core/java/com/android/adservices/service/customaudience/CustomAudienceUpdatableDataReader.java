@@ -56,11 +56,11 @@ public class CustomAudienceUpdatableDataReader {
     public static final String AD_FILTERS_KEY = "ad_filters";
     public static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
 
-    private static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
-    private static final String VALIDATED_FIELD_LOG_FORMAT =
+    public static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
+    public static final String VALIDATED_FIELD_LOG_FORMAT =
             "%s Validated %s found in JSON response";
-    private static final String FIELD_NOT_FOUND_LOG_FORMAT = "%s %s not found in JSON response";
-    private static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
+    public static final String FIELD_NOT_FOUND_LOG_FORMAT = "%s %s not found in JSON response";
+    public static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
             "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
                     + " ignoring and continuing.  Error message: %s";
 

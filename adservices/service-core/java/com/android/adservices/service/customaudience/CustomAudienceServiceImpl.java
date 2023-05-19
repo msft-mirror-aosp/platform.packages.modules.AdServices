@@ -20,6 +20,7 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -57,6 +58,8 @@ import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Throttler;
+import com.android.adservices.service.common.cache.CacheProviderFactory;
+import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.CustomAudienceOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -65,6 +68,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.time.Clock;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -262,8 +266,39 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     public void fetchAndJoinCustomAudience(
             @NonNull FetchAndJoinCustomAudienceInput input,
             @NonNull FetchAndJoinCustomAudienceCallback callback) {
-        sLogger.v("Entering fetchCustomAudience");
-        // TODO(b/282017342): Add implementation
+        sLogger.v("Executing fetchAndJoinCustomAudience.");
+        final int apiName = AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+
+        // Caller permissions must be checked in the binder thread, before anything else
+        mFledgeAuthorizationFilter.assertAppDeclaredPermission(mContext, apiName);
+
+        // Failing fast if parameters are null.
+        try {
+            Objects.requireNonNull(input);
+            Objects.requireNonNull(callback);
+        } catch (NullPointerException exception) {
+            mAdServicesLogger.logFledgeApiCallStats(
+                    apiName, AdServicesStatusUtils.STATUS_INVALID_ARGUMENT, 0);
+            // Rethrow because we want to fail fast
+            throw exception;
+        }
+
+        FetchCustomAudienceImpl impl =
+                new FetchCustomAudienceImpl(
+                        mFlags,
+                        // TODO(b/235841960): Align on internal Clock usage.
+                        Clock.systemUTC(),
+                        mAdServicesLogger,
+                        mExecutorService,
+                        mCustomAudienceImpl.getCustomAudienceDao(),
+                        mCallingAppUidSupplier,
+                        mConsentManager,
+                        mCustomAudienceServiceFilter,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.create(mContext, mFlags)));
+
+        mExecutorService.execute(() -> impl.doFetchCustomAudience(input, callback));
     }
 
     private int notifyFailure(ICustomAudienceCallback callback, Exception exception)

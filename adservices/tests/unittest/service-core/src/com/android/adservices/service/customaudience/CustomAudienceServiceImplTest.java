@@ -29,8 +29,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
@@ -61,6 +63,8 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
+import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.content.Context;
 import android.os.Process;
@@ -110,6 +114,7 @@ public class CustomAudienceServiceImplTest {
     @Mock private FledgeAllowListsFilter mFledgeAllowListsFilter;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private ICustomAudienceCallback mICustomAudienceCallback;
+    @Mock private FetchAndJoinCustomAudienceCallback mFetchAndJoinCustomAudienceCallback;
     @Mock private CustomAudienceOverrideCallback mCustomAudienceOverrideCallback;
     @Mock private AppImportanceFilter mAppImportanceFilter;
     @Mock private CustomAudienceDao mCustomAudienceDao;
@@ -162,6 +167,9 @@ public class CustomAudienceServiceImplTest {
 
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_JOIN_CUSTOM_AUDIENCE), anyString()))
+                .thenReturn(true);
+        Mockito.lenient()
+                .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_FETCH_CUSTOM_AUDIENCE), anyString()))
                 .thenReturn(true);
         Mockito.lenient()
                 .when(mMockThrottler.tryAcquire(eq(FLEDGE_API_LEAVE_CUSTOM_AUDIENCE), anyString()))
@@ -448,6 +456,41 @@ public class CustomAudienceServiceImplTest {
                         CustomAudienceFixture.VALID_OWNER);
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, STATUS_INTERNAL_ERROR);
+    }
+
+    @Test
+    public void testFetchCustomAudience_nullCallback() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.fetchAndJoinCustomAudience(
+                                new FetchAndJoinCustomAudienceInput.Builder(
+                                                CustomAudienceFixture.getValidFetchUriByBuyer(
+                                                        CommonFixture.VALID_BUYER_1),
+                                                CustomAudienceFixture.VALID_OWNER)
+                                        .build(),
+                                null));
+
+        verify(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+        verifyLoggerMock(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
+    }
+
+    @Test
+    public void testFetchCustomAudience_nullInput() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        mService.fetchAndJoinCustomAudience(
+                                null, mFetchAndJoinCustomAudienceCallback));
+
+        verify(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+        verifyLoggerMock(
+                AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN, STATUS_INVALID_ARGUMENT);
     }
 
     @Test
@@ -1207,6 +1250,25 @@ public class CustomAudienceServiceImplTest {
                                 VALID_CUSTOM_AUDIENCE,
                                 CustomAudienceFixture.VALID_OWNER,
                                 mICustomAudienceCallback));
+    }
+
+    @Test
+    public void testAppManifestPermissionNotRequested_fetchCustomAudience_fails() {
+        doThrow(SecurityException.class)
+                .when(mFledgeAuthorizationFilter)
+                .assertAppDeclaredPermission(
+                        CONTEXT, AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mService.fetchAndJoinCustomAudience(
+                                new FetchAndJoinCustomAudienceInput.Builder(
+                                                CustomAudienceFixture.getValidFetchUriByBuyer(
+                                                        CommonFixture.VALID_BUYER_1),
+                                                CustomAudienceFixture.VALID_OWNER)
+                                        .build(),
+                                mFetchAndJoinCustomAudienceCallback));
     }
 
     @Test
