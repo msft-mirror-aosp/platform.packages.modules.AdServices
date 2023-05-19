@@ -2201,4 +2201,12 @@ public interface Flags {
     default String getMeasurementEventReportsCtcEarlyReportingWindows() {
         return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
     }
+
+    /** Default U18 UX feature flag.. */
+    boolean DEFAULT_U18_UX_ENABLED = false;
+
+    /** U18 UX feature flag.. */
+    default boolean getU18UxEnabled() {
+        return DEFAULT_U18_UX_ENABLED;
+    }
 }
