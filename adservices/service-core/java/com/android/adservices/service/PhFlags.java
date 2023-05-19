@@ -2456,6 +2456,8 @@ public final class PhFlags implements Flags {
 
     @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println(
+                "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
         writer.println("\t" + KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
@@ -3303,5 +3305,15 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_U18_UX_ENABLED,
                 /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+    }
+
+    static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
+
+    @Override
+    public boolean getEnableAdServicesSystemApi() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
     }
 }
