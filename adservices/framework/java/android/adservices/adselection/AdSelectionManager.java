@@ -345,6 +345,21 @@ public class AdSelectionManager {
      * contextual_signals, custom_audience_reporting_signals) { return {'status': 0, 'results':
      * {'reporting_url': reporting_url } }; } }
      *
+     * <p>In addition, buyers and sellers have the option to register to receive reports on specific
+     * interactions that occur on the rendered ad. To do so, they can invoke the platform provided
+     * {@code registerAdBeacon} function inside {@code reportWin} and {@code reportResult} for
+     * buyers and sellers, respectively.
+     *
+     * <p>The function definition of {@code registerBeacon} is:
+     *
+     * <p>{@code function registerAdBeacon(interaction_key, reporting_url) }
+     *
+     * <p>For each interaction a buyer/seller is interested in reports for, they would invoke {@code
+     * registerAdBeacon}, where {@code interaction_key} is an identifier for that specific
+     * interaction. This interaction should match {@link
+     * ReportInteractionRequest#getInteractionKey()} when the SDK invokes {@link
+     * #reportInteraction}.
+     *
      * <p>The output is passed by the {@code receiver}, which either returns an empty {@link Object}
      * for a successful run, or an {@link Exception} includes the type of the exception thrown and
      * the corresponding error message.
@@ -406,10 +421,18 @@ public class AdSelectionManager {
     }
 
     /**
-     * Notifies PPAPI that there is a new interaction to report for the ad selected by the
+     * Notifies the service that there is a new interaction to report for the ad selected by the
      * ad-selection run identified by {@code adSelectionId}. There is no guarantee about when the
      * interaction will be reported. The interaction reporting could be delayed and interactions
      * could be batched.
+     *
+     * <p>Using {@link ReportInteractionRequest#getInteractionKey()}, the service will fetch the
+     * {@code interactionReportingUri} that was registered in {@code registerAdBeacon}. See
+     * documentation of {@link #reportImpression} for more details regarding {@code
+     * registerAdBeacon}. Then, the service will attach {@link
+     * ReportInteractionRequest#getInteractionData()} to the request body of a POST request and send
+     * the request. The body of the POST request will have the {@code content-type} of {@code
+     * text/plain}, and the data will be transmitted in {@code charset=UTF-8}.
      *
      * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
      * successful run, or an {@link Exception} includes the type of the exception thrown and the
