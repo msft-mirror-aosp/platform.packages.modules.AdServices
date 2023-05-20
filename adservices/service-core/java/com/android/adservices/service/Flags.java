@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.service.adselection.AdOutcomeSelectorImpl;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
+import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
@@ -382,6 +383,35 @@ public interface Flags {
     /** Returns the job period in millis for Attribution Fallback Job . */
     default long getMeasurementAttributionFallbackJobPeriodMs() {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
+    }
+
+    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
+
+    /**
+     * Returns max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+        return MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE = 100;
+
+    /**
+     * Returns max distinct advertisers with pending impressions per { Publisher X Enrollment X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctDestinationsInActiveSource() {
+        return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
     }
 
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
@@ -1296,6 +1326,23 @@ public interface Flags {
                 || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
+    /**
+     * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
+     * value is false which means storing the rollback handling data in App Search is enabled. This
+     * flag is used for emergency turning off measurement rollback data deletion handling on Android
+     * S.
+     */
+    boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
+
+    /**
+     * Returns the kill switch value for storing Measurement rollback deletion handling data in App
+     * Search. The rollback deletion handling on Android S will be disabled if this kill switch
+     * value is true.
+     */
+    default boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        return MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+    }
+
     // ADID Killswitch.
     /**
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
@@ -2113,5 +2160,61 @@ public interface Flags {
     /** Returns maximum Event Reports per destination */
     default int getMeasurementMaxEventReportsPerDestination() {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
+    }
+
+    /** Disable early reporting windows configurability by default. */
+    boolean MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS = false;
+
+    /** Returns true if event reporting windows configurability is enabled, false otherwise. */
+    default boolean getMeasurementEnableConfigurableEventReportingWindows() {
+        return MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for VTC type source. Derived from {@link
+     * PrivacyParams#EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS = "";
+
+    /**
+     * Returns configured comma separated early VTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsVtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /**
+     * Default early reporting windows for CTC type source. Derived from {@link
+     * PrivacyParams#NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS}.
+     */
+    String MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
+            String.join(
+                    ",",
+                    Long.toString(TimeUnit.DAYS.toSeconds(2)),
+                    Long.toString(TimeUnit.DAYS.toSeconds(7)));
+
+    /**
+     * Returns configured comma separated early CTC based source's event reporting windows in
+     * seconds.
+     */
+    default String getMeasurementEventReportsCtcEarlyReportingWindows() {
+        return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /** Default U18 UX feature flag.. */
+    boolean DEFAULT_U18_UX_ENABLED = false;
+
+    /** U18 UX feature flag.. */
+    default boolean getU18UxEnabled() {
+        return DEFAULT_U18_UX_ENABLED;
+    }
+
+    /** Default enableAdServices system API feature flag.. */
+    boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
+
+    /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi() {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
     }
 }

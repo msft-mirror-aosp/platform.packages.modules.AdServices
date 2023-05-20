@@ -133,6 +133,15 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS =
             "measurement_attribution_fallback_job_period_ms";
 
+    static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
+            "measurement_max_attribution_per_rate_limit_window";
+
+    static final String KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION =
+            "measurement_max_distinct_enrollments_in_attribution";
+
+    static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
+            "measurement_max_distinct_destinations_in_active_source";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -314,6 +323,9 @@ public final class PhFlags implements Flags {
             "measurement_job_registration_fallback_job_kill_switch";
     static final String KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH =
             "measurement_rollback_deletion_kill_switch";
+
+    static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
+            "measurement_rollback_deletion_app_search_kill_switch";
     static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
@@ -474,6 +486,15 @@ public final class PhFlags implements Flags {
 
     static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
+
+    static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS =
+            "measurement_enable_configurable_event_reporting_windows";
+
+    static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
+            "measurement_event_reports_vtc_early_reporting_windows";
+
+    static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
+            "measurement_event_reports_ctc_early_reporting_windows";
 
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     static final String NAMESPACE_ADSERVICES = "adservices";
@@ -900,6 +921,30 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS,
                 /* defaultValue */ MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public int getMeasurementMaxAttributionPerRateLimitWindow() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                /* defaultValue */ MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION,
+                /* defaultValue */ MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+    }
+
+    @Override
+    public int getMeasurementMaxDistinctDestinationsInActiveSource() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE,
+                /* defaultValue */ MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
     }
 
     @Override
@@ -1643,6 +1688,17 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementRollbackDeletionAppSearchKillSwitch() {
+        final boolean defaultValue = MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
+                /* def= */ DeviceConfig.getBoolean(
+                        NAMESPACE_ADSERVICES,
+                        /* name= */ KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                        defaultValue));
+    }
+
+    @Override
     public String getMeasurementDebugJoinKeyEnrollmentAllowlist() {
         return DeviceConfig.getString(
                 NAMESPACE_ADSERVICES,
@@ -1887,7 +1943,7 @@ public final class PhFlags implements Flags {
             return false;
         }
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
+                getSystemPropertyName(KEY_UI_OTA_STRINGS_FEATURE_ENABLED),
                 /* defaultValue */ DeviceConfig.getBoolean(
                         NAMESPACE_ADSERVICES,
                         /* flagName */ KEY_UI_OTA_STRINGS_FEATURE_ENABLED,
@@ -2372,7 +2428,37 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableConfigurableEventReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS);
+    }
+
+    @Override
+    public String getMeasurementEventReportsVtcEarlyReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS);
+    }
+
+    @Override
+    public String getMeasurementEventReportsCtcEarlyReportingWindows() {
+        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
+        return DeviceConfig.getString(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS,
+                /* defaultValue */ MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+        writer.println(
+                "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
+        writer.println("\t" + KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
         writer.println("==== AdServices PH Flags Dump Enrollment ====");
         writer.println(
                 "\t"
@@ -2704,6 +2790,36 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION
                         + " = "
                         + getMeasurementMaxEventReportsPerDestination());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_CONFIGURABLE_EVENT_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEnableConfigurableEventReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEventReportsVtcEarlyReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS
+                        + " = "
+                        + getMeasurementEventReportsCtcEarlyReportingWindows());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW
+                        + " = "
+                        + getMeasurementMaxAttributionPerRateLimitWindow());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION
+                        + " = "
+                        + getMeasurementMaxDistinctEnrollmentsInAttribution());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
+                        + " = "
+                        + getMeasurementMaxDistinctDestinationsInActiveSource());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -3050,6 +3166,11 @@ public final class PhFlags implements Flags {
         writer.println("\t" + KEY_ENABLE_BACK_COMPAT + " = " + getEnableBackCompat());
         writer.println(
                 "\t" + KEY_ENABLE_APPSEARCH_CONSENT_DATA + " = " + getEnableAppsearchConsentData());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH
+                        + " = "
+                        + getMeasurementRollbackDeletionAppSearchKillSwitch());
     }
 
     @Override
@@ -3174,5 +3295,25 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_NOTIFICATION_DISMISSED_ON_CLICK,
                 /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
+    }
+
+    static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
+
+    @Override
+    public boolean getU18UxEnabled() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_U18_UX_ENABLED,
+                /* defaultValue */ DEFAULT_U18_UX_ENABLED);
+    }
+
+    static final String KEY_ENABLE_AD_SERVICES_SYSTEM_API = "enable_ad_services_system_api";
+
+    @Override
+    public boolean getEnableAdServicesSystemApi() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
+                /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
     }
 }

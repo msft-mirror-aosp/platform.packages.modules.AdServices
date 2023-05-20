@@ -46,9 +46,11 @@ import com.android.adservices.service.measurement.aggregation.AggregateDeduplica
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi.Type;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.Filter;
@@ -78,6 +80,8 @@ class AttributionJobHandler {
     private static final String API_VERSION = "0.1";
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
+    private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     private final Flags mFlags;
 
@@ -87,16 +91,25 @@ class AttributionJobHandler {
     }
 
     AttributionJobHandler(DatastoreManager datastoreManager, DebugReportApi debugReportApi) {
-        mDatastoreManager = datastoreManager;
-        mFlags = FlagsFactory.getFlags();
-        mDebugReportApi = debugReportApi;
+        this(
+                datastoreManager,
+                FlagsFactory.getFlags(),
+                debugReportApi,
+                new EventReportWindowCalcDelegate(FlagsFactory.getFlags()),
+                new SourceNoiseHandler(FlagsFactory.getFlags()));
     }
 
     AttributionJobHandler(
-            DatastoreManager datastoreManager, Flags flags, DebugReportApi debugReportApi) {
+            DatastoreManager datastoreManager,
+            Flags flags,
+            DebugReportApi debugReportApi,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /**
@@ -283,7 +296,7 @@ class AttributionJobHandler {
                                                     - AGGREGATE_MIN_REPORT_DELAY))
                                     + AGGREGATE_MIN_REPORT_DELAY);
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor().getDebugKeys(source, trigger);
+                    new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
@@ -515,9 +528,18 @@ class AttributionJobHandler {
         source.setAppDestinations(destinations.first);
         source.setWebDestinations(destinations.second);
 
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+
         EventReport newEventReport =
                 new EventReport.Builder()
-                        .populateFromSourceAndTrigger(source, trigger, eventTrigger)
+                        .populateFromSourceAndTrigger(
+                                source,
+                                trigger,
+                                eventTrigger,
+                                debugKeyPair,
+                                mEventReportWindowCalcDelegate,
+                                mSourceNoiseHandler)
                         .build();
 
         // Call provisionEventReportQuota since it has side-effects affecting source and
@@ -638,7 +660,7 @@ class AttributionJobHandler {
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
         long attributionCount = measurementDao.getAttributionsPerRateLimitWindow(source, trigger);
-        if (attributionCount >= PrivacyParams.getMaxAttributionPerRateLimitWindow()) {
+        if (attributionCount >= mFlags.getMeasurementMaxAttributionPerRateLimitWindow()) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -646,12 +668,19 @@ class AttributionJobHandler {
                     measurementDao,
                     Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT);
         }
-        return attributionCount < PrivacyParams.getMaxAttributionPerRateLimitWindow();
+        return attributionCount < mFlags.getMeasurementMaxAttributionPerRateLimitWindow();
     }
 
-    private static boolean isWithinReportLimit(
+    private boolean isWithinReportLimit(
             Source source, int existingReportCount, @EventSurfaceType int destinationType) {
-        return source.getMaxReportCount(destinationType) > existingReportCount;
+        return mEventReportWindowCalcDelegate.getMaxReportCount(
+                        source, hasAppInstallAttributionOccurred(source, destinationType))
+                > existingReportCount;
+    }
+
+    private static boolean hasAppInstallAttributionOccurred(
+            Source source, @EventSurfaceType int destinationType) {
+        return destinationType == EventSurfaceType.APP && source.isInstallAttributed();
     }
 
     private static boolean isWithinInstallCooldownWindow(Source source, Trigger trigger) {
@@ -807,9 +836,7 @@ class AttributionJobHandler {
                             trigger.getTriggerTime()
                                     - PrivacyParams.RATE_LIMIT_WINDOW_MILLISECONDS,
                             trigger.getTriggerTime());
-            if (count
-                    >= PrivacyParams
-                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution()) {
+            if (count >= mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()) {
                 mDebugReportApi.scheduleTriggerDebugReport(
                         source,
                         trigger,
@@ -818,8 +845,7 @@ class AttributionJobHandler {
                         Type.TRIGGER_REPORTING_ORIGIN_LIMIT);
             }
 
-            return count < PrivacyParams
-                    .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution();
+            return count < mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution();
         } else {
             LogUtil.d("isEnrollmentWithinPrivacyBounds: getPublisherAndDestinationTopPrivateDomains"
                     + " failed. %s %s", source.getPublisher(), trigger.getAttributionDestination());
