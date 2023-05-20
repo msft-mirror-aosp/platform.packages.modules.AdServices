@@ -20,10 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.PrivacyParams;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
@@ -43,33 +43,28 @@ import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class SourceNoiseHandlerTest {
-    private static final double ZERO_DELTA = 0D;
-
     private Flags mFlags;
     private SourceNoiseHandler mSourceNoiseHandler;
 
     @Before
     public void setup() {
-        mFlags = spy(FlagsFactory.getFlags());
+        mFlags = mock(Flags.class);
         doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
-        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
-                spy(new EventReportWindowCalcDelegate(mFlags));
-        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, eventReportWindowCalcDelegate));
+        mSourceNoiseHandler =
+                spy(new SourceNoiseHandler(mFlags, new EventReportWindowCalcDelegate(mFlags)));
     }
 
     @Test
     public void fakeReports_eventSourceDualDestPostInstallMode_generatesFromStaticReportStates() {
         long expiry = System.currentTimeMillis();
         Source source =
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .setEventReportWindow(expiry)
-                                .setInstallCooldownWindow(
-                                        SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
-                                .build());
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .setEventReportWindow(expiry)
+                        .setInstallCooldownWindow(
+                                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                        .build();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
         int falseCount = 0;
@@ -98,7 +93,7 @@ public class SourceNoiseHandlerTest {
 
     @Test
     public void fakeReports_flexEventReport_generatesFromStaticReportStates() throws JSONException {
-        Source source = spy(SourceFixture.getValidSourceWithFlexEventReport());
+        Source source = SourceFixture.getValidSourceWithFlexEventReport();
         // Force increase the probability of random attribution.
         doReturn(0.50D).when(mSourceNoiseHandler).getRandomAttributionProbability(source);
         int falseCount = 0;
@@ -333,90 +328,79 @@ public class SourceNoiseHandlerTest {
         long expiry = System.currentTimeMillis();
         // Single (App) destination, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setEventReportWindow(expiry)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(null)
+                        .setEventReportWindow(expiry)
+                        .build(),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
         // Single (App) destination, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setEventReportWindow(expiry)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(null)
+                        .setEventReportWindow(expiry)
+                        .build(),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
         // Single (Web) destination, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(null)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiry)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .build(),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
         // Single (Web) destination, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(null)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiry)
+                        .setAppDestinations(null)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .build(),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
         // Both destinations set, EVENT type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiry)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .build(),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
 
         // Both destinations set, NAVIGATION type
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiry)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                        .build(),
                 PrivacyParams.getNavigationTriggerDataCardinality());
 
         // App destination with cooldown window
         verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setInstallCooldownWindow(
-                                        SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
-                                .build()),
+                SourceFixture.getValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setEventReportWindow(expiry)
+                        .setAppDestinations(
+                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                        .setWebDestinations(null)
+                        .setInstallCooldownWindow(
+                                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                        .build(),
                 PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
     }
 
