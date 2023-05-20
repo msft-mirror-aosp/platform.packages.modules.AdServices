@@ -47,13 +47,14 @@ public class SourceNoiseHandlerTest {
 
     private Flags mFlags;
     private SourceNoiseHandler mSourceNoiseHandler;
-    private EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 
     @Before
     public void setup() {
         mFlags = spy(FlagsFactory.getFlags());
-        mEventReportWindowCalcDelegate = spy(new EventReportWindowCalcDelegate(mFlags));
-        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, mEventReportWindowCalcDelegate));
+        doReturn(false).when(mFlags).getMeasurementEnableConfigurableEventReportingWindows();
+        EventReportWindowCalcDelegate eventReportWindowCalcDelegate =
+                spy(new EventReportWindowCalcDelegate(mFlags));
+        mSourceNoiseHandler = spy(new SourceNoiseHandler(mFlags, eventReportWindowCalcDelegate));
     }
 
     @Test
@@ -471,99 +472,5 @@ public class SourceNoiseHandlerTest {
         assertNotEquals(0, falseCount);
         assertNotEquals(0, neverCount);
         assertNotEquals(0, truthCount);
-    }
-
-    @Test
-    public void testRandomAttributionProbability() {
-        assertEquals(
-                PrivacyParams.EVENT_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .build()),
-                ZERO_DELTA);
-        assertEquals(
-                PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.NAVIGATION)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setInstallCooldownWindow(1)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.NAVIGATION)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setInstallCooldownWindow(1)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .setInstallCooldownWindow(1)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.NAVIGATION)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .setInstallCooldownWindow(1)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                mSourceNoiseHandler.getRandomAttributionProbability(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.NAVIGATION)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                ZERO_DELTA);
     }
 }

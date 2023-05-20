@@ -28,6 +28,8 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.annotations.VisibleForTesting;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
 
 /** Generates noised reports for the provided source. */
 public class SourceNoiseHandler {
+    private static final int PROBABILITY_DECIMAL_POINTS_LIMIT = 7;
+
     private final Flags mFlags;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
 
@@ -142,6 +146,10 @@ public class SourceNoiseHandler {
 
     /** @return Probability of selecting random state for attribution */
     public double getRandomAttributionProbability(@NonNull Source source) {
+        if (mFlags.getMeasurementEnableConfigurableEventReportingWindows()) {
+            return calculateNoiseDynamically(source);
+        }
+
         // Both destinations are set and install attribution is supported
         if (source.hasWebDestinations() && isInstallDetectionEnabled(source)) {
             return source.getSourceType() == Source.SourceType.EVENT
@@ -167,6 +175,27 @@ public class SourceNoiseHandler {
         return source.getSourceType() == Source.SourceType.EVENT
                 ? PrivacyParams.EVENT_NOISE_PROBABILITY
                 : PrivacyParams.NAVIGATION_NOISE_PROBABILITY;
+    }
+
+    private double calculateNoiseDynamically(Source source) {
+        int triggerDataCardinality = source.getTriggerDataCardinality();
+        int reportingWindowCountForNoising =
+                mEventReportWindowCalcDelegate.getReportingWindowCountForNoising(
+                        source, isInstallDetectionEnabled(source));
+        int maxReportCount =
+                mEventReportWindowCalcDelegate.getMaxReportCount(
+                        source, isInstallDetectionEnabled(source));
+        int destinationMultiplier = getDestinationTypeMultiplier(source);
+        int numberOfStates =
+                Combinatorics.getNumberOfStarsAndBarsSequences(
+                        /*numStars=*/ maxReportCount,
+                        /*numBars=*/ triggerDataCardinality
+                                * reportingWindowCountForNoising
+                                * destinationMultiplier);
+        double absoluteProbability = Combinatorics.getFlipProbability(numberOfStates);
+        return BigDecimal.valueOf(absoluteProbability)
+                .setScale(PROBABILITY_DECIMAL_POINTS_LIMIT, RoundingMode.HALF_UP)
+                .doubleValue();
     }
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled(Source source) {
