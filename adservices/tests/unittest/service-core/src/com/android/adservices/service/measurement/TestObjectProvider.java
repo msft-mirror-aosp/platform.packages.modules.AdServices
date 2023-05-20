@@ -30,12 +30,15 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.deletion.MeasurementDataDeleter;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandlerWrapper;
 import com.android.adservices.service.measurement.inputverification.ClickVerifier;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.mockito.stubbing.Answer;
@@ -64,7 +67,9 @@ class TestObjectProvider {
         return new AttributionJobHandlerWrapper(
                 datastoreManager,
                 flags,
-                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags));
+                new DebugReportApi(ApplicationProvider.getApplicationContext(), flags),
+                new EventReportWindowCalcDelegate(flags),
+                new SourceNoiseHandler(flags));
     }
 
     static MeasurementImpl getMeasurementImpl(
@@ -87,53 +92,28 @@ class TestObjectProvider {
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             DebugReportApi debugReportApi) {
+        SourceNoiseHandler sourceNoiseHandler =
+                spy(new SourceNoiseHandler(FlagsFactory.getFlagsForTest()));
         if (type == Type.DENOISED) {
-            AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                    spy(
-                            new AsyncRegistrationQueueRunner(
-                                    new MockContentResolver(),
-                                    asyncSourceFetcher,
-                                    asyncTriggerFetcher,
-                                    datastoreManager,
-                                    debugReportApi));
             // Disable Impression Noise
             doReturn(Collections.emptyList())
-                    .when(asyncRegistrationQueueRunner)
-                    .generateFakeEventReports(any());
-            return asyncRegistrationQueueRunner;
+                    .when(sourceNoiseHandler)
+                    .assignAttributionModeAndGenerateFakeReports(any(Source.class));
         } else if (type == Type.NOISY) {
-            AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
-                    spy(
-                            new AsyncRegistrationQueueRunner(
-                                    new MockContentResolver(),
-                                    asyncSourceFetcher,
-                                    asyncTriggerFetcher,
-                                    datastoreManager,
-                                    debugReportApi));
             // Create impression noise with 100% probability
             Answer<?> answerSourceEventReports =
                     invocation -> {
                         Source source = invocation.getArgument(0);
                         source.setAttributionMode(Source.AttributionMode.FALSELY);
                         return Collections.singletonList(
-                                new EventReport.Builder()
-                                        .setSourceEventId(source.getEventId())
-                                        .setReportTime(source.getExpiryTime() + ONE_HOUR_IN_MILLIS)
-                                        .setTriggerData(new UnsignedLong(0L))
-                                        .setAttributionDestinations(source.getAppDestinations())
-                                        .setEnrollmentId(source.getEnrollmentId())
-                                        .setTriggerTime(0)
-                                        .setTriggerPriority(0L)
-                                        .setTriggerDedupKey(null)
-                                        .setSourceType(source.getSourceType())
-                                        .setStatus(EventReport.Status.PENDING)
-                                        .setRegistrationOrigin(source.getRegistrationOrigin())
-                                        .build());
+                                new Source.FakeReport(
+                                        new UnsignedLong(0L),
+                                        source.getExpiryTime() + ONE_HOUR_IN_MILLIS,
+                                        source.getAppDestinations()));
                     };
             doAnswer(answerSourceEventReports)
-                    .when(asyncRegistrationQueueRunner)
-                    .generateFakeEventReports(any());
-            return asyncRegistrationQueueRunner;
+                    .when(sourceNoiseHandler)
+                    .assignAttributionModeAndGenerateFakeReports(any(Source.class));
         }
 
         return new AsyncRegistrationQueueRunner(
@@ -141,6 +121,7 @@ class TestObjectProvider {
                 asyncSourceFetcher,
                 asyncTriggerFetcher,
                 datastoreManager,
-                debugReportApi);
+                debugReportApi,
+                sourceNoiseHandler);
     }
 }

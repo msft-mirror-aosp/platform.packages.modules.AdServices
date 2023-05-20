@@ -66,13 +66,6 @@ import com.android.adservices.service.measurement.reporting.DebugReportingJobHan
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -96,6 +89,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -251,7 +251,7 @@ public abstract class E2EMockTest extends E2ETest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
@@ -267,7 +267,7 @@ public abstract class E2EMockTest extends E2ETest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         if (sourceRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
@@ -286,9 +286,9 @@ public abstract class E2EMockTest extends E2ETest {
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
-        processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
@@ -307,14 +307,14 @@ public abstract class E2EMockTest extends E2ETest {
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
-        processDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
+        processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         if (triggerRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
     // Triggers debug reports to be sent
-    void processDebugReportJob(long timestamp, long delay) throws IOException, JSONException {
+    void processActualDebugReportJob(long timestamp, long delay) throws IOException, JSONException {
         long reportTime = timestamp + delay;
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
@@ -324,7 +324,7 @@ public abstract class E2EMockTest extends E2ETest {
                         reportTime,
                         true);
 
-        processDebugEventReports(
+        processActualDebugEventReports(
                 timestamp,
                 (List<EventReport>) eventCaptures[0],
                 (List<Uri>) eventCaptures[1],
@@ -338,19 +338,20 @@ public abstract class E2EMockTest extends E2ETest {
                         reportTime,
                         true);
 
-        processDebugAggregateReports(
+        processActualDebugAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
                 (List<Uri>) aggregateCaptures[1],
                 (List<JSONObject>) aggregateCaptures[2]);
     }
 
-    // Process additional debug reports.
-    protected void processDebugReportApiJob() throws IOException, JSONException {
+    // Process actual additional debug reports.
+    protected void processActualDebugReportApiJob() throws IOException, JSONException {
         Object[] reportCaptures =
                 DebugReportingJobHandlerWrapper.spyPerformScheduledPendingReports(
                         mEnrollmentDao, sDatastoreManager);
 
-        processDebugReports((List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
+        processActualDebugReports(
+                (List<Uri>) reportCaptures[1], (List<JSONObject>) reportCaptures[2]);
     }
 
     @Override
@@ -385,7 +386,7 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp,
                         false);
 
-        processEventReports(
+        processActualEventReports(
                 (List<EventReport>) eventCaptures[0],
                 (List<Uri>) eventCaptures[1],
                 (List<JSONObject>) eventCaptures[2]);
@@ -402,41 +403,41 @@ public abstract class E2EMockTest extends E2ETest {
                         reportingJob.mTimestamp,
                         false);
 
-        processAggregateReports(
+        processActualAggregateReports(
                 (List<AggregateReport>) aggregateCaptures[0],
                 (List<Uri>) aggregateCaptures[1],
                 (List<JSONObject>) aggregateCaptures[2]);
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
-    void processEventReports(
+    void processActualEventReports(
             List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> eventReportObjects =
-                getEventReportObjects(eventReports, destinations, payloads);
+                getActualEventReportObjects(eventReports, destinations, payloads);
         mActualOutput.mEventReportObjects.addAll(eventReportObjects);
     }
 
-    void processDebugEventReports(
+    void processActualDebugEventReports(
             long triggerTime,
             List<EventReport> eventReports,
             List<Uri> destinations,
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> eventReportObjects =
-                getEventReportObjects(eventReports, destinations, payloads);
+                getActualEventReportObjects(eventReports, destinations, payloads);
         for (JSONObject obj : eventReportObjects) {
             obj.put(TestFormatJsonMapping.REPORT_TIME_KEY, triggerTime);
         }
         mActualOutput.mDebugEventReportObjects.addAll(eventReportObjects);
     }
 
-    void processDebugReports(List<Uri> destinations, List<JSONObject> payloads) {
-        List<JSONObject> debugReportObjects = getDebugReportObjects(destinations, payloads);
+    void processActualDebugReports(List<Uri> destinations, List<JSONObject> payloads) {
+        List<JSONObject> debugReportObjects = getActualDebugReportObjects(destinations, payloads);
         mActualOutput.mDebugReportObjects.addAll(debugReportObjects);
     }
 
-    private List<JSONObject> getEventReportObjects(
+    private List<JSONObject> getActualEventReportObjects(
             List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads) {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
@@ -449,7 +450,7 @@ public abstract class E2EMockTest extends E2ETest {
         return result;
     }
 
-    private List<JSONObject> getDebugReportObjects(
+    private List<JSONObject> getActualDebugReportObjects(
             List<Uri> destinations, List<JSONObject> payloads) {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
@@ -462,27 +463,27 @@ public abstract class E2EMockTest extends E2ETest {
     }
 
     // Class extensions may need different processing to prepare for result evaluation.
-    void processAggregateReports(
+    void processActualAggregateReports(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
-    void processDebugAggregateReports(
+    void processActualDebugAggregateReports(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getAggregateReportObjects(aggregateReports, destinations, payloads);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads);
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
-    private List<JSONObject> getAggregateReportObjects(
+    private List<JSONObject> getActualAggregateReportObjects(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
             List<JSONObject> payloads)
@@ -501,13 +502,14 @@ public abstract class E2EMockTest extends E2ETest {
                                     destinations.get(i).toString())
                             .put(
                                     TestFormatJsonMapping.PAYLOAD_KEY,
-                                    getAggregatablePayloadForTest(sharedInfo, payloads.get(i))));
+                                    getActualAggregatablePayloadForTest(
+                                            sharedInfo, payloads.get(i))));
         }
         return result;
     }
 
-    private static JSONObject getAggregatablePayloadForTest(JSONObject sharedInfo, JSONObject data)
-            throws JSONException {
+    private static JSONObject getActualAggregatablePayloadForTest(
+            JSONObject sharedInfo, JSONObject data) throws JSONException {
         String payload =
                 data.getJSONArray("aggregation_service_payloads")
                         .getJSONObject(0)
@@ -529,7 +531,7 @@ public abstract class E2EMockTest extends E2ETest {
                                 sharedInfo.getString("attribution_destination"))
                         .put(
                                 AggregateReportPayloadKeys.HISTOGRAMS,
-                                getAggregateHistograms(decryptedPayload));
+                                getActualAggregateHistograms(decryptedPayload));
         if (!sourceDebugKey.isEmpty()) {
             aggregateJson.put(AggregateReportPayloadKeys.SOURCE_DEBUG_KEY, sourceDebugKey);
         }
@@ -539,7 +541,7 @@ public abstract class E2EMockTest extends E2ETest {
         return aggregateJson;
     }
 
-    private static JSONArray getAggregateHistograms(byte[] encodedCborPayload)
+    private static JSONArray getActualAggregateHistograms(byte[] encodedCborPayload)
             throws JSONException {
         List<JSONObject> result = new ArrayList<>();
 

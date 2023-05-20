@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.ui.settings;
+package com.android.adservices.ui.settingsga;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -39,7 +39,6 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -413,45 +412,6 @@ public class SettingsGaUiAutomatorTest {
         checkSubtitleMatchesToggle(
                 ".*:id/measurement_preference_subtitle",
                 R.string.settingsUI_measurement_view_title);
-    }
-
-    @Test
-    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
-        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-
-        // First get the package name of device's default browser
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, sContext);
-        sDevice.pressHome();
-
-        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        /* go to ad measurement page and scroll to the bottom */
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        scrollView.scrollToEnd(2);
-        sDevice.waitForIdle(3 * PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        // Select the sentence has privacy policy
-        UiObject sentence = scrollTo(R.string.settingsUI_measurement_view_footer_text);
-        int right = sentence.getBounds().right,
-                bottom = sentence.getBounds().bottom,
-                left = sentence.getBounds().left;
-        // click on the bottom line from left to right several times
-        int countOfClicks = 20;
-        sDevice.waitForIdle(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        for (int x = left; x < right; x += (right - left) / countOfClicks) {
-            sDevice.click(x, bottom - 2);
-            if (!sentence.exists()) {
-                sDevice.pressBack();
-                ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-                return;
-            }
-        }
-
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-        Assert.fail("Web browser not found after several clicks on the last line");
     }
 
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)

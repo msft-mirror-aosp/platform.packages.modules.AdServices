@@ -186,7 +186,7 @@ class AppSearchConsentWorker {
                             AppSearchConsentDao.NAMESPACE,
                             apiType,
                             consented.toString());
-            dao.writeConsentData(mConsentSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote consent data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -219,7 +219,7 @@ class AppSearchConsentWorker {
         Objects.requireNonNull(consentType);
         READ_WRITE_LOCK.writeLock().lock();
         try {
-            AppSearchDao.deleteConsentData(
+            AppSearchDao.deleteData(
                             AppSearchAppConsentDao.class,
                             mAppConsentSearchSession,
                             mExecutor,
@@ -265,7 +265,7 @@ class AppSearchConsentWorker {
                 apps.add(app);
                 dao.setApps(apps);
             }
-            dao.writeConsentData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote app consent data to AppSearch (add): " + dao);
             return true;
@@ -301,7 +301,7 @@ class AppSearchConsentWorker {
                     dao.getApps().stream()
                             .filter(filterApp -> !filterApp.equals(app))
                             .collect(Collectors.toList()));
-            dao.writeConsentData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mAppConsentSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote app consent data to AppSearch (remove): " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -348,7 +348,7 @@ class AppSearchConsentWorker {
                             AppSearchNotificationDao.NAMESPACE,
                             /* wasNotificationDisplayed= */ true,
                             /* wasGaUxNotificationDisplayed= */ wasGaUxNotificationDisplayed());
-            dao.writeConsentData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote notification data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -370,7 +370,7 @@ class AppSearchConsentWorker {
                             AppSearchNotificationDao.NAMESPACE,
                             /* wasNotificationDisplayed= */ wasNotificationDisplayed(),
                             /* wasGaUxNotificationDisplayed= */ true);
-            dao.writeConsentData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mNotificationSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote notification data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -407,7 +407,7 @@ class AppSearchConsentWorker {
                             AppSearchInteractionsDao.NAMESPACE,
                             apiType,
                             currentFeatureType.ordinal());
-            dao.writeConsentData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote feature type data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -447,7 +447,7 @@ class AppSearchConsentWorker {
                             AppSearchInteractionsDao.NAMESPACE,
                             apiType,
                             interaction);
-            dao.writeConsentData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mInteractionsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote interactions data to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -493,7 +493,7 @@ class AppSearchConsentWorker {
             } else {
                 dao.addBlockedTopic(topic);
             }
-            dao.writeConsentData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote topics consent data to AppSearch (block): " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -520,7 +520,7 @@ class AppSearchConsentWorker {
                 return;
             }
             dao.removeBlockedTopic(topic);
-            dao.writeConsentData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote topics consent data to AppSearch (unblock): " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
@@ -545,7 +545,7 @@ class AppSearchConsentWorker {
                             List.of(),
                             List.of(),
                             List.of());
-            dao.writeConsentData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
+            dao.writeData(mTopicsSearchSession, mPackageIdentifiers, mExecutor)
                     .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
             LogUtil.d("Wrote topics consent data to AppSearch (clear): " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
