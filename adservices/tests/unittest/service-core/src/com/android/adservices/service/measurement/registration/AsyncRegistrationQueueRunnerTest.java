@@ -66,7 +66,9 @@ import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.WebUtil;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -163,6 +165,7 @@ public class AsyncRegistrationQueueRunnerTest {
     @Mock HttpsURLConnection mUrlConnection;
     @Mock Flags mFlags;
     @Mock AdServicesLogger mLogger;
+    @Mock SourceNoiseHandler mSourceNoiseHandler;
 
     private MockitoSession mStaticMockSession;
 
@@ -222,6 +225,12 @@ public class AsyncRegistrationQueueRunnerTest {
                 .thenReturn(Flags.MEASUREMENT_MAX_SOURCES_PER_PUBLISHER);
         when(mFlags.getMeasurementMaxTriggersPerDestination())
                 .thenReturn(Flags.MEASUREMENT_MAX_TRIGGERS_PER_DESTINATION);
+        when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow())
+                .thenReturn(Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+        when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution())
+                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+        when(mFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
+                .thenReturn(Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
     }
 
     @Test
@@ -254,7 +263,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
@@ -312,7 +321,7 @@ public class AsyncRegistrationQueueRunnerTest {
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
@@ -384,7 +393,7 @@ public class AsyncRegistrationQueueRunnerTest {
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
@@ -448,7 +457,7 @@ public class AsyncRegistrationQueueRunnerTest {
         List<Source.FakeReport> eventReportList =
                 Collections.singletonList(
                         new Source.FakeReport(new UnsignedLong(1L), 1L, List.of(APP_DESTINATION)));
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
@@ -820,7 +829,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -865,7 +874,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -917,7 +926,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -1238,7 +1247,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
                 .thenReturn(validAsyncRegistration);
@@ -1281,7 +1290,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -1374,7 +1383,7 @@ public class AsyncRegistrationQueueRunnerTest {
                         1L,
                         List.of(WebUtil.validUri("https://example.test/sF")));
         List<Source.FakeReport> eventReportList = Collections.singletonList(sf);
-        when(mMockedSource.assignAttributionModeAndGenerateFakeReports())
+        when(mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(mMockedSource))
                 .thenReturn(eventReportList);
 
         when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
@@ -1567,7 +1576,9 @@ public class AsyncRegistrationQueueRunnerTest {
                     source.setAttributionMode(Source.AttributionMode.FALSELY);
                     return fakeReports;
                 };
-        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        doAnswer(falseAttributionAnswer)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
@@ -1614,7 +1625,9 @@ public class AsyncRegistrationQueueRunnerTest {
                     source.setAttributionMode(Source.AttributionMode.FALSELY);
                     return fakeReports;
                 };
-        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        doAnswer(falseAttributionAnswer)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
@@ -1668,7 +1681,9 @@ public class AsyncRegistrationQueueRunnerTest {
                 };
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
-        doAnswer(falseAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        doAnswer(falseAttributionAnswer)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(source);
 
         // Execution
         asyncRegistrationQueueRunner.insertSourceFromTransaction(source, mMeasurementDao);
@@ -1722,7 +1737,9 @@ public class AsyncRegistrationQueueRunnerTest {
                     source.setAttributionMode(Source.AttributionMode.NEVER);
                     return fakeReports;
                 };
-        doAnswer(neverAttributionAnswer).when(source).assignAttributionModeAndGenerateFakeReports();
+        doAnswer(neverAttributionAnswer)
+                .when(mSourceNoiseHandler)
+                .assignAttributionModeAndGenerateFakeReports(source);
         ArgumentCaptor<Attribution> attributionRateLimitArgCaptor =
                 ArgumentCaptor.forClass(Attribution.class);
 
@@ -1757,7 +1774,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1793,7 +1811,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1831,7 +1850,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         when(mMeasurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
@@ -1863,7 +1883,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
@@ -1893,7 +1914,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
                         any(), anyInt(), any(), any(), anyInt(), anyLong(), anyLong()))
@@ -1930,7 +1952,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -1968,7 +1991,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         // Execution
         when(mMeasurementDao.countDistinctDestinationsPerPublisherXEnrollmentInActiveSource(
@@ -2005,7 +2029,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
                 .getNumSourcesPerPublisher(any(), anyInt());
@@ -2034,7 +2059,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         doReturn((long) SystemHealthParams.getMaxSourcesPerPublisher())
                 .when(mMeasurementDao)
@@ -2063,7 +2089,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mAsyncSourceFetcher,
                                 mAsyncTriggerFetcher,
                                 new FakeDatastoreManager(),
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
 
         when(mMeasurementDao.getNumTriggersPerDestination(APP_DESTINATION, EventSurfaceType.APP))
                 .thenReturn(0L);
@@ -2135,7 +2162,8 @@ public class AsyncRegistrationQueueRunnerTest {
                                 mFetcher,
                                 mAsyncTriggerFetcher,
                                 datastoreManager,
-                                mDebugReportApi));
+                                mDebugReportApi,
+                                mSourceNoiseHandler));
         ArgumentCaptor<DatastoreManager.ThrowingCheckedConsumer> consumerArgCaptor =
                 ArgumentCaptor.forClass(DatastoreManager.ThrowingCheckedConsumer.class);
         EnqueueAsyncRegistration.webSourceRegistrationRequest(
@@ -2198,7 +2226,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         x ->
                                 new Source.FakeReport(
                                         new UnsignedLong(0L),
-                                        source.getReportingTimeForNoising(0),
+                                        new EventReportWindowCalcDelegate(mFlags)
+                                                .getReportingTimeForNoising(source, 0, false),
                                         destinations))
                 .collect(Collectors.toList());
     }
@@ -2286,7 +2315,8 @@ public class AsyncRegistrationQueueRunnerTest {
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
                         new FakeDatastoreManager(),
-                        mDebugReportApi));
+                        mDebugReportApi,
+                        mSourceNoiseHandler));
     }
 
     private static void emptyTables(SQLiteDatabase db) {
