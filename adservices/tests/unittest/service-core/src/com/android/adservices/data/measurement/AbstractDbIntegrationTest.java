@@ -105,7 +105,7 @@ public abstract class AbstractDbIntegrationTest {
     public abstract void runActionToTest() throws DatastoreException;
 
     @Test
-    public void runTest() throws DatastoreException, JSONException {
+    public void runTest() throws DatastoreException {
         runActionToTest();
         SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
         DbState dbState = new DbState(readerDb);

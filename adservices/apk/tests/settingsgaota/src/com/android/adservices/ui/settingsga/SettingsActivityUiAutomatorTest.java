@@ -22,7 +22,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -43,7 +42,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -76,7 +74,6 @@ public class SettingsActivityUiAutomatorTest {
 
     private String mTestName;
     private MockitoSession mStaticMockSession;
-    private PhFlags mPhFlags;
     private ConsentManager mConsentManager;
     @Mock Flags mMockFlags;
 
@@ -88,7 +85,6 @@ public class SettingsActivityUiAutomatorTest {
         // Static mocking
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
-                        .spyStatic(PhFlags.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(BackgroundJobsManager.class)
                         .spyStatic(ConsentManager.class)
@@ -98,6 +94,7 @@ public class SettingsActivityUiAutomatorTest {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getUiDialogFragmentEnabled();
+        doReturn(true).when(mMockFlags).getUIDialogsFeatureEnabled();
         // prepare objects used by static mocking
         mConsentManager = mock(ConsentManager.class);
         List<Topic> tempList = new ArrayList<>();
@@ -140,9 +137,6 @@ public class SettingsActivityUiAutomatorTest {
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
-        mPhFlags = spy(PhFlags.getInstance());
-        doReturn(true).when(mPhFlags).getUIDialogsFeatureEnabled();
-        ExtendedMockito.doReturn(mPhFlags).when(PhFlags::getInstance);
         ExtendedMockito.doReturn(mConsentManager)
                 .when(() -> ConsentManager.getInstance(any(Context.class)));
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();
@@ -468,7 +462,7 @@ public class SettingsActivityUiAutomatorTest {
     public void disableDialogFeatureTest() throws UiObjectNotFoundException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
 
-        doReturn(false).when(mPhFlags).getUIDialogsFeatureEnabled();
+        doReturn(false).when(mMockFlags).getUIDialogsFeatureEnabled();
 
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(consentSwitch.exists()).isTrue();
