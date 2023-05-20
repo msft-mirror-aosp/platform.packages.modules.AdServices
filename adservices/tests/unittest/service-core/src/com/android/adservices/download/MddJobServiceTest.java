@@ -79,7 +79,7 @@ import java.util.concurrent.TimeUnit;
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
 public class MddJobServiceTest {
     private static final int BACKGROUND_TASK_TIMEOUT_MS = 5_000;
-    private static final int JOB_SCHEDULED_WAIT_TIME_MS = 1_000;
+    private static final int JOB_SCHEDULED_WAIT_TIME_MS = 2_000;
 
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     private static final JobScheduler JOB_SCHEDULER = CONTEXT.getSystemService(JobScheduler.class);
@@ -91,17 +91,14 @@ public class MddJobServiceTest {
             MDD_CELLULAR_CHARGING_PERIODIC_TASK_JOB.getJobId();
     private static final int MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID =
             MDD_WIFI_CHARGING_PERIODIC_TASK_JOB.getJobId();
-
-    @Spy private MddJobService mSpyMddJobService;
-    private MockitoSession mStaticMockSession;
-
     @Mock JobParameters mMockJobParameters;
-
     @Mock MobileDataDownload mMockMdd;
     @Mock MobileDataDownloadFactory mMockMddFactory;
     @Mock Flags mMockFlags;
     @Mock MddFlags mMockMddFlags;
     @Mock StatsdAdServicesLogger mMockStatsdLogger;
+    @Spy private MddJobService mSpyMddJobService;
+    private MockitoSession mStaticMockSession;
     private AdservicesJobServiceLogger mLogger;
 
     @Before
@@ -176,7 +173,7 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_killswitchIsOn_withoutLogging() {
+    public void testOnStartJob_killswitchIsOn_withoutLogging() throws InterruptedException {
         // Logging killswitch is on.
         Mockito.doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
@@ -185,10 +182,16 @@ public class MddJobServiceTest {
         // Verify logging methods are not invoked.
         verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
         verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testOnStartJob_killSwitchOn_withLogging() {
+    public void testOnStartJob_killSwitchOn_withLogging() throws InterruptedException {
         // Logging killswitch is off.
         Mockito.doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
 
@@ -203,6 +206,13 @@ public class MddJobServiceTest {
                         eq(
                                 AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON),
                         anyInt());
+
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
@@ -243,7 +253,7 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testOnStopJob_withoutLogging() {
+    public void testOnStopJob_withoutLogging() throws InterruptedException {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Logging killswitch is on.
@@ -254,10 +264,16 @@ public class MddJobServiceTest {
         // Verify logging methods are not invoked.
         verify(mLogger, never()).persistJobExecutionData(anyInt(), anyLong());
         verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testOnStopJob_withLogging() {
+    public void testOnStopJob_withLogging() throws InterruptedException {
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         // Logging killswitch is off.
@@ -267,6 +283,12 @@ public class MddJobServiceTest {
 
         // Verify logging methods are invoked.
         verify(mLogger).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
@@ -455,7 +477,7 @@ public class MddJobServiceTest {
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() {
+    public void testOnStartJob_shouldDisableJobTrue_withoutLogging() throws InterruptedException {
         // Logging killswitch is on.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(true).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
@@ -464,10 +486,16 @@ public class MddJobServiceTest {
 
         // Verify logging method is not invoked.
         verify(mLogger, never()).logExecutionStats(anyInt(), anyLong(), anyInt(), anyInt());
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     @Test
-    public void testOnStartJob_shouldDisableJobTrue_withLogging() {
+    public void testOnStartJob_shouldDisableJobTrue_withLogging() throws InterruptedException {
         // Logging killswitch is off.
         ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(false).when(mMockFlags).getBackgroundJobsLoggingKillSwitch();
@@ -482,6 +510,12 @@ public class MddJobServiceTest {
                         eq(
                                 AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS),
                         anyInt());
+        // We schedule the job in this test and cancel it in the teardown. There could be a race
+        // condition between when the job starts and when we try to cancel it. If the job already
+        // started and we exited this test method, the flag would not be mocked anymore and hence
+        // the READ_DEVICE_CONFIG exception.
+        // We wait here so that the scheduled job can finish.
+        Thread.sleep(JOB_SCHEDULED_WAIT_TIME_MS);
     }
 
     private void testOnStartJob_killswitchIsOn() {
