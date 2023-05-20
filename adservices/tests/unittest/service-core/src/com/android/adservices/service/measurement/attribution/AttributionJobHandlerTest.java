@@ -154,6 +154,8 @@ public class AttributionJobHandlerTest {
                         mFlags,
                         new DebugReportApi(ApplicationProvider.getApplicationContext(), mFlags));
         when(mFlags.getMeasurementEnableXNA()).thenReturn(false);
+        when(mFlags.getMeasurementMaxAttributionPerRateLimitWindow()).thenReturn(100);
+        when(mFlags.getMeasurementMaxDistinctEnrollmentsInAttribution()).thenReturn(10);
     }
 
     @Test

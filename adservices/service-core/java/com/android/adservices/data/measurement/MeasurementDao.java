@@ -488,7 +488,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "AND %1$s.%4$s > ? "
                                 + "AND %1$s.%5$s = ?",
                         MeasurementTables.SourceContract.TABLE,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         MeasurementTables.SourceContract.EXPIRY_TIME,
                         MeasurementTables.SourceContract.STATUS);
@@ -502,7 +502,7 @@ class MeasurementDao implements IMeasurementDao {
                                         trigger.getDestinationType(),
                                         sourceWhereStatement),
                                 new String[] {
-                                    trigger.getEnrollmentId(),
+                                    trigger.getRegistrationOrigin().toString(),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(trigger.getTriggerTime()),
                                     String.valueOf(Source.Status.ACTIVE)
@@ -1072,6 +1072,40 @@ class MeasurementDao implements IMeasurementDao {
                             String.valueOf(windowEndTime),
                             String.valueOf(windowEndTime),
                             String.valueOf(destinationType)
+                        });
+    }
+
+    public Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+            Uri registrationOrigin,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            long eventTime,
+            long timePeriodInMs)
+            throws DatastoreException {
+
+        String query =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT (*) FROM %1$s "
+                                + "WHERE %2$s AND "
+                                + "%3$s = ? AND "
+                                + "%4$s != ? AND "
+                                + "%5$s > ?",
+                        MeasurementTables.SourceContract.TABLE,
+                        getPublisherWhereStatement(publisher, publisherType),
+                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                        MeasurementTables.SourceContract.EVENT_TIME);
+
+        return (int)
+                DatabaseUtils.longForQuery(
+                        mSQLTransaction.getDatabase(),
+                        query,
+                        new String[] {
+                            enrollmentId,
+                            registrationOrigin.toString(),
+                            String.valueOf(eventTime - timePeriodInMs)
                         });
     }
 
@@ -1738,7 +1772,7 @@ class MeasurementDao implements IMeasurementDao {
                                 + "OVER (PARTITION BY %2$s ORDER BY %3$s DESC, %4$s DESC) "
                                 + "first_source_id FROM %5$s)",
                         MeasurementTables.SourceContract.ID,
-                        MeasurementTables.SourceContract.ENROLLMENT_ID,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                         MeasurementTables.SourceContract.PRIORITY,
                         MeasurementTables.SourceContract.EVENT_TIME,
                         filterQuery);
@@ -1889,6 +1923,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         long rowId =
                 mSQLTransaction
                         .getDatabase()

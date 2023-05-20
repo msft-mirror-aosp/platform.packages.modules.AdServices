@@ -155,6 +155,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_JOB_EVENT_REPORTI
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
@@ -334,6 +337,9 @@ import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_JOB_EVENT_R
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MANIFEST_FILE_URL;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_DESTINATION;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
+import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_REGISTRATIONS_PER_JOB_INVOCATION;
 import static com.android.adservices.service.PhFlags.KEY_MEASUREMENT_MAX_REGISTRATION_REDIRECTS;
@@ -1541,6 +1547,63 @@ public class PhFlagsTest {
 
         Flags phFlags = FlagsFactory.getFlags();
         assertThat(phFlags.getMeasurementRegistrationJobTriggerMaxDelayMs())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAttributionPerRateLimitWindow() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementMaxAttributionPerRateLimitWindow())
+                .isEqualTo(MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW);
+
+        final int phOverridingValue = 10;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementMaxAttributionPerRateLimitWindow())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementMaxDistinctEnrollmentsInAttribution())
+                .isEqualTo(MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION);
+
+        final int phOverridingValue = 10;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementMaxDistinctEnrollmentsInAttribution())
+                .isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testGetMeasurementMaxDistinctDestinationsInActiveSource() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource())
+                .isEqualTo(MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE);
+
+        final int phOverridingValue = 10;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE,
+                Long.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        Flags phFlags = FlagsFactory.getFlags();
+        assertThat(phFlags.getMeasurementMaxDistinctDestinationsInActiveSource())
                 .isEqualTo(phOverridingValue);
     }
 
