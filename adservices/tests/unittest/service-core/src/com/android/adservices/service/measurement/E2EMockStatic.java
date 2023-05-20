@@ -22,6 +22,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
@@ -58,20 +59,24 @@ public final class E2EMockStatic implements StaticMockFixture {
     @Override
     public void setUpMockBehaviors() {
         // Privacy params
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxAttributionPerRateLimitWindow())
-                    .when(() -> PrivacyParams.getMaxAttributionPerRateLimitWindow());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxAttributionPerRateLimitWindow())
+                .when(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMaxAttributionPerRateLimitWindow());
         doAnswer((Answer<Integer>) invocation ->
                 mParams.getNavigationTriggerDataCardinality())
                     .when(() -> PrivacyParams.getNavigationTriggerDataCardinality());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution())
-                    .when(() -> PrivacyParams
-                            .getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution());
-        doAnswer((Answer<Integer>) invocation ->
-                mParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource())
-                    .when(() -> PrivacyParams
-                            .getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctEnrollmentsInAttribution())
+                .when(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMaxDistinctEnrollmentsInAttribution());
+        doAnswer((Answer<Integer>) invocation -> mParams.getMaxDistinctDestinationsInActiveSource())
+                .when(
+                        () ->
+                                FlagsFactory.getFlags()
+                                        .getMeasurementMaxDistinctDestinationsInActiveSource());
         doAnswer((Answer<Integer>) invocation ->
                 mParams.getMaxDistinctEnrollmentsPerPublisherXDestinationInSource())
                     .when(() -> PrivacyParams
