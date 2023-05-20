@@ -84,7 +84,7 @@
         "source_event_id": "1",
         "trigger_data": "2",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.017022
+        "randomized_trigger_rate": 0.0170218
       }
     }, {
       "report_time": "800176400001",
@@ -95,7 +95,7 @@
         "source_event_id": "1",
         "trigger_data": "1",
         "source_type": "navigation",
-        "randomized_trigger_rate": 0.017022
+        "randomized_trigger_rate": 0.0170218
       }
     }],
     "aggregatable_results": []

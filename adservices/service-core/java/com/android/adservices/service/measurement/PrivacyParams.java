@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.android.adservices.service.Flags;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -104,7 +106,7 @@ public final class PrivacyParams {
      * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
      * available on the source.
      */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
 
     /**
      * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
@@ -228,6 +230,13 @@ public final class PrivacyParams {
 
     // place holder for future change
     private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+
+    /**
+     * Maximum early reporting windows configured through {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
+     */
+    public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
 
     public static double getMaxFlexibleEventInformationGain() {
         return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;
