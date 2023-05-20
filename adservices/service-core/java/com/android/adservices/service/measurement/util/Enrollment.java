@@ -31,6 +31,8 @@ import java.util.Optional;
 /** Enrollment utilities for measurement. */
 public final class Enrollment {
 
+    public static final String FAKE_ENROLLMENT = "fake_enrollment";
+
     private Enrollment() { }
 
     /**

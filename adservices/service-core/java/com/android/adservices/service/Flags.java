@@ -385,6 +385,35 @@ public interface Flags {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
     }
 
+    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
+
+    /**
+     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
+     * Destination Site, Reporting Site, Window).
+     */
+    default int getMeasurementMaxAttributionPerRateLimitWindow() {
+        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION = 10;
+
+    /**
+     * Returns max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctEnrollmentsInAttribution() {
+        return MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION;
+    }
+
+    int MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE = 100;
+
+    /**
+     * Returns max distinct advertisers with pending impressions per { Publisher X Enrollment X
+     * TimePeriod }.
+     */
+    default int getMeasurementMaxDistinctDestinationsInActiveSource() {
+        return MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE;
+    }
+
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
@@ -2171,5 +2200,21 @@ public interface Flags {
      */
     default String getMeasurementEventReportsCtcEarlyReportingWindows() {
         return MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+    }
+
+    /** Default U18 UX feature flag.. */
+    boolean DEFAULT_U18_UX_ENABLED = false;
+
+    /** U18 UX feature flag.. */
+    default boolean getU18UxEnabled() {
+        return DEFAULT_U18_UX_ENABLED;
+    }
+
+    /** Default enableAdServices system API feature flag.. */
+    boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
+
+    /** enableAdServices system API feature flag.. */
+    default boolean getEnableAdServicesSystemApi() {
+        return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
     }
 }

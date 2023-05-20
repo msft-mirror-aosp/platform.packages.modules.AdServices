@@ -27,7 +27,6 @@ import androidx.lifecycle.Observer;
 import com.android.adservices.api.R;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.PhFlags;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.settings.DialogFragmentManager;
 import com.android.adservices.ui.settings.DialogManager;
@@ -76,7 +75,7 @@ public class TopicsActionDelegate {
                                 break;
                             case BLOCK_TOPIC:
                                 UiStatsLogger.logBlockTopicSelected(mTopicsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showBlockTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel, topic);
@@ -90,7 +89,7 @@ public class TopicsActionDelegate {
                                 break;
                             case RESET_TOPICS:
                                 UiStatsLogger.logResetTopicSelected(mTopicsActivity);
-                                if (PhFlags.getInstance().getUIDialogsFeatureEnabled()) {
+                                if (FlagsFactory.getFlags().getUIDialogsFeatureEnabled()) {
                                     if (FlagsFactory.getFlags().getUiDialogFragmentEnabled()) {
                                         DialogFragmentManager.showResetTopicDialog(
                                                 mTopicsActivity, mTopicsViewModel);
