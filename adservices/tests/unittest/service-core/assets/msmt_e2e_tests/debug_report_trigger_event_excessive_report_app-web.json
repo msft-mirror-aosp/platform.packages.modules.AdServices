@@ -149,7 +149,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -163,7 +163,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -177,7 +177,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -193,7 +193,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -207,7 +207,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -221,7 +221,7 @@
       {
         "payload": {
           "attribution_destination": "https://1d1.test",
-          "randomized_trigger_rate": 0.017022,
+          "randomized_trigger_rate": 0.0170218,
           "scheduled_report_time": "1643411973",
           "source_event_id": "1",
           "source_type": "navigation",
@@ -233,7 +233,7 @@
         "report_time": "1643235577000"
       }
     ],
-    "debug_report_results": [
+    "verbose_debug_reports": [
       {
         "payload": [
           {
@@ -243,7 +243,7 @@
               "scheduled_report_time": "1643843973",
               "source_event_id": "1",
               "source_type": "navigation",
-              "randomized_trigger_rate": 0.017022,
+              "randomized_trigger_rate": 0.0170218,
               "trigger_data": "7",
               "source_debug_key": "347982378",
               "trigger_debug_key": "8971346781"

@@ -66,8 +66,10 @@ import com.android.adservices.service.measurement.WebUtil;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -140,12 +142,15 @@ public class MeasurementDaoTest {
     // Differs from WEB_PUBLISHER_ONE by scheme.
     private static final Uri WEB_PUBLISHER_THREE = WebUtil.validUri("http://not.example.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.destination.example");
+    private static final Uri REGISTRATION_ORIGIN =
+            WebUtil.validUri("https://subdomain.example.test");
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
     private MockitoSession mStaticMockSession;
-    public static final Uri REGISTRATION_ORIGIN =
-            WebUtil.validUri("https://subdomain.example.test");
+    private Flags mFlags;
+    public static final Uri REGISTRATION_ORIGIN_2 =
+            WebUtil.validUri("https://subdomain_2.example.test");
 
     @Before
     public void before() {
@@ -155,6 +160,7 @@ public class MeasurementDaoTest {
                         .strictness(Strictness.WARN)
                         .startMocking();
         ExtendedMockito.doReturn(FlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
+        mFlags = FlagsFactory.getFlagsForTest();
     }
 
     @After
@@ -472,6 +478,7 @@ public class MeasurementDaoTest {
             assertEquals(debugReport.getType(), report.getType());
             assertEquals(debugReport.getBody().toString(), report.getBody().toString());
             assertEquals(debugReport.getEnrollmentId(), report.getEnrollmentId());
+            assertEquals(debugReport.getRegistrationOrigin(), report.getRegistrationOrigin());
         }
     }
 
@@ -838,7 +845,8 @@ public class MeasurementDaoTest {
                         6000000000L,
                         publisher,
                         SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                        Source.Status.ACTIVE);
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
         for (Source source : activeSourcesWithAppAndWebDestinations) {
             insertSource(source);
         }
@@ -1397,6 +1405,225 @@ public class MeasurementDaoTest {
                 });
     }
 
+    // Tests countSourcesPerPublisherXEnrollmentExcludingRegistrationOriginSinceTime
+    @Test
+    public void testCountSourcesExclRegOrigin_forSameOrigin_returnsZero() {
+        // Positive case. For same registration origin we always pass the 1 origin
+        // per site limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sourcesMoreThanOneDayOld =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+
+        List<Source> sourcesRecent =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+
+        for (Source source : sourcesMoreThanOneDayOld) {
+            insertSource(source);
+        }
+        for (Source source : sourcesRecent) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentAppPublisher_returnsZero() {
+        // Positive case. For different publisher we always pass the 1 origin
+        // per site limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        Uri appPublisher2 = Uri.parse("android-app://publisher2.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher2,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentWebPublisher_returnsZero() {
+        // Positive case. For different publisher we always pass the 1 origin
+        // per site limit and return 0
+        Uri publisher = WebUtil.validUri("https://publisher.test");
+        Uri publisher2 = WebUtil.validUri("https://publisher2.test");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        publisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    publisher2,
+                                    EventSurfaceType.WEB,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentEnrollment_returnsZero() {
+        // Positive case. For different enrollment (aka reporting site)
+        // we always pass the 1 origin per site limit and return 0
+        String differentEnrollment = "new-enrollment";
+        Uri differentSite = WebUtil.validUri("https://subdomain.different-site.test");
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    differentSite,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    differentEnrollment,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
+    @Test
+    public void testCountSourcesExclRegOrigin_forDifferentOriginMoreThanTimeWindow_returnsZero() {
+        // Positive case. For different origin with same enrollment
+        // more than time window of 1 day we always pass the 1 origin per site
+        // limit and return 0
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(0),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+    // Tests countSourcesPerPublisherXEnrollmentExcludingRegistrationOriginSinceTime
+    @Test
+    public void testCountSources_forDifferentOriginWithinTimeWindow_returnsNumOfSources() {
+        // Negative case. For different origin with same enrollment
+        // we always fail the 1 origin per site limit and return 1
+        Uri appPublisher = Uri.parse("android-app://publisher.app");
+        List<Source> sources =
+                getSourcesWithDifferentDestinations(
+                        5,
+                        true,
+                        true,
+                        System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(2),
+                        appPublisher,
+                        SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                        Source.Status.ACTIVE,
+                        REGISTRATION_ORIGIN);
+        for (Source source : sources) {
+            insertSource(source);
+        }
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(sContext);
+        datastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertEquals(
+                            Integer.valueOf(5),
+                            measurementDao.countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+                                    REGISTRATION_ORIGIN_2,
+                                    appPublisher,
+                                    EventSurfaceType.APP,
+                                    SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                    System.currentTimeMillis(),
+                                    PrivacyParams.MIN_REPORTING_ORIGIN_UPDATE_WINDOW));
+                });
+    }
+
     @Test
     public void testCountDistinctEnrollmentsPerPublisherXDestinationInSource_atWindow() {
         Uri publisher = Uri.parse("android-app://publisher.app");
@@ -1714,11 +1941,12 @@ public class MeasurementDaoTest {
 
         insertSource(
                 createSourceForIATest(
-                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID),
+                                "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest(
-                        "IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, 50, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id IA1 because it has higher priority
         assertTrue(
@@ -1738,11 +1966,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_selectLatest() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id=IA2 as it is latest
         assertTrue(
@@ -1763,11 +1992,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_ignoreNewerSources() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should select id=IA1 as it is the only valid choice.
         // id=IA2 is newer than the evenTimestamp of install event.
@@ -1789,10 +2019,12 @@ public class MeasurementDaoTest {
     public void testInstallAttribution_noValidSource() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, true, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         insertSource(
-                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA2", currentTimestamp, 10, 11, true, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA2");
         // Should not update any sources.
         assertTrue(
@@ -1811,8 +2043,8 @@ public class MeasurementDaoTest {
     public void installAttribution_install_installTimeEqualsEventTime() {
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
-                createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID),
+                createSourceForIATest("IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build(),
                 "IA1");
         assertTrue(
                 DatastoreManagerFactory.getDatastoreManager(sContext)
@@ -1834,7 +2066,8 @@ public class MeasurementDaoTest {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
                 createSourceForIATest(
-                        "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID);
+                                "IA1", currentTimestamp, 100, -1, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
 
         // Execution
         // Active source should get install attributed
@@ -1876,59 +2109,100 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachAdTech() {
+    public void
+            doInstallAttribution_withSourcesAcrossEnrollments_marksOneInstallFromEachRegOrigin() {
         long currentTimestamp = System.currentTimeMillis();
 
         // Enrollment1: Choose IA2 because that's newer and still occurred before install
         insertSource(
                 createSourceForIATest(
-                        "IA1", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                                "IA1",
+                                currentTimestamp,
+                                -1,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .build(),
                 "IA1");
         insertSource(
                 createSourceForIATest(
-                        "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1"),
+                                "IA2", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_1")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example1.test"))
+                        .build(),
                 "IA2");
 
         // Enrollment2: Choose IA4 because IA3's install attribution window has expired
         insertSource(
                 createSourceForIATest(
-                        "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2"),
+                                "IA3", currentTimestamp, -1, 10, true, DEFAULT_ENROLLMENT_ID + "_2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .build(),
                 "IA3");
         insertSource(
                 createSourceForIATest(
-                        "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2"),
+                                "IA4", currentTimestamp, -1, 9, false, DEFAULT_ENROLLMENT_ID + "_2")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example2.test"))
+                        .build(),
                 "IA4");
 
         // Enrollment3: Choose IA5 because IA6 was registered after install event
         insertSource(
                 createSourceForIATest(
-                        "IA5", currentTimestamp, -1, 10, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                                "IA5",
+                                currentTimestamp,
+                                -1,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_3")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .build(),
                 "IA5");
         insertSource(
                 createSourceForIATest(
-                        "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3"),
+                                "IA6", currentTimestamp, -1, 5, false, DEFAULT_ENROLLMENT_ID + "_3")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example3.test"))
+                        .build(),
                 "IA6");
 
         // Enrollment4: Choose IA8 due to higher priority
         insertSource(
                 createSourceForIATest(
-                        "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                                "IA7", currentTimestamp, 5, 10, false, DEFAULT_ENROLLMENT_ID + "_4")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .build(),
                 "IA7");
         insertSource(
                 createSourceForIATest(
-                        "IA8", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID + "_4"),
+                                "IA8",
+                                currentTimestamp,
+                                10,
+                                10,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_4")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example4.test"))
+                        .build(),
                 "IA8");
 
         // Enrollment5: Choose none because both sources are ineligible
         // Expired install attribution window
         insertSource(
                 createSourceForIATest(
-                        "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5"),
+                                "IA9", currentTimestamp, 5, 31, true, DEFAULT_ENROLLMENT_ID + "_5")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .build(),
                 "IA9");
         // Registered after install attribution
         insertSource(
                 createSourceForIATest(
-                        "IA10", currentTimestamp, 10, 3, false, DEFAULT_ENROLLMENT_ID + "_5"),
+                                "IA10",
+                                currentTimestamp,
+                                10,
+                                3,
+                                false,
+                                DEFAULT_ENROLLMENT_ID + "_5")
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example5.test"))
+                        .build(),
                 "IA10");
 
         assertTrue(
@@ -2247,8 +2521,8 @@ public class MeasurementDaoTest {
     public void testUndoInstallAttribution_noMarkedSource() {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
-                createSourceForIATest(
-                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
         source.setInstallAttributed(true);
         insertSource(source, source.getId());
         assertTrue(
@@ -2265,8 +2539,8 @@ public class MeasurementDaoTest {
     public void undoInstallAttribution_uninstall_nullInstallTime() {
         long currentTimestamp = System.currentTimeMillis();
         Source source =
-                createSourceForIATest(
-                        "IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID);
+                createSourceForIATest("IA1", currentTimestamp, 10, 10, false, DEFAULT_ENROLLMENT_ID)
+                        .build();
         source.setInstallAttributed(true);
         insertSource(source, source.getId());
         assertTrue(
@@ -3048,6 +3322,67 @@ public class MeasurementDaoTest {
         List<Source> result6 = runFunc.apply(trigger6MatchSource67);
         assertEquals(1, result6.size());
         assertEquals(sWeb6.getId(), result6.get(0).getId());
+
+        // Trigger with different subdomain than source
+        // Expected: No Match found
+        Trigger triggerDifferentRegistrationOrigin =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain-different.example.test"))
+                        .build();
+
+        List<Source> result7 = runFunc.apply(triggerDifferentRegistrationOrigin);
+        assertTrue(result7.isEmpty());
+
+        // Trigger with different domain than source
+        // Expected: No Match found
+        Trigger triggerDifferentDomainOrigin =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain.example-different.test"))
+                        .build();
+
+        List<Source> result8 = runFunc.apply(triggerDifferentDomainOrigin);
+        assertTrue(result8.isEmpty());
+
+        // Trigger with different port than source
+        // Expected: No Match found
+        Trigger triggerDifferentPort =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId(enrollmentId)
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setRegistrationOrigin(
+                                WebUtil.validUri("https://subdomain.example.test:8083"))
+                        .build();
+
+        List<Source> result9 = runFunc.apply(triggerDifferentPort);
+        assertTrue(result9.isEmpty());
+
+        // Enrollment id for trigger and source not same
+        // Registration Origin for trigger and source same
+        // Expected: Match with sApp1, sApp2, sAppWeb7
+        Trigger triggerDifferentEnrollmentSameRegistration =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(12)
+                        .setEnrollmentId("different-enrollment-id")
+                        .setAttributionDestination(appDestination)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .build();
+        List<Source> result10 = runFunc.apply(triggerDifferentEnrollmentSameRegistration);
+        assertEquals(3, result10.size());
+        assertEquals(sApp1.getId(), result10.get(0).getId());
+        assertEquals(sApp2.getId(), result10.get(1).getId());
+        assertEquals(sAppWeb7.getId(), result10.get(2).getId());
     }
 
     @Test
@@ -4324,6 +4659,9 @@ public class MeasurementDaoTest {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
 
         long count =
@@ -4354,6 +4692,9 @@ public class MeasurementDaoTest {
         values.put(MeasurementTables.DebugReportContract.BODY, debugReport.getBody().toString());
         values.put(
                 MeasurementTables.DebugReportContract.ENROLLMENT_ID, debugReport.getEnrollmentId());
+        values.put(
+                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN,
+                debugReport.getRegistrationOrigin().toString());
         db.insert(MeasurementTables.DebugReportContract.TABLE, null, values);
 
         long count =
@@ -4897,6 +5238,31 @@ public class MeasurementDaoTest {
             long eventTime,
             Uri publisher,
             String enrollmentId,
+            @Source.Status int sourceStatus,
+            Uri registrationOrigin) {
+        long expiryTime =
+                eventTime
+                        + TimeUnit.SECONDS.toMillis(
+                                MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS);
+        return getSourcesWithDifferentDestinations(
+                numSources,
+                hasAppDestinations,
+                hasWebDestinations,
+                eventTime,
+                expiryTime,
+                publisher,
+                enrollmentId,
+                sourceStatus,
+                registrationOrigin);
+    }
+
+    private static List<Source> getSourcesWithDifferentDestinations(
+            int numSources,
+            boolean hasAppDestinations,
+            boolean hasWebDestinations,
+            long eventTime,
+            Uri publisher,
+            String enrollmentId,
             @Source.Status int sourceStatus) {
         long expiryTime =
                 eventTime
@@ -4910,7 +5276,8 @@ public class MeasurementDaoTest {
                 expiryTime,
                 publisher,
                 enrollmentId,
-                sourceStatus);
+                sourceStatus,
+                REGISTRATION_ORIGIN);
     }
 
     private static List<Source> getSourcesWithDifferentDestinations(
@@ -4921,7 +5288,8 @@ public class MeasurementDaoTest {
             long expiryTime,
             Uri publisher,
             String enrollmentId,
-            @Source.Status int sourceStatus) {
+            @Source.Status int sourceStatus,
+            Uri registrationOrigin) {
         List<Source> sources = new ArrayList<>();
         for (int i = 0; i < numSources; i++) {
             Source.Builder sourceBuilder =
@@ -4933,7 +5301,7 @@ public class MeasurementDaoTest {
                             .setEnrollmentId(enrollmentId)
                             .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
                             .setStatus(sourceStatus)
-                            .setRegistrationOrigin(REGISTRATION_ORIGIN);
+                            .setRegistrationOrigin(registrationOrigin);
             if (hasAppDestinations) {
                 sourceBuilder.setAppDestinations(
                         List.of(Uri.parse("android-app://app-destination-" + String.valueOf(i))));
@@ -6320,6 +6688,368 @@ public class MeasurementDaoTest {
                 });
     }
 
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_oneTriggerAndSource() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_nullValuesPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Source with debug AdId present
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        // Source with no debug AdId
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Trigger with debug AdId present
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        // Trigger with no debug AdId
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleSourcesAndTriggers() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with same AdId
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with same AdId
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        1,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleAdIdsPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with different AdIds but the same enrollmentId
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-2")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-3")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with different AdIds but the same enrollmentId
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-4")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-5")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-6")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        6,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollment_multipleEnrollmentIdsPresent() {
+        // Setup
+        DatastoreManager dm = DatastoreManagerFactory.getDatastoreManager(sContext);
+
+        Source.Builder sourceBuilder =
+                new Source.Builder()
+                        .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                        .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                        .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                        .setEventId(SourceFixture.ValidSourceParams.SOURCE_EVENT_ID)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
+        // Multiple sources with different AdIds and differing enrollmentIds
+        Source s1 =
+                sourceBuilder
+                        .setId("s1")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-1")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s1));
+        Source s2 =
+                sourceBuilder
+                        .setId("s2")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-2")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s2));
+        Source s3 =
+                sourceBuilder
+                        .setId("s3")
+                        .setPublisherType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-3")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertSource(s3));
+
+        Trigger.Builder triggerBuilder =
+                new Trigger.Builder()
+                        .setAttributionDestination(
+                                TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                        .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                        .setRegistrationOrigin(
+                                TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN);
+        // Multiple triggers with different AdIds and differing enrollmentIds
+        Trigger t1 =
+                triggerBuilder
+                        .setId("t1")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-4")
+                        .setEnrollmentId("enrollment-id-1")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t1));
+        Trigger t2 =
+                triggerBuilder
+                        .setId("t2")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-5")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t2));
+        Trigger t3 =
+                triggerBuilder
+                        .setId("t3")
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setDebugAdId("debug-ad-id-6")
+                        .setEnrollmentId("enrollment-id-2")
+                        .build();
+        dm.runInTransaction(dao -> dao.insertTrigger(t3));
+
+        // Assertion
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        2,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-1"))));
+        assertTrue(
+                dm.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        4,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollment(
+                                                "enrollment-id-2"))));
+    }
+
     private void queryAndAssertSourceEntries(
             SQLiteDatabase db, String enrollmentId, List<String> expectedSourceIds) {
         try (Cursor cursor =
@@ -6385,9 +7115,16 @@ public class MeasurementDaoTest {
 
     private EventReport createEventReportForSourceAndTrigger(
             String reportId, Source source, Trigger trigger) throws JSONException {
+
         return new EventReport.Builder()
                 .setId(reportId)
-                .populateFromSourceAndTrigger(source, trigger, trigger.parseEventTriggers().get(0))
+                .populateFromSourceAndTrigger(
+                        source,
+                        trigger,
+                        trigger.parseEventTriggers().get(0),
+                        new Pair<>(null, null),
+                        new EventReportWindowCalcDelegate(mFlags),
+                        new SourceNoiseHandler(mFlags))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
@@ -6405,6 +7142,7 @@ public class MeasurementDaoTest {
                                 + "      \"source_event_id\": \"45623\"\n"
                                 + "    }")
                 .setEnrollmentId("1")
+                .setRegistrationOrigin(REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -6568,7 +7306,7 @@ public class MeasurementDaoTest {
         }
     }
 
-    private Source createSourceForIATest(
+    private Source.Builder createSourceForIATest(
             String id,
             long currentTime,
             long priority,
@@ -6588,8 +7326,7 @@ public class MeasurementDaoTest {
                                 - TimeUnit.DAYS.toMillis(
                                         eventTimePastDays == -1 ? 10 : eventTimePastDays))
                 .setPriority(priority == -1 ? 100 : priority)
-                .setRegistrationOrigin(REGISTRATION_ORIGIN)
-                .build();
+                .setRegistrationOrigin(REGISTRATION_ORIGIN);
     }
 
     private AggregateReport generateMockAggregateReport(String attributionDestination, int id) {
