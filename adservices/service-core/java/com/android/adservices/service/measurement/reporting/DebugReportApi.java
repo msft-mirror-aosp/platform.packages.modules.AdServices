@@ -18,23 +18,31 @@ package com.android.adservices.service.measurement.reporting;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
-import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.adservices.service.measurement.util.Web;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -91,10 +99,29 @@ public class DebugReportApi {
 
     private final Context mContext;
     private final Flags mFlags;
+    private final DatastoreManager mDatastoreManager;
+    private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     public DebugReportApi(Context context, Flags flags) {
+        this(
+                context,
+                flags,
+                new EventReportWindowCalcDelegate(flags),
+                new SourceNoiseHandler(flags));
+    }
+
+    @VisibleForTesting
+    DebugReportApi(
+            Context context,
+            Flags flags,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /** Schedules the Source Success Debug Report */
@@ -114,6 +141,7 @@ public class DebugReportApi {
                 Type.SOURCE_SUCCESS,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -129,16 +157,19 @@ public class DebugReportApi {
         try {
             JSONObject body = new JSONObject();
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.LIMIT, limit);
             if (getAdIdPermissionFromSource(source) == PermissionState.GRANTED
                     || getArDebugPermissionFromSource(source) == PermissionState.GRANTED) {
                 body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
             }
-            scheduleReport(Type.SOURCE_DESTINATION_LIMIT, body, source.getEnrollmentId(), dao);
+            scheduleReport(
+                    Type.SOURCE_DESTINATION_LIMIT,
+                    body,
+                    source.getEnrollmentId(),
+                    source.getRegistrationOrigin(),
+                    dao);
         } catch (JSONException e) {
             LogUtil.e(e, "Json error in debug report %s", Type.SOURCE_DESTINATION_LIMIT);
         }
@@ -161,6 +192,7 @@ public class DebugReportApi {
                 Type.SOURCE_NOISED,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -182,6 +214,7 @@ public class DebugReportApi {
                 Type.SOURCE_STORAGE_LIMIT,
                 generateSourceDebugReportBody(source, limit),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -202,6 +235,7 @@ public class DebugReportApi {
                 Type.SOURCE_UNKNOWN_ERROR,
                 generateSourceDebugReportBody(source, null),
                 source.getEnrollmentId(),
+                source.getRegistrationOrigin(),
                 dao);
     }
 
@@ -223,11 +257,13 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
                 trigger.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -250,11 +286,13 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -280,12 +318,14 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor().getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(mDatastoreManager)
+                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBodyWithAllFields(
                         source, trigger, triggerData, debugKeyPair),
                 source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
                 dao);
     }
 
@@ -295,12 +335,14 @@ public class DebugReportApi {
      * @param type The type of the debug report
      * @param body The body of the debug report
      * @param enrollmentId Ad Tech enrollment ID
+     * @param registrationOrigin Reporting origin of the report
      * @param dao Measurement DAO
      */
     private void scheduleReport(
             @NonNull String type,
             @NonNull JSONObject body,
             @NonNull String enrollmentId,
+            @NonNull Uri registrationOrigin,
             @NonNull IMeasurementDao dao) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(body);
@@ -320,6 +362,7 @@ public class DebugReportApi {
                         .setType(type)
                         .setBody(body)
                         .setEnrollmentId(enrollmentId)
+                        .setRegistrationOrigin(registrationOrigin)
                         .build();
         try {
             dao.insertDebugReport(debugReport);
@@ -395,10 +438,8 @@ public class DebugReportApi {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(Body.ATTRIBUTION_DESTINATION, serializeSourceDestinations(source));
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.ATTRIBUTION_DESTINATION, generateSourceDestinations(source));
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
         } catch (JSONException e) {
@@ -407,10 +448,26 @@ public class DebugReportApi {
         return body;
     }
 
-    private static Object serializeSourceDestinations(Source source) throws JSONException {
-        return source.getPublisherType() == EventSurfaceType.APP
-                ? ReportUtil.serializeAttributionDestinations(source.getAppDestinations())
-                : ReportUtil.serializeAttributionDestinations(source.getWebDestinations());
+    private static Object generateSourceDestinations(Source source) throws JSONException {
+        if (source.getPublisherType() == EventSurfaceType.APP) {
+            return ReportUtil.serializeAttributionDestinations(source.getAppDestinations());
+        } else {
+            List<Uri> webAttributionDestinations = new ArrayList<>();
+            for (int i = 0; i < source.getWebDestinations().size(); i++) {
+                webAttributionDestinations.add(
+                        Web.topPrivateDomainAndScheme(source.getWebDestinations().get(i))
+                                .orElse(null));
+            }
+            return ReportUtil.serializeAttributionDestinations(webAttributionDestinations);
+        }
+    }
+
+    private static Uri generateSourceSite(Source source) {
+        if (source.getPublisherType() == EventSurfaceType.APP) {
+            return source.getPublisher();
+        } else {
+            return Web.topPrivateDomainAndScheme(source.getPublisher()).orElse(null);
+        }
     }
 
     /** Generates trigger debug report body */
@@ -422,7 +479,7 @@ public class DebugReportApi {
             boolean isTriggerNoMatchingSource) {
         JSONObject body = new JSONObject();
         try {
-            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestination());
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
             body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
             if (isTriggerNoMatchingSource) {
                 return body;
@@ -430,9 +487,7 @@ public class DebugReportApi {
             body.put(Body.LIMIT, limit);
             body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
-            body.put(
-                    Body.SOURCE_SITE,
-                    BaseUriExtractor.getBaseUri(source.getPublisher()).toString());
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
         } catch (JSONException e) {
             LogUtil.e(e, "Json error while generating trigger debug report body.");
         }
@@ -450,20 +505,20 @@ public class DebugReportApi {
             @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair) {
         JSONObject body = new JSONObject();
         try {
-            body.put(
-                    Body.ATTRIBUTION_DESTINATION,
-                    ReportUtil.serializeAttributionDestinations(
-                            source.getAttributionDestinations(trigger.getDestinationType())));
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
             body.put(
                     Body.SCHEDULED_REPORT_TIME,
                     String.valueOf(
                             TimeUnit.MILLISECONDS.toSeconds(
-                                    source.getReportingTime(
+                                    mEventReportWindowCalcDelegate.getReportingTime(
+                                            source,
                                             trigger.getTriggerTime(),
                                             trigger.getDestinationType()))));
             body.put(Body.SOURCE_EVENT_ID, source.getEventId());
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
-            body.put(Body.RANDOMIZED_TRIGGER_RATE, source.getRandomAttributionProbability());
+            body.put(
+                    Body.RANDOMIZED_TRIGGER_RATE,
+                    mSourceNoiseHandler.getRandomAttributionProbability(source));
             if (triggerData != null) {
                 body.put(Body.TRIGGER_DATA, triggerData.toString());
             }

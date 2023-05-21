@@ -48,6 +48,8 @@ public class SandboxedAppSetIdManagerTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.appsetidsdk";
 
+    private static final int LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC = 60;
+
     private static final Context sContext =
             InstrumentationRegistry.getInstrumentation().getContext();
 
@@ -73,14 +75,15 @@ public class SandboxedAppSetIdManagerTest {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        final FakeLoadSdkCallback callback =
+                new FakeLoadSdkCallback(LOAD_SDK_FROM_INTERNET_TIMEOUT_SEC);
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 
         // This verifies that the appsetidsdk in the Sandbox gets back the correct appsetid.
         // If the appsetidsdk did not get correct appsetid, it will trigger the
         // callback.onLoadSdkError.
-        callback.assertLoadSdkIsSuccessful();
+        callback.assertLoadSdkIsSuccessful("Load SDK from internet");
     }
 
     private void overridingBeforeTest() {
