@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 The Android Open Source Project
+ * Copyright (C) 2023 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,22 +16,8 @@
 
 package android.adservices.common;
 
-import android.adservices.common.AdServicesStates;
-import android.adservices.common.IAdServicesCommonCallback;
-import android.adservices.common.IEnableAdServicesCallback;
-import android.net.Uri;
-
 /**
- * Common AdServices service.
+ * AdServicesStates parcel.
  * {@hide}
  */
-interface IAdServicesCommonService {
-
-    void isAdServicesEnabled(in IAdServicesCommonCallback callback);
-
-    void setAdServicesEnabled(
-            in boolean adServicesEntryPointEnabled,
-            in boolean adIdEnabled);
-
-    void enableAdServices(in AdServicesStates adServicesStates, in IEnableAdServicesCallback callback);
-}
+parcelable AdServicesStates;
