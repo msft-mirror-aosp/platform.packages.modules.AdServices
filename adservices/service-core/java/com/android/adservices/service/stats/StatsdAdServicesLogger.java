@@ -330,6 +330,26 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 stats.getStopReason());
     }
 
+    /** log method for measurement attribution. */
+    public void logMeasurementAttributionStats(
+            MeasurementAttributionStats measurementAttributionStats) {
+        AdServicesStatsLog.write(
+                measurementAttributionStats.getCode(),
+                measurementAttributionStats.getSourceType(),
+                measurementAttributionStats.getSurfaceType(),
+                measurementAttributionStats.getResult(),
+                measurementAttributionStats.getFailureType(),
+                measurementAttributionStats.isSourceDerived(),
+                measurementAttributionStats.isInstallAttribution(),
+                measurementAttributionStats.getAttributionDelay());
+    }
+
+    /** log method for measurement wipeout. */
+    public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
+        AdServicesStatsLog.write(
+                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
+    }
+
     @NonNull
     private byte[] toBytes(long fieldId, @NonNull int[] values) {
         ProtoOutputStream protoOutputStream = new ProtoOutputStream();
