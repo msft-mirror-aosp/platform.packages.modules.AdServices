@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"మీరు బ్లాక్ చేసిన యాప్‌లు"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"యాప్‌లు సూచించిన డేటాను రీసెట్ చేయండి"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"మీరు ఉపయోగించే యాప్‌లు, మీ అనుభవాన్ని వ్యక్తిగతీకరించడానికి మీకు ఆసక్తి ఉన్న అంశాలను గుర్తుంచుకోవడం సాధారణం. యాప్‌లు మీ టాపిక్‌ల గురించి Androidతో సమాచారాన్ని కూడా స్టోర్ చేయగలవు.\n\nఉదాహరణకు, మీరు మారథాన్ ట్రైనింగ్‌కు సంబంధించిన యాప్‌ను ఉపయోగిస్తే, మీరు రన్నింగ్ షూల పట్ల ఆసక్తి కలిగి ఉన్నారని యాప్ నిర్ధారించవచ్చు. తర్వాత, మీరు వేరొక యాప్‌ను ఉపయోగిస్తే, మొదటి యాప్ సూచించిన రన్నింగ్ షూలకు సంబంధించిన యాడ్‌ను మీకు చూపవచ్చు.\n\nAndroid క్రమం తప్పకుండా యాప్ సూచించిన డేటాను ఆటోమేటిక్‌గా తొలగిస్తుంది. మీరు మళ్లీ ఉపయోగించే యాప్ లిస్ట్‌లో తిరిగి కనిపించవచ్చు. లేదా, మీ కోసం యాడ్‌లను సూచించకుండా మీరు యాప్‌ను బ్లాక్ చేయవచ్చు.\n\nమీ యాప్‌లలో మీరు చూసే యాడ్, ఈ సెట్టింగ్, యాడ్ టాపిక్‌ల సెట్టింగ్, మీ అడ్వర్టయిజింగ్ ID సెట్టింగ్‌లు ఇంకా మీరు ఉపయోగిస్తున్న యాప్ యాడ్‌లను వ్యక్తిగతీకరిస్తుందా అనే దాని ఆధారంగా అనుకూలీకరించబడవచ్చు."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"మ్యూజిక్, వార్తలు, క్రీడల వంటి ఆసక్తి ఉన్న టాపిక్‌లను రంగురంగుల చిహ్నాలతో సూచించిన ఉదాహరణ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"సర్కిల్ లోపల లాక్‌ను రంగు రంగులుగా సూచించిన ఉదాహరణ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"తొమ్మిది చుక్కలతో ఏర్పడిన స్క్వేర్‌ను నలుపు, తెలుపు రంగులతో సూచించిన ఉదాహరణ"</string>
