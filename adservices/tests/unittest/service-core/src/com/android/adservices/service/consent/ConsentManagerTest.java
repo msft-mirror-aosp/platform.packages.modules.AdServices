@@ -215,7 +215,9 @@ public class ConsentManagerTest {
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mContextSpy.getPackageManager()));
         mEnrollmentDao =
-                spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest(), mMockFlags));
+                spy(
+                        new EnrollmentDao(
+                                mContextSpy, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
