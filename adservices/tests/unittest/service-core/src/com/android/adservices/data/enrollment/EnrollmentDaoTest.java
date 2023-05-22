@@ -33,8 +33,8 @@ import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.enrollment.EnrollmentData;
 
@@ -51,7 +51,7 @@ import java.util.Set;
 public class EnrollmentDaoTest {
 
     protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    private DbHelper mDbHelper;
+    private SharedDbHelper mDbHelper;
     private EnrollmentDao mEnrollmentDao;
 
     @Mock private Flags mMockFlags;
@@ -151,7 +151,7 @@ public class EnrollmentDaoTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        mDbHelper = DbTestUtil.getDbHelperForTest();
+        mDbHelper = DbTestUtil.getSharedDbHelperForTest();
         when(mMockFlags.isEnableEnrollmentTestSeed()).thenReturn(false);
         mEnrollmentDao = new EnrollmentDao(sContext, mDbHelper, mMockFlags);
     }
