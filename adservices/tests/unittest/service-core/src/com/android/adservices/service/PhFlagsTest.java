@@ -236,6 +236,7 @@ import static com.android.adservices.service.PhFlags.KEY_ENABLE_ENROLLMENT_TEST_
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_FOREGROUND_STATUS_TOPICS;
 import static com.android.adservices.service.PhFlags.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.PhFlags.KEY_ENROLLMENT_BLOCKLIST_IDS;
+import static com.android.adservices.service.PhFlags.KEY_ERROR_CODE_LOGGING_DENY_LIST;
 import static com.android.adservices.service.PhFlags.KEY_EU_NOTIF_FLOW_CHANGE_ENABLED;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_EVENT_COUNT;
 import static com.android.adservices.service.PhFlags.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_EVENT_COUNT;
@@ -4933,6 +4934,40 @@ public class PhFlagsTest {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_GLOBAL_BLOCKED_TOPIC_IDS,
                 blockedTopicIds,
+                /* makeDefault= */ false);
+    }
+
+    @Test
+    public void testGetErrorCodeLoggingDenyList() {
+        // Without any overriding, the list is empty
+        assertThat(FlagsFactory.getFlags().getErrorCodeLoggingDenyList()).isEmpty();
+
+        Flags phFlags = FlagsFactory.getFlags();
+
+        // Valid values passed as part of the PhFlag
+        setErrorCodeLoggingDenyList("10, 11, 12");
+        assertThat(phFlags.getErrorCodeLoggingDenyList()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setErrorCodeLoggingDenyList(" 10, 11, 12");
+        assertThat(phFlags.getErrorCodeLoggingDenyList()).isEqualTo(ImmutableList.of(10, 11, 12));
+
+        setErrorCodeLoggingDenyList(" ");
+        assertThat(phFlags.getErrorCodeLoggingDenyList()).isEqualTo(ImmutableList.of());
+
+        setErrorCodeLoggingDenyList("");
+        assertThat(phFlags.getErrorCodeLoggingDenyList()).isEqualTo(ImmutableList.of());
+
+        // Invalid values passed as part of PhFlag.
+        setErrorCodeLoggingDenyList("1,a, 34");
+        assertThat(FlagsFactory.getFlags().getErrorCodeLoggingDenyList())
+                .isEqualTo(ImmutableList.of(1, 34));
+    }
+
+    private void setErrorCodeLoggingDenyList(String errorCodeLoggingDenyList) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ERROR_CODE_LOGGING_DENY_LIST,
+                errorCodeLoggingDenyList,
                 /* makeDefault= */ false);
     }
 
