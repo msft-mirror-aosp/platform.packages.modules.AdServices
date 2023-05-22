@@ -79,15 +79,15 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
                 mAdSelectionEntryDao.getAdSelectionHistogramInfo(adSelectionId, callerPackageName);
         if (histogramInfo == null) {
             sLogger.v(
-                    "No ad selection with ID %s and caller package name %s found",
+                    "No ad selection with ID %d and caller package name %s found",
                     adSelectionId, callerPackageName);
             return;
         }
 
-        Set<String> adCounterKeys = histogramInfo.getAdCounterKeys();
+        Set<Integer> adCounterKeys = histogramInfo.getAdCounterKeys();
         if (adCounterKeys == null || adCounterKeys.isEmpty()) {
             sLogger.v(
-                    "No ad counter keys associated with ad selection with ID %s and caller package"
+                    "No ad counter keys associated with ad selection with ID %d and caller package"
                             + " name %s",
                     adSelectionId, callerPackageName);
             return;
@@ -100,7 +100,7 @@ public class AdCounterHistogramUpdaterImpl implements AdCounterHistogramUpdater 
                         .setTimestamp(eventTimestamp);
 
         sLogger.v("Inserting %d histogram events", adCounterKeys.size());
-        for (String key : adCounterKeys) {
+        for (Integer key : adCounterKeys) {
             // TODO(b/276528814): Insert in bulk instead of in multiple transactions
             //  and handle eviction only once
             mFrequencyCapDao.insertHistogramEvent(

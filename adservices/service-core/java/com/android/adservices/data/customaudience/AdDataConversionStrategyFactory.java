@@ -74,16 +74,11 @@ public class AdDataConversionStrategyFactory {
             String renderUriString = JsonUtils.getStringFromJson(json, RENDER_URI_FIELD_NAME);
             String metadata = json.getString(METADATA_FIELD_NAME);
             Uri renderUri = FledgeRoomConverters.deserializeUri(renderUriString);
-            Set<String> adCounterKeys = new HashSet<>();
+            Set<Integer> adCounterKeys = new HashSet<>();
             if (json.has(AD_COUNTER_KEYS_FIELD_NAME)) {
                 JSONArray counterKeys = json.getJSONArray(AD_COUNTER_KEYS_FIELD_NAME);
                 for (int i = 0; i < counterKeys.length(); i++) {
-                    adCounterKeys.add(
-                            JsonUtils.getStringFromJsonArrayAtIndex(
-                                    counterKeys,
-                                    i,
-                                    String.format(
-                                            STRING_ERROR_FORMAT, i, AD_COUNTER_KEYS_FIELD_NAME)));
+                    adCounterKeys.add(counterKeys.getInt(i));
                 }
             }
             AdFilters adFilters = null;

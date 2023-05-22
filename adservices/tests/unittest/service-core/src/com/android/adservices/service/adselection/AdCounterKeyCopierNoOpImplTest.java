@@ -230,6 +230,6 @@ public class AdCounterKeyCopierNoOpImplTest {
                         .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                         .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-        assertThat(outputSelection.getAdCounterKeys()).isNull();
+        assertThat(outputSelection.getAdCounterIntKeys()).isNull();
     }
 }

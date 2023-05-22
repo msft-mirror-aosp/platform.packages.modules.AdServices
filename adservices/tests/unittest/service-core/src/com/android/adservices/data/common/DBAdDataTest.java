@@ -120,7 +120,7 @@ public class DBAdDataTest {
         int[] size = new int[1];
         size[0] += SAMPLE_AD_DATA.getRenderUri().toString().getBytes().length;
         size[0] += SAMPLE_AD_DATA.getMetadata().getBytes().length;
-        SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += x.getBytes().length);
+        SAMPLE_AD_DATA.getAdCounterKeys().forEach(x -> size[0] += 4);
         size[0] += SAMPLE_AD_DATA.getAdFilters().getSizeInBytes();
         assertEquals(size[0], CONVERSION_STRATEGY.fromServiceObject(SAMPLE_AD_DATA).size());
     }
