@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement.attribution;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MAX_REPORT_DELAY;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_MIN_REPORT_DELAY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -59,6 +60,7 @@ import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
+import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -166,6 +168,13 @@ class AttributionJobHandler {
 
                     Optional<Pair<Source, List<Source>>> sourceOpt =
                             selectSourceToAttribute(trigger, measurementDao, attributionStatus);
+
+                    // Log competing source that did not win attribution because of delay
+                    Optional<Source> matchingDelayedSource =
+                            measurementDao.getNearestDelayedMatchingActiveSource(trigger);
+                    if (matchingDelayedSource.isPresent()) {
+                        logDelayedSourceRegistrationStats(matchingDelayedSource.get(), trigger);
+                    }
 
                     if (sourceOpt.isEmpty()) {
                         mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
@@ -965,6 +974,22 @@ class AttributionJobHandler {
                                 .setSourceDerived(attributionStatus.isSourceDerived())
                                 .setInstallAttribution(attributionStatus.isInstallAttribution())
                                 .setAttributionDelay(attributionStatus.getAttributionDelay().get())
+                                .build());
+    }
+
+    private void logDelayedSourceRegistrationStats(Source source, Trigger trigger) {
+        DelayedSourceRegistrationStatus delayedSourceRegistrationStatus =
+                new DelayedSourceRegistrationStatus();
+        delayedSourceRegistrationStatus.setRegistrationDelay(
+                source.getEventTime() - trigger.getTriggerTime());
+
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementDelayedSourceRegistrationStats(
+                        new MeasurementDelayedSourceRegistrationStats.Builder()
+                                .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
+                                .setRegistrationStatus(delayedSourceRegistrationStatus.UNKNOWN)
+                                .setRegistrationDelay(
+                                        delayedSourceRegistrationStatus.getRegistrationDelay())
                                 .build());
     }
 }
