@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.consent;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION;
@@ -1724,6 +1725,16 @@ public class ConsentManager {
             AdServicesManager adServicesManager,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context);
+        // On R/S, handleConsentMigrationIfNeeded should never be executed.
+        // It is a T+ feature. On T+, this function should only execute if it's within the
+        // AdServices
+        // APK and not ExtServices. So check if it's within ExtServices, and bail out if that's the
+        // case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.i("Aborting attempt to migrate consent in ExtServices");
+            return;
+        }
         Objects.requireNonNull(datastore);
         if (consentSourceOfTruth == Flags.PPAPI_AND_SYSTEM_SERVER
                 || consentSourceOfTruth == Flags.SYSTEM_SERVER_ONLY) {
@@ -2046,6 +2057,18 @@ public class ConsentManager {
         Objects.requireNonNull(context);
         Objects.requireNonNull(appSearchConsentManager);
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
+
+        // On R/S, this function should never be executed because AppSearch to PPAPI and
+        // System Server migration is a T+ feature. On T+, this function should only execute
+        // if it's within the AdServices APK and not ExtServices. So check if it's within
+        // ExtServices, and bail out if that's the case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.i(
+                    "Aborting attempt to migrate AppSearch to PPAPI and System Service in"
+                            + " ExtServices");
+            return;
+        }
 
         try {
             // This should be called only once after OTA (if flag is enabled). If we did not record
