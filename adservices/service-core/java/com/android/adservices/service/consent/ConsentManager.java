@@ -26,6 +26,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 
 import android.annotation.IntDef;
 import android.annotation.NonNull;
@@ -56,6 +57,9 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.WipeoutStatus;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
@@ -970,6 +974,10 @@ public class ConsentManager {
     /** Wipes out all the data gathered by Measurement API. */
     public void resetMeasurement() {
         mMeasurementImpl.deleteAllMeasurementData(List.of());
+        // Log wipeout event triggered by consent flip to delete data of package
+        WipeoutStatus wipeoutStatus = new WipeoutStatus();
+        wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP);
+        logWipeoutStats(wipeoutStatus);
     }
 
     /** Wipes out all the Enrollment data */
@@ -2197,5 +2205,14 @@ public class ConsentManager {
 
     private void asyncExecute(Runnable runnable) {
         AdServicesExecutors.getBackgroundExecutor().execute(runnable);
+    }
+
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementWipeoutStats(
+                        new MeasurementWipeoutStats.Builder()
+                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .build());
     }
 }
