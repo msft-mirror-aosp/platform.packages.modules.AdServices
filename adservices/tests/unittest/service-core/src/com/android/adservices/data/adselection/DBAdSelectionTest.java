@@ -62,7 +62,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         assertEquals(AD_SELECTION_ID, dbAdSelection.getAdSelectionId());
@@ -73,7 +73,7 @@ public class DBAdSelectionTest {
         assertEquals(BID, dbAdSelection.getWinningAdBid(), 0);
         assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
         assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
-        assertThat(dbAdSelection.getAdCounterKeys())
+        assertThat(dbAdSelection.getAdCounterIntKeys())
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
     }
 
@@ -91,7 +91,7 @@ public class DBAdSelectionTest {
                             .setWinningAdBid(BID)
                             .setCreationTimestamp(ACTIVATION_TIME)
                             .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                            .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                             .build();
                 });
     }
@@ -181,7 +181,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(null)
+                        .setAdCounterIntKeys(null)
                         .build();
 
         assertEquals(AD_SELECTION_ID, dbAdSelection.getAdSelectionId());
@@ -192,7 +192,7 @@ public class DBAdSelectionTest {
         assertEquals(BID, dbAdSelection.getWinningAdBid(), 0);
         assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
         assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
-        assertThat(dbAdSelection.getAdCounterKeys()).isNull();
+        assertThat(dbAdSelection.getAdCounterIntKeys()).isNull();
     }
 
     @Test
@@ -207,7 +207,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(new HashSet<>())
+                        .setAdCounterIntKeys(new HashSet<>())
                         .build();
 
         assertEquals(AD_SELECTION_ID, dbAdSelection.getAdSelectionId());
@@ -218,7 +218,7 @@ public class DBAdSelectionTest {
         assertEquals(BID, dbAdSelection.getWinningAdBid(), 0);
         assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
         assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
-        assertThat(dbAdSelection.getAdCounterKeys()).isNull();
+        assertThat(dbAdSelection.getAdCounterIntKeys()).isNull();
     }
 
     @Test
@@ -243,7 +243,7 @@ public class DBAdSelectionTest {
         assertEquals(BID, dbAdSelection.getWinningAdBid(), 0);
         assertEquals(ACTIVATION_TIME, dbAdSelection.getCreationTimestamp());
         assertEquals(CALLER_PACKAGE_NAME, dbAdSelection.getCallerPackageName());
-        assertThat(dbAdSelection.getAdCounterKeys()).isNull();
+        assertThat(dbAdSelection.getAdCounterIntKeys()).isNull();
     }
 
     @Test
@@ -258,7 +258,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         DBAdSelection obj2 =
@@ -271,7 +271,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         CommonFixture.assertHaveSameHashCode(obj1, obj2);
@@ -289,7 +289,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(BID)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         DBAdSelection obj2 =
@@ -314,7 +314,7 @@ public class DBAdSelectionTest {
                         .setWinningAdBid(10)
                         .setCreationTimestamp(ACTIVATION_TIME)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
-                        .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                        .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
         CommonFixture.assertDifferentHashCode(obj1, obj2, obj3);

@@ -75,8 +75,13 @@ public final class DBAdSelection {
     private final String mCallerPackageName;
 
     @ColumnInfo(name = "ad_counter_keys")
+    @Deprecated(since = "Integer keys are now used; kept for Room DB backwards compatibility")
     @Nullable
     private final Set<String> mAdCounterKeys;
+
+    @ColumnInfo(name = "ad_counter_int_keys")
+    @Nullable
+    private final Set<Integer> mAdCounterIntKeys;
 
     public DBAdSelection(
             long adSelectionId,
@@ -87,7 +92,9 @@ public final class DBAdSelection {
             double winningAdBid,
             @NonNull Instant creationTimestamp,
             @NonNull String callerPackageName,
-            @Nullable Set<String> adCounterKeys) {
+            // String keys deprecated but kept in ctor for Room DB backwards compatibility
+            @Nullable Set<String> adCounterKeys,
+            @Nullable Set<Integer> adCounterIntKeys) {
         this.mAdSelectionId = adSelectionId;
         this.mCustomAudienceSignals = customAudienceSignals;
         this.mContextualSignals = contextualSignals;
@@ -97,6 +104,7 @@ public final class DBAdSelection {
         this.mCreationTimestamp = creationTimestamp;
         this.mCallerPackageName = callerPackageName;
         this.mAdCounterKeys = adCounterKeys;
+        this.mAdCounterIntKeys = adCounterIntKeys;
     }
 
     @Override
@@ -112,7 +120,8 @@ public final class DBAdSelection {
                     && mWinningAdBid == adSelection.mWinningAdBid
                     && Objects.equals(mCreationTimestamp, adSelection.mCreationTimestamp)
                     && mCallerPackageName.equals(adSelection.mCallerPackageName)
-                    && Objects.equals(mAdCounterKeys, adSelection.mAdCounterKeys);
+                    && Objects.equals(mAdCounterKeys, adSelection.mAdCounterKeys)
+                    && Objects.equals(mAdCounterIntKeys, adSelection.mAdCounterIntKeys);
         }
         return false;
     }
@@ -128,7 +137,8 @@ public final class DBAdSelection {
                 mWinningAdBid,
                 mCreationTimestamp,
                 mCallerPackageName,
-                mAdCounterKeys);
+                mAdCounterKeys,
+                mAdCounterIntKeys);
     }
 
     /**
@@ -190,10 +200,22 @@ public final class DBAdSelection {
         return mCallerPackageName;
     }
 
-    /** @return the winning ad's set of counter keys */
+    /**
+     * @return the winning ad's set of counter keys
+     * @deprecated This field is no longer used but is kept for Room DB compatibility; please use
+     *     {@link #getAdCounterIntKeys()} instead.
+     */
     @Nullable
-    public Set<String> getAdCounterKeys() {
+    Set<String> getAdCounterKeys() {
         return mAdCounterKeys;
+    }
+
+    /**
+     * @return the winning ad's set of counter keys
+     */
+    @Nullable
+    public Set<Integer> getAdCounterIntKeys() {
+        return mAdCounterIntKeys;
     }
 
     /** Builder for {@link DBAdSelection} object. */
@@ -206,7 +228,7 @@ public final class DBAdSelection {
         private double mWinningAdBid;
         private Instant mCreationTimestamp;
         private String mCallerPackageName;
-        private Set<String> mAdCounterKeys;
+        private Set<Integer> mAdCounterIntKeys;
 
         public Builder() {}
 
@@ -279,15 +301,15 @@ public final class DBAdSelection {
         }
 
         /**
-         * Sets the winning ad's set of counter keys, which are used to update ad counter histograms
-         * for frequency cap filtering.
+         * Sets the winning ad's set of integer counter keys, which are used to update ad counter
+         * histograms for frequency cap filtering.
          */
         @NonNull
-        public Builder setAdCounterKeys(@NonNull Set<String> adCounterKeys) {
-            if (adCounterKeys == null || adCounterKeys.isEmpty()) {
-                mAdCounterKeys = null;
+        public Builder setAdCounterIntKeys(@NonNull Set<Integer> adCounterIntKeys) {
+            if (adCounterIntKeys == null || adCounterIntKeys.isEmpty()) {
+                mAdCounterIntKeys = null;
             } else {
-                mAdCounterKeys = adCounterKeys;
+                mAdCounterIntKeys = adCounterIntKeys;
             }
             return this;
         }
@@ -321,7 +343,8 @@ public final class DBAdSelection {
                     mWinningAdBid,
                     mCreationTimestamp,
                     mCallerPackageName,
-                    mAdCounterKeys);
+                    null,
+                    mAdCounterIntKeys);
         }
     }
 }

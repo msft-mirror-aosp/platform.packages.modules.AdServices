@@ -126,7 +126,7 @@ public class FrequencyCapFilteringE2ETest {
                     .setWinningAdBid(0.5)
                     .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                     .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
     private static final DBAdSelection EXISTING_PREVIOUS_AD_SELECTION_BUYER_2 =
@@ -144,7 +144,7 @@ public class FrequencyCapFilteringE2ETest {
                     .setWinningAdBid(0.5)
                     .setCreationTimestamp(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
                     .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
-                    .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
+                    .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
     private static final ImmutableSet<KeyedFrequencyCap> CLICK_FILTERS =
@@ -339,7 +339,7 @@ public class FrequencyCapFilteringE2ETest {
         verify(mFrequencyCapDaoSpy, times(AdDataFixture.getAdCounterKeys().size()))
                 .insertHistogramEvent(any(), anyInt(), anyInt());
 
-        for (String key : AdDataFixture.getAdCounterKeys()) {
+        for (Integer key : AdDataFixture.getAdCounterKeys()) {
             assertThat(
                             mFrequencyCapDaoSpy.getNumEventsForBuyerAfterTime(
                                     key,

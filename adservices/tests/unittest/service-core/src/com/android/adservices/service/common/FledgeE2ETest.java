@@ -236,7 +236,7 @@ public class FledgeE2ETest {
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);
     private static final List<Double> BIDS_FOR_BUYER_2 = ImmutableList.of(4.5, 6.7, 10.0);
     // A list of empty ad counter keys to apply to ads for buyer when not doing fcap filtering.
-    private static final List<Set<String>> EMPTY_AD_COUNTER_KEYS_FOR_BUYER_2 =
+    private static final List<Set<Integer>> EMPTY_AD_COUNTER_KEYS_FOR_BUYER_2 =
             Arrays.asList(new HashSet[BIDS_FOR_BUYER_2.size()]);
     private static final List<Double> INVALID_BIDS = ImmutableList.of(0.0, -1.0, -2.0);
     private final AdServicesLogger mAdServicesLogger = AdServicesLoggerImpl.getInstance();
@@ -1480,7 +1480,7 @@ public class FledgeE2ETest {
                         mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
 
         // Using the same generic key across all ads in the CA
-        List<Set<String>> adCounterKeysForCa2 =
+        List<Set<Integer>> adCounterKeysForCa2 =
                 Arrays.asList(
                         Collections.singleton(KeyedFrequencyCapFixture.KEY1),
                         Collections.singleton(KeyedFrequencyCapFixture.KEY1),
@@ -2745,7 +2745,7 @@ public class FledgeE2ETest {
             final Uri buyerDomain,
             final String customAudienceSeq,
             List<Double> bids,
-            List<Set<String>> adCounterKeysForBids,
+            List<Set<Integer>> adCounterKeysForBids,
             List<AdFilters> filtersForBids) {
 
         // Generate ads for with bids provided

@@ -23,6 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.AdServicesParcelableUtil;
+import com.android.internal.util.Preconditions;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -32,7 +33,7 @@ import java.util.Set;
 public final class AdData implements Parcelable {
     @NonNull private final Uri mRenderUri;
     @NonNull private final String mMetadata;
-    @NonNull private final Set<String> mAdCounterKeys;
+    @NonNull private final Set<Integer> mAdCounterKeys;
     @Nullable private final AdFilters mAdFilters;
 
     @NonNull
@@ -67,7 +68,7 @@ public final class AdData implements Parcelable {
         mMetadata = in.readString();
         mAdCounterKeys =
                 AdServicesParcelableUtil.readNullableFromParcel(
-                        in, AdServicesParcelableUtil::readStringSetFromParcel);
+                        in, AdServicesParcelableUtil::readIntegerSetFromParcel);
         mAdFilters =
                 AdServicesParcelableUtil.readNullableFromParcel(
                         in, AdFilters.CREATOR::createFromParcel);
@@ -80,7 +81,7 @@ public final class AdData implements Parcelable {
         mRenderUri.writeToParcel(dest, flags);
         dest.writeString(mMetadata);
         AdServicesParcelableUtil.writeNullableToParcel(
-                dest, mAdCounterKeys, AdServicesParcelableUtil::writeStringSetToParcel);
+                dest, mAdCounterKeys, AdServicesParcelableUtil::writeIntegerSetToParcel);
         AdServicesParcelableUtil.writeNullableToParcel(
                 dest,
                 mAdFilters,
@@ -128,7 +129,7 @@ public final class AdData implements Parcelable {
      */
     // TODO(b/221876775): Unhide for frequency cap API review
     @NonNull
-    public Set<String> getAdCounterKeys() {
+    public Set<Integer> getAdCounterKeys() {
         return mAdCounterKeys;
     }
 
@@ -191,7 +192,7 @@ public final class AdData implements Parcelable {
     public static final class Builder {
         @Nullable private Uri mRenderUri;
         @Nullable private String mMetadata;
-        @NonNull private Set<String> mAdCounterKeys = new HashSet<>();
+        @NonNull private Set<Integer> mAdCounterKeys = new HashSet<>();
         @Nullable private AdFilters mAdFilters;
 
         // TODO(b/232883403): We may need to add @NonNUll members as args.
@@ -238,8 +239,10 @@ public final class AdData implements Parcelable {
          */
         // TODO(b/221876775): Unhide for frequency cap API review
         @NonNull
-        public AdData.Builder setAdCounterKeys(@NonNull Set<String> adCounterKeys) {
+        public AdData.Builder setAdCounterKeys(@NonNull Set<Integer> adCounterKeys) {
             Objects.requireNonNull(adCounterKeys);
+            Preconditions.checkArgument(
+                    !adCounterKeys.contains(null), "Ad counter keys must not contain null value");
             mAdCounterKeys = adCounterKeys;
             return this;
         }

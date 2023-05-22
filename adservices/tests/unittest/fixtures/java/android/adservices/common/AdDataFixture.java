@@ -36,8 +36,8 @@ public class AdDataFixture {
     public static final String VALID_METADATA = "{\"example\": \"metadata\", \"valid\": true}";
     public static final String INVALID_METADATA = "not.{real!metadata} = 1";
 
-    public static ImmutableSet<String> getAdCounterKeys() {
-        return ImmutableSet.<String>builder()
+    public static ImmutableSet<Integer> getAdCounterKeys() {
+        return ImmutableSet.<Integer>builder()
                 .add(
                         KeyedFrequencyCapFixture.KEY1,
                         KeyedFrequencyCapFixture.KEY2,

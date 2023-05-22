@@ -38,13 +38,13 @@ public class DBAdData {
     @NonNull private final Uri mRenderUri;
     @NonNull
     private final String mMetadata;
-    @NonNull private final Set<String> mAdCounterKeys;
+    @NonNull private final Set<Integer> mAdCounterKeys;
     @Nullable private final AdFilters mAdFilters;
 
     public DBAdData(
             @NonNull Uri renderUri,
             @NonNull String metadata,
-            @NonNull Set<String> adCounterKeys,
+            @NonNull Set<Integer> adCounterKeys,
             @Nullable AdFilters adFilters) {
         Objects.requireNonNull(renderUri);
         Objects.requireNonNull(metadata);
@@ -58,9 +58,8 @@ public class DBAdData {
     /** Returns the estimated size, in bytes, of the components of this object. */
     public int size() {
         int totalSize = mRenderUri.toString().getBytes().length + mMetadata.getBytes().length;
-        for (String adCounterKey : mAdCounterKeys) {
-            totalSize += adCounterKey.getBytes().length;
-        }
+        // Each int should cost about 4 bytes
+        totalSize += 4 * mAdCounterKeys.size();
         if (mAdFilters != null) {
             totalSize += mAdFilters.getSizeInBytes();
         }
@@ -78,11 +77,13 @@ public class DBAdData {
     public String getMetadata() {
         return mMetadata;
     }
+
     /** See {@link AdData#getAdCounterKeys()} ()} */
     @NonNull
-    public Set<String> getAdCounterKeys() {
+    public Set<Integer> getAdCounterKeys() {
         return mAdCounterKeys;
     }
+
     /** See {@link AdData#getAdFilters()} ()} */
     @Nullable
     public AdFilters getAdFilters() {
@@ -126,7 +127,7 @@ public class DBAdData {
     public static class Builder {
         @Nullable private Uri mRenderUri;
         @Nullable private String mMetadata;
-        @NonNull private Set<String> mAdCounterKeys = new HashSet<>();
+        @NonNull private Set<Integer> mAdCounterKeys = new HashSet<>();
         @Nullable private AdFilters mAdFilters;
 
         public Builder() {
@@ -145,7 +146,7 @@ public class DBAdData {
         }
 
         /** See {@link AdData#getAdCounterKeys()} for details. */
-        public Builder setAdCounterKeys(@NonNull Set<String> adCounterKeys) {
+        public Builder setAdCounterKeys(@NonNull Set<Integer> adCounterKeys) {
             this.mAdCounterKeys = adCounterKeys;
             return this;
         }

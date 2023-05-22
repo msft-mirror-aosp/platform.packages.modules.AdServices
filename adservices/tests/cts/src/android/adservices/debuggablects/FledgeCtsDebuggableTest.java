@@ -2063,7 +2063,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         PhFlagsFixture.overrideFledgeAdSelectionFilteringEnabled(true);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
-        final String keyToFilter = "test_non_win_event_filters_ads";
+        final int keyToFilter = 10;
 
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
