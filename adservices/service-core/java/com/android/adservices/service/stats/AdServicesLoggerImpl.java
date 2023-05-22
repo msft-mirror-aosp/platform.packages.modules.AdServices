@@ -130,4 +130,9 @@ public class AdServicesLoggerImpl implements AdServicesLogger {
             MeasurementAttributionStats measurementAttributionStats) {
         mStatsdAdServicesLogger.logMeasurementAttributionStats(measurementAttributionStats);
     }
+
+    @Override
+    public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
+        mStatsdAdServicesLogger.logMeasurementWipeoutStats(measurementWipeoutStats);
+    }
 }
