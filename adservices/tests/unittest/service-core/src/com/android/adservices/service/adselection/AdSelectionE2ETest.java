@@ -501,7 +501,7 @@ public class AdSelectionE2ETest {
     FledgeAuthorizationFilter mFledgeAuthorizationFilter =
             new FledgeAuthorizationFilter(
                     mContext.getPackageManager(),
-                    new EnrollmentDao(mContext, DbTestUtil.getDbHelperForTest(), mFlags),
+                    new EnrollmentDao(mContext, DbTestUtil.getSharedDbHelperForTest(), mFlags),
                     mAdServicesLoggerMock);
 
     private MockitoSession mStaticMockSession = null;
