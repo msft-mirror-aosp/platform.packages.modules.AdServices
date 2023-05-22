@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.appsearch;
 
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
@@ -406,6 +408,17 @@ public class AppSearchConsentManager {
         Objects.requireNonNull(datastore);
         Objects.requireNonNull(appConsentDao);
 
+        // On R/S, this function should never be executed because AppSearch to PPAPI and
+        // System Server migration is a T+ feature. On T+, this function should only execute
+        // if it's within the AdServices APK and not ExtServices. So check if it's within
+        // ExtServices, and bail out if that's the case on any platform.
+        String packageName = context.getPackageName();
+        if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.i(
+                    "Aborting attempt to migrate Consent data to PPAPI and System Service in"
+                            + " ExtServices");
+            return false;
+        }
         // Only perform migration if all the pre-conditions are met.
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
