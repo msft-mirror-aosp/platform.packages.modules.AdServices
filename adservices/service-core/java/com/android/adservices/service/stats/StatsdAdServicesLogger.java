@@ -350,6 +350,15 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
     }
 
+    /** log method for measurement attribution. */
+    public void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats) {
+        AdServicesStatsLog.write(
+                measurementDelayedSourceRegistrationStats.getCode(),
+                measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
+                measurementDelayedSourceRegistrationStats.getRegistrationDelay());
+    }
+
     @NonNull
     private byte[] toBytes(long fieldId, @NonNull int[] values) {
         ProtoOutputStream protoOutputStream = new ProtoOutputStream();
