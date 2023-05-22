@@ -88,4 +88,7 @@ public interface AdServicesLogger {
 
     /** Logs measurement debug keys stats. */
     void logMeasurementDebugKeysMatch(MsmtDebugKeysMatchStats stats);
+
+    /** Logs measurement attribution stats. */
+    void logMeasurementAttributionStats(MeasurementAttributionStats measurementAttributionStats);
 }
