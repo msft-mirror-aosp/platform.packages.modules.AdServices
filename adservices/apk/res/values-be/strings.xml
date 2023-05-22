@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Заблакіраваныя вамі праграмы"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Скінуць даныя рэкламы, якую прапануюць праграмы"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Праграмы, якімі вы карыстаецеся, звычайна запамінаюць цікавыя для вас тэмы, каб прапаноўваць вам персаналізаванае змесціва. Яны таксама могуць захоўваць інфармацыю пра вашы тэмы ў Android.\n\nНапрыклад, калі вы карыстаецеся праграмай з трэніроўкамі для марафону, праграма можа вырашыць, што вас цікавяць красоўкі. Пазней у іншай праграме вы можаце ўбачыць рэкламу красовак, прапанаваную першай праграмай.\n\nAndroid рэгулярна выдаляе даныя, якія прапануюцца праграмамі. Калі вы працягваеце карыстацца праграмай, яе даныя могуць зноў з\'явіцца ў спісе. Таксама вы можаце забараніць праграме прапаноўваць вам рэкламу.\n\nРэклама ў вашых праграмах можа персаналізавацца з улікам гэтай налады, налад тэм рэкламы і рэкламнага ідэнтыфікатара, а таксама таго, ці персаналізуе рэкламу тая праграма, якой вы карыстаецеся."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Каляровыя значкі з сімваламі, якія абазначаюць цікавыя тэмы, напрыклад музыку, навіны і спорт"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Каляровы значок замка ўнутры круга"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Малы чорна-белы значок з дзевяці кропак, якія ўтвараюць квадрат"</string>

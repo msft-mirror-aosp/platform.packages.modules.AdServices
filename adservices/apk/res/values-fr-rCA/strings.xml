@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Applications que vous avez bloquées"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Réinitialiser les données suggérées par les applications"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Il est courant que les applications que vous utilisez mémorisent les sujets qui vous intéressent afin de personnaliser votre expérience. Les applications peuvent également stocker des renseignements sur Android concernant ces sujets.\n\nPar exemple, si vous utilisez une application portant sur l\'entraînement au marathon, l\'application peut déterminer que vous êtes intéressé par des chaussures de course. Par la suite, si vous utilisez une autre application, celle-ci peut vous montrer une annonce pour des chaussures de course suggérée par la première application.\n\nAndroid supprime automatiquement et régulièrement les données suggérées par les applications. Une application que vous utilisez de nouveau peut réapparaître dans la liste. Vous pouvez également bloquer une application pour l\'empêcher de vous suggérer des annonces.\n\nDans vos applications, une annonce que vous voyez peut être personnalisée en fonction de ce paramètre, du paramètre des sujets d\'annonces, de vos paramètres d\'identifiant publicitaire, et si l\'application que vous utilisez personnalise les annonces."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Illustration colorée de symboles représentant des sujets d\'intérêt tels que la musique, les actualités et les sports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Illustration colorée d\'un cadenas à l\'intérieur d\'un cercle"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Petite illustration en noir et blanc de neuf points formant un carré"</string>

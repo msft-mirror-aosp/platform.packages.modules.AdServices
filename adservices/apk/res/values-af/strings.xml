@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps wat jy geblokkeer het"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Stel appvoorgestelde data terug"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Dit is algemeen dat apps wat jy gebruik dinge onthou waarin jy belangstel, sodat hulle jou ervaring kan personaliseer. Apps kan ook inligting oor jou onderwerpe by Android berg.\n\nAs jy byvoorbeeld ’n app oor marathonvoorbereiding gebruik, kan die app besluit dat jy in hardloopskoene belangstel. As jy later ’n ander app gebruik, kan daardie app vir jou ’n advertensie vir hardloopskoene wys wat deur die eerste app voorgestel is.\n\nAndroid vee appvoorgestelde data gereeld outomaties uit. ’n App wat jy weer gebruik, kan dalk weer op die lys verskyn. Of jy kan ’n app keer om vir jou advertensies voor te stel.\n\n’n Advertensie wat jy in jou apps sien, kan dalk gepersonaliseer word na gelang van hierdie instelling, die advertensie-onderwerpinstelling, jou reklame-ID-instellings, en óf die app wat jy gebruik, advertensies personaliseer."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Kleurvolle illustrasie van simbole wat onderwerpe waarin jy belangstel verteenwoordig, soos musiek, nuus en sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Kleurvolle illustrasie van ’n slot binne ’n kring"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Klein illustrasie in swart en wit van nege kolletjies wat ’n vierkant vorm"</string>

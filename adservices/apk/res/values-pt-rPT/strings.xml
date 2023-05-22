@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps que bloqueou"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Repor dados sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"As apps que usa memorizam habitualmente conteúdo que lhe interessa para personalizar a sua experiência. As apps também podem armazenar informações no Android sobre os seus tópicos.\n\nPor exemplo, se usar uma app de preparação para maratonas, a app pode decidir que tem interesse em ténis de corrida. Mais tarde, se usar uma app diferente, essa app pode mostrar-lhe um anúncio de ténis de corrida sugerido pela primeira app.\n\nO Android apaga automaticamente os tópicos e dados sugeridos por apps com regularidade. Se voltar a usar uma app, esta pode reaparecer na lista. Em alternativa, pode impedir que uma app lhe sugira anúncios.\n\nNas suas apps, um anúncio que vê pode ser personalizado consoante esta definição, a definição de tópicos de anúncios, as definições do seu ID de publicidade e se a app que usa personaliza anúncios."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustração colorida de símbolos que representam tópicos de interesse, como música, notícias e desporto"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustração colorida de uma fechadura dentro de um círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pequena ilustração a preto e branco de nove pontos a formar um quadrado"</string>

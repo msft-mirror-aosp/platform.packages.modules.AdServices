@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikasi yang Anda blokir"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset data yang disarankan aplikasi"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikasi yang Anda gunakan biasanya mengingat hal-hal yang Anda minati untuk mempersonalisasi pengalaman Anda. Aplikasi juga dapat menyimpan informasi dengan Android tentang topik yang Anda suka.\n\nMisalnya, jika Anda menggunakan aplikasi untuk latihan maraton, aplikasi mungkin akan menyimpulkan bahwa Anda tertarik dengan sepatu lari. Nantinya, jika Anda menggunakan aplikasi lain, aplikasi tersebut dapat menampilkan iklan sepatu lari yang disarankan oleh aplikasi pertama.\n\nAndroid akan rutin menghapus otomatis data yang disarankan aplikasi. Aplikasi yang Anda gunakan lagi mungkin akan muncul kembali di daftar. Atau, Anda dapat memblokir aplikasi agar tidak menyarankan iklan untuk Anda.\n\nDi aplikasi, iklan yang Anda lihat mungkin telah dipersonalisasi, bergantung pada setelan ini, setelan topik iklan, setelan ID iklan Anda, dan apakah aplikasi Anda menggunakan iklan yang dipersonalisasi."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrasi simbol penuh warna yang menampilkan topik minat seperti musik, berita, dan olahraga"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrasi kunci dalam lingkaran yang penuh warna"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrasi hitam putih kecil yang menggambarkan sembilan titik membentuk persegi"</string>
