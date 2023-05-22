@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"እርስዎ ያገዷቸው መተግበሪያዎች"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"በመተግበሪያ የተጠቆመ ውሂብን ዳግም አስጀምር"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ተሞክሮዎን ግላዊነት ለማላበስ እርስዎ የሚጠቀሟቸው መተግበሪያዎች የእርስዎ ዝንባሌን ማስታወሳቸው የተለመደ ነው። እንዲሁም መተግበሪያዎች ስለርዕሶችዎ በAndroid መረጃን ማከማቸት ይችላሉ።\n\nለምሳሌ ስለማራቶን ስልጠና አንድን መተግበሪያ ከተጠቀሙ መተግበሪያው እርስዎ በሩጫ ጫማዎች ላይ ዝንባሌ እንዳለዎት ሊወስን ይችላል። በኋላ ላይ የተለየ መተግበሪያ የሚጠቀሙ ከሆነ ያ መተግበሪያ በመጀመሪያው መተግበሪያ በአስተያየት የተጠቆሙ የሩጫ ጫማዎች ማስታወቂያ ሊያሳይዎት ይችላል።\n\nAndroid በመተግበሪያ አስተያየት የተደረገ ውሂብን በመደበኛነት በራስ ሰር ይሰርዛል። በድጋሚ የሚጠቀሙት መተግበሪያ በዝርዝሩ ላይ ዳግም ሊታይ ይችላል። ወይም መተግበሪያ ለእርስዎ ማስታወቂያን በአስተያየት ከመጠቆም ማገድ ይችላሉ።\n\nበመተግበሪያዎችዎ ውስጥ በዚህ ቅንብር፣ በማስታወቂያ ርዕሶቹ ቅንብር፣ በእርስዎ የማስታወቂያ መታወቂያ ቅንብሮች እና የሚጠቀሙት መተግበሪያ ማስታወቂያዎችን ግላዊነት በሚያላብስበት መንገድ መሰረት የሚያዩት ማስታወቂያ ግላዊነትን የተላበሰ ሊሆን ይችላል።"</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"እንደ ሙዚቃ፣ ዜና እና ስፖርት ያሉ የዝንባሌ ርዕሶችን የሚወክሉ በቀለም የተሞሉ የሥዕላዊ ማብራሪያ ምልክቶች"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"በክበብ ውስጥ ያለ በቀለም የተሞላ ቁልፍ ሥዕላዊ ማብራሪያ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ኩብ የሚፈጥሩ የዘጠኝ ነጥቦች ትንሽ ጥቁር እና ነጭ ሥዕላዊ ማብራሪያ"</string>

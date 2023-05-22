@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, du har blokeret"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nulstil data om foreslåede annoncer fra apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er helt normalt, at de apps, du bruger, husker de ting, du er interesseret i, for at personligt tilpasse din brugeroplevelse. Apps kan også gemme oplysninger om dine emner i Android.\n\nHvis du bruger en app til maratontræning, kan appen f.eks. skønne, at du er interesseret i løbesko. Hvis du derefter bruger en anden app, kan den pågældende app vise dig en annonce om løbesko, som er foreslået af den første app.\n\nAndroid sletter automatisk data for foreslåede annoncer fra apps med jævne mellemrum. Når du bruger en app igen, kan den dukke op på listen igen. Du kan også blokere en app, så den ikke kan foreslå annoncer til dig.\n\nI dine apps kan en annonce, du får vist, være personligt tilpasset i henhold til denne indstilling, indstillingen for annonceemner, dine indstillinger for annoncerings-id, og om den app, du bruger, tilpasser annoncer."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Farvestrålende illustration af symboler, der repræsenterer emner, du kan være interesseret i, f.eks. musik, nyheder og sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Farvestrålende illustration af en lås inden i en cirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Lille sort-hvid illustration af ni punkter, der danner en firkant"</string>

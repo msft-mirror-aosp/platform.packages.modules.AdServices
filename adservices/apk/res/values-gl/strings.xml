@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacións bloqueadas"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer datos suxeridos polas aplicacións"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"É habitual que as aplicacións que usas garden os teus intereses para ofrecerche unha experiencia personalizada. As aplicacións tamén poden almacenar con Android información sobre os teus temas.\n\nPor exemplo, se usas unha aplicación sobre adestramento para correr maratóns, a aplicación podería determinar que che interesan as zapatillas de correr. Máis tarde, se usas unha aplicación diferente, esta pode mostrarche un anuncio de zapatillas de correr suxerido pola primeira aplicación.\n\nAndroid elimina de forma automática e periódica os datos suxeridos polas aplicacións. Se volves usar unha aplicación, podería aparecer de novo na lista. Tamén podes impedir que unha aplicación suxira anuncios.\n\nOs anuncios que se che mostran nas aplicacións poden estar personalizados en función desta opción de configuración, da relativa aos temas dos anuncios, da configuración do teu identificador de publicidade ou de se as aplicacións en cuestión personalizan os anuncios."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustración colorida de símbolos que representan temas de interese (por exemplo, música, noticias e deportes)"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustración colorida dun cadeado dentro dun círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pequena ilustración en branco e negro de nove puntos que forman un cadrado"</string>

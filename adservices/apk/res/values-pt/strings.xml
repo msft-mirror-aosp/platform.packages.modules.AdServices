@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps bloqueados"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Redefinir dados sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Os apps que você usa guardam seus interesses para personalizar sua experiência. Eles também armazenam os temas de seu interesse com o Android.\n\nPor exemplo, se você usar um app de treino para maratonas, o app supõe que você tem interesse em tênis de corrida. Depois, se você usar um outro app, pode encontrar um anúncio de tênis, sugerido pelo primeiro app.\n\nO Android exclui automaticamente e com frequência dados sugeridos por apps. No entanto, um app que for usado de novo pode voltar a aparecer na sua lista. Ou então, você pode bloquear as sugestões de anúncios de um app.\n\nOs anúncios podem ser personalizados dependendo dessa configuração, dos temas de anúncios, dos ID de publicidade e se o app usado personaliza anúncios ou não."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustração colorida de símbolos representando temas de interesse, como música, notícias e esportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustração colorida de um cadeado dentro de um círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pequena ilustração em preto e branco de nove pontos formando um quadrado"</string>
