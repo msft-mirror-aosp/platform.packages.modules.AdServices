@@ -18,6 +18,8 @@ package com.android.adservices.data.measurement;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE;
 
+import static com.android.adservices.service.measurement.SystemHealthParams.MAX_DELAYED_SOURCE_REGISTRATION_WINDOW;
+
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -511,6 +513,59 @@ class MeasurementDao implements IMeasurementDao {
                 sources.add(SqliteObjectMapper.constructSourceFromCursor(cursor));
             }
             return sources;
+        }
+    }
+
+    @Override
+    public Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException {
+        Optional<String> destinationValue = getDestinationValue(trigger);
+        if (!destinationValue.isPresent()) {
+            LogUtil.d(
+                    "getMatchingActiveDelayedSources: unable to obtain destination value: %s",
+                    trigger.getAttributionDestination().toString());
+            return Optional.empty();
+        }
+        String triggerDestinationValue = destinationValue.get();
+        String sourceWhereStatement =
+                String.format(
+                        "%1$s.%2$s = ? "
+                                + "AND %1$s.%3$s > ? "
+                                + "AND %1$s.%3$s <= ? "
+                                + "AND %1$s.%4$s > ? "
+                                + "AND %1$s.%5$s = ?",
+                        MeasurementTables.SourceContract.TABLE,
+                        MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
+                        MeasurementTables.SourceContract.EVENT_TIME,
+                        MeasurementTables.SourceContract.EXPIRY_TIME,
+                        MeasurementTables.SourceContract.STATUS);
+        String sourceOrderByStatement =
+                String.format(" ORDER BY %1$s ASC", MeasurementTables.SourceContract.EVENT_TIME);
+        String sourceLimitStatement = String.format(" LIMIT %1$s", 1);
+
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                selectSourcesByDestination(
+                                                triggerDestinationValue,
+                                                trigger.getDestinationType(),
+                                                sourceWhereStatement)
+                                        + sourceOrderByStatement
+                                        + sourceLimitStatement,
+                                new String[] {
+                                    trigger.getRegistrationOrigin().toString(),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(
+                                            trigger.getTriggerTime()
+                                                    + MAX_DELAYED_SOURCE_REGISTRATION_WINDOW),
+                                    String.valueOf(trigger.getTriggerTime()),
+                                    String.valueOf(Source.Status.ACTIVE)
+                                })) {
+            if (cursor.moveToNext()) {
+                return Optional.of(SqliteObjectMapper.constructSourceFromCursor(cursor));
+            }
+            return Optional.empty();
         }
     }
 
@@ -1488,13 +1543,6 @@ class MeasurementDao implements IMeasurementDao {
         validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        // Handle no-op case
-        // Preserving everything => Do Nothing
-        if (domains.isEmpty()
-                && origins.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            return ImmutableList.of();
-        }
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
         Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
@@ -1541,13 +1589,6 @@ class MeasurementDao implements IMeasurementDao {
         validateRange(start, end);
         Instant cappedStart = capDeletionRange(start);
         Instant cappedEnd = capDeletionRange(end);
-        // Handle no-op case
-        // Preserving everything => Do Nothing
-        if (domains.isEmpty()
-                && origins.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            return ImmutableList.of();
-        }
         Function<String, String> registrantMatcher = getRegistrantMatcher(registrant);
         Function<String, String> siteMatcher = getSiteMatcher(origins, domains, matchBehavior);
         Function<String, String> timeMatcher = getTimeMatcher(cappedStart, cappedEnd);
@@ -1610,15 +1651,16 @@ class MeasurementDao implements IMeasurementDao {
             List<Uri> origins,
             List<Uri> domains,
             @DeletionRequest.MatchBehavior int matchBehavior) {
-        if (origins.isEmpty()
-                && domains.isEmpty()
-                && matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
-            throw new IllegalStateException("No-op conditions");
-        }
 
         return (String columnName) -> {
             if (origins.isEmpty() && domains.isEmpty()) {
-                return "";
+                if (matchBehavior == DeletionRequest.MATCH_BEHAVIOR_PRESERVE) {
+                    // MATCH EVERYTHING
+                    return "";
+                } else {
+                    // MATCH NOTHING
+                    return columnName + " IN ()";
+                }
             }
             StringBuilder whereBuilder = new StringBuilder();
             boolean started = false;

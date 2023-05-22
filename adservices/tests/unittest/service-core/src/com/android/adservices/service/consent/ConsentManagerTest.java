@@ -91,6 +91,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.AdServicesCommon;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.common.BooleanFileDatastore;
@@ -214,7 +215,9 @@ public class ConsentManagerTest {
         mConsentDatastore = ConsentManager.createAndInitializeDataStore(mContextSpy);
         mAppConsentDao = spy(new AppConsentDao(mDatastore, mContextSpy.getPackageManager()));
         mEnrollmentDao =
-                spy(new EnrollmentDao(mContextSpy, DbTestUtil.getDbHelperForTest(), mMockFlags));
+                spy(
+                        new EnrollmentDao(
+                                mContextSpy, DbTestUtil.getSharedDbHelperForTest(), mMockFlags));
         mAdServicesManager = new AdServicesManager(mMockIAdServicesManager);
         doReturn(mAdServicesManager).when(mContextSpy).getSystemService(AdServicesManager.class);
 
@@ -2533,6 +2536,52 @@ public class ConsentManagerTest {
 
         // Clear shared preference
         ConsentManager.resetSharedPreference(mContextSpy, SHARED_PREFS_KEY_HAS_MIGRATED);
+    }
+
+    @Test
+    public void testHandleConsentMigrationIfNeeded_ExtServices() throws RemoteException {
+        doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                .when(mContextSpy)
+                .getPackageName();
+
+        ConsentManager.handleConsentMigrationIfNeeded(
+                mContextSpy, mConsentDatastore, mAdServicesManager, 2);
+
+        verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
+        verify(mMockIAdServicesManager, never()).setConsent(any());
+    }
+
+    @Test
+    public void testHandleConsentMigrationFromAppSearchIfNeeded_ExtServices() throws Exception {
+        doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
+                .when(mContextSpy)
+                .getPackageName();
+        SharedPreferences mockSharedPrefs = mock(SharedPreferences.class);
+        SharedPreferences.Editor mockEditor = mock(SharedPreferences.Editor.class);
+        when(mockSharedPrefs.edit()).thenReturn(mockEditor);
+        when(mContextSpy.getSharedPreferences(any(String.class), anyInt()))
+                .thenReturn(mockSharedPrefs);
+        ConsentManager.handleConsentMigrationFromAppSearchIfNeeded(
+                mContextSpy,
+                mDatastore,
+                mAppConsentDao,
+                mAppSearchConsentManager,
+                mAdServicesManager);
+
+        verify(mContextSpy, never()).getSharedPreferences(anyString(), anyInt());
+        verify(mAppSearchConsentManager, never())
+                .migrateConsentDataIfNeeded(any(), any(), any(), any(), any());
+        verify(mMockIAdServicesManager, never()).setConsent(any());
+        verify(mMockIAdServicesManager, never()).recordNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordGaUxNotificationDisplayed();
+        verify(mMockIAdServicesManager, never()).recordDefaultConsent(anyBoolean());
+        verify(mMockIAdServicesManager, never()).recordAdServicesDeletionOccurred(anyInt());
+        verify(mMockIAdServicesManager, never()).recordDefaultAdIdState(anyBoolean());
+        verify(mMockIAdServicesManager, never()).recordFledgeDefaultConsent(anyBoolean());
+        verify(mMockIAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
+        verify(mMockIAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
+        verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mockEditor, never()).putBoolean(any(), anyBoolean());
     }
 
     @Test
