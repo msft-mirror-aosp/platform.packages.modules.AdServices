@@ -143,7 +143,7 @@ public abstract class E2EMockTest extends E2ETest {
         mEnrollmentDao =
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
-                        DbTestUtil.getDbHelperForTest(),
+                        DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
                         /* enable seed */ true);
 
