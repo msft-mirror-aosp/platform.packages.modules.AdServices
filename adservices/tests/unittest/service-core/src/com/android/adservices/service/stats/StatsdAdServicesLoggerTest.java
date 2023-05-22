@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.OnDeviceClassifierStatus;
@@ -476,6 +477,35 @@ public class StatsdAdServicesLoggerTest {
                         AdServicesStatsLog.write(
                                 eq(AD_SERVICES_MEASUREMENT_WIPEOUT),
                                 eq(WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal()));
+
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementDelayedSourceRegistration_success() {
+        int UnknownEnumValue = 0;
+        long registrationDelay = 500L;
+        MeasurementDelayedSourceRegistrationStats stats =
+                new MeasurementDelayedSourceRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
+                        .setRegistrationStatus(UnknownEnumValue)
+                        .setRegistrationDelay(registrationDelay)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyLong()));
+
+        // Invoke logging call
+        mLogger.logMeasurementDelayedSourceRegistrationStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION),
+                                eq(UnknownEnumValue),
+                                eq(registrationDelay));
 
         ExtendedMockito.verify(writeInvocation);
 

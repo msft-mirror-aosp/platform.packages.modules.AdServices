@@ -24,6 +24,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
@@ -548,5 +549,29 @@ public class AdServicesLoggerImplTest {
         assertEquals(
                 argumentCaptor.getValue().getWipeoutType(),
                 WipeoutStatus.WipeoutType.CONSENT_FLIP.ordinal());
+    }
+
+    @Test
+    public void testLogMeasurementDelayedSourceRegistrationStats() {
+        int UnknownEnumValue = 0;
+        long registrationDelay = 500L;
+        MeasurementDelayedSourceRegistrationStats stats =
+                new MeasurementDelayedSourceRegistrationStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION)
+                        .setRegistrationStatus(UnknownEnumValue)
+                        .setRegistrationDelay(registrationDelay)
+                        .build();
+
+        AdServicesLoggerImpl adServicesLogger = new AdServicesLoggerImpl(mStatsdLoggerMock);
+        adServicesLogger.logMeasurementDelayedSourceRegistrationStats(stats);
+        ArgumentCaptor<MeasurementDelayedSourceRegistrationStats> argumentCaptor =
+                ArgumentCaptor.forClass(MeasurementDelayedSourceRegistrationStats.class);
+        verify(mStatsdLoggerMock)
+                .logMeasurementDelayedSourceRegistrationStats(argumentCaptor.capture());
+        assertEquals(
+                argumentCaptor.getValue().getCode(),
+                AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION);
+        assertEquals(argumentCaptor.getValue().getRegistrationStatus(), UnknownEnumValue);
+        assertEquals(argumentCaptor.getValue().getRegistrationDelay(), registrationDelay);
     }
 }
