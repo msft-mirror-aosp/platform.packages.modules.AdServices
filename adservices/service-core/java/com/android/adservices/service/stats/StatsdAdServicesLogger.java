@@ -344,6 +344,12 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementAttributionStats.getAttributionDelay());
     }
 
+    /** log method for measurement wipeout. */
+    public void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats) {
+        AdServicesStatsLog.write(
+                measurementWipeoutStats.getCode(), measurementWipeoutStats.getWipeoutType());
+    }
+
     @NonNull
     private byte[] toBytes(long fieldId, @NonNull int[] values) {
         ProtoOutputStream protoOutputStream = new ProtoOutputStream();
