@@ -3642,6 +3642,11 @@ public class SdkSandboxManagerServiceUnitTest {
         public void onSandboxDeath(CallingInfo callingInfo) {}
 
         @Override
+        public boolean isSandboxBoundForApp(CallingInfo callingInfo) {
+            return false;
+        }
+
+        @Override
         public int getSandboxStatusForApp(CallingInfo callingInfo) {
             if (mService.containsKey(callingInfo)) {
                 return CREATED;
