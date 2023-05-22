@@ -19,6 +19,7 @@ package com.android.adservices.service.stats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_ATTRIBUTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB;
 import static com.android.adservices.service.stats.EpochComputationClassifierStats.ClassifierType;
@@ -38,6 +39,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.errorlogging.AdServicesErrorStats;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.attribution.AttributionStatus;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.MockedVoidMethod;
 import com.android.modules.utils.build.SdkLevel;
@@ -402,6 +404,53 @@ public class StatsdAdServicesLoggerTest {
                                 eq(true),
                                 eq(hashedValue),
                                 eq(hashLimit));
+        ExtendedMockito.verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void logMeasurementAttribution_success() {
+        MeasurementAttributionStats stats =
+                new MeasurementAttributionStats.Builder()
+                        .setCode(AD_SERVICES_MEASUREMENT_ATTRIBUTION)
+                        .setSourceType(AttributionStatus.SourceType.EVENT.ordinal())
+                        .setSurfaceType(AttributionStatus.AttributionSurface.APP_WEB.ordinal())
+                        .setResult(AttributionStatus.AttributionResult.SUCCESS.ordinal())
+                        .setFailureType(AttributionStatus.FailureType.UNKNOWN.ordinal())
+                        .setSourceDerived(false)
+                        .setInstallAttribution(true)
+                        .setAttributionDelay(100L)
+                        .build();
+        ExtendedMockito.doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyLong()));
+
+        // Invoke logging call
+        mLogger.logMeasurementAttributionStats(stats);
+
+        // Verify only compat logging took place
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                eq(AD_SERVICES_MEASUREMENT_ATTRIBUTION),
+                                eq(AttributionStatus.SourceType.EVENT.ordinal()),
+                                eq(AttributionStatus.AttributionSurface.APP_WEB.ordinal()),
+                                eq(AttributionStatus.AttributionResult.SUCCESS.ordinal()),
+                                eq(AttributionStatus.FailureType.UNKNOWN.ordinal()),
+                                eq(false),
+                                eq(true),
+                                eq(100L));
+
         ExtendedMockito.verify(writeInvocation);
 
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
