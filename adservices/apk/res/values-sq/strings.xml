@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikacionet që ke bllokuar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Rivendos të dhënat e sugjeruara nga aplikacionet"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Zakonisht aplikacionet që ti përdor kujtojnë gjërat që të interesojnë për të personalizuar përvojën tënde. Gjithashtu, aplikacionet mund të ruajnë informacione me Android rreth temave të tua.\n\nPër shembull, nëse ti përdor një aplikacion për trajnim për maratonë, aplikacioni mund të vendosë që të interesojnë atlete vrapimi. Më vonë, nëse përdor një aplikacion tjetër, ai aplikacion mund të të shfaqë një reklamë për atlete vrapimi me sugjerim të aplikacionit të parë.\n\nAndroid fshin automatikisht të dhëna të sugjeruara nga aplikacionet rregullisht. Një aplikacion që ti e përdor sërish mund të rishfaqet në listë. Ose mund të bllokosh një aplikacion që mos të të sugjerojë reklama.\n\nNë aplikacionet e tua, një reklamë mund të jetë e personalizuar në varësi të këtij cilësimi, cilësimit të temave të reklamave, cilësimeve të tua për ID-në e reklamimit dhe nëse aplikacioni që ti po përdor i personalizon reklamat."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustrim me ngjyra i simboleve që përfaqësojnë tema interesi, si p.sh. muzika, lajmet dhe sportet"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustrim me ngjyra i një kyçi brenda një rrethi"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustrim i vogël bardh e zi i nëntë pikave që formojnë një katror"</string>

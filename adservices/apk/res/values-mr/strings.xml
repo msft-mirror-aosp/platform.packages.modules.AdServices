@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"तुम्ही ब्लॉक केलेली अ‍ॅप्स"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"अ‍ॅपने सुचवलेला डेटा रीसेट करा"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"तुमचा अनुभव पर्सनलाइझ करण्यासाठी तुम्हाला स्वारस्य असलेल्या गोष्टी लक्षात ठेवणे ही अ‍ॅप्ससाठी सामान्य बाब आहे. अ‍ॅप्स ही तुमच्या विषयांबद्दल Android सह माहिती स्टोअरदेखील करू शकतात.\n\nउदाहरणार्थ, तुम्ही मॅरेथॉनच्या प्रशिक्षणाशी संबंधित अ‍ॅप वापरत असल्यास, तुम्हाला धावण्यासाठीच्या शूजमध्ये स्वारस्य आहे हे अ‍ॅप ठरवू शकते. त्यानंतर, तुम्ही वेगळे अ‍ॅप वापरत असल्यास, ते अ‍ॅप पहिल्या अ‍ॅपने सुचवलेली धावण्यासाठीच्या शूजची जाहिरात तुम्हाला दाखवू शकते.\n\nAndroid हे अ‍ॅपने सुचवलेला डेटा ऑटो-डिलीट करते. तुम्ही पुन्हा वापरत असलेले अ‍ॅप या सूचीमध्ये परत दिसू शकते. किंवा तुम्ही अ‍ॅपला तुम्हाला जाहिराती सुचवण्यापासून ब्लॉक करू शकता.\n\nतुमच्या अ‍ॅप्समध्ये, हे सेटिंग, जाहिरातीच्या विषयांचे सेटिंग, तुमच्या जाहिरात आयडीची सेटिंग्ज आणि तुम्ही वापरत असलेले अ‍ॅप जाहिराती पर्सनलाइझ करते की नाही यांनुसार तुम्ही पाहत असलेली जाहिरात पर्सनलाइझ केलेली असू शकते."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"संगीत, बातम्या आणि क्रीडा यांसारख्या स्वारस्य असलेल्या विषयांचे प्रतिनिधित्व करणाऱ्या चिन्हांचे रंगीत इलस्ट्रेशन"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"वर्तुळातील लॉकचे रंगीत इलस्ट्रेशन"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"चौरस बनवणारे नऊ ठिपके असलेले छोटे कृष्णधवल इलस्ट्रेशन"</string>
