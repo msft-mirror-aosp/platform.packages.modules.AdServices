@@ -1,5 +1,5 @@
 {
-  "name": "With range on starting equals ending date, but no origin",
+  "name": "With range on starting equals ending date, but no origin with preserve",
   "input": {
     "sources": [
       {
@@ -235,6 +235,7 @@
     "start": 1648665733600,
     "end": 1648665733600,
     "origins": [],
-    "domains": []
+    "domains": [],
+    "matchBehavior": 1
   }
 }

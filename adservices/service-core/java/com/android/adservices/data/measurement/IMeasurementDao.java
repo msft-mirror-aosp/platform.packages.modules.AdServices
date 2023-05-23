@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for Measurement related data access operations. */
@@ -187,6 +188,13 @@ public interface IMeasurementDao {
      * @return list of active matching sources; Null in case of SQL failure
      */
     List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException;
+
+    /**
+     * Queries and returns the most recent matching delayed {@link Source} (Optional) for the
+     * provided {@link Trigger}.
+     */
+    Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
