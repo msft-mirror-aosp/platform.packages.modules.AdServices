@@ -151,11 +151,19 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         /** @hide */
         public Lifecycle(Context context) {
-            super(context);
-            TopicsDao topicsDao = TopicsDao.getInstance(context);
-            mService =
+            this(
+                    context,
                     new AdServicesManagerService(
-                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
+                            context,
+                            new UserInstanceManager(
+                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+        }
+
+        /** @hide */
+        @VisibleForTesting
+        public Lifecycle(Context context, AdServicesManagerService service) {
+            super(context);
+            mService = service;
             LogUtil.d("AdServicesManagerService constructed!");
         }
 
