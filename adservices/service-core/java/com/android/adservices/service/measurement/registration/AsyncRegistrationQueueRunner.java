@@ -40,6 +40,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SystemHealthParams;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Web;
@@ -62,6 +63,7 @@ public class AsyncRegistrationQueueRunner {
     private final AsyncTriggerFetcher mAsyncTriggerFetcher;
     private final ContentResolver mContentResolver;
     private final DebugReportApi mDebugReportApi;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     private AsyncRegistrationQueueRunner(Context context) {
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
@@ -69,6 +71,7 @@ public class AsyncRegistrationQueueRunner {
         mAsyncTriggerFetcher = new AsyncTriggerFetcher(context);
         mContentResolver = context.getContentResolver();
         mDebugReportApi = new DebugReportApi(context, FlagsFactory.getFlags());
+        mSourceNoiseHandler = new SourceNoiseHandler(FlagsFactory.getFlags());
     }
 
     @VisibleForTesting
@@ -77,12 +80,14 @@ public class AsyncRegistrationQueueRunner {
             AsyncSourceFetcher asyncSourceFetcher,
             AsyncTriggerFetcher asyncTriggerFetcher,
             DatastoreManager datastoreManager,
-            DebugReportApi debugReportApi) {
+            DebugReportApi debugReportApi,
+            SourceNoiseHandler sourceNoiseHandler) {
         mAsyncSourceFetcher = asyncSourceFetcher;
         mAsyncTriggerFetcher = asyncTriggerFetcher;
         mDatastoreManager = datastoreManager;
         mContentResolver = contentResolver;
         mDebugReportApi = debugReportApi;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /**
@@ -320,7 +325,7 @@ public class AsyncRegistrationQueueRunner {
                         windowStartTime,
                         requestTime);
         int maxDistinctDestinations =
-                PrivacyParams.getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource();
+                FlagsFactory.getFlags().getMeasurementMaxDistinctDestinationsInActiveSource();
         if (destinationCount + destinations.size() > maxDistinctDestinations) {
             LogUtil.d(
                     "AsyncRegistrationQueueRunner: "
@@ -388,11 +393,9 @@ public class AsyncRegistrationQueueRunner {
                 .build();
     }
 
-
-    /** Visible for testing only */
-    @VisibleForTesting
-    public List<EventReport> generateFakeEventReports(Source source) {
-        List<Source.FakeReport> fakeReports = source.assignAttributionModeAndGenerateFakeReports();
+    private List<EventReport> generateFakeEventReports(Source source) {
+        List<Source.FakeReport> fakeReports =
+                mSourceNoiseHandler.assignAttributionModeAndGenerateFakeReports(source);
         return fakeReports.stream()
                 .map(
                         fakeReport ->
@@ -413,7 +416,8 @@ public class AsyncRegistrationQueueRunner {
                                         .setSourceType(source.getSourceType())
                                         .setStatus(EventReport.Status.PENDING)
                                         .setRandomizedTriggerRate(
-                                                source.getRandomAttributionProbability())
+                                                mSourceNoiseHandler.getRandomAttributionProbability(
+                                                        source))
                                         .setRegistrationOrigin(source.getRegistrationOrigin())
                                         .build())
                 .collect(Collectors.toList());
