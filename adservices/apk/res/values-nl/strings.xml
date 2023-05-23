@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps die je hebt geblokkeerd"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Door apps voorgestelde gegevens resetten"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Het is heel gewoon dat apps die je gebruikt, onthouden waarin je bent geïnteresseerd om zo de functionaliteit te personaliseren. Apps kunnen ook informatie in Android opslaan over je onderwerpen.\n\nAls je bijvoorbeeld een trainingsapp voor marathons gebruikt, kan de app bepalen dat je geïnteresseerd bent in hardloopschoenen. Gebruik je later een andere app, dan kan die app je een advertentie voor hardloopschoenen laten zien die wordt voorgesteld door de eerste app.\n\nAndroid verwijdert door apps voorgestelde gegevens regelmatig automatisch. Een app die je gebruikt, kan opnieuw in de lijst verschijnen. Je kunt ook altijd voorkomen dat een app advertenties voor je voorstelt.\n\nIn je apps kunnen getoonde advertenties worden gepersonaliseerd, afhankelijk van deze instelling, de instelling voor advertentieonderwerpen, je advertentie-ID-instellingen en of de app die je gebruikt advertenties personaliseert."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Kleurrijke illustratie van symbolen die interessegebieden voorstellen, zoals muziek, nieuws en sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Kleurrijke illustratie van een slot in een cirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kleine zwart-witillustratie van 9 stippen die samen een vierkant vormen"</string>

@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Jūsu bloķētās lietotnes"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Atiestatīt lietotņu ieteiktos datus"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Lietotnēs bieži vien tiek saglabāta informācija par lietotāju interesēm, lai personalizētu lietošanas iespējas. No lietotnēm iegūtā informācija par tēmām, kuras jūs interesē, var tikt glabāta arī operētājsistēmā Android.\n\nPiemēram, ja izmantojat lietotni, kas saistīta ar treniņiem maratonam, šajā lietotnē var tikt noteikts, ka jūs interesē skriešanas apavi. Vēlāk citā lietotnē jums var tikt parādīta skriešanas apavu reklāma, ko ieteikusi pirmā lietotne.\n\nOperētājsistēmā Android lietotņu ieteiktie dati regulāri tiek automātiski dzēsti. Ja atkārtoti izmantosiet lietotni, tā var tikt atkal parādīta sarakstā. Varat arī bloķēt konkrētu lietotni, lai tā nevarētu ieteikt jums rādāmās reklāmas.\n\nLietotnēs redzamās reklāmas var tikt personalizētas, ņemot vērā šo iestatījumu, reklāmu tēmu iestatījumu, jūsu reklamēšanas ID iestatījumus un to, vai attiecīgajā lietotnē tiek personalizētas reklāmas."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Krāsaina ilustrācija ar simboliem, kas apzīmē interešu tēmas, piemēram, mūziku, ziņas un sportu"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Krāsaina ilustrācija ar slēdzeni aplī"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Maza melnbalta ilustrācija ar deviņiem kvadrātā izkārtotiem punktiem"</string>
