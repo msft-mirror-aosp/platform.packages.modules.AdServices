@@ -48,8 +48,9 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         // On T+ devices, always disable the AdExtServices activities and services.
         if (Build.VERSION.SDK_INT != Build.VERSION_CODES.S
                 && Build.VERSION.SDK_INT != Build.VERSION_CODES.S_V2) {
-            // If this is not an S- device, disable the activities, services, and do not
-            // register the broadcast receivers.
+            // If this is not an S- device, disable the activities, services, and unregister the
+            // broadcast receivers.
+            unregisterPackageChangedBroadcastReceivers(context);
             updateAdExtServicesActivities(context, /* shouldEnable= */ false);
             updateAdExtServicesServices(context, /* shouldEnable= */ false);
             return;
@@ -74,7 +75,17 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     void registerPackagedChangedBroadcastReceivers(Context context) {
         PackageChangedReceiver.enableReceiver(context, FlagsFactory.getFlags());
-        LogUtil.d("Package changed broadcast receivers registered.");
+        LogUtil.d(
+                "Package changed broadcast receivers registered from package %s",
+                context.getPackageName());
+    }
+
+    @VisibleForTesting
+    void unregisterPackageChangedBroadcastReceivers(Context context) {
+        PackageChangedReceiver.disableReceiver(context, FlagsFactory.getFlags());
+        LogUtil.d(
+                "Package change broadcast receivers unregistered from package %s",
+                context.getPackageName());
     }
 
     /**

@@ -474,7 +474,9 @@ public abstract class E2ETest {
         SQLiteDatabase db = DbTestUtil.getMeasurementDbHelperForTest().getWritableDatabase();
         emptyTables(db);
 
-        DbTestUtil.getDbHelperForTest().getWritableDatabase().delete("enrollment_data", null, null);
+        DbTestUtil.getSharedDbHelperForTest()
+                .getWritableDatabase()
+                .delete("enrollment_data", null, null);
     }
 
     // The 'name' parameter is needed for the JUnit parameterized test, although it's ostensibly
@@ -974,7 +976,7 @@ public abstract class E2ETest {
             result.append("\n" + tableName + ":\n");
             result.append(getTableState(db, tableName));
         }
-        SQLiteDatabase enrollmentDb = DbTestUtil.getDbHelperForTest().getWritableDatabase();
+        SQLiteDatabase enrollmentDb = DbTestUtil.getSharedDbHelperForTest().getWritableDatabase();
         List<String> enrollmentTables = ImmutableList.of("enrollment_data");
         for (String tableName : enrollmentTables) {
             result.append("\n" + tableName + ":\n");
