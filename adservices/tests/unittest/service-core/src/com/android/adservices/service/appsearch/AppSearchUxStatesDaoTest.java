@@ -18,15 +18,23 @@ package com.android.adservices.service.appsearch;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
 import androidx.test.filters.SmallTest;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.mockito.MockitoSession;
 import org.mockito.quality.Strictness;
+
+import java.util.concurrent.Executor;
 
 @SmallTest
 public class AppSearchUxStatesDaoTest {
@@ -91,5 +99,42 @@ public class AppSearchUxStatesDaoTest {
     @Test
     public void testGetRowId() {
         assertThat(AppSearchNotificationDao.getRowId(ID1)).isEqualTo(ID1);
+    }
+
+    @Test
+    public void isAdultAccountTest_nullDao() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+        boolean result =
+                AppSearchUxStatesDao.readIsAdultAccount(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    public void isAdultAccountTest_trueBit() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+
+        String query = "userId:" + ID1;
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao.isAdultAccount()).thenReturn(false);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
+
+        boolean result =
+                AppSearchUxStatesDao.readIsAdultAccount(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+
+        // Confirm that the right value is returned even when it is true.
+        String query2 = "userId:" + ID2;
+        AppSearchUxStatesDao dao2 = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao2.isAdultAccount()).thenReturn(true);
+        ExtendedMockito.doReturn(dao2)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query2)));
+        boolean result2 =
+                AppSearchUxStatesDao.readIsAdultAccount(mockSearchSession, mockExecutor, ID2);
+        assertThat(result2).isTrue();
     }
 }

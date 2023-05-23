@@ -492,4 +492,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdultAccount() {
+        try {
+            return mService.isAdultAccount();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isAdultAccount bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setAdultAccount(boolean isAdultAccount) {
+        try {
+            mService.setAdultAccount(isAdultAccount);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }

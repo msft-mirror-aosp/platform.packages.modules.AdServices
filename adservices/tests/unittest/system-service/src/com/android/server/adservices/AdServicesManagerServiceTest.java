@@ -1046,4 +1046,16 @@ public class AdServicesManagerServiceTest {
         when(mMockPackageManager.getInstalledPackages(any(PackageManager.PackageInfoFlags.class)))
                 .thenReturn(packageInfoList);
     }
+
+    @Test
+    public void isAdultAccountTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdultAccount()).isFalse();
+        service.setAdultAccount(true);
+        assertThat(service.isAdultAccount()).isTrue();
+    }
 }
