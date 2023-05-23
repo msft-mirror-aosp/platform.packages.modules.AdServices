@@ -176,10 +176,10 @@ public class FledgeE2ETest {
             new FrequencyCapFilters.Builder()
                     .setKeyedFrequencyCapsForClickEvents(
                             Collections.singleton(
-                                    new KeyedFrequencyCap.Builder()
-                                            .setInterval(Duration.ofDays(1))
-                                            .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
-                                            .setMaxCount(0)
+                                    new KeyedFrequencyCap.Builder(
+                                                    KeyedFrequencyCapFixture.KEY1,
+                                                    0,
+                                                    Duration.ofDays(1))
                                             .build()))
                     .build();
     @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();

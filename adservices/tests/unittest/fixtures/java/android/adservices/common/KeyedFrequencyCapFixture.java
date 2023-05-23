@@ -39,9 +39,6 @@ public class KeyedFrequencyCapFixture {
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
 
     public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(int key) {
-        return new KeyedFrequencyCap.Builder()
-                .setAdCounterKey(key)
-                .setMaxCount(FILTER_COUNT)
-                .setInterval(ONE_DAY_DURATION);
+        return new KeyedFrequencyCap.Builder(key, FILTER_COUNT, ONE_DAY_DURATION);
     }
 }
