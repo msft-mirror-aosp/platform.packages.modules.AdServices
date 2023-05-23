@@ -68,7 +68,10 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
     /**
      * The data format is measurement_enable_configurable_event_reporting_windows flag, sourceType,
      * sourceEventReportWindow (limit), cooldown window, appDestination, webDestination
-     * configuredEarlyReportingWindows and expectedProbability.
+     * configuredEarlyReportingWindows and expectedProbability. Each test description has numbers
+     * like 1-1-1, 2-1-2, 3-3-3 etc. These signify max reports, trigger data bits and reporting
+     * windows count respectively. For e.g., 2-1-2 stands for 2 maximum conversions, 1 trigger data
+     * bit (0 or 1) and 2 available reporting windows.
      */
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
@@ -251,6 +254,32 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                             HOURS.toSeconds(1), DAYS.toSeconds(1)
                         }, // early reporting windows
                         INSTALL_ATTR_EVENT_NOISE_PROBABILITY
+                    },
+                    {
+                        "configured, EVENT, 2-1-3, app, install detection",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(6), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        null, // web destination
+                        new Long[] {
+                            HOURS.toSeconds(1), DAYS.toSeconds(1)
+                        }, // early reporting windows
+                        0.0000233
+                    },
+                    {
+                        "configured, EVENT, 2-1-3, app & web, install detection",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(6), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {
+                            HOURS.toSeconds(1), DAYS.toSeconds(1)
+                        }, // early reporting windows
+                        0.0000757
                     },
                     {
                         "configured, EVENT, 1-1-1, web, (install cooldown - unused)",
