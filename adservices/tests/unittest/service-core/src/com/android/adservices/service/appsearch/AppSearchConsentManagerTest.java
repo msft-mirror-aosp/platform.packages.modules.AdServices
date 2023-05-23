@@ -553,4 +553,28 @@ public class AppSearchConsentManagerTest {
         when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
         when(mSharedPrefs.edit()).thenReturn(mEditor);
     }
+
+    @Test
+    public void setAdultAccountTest_trueBit() {
+        mAppSearchConsentManager.setAdultAccount(true);
+        verify(mAppSearchConsentWorker).setAdultAccount(true);
+    }
+
+    @Test
+    public void setAdultAccountTest_falseBit() {
+        mAppSearchConsentManager.setAdultAccount(false);
+        verify(mAppSearchConsentWorker).setAdultAccount(false);
+    }
+
+    private void setAdultAccountTest(boolean isAdultAccount) {
+        mAppSearchConsentManager.setAdultAccount(isAdultAccount);
+        verify(mAppSearchConsentWorker).setAdultAccount(isAdultAccount);
+    }
+
+    @Test
+    public void isAdultAccountTest_defaultFalseBit() {
+        when(mAppSearchConsentWorker.isAdultAccount()).thenReturn(false);
+        assertThat(mAppSearchConsentManager.isAdultAccount()).isFalse();
+        verify(mAppSearchConsentWorker).isAdultAccount();
+    }
 }
