@@ -1167,39 +1167,4 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
                 ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
     }
-
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public boolean isAdultAccount() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("isAdultAccount() for User Identifier %d", userIdentifier);
-
-        try {
-            return mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .isAdultAccount();
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to call isAdultAccount().");
-            return false;
-        }
-    }
-
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void setAdultAccount(boolean isAdultAccount) {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("setAdultAccount() for User Identifier %d", userIdentifier);
-
-        try {
-            mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .setAdultAccount(isAdultAccount);
-        } catch (IOException e) {
-            LogUtil.e(e, "Failed to call setAdultAccount().");
-        }
-    }
 }
