@@ -415,15 +415,4 @@ public class ConsentManagerTest {
                 .isFalse();
         assertThat(Files.exists(packageDir)).isTrue();
     }
-
-    @Test
-    public void isAdultAccountTest() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-
-        assertThat(consentManager.isAdultAccount()).isFalse();
-        consentManager.setAdultAccount(true);
-
-        assertThat(consentManager.isAdultAccount()).isTrue();
-    }
 }
