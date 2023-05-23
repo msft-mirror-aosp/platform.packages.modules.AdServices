@@ -590,42 +590,4 @@ class AppSearchConsentWorker {
         // If we don't know the AdServices package name, we can't do a write.
         throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
-
-    /** Returns whether isAdultAccount bit is true. */
-    boolean isAdultAccount() {
-        READ_WRITE_LOCK.readLock().lock();
-        try {
-            return AppSearchUxStatesDao.readIsAdultAccount(mGlobalSearchSession, mExecutor, mUid);
-        } finally {
-            READ_WRITE_LOCK.readLock().unlock();
-        }
-    }
-
-    /** Saves the isAdultAccount bit in app search. */
-    void setAdultAccount(boolean isAdultAccount) {
-        READ_WRITE_LOCK.writeLock().lock();
-        try {
-            AppSearchUxStatesDao dao =
-                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
-            if (dao == null) {
-                dao =
-                        new AppSearchUxStatesDao(
-                                AppSearchUxStatesDao.getRowId(mUid),
-                                mUid,
-                                AppSearchUxStatesDao.NAMESPACE,
-                                false,
-                                false,
-                                false);
-            }
-            dao.setAdultAccount(isAdultAccount);
-            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
-                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            LogUtil.d("Wrote the isAdultAccount bit to AppSearch: " + dao);
-        } catch (InterruptedException | TimeoutException | ExecutionException e) {
-            LogUtil.e("Failed to write the isAdultAccount to AppSearch ", e);
-            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
-        } finally {
-            READ_WRITE_LOCK.writeLock().unlock();
-        }
-    }
 }

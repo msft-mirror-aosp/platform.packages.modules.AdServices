@@ -463,25 +463,4 @@ public final class ConsentManager {
             mDatastore.tearDownForTesting();
         }
     }
-
-    @VisibleForTesting static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
-
-    /** Returns whether the isAdultAccount bit is true. */
-    public boolean isAdultAccount() {
-        synchronized (this) {
-            Boolean isAdultAccount = mDatastore.get(IS_ADULT_ACCOUNT);
-            return isAdultAccount != null ? isAdultAccount : false;
-        }
-    }
-
-    /** Set the AdultAccount bit in system server. */
-    public void setAdultAccount(boolean isAdultAccount) throws IOException {
-        synchronized (this) {
-            try {
-                mDatastore.put(IS_ADULT_ACCOUNT, isAdultAccount);
-            } catch (IOException e) {
-                LogUtil.e(e, "setAdultAccount operation failed: " + e.getMessage());
-            }
-        }
-    }
 }
