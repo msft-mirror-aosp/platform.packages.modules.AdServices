@@ -97,11 +97,14 @@ public class AdExtBootCompletedReceiverTest {
         doReturn(true).when(mMockFlags).getGlobalKillSwitch();
 
         bootCompletedReceiver.onReceive(sContext, sIntent);
+
         verify(bootCompletedReceiver, never()).registerPackagedChangedBroadcastReceivers(any());
         verify(bootCompletedReceiver, never()).updateAdExtServicesServices(any(), eq(true));
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
         verify(bootCompletedReceiver, atLeastOnce()).updateAdExtServicesServices(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce())
+                .unregisterPackageChangedBroadcastReceivers(any());
     }
 
     @Test
@@ -119,6 +122,8 @@ public class AdExtBootCompletedReceiverTest {
         verify(bootCompletedReceiver, atLeastOnce())
                 .updateAdExtServicesActivities(any(), eq(false));
         verify(bootCompletedReceiver, atLeastOnce()).updateAdExtServicesServices(any(), eq(false));
+        verify(bootCompletedReceiver, atLeastOnce())
+                .unregisterPackageChangedBroadcastReceivers(any());
     }
 
     @Test
@@ -178,6 +183,16 @@ public class AdExtBootCompletedReceiverTest {
         AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
         bootCompletedReceiver.registerPackagedChangedBroadcastReceivers(sContext);
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any(Flags.class)));
+    }
+
+    @Test
+    public void testUnregisterReceivers() {
+        doReturn(true).when(() -> PackageChangedReceiver.disableReceiver(any(), any()));
+
+        AdExtBootCompletedReceiver bootCompletedReceiver = new AdExtBootCompletedReceiver();
+        bootCompletedReceiver.unregisterPackageChangedBroadcastReceivers(sContext);
+
+        verify(() -> PackageChangedReceiver.disableReceiver(any(Context.class), any(Flags.class)));
     }
 
     @Test
