@@ -1170,6 +1170,41 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdIdEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdIdEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdIdEnabled(isAdIdEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdIdEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean isU18Account() {
         enforceAdServicesManagerPermission();
 
