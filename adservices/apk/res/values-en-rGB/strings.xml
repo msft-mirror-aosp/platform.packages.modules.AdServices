@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps that you have blocked"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Reset app-suggested data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"It’s common for apps that you use to remember things that you’re interested in to personalise your experience. Apps can also store information with Android about your topics.\n\nFor example, if you use an app about marathon training, the app might decide that you’re interested in running shoes. Later, if you use a different app, that app can show you an ad for running shoes suggested by the first app.\n\nAndroid auto-deletes app-suggested data regularly. An app you use again might reappear on the list. Or you can block an app from suggesting ads for you.\n\nIn your apps, an ad you see may be personalised, depending on this setting, the ad topics setting, your advertising ID settings and whether the app that you’re using personalises ads."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Colourful illustration of symbols representing topics of interest like music, news and sports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Colourful illustration of a lock inside a circle"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Small black and white illustration of nine dots forming a square"</string>

@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Bloklangan ilovalar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Ilovalar taklif qiladigan maʼlumotlarni tiklash"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Odatda, siz foydalanadigan ilovalar sizga mos kontentni taklif qilish uchun sizni qiziqtirgan mavzularni eslab qoladi. Qiziqishlaringiz haqidagi maʼlumotlar Androidda ham saqlanishi mumkin.\n\nMasalan, siz marafon mashqlari ilovasidan foydalangan boʻlsangiz, u sizni yugurish poyafzaliga qiziqadi deb hisoblashi mumkin. Keyinroq boshqa ilovani ochsangiz, u birinchi ilova tomonidan taklif qilingan poyafzal reklamalarini koʻrsatishi mumkin.\n\nAndroid ilovalar tomonidan taklif qilingan maʼlumotlarni muntazam ravishda oʻchirib turadi. Ilovadan foydalanishda davom etsangiz, uning maʼlumotlari yana roʻyxatga kiritilishi mumkin. Yoki ilova sizga reklama taklif qilishini bloklashingiz mumkin. .\n\nIlovalarda chiqadigan reklamalar moslashtirilgan boʻlishi mumkin. Ushbu sozlama, shuningdek, reklama mavzulari, reklama identifikatori va siz foydalanayotgan ilova sozlamalari asosida koʻrsatiladi."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Musiqa, yangiliklar va sport kabi mavzularni aks ettiruvchi belgilarning rangli tasvir"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Doira ichidagi qulfning rangli tasviri"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kvadrat shaklidagi toʻqqizta nuqtadan iborat oq va qora rangli kichik tasvir"</string>
