@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"برنامه‌هایی که مسدود کرده‌اید"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"بازنشانی داده‌های پیشنهادی برنامه"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏برنامه‌هایی که استفاده می‌کنید معمولاً علایق شما را به‌خاطر می‌سپارند تا بتوانند تجربه شما را شخصی‌سازی کنند. برنامه‌ها می‌توانند اطلاعات مربوط به موضوعات شما را نیز با کمک Android ذخیره کنند.\n\nبرای مثال، اگر از برنامه‌ای درباره تمرین دو مارتون استفاده کنید، ممکن است برنامه نتیجه‌گیری کند که به کفش مخصوص دویدن علاقه‌مند هستید. اگر بعداً از برنامه دیگری استفاده کنید، آن برنامه می‌تواند آگهی‌ای درخصوص کفش دو به شما نشان دهد که توسط برنامه اول پیشنهاد شده است.\n\nAndroid مرتباً داده‌های پیشنهادی برنامه‌ها را به‌طور خودکار حذف می‌کند. اگر از برنامه‌ای دوباره استفاده کنید ممکن است دوباره در فهرست پیدا شود. همچنین می‌توانید آگهی‌های پیشنهادی برنامه‌ها را مسدود کنید.\n\nبسته به این تنظیم، تنظیم موضوع‌های آگهی، تنظیمات شناسه تبلیغاتی شما، و اینکه آیا برنامه‌ای که از آن استفاده می‌کنید آگهی‌ها را شخصی‌سازی می‌کند یا نه، ممکن است آگهی‌هایی که در برنامه‌هایتان می‌بینید شخصی‌سازی شود."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"تصویر رنگارنگ نمادهایی که علایقی مثل موسیقی، اخبار، و ورزش را نشان می‌دهند"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"تصویر رنگارنگ قفلی درون دایره"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"تصویر سیاه‌وسفید کوچکی از نه نقطه که یک مربع را شکل داده‌اند"</string>

@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ön által letiltott alkalmazások"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Az alkalmazások által javasolt adatok visszaállítása"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Az alkalmazások gyakran megjegyzik, hogy Ön mi iránt érdeklődik, hogy személyre szabhassák a felhasználói élményt. Ezenkívül információkat is tárolhatnak az Android rendszeren az Önt érdeklő témákról.\n\nHa például egy maratonra való felkészüléssel kapcsolatos alkalmazást használ, az alkalmazás megállapíthatja, hogy Önt érdeklik a futócipők. Később, egy másik alkalmazás megjeleníthet Önnek egy futócipőkkel kapcsolatos hirdetést az első app javaslata alapján.\n\nAz Android automatikusan, rendszeresen törli az alkalmazások által javasolt adatokat. Ha ismét használja valamelyik alkalmazást, újra megjelenhet a listán. Emellett lehetősége van arra is, hogy letiltsa a kívánt alkalmazás számára, hogy hirdetéseket javasoljon Önnek.\n\nAz alkalmazásaiban megjelenő hirdetések a következőktől függően lehetnek személyre szabva: ez a beállítás, a hirdetéstémák beállítás, a hirdetésazonosítóval kapcsolatos beállításai, valamint az, hogy az éppen használt app személyre szabott hirdetéseket használ-e."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Érdeklődési köröket, például zenét, híreket vagy sportot jelképező szimbólumok színes illusztrációja"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Körben lévő lakat színes illusztrációja"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Négyzetet formáló kilenc pont kis méretű, fekete-fehér illusztrációja"</string>

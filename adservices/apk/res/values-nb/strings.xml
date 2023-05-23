@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apper du har blokkert"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tilbakestill dataene som er foreslått av apper"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Det er vanlig at apper du bruker, husker ting du er interessert i, for å gi deg en tilpasset opplevelse. Apper kan også lagre informasjon i Android om emnene dine.\n\nHvis du for eksempel bruker en app om maratontrening, kan appen fastslå at du er interessert i løpesko. Hvis du bruker en annen app senere, kan den appen vise deg en annonse for løpesko som ble foreslått av den første appen.\n\nAndroid sletter automatisk data fra appforslag regelmessig. Apper du bruker igjen, kan vises på listen igjen. Du kan også blokkere enkeltapper fra å foreslå annonser for deg.\n\nI apper kan annonser du ser, være personlig tilpasset avhengig av denne innstillingen, innstillingen for annonseemner, innstillingene for annonserings-ID og hvorvidt appen du bruker, har personlig tilpassede annonser."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Fargerik illustrasjon av symboler som representerer interessante emner som musikk, nyheter og sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Fargerik illustrasjon av en lås i en sirkel"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Liten illustrasjon i svart-hvitt av ni punkter som danner et kvadrat"</string>
