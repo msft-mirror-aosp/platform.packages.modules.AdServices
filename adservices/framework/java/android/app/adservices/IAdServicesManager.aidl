@@ -193,11 +193,4 @@ interface IAdServicesManager {
     boolean setConsentForAppIfNew(in String packageName,in int packageUid,in boolean isConsentRevoked);
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
-
-/** Returns whether the isAdultAccount bit is true. */
-boolean isAdultAccount();
-
-/** Saves the isAdultAccount bit. */
-void setAdultAccount(boolean isAdultAccount);
-
 }
