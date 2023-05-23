@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
 
         // AppSetIdManager can not be called on R until OutcomeReceiver dependencies are removed.
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-            setAppSetIdText("Service is not available.");
+            setAppSetIdText("Device not supported.");
             return;
         }
 
