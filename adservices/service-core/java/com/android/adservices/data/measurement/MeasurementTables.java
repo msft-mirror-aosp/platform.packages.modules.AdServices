@@ -246,6 +246,7 @@ public final class MeasurementTables {
         String TYPE = "type";
         String BODY = "body";
         String ENROLLMENT_ID = "enrollment_id";
+        String REGISTRATION_ORIGIN = "registration_origin";
     }
 
     /** Contract for xna ignored sources. */
@@ -870,7 +871,7 @@ public final class MeasurementTables {
     public static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_LATEST =
             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6;
 
-    public static final String CREATE_TABLE_DEBUG_REPORT_V6 =
+    public static final String CREATE_TABLE_DEBUG_REPORT_V3 =
             "CREATE TABLE IF NOT EXISTS "
                     + DebugReportContract.TABLE
                     + " ("
@@ -884,7 +885,21 @@ public final class MeasurementTables {
                     + " TEXT "
                     + ")";
 
-    public static final String CREATE_TABLE_DEBUG_REPORT_LATEST = CREATE_TABLE_DEBUG_REPORT_V6;
+    public static final String CREATE_TABLE_DEBUG_REPORT_LATEST =
+            "CREATE TABLE IF NOT EXISTS "
+                    + DebugReportContract.TABLE
+                    + " ("
+                    + DebugReportContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + DebugReportContract.TYPE
+                    + " TEXT, "
+                    + DebugReportContract.BODY
+                    + " TEXT, "
+                    + DebugReportContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + DebugReportContract.REGISTRATION_ORIGIN
+                    + " TEXT "
+                    + ")";
 
     public static final String CREATE_TABLE_XNA_IGNORED_SOURCES_V6 =
             "CREATE TABLE "
@@ -1134,7 +1149,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_AGGREGATE_REPORT_V6,
                             CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6,
                             CREATE_TABLE_ASYNC_REGISTRATION_V6,
-                            CREATE_TABLE_DEBUG_REPORT_V6,
+                            CREATE_TABLE_DEBUG_REPORT_V3,
                             CREATE_TABLE_XNA_IGNORED_SOURCES_V6));
 
     // Private constructor to prevent instantiation.

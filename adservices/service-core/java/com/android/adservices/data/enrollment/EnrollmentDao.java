@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.DbHelper;
+import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -48,19 +48,20 @@ import java.util.Set;
 public class EnrollmentDao implements IEnrollmentDao {
 
     private static EnrollmentDao sSingleton;
-    private final DbHelper mDbHelper;
+    private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
     @VisibleForTesting static final String ENROLLMENT_SHARED_PREF = "adservices_enrollment";
     @VisibleForTesting static final String IS_SEEDED = "is_seeded";
 
     @VisibleForTesting
-    public EnrollmentDao(Context context, DbHelper dbHelper, Flags flags) {
+    public EnrollmentDao(Context context, SharedDbHelper dbHelper, Flags flags) {
         this(context, dbHelper, flags, flags.isEnableEnrollmentTestSeed());
     }
 
     @VisibleForTesting
-    public EnrollmentDao(Context context, DbHelper dbHelper, Flags flags, boolean enableTestSeed) {
+    public EnrollmentDao(
+            Context context, SharedDbHelper dbHelper, Flags flags, boolean enableTestSeed) {
         // performSeed is needed to force seeding in tests that do not have DEVICE_CONFIG
         // permissions
         mContext = context;
@@ -78,7 +79,9 @@ public class EnrollmentDao implements IEnrollmentDao {
             if (sSingleton == null) {
                 sSingleton =
                         new EnrollmentDao(
-                                context, DbHelper.getInstance(context), FlagsFactory.getFlags());
+                                context,
+                                SharedDbHelper.getInstance(context),
+                                FlagsFactory.getFlags());
             }
             return sSingleton;
         }

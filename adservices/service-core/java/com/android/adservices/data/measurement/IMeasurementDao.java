@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for Measurement related data access operations. */
@@ -139,6 +140,19 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Gets the count of sources in the source table in a time period before event time with
+     * matching publisher, enrollment, excluding the given registration origin.
+     */
+    Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+            Uri registrationOrigin,
+            Uri publisher,
+            @EventSurfaceType int publisherType,
+            String enrollmentId,
+            long eventTime,
+            long timePeriodInMs)
+            throws DatastoreException;
+
+    /**
      * Gets the count of distinct IDs of enrollments in the Source table in a time window with
      * matching publisher and destination, excluding a given enrollment ID.
      */
@@ -174,6 +188,13 @@ public interface IMeasurementDao {
      * @return list of active matching sources; Null in case of SQL failure
      */
     List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException;
+
+    /**
+     * Queries and returns the most recent matching delayed {@link Source} (Optional) for the
+     * provided {@link Trigger}.
+     */
+    Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException;
 
     /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
@@ -562,5 +583,18 @@ public interface IMeasurementDao {
      * @param enrollmentId enrollment ID
      */
     void insertIgnoredSourceForEnrollment(@NonNull String sourceId, @NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the
+     * platform AdID from app contexts for debug key population in reports. It counts distinct AdIDs
+     * provided by the AdTech across sources and triggers in the DB.
+     *
+     * @param enrollmentId enrollmentId of previous source/trigger registrations to check AdId
+     *     provided on registration.
+     * @return number of unique AdIds the AdTech has provided.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException;
 }
