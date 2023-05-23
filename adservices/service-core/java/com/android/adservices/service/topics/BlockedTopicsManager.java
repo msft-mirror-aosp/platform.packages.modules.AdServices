@@ -146,12 +146,12 @@ public class BlockedTopicsManager {
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
                         mAdServicesManager.recordBlockedTopic(
-                                List.of(convertTopicToTopicParcel(topic)));
+                                List.of(topic.convertTopicToTopicParcel()));
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         mTopicsDao.recordBlockedTopic(topic);
                         mAdServicesManager.recordBlockedTopic(
-                                List.of(convertTopicToTopicParcel(topic)));
+                                List.of(topic.convertTopicToTopicParcel()));
                         break;
                     case Flags.APPSEARCH_ONLY:
                         if (mEnableAppSearchConsent) {
@@ -185,11 +185,11 @@ public class BlockedTopicsManager {
                         mTopicsDao.removeBlockedTopic(topic);
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.removeBlockedTopic(convertTopicToTopicParcel(topic));
+                        mAdServicesManager.removeBlockedTopic(topic.convertTopicToTopicParcel());
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
                         mTopicsDao.removeBlockedTopic(topic);
-                        mAdServicesManager.removeBlockedTopic(convertTopicToTopicParcel(topic));
+                        mAdServicesManager.removeBlockedTopic(topic.convertTopicToTopicParcel());
                         break;
                     case Flags.APPSEARCH_ONLY:
                         if (mEnableAppSearchConsent) {
@@ -367,7 +367,7 @@ public class BlockedTopicsManager {
         // Migrate blocked topics to System Service.
         List<TopicParcel> topicParcels = new ArrayList<>();
         for (Topic topic : topicsDao.retrieveAllBlockedTopics()) {
-            topicParcels.add(convertTopicToTopicParcel(topic));
+            topicParcels.add(topic.convertTopicToTopicParcel());
         }
         adServicesManager.recordBlockedTopic(topicParcels);
 
@@ -411,15 +411,6 @@ public class BlockedTopicsManager {
                     "Finish clearing blocked topics in PPAPI but shared preference is not"
                             + " updated.");
         }
-    }
-
-    @VisibleForTesting
-    static TopicParcel convertTopicToTopicParcel(@NonNull Topic topic) {
-        return new TopicParcel.Builder()
-                .setTopicId(topic.getTopic())
-                .setTaxonomyVersion(topic.getTaxonomyVersion())
-                .setModelVersion(topic.getModelVersion())
-                .build();
     }
 
     private Topic convertTopicParcelToTopic(@NonNull TopicParcel topicParcel) {
