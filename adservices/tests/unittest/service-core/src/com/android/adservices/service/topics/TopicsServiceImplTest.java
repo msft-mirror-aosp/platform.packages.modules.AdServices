@@ -548,9 +548,7 @@ public class TopicsServiceImplTest {
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
-                topics.stream()
-                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
-                        .collect(Collectors.toList());
+                topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
 
         // Mock IPC calls
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(List.of(topicParcels.get(0)));
@@ -612,9 +610,7 @@ public class TopicsServiceImplTest {
         final int numberOfLookBackEpochs = 3;
         List<Topic> topics = prepareAndPersistTopics(numberOfLookBackEpochs);
         List<TopicParcel> topicParcels =
-                topics.stream()
-                        .map(BlockedTopicsManager::convertTopicToTopicParcel)
-                        .collect(Collectors.toList());
+                topics.stream().map(Topic::convertTopicToTopicParcel).collect(Collectors.toList());
 
         // Mock IPC calls
         doNothing().when(mMockAdServicesManager).recordBlockedTopic(anyList());
