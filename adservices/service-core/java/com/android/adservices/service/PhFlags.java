@@ -46,6 +46,8 @@ public final class PhFlags implements Flags {
     static final String KEY_MAINTENANCE_JOB_PERIOD_MS = "maintenance_job_period_ms";
     static final String KEY_MAINTENANCE_JOB_FLEX_MS = "maintenance_job_flex_ms";
 
+    static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
+
     // Topics keys
     static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
     static final String KEY_TOPICS_EPOCH_JOB_FLEX_MS = "topics_epoch_job_flex_ms";
@@ -3131,12 +3133,14 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getFledgeReportInteractionRequestPermitsPerSecond());
-        writer.println("==== AdServices PH Flags Error Logging Enabled ====");
+        writer.println("==== AdServices PH Flags Error Logging ====");
         writer.println(
                 "\t"
                         + KEY_ADSERVICES_ERROR_LOGGING_ENABLED
                         + " = "
                         + getAdServicesErrorLoggingEnabled());
+        writer.println(
+                "\t" + KEY_ERROR_CODE_LOGGING_DENY_LIST + " = " + getErrorCodeLoggingDenyList());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
@@ -3292,6 +3296,38 @@ public final class PhFlags implements Flags {
             }
         }
         return ImmutableList.copyOf(globalBlockedTopicIdsIntList);
+    }
+
+    @Override
+    public ImmutableList<Integer> getErrorCodeLoggingDenyList() {
+        String defaultErrorCodeLoggingDenyStr =
+                ERROR_CODE_LOGGING_DENY_LIST.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+
+        String errorCodeLoggingDenyStr =
+                DeviceConfig.getString(
+                        NAMESPACE_ADSERVICES,
+                        KEY_ERROR_CODE_LOGGING_DENY_LIST,
+                        defaultErrorCodeLoggingDenyStr);
+        if (TextUtils.isEmpty(errorCodeLoggingDenyStr)) {
+            return ImmutableList.of();
+        }
+        errorCodeLoggingDenyStr = errorCodeLoggingDenyStr.trim();
+        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(",");
+
+        List<Integer> errorCodeLoggingDenyIntList = new ArrayList<>();
+
+        for (String errorCode : errorCodeLoggingDenyStrList) {
+            try {
+                int errorCodeInteger = Integer.parseInt(errorCode.trim());
+                errorCodeLoggingDenyIntList.add(errorCodeInteger);
+            } catch (NumberFormatException e) {
+                LogUtil.e("Parsing denied error code logging failed for " + errorCode);
+                // TODO (b/283323414) : Add CEL for this.
+            }
+        }
+        return ImmutableList.copyOf(errorCodeLoggingDenyIntList);
     }
 
     @Override
