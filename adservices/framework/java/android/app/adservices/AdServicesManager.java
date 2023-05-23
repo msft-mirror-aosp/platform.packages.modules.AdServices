@@ -493,6 +493,26 @@ public final class AdServicesManager {
         }
     }
 
+    /** Returns whether the isU18Account bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isU18Account() {
+        try {
+            return mService.isU18Account();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isU18Account bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setU18Account(boolean isU18Account) {
+        try {
+            mService.setU18Account(isU18Account);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /** Returns whether the isEntryPointEnabled bit is true. */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public boolean isEntryPointEnabled() {
