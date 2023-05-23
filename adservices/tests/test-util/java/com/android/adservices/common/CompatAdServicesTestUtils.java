@@ -36,10 +36,7 @@ public class CompatAdServicesTestUtils {
         setBlockedTopicsSourceOfTruth(APPSEARCH_ONLY);
         setConsentSourceOfTruth(APPSEARCH_ONLY);
         setEnableAppSearchConsentData(true);
-        // Measurement rollback check requires loading AdServicesManagerService's Binder from the
-        // SdkSandboxManager via getSystemService() which is not supported on S-. By disabling
-        // measurement rollback (i.e. setting the kill switch), we omit invoking that code.
-        setMeasurementRollbackDeleteKillSwitch(true);
+        setEnableMeasurementRollbackAppSearchKillSwitch(false);
     }
 
     /** Reset back-compat related flags to their default values after test execution. */
@@ -48,7 +45,7 @@ public class CompatAdServicesTestUtils {
         setBlockedTopicsSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setConsentSourceOfTruth(PPAPI_AND_SYSTEM_SERVER_SOURCE_OF_TRUTH);
         setEnableAppSearchConsentData(false);
-        setMeasurementRollbackDeleteKillSwitch(false);
+        setEnableMeasurementRollbackAppSearchKillSwitch(true);
     }
 
     public static void setPpapiAppAllowList(String allowList) {
@@ -61,12 +58,6 @@ public class CompatAdServicesTestUtils {
                 ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
         setPpapiAppAllowList(mPreviousAppAllowList + "," + packageName);
         return mPreviousAppAllowList;
-    }
-
-    private static void setMeasurementRollbackDeleteKillSwitch(boolean isEnabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_rollback_deletion_kill_switch "
-                        + isEnabled);
     }
 
     private static void setEnableBackCompatFlag(boolean isEnabled) {
@@ -86,5 +77,11 @@ public class CompatAdServicesTestUtils {
     private static void setEnableAppSearchConsentData(boolean isEnabled) {
         ShellUtils.runShellCommand(
                 "device_config put adservices enable_appsearch_consent_data " + isEnabled);
+    }
+
+    private static void setEnableMeasurementRollbackAppSearchKillSwitch(boolean isEnabled) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices measurement_rollback_deletion_app_search_kill_switch "
+                        + isEnabled);
     }
 }

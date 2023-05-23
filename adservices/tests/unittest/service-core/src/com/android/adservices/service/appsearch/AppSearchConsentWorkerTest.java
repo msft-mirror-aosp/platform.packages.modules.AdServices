@@ -349,7 +349,7 @@ public class AppSearchConsentWorkerTest {
                     FluentFuture.from(
                             Futures.immediateFailedFuture(new ExecutionException("test", null)));
             ExtendedMockito.doReturn(future)
-                    .when(() -> AppSearchDao.deleteConsentData(any(), any(), any(), any(), any()));
+                    .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             RuntimeException e =
@@ -377,7 +377,7 @@ public class AppSearchConsentWorkerTest {
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
             ExtendedMockito.doReturn(future)
-                    .when(() -> AppSearchDao.deleteConsentData(any(), any(), any(), any(), any()));
+                    .when(() -> AppSearchDao.deleteData(any(), any(), any(), any(), any()));
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             // No exceptions are thrown.
@@ -436,7 +436,7 @@ public class AppSearchConsentWorkerTest {
             FluentFuture future =
                     FluentFuture.from(
                             Futures.immediateFailedFuture(new ExecutionException("test", null)));
-            when(dao.writeConsentData(any(), any(), any())).thenReturn(future);
+            when(dao.writeData(any(), any(), any())).thenReturn(future);
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -468,14 +468,14 @@ public class AppSearchConsentWorkerTest {
             when(dao.getApps()).thenReturn(List.of());
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-            when(dao.writeConsentData(any(), any(), any())).thenReturn(future);
+            when(dao.writeData(any(), any(), any())).thenReturn(future);
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             // No exceptions are thrown.
             assertThat(appSearchConsentWorker.addAppWithConsent(consentType, TEST)).isTrue();
             verify(dao, atLeastOnce()).getApps();
-            verify(dao, atLeastOnce()).writeConsentData(any(), any(), any());
+            verify(dao, atLeastOnce()).writeData(any(), any(), any());
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();
@@ -530,7 +530,7 @@ public class AppSearchConsentWorkerTest {
             FluentFuture future =
                     FluentFuture.from(
                             Futures.immediateFailedFuture(new ExecutionException("test", null)));
-            when(dao.writeConsentData(any(), any(), any())).thenReturn(future);
+            when(dao.writeData(any(), any(), any())).thenReturn(future);
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
@@ -567,14 +567,14 @@ public class AppSearchConsentWorkerTest {
             when(dao.getApps()).thenReturn(List.of(TEST));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
             FluentFuture future = FluentFuture.from(Futures.immediateFuture(result));
-            when(dao.writeConsentData(any(), any(), any())).thenReturn(future);
+            when(dao.writeData(any(), any(), any())).thenReturn(future);
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             // No exceptions are thrown.
             appSearchConsentWorker.removeAppWithConsent(consentType, TEST);
             verify(dao, atLeastOnce()).getApps();
-            verify(dao, atLeastOnce()).writeConsentData(any(), any(), any());
+            verify(dao, atLeastOnce()).writeData(any(), any(), any());
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();
@@ -978,14 +978,14 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(dao)
                     .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeConsentData(any(), any(), any()))
+            when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             appSearchConsentWorker.recordBlockedTopic(TOPIC1);
             verify(dao).addBlockedTopic(TOPIC1);
-            verify(dao).writeConsentData(any(), any(), any());
+            verify(dao).writeData(any(), any(), any());
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();
@@ -1008,7 +1008,7 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(dao)
                     .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
             AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
-            when(dao.writeConsentData(any(), any(), any()))
+            when(dao.writeData(any(), any(), any()))
                     .thenReturn(
                             FluentFuture.from(
                                     Futures.immediateFailedFuture(new InterruptedException())));
@@ -1016,7 +1016,7 @@ public class AppSearchConsentWorkerTest {
             RuntimeException e =
                     assertThrows(RuntimeException.class, () -> worker.recordUnblockedTopic(TOPIC1));
             verify(dao).removeBlockedTopic(TOPIC1);
-            verify(dao).writeConsentData(any(), any(), any());
+            verify(dao).writeData(any(), any(), any());
             assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         } finally {
             if (staticMockSessionLocal != null) {
@@ -1070,14 +1070,14 @@ public class AppSearchConsentWorkerTest {
             ExtendedMockito.doReturn(dao)
                     .when(() -> AppSearchTopicsConsentDao.readConsentData(any(), any(), any()));
             AppSearchBatchResult<String, Void> result = Mockito.mock(AppSearchBatchResult.class);
-            when(dao.writeConsentData(any(), any(), any()))
+            when(dao.writeData(any(), any(), any()))
                     .thenReturn(FluentFuture.from(Futures.immediateFuture(result)));
 
             AppSearchConsentWorker appSearchConsentWorker =
                     AppSearchConsentWorker.getInstance(mContext);
             appSearchConsentWorker.recordUnblockedTopic(TOPIC1);
             verify(dao).removeBlockedTopic(TOPIC1);
-            verify(dao).writeConsentData(any(), any(), any());
+            verify(dao).writeData(any(), any(), any());
         } finally {
             if (staticMockSessionLocal != null) {
                 staticMockSessionLocal.finishMocking();

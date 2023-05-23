@@ -23,7 +23,8 @@ import android.util.Pair;
 
 import androidx.annotation.Nullable;
 
-import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
+import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.util.Debug;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
@@ -382,7 +383,12 @@ public class EventReport {
 
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
-                Source source, Trigger trigger, EventTrigger eventTrigger) {
+                @NonNull Source source,
+                @NonNull Trigger trigger,
+                @NonNull EventTrigger eventTrigger,
+                @Nullable Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+                @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+                @NonNull SourceNoiseHandler sourceNoiseHandler) {
             mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
@@ -394,13 +400,11 @@ public class EventReport {
             mBuilding.mAttributionDestinations =
                     source.getAttributionDestinations(trigger.getDestinationType());
             mBuilding.mReportTime =
-                    source.getReportingTime(
-                            trigger.getTriggerTime(),
-                            trigger.getDestinationType());
+                    eventReportWindowCalcDelegate.getReportingTime(
+                            source, trigger.getTriggerTime(), trigger.getDestinationType());
             mBuilding.mSourceType = source.getSourceType();
-            mBuilding.mRandomizedTriggerRate = source.getRandomAttributionProbability();
-            Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor().getDebugKeys(source, trigger);
+            mBuilding.mRandomizedTriggerRate =
+                    sourceNoiseHandler.getRandomAttributionProbability(source);
             mBuilding.mSourceDebugKey = debugKeyPair.first;
             mBuilding.mTriggerDebugKey = debugKeyPair.second;
             mBuilding.mDebugReportStatus = DebugReportStatus.NONE;
