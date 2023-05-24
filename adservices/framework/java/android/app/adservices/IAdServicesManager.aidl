@@ -194,6 +194,12 @@ interface IAdServicesManager {
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
 
+    /** Returns whether the isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled();
+
+    /** Saves the isAdIdEnabled bit. */
+    void setAdIdEnabled(boolean isAdIdEnabled);
+
     /** Returns whether the isU18Account bit is true. */
     boolean isU18Account();
 
