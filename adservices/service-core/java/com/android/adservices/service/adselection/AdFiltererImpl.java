@@ -252,7 +252,7 @@ public final class AdFiltererImpl implements AdFilterer {
                             FrequencyCapFilters.AD_EVENT_TYPE_WIN,
                             intervalStartTime);
 
-            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
                 return false;
             }
         }
@@ -272,7 +272,7 @@ public final class AdFiltererImpl implements AdFilterer {
                     mFrequencyCapDao.getNumEventsForBuyerAfterTime(
                             frequencyCap.getAdCounterKey(), buyer, adEventType, intervalStartTime);
 
-            if (numEventsSinceStartTime > frequencyCap.getMaxCount()) {
+            if (numEventsSinceStartTime >= frequencyCap.getMaxCount()) {
                 return false;
             }
         }

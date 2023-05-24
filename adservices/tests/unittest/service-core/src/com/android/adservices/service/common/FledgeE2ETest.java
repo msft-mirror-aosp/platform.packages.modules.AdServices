@@ -178,7 +178,7 @@ public class FledgeE2ETest {
                             Collections.singleton(
                                     new KeyedFrequencyCap.Builder(
                                                     KeyedFrequencyCapFixture.KEY1,
-                                                    0,
+                                                    1,
                                                     Duration.ofDays(1))
                                             .build()))
                     .build();
