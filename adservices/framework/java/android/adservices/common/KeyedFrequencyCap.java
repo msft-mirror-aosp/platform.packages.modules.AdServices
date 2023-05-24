@@ -17,7 +17,6 @@
 package android.adservices.common;
 
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -159,10 +158,10 @@ public final class KeyedFrequencyCap implements Parcelable {
      * @hide
      */
     public static KeyedFrequencyCap fromJson(JSONObject json) throws JSONException {
-        return new Builder()
-                .setAdCounterKey(json.getInt(AD_COUNTER_KEY_FIELD_NAME))
-                .setMaxCount(json.getInt(MAX_COUNT_FIELD_NAME))
-                .setInterval(Duration.ofSeconds(json.getLong(INTERVAL_FIELD_NAME)))
+        return new Builder(
+                        json.getInt(AD_COUNTER_KEY_FIELD_NAME),
+                        json.getInt(MAX_COUNT_FIELD_NAME),
+                        Duration.ofSeconds(json.getLong(INTERVAL_FIELD_NAME)))
                 .build();
     }
 
@@ -213,9 +212,18 @@ public final class KeyedFrequencyCap implements Parcelable {
     public static final class Builder {
         private int mAdCounterKey;
         private int mMaxCount;
-        @Nullable private Duration mInterval;
+        @NonNull private Duration mInterval;
 
-        public Builder() {}
+        public Builder(int adCounterKey, int maxCount, @NonNull Duration interval) {
+            Preconditions.checkArgument(maxCount >= 0, "Max count must be non-negative");
+            Objects.requireNonNull(interval, "Interval must not be null");
+            Preconditions.checkArgument(
+                    interval.getSeconds() > 0, "Interval in seconds must be positive and non-zero");
+
+            mAdCounterKey = adCounterKey;
+            mMaxCount = maxCount;
+            mInterval = interval;
+        }
 
         /**
          * Sets the ad counter key the frequency cap applies to.
@@ -255,18 +263,9 @@ public final class KeyedFrequencyCap implements Parcelable {
             return this;
         }
 
-        /**
-         * Builds and returns a {@link KeyedFrequencyCap} instance.
-         *
-         * @throws NullPointerException if the ad counter key or interval are null
-         * @throws IllegalArgumentException if the ad counter key, max count, or interval are
-         *     invalid
-         */
+        /** Builds and returns a {@link KeyedFrequencyCap} instance. */
         @NonNull
-        public KeyedFrequencyCap build() throws NullPointerException, IllegalArgumentException {
-            Preconditions.checkArgument(mMaxCount >= 0, "Max count must be non-negative");
-            Objects.requireNonNull(mInterval, "Interval must not be null");
-
+        public KeyedFrequencyCap build() {
             return new KeyedFrequencyCap(this);
         }
     }
