@@ -2216,6 +2216,63 @@ public class ConsentManager {
                                 .build());
     }
 
+    /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
+    public Boolean isU18Account() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_U18_ACCOUNT);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isU18Account();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isU18Account();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isU18Account bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the U18Account bit to storage based on consent_source_of_truth. */
+    public void setU18Account(boolean isU18Account) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setU18Account(isU18Account);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
+                        mAdServicesManager.setU18Account(isU18Account);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setU18Account(isU18Account);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisU18Account operation failed. " + e.getMessage());
+            }
+        }
+    }
+
     /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
     public Boolean isEntryPointEnabled() {
         synchronized (LOCK) {
