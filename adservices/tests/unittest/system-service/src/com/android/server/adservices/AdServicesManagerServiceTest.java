@@ -1048,6 +1048,18 @@ public class AdServicesManagerServiceTest {
     }
 
     @Test
+    public void isAdIdEnabledTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdIdEnabled()).isFalse();
+        service.setAdIdEnabled(true);
+        assertThat(service.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
     public void isU18AccountTest() throws IOException {
         AdServicesManagerService service =
                 spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));

@@ -216,6 +216,18 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 && this.mIsAdIdEnabled == obj.mIsAdIdEnabled;
     }
 
+    /** Read the isAdIdEnabled bit from AppSearch. */
+    public static boolean readIsAdIdEnabled(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+        if (dao == null) {
+            return false;
+        }
+        return dao.isAdIdEnabled();
+    }
+
     /** Read the isU18Account bit from AppSearch. */
     public static boolean readIsU18Account(
             @NonNull ListenableFuture<GlobalSearchSession> searchSession,
