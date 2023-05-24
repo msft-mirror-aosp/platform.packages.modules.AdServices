@@ -49,9 +49,6 @@ import java.util.Objects;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesManager {
-
-    public static final String AD_SERVICES_SYSTEM_SERVICE = "adservices_manager";
-
     @GuardedBy("SINGLETON_LOCK")
     private static AdServicesManager sSingleton;
 
