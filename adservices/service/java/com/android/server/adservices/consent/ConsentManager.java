@@ -463,4 +463,88 @@ public final class ConsentManager {
             mDatastore.tearDownForTesting();
         }
     }
+
+    @VisibleForTesting static final String IS_AD_ID_ENABLED = "IS_AD_ID_ENABLED";
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public boolean isAdIdEnabled() {
+        synchronized (this) {
+            Boolean isAdIdEnabled = mDatastore.get(IS_AD_ID_ENABLED);
+            return isAdIdEnabled != null ? isAdIdEnabled : false;
+        }
+    }
+
+    /** Set the AdIdEnabled bit in system server. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_AD_ID_ENABLED, isAdIdEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setAdIdEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_U18_ACCOUNT = "IS_U18_ACCOUNT";
+
+    /** Returns whether the isU18Account bit is true. */
+    public boolean isU18Account() {
+        synchronized (this) {
+            Boolean isU18Account = mDatastore.get(IS_U18_ACCOUNT);
+            return isU18Account != null ? isU18Account : false;
+        }
+    }
+
+    /** Set the U18Account bit in system server. */
+    public void setU18Account(boolean isU18Account) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_U18_ACCOUNT, isU18Account);
+            } catch (IOException e) {
+                LogUtil.e(e, "setU18Account operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public boolean isEntryPointEnabled() {
+        synchronized (this) {
+            Boolean isEntryPointEnabled = mDatastore.get(IS_ENTRY_POINT_ENABLED);
+            return isEntryPointEnabled != null ? isEntryPointEnabled : false;
+        }
+    }
+
+    /** Set the EntryPointEnabled bit in system server. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setEntryPointEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public boolean isAdultAccount() {
+        synchronized (this) {
+            Boolean isAdultAccount = mDatastore.get(IS_ADULT_ACCOUNT);
+            return isAdultAccount != null ? isAdultAccount : false;
+        }
+    }
+
+    /** Set the AdultAccount bit in system server. */
+    public void setAdultAccount(boolean isAdultAccount) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_ADULT_ACCOUNT, isAdultAccount);
+            } catch (IOException e) {
+                LogUtil.e(e, "setAdultAccount operation failed: " + e.getMessage());
+            }
+        }
+    }
 }

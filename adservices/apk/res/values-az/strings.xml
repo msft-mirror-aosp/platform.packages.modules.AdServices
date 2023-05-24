@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blok etdiyiniz tətbiqlər"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Tətbiq tərəfindən təklif olunan datanı sıfırlayın"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Təcrübənizi fərdiləşdirmək üçün maraqlandığınız şeyləri yadda saxlamaq üçün istifadə etdiyiniz tətbiqlər üçün adi haldır. Tətbiqlər mövzularınız haqqında Android\'də də məlumat saxlaya bilər.\n\nMəsələn, marafon təlimi ilə bağlı tətbiqdən istifadə edirsinizsə, tətbiq qaçış ayaqqabıları ilə maraqlandığınıza qərar verə bilər. Daha sonra, başqa tətbiqdən istifadə etsəniz, həmin tətbiq sizə ilk tətbiq tərəfindən təklif olunan qaçış ayaqqabısı reklamı göstərə bilər.\n\nAndroid tətbiq tərəfindən təklif olunan datanı müntəzəm olaraq avtomatik silir. Təkrar istifadə etdiyiniz tətbiq siyahıda yenidən görünə bilər. Və ya tətbiqin sizin üçün reklam təklif etməsini blok edə bilərsiniz.\n\nTətbiqlərinizdə gördüyünüz reklam bu ayardan, reklam mövzuları ayarından, reklam ID-si ayarlarından və istifadə etdiyiniz tətbiqin reklamları fərdiləşdirib-fərdiləşdirməməsindən asılı olaraq fərdiləşdirilə bilər."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Musiqi, xəbərlər və idman kimi maraq doğuran mövzuları təmsil edən simvolların rəngli təsviri"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Dairənin içində kilidi göstərən rəngli təsvir"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kvadrat təşkil edən doqquz nöqtəni göstərən kiçik ağ-qara təsvir"</string>

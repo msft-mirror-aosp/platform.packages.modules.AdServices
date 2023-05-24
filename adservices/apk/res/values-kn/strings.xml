@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"ನೀವು ನಿರ್ಬಂಧಿಸಿದ ಆ್ಯಪ್‌ಗಳು"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ಆ್ಯಪ್ ಸೂಚಿಸಿದ ಡೇಟಾವನ್ನು ರೀಸೆಟ್ ಮಾಡಿ"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"ನಿಮ್ಮ ಅನುಭವವನ್ನು ವೈಯಕ್ತೀಕರಿಸಲು ನಿಮಗೆ ಆಸಕ್ತಿ ಇರುವ ವಿಷಯಗಳನ್ನು ನೀವು ಬಳಸುವ ಆ್ಯಪ್‌ಗಳು ಸಾಮಾನ್ಯವಾಗಿ ನೆನಪಿಟ್ಟುಕೊಳ್ಳುತ್ತವೆ. ಆ್ಯಪ್‌ಗಳು ನಿಮ್ಮ ವಿಷಯಗಳ ಕುರಿತು Android ನೊಂದಿಗೆ ಮಾಹಿತಿಯನ್ನು ಸಹ ಸಂಗ್ರಹಿಸಬಹುದು.\n\nಉದಾಹರಣೆಗೆ, ನೀವು ಮ್ಯಾರಥಾನ್ ತರಬೇತಿಯ ಕುರಿತು ಆ್ಯಪ್ ಒಂದನ್ನು ಬಳಸಿದರೆ, ನೀವು ರನ್ನಿಂಗ್ ಶೂಗಳ ಕುರಿತು ಆಸಕ್ತಿ ಹೊಂದಿದ್ದೀರಿ ಎಂದು ಆ್ಯಪ್‌ ನಿರ್ಧರಿಸಬಹುದು. ನಂತರ, ನೀವು ಬೇರೆ ಆ್ಯಪ್ ಒಂದನ್ನು ಬಳಸಿದರೆ, ಮೊದಲ ಆ್ಯಪ್ ಸೂಚಿಸಿದ ರನ್ನಿಂಗ್ ಶೂಗಳ ಜಾಹೀರಾತನ್ನು ಆ ಆ್ಯಪ್ ನಿಮಗೆ ತೋರಿಸುತ್ತದೆ.\n\nನಿಯಮಿತವಾಗಿ ಆ್ಯಪ್ ಸೂಚಿಸಿದ ಡೇಟಾವನ್ನು Android ಸ್ವಯಂ ಅಳಿಸುತ್ತದೆ. ನೀವು ಮತ್ತೆ ಬಳಸುವ ಆ್ಯಪ್, ಪಟ್ಟಿಯಲ್ಲಿ ಪುನಃ ಕಾಣಿಸಿಕೊಳ್ಳಬಹುದು. ಅಥವಾ ನಿಮಗಾಗಿ ಜಾಹೀರಾತುಗಳನ್ನು ಸೂಚಿಸದಂತೆ ನೀವು ಆ್ಯಪ್ ಒಂದನ್ನು ನಿರ್ಬಂಧಿಸಬಹುದು.\n\nನಿಮ್ಮ ಆ್ಯಪ್‌ಗಳಲ್ಲಿ, ಈ ಸೆಟ್ಟಿಂಗ್, ಜಾಹೀರಾತು ವಿಷಯಗಳ ಸೆಟ್ಟಿಂಗ್, ನಿಮ್ಮ ಜಾಹೀರಾತು ಐಡಿ ಸೆಟ್ಟಿಂಗ್‌ಗಳು ಮತ್ತು ನೀವು ಬಳಸುತ್ತಿರುವ ಆ್ಯಪ್ ಜಾಹೀರಾತುಗಳನ್ನು ವೈಯಕ್ತೀಕರಿಸುತ್ತದೆಯೇ ಎಂಬುದನ್ನು ಅವಲಂಬಿಸಿ ನೀವು ನೋಡುವ ಜಾಹೀರಾತನ್ನು ವೈಯಕ್ತೀಕರಿಸಬಹುದು."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"ಸಂಗೀತ, ಸುದ್ದಿ ಮತ್ತು ಕ್ರೀಡೆಗಳಂತಹ ಆಸಕ್ತಿಯ ವಿಷಯಗಳನ್ನು ಪ್ರತಿನಿಧಿಸುವ ಸಂಕೇತಗಳ ವರ್ಣರಂಜಿತ ಚಿತ್ರಣ"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"ವೃತ್ತದೊಳಗಿನ ಬೀಗದ ವರ್ಣರಂಜಿತ ಚಿತ್ರಣ"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ಒಂದು ಚೌಕವನ್ನು ರೂಪಿಸುವ ಒಂಬತ್ತು ಚುಕ್ಕೆಗಳ ಸಣ್ಣ ಕಪ್ಪು ಮತ್ತು ಬಿಳಿ ಚಿತ್ರಣ"</string>

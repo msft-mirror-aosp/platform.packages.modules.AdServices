@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Estämäsi sovellukset"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Nollaa sovellusten ehdottama data"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Käyttämäsi sovellukset muistavat usein sinua kiinnostavia aiheita ja käyttävät niitä personoidessaan kokemustasi. Sovellukset voivat myös tallentaa tietoja aiheista Androidiin.\n\nJos esimerkiksi käytät sovellusta maratonille treenaamiseen, sovellus voi päätellä, että olet kiinnostunut juoksukengistä. Jos käytät myöhemmin toista sovellusta, se voi näyttää sinulle ensimmäisen sovelluksen ehdottamia mainoksia juoksukengistä.\n\nAndroid poistaa sovellusten ehdotusdataa automaattisesti ja säännöllisesti. Jos käytät sovellusta uudelleen, se voi näkyä taas listalla. Voit milloin tahansa estää sovellusta ehdottamasta sinulle mainoksia.\n\nSovelluksessa näkemäsi mainokset voivat olla personoituja riippuen tästä asetuksesta, mainosten aiheasetuksesta, mainostunnusasetuksista ja siitä, personoiko käyttämäsi sovellus mainoksia."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Värikäs kuvituskuva symboleista, jotka edustavat musiikkia, uutisia, urheilua ja muita kiinnostavia aiheita"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Värikäs kuvituskuva ympyrän sisällä olevasta lukosta"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Pieni mustavalkoinen kuvituskuva yhdeksän pisteen muodostamasta neliöstä"</string>

@@ -415,4 +415,48 @@ public class ConsentManagerTest {
                 .isFalse();
         assertThat(Files.exists(packageDir)).isTrue();
     }
+
+    @Test
+    public void isAdIdEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isAdIdEnabled()).isFalse();
+        consentManager.setAdIdEnabled(true);
+
+        assertThat(consentManager.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
+    public void isU18AccountTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isU18Account()).isFalse();
+        consentManager.setU18Account(true);
+
+        assertThat(consentManager.isU18Account()).isTrue();
+    }
+
+    @Test
+    public void isEntryPointEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isEntryPointEnabled()).isFalse();
+        consentManager.setEntryPointEnabled(true);
+
+        assertThat(consentManager.isEntryPointEnabled()).isTrue();
+    }
+
+    @Test
+    public void isAdultAccountTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isAdultAccount()).isFalse();
+        consentManager.setAdultAccount(true);
+
+        assertThat(consentManager.isAdultAccount()).isTrue();
+    }
 }

@@ -506,4 +506,44 @@ public class AppSearchConsentManager {
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
     }
+
+    /** Save the isAdIdEnabled bit. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        mAppSearchConsentWorker.setAdIdEnabled(isAdIdEnabled);
+    }
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public Boolean isAdIdEnabled() {
+        return mAppSearchConsentWorker.isAdIdEnabled();
+    }
+
+    /** Save the isU18Account bit. */
+    public void setU18Account(boolean isU18Account) {
+        mAppSearchConsentWorker.setU18Account(isU18Account);
+    }
+
+    /** Returns whether the isU18Account bit is true. */
+    public Boolean isU18Account() {
+        return mAppSearchConsentWorker.isU18Account();
+    }
+
+    /** Save the isEntryPointEnabled bit. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        mAppSearchConsentWorker.setEntryPointEnabled(isEntryPointEnabled);
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public Boolean isEntryPointEnabled() {
+        return mAppSearchConsentWorker.isEntryPointEnabled();
+    }
+
+    /** Save the isAdultAccount bit. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        mAppSearchConsentWorker.setAdultAccount(isAdultAccount);
+    }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public Boolean isAdultAccount() {
+        return mAppSearchConsentWorker.isAdultAccount();
+    }
 }
