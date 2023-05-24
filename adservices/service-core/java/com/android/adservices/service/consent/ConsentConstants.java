@@ -83,5 +83,7 @@ public class ConsentConstants {
     public static final String ERROR_MESSAGE_APPSEARCH_FAILURE =
             "Failed to persist data to AppSearch.";
 
+    public static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
+
     public static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
 }
