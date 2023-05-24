@@ -38,10 +38,10 @@ public class KeyedFrequencyCapTest {
     @Test
     public void testBuildValidKeyedFrequencyCap_success() {
         final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder()
-                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
-                        .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
@@ -52,10 +52,10 @@ public class KeyedFrequencyCapTest {
     @Test
     public void testParcelKeyedFrequencyCap_success() {
         final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder()
-                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
-                        .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         Parcel targetParcel = Parcel.obtain();
@@ -140,10 +140,10 @@ public class KeyedFrequencyCapTest {
     @Test
     public void testToString() {
         final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder()
-                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
-                        .setMaxCount(KeyedFrequencyCapFixture.VALID_COUNT)
-                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         final String expectedString =
@@ -156,19 +156,70 @@ public class KeyedFrequencyCapTest {
     }
 
     @Test
+    public void testBuildValidKeyedFrequencyCap_allSettersOverwriteSuccess() {
+        final Duration twoDays = KeyedFrequencyCapFixture.ONE_DAY_DURATION.plusDays(1);
+
+        final KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY2)
+                        .setMaxCount(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
+                        .setInterval(twoDays)
+                        .build();
+
+        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY2);
+        assertThat(originalCap.getMaxCount())
+                .isEqualTo(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT);
+        assertThat(originalCap.getInterval()).isEqualTo(twoDays);
+    }
+
+    @Test
     public void testBuildNegativeCount_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setMaxCount(-1));
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                -1,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION));
+    }
+
+    @Test
+    public void testSetNegativeCount_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setMaxCount(-1));
     }
 
     @Test
     public void testBuildZeroCount_success() {
         final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder()
-                        .setAdCounterKey(KeyedFrequencyCapFixture.KEY1)
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                0,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .build();
+
+        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        assertThat(originalCap.getMaxCount()).isEqualTo(0);
+        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
+    }
+
+    @Test
+    public void testSetZeroCount_success() {
+        final KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .setMaxCount(0)
-                        .setInterval(KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
         assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
@@ -180,26 +231,69 @@ public class KeyedFrequencyCapTest {
     public void testBuildNegativeInterval_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofSeconds(-1)));
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                Duration.ofSeconds(-1)));
+    }
+
+    @Test
+    public void testSetNegativeInterval_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setInterval(Duration.ofSeconds(-1)));
     }
 
     @Test
     public void testBuildZeroInterval_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofSeconds(0)));
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                Duration.ofSeconds(0)));
+    }
+
+    @Test
+    public void testSetZeroInterval_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setInterval(Duration.ofSeconds(0)));
     }
 
     @Test
     public void testBuildIntervalLessThanSecond_throws() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new KeyedFrequencyCap.Builder().setInterval(Duration.ofMillis(50)));
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                Duration.ofMillis(50)));
     }
 
     @Test
-    public void testBuildNoSetters_throws() {
-        assertThrows(NullPointerException.class, () -> new KeyedFrequencyCap.Builder().build());
+    public void testSetIntervalLessThanSecond_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setInterval(Duration.ofMillis(50)));
     }
 
     @Test
