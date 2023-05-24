@@ -2215,4 +2215,61 @@ public class ConsentManager {
                                 .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
                                 .build());
     }
+
+    /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
+    public Boolean isAdultAccount() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isAdultAccount();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isAdultAccount();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isAdultAccount bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the AdultAccount bit to storage based on consent_source_of_truth. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setAdultAccount(isAdultAccount);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
+                        mAdServicesManager.setAdultAccount(isAdultAccount);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setAdultAccount(isAdultAccount);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisAdultAccount operation failed. " + e.getMessage());
+            }
+        }
+    }
 }
