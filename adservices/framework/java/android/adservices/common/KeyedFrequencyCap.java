@@ -32,9 +32,8 @@ import java.util.Objects;
 /**
  * A frequency cap for a specific ad counter key.
  *
- * <p>Frequency caps define the maximum count of previously counted events within a given time
- * interval. If the frequency cap is exceeded, the associated ad will be filtered out of ad
- * selection.
+ * <p>Frequency caps define the maximum rate an event can occur within a given time interval. If the
+ * frequency cap is exceeded, the associated ad will be filtered out of ad selection.
  *
  * @hide
  */
@@ -98,16 +97,15 @@ public final class KeyedFrequencyCap implements Parcelable {
     }
 
     /**
-     * Returns the maximum count of previously occurring events allowed within a given time
-     * interval.
+     * Returns the maximum count of event occurrences allowed within a given time interval.
      *
      * <p>If there are more events matching the ad counter key and ad event type counted on the
      * device within the time interval defined by {@link #getInterval()}, the frequency cap has been
      * exceeded, and the ad will not be eligible for ad selection.
      *
      * <p>For example, an ad that specifies a filter for a max count of two within one hour will not
-     * be eligible for ad selection if the event has been counted three or more times within the
-     * hour preceding the ad selection process.
+     * be eligible for ad selection if the event has been counted two or more times within the hour
+     * preceding the ad selection process.
      */
     public int getMaxCount() {
         return mMaxCount;
@@ -215,10 +213,10 @@ public final class KeyedFrequencyCap implements Parcelable {
         @NonNull private Duration mInterval;
 
         public Builder(int adCounterKey, int maxCount, @NonNull Duration interval) {
-            Preconditions.checkArgument(maxCount >= 0, "Max count must be non-negative");
+            Preconditions.checkArgument(maxCount > 0, "Max count must be strictly positive");
             Objects.requireNonNull(interval, "Interval must not be null");
             Preconditions.checkArgument(
-                    interval.getSeconds() > 0, "Interval in seconds must be positive and non-zero");
+                    interval.getSeconds() > 0, "Interval in seconds must be strictly positive");
 
             mAdCounterKey = adCounterKey;
             mMaxCount = maxCount;
@@ -243,7 +241,7 @@ public final class KeyedFrequencyCap implements Parcelable {
          */
         @NonNull
         public Builder setMaxCount(int maxCount) {
-            Preconditions.checkArgument(maxCount >= 0, "Max count must be non-negative");
+            Preconditions.checkArgument(maxCount > 0, "Max count must be strictly positive");
             mMaxCount = maxCount;
             return this;
         }
@@ -258,7 +256,7 @@ public final class KeyedFrequencyCap implements Parcelable {
         public Builder setInterval(@NonNull Duration interval) {
             Objects.requireNonNull(interval, "Interval must not be null");
             Preconditions.checkArgument(
-                    interval.getSeconds() > 0, "Interval in seconds must be positive and non-zero");
+                    interval.getSeconds() > 0, "Interval in seconds must be strictly positive");
             mInterval = interval;
             return this;
         }

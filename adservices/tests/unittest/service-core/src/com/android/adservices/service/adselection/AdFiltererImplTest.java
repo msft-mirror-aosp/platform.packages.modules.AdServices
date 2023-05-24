@@ -268,7 +268,7 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterContextualAdsWithEmptyFrequencyCapFilters() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT)
                 .when(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
@@ -296,7 +296,7 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterContextualAdsForNonMatchingFrequencyCap() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_UNDER_MAX_COUNT)
                 .when(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 
@@ -489,7 +489,7 @@ public class AdFiltererImplTest {
 
     @Test
     public void testFilterCustomAudiencesWithNonMatchingFrequencyCapFilters() {
-        doReturn(KeyedFrequencyCapFixture.FILTER_COUNT)
+        doReturn(KeyedFrequencyCapFixture.FILTER_UNDER_MAX_COUNT)
                 .when(mFrequencyCapDaoMock)
                 .getNumEventsForBuyerAfterTime(anyInt(), any(), anyInt(), any());
 

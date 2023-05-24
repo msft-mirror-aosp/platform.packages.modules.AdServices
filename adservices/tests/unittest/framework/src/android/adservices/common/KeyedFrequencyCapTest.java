@@ -199,32 +199,26 @@ public class KeyedFrequencyCapTest {
     }
 
     @Test
-    public void testBuildZeroCount_success() {
-        final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder(
+    public void testBuildZeroCount_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
                                 KeyedFrequencyCapFixture.KEY1,
                                 0,
-                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
-                        .build();
-
-        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(originalCap.getMaxCount()).isEqualTo(0);
-        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION));
     }
 
     @Test
-    public void testSetZeroCount_success() {
-        final KeyedFrequencyCap originalCap =
-                new KeyedFrequencyCap.Builder(
-                                KeyedFrequencyCapFixture.KEY1,
-                                KeyedFrequencyCapFixture.VALID_COUNT,
-                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
-                        .setMaxCount(0)
-                        .build();
-
-        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(originalCap.getMaxCount()).isEqualTo(0);
-        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
+    public void testSetZeroCount_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new KeyedFrequencyCap.Builder(
+                                        KeyedFrequencyCapFixture.KEY1,
+                                        KeyedFrequencyCapFixture.VALID_COUNT,
+                                        KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                                .setMaxCount(0));
     }
 
     @Test
