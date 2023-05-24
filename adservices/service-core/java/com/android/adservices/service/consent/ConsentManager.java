@@ -2216,6 +2216,66 @@ public class ConsentManager {
                                 .build());
     }
 
+    /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
+    public Boolean isEntryPointEnabled() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isEntryPointEnabled();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isEntryPointEnabled();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isEntryPointEnabled bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the EntryPointEnabled bit to storage based on consent_source_of_truth. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+                        mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException(
+                        "setisEntryPointEnabled operation failed. " + e.getMessage());
+            }
+        }
+    }
+
     /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
     public Boolean isAdultAccount() {
         synchronized (LOCK) {
