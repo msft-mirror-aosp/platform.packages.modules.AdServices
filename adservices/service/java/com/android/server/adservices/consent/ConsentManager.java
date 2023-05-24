@@ -464,6 +464,27 @@ public final class ConsentManager {
         }
     }
 
+    @VisibleForTesting static final String IS_AD_ID_ENABLED = "IS_AD_ID_ENABLED";
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public boolean isAdIdEnabled() {
+        synchronized (this) {
+            Boolean isAdIdEnabled = mDatastore.get(IS_AD_ID_ENABLED);
+            return isAdIdEnabled != null ? isAdIdEnabled : false;
+        }
+    }
+
+    /** Set the AdIdEnabled bit in system server. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_AD_ID_ENABLED, isAdIdEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setAdIdEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
     @VisibleForTesting static final String IS_U18_ACCOUNT = "IS_U18_ACCOUNT";
 
     /** Returns whether the isU18Account bit is true. */
