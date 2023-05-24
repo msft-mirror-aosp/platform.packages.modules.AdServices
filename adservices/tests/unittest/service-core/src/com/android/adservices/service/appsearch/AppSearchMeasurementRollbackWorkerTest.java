@@ -63,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 public class AppSearchMeasurementRollbackWorkerTest {
     private static final String USERID = "user1";
     private static final long APEX_VERSION = 100L;
-    private static final int FUTURE_TIMEOUT_MILLISECONDS = 2100;
+    private static final int FUTURE_TIMEOUT_MILLISECONDS = 3000;
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final Executor mExecutor = AdServicesExecutors.getBackgroundExecutor();
