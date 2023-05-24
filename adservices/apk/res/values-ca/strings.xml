@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplicacions que has bloquejat"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restableix les dades suggerides per aplicacions"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"És habitual que les aplicacions que utilitzes recordin coses que t\'interessen per personalitzar la teva experiència. Les aplicacions també poden emmagatzemar informació amb Android sobre els teus temes.\n\nPer exemple, si utilitzes una aplicació sobre entrenament de maratons, l\'aplicació pot decidir que t\'interessen les sabatilles de córrer. Més endavant, si utilitzes una altra aplicació, aquesta aplicació pot mostrar-te un anunci de sabatilles de córrer suggerit per la primera aplicació.\n\nAndroid suprimeix automàticament les dades suggerides per aplicacions de manera regular. Pot ser que una aplicació que utilitzis de nou torni a aparèixer a la llista. O pots bloquejar una aplicació per impedir que et suggereixi anuncis.\n\nA les teves aplicacions, un anunci que vegis pot estar personalitzat, depenent d\'aquesta configuració, de la configuració de temes d\'anuncis, de la configuració d\'identificador de publicitat i de si l\'aplicació que utilitzes personalitza anuncis."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Il·lustració de símbols acolorida que representa temes d\'interès, com música, notícies i esports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Il·lustració acolorida d\'un cadenat dins d\'un cercle"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Il·lustració petita en blanc i negre de nou punts que formen un quadrat"</string>
