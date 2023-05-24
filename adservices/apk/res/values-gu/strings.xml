@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"તમે બ્લૉક કરેલી ઍપ"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"ઍપ દ્વારા સૂચવેલા ડેટા રીસેટ કરો"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"તમારો અનુભવ મનગમતો બનાવવા માટે, તમે ઉપયોગમાં લો છો તે વિવિધ ઍપ દ્વારા તમે રુચિ ધરાવતા હો તેવી બાબતો યાદ રાખવી સામાન્ય વાત છે. ઍપ, તમારા વિષયો સંબંધિત માહિતી Androidની સહાયથી સ્ટોર પણ કરી શકે છે.\n\nઉદાહરણ તરીકે, જો તમે મેરેથોનના પ્રશિક્ષણ સંબંધિત કોઈ ઍપનો ઉપયોગ કરો, તો તે ઍપ નક્કી કરી શકે છે કે તમે દોડવા માટેના શૂઝમાં રુચિ ધરાવો છો. પછીથી, જો તમે બીજી કોઈ ઍપનો ઉપયોગ કરો તો તે ઍપ તમને પહેલી ઍપ દ્વારા સૂચવવામાં આવેલી દોડવાના શૂઝવાળી જાહેરાત બતાવી શકે છે.\n\nઍપ દ્વારા સૂચવેલી જાહેરાતો સંબંધિત ડેટાને Android નિયમિત, ઑટોમૅટિક રીતે ડિલીટ કરે છે. તમે ફરી ઉપયોગ કરો છો તે ઍપ સૂચિમાં ફરીથી દેખાઈ શકે છે. અથવા તમે કોઈ ઍપને તમને જાહેરાતોનું સૂચન આપવાથી બ્લૉક કરી શકો છો.\n\nતમારી ઍપમાં તમને જોવા મળતી જાહેરાત આ સેટિંગ, જાહેરાતના વિષયોના સેટિંગ, તમારા જાહેરાત IDના સેટિંગ અને તમે ઉપયોગમાં લઈ રહ્યાં હો તે ઍપ જાહેરાતોને મનગમતી બનાવે છે કે નહીં, તેના આધારે મનગમતી બનાવેલી હોઈ શકે છે."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"મ્યુઝિક, સમાચાર અને રમતગમત જેવા રુચિના વિષયોનું પ્રતિનિધિત્વ કરતા પ્રતીકોનું રંગીન ચિત્ર"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"વર્તુળની અંદર લૉકનું રંગીન ચિત્ર"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"ચોરસ આકાર બનાવતા નવ ડોટનું નાનું બ્લૅક ઍન્ડ વ્હાઇટ ચિત્ર"</string>

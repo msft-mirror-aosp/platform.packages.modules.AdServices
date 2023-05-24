@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikacije koje ste blokirali"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Poništi podatke o prijedlozima aplikacija"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Uobičajeno je da aplikacije koje koristite pamte stvari koje vas zanimaju da personaliziraju vaše iskustvo. Aplikacije također mogu pohranjivati informacije o vašim temama u Androidu.\n\nNaprimjer, ako koristite aplikaciju o treningu za maraton, aplikacija može utvrditi da vas zanimaju patike za trčanje. Kasnije, ako koristite drugu aplikaciju, ona vam može prikazati oglas za patike za trčanje koje je predložila prva aplikacija.\n\nAndroid redovno automatski briše podatke o prijedlozima aplikacija. Aplikacija koju ponovo koristite može se ponovo pojaviti na listi. Ili možete blokirati da vam aplikacija predlaže oglase.\n\nOglas koji vam se prikaže u aplikacijama može biti personaliziran, ovisno o ovoj postavci, postavci tema oglasa, postavkama ID-a za oglašavanje i o tome personalizira li oglase aplikacija koju koristite."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustracija simbola u boji koji predstavljaju teme interesovanja kao što su muzika, vijesti i sportovi"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustracija u boji brave unutar kruga"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Mala crno-bijela ilustracija devet tačaka koje oblikuju kvadrat"</string>

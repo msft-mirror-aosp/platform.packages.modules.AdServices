@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Ama-app owavimbile"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Setha kabusha idatha ephakanyiswe yi-app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kuvamile ukuthi ama-app owasebenzisayo akhumbule izinto onentshisekelo kuzo ukuze ziqondanise nomuntu siqu ukuzizwisa kwakho. Ama-app angase futhi agcine ulwazi nge-Android mayelana nezihloko zakho.\n\nNgokwesibonelo, uma usebenzisa i-app emayelana nokuqeqeshwa kwe-marathon, i-app inganquma ukuthi uthanda izicathulo zokugijima. Kamuva, uma usebenzisa i-app ehlukile, leyo app ingakubonisa isikhangiso sezicathulo zokugijima esiphakanyiswe i-app yokuqala.\n\nI-Android isusa ngokuzenzekela idatha ephakanyiswa njalo i-app. I-App oyisebenzisayo futhi ingase ivele ohlwini. Noma ungavimba i-app ukuthi ikuphakamisele izikhangiso.\n\nKuma-app akho, isikhangiso osibonayo singaqondaniswa nomuntu siqu, kuye ngale sethingi, isethingi lezihloko zesikhangiso, amasethingi akho e-ID yokukhangisa, nokuthi i-app oyisebenzisayo iqondanisa nomuntu siqu yini izikhangiso."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Umfanekiso omibalabala wezimpawu ezimele izihloko ozithakaselayo njengomculo, izindaba, nezemidlalo"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Umfanekiso omibalabala wesikhiya esingaphakathi kwendilinga"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Umfanekiso omncane omnyama nomhlophe wamachashazi ayisishiyagalolunye akha isikwele"</string>
