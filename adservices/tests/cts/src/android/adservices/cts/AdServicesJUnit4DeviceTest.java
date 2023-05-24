@@ -16,24 +16,17 @@
 package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
-
-import static org.junit.Assume.assumeTrue;
 
 import android.adservices.AdServicesState;
 import android.adservices.AdServicesVersion;
 
 import androidx.test.runner.AndroidJUnit4;
 
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * CTS test for APIs provided by {@link android.adservices.AdServicesVersion} and other generic
- * features.
+ * CTS test for API provided by AdServicesVersion.
  */
 @RunWith(AndroidJUnit4.class)
 public class AdServicesJUnit4DeviceTest {
@@ -49,16 +42,6 @@ public class AdServicesJUnit4DeviceTest {
     @Test
     public void testAdServicesState() {
         assertThat(AdServicesState.isAdServicesStateEnabled()).isTrue();
-    }
-
-    @Test
-    public void testBinderServiceIsPublished() {
-        assumeTrue("SDK level must be at least T", SdkLevel.isAtLeastT());
-        String cmd = "service check adservices_manager";
-
-        assertWithMessage("output of '%s'", cmd)
-                .that(ShellUtils.runShellCommand(cmd))
-                .doesNotContain("not found");
     }
 }
 

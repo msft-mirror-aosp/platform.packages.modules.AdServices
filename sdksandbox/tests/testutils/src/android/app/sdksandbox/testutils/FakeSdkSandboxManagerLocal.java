@@ -78,7 +78,7 @@ public class FakeSdkSandboxManagerLocal implements SdkSandboxManagerLocal {
     }
 
     @Override
-    public void registerAdServicesManagerService(IBinder iBinder, boolean published) {}
+    public void registerAdServicesManagerService(IBinder iBinder) {}
 
     @Override
     public boolean canRegisterBroadcastReceiver(

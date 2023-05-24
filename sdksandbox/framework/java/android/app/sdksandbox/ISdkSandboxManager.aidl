@@ -50,6 +50,6 @@ interface ISdkSandboxManager {
     void stopSdkSandbox(in String callingPackageName);
     void logLatencyFromSystemServerToApp(in String method, int latency);
 
-    // TODO(b/282239822): Remove this workaround on Android VIC
+    // TODO(b/263119223): Remove this is a workaround for b/262282035.
     IBinder getAdServicesManager();
 }
