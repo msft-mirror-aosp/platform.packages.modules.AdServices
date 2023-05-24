@@ -1170,6 +1170,68 @@ public class AppSearchConsentWorkerTest {
     }
 
     @Test
+    public void isU18AccountTest_trueBit() {
+        isU18AccountTest(true);
+    }
+
+    @Test
+    public void isU18AccountTest_falseBit() {
+        isU18AccountTest(false);
+    }
+
+    private void isU18AccountTest(boolean isU18Account) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isU18Account)
+                    .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isU18Account()).isEqualTo(isU18Account);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setU18AccountTest_trueBit() {
+        setU18AccountTest(true);
+    }
+
+    @Test
+    public void setU18AccountTest_falseBit() {
+        setU18AccountTest(false);
+    }
+
+    private void setU18AccountTest(boolean isU18Account) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(RuntimeException.class, () -> worker.setU18Account(isU18Account));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
     public void isEntryPointEnabledTest_trueBit() {
         isEntryPointEnabledTest(true);
     }

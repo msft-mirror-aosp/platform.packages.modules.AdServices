@@ -464,6 +464,27 @@ public final class ConsentManager {
         }
     }
 
+    @VisibleForTesting static final String IS_U18_ACCOUNT = "IS_U18_ACCOUNT";
+
+    /** Returns whether the isU18Account bit is true. */
+    public boolean isU18Account() {
+        synchronized (this) {
+            Boolean isU18Account = mDatastore.get(IS_U18_ACCOUNT);
+            return isU18Account != null ? isU18Account : false;
+        }
+    }
+
+    /** Set the U18Account bit in system server. */
+    public void setU18Account(boolean isU18Account) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_U18_ACCOUNT, isU18Account);
+            } catch (IOException e) {
+                LogUtil.e(e, "setU18Account operation failed: " + e.getMessage());
+            }
+        }
+    }
+
     @VisibleForTesting static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
 
     /** Returns whether the isEntryPointEnabled bit is true. */
