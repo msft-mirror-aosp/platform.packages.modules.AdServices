@@ -1168,4 +1168,67 @@ public class AppSearchConsentWorkerTest {
                         /* appSearchResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
     }
+
+    @Test
+    public void isAdultAccountTest_trueBit() {
+        isAdultAccountTest(true);
+    }
+
+    @Test
+    public void isAdultAccountTest_falseBit() {
+        isAdultAccountTest(false);
+    }
+
+    private void isAdultAccountTest(boolean isAdultAccount) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isAdultAccount)
+                    .when(() -> AppSearchUxStatesDao.readIsAdultAccount(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isAdultAccount()).isEqualTo(isAdultAccount);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setAdultAccountTest_trueBit() {
+        setAdultAccountTest(true);
+    }
+
+    @Test
+    public void setAdultAccountTest_falseBit() {
+        setAdultAccountTest(false);
+    }
+
+    private void setAdultAccountTest(boolean isAdultAccount) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.setAdultAccount(isAdultAccount));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
 }
