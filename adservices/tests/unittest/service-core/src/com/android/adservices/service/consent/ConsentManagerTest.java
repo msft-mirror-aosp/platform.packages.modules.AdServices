@@ -3613,6 +3613,69 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void isU18AccountTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.isU18Account()).isFalse();
+
+        verify(mMockIAdServicesManager).isU18Account();
+
+        doReturn(true).when(mMockIAdServicesManager).isU18Account();
+        spyConsentManager.setU18Account(true);
+
+        assertThat(spyConsentManager.isU18Account()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isU18Account();
+        verify(mMockIAdServicesManager).setU18Account(anyBoolean());
+    }
+
+    @Test
+    public void isU18AccountTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean isU18Account = spyConsentManager.isU18Account();
+
+        assertThat(isU18Account).isFalse();
+
+        verify(mMockIAdServicesManager).isU18Account();
+
+        doReturn(true).when(mMockIAdServicesManager).isU18Account();
+        spyConsentManager.setU18Account(true);
+
+        assertThat(spyConsentManager.isU18Account()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isU18Account();
+        verify(mMockIAdServicesManager).setU18Account(anyBoolean());
+    }
+
+    @Test
+    public void isU18AccountTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManager).isU18Account();
+        assertThat(spyConsentManager.isU18Account()).isFalse();
+        verify(mAppSearchConsentManager).isU18Account();
+
+        doReturn(true).when(mAppSearchConsentManager).isU18Account();
+        spyConsentManager.setU18Account(true);
+
+        assertThat(spyConsentManager.isU18Account()).isTrue();
+
+        verify(mAppSearchConsentManager, times(2)).isU18Account();
+        verify(mAppSearchConsentManager).setU18Account(anyBoolean());
+    }
+
+    @Test
     public void isEntryPointEnabledTest_SystemServerOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
