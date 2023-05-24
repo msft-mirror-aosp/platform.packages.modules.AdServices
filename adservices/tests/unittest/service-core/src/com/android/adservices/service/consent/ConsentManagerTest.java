@@ -3613,6 +3613,69 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void isEntryPointEnabledTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.isEntryPointEnabled()).isFalse();
+
+        verify(mMockIAdServicesManager).isEntryPointEnabled();
+
+        doReturn(true).when(mMockIAdServicesManager).isEntryPointEnabled();
+        spyConsentManager.setEntryPointEnabled(true);
+
+        assertThat(spyConsentManager.isEntryPointEnabled()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isEntryPointEnabled();
+        verify(mMockIAdServicesManager).setEntryPointEnabled(anyBoolean());
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean isEntryPointEnabled = spyConsentManager.isEntryPointEnabled();
+
+        assertThat(isEntryPointEnabled).isFalse();
+
+        verify(mMockIAdServicesManager).isEntryPointEnabled();
+
+        doReturn(true).when(mMockIAdServicesManager).isEntryPointEnabled();
+        spyConsentManager.setEntryPointEnabled(true);
+
+        assertThat(spyConsentManager.isEntryPointEnabled()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isEntryPointEnabled();
+        verify(mMockIAdServicesManager).setEntryPointEnabled(anyBoolean());
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManager).isEntryPointEnabled();
+        assertThat(spyConsentManager.isEntryPointEnabled()).isFalse();
+        verify(mAppSearchConsentManager).isEntryPointEnabled();
+
+        doReturn(true).when(mAppSearchConsentManager).isEntryPointEnabled();
+        spyConsentManager.setEntryPointEnabled(true);
+
+        assertThat(spyConsentManager.isEntryPointEnabled()).isTrue();
+
+        verify(mAppSearchConsentManager, times(2)).isEntryPointEnabled();
+        verify(mAppSearchConsentManager).setEntryPointEnabled(anyBoolean());
+    }
+
+    @Test
     public void isAdultAccountTest_SystemServerOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
