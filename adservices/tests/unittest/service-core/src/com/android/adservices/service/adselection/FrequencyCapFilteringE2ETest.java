@@ -150,7 +150,7 @@ public class FrequencyCapFilteringE2ETest {
     private static final ImmutableSet<KeyedFrequencyCap> CLICK_FILTERS =
             ImmutableSet.of(
                     new KeyedFrequencyCap.Builder(
-                                    KeyedFrequencyCapFixture.KEY1, 0, Duration.ofSeconds(1))
+                                    KeyedFrequencyCapFixture.KEY1, 1, Duration.ofSeconds(1))
                             .build());
 
     private static final DBAdData AD_WITH_FILTER =

@@ -2070,7 +2070,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setKeyedFrequencyCapsForImpressionEvents(
                                 ImmutableSet.of(
                                         new KeyedFrequencyCap.Builder(
-                                                        keyToFilter, 0, Duration.ofSeconds(10))
+                                                        keyToFilter, 1, Duration.ofSeconds(10))
                                                 .build()))
                         .build();
 
