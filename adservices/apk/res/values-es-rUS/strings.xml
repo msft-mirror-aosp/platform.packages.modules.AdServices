@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps que bloqueaste"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Restablecer los datos sugeridos por apps"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Con frecuencia, las apps que usas recuerdan el contenido que te interesa para personalizar tu experiencia. Las apps también pueden usar Android para almacenar información sobre tus temas.\n\nPor ejemplo, si usas una app sobre entrenamiento para maratones, la app podría inferir que te interesan las zapatillas deportivas. Más adelante, si usas una app diferente, esta podría mostrarte un anuncio de zapatillas deportivas sugerido por la primera app.\n\nAndroid borra los datos sugeridos por apps regularmente de forma automática. Las apps que vuelvas a usar podrían volver a aparecer en la lista. Si quieres que esto no suceda, bloquea una app para que deje de sugerirte anuncios.\n\nEs posible que en tus apps se muestren anuncios personalizados dependiendo de los parámetros de configuración de anuncios personalizados, de tu ID de publicidad y de los temas de anuncios, y de si la app que usas personaliza anuncios."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Ilustración colorida de símbolos que representan temas de interés como música, noticias y deportes"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Ilustración colorida de una cerradura dentro de un círculo"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Ilustración pequeña en blanco y negro de nueve puntos que forman un cuadrado"</string>

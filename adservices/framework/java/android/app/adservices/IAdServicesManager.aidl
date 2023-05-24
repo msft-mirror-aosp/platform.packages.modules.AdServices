@@ -193,4 +193,27 @@ interface IAdServicesManager {
     boolean setConsentForAppIfNew(in String packageName,in int packageUid,in boolean isConsentRevoked);
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled();
+
+    /** Saves the isAdIdEnabled bit. */
+    void setAdIdEnabled(boolean isAdIdEnabled);
+
+    /** Returns whether the isU18Account bit is true. */
+    boolean isU18Account();
+
+    /** Saves the isU18Account bit. */
+    void setU18Account(boolean isU18Account);
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled();
+
+    /** Saves the isEntryPointEnabled bit. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled);
+
+    /** Returns whether the isAdultAccount bit is true. */
+    boolean isAdultAccount();
+
+    void setAdultAccount(boolean isAdultAccount);
 }

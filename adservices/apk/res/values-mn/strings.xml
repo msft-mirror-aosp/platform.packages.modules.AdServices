@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Таны блоклосон аппууд"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Аппын санал болгосон өгөгдлийг шинэчлэх"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Таны хэрэглээг хувийн болгохын тулд таны ашигладаг аппууд таны сонирхдог зүйлсийг санадаг байх нь хэвийн зүйл юм. Мөн аппууд таны сэдвүүдийн тухай мэдээллийг Android дээр хадгалдаг.\n\nЖишээ нь, хэрэв та марафон гүйлтийн сургалтын талаарх апп ашигладаг бол уг апп таныг гүйлтийн гутал сонирхож байна гэж үзэж болох юм. Дараа нь таныг өөр апп ашиглах үед тус апп танд эхний аппаас санал болгосны дагуу гүйлтийн гутлын зар үзүүлэх боломжтой.\n\nAndroid нь аппын санал болгосон өгөгдлийг тогтмол автоматаар устгадаг. Таны дахин ашигласан апп жагсаалтад дахин гарч ирж магадгүй. Эсвэл та апп танд зар санал болгохыг блоклож болно.\n\nТаны аппуудад таны харж буй зарыг хувийн болгох эсэх нь энэ тохиргоо, зарын сэдвийн тохиргоо, таны зар сурталчилгааны ID тохиргоо болон таны ашиглаж буй апп нь зарыг хувийн болгодог зэргээс хамаарна."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Хөгжим, мэдээ болон спорт зэрэг сонирхлын сэдвүүдийг төлөөлөх тэмдгийн өнгөлөг зурагт тайлбар"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Тойрог доторх түгжээний өнгөлөг зурагт тайлбар"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Дөрвөлжин дүрс бүрдүүлж буй есөн цэгийн жижиг хар, цагаан зурагт тайлбар"</string>

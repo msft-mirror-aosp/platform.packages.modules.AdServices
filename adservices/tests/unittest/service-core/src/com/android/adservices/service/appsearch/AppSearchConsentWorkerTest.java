@@ -1168,4 +1168,256 @@ public class AppSearchConsentWorkerTest {
                         /* appSearchResult= */ mockResult);
         when(mockResponse.getMigrationFailures()).thenReturn(List.of(failure));
     }
+
+    @Test
+    public void isAdIdEnabledTest_trueBit() {
+        isAdIdEnabledTest(true);
+    }
+
+    @Test
+    public void isAdIdEnabledTest_falseBit() {
+        isAdIdEnabledTest(false);
+    }
+
+    private void isAdIdEnabledTest(boolean isAdIdEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isAdIdEnabled)
+                    .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isAdIdEnabled()).isEqualTo(isAdIdEnabled);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setAdIdEnabledTest_trueBit() {
+        setAdIdEnabledTest(true);
+    }
+
+    @Test
+    public void setAdIdEnabledTest_falseBit() {
+        setAdIdEnabledTest(false);
+    }
+
+    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.setAdIdEnabled(isAdIdEnabled));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void isU18AccountTest_trueBit() {
+        isU18AccountTest(true);
+    }
+
+    @Test
+    public void isU18AccountTest_falseBit() {
+        isU18AccountTest(false);
+    }
+
+    private void isU18AccountTest(boolean isU18Account) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isU18Account)
+                    .when(() -> AppSearchUxStatesDao.readIsU18Account(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isU18Account()).isEqualTo(isU18Account);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setU18AccountTest_trueBit() {
+        setU18AccountTest(true);
+    }
+
+    @Test
+    public void setU18AccountTest_falseBit() {
+        setU18AccountTest(false);
+    }
+
+    private void setU18AccountTest(boolean isU18Account) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(RuntimeException.class, () -> worker.setU18Account(isU18Account));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_trueBit() {
+        isEntryPointEnabledTest(true);
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_falseBit() {
+        isEntryPointEnabledTest(false);
+    }
+
+    private void isEntryPointEnabledTest(boolean isEntryPointEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isEntryPointEnabled)
+                    .when(() -> AppSearchUxStatesDao.readIsEntryPointEnabled(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isEntryPointEnabled()).isEqualTo(isEntryPointEnabled);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setEntryPointEnabledTest_trueBit() {
+        setEntryPointEnabledTest(true);
+    }
+
+    @Test
+    public void setEntryPointEnabledTest_falseBit() {
+        setEntryPointEnabledTest(false);
+    }
+
+    private void setEntryPointEnabledTest(boolean isEntryPointEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> worker.setEntryPointEnabled(isEntryPointEnabled));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void isAdultAccountTest_trueBit() {
+        isAdultAccountTest(true);
+    }
+
+    @Test
+    public void isAdultAccountTest_falseBit() {
+        isAdultAccountTest(false);
+    }
+
+    private void isAdultAccountTest(boolean isAdultAccount) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isAdultAccount)
+                    .when(() -> AppSearchUxStatesDao.readIsAdultAccount(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isAdultAccount()).isEqualTo(isAdultAccount);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setAdultAccountTest_trueBit() {
+        setAdultAccountTest(true);
+    }
+
+    @Test
+    public void setAdultAccountTest_falseBit() {
+        setAdultAccountTest(false);
+    }
+
+    private void setAdultAccountTest(boolean isAdultAccount) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.setAdultAccount(isAdultAccount));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
 }

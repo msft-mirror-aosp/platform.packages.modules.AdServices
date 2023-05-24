@@ -78,6 +78,7 @@ class AppSearchConsentWorker {
     private static final String NOTIFICATION_DATABASE_NAME = "adservices_notification";
     private static final String INTERACTIONS_DATABASE_NAME = "adservices_interactions";
     private static final String TOPICS_DATABASE_NAME = "adservices-topics";
+    private static final String UX_STATES_DATABASE_NAME = "adservices-ux-states";
 
     // Required for allowing AdServices apk access to read consent written by ExtServices module.
     private String mAdservicesPackageName;
@@ -88,6 +89,7 @@ class AppSearchConsentWorker {
     private ListenableFuture<AppSearchSession> mNotificationSearchSession;
     private ListenableFuture<AppSearchSession> mInteractionsSearchSession;
     private ListenableFuture<AppSearchSession> mTopicsSearchSession;
+    private ListenableFuture<AppSearchSession> mUxStatesSearchSession;
 
     // When reading across APKs, a GlobalSearchSession is needed, hence we use it when reading.
     private ListenableFuture<GlobalSearchSession> mGlobalSearchSession;
@@ -126,6 +128,10 @@ class AppSearchConsentWorker {
         mTopicsSearchSession =
                 PlatformStorage.createSearchSessionAsync(
                         new PlatformStorage.SearchContext.Builder(mContext, TOPICS_DATABASE_NAME)
+                                .build());
+        mUxStatesSearchSession =
+                PlatformStorage.createSearchSessionAsync(
+                        new PlatformStorage.SearchContext.Builder(mContext, UX_STATES_DATABASE_NAME)
                                 .build());
 
         // We use global session for reads since we may perform read on T+ AdServices package to
@@ -589,5 +595,162 @@ class AppSearchConsentWorker {
         }
         // If we don't know the AdServices package name, we can't do a write.
         throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+    }
+
+    /** Returns whether isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsAdIdEnabled(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isAdIdEnabled bit in app search. */
+    void setAdIdEnabled(boolean isAdIdEnabled) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE,
+                                false,
+                                false,
+                                false,
+                                false);
+            }
+            dao.setAdIdEnabled(isAdIdEnabled);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isAdIdEnabled bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isAdIdEnabled to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isU18Account bit is true. */
+    boolean isU18Account() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsU18Account(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isU18Account bit in app search. */
+    void setU18Account(boolean isU18Account) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE,
+                                false,
+                                false,
+                                false,
+                                false);
+            }
+            dao.setU18Account(isU18Account);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isU18Account bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isU18Account to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsEntryPointEnabled(
+                    mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isEntryPointEnabled bit in app search. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE,
+                                false,
+                                false,
+                                false,
+                                false);
+            }
+            dao.setEntryPointEnabled(isEntryPointEnabled);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isEntryPointEnabled bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isEntryPointEnabled to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether isAdultAccount bit is true. */
+    boolean isAdultAccount() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsAdultAccount(mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the isAdultAccount bit in app search. */
+    void setAdultAccount(boolean isAdultAccount) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE,
+                                false,
+                                false,
+                                false,
+                                false);
+            }
+            dao.setAdultAccount(isAdultAccount);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the isAdultAccount bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the isAdultAccount to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
     }
 }

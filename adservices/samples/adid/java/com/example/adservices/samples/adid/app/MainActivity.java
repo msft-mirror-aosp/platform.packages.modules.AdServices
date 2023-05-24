@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         // AdIdManager can not be called on R until OutcomeReceiver dependencies are removed.
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
-            setAdIdText("Service is not available.");
+            setAdIdText("Device not supported.");
             return;
         }
 

@@ -1046,4 +1046,52 @@ public class AdServicesManagerServiceTest {
         when(mMockPackageManager.getInstalledPackages(any(PackageManager.PackageInfoFlags.class)))
                 .thenReturn(packageInfoList);
     }
+
+    @Test
+    public void isAdIdEnabledTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdIdEnabled()).isFalse();
+        service.setAdIdEnabled(true);
+        assertThat(service.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
+    public void isU18AccountTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isU18Account()).isFalse();
+        service.setU18Account(true);
+        assertThat(service.isU18Account()).isTrue();
+    }
+
+    @Test
+    public void isEntryPointEnabledTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isEntryPointEnabled()).isFalse();
+        service.setEntryPointEnabled(true);
+        assertThat(service.isEntryPointEnabled()).isTrue();
+    }
+
+    @Test
+    public void isAdultAccountTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.isAdultAccount()).isFalse();
+        service.setAdultAccount(true);
+        assertThat(service.isAdultAccount()).isTrue();
+    }
 }

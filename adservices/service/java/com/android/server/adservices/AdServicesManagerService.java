@@ -151,11 +151,19 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         /** @hide */
         public Lifecycle(Context context) {
-            super(context);
-            TopicsDao topicsDao = TopicsDao.getInstance(context);
-            mService =
+            this(
+                    context,
                     new AdServicesManagerService(
-                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
+                            context,
+                            new UserInstanceManager(
+                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+        }
+
+        /** @hide */
+        @VisibleForTesting
+        public Lifecycle(Context context, AdServicesManagerService service) {
+            super(context);
+            mService = service;
             LogUtil.d("AdServicesManagerService constructed!");
         }
 
@@ -1166,5 +1174,145 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext.enforceCallingPermission(
                 AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
                 ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdIdEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdIdEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdIdEnabled(isAdIdEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdIdEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isU18Account() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isU18Account();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isU18Account().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18Account(boolean isU18Account) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18Account(isU18Account);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18Account().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isEntryPointEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isEntryPointEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isEntryPointEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setEntryPointEnabled(isEntryPointEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setEntryPointEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdultAccount() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdultAccount();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdultAccount().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdultAccount(boolean isAdultAccount) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdultAccount(isAdultAccount);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdultAccount().");
+        }
     }
 }

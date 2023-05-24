@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式往往會記住你感興趣的主題，以便提供個人化的使用體驗。此外，應用程式也可將主題相關資訊儲存在 Android。\n\n舉例來說，如果你使用有關馬拉松訓練的應用程式，該應用程式可能會判斷你對跑鞋感興趣。假如你之後使用其他應用程式，當中可能會顯示馬拉松訓練應用程式建議的跑鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。你日後再度使用的應用程式可能會重新顯示在清單中。你也可以透過封鎖的方式禁止應用程式建議廣告。\n\n你可能會在應用程式中看到個人化廣告，這類廣告的顯示依據如下：這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"這張彩色插圖中的圓圈內有一個鎖頭"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"這張小型黑白插圖中有由九個圓點組成的正方形"</string>

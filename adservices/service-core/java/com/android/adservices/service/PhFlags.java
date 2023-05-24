@@ -33,7 +33,9 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
@@ -3351,5 +3353,21 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
                 /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
+    }
+
+    @Override
+    public Map<String, Boolean> getUxFlags() {
+        Map<String, Boolean> uxMap = new HashMap<>();
+        uxMap.put(KEY_UI_DIALOGS_FEATURE_ENABLED, getUIDialogsFeatureEnabled());
+        uxMap.put(KEY_UI_DIALOG_FRAGMENT_ENABLED, getUiDialogFragmentEnabled());
+        uxMap.put(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, isEeaDeviceFeatureEnabled());
+        uxMap.put(KEY_IS_EEA_DEVICE, isEeaDevice());
+        uxMap.put(KEY_RECORD_MANUAL_INTERACTION_ENABLED, getRecordManualInteractionEnabled());
+        uxMap.put(KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
+        uxMap.put(KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
+        uxMap.put(KEY_UI_FEATURE_TYPE_LOGGING_ENABLED, isUiFeatureTypeLoggingEnabled());
+        uxMap.put(KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
+        uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
+        return uxMap;
     }
 }
