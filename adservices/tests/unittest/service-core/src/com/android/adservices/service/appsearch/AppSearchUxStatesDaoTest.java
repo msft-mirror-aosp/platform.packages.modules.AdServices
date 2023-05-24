@@ -212,4 +212,41 @@ public class AppSearchUxStatesDaoTest {
                 AppSearchUxStatesDao.readIsU18Account(mockSearchSession, mockExecutor, ID2);
         assertThat(result2).isTrue();
     }
+
+    @Test
+    public void isAdIdEnabledTest_nullDao() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+        boolean result =
+                AppSearchUxStatesDao.readIsAdIdEnabled(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    public void isAdIdEnabledTest_trueBit() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+
+        String query = "userId:" + ID1;
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao.isAdIdEnabled()).thenReturn(false);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
+
+        boolean result =
+                AppSearchUxStatesDao.readIsAdIdEnabled(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+
+        // Confirm that the right value is returned even when it is true.
+        String query2 = "userId:" + ID2;
+        AppSearchUxStatesDao dao2 = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao2.isAdIdEnabled()).thenReturn(true);
+        ExtendedMockito.doReturn(dao2)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query2)));
+        boolean result2 =
+                AppSearchUxStatesDao.readIsAdIdEnabled(mockSearchSession, mockExecutor, ID2);
+        assertThat(result2).isTrue();
+    }
 }
