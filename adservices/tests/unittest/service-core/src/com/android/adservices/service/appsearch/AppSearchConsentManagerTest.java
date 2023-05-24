@@ -555,6 +555,30 @@ public class AppSearchConsentManagerTest {
     }
 
     @Test
+    public void setU18AccountTest_trueBit() {
+        mAppSearchConsentManager.setU18Account(true);
+        verify(mAppSearchConsentWorker).setU18Account(true);
+    }
+
+    @Test
+    public void setU18AccountTest_falseBit() {
+        mAppSearchConsentManager.setU18Account(false);
+        verify(mAppSearchConsentWorker).setU18Account(false);
+    }
+
+    private void setU18AccountTest(boolean isU18Account) {
+        mAppSearchConsentManager.setU18Account(isU18Account);
+        verify(mAppSearchConsentWorker).setU18Account(isU18Account);
+    }
+
+    @Test
+    public void isU18AccountTest_defaultFalseBit() {
+        when(mAppSearchConsentWorker.isU18Account()).thenReturn(false);
+        assertThat(mAppSearchConsentManager.isU18Account()).isFalse();
+        verify(mAppSearchConsentWorker).isU18Account();
+    }
+
+    @Test
     public void setEntryPointEnabledTest_trueBit() {
         mAppSearchConsentManager.setEntryPointEnabled(true);
         verify(mAppSearchConsentWorker).setEntryPointEnabled(true);
