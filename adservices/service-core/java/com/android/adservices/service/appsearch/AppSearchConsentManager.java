@@ -507,6 +507,16 @@ public class AppSearchConsentManager {
                 .collect(Collectors.toSet());
     }
 
+    /** Save the isEntryPointEnabled bit. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        mAppSearchConsentWorker.setEntryPointEnabled(isEntryPointEnabled);
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public Boolean isEntryPointEnabled() {
+        return mAppSearchConsentWorker.isEntryPointEnabled();
+    }
+
     /** Save the isAdultAccount bit. */
     public void setAdultAccount(boolean isAdultAccount) {
         mAppSearchConsentWorker.setAdultAccount(isAdultAccount);
