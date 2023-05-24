@@ -191,11 +191,12 @@ public interface SdkSandboxManagerLocal {
      */
     boolean isInstrumentationRunning(@NonNull String clientAppPackageName, int clientAppUid);
 
+    // TODO(b/282239822): Remove this workaround on Android VIC
     /**
      * Register the AdServicesManager System Service
      *
      * @param iBinder The AdServicesManagerService Binder.
      * @hide
      */
-    void registerAdServicesManagerService(IBinder iBinder);
+    void registerAdServicesManagerService(IBinder iBinder, boolean published);
 }
