@@ -555,6 +555,30 @@ public class AppSearchConsentManagerTest {
     }
 
     @Test
+    public void setEntryPointEnabledTest_trueBit() {
+        mAppSearchConsentManager.setEntryPointEnabled(true);
+        verify(mAppSearchConsentWorker).setEntryPointEnabled(true);
+    }
+
+    @Test
+    public void setEntryPointEnabledTest_falseBit() {
+        mAppSearchConsentManager.setEntryPointEnabled(false);
+        verify(mAppSearchConsentWorker).setEntryPointEnabled(false);
+    }
+
+    private void setEntryPointEnabledTest(boolean isEntryPointEnabled) {
+        mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled);
+        verify(mAppSearchConsentWorker).setEntryPointEnabled(isEntryPointEnabled);
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_defaultFalseBit() {
+        when(mAppSearchConsentWorker.isEntryPointEnabled()).thenReturn(false);
+        assertThat(mAppSearchConsentManager.isEntryPointEnabled()).isFalse();
+        verify(mAppSearchConsentWorker).isEntryPointEnabled();
+    }
+
+    @Test
     public void setAdultAccountTest_trueBit() {
         mAppSearchConsentManager.setAdultAccount(true);
         verify(mAppSearchConsentWorker).setAdultAccount(true);

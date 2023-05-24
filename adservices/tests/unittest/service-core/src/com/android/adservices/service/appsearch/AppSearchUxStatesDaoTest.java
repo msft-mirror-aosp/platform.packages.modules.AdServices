@@ -63,7 +63,7 @@ public class AppSearchUxStatesDaoTest {
     @Test
     public void testToString() {
         AppSearchUxStatesDao dao =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, false, false, false);
+                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, false, false, false, false);
         assertThat(dao.toString())
                 .isEqualTo(
                         "id="
@@ -72,6 +72,7 @@ public class AppSearchUxStatesDaoTest {
                                 + ID2
                                 + "; namespace="
                                 + NAMESPACE
+                                + "; isEntryPointEnabled=false"
                                 + "; isU18Account=false"
                                 + "; isAdultAccount=false"
                                 + "; isAdIdEnabled=false");
@@ -80,11 +81,11 @@ public class AppSearchUxStatesDaoTest {
     @Test
     public void testEquals() {
         AppSearchUxStatesDao dao1 =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false);
+                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false, false);
         AppSearchUxStatesDao dao2 =
-                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false);
+                new AppSearchUxStatesDao(ID1, ID2, NAMESPACE, true, false, false, false);
         AppSearchUxStatesDao dao3 =
-                new AppSearchUxStatesDao(ID1, "foo", NAMESPACE, true, false, false);
+                new AppSearchUxStatesDao(ID1, "foo", NAMESPACE, true, false, false, false);
         assertThat(dao1.equals(dao2)).isTrue();
         assertThat(dao1.equals(dao3)).isFalse();
         assertThat(dao2.equals(dao3)).isFalse();
@@ -93,12 +94,49 @@ public class AppSearchUxStatesDaoTest {
     @Test
     public void testGetQuery() {
         String expected = "userId:" + ID1;
-        assertThat(AppSearchNotificationDao.getQuery(ID1)).isEqualTo(expected);
+        assertThat(AppSearchUxStatesDao.getQuery(ID1)).isEqualTo(expected);
     }
 
     @Test
     public void testGetRowId() {
-        assertThat(AppSearchNotificationDao.getRowId(ID1)).isEqualTo(ID1);
+        assertThat(AppSearchUxStatesDao.getRowId(ID1)).isEqualTo(ID1);
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_nullDao() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+        ExtendedMockito.doReturn(null)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), any()));
+        boolean result =
+                AppSearchUxStatesDao.readIsEntryPointEnabled(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_trueBit() {
+        ListenableFuture mockSearchSession = Mockito.mock(ListenableFuture.class);
+        Executor mockExecutor = Mockito.mock(Executor.class);
+
+        String query = "userId:" + ID1;
+        AppSearchUxStatesDao dao = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao.isEntryPointEnabled()).thenReturn(false);
+        ExtendedMockito.doReturn(dao)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query)));
+
+        boolean result =
+                AppSearchUxStatesDao.readIsEntryPointEnabled(mockSearchSession, mockExecutor, ID1);
+        assertThat(result).isFalse();
+
+        // Confirm that the right value is returned even when it is true.
+        String query2 = "userId:" + ID2;
+        AppSearchUxStatesDao dao2 = Mockito.mock(AppSearchUxStatesDao.class);
+        Mockito.when(dao2.isEntryPointEnabled()).thenReturn(true);
+        ExtendedMockito.doReturn(dao2)
+                .when(() -> AppSearchDao.readConsentData(any(), any(), any(), any(), eq(query2)));
+        boolean result2 =
+                AppSearchUxStatesDao.readIsEntryPointEnabled(mockSearchSession, mockExecutor, ID2);
+        assertThat(result2).isTrue();
     }
 
     @Test

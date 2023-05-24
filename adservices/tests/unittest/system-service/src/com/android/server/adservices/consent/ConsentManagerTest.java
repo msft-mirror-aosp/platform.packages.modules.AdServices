@@ -417,6 +417,17 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void isEntryPointEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isEntryPointEnabled()).isFalse();
+        consentManager.setEntryPointEnabled(true);
+
+        assertThat(consentManager.isEntryPointEnabled()).isTrue();
+    }
+
+    @Test
     public void isAdultAccountTest() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);

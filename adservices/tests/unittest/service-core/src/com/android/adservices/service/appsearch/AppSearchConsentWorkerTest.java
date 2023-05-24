@@ -1170,6 +1170,70 @@ public class AppSearchConsentWorkerTest {
     }
 
     @Test
+    public void isEntryPointEnabledTest_trueBit() {
+        isEntryPointEnabledTest(true);
+    }
+
+    @Test
+    public void isEntryPointEnabledTest_falseBit() {
+        isEntryPointEnabledTest(false);
+    }
+
+    private void isEntryPointEnabledTest(boolean isEntryPointEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isEntryPointEnabled)
+                    .when(() -> AppSearchUxStatesDao.readIsEntryPointEnabled(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isEntryPointEnabled()).isEqualTo(isEntryPointEnabled);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setEntryPointEnabledTest_trueBit() {
+        setEntryPointEnabledTest(true);
+    }
+
+    @Test
+    public void setEntryPointEnabledTest_falseBit() {
+        setEntryPointEnabledTest(false);
+    }
+
+    private void setEntryPointEnabledTest(boolean isEntryPointEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> worker.setEntryPointEnabled(isEntryPointEnabled));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
     public void isAdultAccountTest_trueBit() {
         isAdultAccountTest(true);
     }
