@@ -94,4 +94,8 @@ public interface AdServicesLogger {
 
     /** Logs measurement wipeout stats. */
     void logMeasurementWipeoutStats(MeasurementWipeoutStats measurementWipeoutStats);
+
+    /** Logs measurement delayed source registration stats. */
+    void logMeasurementDelayedSourceRegistrationStats(
+            MeasurementDelayedSourceRegistrationStats measurementDelayedSourceRegistrationStats);
 }
