@@ -496,6 +496,26 @@ public final class AdServicesManager {
         }
     }
 
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isEntryPointEnabled() {
+        try {
+            return mService.isEntryPointEnabled();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isEntryPointEnabled bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        try {
+            mService.setEntryPointEnabled(isEntryPointEnabled);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /** Returns whether the isAdultAccount bit is true. */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public boolean isAdultAccount() {

@@ -194,10 +194,14 @@ interface IAdServicesManager {
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
 
-/** Returns whether the isAdultAccount bit is true. */
-boolean isAdultAccount();
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled();
 
-/** Saves the isAdultAccount bit. */
-void setAdultAccount(boolean isAdultAccount);
+    /** Saves the isEntryPointEnabled bit. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled);
 
+    /** Returns whether the isAdultAccount bit is true. */
+    boolean isAdultAccount();
+
+    void setAdultAccount(boolean isAdultAccount);
 }

@@ -464,6 +464,27 @@ public final class ConsentManager {
         }
     }
 
+    @VisibleForTesting static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public boolean isEntryPointEnabled() {
+        synchronized (this) {
+            Boolean isEntryPointEnabled = mDatastore.get(IS_ENTRY_POINT_ENABLED);
+            return isEntryPointEnabled != null ? isEntryPointEnabled : false;
+        }
+    }
+
+    /** Set the EntryPointEnabled bit in system server. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setEntryPointEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
     @VisibleForTesting static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
 
     /** Returns whether the isAdultAccount bit is true. */
