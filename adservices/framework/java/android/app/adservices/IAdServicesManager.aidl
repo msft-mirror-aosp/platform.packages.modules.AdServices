@@ -194,6 +194,12 @@ interface IAdServicesManager {
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
 
+    /** Returns whether the isU18Account bit is true. */
+    boolean isU18Account();
+
+    /** Saves the isU18Account bit. */
+    void setU18Account(boolean isU18Account);
+
     /** Returns whether the isEntryPointEnabled bit is true. */
     boolean isEntryPointEnabled();
 
