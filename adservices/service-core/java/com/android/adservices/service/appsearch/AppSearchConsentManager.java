@@ -506,4 +506,14 @@ public class AppSearchConsentManager {
                 .map(applicationInfo -> applicationInfo.packageName)
                 .collect(Collectors.toSet());
     }
+
+    /** Save the isAdultAccount bit. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        mAppSearchConsentWorker.setAdultAccount(isAdultAccount);
+    }
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public Boolean isAdultAccount() {
+        return mAppSearchConsentWorker.isAdultAccount();
+    }
 }
