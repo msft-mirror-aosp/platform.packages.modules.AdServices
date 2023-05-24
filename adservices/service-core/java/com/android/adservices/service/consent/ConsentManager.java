@@ -2216,6 +2216,63 @@ public class ConsentManager {
                                 .build());
     }
 
+    /** Returns whether the isAdIdEnabled bit is true based on consent_source_of_truth. */
+    public Boolean isAdIdEnabled() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isAdIdEnabled();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isAdIdEnabled();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isAdIdEnabled bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the AdIdEnabled bit to storage based on consent_source_of_truth. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setAdIdEnabled(isAdIdEnabled);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
+                        mAdServicesManager.setAdIdEnabled(isAdIdEnabled);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisAdIdEnabled operation failed. " + e.getMessage());
+            }
+        }
+    }
+
     /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
     public Boolean isU18Account() {
         synchronized (LOCK) {

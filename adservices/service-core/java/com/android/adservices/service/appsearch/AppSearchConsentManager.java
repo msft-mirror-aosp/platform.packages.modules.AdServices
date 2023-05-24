@@ -507,6 +507,16 @@ public class AppSearchConsentManager {
                 .collect(Collectors.toSet());
     }
 
+    /** Save the isAdIdEnabled bit. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        mAppSearchConsentWorker.setAdIdEnabled(isAdIdEnabled);
+    }
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public Boolean isAdIdEnabled() {
+        return mAppSearchConsentWorker.isAdIdEnabled();
+    }
+
     /** Save the isU18Account bit. */
     public void setU18Account(boolean isU18Account) {
         mAppSearchConsentWorker.setU18Account(isU18Account);

@@ -555,6 +555,30 @@ public class AppSearchConsentManagerTest {
     }
 
     @Test
+    public void setAdIdEnabledTest_trueBit() {
+        mAppSearchConsentManager.setAdIdEnabled(true);
+        verify(mAppSearchConsentWorker).setAdIdEnabled(true);
+    }
+
+    @Test
+    public void setAdIdEnabledTest_falseBit() {
+        mAppSearchConsentManager.setAdIdEnabled(false);
+        verify(mAppSearchConsentWorker).setAdIdEnabled(false);
+    }
+
+    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
+        mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled);
+        verify(mAppSearchConsentWorker).setAdIdEnabled(isAdIdEnabled);
+    }
+
+    @Test
+    public void isAdIdEnabledTest_defaultFalseBit() {
+        when(mAppSearchConsentWorker.isAdIdEnabled()).thenReturn(false);
+        assertThat(mAppSearchConsentManager.isAdIdEnabled()).isFalse();
+        verify(mAppSearchConsentWorker).isAdIdEnabled();
+    }
+
+    @Test
     public void setU18AccountTest_trueBit() {
         mAppSearchConsentManager.setU18Account(true);
         verify(mAppSearchConsentWorker).setU18Account(true);
