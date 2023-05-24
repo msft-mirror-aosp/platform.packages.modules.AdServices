@@ -507,6 +507,16 @@ public class AppSearchConsentManager {
                 .collect(Collectors.toSet());
     }
 
+    /** Save the isU18Account bit. */
+    public void setU18Account(boolean isU18Account) {
+        mAppSearchConsentWorker.setU18Account(isU18Account);
+    }
+
+    /** Returns whether the isU18Account bit is true. */
+    public Boolean isU18Account() {
+        return mAppSearchConsentWorker.isU18Account();
+    }
+
     /** Save the isEntryPointEnabled bit. */
     public void setEntryPointEnabled(boolean isEntryPointEnabled) {
         mAppSearchConsentWorker.setEntryPointEnabled(isEntryPointEnabled);
