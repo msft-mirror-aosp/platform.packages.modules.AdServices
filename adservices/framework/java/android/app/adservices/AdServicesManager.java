@@ -493,6 +493,26 @@ public final class AdServicesManager {
         }
     }
 
+    /** Returns whether the isAdIdEnabled bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        try {
+            return mService.isAdIdEnabled();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the isAdIdEnabled bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        try {
+            mService.setAdIdEnabled(isAdIdEnabled);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /** Returns whether the isU18Account bit is true. */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public boolean isU18Account() {
