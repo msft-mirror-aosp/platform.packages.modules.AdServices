@@ -1170,6 +1170,69 @@ public class AppSearchConsentWorkerTest {
     }
 
     @Test
+    public void isAdIdEnabledTest_trueBit() {
+        isAdIdEnabledTest(true);
+    }
+
+    @Test
+    public void isAdIdEnabledTest_falseBit() {
+        isAdIdEnabledTest(false);
+    }
+
+    private void isAdIdEnabledTest(boolean isAdIdEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(isAdIdEnabled)
+                    .when(() -> AppSearchUxStatesDao.readIsAdIdEnabled(any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.isAdIdEnabled()).isEqualTo(isAdIdEnabled);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setAdIdEnabledTest_trueBit() {
+        setAdIdEnabledTest(true);
+    }
+
+    @Test
+    public void setAdIdEnabledTest_falseBit() {
+        setAdIdEnabledTest(false);
+    }
+
+    private void setAdIdEnabledTest(boolean isAdIdEnabled) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class, () -> worker.setAdIdEnabled(isAdIdEnabled));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
     public void isU18AccountTest_trueBit() {
         isU18AccountTest(true);
     }

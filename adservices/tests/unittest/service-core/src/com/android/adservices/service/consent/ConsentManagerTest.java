@@ -3613,6 +3613,69 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void isAdIdEnabledTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.isAdIdEnabled()).isFalse();
+
+        verify(mMockIAdServicesManager).isAdIdEnabled();
+
+        doReturn(true).when(mMockIAdServicesManager).isAdIdEnabled();
+        spyConsentManager.setAdIdEnabled(true);
+
+        assertThat(spyConsentManager.isAdIdEnabled()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isAdIdEnabled();
+        verify(mMockIAdServicesManager).setAdIdEnabled(anyBoolean());
+    }
+
+    @Test
+    public void isAdIdEnabledTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean isAdIdEnabled = spyConsentManager.isAdIdEnabled();
+
+        assertThat(isAdIdEnabled).isFalse();
+
+        verify(mMockIAdServicesManager).isAdIdEnabled();
+
+        doReturn(true).when(mMockIAdServicesManager).isAdIdEnabled();
+        spyConsentManager.setAdIdEnabled(true);
+
+        assertThat(spyConsentManager.isAdIdEnabled()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).isAdIdEnabled();
+        verify(mMockIAdServicesManager).setAdIdEnabled(anyBoolean());
+    }
+
+    @Test
+    public void isAdIdEnabledTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManager).isAdIdEnabled();
+        assertThat(spyConsentManager.isAdIdEnabled()).isFalse();
+        verify(mAppSearchConsentManager).isAdIdEnabled();
+
+        doReturn(true).when(mAppSearchConsentManager).isAdIdEnabled();
+        spyConsentManager.setAdIdEnabled(true);
+
+        assertThat(spyConsentManager.isAdIdEnabled()).isTrue();
+
+        verify(mAppSearchConsentManager, times(2)).isAdIdEnabled();
+        verify(mAppSearchConsentManager).setAdIdEnabled(anyBoolean());
+    }
+
+    @Test
     public void isU18AccountTest_SystemServerOnly() throws RemoteException {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =

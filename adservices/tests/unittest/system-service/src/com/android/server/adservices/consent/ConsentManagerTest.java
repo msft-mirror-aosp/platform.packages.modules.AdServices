@@ -417,6 +417,17 @@ public class ConsentManagerTest {
     }
 
     @Test
+    public void isAdIdEnabledTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.isAdIdEnabled()).isFalse();
+        consentManager.setAdIdEnabled(true);
+
+        assertThat(consentManager.isAdIdEnabled()).isTrue();
+    }
+
+    @Test
     public void isU18AccountTest() throws IOException {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
