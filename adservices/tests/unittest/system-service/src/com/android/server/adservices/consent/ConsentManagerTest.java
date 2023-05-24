@@ -459,4 +459,15 @@ public class ConsentManagerTest {
 
         assertThat(consentManager.isAdultAccount()).isTrue();
     }
+
+    @Test
+    public void wasU18NotificationDisplayedTest() throws IOException {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        assertThat(consentManager.wasU18NotificationDisplayed()).isFalse();
+        consentManager.setU18NotificationDisplayed(true);
+
+        assertThat(consentManager.wasU18NotificationDisplayed()).isTrue();
+    }
 }

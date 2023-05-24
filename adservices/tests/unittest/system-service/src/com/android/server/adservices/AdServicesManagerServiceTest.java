@@ -1094,4 +1094,16 @@ public class AdServicesManagerServiceTest {
         service.setAdultAccount(true);
         assertThat(service.isAdultAccount()).isTrue();
     }
+
+    @Test
+    public void wasU18NotificationDisplayedTest() throws IOException {
+        AdServicesManagerService service =
+                spy(new AdServicesManagerService(mSpyContext, mUserInstanceManager));
+
+        disableEnforceAdServicesManagerPermission(service);
+
+        assertThat(service.wasU18NotificationDisplayed()).isFalse();
+        service.setU18NotificationDisplayed(true);
+        assertThat(service.wasU18NotificationDisplayed()).isTrue();
+    }
 }
