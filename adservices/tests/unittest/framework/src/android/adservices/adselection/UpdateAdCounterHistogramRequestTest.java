@@ -35,10 +35,10 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testBuildValidRequest_success() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
 
         assertThat(originalRequest.getAdSelectionId()).isEqualTo(VALID_AD_SELECTION_ID);
@@ -50,16 +50,16 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testEqualsIdentical() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
         final UpdateAdCounterHistogramRequest identicalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
 
         assertThat(originalRequest.equals(identicalRequest)).isTrue();
@@ -68,16 +68,16 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testEqualsDifferent() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
         final UpdateAdCounterHistogramRequest differentRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID + 99)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_2)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID + 99,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_2)
                         .build();
 
         assertThat(originalRequest.equals(differentRequest)).isFalse();
@@ -86,10 +86,10 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testEqualsNull() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
         final UpdateAdCounterHistogramRequest nullRequest = null;
 
@@ -99,16 +99,16 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testHashCodeIdentical() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
         final UpdateAdCounterHistogramRequest identicalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
 
         assertThat(originalRequest.hashCode()).isEqualTo(identicalRequest.hashCode());
@@ -117,16 +117,16 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testHashCodeDifferent() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
         final UpdateAdCounterHistogramRequest differentRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID + 99)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_2)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID + 99,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_2)
                         .build();
 
         assertThat(originalRequest.hashCode()).isNotEqualTo(differentRequest.hashCode());
@@ -135,10 +135,10 @@ public class UpdateAdCounterHistogramRequestTest {
     @Test
     public void testToString() {
         final UpdateAdCounterHistogramRequest originalRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(VALID_AD_SELECTION_ID)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                CommonFixture.VALID_BUYER_1)
                         .build();
 
         final String expected =
@@ -153,14 +153,57 @@ public class UpdateAdCounterHistogramRequestTest {
     }
 
     @Test
-    public void testBuildUnsetAdSelectionId_throws() {
+    public void testAllSettersOverwrite_success() {
+        final long otherAdSelectionId = VALID_AD_SELECTION_ID + 1;
+
+        final UpdateAdCounterHistogramRequest originalRequest =
+                new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1)
+                        .setAdSelectionId(otherAdSelectionId)
+                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
+                        .setCallerAdTech(CommonFixture.VALID_BUYER_2)
+                        .build();
+
+        assertThat(originalRequest.getAdEventType())
+                .isEqualTo(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION);
+        assertThat(originalRequest.getAdSelectionId()).isEqualTo(otherAdSelectionId);
+        assertThat(originalRequest.getCallerAdTech()).isEqualTo(CommonFixture.VALID_BUYER_2);
+    }
+
+    @Test
+    public void testBuildZeroAdSelectionId_throws() {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new UpdateAdCounterHistogramRequest.Builder()
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                                .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                                .build());
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                0,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1));
+    }
+
+    @Test
+    public void testSetZeroAdSelectionId_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
+                                .setAdSelectionId(0));
+    }
+
+    @Test
+    public void testBuildWinType_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_WIN,
+                                CommonFixture.VALID_BUYER_1));
     }
 
     @Test
@@ -168,36 +211,33 @@ public class UpdateAdCounterHistogramRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new UpdateAdCounterHistogramRequest.Builder()
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
                                 .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_WIN));
     }
 
     @Test
-    public void testBuildUnsetType_throws() {
+    public void testBuildNullCaller_throws() {
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
-                        new UpdateAdCounterHistogramRequest.Builder()
-                                .setAdSelectionId(VALID_AD_SELECTION_ID)
-                                .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                                .build());
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                VALID_AD_SELECTION_ID,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                null));
     }
 
     @Test
     public void testSetNullCaller_throws() {
         assertThrows(
                 NullPointerException.class,
-                () -> new UpdateAdCounterHistogramRequest.Builder().setCallerAdTech(null));
-    }
-
-    @Test
-    public void testBuildUnsetCaller_throws() {
-        assertThrows(
-                NullPointerException.class,
                 () ->
-                        new UpdateAdCounterHistogramRequest.Builder()
-                                .setAdSelectionId(VALID_AD_SELECTION_ID)
-                                .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                                .build());
+                        new UpdateAdCounterHistogramRequest.Builder(
+                                        VALID_AD_SELECTION_ID,
+                                        FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                        CommonFixture.VALID_BUYER_1)
+                                .setCallerAdTech(null));
     }
 }

@@ -588,11 +588,11 @@ public class AdSelectionManager {
         try {
             final AdSelectionService service = Objects.requireNonNull(getService());
             service.updateAdCounterHistogram(
-                    new UpdateAdCounterHistogramInput.Builder()
-                            .setAdEventType(updateAdCounterHistogramRequest.getAdEventType())
-                            .setAdSelectionId(updateAdCounterHistogramRequest.getAdSelectionId())
-                            .setCallerAdTech(updateAdCounterHistogramRequest.getCallerAdTech())
-                            .setCallerPackageName(getCallerPackageName())
+                    new UpdateAdCounterHistogramInput.Builder(
+                                    updateAdCounterHistogramRequest.getAdSelectionId(),
+                                    updateAdCounterHistogramRequest.getAdEventType(),
+                                    updateAdCounterHistogramRequest.getCallerAdTech(),
+                                    getCallerPackageName())
                             .build(),
                     new UpdateAdCounterHistogramCallback.Stub() {
                         @Override

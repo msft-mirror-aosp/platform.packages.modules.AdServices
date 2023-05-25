@@ -229,10 +229,10 @@ public class PermissionsValidTest {
                         .build();
 
         UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                new UpdateAdCounterHistogramRequest.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                AdTechIdentifier.fromString("test.com"))
                         .build();
         ExecutionException exception =
                 assertThrows(

@@ -2196,10 +2196,10 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
 
         // Update ad counter histogram for the first ad selection outcome
         UpdateAdCounterHistogramRequest updateRequest =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(outcome1.getAdSelectionId())
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION)
-                        .setCallerAdTech(BUYER_1)
+                new UpdateAdCounterHistogramRequest.Builder(
+                                outcome1.getAdSelectionId(),
+                                FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION,
+                                BUYER_1)
                         .build();
         mAdSelectionClient
                 .updateAdCounterHistogram(updateRequest)
