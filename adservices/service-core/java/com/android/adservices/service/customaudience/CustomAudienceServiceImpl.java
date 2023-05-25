@@ -237,6 +237,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                 }
             } catch (Exception exception) {
+                sLogger.d(exception, "Error encountered in joinCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
                 return;
             }
@@ -359,9 +360,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
                 // Fail silently for revoked user consent
                 if (!mConsentManager.isFledgeConsentRevokedForApp(ownerPackageName)) {
+                    sLogger.v("Leaving custom audience");
                     mCustomAudienceImpl.leaveCustomAudience(ownerPackageName, buyer, name);
                     resultCode = AdServicesStatusUtils.STATUS_SUCCESS;
                 } else {
+                    sLogger.v("Consent revoked");
                     resultCode = AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
                 }
             } catch (WrongCallingApplicationStateException
@@ -370,6 +373,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     | FledgeAuthorizationFilter.AdTechNotAllowedException
                     | FledgeAllowListsFilter.AppNotAllowedException exception) {
                 // Catch these specific exceptions, but report them back to the caller
+                sLogger.d(exception, "Error encountered in leaveCustomAudience, notifying caller");
                 resultCode = notifyFailure(callback, exception);
                 return;
             } catch (Exception exception) {
