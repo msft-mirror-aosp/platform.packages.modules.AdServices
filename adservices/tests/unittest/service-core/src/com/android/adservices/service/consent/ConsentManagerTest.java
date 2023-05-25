@@ -18,6 +18,7 @@ package com.android.adservices.service.consent;
 
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY_FOR_ALL;
+import static com.android.adservices.service.consent.ConsentConstants.DEFAULT_CONSENT;
 import static com.android.adservices.service.consent.ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.adservices.service.consent.ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED;
 import static com.android.adservices.service.consent.ConsentConstants.NOTIFICATION_DISPLAYED_ONCE;
@@ -3862,6 +3863,73 @@ public class ConsentManagerTest {
 
         verify(mAppSearchConsentManager, times(2)).isAdultAccount();
         verify(mAppSearchConsentManager).setAdultAccount(anyBoolean());
+    }
+
+    @Test
+    public void testDefaultConsentRecorded_PpApiOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.getDefaultConsent()).isNull();
+
+        verify(mMockIAdServicesManager, never()).getDefaultConsent();
+
+        spyConsentManager.recordDefaultConsent(true);
+
+        assertThat(spyConsentManager.getDefaultConsent()).isTrue();
+
+        verify(mMockIAdServicesManager, never()).getDefaultConsent();
+        verify(mMockIAdServicesManager, never()).recordDefaultConsent(anyBoolean());
+    }
+
+    @Test
+    public void testDefaultConsentRecorded_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.getDefaultConsent()).isFalse();
+
+        verify(mMockIAdServicesManager).getDefaultConsent();
+
+        doReturn(true).when(mMockIAdServicesManager).getDefaultConsent();
+        spyConsentManager.recordDefaultConsent(true);
+
+        assertThat(spyConsentManager.getDefaultConsent()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).getDefaultConsent();
+        verify(mMockIAdServicesManager).recordDefaultConsent(eq(true));
+
+        // Verify default consent is not set in PPAPI
+        assertThat(mConsentDatastore.get(DEFAULT_CONSENT)).isNull();
+    }
+
+    @Test
+    public void testDefaultConsentRecorded_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean getDefaultConsent = spyConsentManager.getDefaultConsent();
+
+        assertThat(getDefaultConsent).isFalse();
+
+        verify(mMockIAdServicesManager).getDefaultConsent();
+
+        doReturn(true).when(mMockIAdServicesManager).getDefaultConsent();
+        spyConsentManager.recordDefaultConsent(true);
+
+        assertThat(spyConsentManager.getDefaultConsent()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).getDefaultConsent();
+        verify(mMockIAdServicesManager).recordDefaultConsent(eq(true));
+
+        // Verify default consent is also set in PPAPI
+        assertThat(mConsentDatastore.get(DEFAULT_CONSENT)).isTrue();
     }
 
     @Test
