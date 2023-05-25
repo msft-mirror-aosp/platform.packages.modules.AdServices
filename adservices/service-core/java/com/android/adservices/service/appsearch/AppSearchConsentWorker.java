@@ -622,6 +622,7 @@ class AppSearchConsentWorker {
                                 false,
                                 false,
                                 false,
+                                false,
                                 false);
             }
             dao.setAdIdEnabled(isAdIdEnabled);
@@ -658,6 +659,7 @@ class AppSearchConsentWorker {
                                 AppSearchUxStatesDao.getRowId(mUid),
                                 mUid,
                                 AppSearchUxStatesDao.NAMESPACE,
+                                false,
                                 false,
                                 false,
                                 false,
@@ -701,6 +703,7 @@ class AppSearchConsentWorker {
                                 false,
                                 false,
                                 false,
+                                false,
                                 false);
             }
             dao.setEntryPointEnabled(isEntryPointEnabled);
@@ -740,6 +743,7 @@ class AppSearchConsentWorker {
                                 false,
                                 false,
                                 false,
+                                false,
                                 false);
             }
             dao.setAdultAccount(isAdultAccount);
@@ -748,6 +752,47 @@ class AppSearchConsentWorker {
             LogUtil.d("Wrote the isAdultAccount bit to AppSearch: " + dao);
         } catch (InterruptedException | TimeoutException | ExecutionException e) {
             LogUtil.e("Failed to write the isAdultAccount to AppSearch ", e);
+            throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
+    /** Returns whether wasU18NotificationDisplayed bit is true. */
+    boolean wasU18NotificationDisplayed() {
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchUxStatesDao.readIsU18NotificationDisplayed(
+                    mGlobalSearchSession, mExecutor, mUid);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /** Saves the wasU18NotificationDisplayed bit in app search. */
+    void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        READ_WRITE_LOCK.writeLock().lock();
+        try {
+            AppSearchUxStatesDao dao =
+                    AppSearchUxStatesDao.readData(mGlobalSearchSession, mExecutor, mUid);
+            if (dao == null) {
+                dao =
+                        new AppSearchUxStatesDao(
+                                AppSearchUxStatesDao.getRowId(mUid),
+                                mUid,
+                                AppSearchUxStatesDao.NAMESPACE,
+                                false,
+                                false,
+                                false,
+                                false,
+                                false);
+            }
+            dao.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+            dao.writeData(mUxStatesSearchSession, mPackageIdentifiers, mExecutor)
+                    .get(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            LogUtil.d("Wrote the wasU18NotificationDisplayed bit to AppSearch: " + dao);
+        } catch (InterruptedException | TimeoutException | ExecutionException e) {
+            LogUtil.e("Failed to write the wasU18NotificationDisplayed to AppSearch ", e);
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         } finally {
             READ_WRITE_LOCK.writeLock().unlock();
