@@ -2446,4 +2446,69 @@ public class ConsentManager {
             }
         }
     }
+
+    /**
+     * Returns whether the wasU18NotificationDisplayed bit is true based on consent_source_of_truth.
+     */
+    public Boolean wasU18NotificationDisplayed() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.wasU18NotificationDisplayed();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.wasU18NotificationDisplayed();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get wasU18NotificationDisplayed bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the U18NotificationDisplayed bit to storage based on consent_source_of_truth. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(
+                                ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED,
+                                wasU18NotificationDisplayed);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(
+                                ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED,
+                                wasU18NotificationDisplayed);
+                        mAdServicesManager.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setU18NotificationDisplayed(
+                                    wasU18NotificationDisplayed);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException(
+                        "setwasU18NotificationDisplayed operation failed. " + e.getMessage());
+            }
+        }
+    }
 }
