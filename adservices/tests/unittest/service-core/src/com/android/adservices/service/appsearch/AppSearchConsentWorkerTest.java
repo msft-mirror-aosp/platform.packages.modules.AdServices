@@ -1420,4 +1420,72 @@ public class AppSearchConsentWorkerTest {
             }
         }
     }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_trueBit() {
+        wasU18NotificationDisplayedTest(true);
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_falseBit() {
+        wasU18NotificationDisplayedTest(false);
+    }
+
+    private void wasU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(AppSearchUxStatesDao.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            ExtendedMockito.doReturn(wasU18NotificationDisplayed)
+                    .when(
+                            () ->
+                                    AppSearchUxStatesDao.readIsU18NotificationDisplayed(
+                                            any(), any(), any()));
+            AppSearchConsentWorker appSearchConsentWorker =
+                    AppSearchConsentWorker.getInstance(mContext);
+            assertThat(appSearchConsentWorker.wasU18NotificationDisplayed())
+                    .isEqualTo(wasU18NotificationDisplayed);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
+
+    @Test
+    public void setU18NotificationDisplayedTest_trueBit() {
+        setU18NotificationDisplayedTest(true);
+    }
+
+    @Test
+    public void setU18NotificationDisplayedTest_falseBit() {
+        setU18NotificationDisplayedTest(false);
+    }
+
+    private void setU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
+        MockitoSession staticMockSessionLocal = null;
+        try {
+            staticMockSessionLocal =
+                    ExtendedMockito.mockitoSession()
+                            .spyStatic(PlatformStorage.class)
+                            .strictness(Strictness.WARN)
+                            .initMocks(this)
+                            .startMocking();
+            initFailureResponse();
+            AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance(mContext);
+            RuntimeException e =
+                    assertThrows(
+                            RuntimeException.class,
+                            () -> worker.setU18NotificationDisplayed(wasU18NotificationDisplayed));
+            assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
+        } finally {
+            if (staticMockSessionLocal != null) {
+                staticMockSessionLocal.finishMocking();
+            }
+        }
+    }
 }

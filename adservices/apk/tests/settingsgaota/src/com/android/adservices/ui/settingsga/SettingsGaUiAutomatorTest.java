@@ -414,6 +414,33 @@ public class SettingsGaUiAutomatorTest {
                 R.string.settingsUI_measurement_view_title);
     }
 
+    @Test
+    public void dialogRotateTest() throws UiObjectNotFoundException, RemoteException {
+        mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialog_fragment_enabled true");
+        sDevice.unfreezeRotation();
+
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
+
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(consentSwitch.exists()).isTrue();
+        // turn it on if not
+        if (!consentSwitch.isChecked()) {
+            consentSwitch.click();
+        }
+        consentSwitch.click();
+        UiObject dialogTitle =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
+
+        assertThat(dialogTitle.exists()).isTrue();
+
+        sDevice.setOrientationRight();
+        assertThat(dialogTitle.exists()).isTrue();
+    }
+
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)
             throws UiObjectNotFoundException {
         UiScrollable scrollView =

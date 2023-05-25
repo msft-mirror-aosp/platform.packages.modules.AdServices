@@ -58,6 +58,7 @@ class AppSearchUxStatesDao extends AppSearchDao {
     @Document.BooleanProperty private boolean mIsU18Account;
     @Document.BooleanProperty private boolean mIsAdultAccount;
     @Document.BooleanProperty private boolean mIsAdIdEnabled;
+    @Document.BooleanProperty private boolean mWasU18NotificationDisplayed;
 
     AppSearchUxStatesDao(
             @NonNull String id,
@@ -66,7 +67,8 @@ class AppSearchUxStatesDao extends AppSearchDao {
             @NonNull boolean isEntryPointEnabled,
             @NonNull boolean isU18Account,
             @NonNull boolean isAdultAccount,
-            @NonNull boolean isAdIdEnabled) {
+            @NonNull boolean isAdIdEnabled,
+            @NonNull boolean wasU18NotificationDisplayed) {
         this.mId = id;
         this.mUserId = userId;
         this.mNamespace = namespace;
@@ -74,6 +76,7 @@ class AppSearchUxStatesDao extends AppSearchDao {
         this.mIsU18Account = isU18Account;
         this.mIsAdultAccount = isAdultAccount;
         this.mIsAdIdEnabled = isAdIdEnabled;
+        this.mWasU18NotificationDisplayed = wasU18NotificationDisplayed;
     }
 
     /** Returns the row ID that should be unique for the namespace. */
@@ -179,6 +182,16 @@ class AppSearchUxStatesDao extends AppSearchDao {
         mIsAdIdEnabled = isAdIdEnabled;
     }
 
+    @NonNull
+    public boolean wasU18NotificationDisplayed() {
+        return mWasU18NotificationDisplayed;
+    }
+
+    @NonNull
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        mWasU18NotificationDisplayed = wasU18NotificationDisplayed;
+    }
+
     public String toString() {
         return "id="
                 + mId
@@ -193,13 +206,15 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 + "; isAdultAccount="
                 + mIsAdultAccount
                 + "; isAdIdEnabled="
-                + mIsAdIdEnabled;
+                + mIsAdIdEnabled
+                + "; wasU18NotificationDisplayed="
+                + mWasU18NotificationDisplayed;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(
-                mId, mUserId, mNamespace, mIsEntryPointEnabled, mIsU18Account, mIsAdultAccount, mIsAdIdEnabled);
+                mId, mUserId, mNamespace, mIsEntryPointEnabled, mIsU18Account, mIsAdultAccount, mIsAdIdEnabled, mWasU18NotificationDisplayed);
     }
 
     @Override
@@ -213,7 +228,8 @@ class AppSearchUxStatesDao extends AppSearchDao {
                 && this.mIsEntryPointEnabled == obj.mIsEntryPointEnabled
                 && this.mIsU18Account == obj.mIsU18Account
                 && this.mIsAdultAccount == obj.mIsAdultAccount
-                && this.mIsAdIdEnabled == obj.mIsAdIdEnabled;
+                && this.mIsAdIdEnabled == obj.mIsAdIdEnabled
+                && this.mWasU18NotificationDisplayed == obj.mWasU18NotificationDisplayed;
     }
 
     /** Read the isAdIdEnabled bit from AppSearch. */
@@ -262,5 +278,17 @@ class AppSearchUxStatesDao extends AppSearchDao {
             return false;
         }
         return dao.isAdultAccount();
+    }
+
+    /** Read the wasU18NotificationDisplayed bit from AppSearch. */
+    public static boolean readIsU18NotificationDisplayed(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId) {
+        AppSearchUxStatesDao dao = readData(searchSession, executor, userId);
+        if (dao == null) {
+            return false;
+        }
+        return dao.wasU18NotificationDisplayed();
     }
 }
