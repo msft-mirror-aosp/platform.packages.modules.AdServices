@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.net.Uri;
@@ -26,8 +24,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.IMeasurementDao;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -60,8 +56,7 @@ public class DebugReportingJobHandler {
 
         List<String> pendingDebugReportIdsInWindow = pendingDebugReports.get();
         for (String debugReportId : pendingDebugReportIdsInWindow) {
-            @AdServicesStatusUtils.StatusCode int result = performReport(debugReportId);
-            logReportingStats(result);
+            performReport(debugReportId);
         }
     }
 
@@ -123,15 +118,5 @@ public class DebugReportingJobHandler {
             throws IOException {
         DebugReportSender debugReportSender = new DebugReportSender();
         return debugReportSender.sendReport(adTechDomain, debugReportPayload);
-    }
-
-    private static void logReportingStats(int resultCode) {
-        AdServicesLoggerImpl.getInstance()
-                .logMeasurementReports(
-                        new MeasurementReportsStats.Builder()
-                                .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
-                                .setType(AD_SERVICES_MEASUREMENT_REPORTS_UPLOADED__TYPE__EVENT)
-                                .setResultCode(resultCode)
-                                .build());
     }
 }
