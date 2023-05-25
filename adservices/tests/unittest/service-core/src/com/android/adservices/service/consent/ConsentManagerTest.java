@@ -3863,4 +3863,67 @@ public class ConsentManagerTest {
         verify(mAppSearchConsentManager, times(2)).isAdultAccount();
         verify(mAppSearchConsentManager).setAdultAccount(anyBoolean());
     }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_SystemServerOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isFalse();
+
+        verify(mMockIAdServicesManager).wasU18NotificationDisplayed();
+
+        doReturn(true).when(mMockIAdServicesManager).wasU18NotificationDisplayed();
+        spyConsentManager.setU18NotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasU18NotificationDisplayed();
+        verify(mMockIAdServicesManager).setU18NotificationDisplayed(anyBoolean());
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_PpApiAndSystemServer() throws RemoteException {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        Boolean wasU18NotificationDisplayed = spyConsentManager.wasU18NotificationDisplayed();
+
+        assertThat(wasU18NotificationDisplayed).isFalse();
+
+        verify(mMockIAdServicesManager).wasU18NotificationDisplayed();
+
+        doReturn(true).when(mMockIAdServicesManager).wasU18NotificationDisplayed();
+        spyConsentManager.setU18NotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isTrue();
+
+        verify(mMockIAdServicesManager, times(2)).wasU18NotificationDisplayed();
+        verify(mMockIAdServicesManager).setU18NotificationDisplayed(anyBoolean());
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_appSearchOnly() throws RemoteException {
+        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
+        when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doReturn(false).when(mAppSearchConsentManager).wasU18NotificationDisplayed();
+        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isFalse();
+        verify(mAppSearchConsentManager).wasU18NotificationDisplayed();
+
+        doReturn(true).when(mAppSearchConsentManager).wasU18NotificationDisplayed();
+        spyConsentManager.setU18NotificationDisplayed(true);
+
+        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isTrue();
+
+        verify(mAppSearchConsentManager, times(2)).wasU18NotificationDisplayed();
+        verify(mAppSearchConsentManager).setU18NotificationDisplayed(anyBoolean());
+    }
 }
