@@ -216,4 +216,11 @@ interface IAdServicesManager {
     boolean isAdultAccount();
 
     void setAdultAccount(boolean isAdultAccount);
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    boolean wasU18NotificationDisplayed();
+
+    /** Saves the wasU18NotificationDisplayed bit. */
+    void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed);
+
 }
