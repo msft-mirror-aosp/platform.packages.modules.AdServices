@@ -44,7 +44,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 public class SharedDbHelperTest {
@@ -124,9 +123,44 @@ public class SharedDbHelperTest {
 
         assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
         // Sorted map because in case we need to add in order to avoid FK Constraints
-        Map<String, List<ContentValues>> preFakeData = createMigrationFakeDataWithDupeSites();
-        Map<String, List<ContentValues>> postFakeData = createMigrationFakeDataNoDupeSites();
+        Map<String, List<ContentValues>> fakeData = createMigrationFakeDataDistinctSites();
 
+        populateDb(oldDb, fakeData);
+        SharedDbHelper sharedDbHelper =
+                new SharedDbHelper(
+                        sContext,
+                        SHARED_DB_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION,
+                        dbHelper);
+        SQLiteDatabase newDb = sharedDbHelper.safeGetWritableDatabase();
+        DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
+        SQLiteDatabase referenceLatestDb =
+                createReferenceDbAtVersion(
+                        sContext,
+                        MIGRATION_DB_REFERENCE_NAME,
+                        SharedDbHelper.CURRENT_DATABASE_VERSION);
+        DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
+        assertEquals(SharedDbHelper.CURRENT_DATABASE_VERSION, newDb.getVersion());
+        verifyDataInDb(newDb, fakeData);
+        emptyTables(newDb, EnrollmentTables.ENROLLMENT_TABLES);
+        emptyTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES);
+    }
+
+    @Test
+    public void testMigrationExcludesDuplicatesSites() {
+        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
+
+        assertEquals(1, db.getVersion());
+
+        DbHelper dbHelper =
+                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+        SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
+
+        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+        // Sorted map because in case we need to add in order to avoid FK Constraints
+        Map<String, List<ContentValues>> preFakeData = createMigrationFakeDataFull();
+        Map<String, List<ContentValues>> postFakeData = createPostMigrationFakeDataFull();
         populateDb(oldDb, preFakeData);
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
@@ -145,30 +179,30 @@ public class SharedDbHelperTest {
         assertEquals(SharedDbHelper.CURRENT_DATABASE_VERSION, newDb.getVersion());
         verifyDataInDb(newDb, postFakeData);
         emptyTables(newDb, EnrollmentTables.ENROLLMENT_TABLES);
+        emptyTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES);
     }
 
-    private Map<String, List<ContentValues>> createMigrationFakeDataWithDupeSites() {
-        Map<String, List<ContentValues>> tableRowsMap = createMigrationFakeDataNoDupeSites();
-        List<ContentValues> enrollmentRows =
-                tableRowsMap.get(EnrollmentTables.EnrollmentDataContract.TABLE);
-
-        ContentValues enrollmentDupe = ContentValueFixtures.generateEnrollmentContentValuesV1();
-        enrollmentDupe.put(
-                EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID,
-                UUID.randomUUID().toString());
-        enrollmentRows.add(enrollmentDupe);
-        tableRowsMap.put(EnrollmentTables.EnrollmentDataContract.TABLE, enrollmentRows);
-
+    private Map<String, List<ContentValues>> createMigrationFakeDataFull() {
+        Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
+        tableRowsMap.put(
+                EnrollmentTables.EnrollmentDataContract.TABLE,
+                ContentValueFixtures.generateFullSiteEnrollmentListV1());
         return tableRowsMap;
     }
 
-    private Map<String, List<ContentValues>> createMigrationFakeDataNoDupeSites() {
+    private Map<String, List<ContentValues>> createMigrationFakeDataDistinctSites() {
+        Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
+        tableRowsMap.put(
+                EnrollmentTables.EnrollmentDataContract.TABLE,
+                ContentValueFixtures.generateDistinctSiteEnrollmentListV1());
+        return tableRowsMap;
+    }
+
+    private Map<String, List<ContentValues>> createPostMigrationFakeDataFull() {
         Map<String, List<ContentValues>> tableRowsMap = new LinkedHashMap<>();
         List<ContentValues> enrollmentRows = new ArrayList<>();
-
-        enrollmentRows.add(ContentValueFixtures.generateEnrollmentContentValuesV1());
+        enrollmentRows.add(ContentValueFixtures.generateEnrollmentUniqueExampleContentValuesV1());
         tableRowsMap.put(EnrollmentTables.EnrollmentDataContract.TABLE, enrollmentRows);
-
         return tableRowsMap;
     }
 
