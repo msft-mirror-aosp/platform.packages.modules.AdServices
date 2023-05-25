@@ -32,6 +32,8 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceOverrideCallback;
+import android.adservices.customaudience.FetchCustomAudienceCallback;
+import android.adservices.customaudience.FetchCustomAudienceInput;
 import android.adservices.customaudience.ICustomAudienceCallback;
 import android.adservices.customaudience.ICustomAudienceService;
 import android.annotation.NonNull;
@@ -248,6 +250,19 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mAdServicesLogger.logFledgeApiCallStats(apiName, resultCode, 0);
             }
         }
+    }
+
+    /**
+     * Adds the user to the {@link CustomAudience} fetched from a {@code fetchUri}
+     *
+     * @hide
+     */
+    @Override
+    public void fetchCustomAudience(
+            @NonNull FetchCustomAudienceInput input,
+            @NonNull FetchCustomAudienceCallback callback) {
+        sLogger.v("Entering fetchCustomAudience");
+        // TODO(b/282017342): Add implementation
     }
 
     private int notifyFailure(ICustomAudienceCallback callback, Exception exception)
