@@ -340,7 +340,7 @@ class AttributionJobHandler {
                                                     - AGGREGATE_MIN_REPORT_DELAY))
                                     + AGGREGATE_MIN_REPORT_DELAY);
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+                    new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
@@ -575,7 +575,7 @@ class AttributionJobHandler {
         source.setWebDestinations(destinations.second);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+                new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
 
         EventReport newEventReport =
                 new EventReport.Builder()
@@ -743,7 +743,8 @@ class AttributionJobHandler {
      * @return true for a match, false otherwise
      */
     private boolean doTopLevelFiltersMatch(
-            @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao) {
+            @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         try {
             FilterMap sourceFilters = source.getFilterData();
             List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
@@ -770,7 +771,8 @@ class AttributionJobHandler {
     }
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(
-            Source source, Trigger trigger, IMeasurementDao measurementDao) {
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         try {
             FilterMap sourceFiltersData = source.getFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
@@ -835,7 +837,8 @@ class AttributionJobHandler {
             List<AggregateHistogramContribution> contributions,
             Source source,
             Trigger trigger,
-            IMeasurementDao measurementDao) {
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
         int newAggregateContributions = source.getAggregateContributions();
         for (AggregateHistogramContribution contribution : contributions) {
             try {
