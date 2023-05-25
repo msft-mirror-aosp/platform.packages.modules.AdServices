@@ -28,6 +28,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.adselection.InteractionReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
+import static com.android.adservices.service.adselection.InteractionReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -1148,9 +1149,7 @@ public class InteractionReporterTest {
                 mMaxRegisteredAdBeaconsPerDestination,
                 SELLER_DESTINATION);
 
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        List.of(new MockResponse(), new MockResponse()));
+        mMockWebServerRule.startMockWebServer(List.of(new MockResponse(), new MockResponse()));
 
         ReportInteractionInput inputParams =
                 new ReportInteractionInput.Builder()
@@ -1162,7 +1161,7 @@ public class InteractionReporterTest {
                         .build();
 
         // Instantiate flags with small max interaction data size
-        mFlags =
+        Flags flags =
                 new Flags() {
                     @Override
                     public long getFledgeReportInteractionMaxInteractionDataSizeB() {
@@ -1178,7 +1177,7 @@ public class InteractionReporterTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags,
+                        flags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock);
@@ -1191,6 +1190,72 @@ public class InteractionReporterTest {
         assertEquals(
                 callback.mFledgeErrorResponse.getErrorMessage(),
                 INTERACTION_DATA_SIZE_MAX_EXCEEDED);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(STATUS_INVALID_ARGUMENT),
+                        anyInt());
+    }
+
+    @Test
+    public void testReportInteractionFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        mMockWebServerRule.startMockWebServer(List.of(new MockResponse(), new MockResponse()));
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+
+        // Instantiate flags with small max interaction data size
+        Flags flags =
+                new Flags() {
+                    @Override
+                    public long
+                            getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
+                        return 1;
+                    }
+                };
+
+        // Re init interaction reporter with new flags
+        mInteractionReporter =
+                new InteractionReporter(
+                        mAdSelectionEntryDao,
+                        mHttpClient,
+                        mLightweightExecutorService,
+                        mBackgroundExecutorService,
+                        mAdServicesLoggerMock,
+                        flags,
+                        mAdSelectionServiceFilterMock,
+                        MY_UID,
+                        mFledgeAuthorizationFilterMock);
+
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
+
+        assertFalse(callback.mIsSuccess);
+        assertEquals(callback.mFledgeErrorResponse.getStatusCode(), STATUS_INVALID_ARGUMENT);
+        assertEquals(
+                callback.mFledgeErrorResponse.getErrorMessage(), INTERACTION_KEY_SIZE_MAX_EXCEEDED);
 
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(

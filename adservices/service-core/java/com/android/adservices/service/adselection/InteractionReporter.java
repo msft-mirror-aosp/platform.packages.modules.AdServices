@@ -56,6 +56,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -69,6 +70,8 @@ public class InteractionReporter {
             "Could not find a match in the database for this adSelectionId and callerPackageName!";
     public static final String INTERACTION_DATA_SIZE_MAX_EXCEEDED =
             "Interaction data max size exceeded!";
+    public static final String INTERACTION_KEY_SIZE_MAX_EXCEEDED =
+            "Interaction key max size exceeded!";
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int LOGGING_API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
@@ -155,7 +158,18 @@ public class InteractionReporter {
                                                                 adSelectionId, callerPackageName),
                                                 NO_MATCH_FOUND_IN_AD_SELECTION_DB);
                                         Preconditions.checkArgument(
-                                                inputParams.getInteractionData().getBytes().length
+                                                inputParams
+                                                                .getInteractionKey()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
+                                                        <= mFlags
+                                                                .getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB(),
+                                                INTERACTION_KEY_SIZE_MAX_EXCEEDED);
+                                        Preconditions.checkArgument(
+                                                inputParams
+                                                                .getInteractionData()
+                                                                .getBytes(StandardCharsets.UTF_8)
+                                                                .length
                                                         <= mFlags
                                                                 .getFledgeReportInteractionMaxInteractionDataSizeB(),
                                                 INTERACTION_DATA_SIZE_MAX_EXCEEDED);
