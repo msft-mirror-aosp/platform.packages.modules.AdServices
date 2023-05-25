@@ -70,6 +70,15 @@ public final class CustomAudienceFixture {
     public static final AdSelectionSignals VALID_USER_BIDDING_SIGNALS =
             AdSelectionSignals.fromString("{'valid': 'yep', 'opaque': 'definitely'}");
 
+    public static Uri getValidFetchUriByBuyer(AdTechIdentifier buyer, String token) {
+        boolean hasToken = token != null && !token.isEmpty();
+        return CommonFixture.getUri(buyer, "/ca" + (hasToken ? "?token=" + token : ""));
+    }
+
+    public static Uri getValidFetchUriByBuyer(AdTechIdentifier buyer) {
+        return getValidFetchUriByBuyer(buyer, null);
+    }
+
     public static Uri getValidDailyUpdateUriByBuyer(AdTechIdentifier buyer) {
         return CommonFixture.getUri(buyer, "/update");
     }
