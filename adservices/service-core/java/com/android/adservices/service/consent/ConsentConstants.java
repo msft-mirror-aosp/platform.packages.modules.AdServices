@@ -90,4 +90,6 @@ public class ConsentConstants {
     public static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
 
     public static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
+
+    public static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
 }

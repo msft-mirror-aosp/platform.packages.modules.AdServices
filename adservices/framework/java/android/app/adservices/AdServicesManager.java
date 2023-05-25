@@ -575,4 +575,24 @@ public final class AdServicesManager {
             throw e.rethrowFromSystemServer();
         }
     }
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public boolean wasU18NotificationDisplayed() {
+        try {
+            return mService.wasU18NotificationDisplayed();
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
+    /** Saves the wasU18NotificationDisplayed bit. */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        try {
+            mService.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
 }
