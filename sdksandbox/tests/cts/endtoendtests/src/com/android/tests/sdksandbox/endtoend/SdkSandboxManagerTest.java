@@ -54,6 +54,7 @@ import androidx.test.core.app.ActivityScenario;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.compatibility.common.util.DeviceConfigStateHelper;
 import com.android.ctssdkprovider.IActivityStarter;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
@@ -84,6 +85,10 @@ public class SdkSandboxManagerTest {
     private static final String OPTION_THROW_INTERNAL_ERROR = "internal-error";
     private static final String OPTION_THROW_REQUEST_SURFACE_PACKAGE_ERROR = "rsp-error";
 
+    private static final String NAMESPACE_WINDOW_MANAGER = "window_manager";
+    private static final String ASM_RESTRICTIONS_ENABLED =
+            "ActivitySecurity__asm_restrictions_enabled";
+
     @Rule
     public final ActivityScenarioRule<TestActivity> mRule =
             new ActivityScenarioRule<>(TestActivity.class);
@@ -94,11 +99,15 @@ public class SdkSandboxManagerTest {
 
     private SdkSandboxManager mSdkSandboxManager;
 
+    private final DeviceConfigStateHelper mDeviceConfig =
+            new DeviceConfigStateHelper(NAMESPACE_WINDOW_MANAGER);
+
     @Before
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = mRule.getScenario();
+        mDeviceConfig.set(ASM_RESTRICTIONS_ENABLED, "1");
     }
 
     @After
@@ -106,6 +115,7 @@ public class SdkSandboxManagerTest {
         try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_1);
             mSdkSandboxManager.unloadSdk(SDK_NAME_2);
+            mDeviceConfig.close();
         } catch (Exception ignored) {
         }
     }
