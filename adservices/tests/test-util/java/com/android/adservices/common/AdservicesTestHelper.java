@@ -112,7 +112,8 @@ public class AdservicesTestHelper {
     public static boolean isDeviceSupported() {
         final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
         PackageManager pm = inst.getContext().getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
+        return !pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW) // Android Go Devices
+                && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
                 && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
     }
