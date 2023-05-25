@@ -27,6 +27,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 
+import java.util.Iterator;
 import java.util.Map;
 
 /**
@@ -131,6 +132,31 @@ public class SdkSandboxActivityRegistry {
                         "There is no registered SdkSandboxActivityHandler to notify");
             }
             handlerInfo.getHandler().onActivityCreated(activity);
+        }
+    }
+
+    /**
+     * Unregisters all {@link SdkSandboxActivityHandler} instances that are registered by the passed
+     * SDK.
+     *
+     * <p>This is expected to be called by the system when an SDK is unloaded to free memory.
+     *
+     * @param sdkName the name of the SDK to unregister its registered handlers
+     */
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    public void unregisterAllActivityHandlersForSdk(@NonNull String sdkName) {
+        synchronized (mMapsLock) {
+            Iterator<Map.Entry<SdkSandboxActivityHandler, HandlerInfo>> iter =
+                    mHandlerToHandlerInfoMap.entrySet().iterator();
+            while (iter.hasNext()) {
+                Map.Entry<SdkSandboxActivityHandler, HandlerInfo> handlerEntry = iter.next();
+                HandlerInfo handlerInfo = handlerEntry.getValue();
+                if (handlerInfo.getSdkName().equals(sdkName)) {
+                    IBinder handlerToken = handlerInfo.getToken();
+                    iter.remove();
+                    mTokenToHandlerInfoMap.remove(handlerToken);
+                }
+            }
         }
     }
 

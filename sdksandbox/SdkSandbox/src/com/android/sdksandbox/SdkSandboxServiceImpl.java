@@ -26,6 +26,7 @@ import android.app.sdksandbox.SandboxedSdkContext;
 import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SharedPreferencesKey;
 import android.app.sdksandbox.SharedPreferencesUpdate;
+import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
 import android.app.sdksandbox.sdkprovider.SdkSandboxController;
 import android.content.Context;
 import android.content.Intent;
@@ -34,6 +35,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Process;
@@ -43,6 +45,8 @@ import android.util.ArrayMap;
 import android.util.ArraySet;
 import android.util.Log;
 import android.webkit.WebView;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -90,6 +94,11 @@ public class SdkSandboxServiceImpl extends Service {
 
         long getCurrentTime() {
             return System.currentTimeMillis();
+        }
+
+        @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+        SdkSandboxActivityRegistry getSdkSandboxActivityRegistry() {
+            return SdkSandboxActivityRegistry.getInstance();
         }
     }
 
@@ -458,6 +467,11 @@ public class SdkSandboxServiceImpl extends Service {
             if (sandboxedSdkHolder != null) {
                 sandboxedSdkHolder.unloadSdk();
                 mHeldSdk.remove(sdkName);
+                if (SdkLevel.isAtLeastU()) {
+                    mInjector
+                            .getSdkSandboxActivityRegistry()
+                            .unregisterAllActivityHandlersForSdk(sdkName);
+                }
             }
         }
     }
