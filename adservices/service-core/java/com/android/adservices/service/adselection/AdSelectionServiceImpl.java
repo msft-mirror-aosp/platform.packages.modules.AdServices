@@ -37,6 +37,10 @@ import android.adservices.adselection.AdSelectionInput;
 import android.adservices.adselection.AdSelectionOverrideCallback;
 import android.adservices.adselection.AdSelectionService;
 import android.adservices.adselection.BuyersDecisionLogic;
+import android.adservices.adselection.GetAdSelectionDataCallback;
+import android.adservices.adselection.GetAdSelectionDataInput;
+import android.adservices.adselection.ProcessAdSelectionResultCallback;
+import android.adservices.adselection.ProcessAdSelectionResultInput;
 import android.adservices.adselection.RemoveAdCounterHistogramOverrideInput;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
@@ -224,6 +228,20 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         FlagsFactory.getFlags()),
                 ConsentManager.getInstance(context));
     }
+
+    @Override
+    public void getAdSelectionData(
+            GetAdSelectionDataInput getAdSelectionDataInput,
+            CallerMetadata callerMetadata,
+            GetAdSelectionDataCallback getAdSelectionDataCallback)
+            throws RemoteException {}
+
+    @Override
+    public void processAdSelectionResult(
+            ProcessAdSelectionResultInput processAdSelectionResultInput,
+            CallerMetadata callerMetadata,
+            ProcessAdSelectionResultCallback processAdSelectionResultCallback)
+            throws RemoteException {}
 
     // TODO(b/233116758): Validate all the fields inside the adSelectionConfig.
     @Override
