@@ -75,6 +75,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -760,7 +761,7 @@ public class ImpressionReporter {
 
             for (InteractionUriRegistrationInfo uriRegistrationInfo :
                     interactionUriRegistrationInfos) {
-                if (uriRegistrationInfo.getInteractionKey().getBytes().length
+                if (uriRegistrationInfo.getInteractionKey().getBytes(StandardCharsets.UTF_8).length
                         > maxInteractionKeySize) {
                     sLogger.v(
                             "InteractionKey size exceeds the maximum allowed! Skipping this entry");
