@@ -546,4 +546,14 @@ public class AppSearchConsentManager {
     public Boolean isAdultAccount() {
         return mAppSearchConsentWorker.isAdultAccount();
     }
+
+    /** Save the wasU18NotificationDisplayed bit. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        mAppSearchConsentWorker.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+    }
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    public Boolean wasU18NotificationDisplayed() {
+        return mAppSearchConsentWorker.wasU18NotificationDisplayed();
+    }
 }

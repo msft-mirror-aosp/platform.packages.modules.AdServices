@@ -649,4 +649,28 @@ public class AppSearchConsentManagerTest {
         assertThat(mAppSearchConsentManager.isAdultAccount()).isFalse();
         verify(mAppSearchConsentWorker).isAdultAccount();
     }
+
+    @Test
+    public void setU18NotificationDisplayedTest_trueBit() {
+        mAppSearchConsentManager.setU18NotificationDisplayed(true);
+        verify(mAppSearchConsentWorker).setU18NotificationDisplayed(true);
+    }
+
+    @Test
+    public void setU18NotificationDisplayedTest_falseBit() {
+        mAppSearchConsentManager.setU18NotificationDisplayed(false);
+        verify(mAppSearchConsentWorker).setU18NotificationDisplayed(false);
+    }
+
+    private void setU18NotificationDisplayedTest(boolean wasU18NotificationDisplayed) {
+        mAppSearchConsentManager.setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        verify(mAppSearchConsentWorker).setU18NotificationDisplayed(wasU18NotificationDisplayed);
+    }
+
+    @Test
+    public void wasU18NotificationDisplayedTest_defaultFalseBit() {
+        when(mAppSearchConsentWorker.wasU18NotificationDisplayed()).thenReturn(false);
+        assertThat(mAppSearchConsentManager.wasU18NotificationDisplayed()).isFalse();
+        verify(mAppSearchConsentWorker).wasU18NotificationDisplayed();
+    }
 }
