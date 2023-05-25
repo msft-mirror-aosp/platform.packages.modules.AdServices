@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"您屏蔽的应用"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重置应用建议的数据"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"您使用的应用常常会记住您感兴趣的内容，以便为您提供个性化体验。应用还可以将与您的主题相关的信息存储在 Android 中。\n\n例如，如果您使用马拉松训练方面的应用，应用可能会判断您对跑鞋感兴趣。之后，如果您使用其他应用，可能会在其中看到第一款应用建议的跑鞋广告。\n\nAndroid 会定期自动删除应用建议的数据。您再次使用的应用可能会重新出现在列表中。或者，您可以阻止应用为您建议广告。\n\n您在应用中看到的广告可能已经过个性化定制，具体取决于此设置、广告主题设置、您的广告 ID 设置，以及您使用的应用是否展示个性化广告。"</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"代表感兴趣主题（如音乐、新闻和体育）的符号的彩色图示"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"圆圈内锁形图标的彩色图示"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"九个点构成方形的黑白小图示"</string>

@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blokirane aplikacije"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Ponastavi podatke, ki jih predlagajo aplikacije"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Običajno je, da si aplikacije, ki jih uporabljate, zapomnijo stvari, ki vas zanimajo, zato da osebno prilagodijo vašo izkušnjo. Aplikacije lahko v napravi Android tudi shranjujejo informacije o vaših temah.\n\nČe na primer uporabljate aplikacijo, ki se nanaša na trening za maraton, se aplikacija lahko odloči, da vas zanimajo tekaški čevlji. Če pozneje uporabite drugo aplikacijo, vam ta aplikacija lahko prikaže oglas za tekaške čevlje, ki ga je predlagala prva aplikacija.\n\nAndroid redno samodejno briše podatke, ki jih predlagajo aplikacije. Aplikacija, ki jo znova uporabite, se lahko znova prikaže na seznamu. Lahko pa blokirate, da bi aplikacija predlagala oglase za vas.\n\nV aplikacijah je oglas, ki ga vidite, lahko osebno prilagojen. To je odvisno od te nastavitve, nastavitve tem oglasov, nastavitev oglaševalskega ID-ja in tega, ali aplikacija, ki jo uporabljate, osebno prilagaja oglase."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Barvna ilustracija simbolov, ki predstavljajo teme zanimanj, kot so glasba, novice in šport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Barvna ilustracija ključavnice v krogu"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Majhna črno-bela ilustracija devetih pik, razporejenih v kvadrat"</string>
