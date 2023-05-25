@@ -2215,4 +2215,235 @@ public class ConsentManager {
                                 .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
                                 .build());
     }
+
+    /** Returns whether the isAdIdEnabled bit is true based on consent_source_of_truth. */
+    public Boolean isAdIdEnabled() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_AD_ID_ENABLED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isAdIdEnabled();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isAdIdEnabled();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isAdIdEnabled bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the AdIdEnabled bit to storage based on consent_source_of_truth. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setAdIdEnabled(isAdIdEnabled);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled);
+                        mAdServicesManager.setAdIdEnabled(isAdIdEnabled);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisAdIdEnabled operation failed. " + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
+    public Boolean isU18Account() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_U18_ACCOUNT);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isU18Account();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isU18Account();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isU18Account bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the U18Account bit to storage based on consent_source_of_truth. */
+    public void setU18Account(boolean isU18Account) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setU18Account(isU18Account);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account);
+                        mAdServicesManager.setU18Account(isU18Account);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setU18Account(isU18Account);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisU18Account operation failed. " + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
+    public Boolean isEntryPointEnabled() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_ENTRY_POINT_ENABLED);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isEntryPointEnabled();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isEntryPointEnabled();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isEntryPointEnabled bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the EntryPointEnabled bit to storage based on consent_source_of_truth. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(
+                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+                        mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException(
+                        "setisEntryPointEnabled operation failed. " + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
+    public Boolean isAdultAccount() {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        return mDatastore.get(ConsentConstants.IS_ADULT_ACCOUNT);
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        // Intentional fallthrough
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        return mAdServicesManager.isAdultAccount();
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            return mAppSearchConsentManager.isAdultAccount();
+                        }
+                        break;
+                    default:
+                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                        return false;
+                }
+            } catch (RuntimeException e) {
+                LogUtil.e(e, "Get isAdultAccount bit failed. " + e.getMessage());
+            }
+            return false;
+        }
+    }
+
+    /** Set the AdultAccount bit to storage based on consent_source_of_truth. */
+    public void setAdultAccount(boolean isAdultAccount) {
+        synchronized (LOCK) {
+            try {
+                switch (mConsentSourceOfTruth) {
+                    case Flags.PPAPI_ONLY:
+                        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
+                        break;
+                    case Flags.SYSTEM_SERVER_ONLY:
+                        mAdServicesManager.setAdultAccount(isAdultAccount);
+                        break;
+                    case Flags.PPAPI_AND_SYSTEM_SERVER:
+                        mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount);
+                        mAdServicesManager.setAdultAccount(isAdultAccount);
+                        break;
+                    case Flags.APPSEARCH_ONLY:
+                        if (mFlags.getEnableAppsearchConsentData()) {
+                            mAppSearchConsentManager.setAdultAccount(isAdultAccount);
+                        }
+                        break;
+                    default:
+                        throw new RuntimeException(
+                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                }
+            } catch (IOException | RuntimeException e) {
+                throw new RuntimeException("setisAdultAccount operation failed. " + e.getMessage());
+            }
+        }
+    }
 }

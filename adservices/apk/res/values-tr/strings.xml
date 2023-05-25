@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Engellediğiniz uygulamalar"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Uygulamalar tarafından önerilen verileri sıfırla"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Kullandığınız uygulamaların, deneyiminizi kişiselleştirmek amacıyla, ilgilendiğiniz şeyleri hatırlaması yaygın bir durumdur. Uygulamalar ayrıca konularınızla ilgili bilgileri Android\'de depolayabilirler.\n\nÖrneğin, maraton antrenmanı ile ilgili bir uygulama kullanırsanız uygulama koşu ayakkabılarıyla ilgilendiğinize karar verebilir. Daha sonra kullandığınız farklı bir uygulama da, ilk uygulama tarafından önerilen koşu ayakkabılarına dair reklam gösterebilir.\n\nAndroid, uygulama tarafından önerilen verileri düzenli bir şekilde otomatik olarak siler. Tekrar kullandığınız bir uygulama listede yeniden görünebilir. İsterseniz bir uygulamanın sizin için reklamlar önermesini engelleyebilirsiniz.\n\nUygulamalarınızda gördüğünüz reklamlar bu ayara, reklam konuları ayarına, reklamveren kimliği ayarlarınıza ve uygulamanın kişiselleştirilmiş reklamlar kullanıp kullanmadığına bağlı olarak kişiselleştirilmiş olabilir."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Müzik, haber ve spor gibi ilgi alanlarını temsil eden sembollerin renkli çizimi"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Daire içindeki bir kilidin renkli çizimi"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kare oluşturan dokuz noktanın küçük siyah beyaz çizimi"</string>

@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Aplikácie, ktoré ste zablokovali"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Resetovať údaje navrhované aplikáciami"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Aplikácie, ktoré používate, si bežne pamätajú témy, o ktoré sa zaujímate, aby vám mohli prispôsobovať prostredie. Okrem toho môžu aplikácie ukladať informácie o vašich témach pomocou Androidu.\n\nAk napríklad používate aplikáciu zameranú na tréning maratónu, táto aplikácia môže usúdiť, že máte záujem o kúpu bežeckej obuvi. Ak neskôr použijete inú aplikáciu, môže vám na základe návrhu predchádzajúcej aplikácie zobraziť reklamu na bežeckú obuv.\n\nÚdaje navrhované aplikáciami Android pravidelne automaticky odstraňuje. Aplikácia, ktorú použijete znova, sa môže v zozname opäť zobraziť. Prípadne môžete určitej aplikácii zakázať navrhovať vám reklamy.\n\nReklamy zobrazované aplikáciami môžu byť prispôsobené v závislosti od tohto nastavenia, nastavenia tém reklám, vašich nastavení reklamného identifikátora a podľa toho, či aplikácia, ktorú používate, prispôsobuje reklamy."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Pestrá ilustrácia symbolov znázorňujúcich témy záujmov, ako sú hudba, správy a šport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Pestrá ilustrácia zámky v kruhu"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Malá čiernobiela ilustrácia deviatich bodiek tvoriacich štvorec"</string>
