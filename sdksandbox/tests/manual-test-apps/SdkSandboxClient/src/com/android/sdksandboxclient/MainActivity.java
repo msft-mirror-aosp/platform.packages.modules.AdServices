@@ -103,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Saved instance state keys
     private static final String SDKS_LOADED_KEY = "sdks_loaded";
+    private static final String APP_OWNED_INTERFACE_REGISTERED = "app-owned-interface_registered";
     private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED = "customized_sdk_context_enabled";
     private static final String SANDBOXED_SDK_BINDER = "com.android.sdksandboxclient.SANDBOXED_SDK";
 
@@ -193,13 +194,6 @@ public class MainActivity extends AppCompatActivity {
         registerSdkToSdkButton();
         registerDumpSandboxButton();
         registerNewAppWebviewButton();
-
-        if (savedInstanceState == null) {
-            // Register AppOwnedSdkInterface when activity first created
-            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
-                    new AppOwnedSdkSandboxInterface(
-                            APP_OWNED_SDK_NAME, (long) 1.01, new AppOwnedSdkApi()));
-        }
 
         refreshLoadSdksButtonText();
     }
@@ -622,10 +616,27 @@ public class MainActivity extends AppCompatActivity {
                                     final SurfaceView view = mBottomBannerView;
                                     OutcomeReceiver<Bundle, RequestSurfacePackageException>
                                             receiver = new RequestSurfacePackageReceiver(view);
+                                    final String dropDownKey =
+                                            dropdown.getSelectedItem().toString();
+                                    if (dropDownKey.equals(DROPDOWN_KEY_SDK_APP)) {
+                                        if (!mSavedInstanceState.containsKey(
+                                                APP_OWNED_INTERFACE_REGISTERED)) {
+                                            // Register AppOwnedSdkInterface when activity first
+                                            // created
+                                            // TODO(b/284281064) : We should be checking sdk
+                                            // extension here
+                                            mSdkSandboxManager.registerAppOwnedSdkSandboxInterface(
+                                                    new AppOwnedSdkSandboxInterface(
+                                                            APP_OWNED_SDK_NAME,
+                                                            (long) 1.01,
+                                                            new AppOwnedSdkApi()));
+                                            mSavedInstanceState.putBoolean(
+                                                    APP_OWNED_INTERFACE_REGISTERED, true);
+                                        }
+                                    }
                                     mSdkSandboxManager.requestSurfacePackage(
                                             SDK_NAME,
-                                            getRequestSurfacePackageParams(
-                                                    dropdown.getSelectedItem().toString(), view),
+                                            getRequestSurfacePackageParams(dropDownKey, view),
                                             Runnable::run,
                                             receiver);
                                 });
