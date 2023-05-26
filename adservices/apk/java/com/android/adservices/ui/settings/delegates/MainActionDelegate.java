@@ -18,6 +18,7 @@ package com.android.adservices.ui.settings.delegates;
 import android.content.Intent;
 import android.icu.text.MessageFormat;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -147,6 +148,14 @@ public class MainActionDelegate {
         configureTopicsButton(fragment);
         configureAppsButton(fragment);
         configureSubtitles(fragment);
+        configureLearnMore(fragment);
+    }
+
+    private void configureLearnMore(AdServicesSettingsMainFragment fragment) {
+        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
+            ((TextView) fragment.requireView().findViewById(R.id.main_view_ga_footer_learn_more))
+                    .setMovementMethod(LinkMovementMethod.getInstance());
+        }
     }
 
     private void setLayoutVisibility(int[] layoutList, int visibility) {
