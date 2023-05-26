@@ -945,12 +945,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -960,12 +960,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1112,12 +1112,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1127,12 +1127,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1249,12 +1249,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1264,12 +1264,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1404,12 +1404,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1419,12 +1419,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1556,12 +1556,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1571,12 +1571,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': -1, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1697,12 +1697,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': -1, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1712,12 +1712,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1830,12 +1830,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -1845,12 +1845,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -1998,14 +1998,14 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('"
+                        + "const beacons = {'"
                         + longerClickEventSeller
-                        + "', '"
+                        + "': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -2015,14 +2015,14 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('"
-                        + longerHoverEventBuyer
                         + "', '"
+                        + longerHoverEventBuyer
+                        + "': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"
@@ -3062,12 +3062,12 @@ public class AdSelectionServiceImplTest {
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
                         + "{\n"
-                        + "    registerAdBeacon('click_seller', '"
+                        + "const beacons = {'click_seller': '"
                         + clickUriSeller
-                        + "');\n"
-                        + "    registerAdBeacon('hover_seller', '"
+                        + "', 'hover_seller': '"
                         + hoverUriSeller
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'signals_for_buyer':"
                         + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                         + sellerReportingUri
@@ -3077,12 +3077,12 @@ public class AdSelectionServiceImplTest {
         String buyerDecisionLogicJs =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer ,"
                         + "contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click_buyer', '"
+                        + "const beacons = {'click_buyer': '"
                         + clickUriBuyer
-                        + "');\n"
-                        + "    registerAdBeacon('hover_buyer', '"
+                        + "', 'hover_buyer': '"
                         + hoverUriBuyer
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + buyerReportingUri
                         + "' } };\n"

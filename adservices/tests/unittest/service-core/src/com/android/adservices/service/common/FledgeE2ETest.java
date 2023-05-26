@@ -1031,12 +1031,12 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                        + "const beacons = {'click': '"
                         + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
+                        + "', 'hover': '"
                         + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
@@ -1731,12 +1731,12 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                        + "const beacons = {'click': '"
                         + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
+                        + "', 'hover': '"
                         + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
@@ -1809,12 +1809,12 @@ public class FledgeE2ETest {
                         + "}\n"
                         + "function reportWin(ad_selection_signals, per_buyer_signals,"
                         + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                        + "    registerAdBeacon('click', '"
+                        + "const beacons = {'click': '"
                         + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
-                        + "');\n"
-                        + "    registerAdBeacon('hover', '"
+                        + "', 'hover': '"
                         + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
-                        + "');\n"
+                        + "'};\n"
+                        + "registerAdBeacon(beacons);"
                         + " return {'status': 0, 'results': {'reporting_uri': '"
                         + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                         + "' } };\n"
@@ -2290,12 +2290,12 @@ public class FledgeE2ETest {
                 + "}\n"
                 + "function reportWin(ad_selection_signals, per_buyer_signals,"
                 + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                + "    registerAdBeacon('click', '"
+                + "const beacons = {'click': '"
                 + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
-                + "');\n"
-                + "    registerAdBeacon('hover', '"
+                + "', 'hover': '"
                 + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
-                + "');\n"
+                + "'};\n"
+                + "registerAdBeacon(beacons);"
                 + " return {'status': 0, 'results': {'reporting_uri': '"
                 + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                 + "' } };\n"
@@ -2337,12 +2337,12 @@ public class FledgeE2ETest {
                 + "}\n"
                 + "function reportWin(ad_selection_signals, per_buyer_signals,"
                 + " signals_for_buyer ,contextual_signals, custom_audience_signals) {\n"
-                + "    registerAdBeacon('click', '"
+                + "const beacons = {'click': '"
                 + mMockWebServerRule.uriForPath(CLICK_BUYER_PATH)
-                + "');\n"
-                + "    registerAdBeacon('hover', '"
+                + "', 'hover': '"
                 + mMockWebServerRule.uriForPath(HOVER_BUYER_PATH)
-                + "');\n"
+                + "'};\n"
+                + "registerAdBeacon(beacons);"
                 + " return {'status': 0, 'results': {'reporting_uri': '"
                 + mMockWebServerRule.uriForPath(BUYER_REPORTING_PATH)
                 + "' } };\n"
@@ -2357,12 +2357,12 @@ public class FledgeE2ETest {
                 + "}\n"
                 + "function reportResult(ad_selection_config, render_uri, bid,"
                 + " contextual_signals) {\n"
-                + "    registerAdBeacon('click', '"
+                + "const beacons = {'click': '"
                 + mMockWebServerRule.uriForPath(CLICK_SELLER_PATH)
-                + "');\n"
-                + "    registerAdBeacon('hover', '"
+                + "', 'hover': '"
                 + mMockWebServerRule.uriForPath(HOVER_SELLER_PATH)
-                + "');\n"
+                + "'};\n"
+                + "registerAdBeacon(beacons);"
                 + " return {'status': 0, 'results': {'signals_for_buyer':"
                 + " '{\"signals_for_buyer\":1}', 'reporting_uri': '"
                 + mMockWebServerRule.uriForPath(SELLER_REPORTING_PATH)
