@@ -57,6 +57,8 @@ public final class DebugReportingJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling DebugReportingJobService job because it's running in ExtServices on"
