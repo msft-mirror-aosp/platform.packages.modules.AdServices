@@ -261,11 +261,11 @@ public class FrequencyCapFilteringE2ETest {
                         mConsentManagerMock);
 
         mInputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                new UpdateAdCounterHistogramInput.Builder(
+                                AD_SELECTION_ID_BUYER_1,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1,
+                                CommonFixture.TEST_PACKAGE_NAME)
                         .build();
 
         // Required stub for Custom Audience DB persistence
@@ -355,11 +355,11 @@ public class FrequencyCapFilteringE2ETest {
 
         // Caller does not match previous ad selection
         UpdateAdCounterHistogramInput inputParamsOtherPackage =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID_BUYER_1)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME_1)
+                new UpdateAdCounterHistogramInput.Builder(
+                                AD_SELECTION_ID_BUYER_1,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_1,
+                                CommonFixture.TEST_PACKAGE_NAME_1)
                         .build();
 
         UpdateAdCounterHistogramTestCallback callback =
@@ -728,11 +728,11 @@ public class FrequencyCapFilteringE2ETest {
         // Update events for BUYER_2 to fill the event table and evict the first entries for BUYER_1
         // T1 - BUYER_2 events trigger table eviction of the oldest events (which are for BUYER_1)
         UpdateAdCounterHistogramInput inputParamsForBuyer2 =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(AD_SELECTION_ID_BUYER_2)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_2)
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                new UpdateAdCounterHistogramInput.Builder(
+                                AD_SELECTION_ID_BUYER_2,
+                                FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                CommonFixture.VALID_BUYER_2,
+                                CommonFixture.TEST_PACKAGE_NAME)
                         .build();
 
         updateHistogramCallback = callUpdateAdCounterHistogram(inputParamsForBuyer2);

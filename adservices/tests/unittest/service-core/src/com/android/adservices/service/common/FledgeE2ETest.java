@@ -2171,12 +2171,11 @@ public class FledgeE2ETest {
     private void updateHistogramAndAssertSuccess(long adSelectionId, int adEventType)
             throws InterruptedException {
         UpdateAdCounterHistogramInput inputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(adEventType)
-                        .setCallerAdTech(
-                                AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()))
-                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                new UpdateAdCounterHistogramInput.Builder(
+                                adSelectionId,
+                                adEventType,
+                                AdTechIdentifier.fromString(mLocalhostBuyerDomain.getHost()),
+                                CommonFixture.TEST_PACKAGE_NAME)
                         .build();
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback callback =
