@@ -62,13 +62,15 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
 import com.android.modules.utils.BackgroundThread;
 import com.android.modules.utils.build.SdkLevel;
+
+import com.google.android.material.snackbar.BaseTransientBottomBar;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -108,12 +110,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String SANDBOXED_SDK_BINDER = "com.android.sdksandboxclient.SANDBOXED_SDK";
     private static final String SANDBOXED_SDK_KEY =
             "com.android.sdksandboxclient.SANDBOXED_SDK_KEY";
+    public static final int SNACKBAR_MAX_LINES = 4;
 
     private Bundle mSavedInstanceState = new Bundle();
     private boolean mSdksLoaded = false;
     private boolean mSdkToSdkCommEnabled = false;
     private SdkSandboxManager mSdkSandboxManager;
     private final Executor mExecutor = Executors.newSingleThreadExecutor();
+
+    private View mRootLayout;
 
     private Button mResetPreferencesButton;
     private Button mLoadSdksButton;
@@ -158,6 +163,8 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         mSdkSandboxManager = getApplicationContext().getSystemService(SdkSandboxManager.class);
+
+        mRootLayout = findViewById(R.id.root_layout);
 
         mBottomBannerView = findViewById(R.id.bottom_banner_view);
         mBottomBannerView.setZOrderOnTop(true);
@@ -250,14 +257,15 @@ public class MainActivity extends AppCompatActivity {
                 boolean result = sdkApi.isCustomizedSdkContextEnabled();
                 mSavedInstanceState.putBoolean(CUSTOMIZED_SDK_CONTEXT_ENABLED, result);
             } catch (RemoteException e) {
-                toastAndLog(e, "Failed to fetch feature flag status: %s", e);
+                logAndDisplayMessage(e, "Failed to fetch feature flag status: %s", e);
             }
         }
 
         boolean result = mSavedInstanceState.getBoolean(CUSTOMIZED_SDK_CONTEXT_ENABLED);
-        featureFlagStatus.post(() -> {
-            featureFlagStatus.setText("CustomizedSdkContext Enabled: " + result);
-        });
+        featureFlagStatus.post(
+                () -> {
+                    featureFlagStatus.setText("CustomizedSdkContext Enabled: " + result);
+                });
     }
 
     private void refreshLoadSdksButtonText() {
@@ -281,8 +289,9 @@ public class MainActivity extends AppCompatActivity {
                 v -> {
                     // Register for sandbox death event.
                     mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                            Runnable::run, () -> toastAndLog(INFO, "Sdk Sandbox process died"));
-                    toastAndLog(INFO, "Registered death callback");
+                            Runnable::run,
+                            () -> logAndDisplayMessage(INFO, "Sdk Sandbox process died"));
+                    logAndDisplayMessage(INFO, "Registered death callback");
                 });
     }
 
@@ -299,7 +308,7 @@ public class MainActivity extends AppCompatActivity {
                             new OutcomeReceiver<>() {
                                 @Override
                                 public void onResult(SandboxedSdk sandboxedSdk) {
-                                    toastAndLog(INFO, "All SDKs Loaded successfully!");
+                                    logAndDisplayMessage(INFO, "All SDKs Loaded successfully!");
                                     mSdksLoaded = true;
                                     refreshLoadSdksButtonText();
                                     configureFeatureFlagSection();
@@ -307,7 +316,8 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onError(LoadSdkException error) {
-                                    toastAndLog(ERROR, "Failed to load all SDKs: %s", error);
+                                    logAndDisplayMessage(
+                                            ERROR, "Failed to load all SDKs: %s", error);
                                 }
                             };
                     OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver =
@@ -324,7 +334,8 @@ public class MainActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onError(LoadSdkException error) {
-                                    toastAndLog(ERROR, "Failed to load first SDK: %s", error);
+                                    logAndDisplayMessage(
+                                            ERROR, "Failed to load first SDK: %s", error);
                                 }
                             };
                     Log.i(TAG, "Loading SDKs " + SDK_NAME + " and " + MEDIATEE_SDK_NAME);
@@ -375,16 +386,16 @@ public class MainActivity extends AppCompatActivity {
                                     params.putString(VIEW_TYPE_KEY, VIEW_TYPE_WEBVIEW);
                                     break;
                                 }
-                          case AD_REFRESH:
+                            case AD_REFRESH:
                                 {
-                                     params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
-                                     break;
+                                    params.putString(VIEW_TYPE_KEY, VIEW_TYPE_AD_REFRESH);
+                                    break;
                                 }
-                          case EDITTEXT:
-                               {
+                            case EDITTEXT:
+                                {
                                     params.putString(VIEW_TYPE_KEY, VIEW_TYPE_EDITTEXT);
                                     break;
-                               }
+                                }
                         }
 
                         switch (options.getOnClick()) {
@@ -409,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
                                             SDK_NAME, params, Runnable::run, receiver);
                                 });
                     } else {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                     }
                 });
     }
@@ -431,7 +442,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void onGetOrSendFileDescriptorPressed(boolean isGetFileDescriptorCalled) {
         if (!mSdksLoaded) {
-            toastAndLog(WARN, "Sdk is not loaded");
+            logAndDisplayMessage(WARN, "Sdk is not loaded");
             return;
         }
         Log.i(TAG, "Ready to transfer File Descriptor between APP and SDK");
@@ -452,7 +463,7 @@ public class MainActivity extends AppCompatActivity {
                                                 inputValue.getText().toString();
                                         if (inputValueString.isEmpty()
                                                 || inputValueString.length() > 1000) {
-                                            toastAndLog(
+                                            logAndDisplayMessage(
                                                     WARN,
                                                     "Input string cannot be empty or"
                                                             + " have more than 1000"
@@ -468,7 +479,7 @@ public class MainActivity extends AppCompatActivity {
                                         }
 
                                         if (inputValueString.equals(value)) {
-                                            toastAndLog(
+                                            logAndDisplayMessage(
                                                     INFO,
                                                     "FileDescriptor transfer successful, value sent"
                                                             + " ="
@@ -476,7 +487,7 @@ public class MainActivity extends AppCompatActivity {
                                                             + " , value received = "
                                                             + value);
                                         } else {
-                                            toastAndLog(
+                                            logAndDisplayMessage(
                                                     WARN,
                                                     "FileDescriptor transfer unsuccessful, Value"
                                                             + " sent ="
@@ -510,7 +521,7 @@ public class MainActivity extends AppCompatActivity {
             pFd.close();
             return value;
         } catch (Exception e) {
-            toastAndLog(ERROR, "Failed to get FileDescriptor: %s", e);
+            logAndDisplayMessage(ERROR, "Failed to get FileDescriptor: %s", e);
         }
         return "";
     }
@@ -538,7 +549,7 @@ public class MainActivity extends AppCompatActivity {
             pFd.close();
             return parsedValue;
         } catch (Exception e) {
-            toastAndLog(ERROR, "Failed to send FileDescriptor: %s", e);
+            logAndDisplayMessage(ERROR, "Failed to send FileDescriptor: %s", e);
         }
         return "";
     }
@@ -552,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
         mCreateFileButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                         return;
                     }
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -565,7 +576,8 @@ public class MainActivity extends AppCompatActivity {
                             (dialog, which) -> {
                                 final int sizeInMb = Integer.parseInt(input.getText().toString());
                                 if (sizeInMb <= 0 || sizeInMb > 100) {
-                                    toastAndLog(WARN, "Please provide a value between 1 and 100");
+                                    logAndDisplayMessage(
+                                            WARN, "Please provide a value between 1 and 100");
                                     return;
                                 }
                                 IBinder binder = mSandboxedSdk.getInterface();
@@ -577,9 +589,9 @@ public class MainActivity extends AppCompatActivity {
                                                     try {
                                                         String response =
                                                                 sdkApi.createFile(sizeInMb);
-                                                        toastAndLog(INFO, response);
+                                                        logAndDisplayMessage(INFO, response);
                                                     } catch (Exception e) {
-                                                        toastAndLog(
+                                                        logAndDisplayMessage(
                                                                 e,
                                                                 "Failed to create file with %d Mb",
                                                                 sizeInMb);
@@ -597,7 +609,7 @@ public class MainActivity extends AppCompatActivity {
                     mSdkToSdkCommEnabled = !mSdkToSdkCommEnabled;
                     if (mSdkToSdkCommEnabled) {
                         mSdkToSdkCommButton.setText("Disable SDK to SDK comm");
-                        toastAndLog(INFO, "Sdk to Sdk Comm Enabled");
+                        logAndDisplayMessage(INFO, "Sdk Sdk Comm Enabled");
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         builder.setTitle("Choose winning SDK");
 
@@ -648,7 +660,7 @@ public class MainActivity extends AppCompatActivity {
                         builder.show();
                     } else {
                         mSdkToSdkCommButton.setText("Enable SDK to SDK comm");
-                        toastAndLog(INFO, "Sdk to Sdk Comm Disabled");
+                        logAndDisplayMessage(INFO, "Sdk Sdk Comm Disabled");
                     }
                 });
     }
@@ -657,7 +669,7 @@ public class MainActivity extends AppCompatActivity {
         mDumpSandboxButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                         return;
                     }
 
@@ -674,15 +686,14 @@ public class MainActivity extends AppCompatActivity {
                             .setMessage(sandboxDump)
                             .setNegativeButton("Cancel", null)
                             .show();
-                }
-        );
+                });
     }
 
     private void registerSyncKeysButton() {
         mSyncKeysButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                         return;
                     }
 
@@ -728,17 +739,17 @@ public class MainActivity extends AppCompatActivity {
                                 String syncedKeysValue =
                                         sdkApi.getSyncedSharedPreferencesString(keyToSync);
                                 if (syncedKeysValue.equals(valueToSync)) {
-                                    toastAndLog(
+                                    logAndDisplayMessage(
                                             INFO,
                                             "Key was synced successfully\n"
                                                     + "Key is : %s Value is : %s",
                                             keyToSync,
                                             syncedKeysValue);
                                 } else {
-                                    toastAndLog(WARN, "Key was not synced");
+                                    logAndDisplayMessage(WARN, "Key was not synced");
                                 }
                             } catch (Exception e) {
-                                toastAndLog(e, "Failed to sync keys (%s)", keyToSync);
+                                logAndDisplayMessage(e, "Failed to sync keys (%s)", keyToSync);
                             }
                         });
     }
@@ -747,11 +758,11 @@ public class MainActivity extends AppCompatActivity {
         mNewFullScreenAd.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                         return;
                     }
                     if (!SdkLevel.isAtLeastU()) {
-                        toastAndLog(WARN, "Device should have Android U or above!");
+                        logAndDisplayMessage(WARN, "Device should have Android U or above!");
                         return;
                     }
                     IBinder binder = mSandboxedSdk.getInterface();
@@ -766,9 +777,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                     try {
                         sdkApi.startActivity(starter, params);
-                        toastAndLog(INFO, "Started activity %s", starter);
+                        logAndDisplayMessage(INFO, "Started activity %s", starter);
                     } catch (RemoteException e) {
-                        toastAndLog(e, "Failed to startActivity (%s)", starter);
+                        logAndDisplayMessage(e, "Failed to startActivity (%s)", starter);
                     }
                 });
     }
@@ -777,7 +788,7 @@ public class MainActivity extends AppCompatActivity {
         mNewAppWebviewButton.setOnClickListener(
                 v -> {
                     if (!mSdksLoaded) {
-                        toastAndLog(WARN, "Sdk is not loaded");
+                        logAndDisplayMessage(WARN, "Sdk is not loaded");
                         return;
                     }
                     IBinder binder = mSandboxedSdk.getInterface();
@@ -797,7 +808,7 @@ public class MainActivity extends AppCompatActivity {
         return params;
     }
 
-    private void toastAndLog(int logLevel, String fmt, Object... args) {
+    private void logAndDisplayMessage(int logLevel, String fmt, Object... args) {
         String message = String.format(fmt, args);
         switch (logLevel) {
             case DEBUG:
@@ -818,17 +829,33 @@ public class MainActivity extends AppCompatActivity {
             default:
                 Log.w(TAG, "Invalid log level " + logLevel + " for message: " + message);
         }
-        makeToast(message);
+        displayMessage(message);
     }
 
-    private void toastAndLog(Exception e, String fmt, Object... args) {
+    private void logAndDisplayMessage(Exception e, String fmt, Object... args) {
         String message = String.format(fmt, args);
         Log.e(TAG, message, e);
-        makeToast(message);
+        displayMessage(message);
     }
 
-    private void makeToast(CharSequence message) {
-        runOnUiThread(() -> Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show());
+    private void displayMessage(CharSequence message) {
+        runOnUiThread(
+                () -> {
+                    final Snackbar snackbar =
+                            Snackbar.make(mRootLayout, message, Snackbar.LENGTH_LONG);
+                    snackbar.setAction(R.string.snackbar_dismiss, v -> snackbar.dismiss());
+                    snackbar.setTextMaxLines(SNACKBAR_MAX_LINES);
+                    snackbar.addCallback(
+                            new BaseTransientBottomBar.BaseCallback<>() {
+                                @Override
+                                public void onDismissed(Snackbar transientBottomBar, int event) {
+                                    mBottomBannerView.setZOrderOnTop(true);
+                                }
+                            });
+
+                    mBottomBannerView.setZOrderOnTop(false);
+                    snackbar.show();
+                });
     }
 
     private class RequestSurfacePackageReceiver
@@ -849,12 +876,12 @@ public class MainActivity extends AppCompatActivity {
                         mSurfaceView.setChildSurfacePackage(surfacePackage);
                         mSurfaceView.setVisibility(View.VISIBLE);
                     });
-            toastAndLog(INFO, "Rendered surface view");
+            logAndDisplayMessage(INFO, "Rendered surface view");
         }
 
         @Override
         public void onError(@NonNull RequestSurfacePackageException error) {
-            toastAndLog(ERROR, "Failed: %s", error.getMessage());
+            logAndDisplayMessage(ERROR, "Failed: %s", error.getMessage());
         }
     }
 
