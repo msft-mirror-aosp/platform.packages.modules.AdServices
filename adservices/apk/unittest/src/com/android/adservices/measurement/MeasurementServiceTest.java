@@ -45,11 +45,11 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
-import com.android.adservices.service.measurement.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.attribution.AttributionJobService;
+import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
 import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
@@ -108,7 +108,7 @@ public class MeasurementServiceTest {
                     assertNotNull(binder);
                     verify(mMockConsentManager, times(1)).getConsent();
                     ExtendedMockito.verify(
-                            () -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                            () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
                     assertJobScheduled(/* timesCalled */ 1);
                 });
     }
@@ -168,7 +168,7 @@ public class MeasurementServiceTest {
                     verify(mMockConsentManager, times(1))
                             .getConsent(eq(AdServicesApiType.MEASUREMENTS));
                     ExtendedMockito.verify(
-                            () -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                            () -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
                     assertJobScheduled(/* timesCalled */ 1);
                 });
     }
@@ -283,7 +283,7 @@ public class MeasurementServiceTest {
                     .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
 
             ExtendedMockito.doReturn(true)
-                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class)));
+                    .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
             ExtendedMockito.doNothing()
                     .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
             ExtendedMockito.doNothing()

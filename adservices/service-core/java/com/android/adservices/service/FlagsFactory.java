@@ -56,12 +56,12 @@ public class FlagsFactory {
             }
 
             @Override
-            public boolean getEnableTopicMigration() {
+            public boolean getFledgeRegisterAdBeaconEnabled() {
                 return true;
             }
 
             @Override
-            public boolean getEnableTopicContributorsCheck() {
+            public boolean getFledgeAdSelectionFilteringEnabled() {
                 return true;
             }
         };

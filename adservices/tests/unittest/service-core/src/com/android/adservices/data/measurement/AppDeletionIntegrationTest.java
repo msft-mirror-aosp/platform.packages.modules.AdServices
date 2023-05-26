@@ -51,7 +51,7 @@ public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     }
 
     public void runActionToTest() {
-        new SQLDatastoreManager(DbTestUtil.getDbHelperForTest())
+        new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
                 .runInTransaction((dao) -> dao.deleteAppRecords(mUri));
     }
 }

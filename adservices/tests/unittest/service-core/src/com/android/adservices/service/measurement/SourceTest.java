@@ -21,16 +21,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
 
 import android.net.Uri;
 
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseParams;
-import com.android.adservices.service.measurement.noising.ImpressionNoiseUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -46,13 +42,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
 public class SourceTest {
 
-    private static final double ZERO_DELTA = 0D;
     private static final UnsignedLong DEBUG_KEY_1 = new UnsignedLong(81786463L);
     private static final UnsignedLong DEBUG_KEY_2 = new UnsignedLong(23487834L);
 
@@ -81,6 +75,9 @@ public class SourceTest {
 
         String sharedAggregateKeys = "[\"campaignCounts\"]";
         String parentId = "parent-id";
+        String debugJoinKey = "SAMPLE_DEBUG_JOIN_KEY";
+        String debugAppAdId = "SAMPLE_DEBUG_APP_ADID";
+        String debugWebAdId = "SAMPLE_DEBUG_WEB_ADID";
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -117,6 +114,10 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -153,6 +154,10 @@ public class SourceTest {
                         .setSharedAggregationKeys(sharedAggregateKeys)
                         .setInstallTime(100L)
                         .setParentId(parentId)
+                        .setDebugJoinKey(debugJoinKey)
+                        .setPlatformAdId(debugAppAdId)
+                        .setDebugAdId(debugWebAdId)
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
                         .build());
     }
 
@@ -301,6 +306,22 @@ public class SourceTest {
         assertNotEquals(
                 SourceFixture.getValidSourceBuilder().setInstallTime(100L).build(),
                 SourceFixture.getValidSourceBuilder().setInstallTime(101L).build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugJoinKey("debugJoinKey2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setPlatformAdId("debugAppAdId2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId1").build(),
+                SourceFixture.getValidSourceBuilder().setDebugAdId("debugWebAdId2").build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain1.example.test"))
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .build());
     }
 
     @Test
@@ -324,7 +345,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -345,32 +367,12 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
     public void testSourceBuilder_validateArgumentAttributionDestination() {
-        assertInvalidSourceArguments(
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
-                SourceFixture.ValidSourceParams.PUBLISHER,
-                null,
-                null,
-                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
-                SourceFixture.ValidSourceParams.REGISTRANT,
-                SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME,
-                SourceFixture.ValidSourceParams.EXPIRY_TIME,
-                SourceFixture.ValidSourceParams.PRIORITY,
-                SourceFixture.ValidSourceParams.SOURCE_TYPE,
-                SourceFixture.ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW,
-                SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW,
-                SourceFixture.ValidSourceParams.DEBUG_KEY,
-                SourceFixture.ValidSourceParams.ATTRIBUTION_MODE,
-                SourceFixture.ValidSourceParams.buildAggregateSource(),
-                SourceFixture.ValidSourceParams.buildFilterData(),
-                SourceFixture.ValidSourceParams.REGISTRATION_ID,
-                SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
-
         // Invalid app Uri
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -391,7 +393,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Invalid web Uri
         assertInvalidSourceArguments(
@@ -413,7 +416,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty app destinations list
         assertInvalidSourceArguments(
@@ -435,7 +439,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Empty web destinations list
         assertInvalidSourceArguments(
@@ -457,7 +462,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         // Too many app destinations
         assertInvalidSourceArguments(
@@ -481,7 +487,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -505,7 +512,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -529,7 +537,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
 
         assertInvalidSourceArguments(
                 SourceFixture.ValidSourceParams.SOURCE_EVENT_ID,
@@ -550,7 +559,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -574,177 +584,8 @@ public class SourceTest {
                 SourceFixture.ValidSourceParams.buildFilterData(),
                 SourceFixture.ValidSourceParams.REGISTRATION_ID,
                 SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS,
-                SourceFixture.ValidSourceParams.INSTALL_TIME);
-    }
-
-    @Test
-    public void getReportingTime_eventSourceAppDestination() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_eventSrcInstallAttributedAppDestinationTrigger1stWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.INSTALL_ATTR_EVENT_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_eventSrcInstallAttributedAppDestinationTrigger2ndWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_eventSrcInstallAttributedWebDestinationTrigger1stWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_eventSrcInstallAttributedWebDestinationTrigger2ndWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_eventSourceWebDestination() {
-        long triggerTime = System.currentTimeMillis();
-        long expiryTime = triggerTime + TimeUnit.DAYS.toMillis(30);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setEventReportWindow(expiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                expiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void getReportingTime_navigationSourceTriggerInFirstWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(1);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[0]
-                        + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_navigationSourceTriggerInSecondWindow() {
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(25);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceEventTime
-                        + PrivacyParams.NAVIGATION_EARLY_REPORTING_WINDOW_MILLISECONDS[1]
-                        + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_navigationSecondExpiry() {
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(2);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(3);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
-    }
-
-    @Test
-    public void getReportingTime_navigationLast() {
-        long triggerTime = System.currentTimeMillis();
-        long sourceExpiryTime = triggerTime + TimeUnit.DAYS.toMillis(1);
-        long sourceEventTime = triggerTime - TimeUnit.DAYS.toMillis(20);
-        Source source =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setEventReportWindow(sourceExpiryTime)
-                        .setEventTime(sourceEventTime)
-                        .build();
-        assertEquals(
-                sourceExpiryTime + TimeUnit.HOURS.toMillis(1),
-                source.getReportingTime(triggerTime, EventSurfaceType.APP));
+                SourceFixture.ValidSourceParams.INSTALL_TIME,
+                SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
     @Test
@@ -798,281 +639,6 @@ public class SourceTest {
     }
 
     @Test
-    public void testMaxReportCount() {
-        Source eventSourceInstallNotAttributed =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setInstallAttributed(false)
-                        .build();
-        assertEquals(
-                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallNotAttributed.getMaxReportCount(EventSurfaceType.APP));
-        assertEquals(
-                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallNotAttributed.getMaxReportCount(EventSurfaceType.WEB));
-
-        Source navigationSourceInstallNotAttributed =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setInstallAttributed(false)
-                        .build();
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallNotAttributed.getMaxReportCount(
-                        EventSurfaceType.APP));
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallNotAttributed.getMaxReportCount(
-                        EventSurfaceType.WEB));
-
-        Source eventSourceInstallAttributed =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallAttributed.getMaxReportCount(EventSurfaceType.APP));
-        // Install attribution state does not matter for web destination
-        assertEquals(
-                PrivacyParams.EVENT_SOURCE_MAX_REPORTS,
-                eventSourceInstallAttributed.getMaxReportCount(EventSurfaceType.WEB));
-
-        Source navigationSourceInstallAttributed =
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setInstallAttributed(true)
-                        .build();
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallAttributed.getMaxReportCount(EventSurfaceType.APP));
-        assertEquals(
-                PrivacyParams.NAVIGATION_SOURCE_MAX_REPORTS,
-                navigationSourceInstallAttributed.getMaxReportCount(EventSurfaceType.WEB));
-    }
-
-    @Test
-    public void testRandomAttributionProbability() {
-        assertEquals(
-                PrivacyParams.EVENT_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-        assertEquals(
-                PrivacyParams.NAVIGATION_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setInstallCooldownWindow(1)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setInstallCooldownWindow(1)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                        .setInstallCooldownWindow(1)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                        .setInstallCooldownWindow(1)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-
-        assertEquals(
-                PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
-                SourceFixture.getValidSourceBuilder()
-                        .setSourceType(Source.SourceType.NAVIGATION)
-                        .setAppDestinations(
-                                SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                        .build()
-                        .getRandomAttributionProbability(),
-                ZERO_DELTA);
-    }
-
-    @Test
-    public void testFakeReportGeneration() {
-        long expiry = System.currentTimeMillis();
-        // Single (App) destination, EVENT type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setEventReportWindow(expiry)
-                                .build()),
-                PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
-
-        // Single (App) destination, NAVIGATION type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setEventReportWindow(expiry)
-                                .build()),
-                PrivacyParams.getNavigationTriggerDataCardinality());
-
-        // Single (Web) destination, EVENT type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(null)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
-
-        // Single (Web) destination, NAVIGATION type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(null)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                PrivacyParams.getNavigationTriggerDataCardinality());
-
-        // Both destinations set, EVENT type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
-
-        // Both destinations set, NAVIGATION type
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .build()),
-                PrivacyParams.getNavigationTriggerDataCardinality());
-
-        // App destination with cooldown window
-        verifyAlgorithmicFakeReportGeneration(
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setEventReportWindow(expiry)
-                                .setAppDestinations(
-                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
-                                .setWebDestinations(null)
-                                .setInstallCooldownWindow(
-                                        SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
-                                .build()),
-                PrivacyParams.EVENT_TRIGGER_DATA_CARDINALITY);
-    }
-
-    @Test
-    public void fakeReports_eventSourceDualDestPostInstallMode_generatesFromStaticReportStates() {
-        long expiry = System.currentTimeMillis();
-        Source source =
-                spy(
-                        SourceFixture.getValidSourceBuilder()
-                                .setSourceType(Source.SourceType.EVENT)
-                                .setWebDestinations(
-                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                                .setEventReportWindow(expiry)
-                                .setInstallCooldownWindow(
-                                        SourceFixture.ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
-                                .build());
-        // Increase the probability of random attribution.
-        doReturn(0.50D).when(source).getRandomAttributionProbability();
-        int falseCount = 0;
-        int neverCount = 0;
-        int truthCount = 0;
-        for (int i = 0; i < 500; i++) {
-            List<Source.FakeReport> fakeReports =
-                    source.assignAttributionModeAndGenerateFakeReports();
-            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
-                falseCount++;
-                assertNotEquals(0, fakeReports.size());
-                assertTrue(
-                        isValidEventSourceDualDestPostInstallModeFakeReportState(
-                                source, fakeReports));
-            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
-                neverCount++;
-                assertEquals(0, fakeReports.size());
-            } else {
-                truthCount++;
-            }
-        }
-        assertNotEquals(0, falseCount);
-        assertNotEquals(0, neverCount);
-        assertNotEquals(0, truthCount);
-    }
-
-    @Test
     public void testGetAttributionDestinations() {
         Source source = SourceFixture.getValidSource();
         assertEquals(
@@ -1081,370 +647,6 @@ public class SourceTest {
         assertEquals(
                 source.getAttributionDestinations(EventSurfaceType.WEB),
                 source.getWebDestinations());
-    }
-
-    @Test
-    public void impressionNoiseParamGeneration() {
-        long eventTime = System.currentTimeMillis();
-        Source eventSource30dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 1,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                eventSource30dExpiry.getImpressionNoiseParams());
-
-        Source eventSource7dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 1,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                eventSource7dExpiry.getImpressionNoiseParams());
-
-        Source eventSource2dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 1,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                eventSource2dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource30dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 3,
-                        /* destinationMultiplier */ 1),
-                navigationSource30dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource7dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 2,
-                        /* destinationMultiplier */ 1),
-                navigationSource7dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource2dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                navigationSource2dExpiry.getImpressionNoiseParams());
-    }
-
-    @Test
-    public void impressionNoiseParamGeneration_withInstallAttribution() {
-        long eventTime = System.currentTimeMillis();
-
-        Source eventSource30dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 2,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 2,
-                        /* destinationMultiplier */ 1),
-                eventSource30dExpiry.getImpressionNoiseParams());
-
-        Source eventSource7dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 2,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 2,
-                        /* destinationMultiplier */ 1),
-                eventSource7dExpiry.getImpressionNoiseParams());
-
-        Source eventSource2dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 2,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                eventSource2dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource30dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 3,
-                        /* destinationMultiplier */ 1),
-                navigationSource30dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource7dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 2,
-                        /* destinationMultiplier */ 1),
-                navigationSource7dExpiry.getImpressionNoiseParams());
-
-        Source navigationSource2dExpiry = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 3,
-                        /* triggerDataCardinality= */ 8,
-                        /* reportingWindowCount= */ 1,
-                        /* destinationMultiplier */ 1),
-                navigationSource2dExpiry.getImpressionNoiseParams());
-        Source eventSourceWith2Destinations30dExpiry =
-                SourceFixture.getValidSourceBuilder()
-                        .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
-                        .setSourceType(Source.SourceType.EVENT)
-                        .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(2))
-                        .setInstallAttributionWindow(TimeUnit.DAYS.toMillis(10))
-                        .setEventTime(eventTime)
-                        .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(30))
-                        .build();
-        assertEquals(
-                new ImpressionNoiseParams(
-                        /* reportCount= */ 2,
-                        /* triggerDataCardinality= */ 2,
-                        /* reportingWindowCount= */ 2,
-                        /* destinationMultiplier */ 2),
-                eventSourceWith2Destinations30dExpiry.getImpressionNoiseParams());
-    }
-
-    @Test
-    public void reportingTimeByIndex_event() {
-        long eventTime = System.currentTimeMillis();
-        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
-
-        // Expected: 1 window at expiry
-        Source eventSource10d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
-                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
-                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 1));
-
-        // Expected: 1 window at expiry
-        Source eventSource7d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                eventSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                eventSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
-
-        // Expected: 1 window at expiry
-        Source eventSource2d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
-
-    }
-
-    @Test
-    public void reportingTimeByIndex_eventWithInstallAttribution() {
-        long eventTime = System.currentTimeMillis();
-        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
-
-        // Expected: 2 windows at 2d, expiry(10d)
-        Source eventSource10d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(10))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
-                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 1));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(10) + oneHourInMillis,
-                eventSource10d.getReportingTimeForNoising(/* windowIndex= */ 2));
-
-        // Expected: 1 window at 2d(expiry)
-        Source eventSource2d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.EVENT)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                eventSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
-    }
-
-    @Test
-    public void reportingTimeByIndex_navigation() {
-        long eventTime = System.currentTimeMillis();
-        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
-
-        // Expected: 3 windows at 2d, 7d & expiry(20d)
-        Source navigationSource20d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 1));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(20) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 2));
-
-        // Expected: 2 windows at 2d & expiry(7d)
-        Source navigationSource7d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 2));
-
-        // Expected: 1 window at 2d(expiry)
-        Source navigationSource2d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
-    }
-
-    @Test
-    public void reportingTimeByIndex_navigationWithInstallAttribution() {
-        long eventTime = System.currentTimeMillis();
-        long oneHourInMillis = TimeUnit.HOURS.toMillis(1);
-
-        // Expected: 3 windows at 2d, 7d & expiry(20d)
-        Source navigationSource20d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(20))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 1));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(20) + oneHourInMillis,
-                navigationSource20d.getReportingTimeForNoising(/* windowIndex= */ 2));
-
-        // Expected: 2 windows at 2d & expiry(7d)
-        Source navigationSource7d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(7))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 1));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(7) + oneHourInMillis,
-                navigationSource7d.getReportingTimeForNoising(/* windowIndex= */ 2));
-
-        // Expected: 1 window at 2d(expiry)
-        Source navigationSource2d = SourceFixture.getValidSourceBuilder()
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setInstallCooldownWindow(TimeUnit.DAYS.toMillis(1))
-                .setEventTime(eventTime)
-                .setEventReportWindow(eventTime + TimeUnit.DAYS.toMillis(2))
-                .build();
-        assertEquals(
-                eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 0));
-        assertEquals(eventTime + TimeUnit.DAYS.toMillis(2) + oneHourInMillis,
-                navigationSource2d.getReportingTimeForNoising(/* windowIndex= */ 1));
     }
 
     @Test
@@ -1524,58 +726,6 @@ public class SourceTest {
         assertEquals(fromSource, Source.Builder.from(fromSource).build());
     }
 
-    private void verifyAlgorithmicFakeReportGeneration(Source source, int expectedCardinality) {
-        // Increase the probability of random attribution.
-        doReturn(0.50D).when(source).getRandomAttributionProbability();
-        int falseCount = 0;
-        int neverCount = 0;
-        int truthCount = 0;
-        for (int i = 0; i < 500; i++) {
-            List<Source.FakeReport> fakeReports =
-                    source.assignAttributionModeAndGenerateFakeReports();
-            if (source.getAttributionMode() == Source.AttributionMode.FALSELY) {
-                falseCount++;
-                assertNotEquals(0, fakeReports.size());
-                for (Source.FakeReport report : fakeReports) {
-                    assertTrue(
-                            source.getEventReportWindow() + TimeUnit.HOURS.toMillis(1)
-                                    >= report.getReportingTime());
-                    Long triggerData = report.getTriggerData().getValue();
-                    assertTrue(0 <= triggerData && triggerData < expectedCardinality);
-                }
-            } else if (source.getAttributionMode() == Source.AttributionMode.NEVER) {
-                neverCount++;
-                assertEquals(0, fakeReports.size());
-            } else {
-                truthCount++;
-            }
-        }
-        assertNotEquals(0, falseCount);
-        assertNotEquals(0, neverCount);
-        assertNotEquals(0, truthCount);
-    }
-
-    private boolean isValidEventSourceDualDestPostInstallModeFakeReportState(
-            Source source, List<Source.FakeReport> fakeReportsState) {
-        // Generated fake reports state matches one of the states
-        return Arrays.stream(ImpressionNoiseUtil.DUAL_DESTINATION_POST_INSTALL_FAKE_REPORT_CONFIG)
-                .map(reportsState -> convertToReportsState(reportsState, source))
-                .anyMatch(fakeReportsState::equals);
-    }
-
-    private List<Source.FakeReport> convertToReportsState(int[][] reportsState, Source source) {
-        return Arrays.stream(reportsState)
-                .map(
-                        reportState ->
-                                new Source.FakeReport(
-                                        new UnsignedLong(Long.valueOf(reportState[0])),
-                                        source.getReportingTimeForNoising(reportState[1]),
-                                        reportState[2] == 0
-                                                ? source.getAppDestinations()
-                                                : source.getWebDestinations()))
-                .collect(Collectors.toList());
-    }
-
     private void assertInvalidSourceArguments(
             UnsignedLong sourceEventId,
             Uri publisher,
@@ -1595,7 +745,8 @@ public class SourceTest {
             @Nullable String filterData,
             @Nullable String registrationId,
             @Nullable String sharedAggregationKeys,
-            @Nullable Long installTime) {
+            @Nullable Long installTime,
+            Uri registrationOrigin) {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -1619,6 +770,7 @@ public class SourceTest {
                                 .setRegistrationId(registrationId)
                                 .setSharedAggregationKeys(sharedAggregationKeys)
                                 .setInstallTime(installTime)
+                                .setRegistrationOrigin(registrationOrigin)
                                 .build());
     }
 }

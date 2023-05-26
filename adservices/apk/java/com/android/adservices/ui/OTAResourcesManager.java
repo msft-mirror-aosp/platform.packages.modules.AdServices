@@ -17,19 +17,27 @@ package com.android.adservices.ui;
 
 import static android.os.ParcelFileDescriptor.MODE_READ_ONLY;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.loader.ResourcesLoader;
 import android.content.res.loader.ResourcesProvider;
 import android.net.Uri;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.ArrayMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.download.MobileDataDownloadFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
@@ -46,6 +54,8 @@ import java.util.concurrent.ExecutionException;
  * Manages OTA (over the air) Resources downloaded from MDD. This allows device to use updated OTA
  * resources. Currently only strings are supported.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class OTAResourcesManager {
     // this value needs to be updated if bundled resources are updated
     private static final long BUNDLED_RESOURCES_VERSION = 0;
@@ -87,7 +97,11 @@ public class OTAResourcesManager {
             return;
         }
         if (!resourcesFile.hasFileUri()) {
-            LogUtil.e("Failed to get downloaded OTA file URI");
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DOWNLOADED_OTA_FILE_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX,
+                    OTAResourcesManager.class.getSimpleName(),
+                    new Object() {}.getClass().getEnclosingMethod().getName());
             return;
         }
         File f = new File(context.getDataDir() + Uri.parse(resourcesFile.getFileUri()).getPath());
@@ -100,9 +114,17 @@ public class OTAResourcesManager {
             fd.close();
         } catch (IOException e) {
             LogUtil.e("Exception while trying to add ResourcesProvider:" + e);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             OTAResourcesLoader.clearProviders();
         } catch (Exception e) {
             LogUtil.e("Caught exception while adding providers: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__RESOURCES_PROVIDER_ADD_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             OTAResourcesLoader.clearProviders();
         }
     }
@@ -127,6 +149,10 @@ public class OTAResourcesManager {
             fileGroup = mobileDataDownload.getFileGroup(getFileGroupRequest).get();
         } catch (ExecutionException | InterruptedException e) {
             LogUtil.e(e, "Unable to load MDD file group for " + FILE_GROUP_NAME);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
             return null;
         }
 

@@ -22,6 +22,8 @@ import static org.junit.Assert.assertFalse;
 import android.content.Context;
 import android.net.Uri;
 
+import com.android.adservices.LogUtil;
+
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -96,20 +98,39 @@ public class MockWebServerRule implements TestRule {
         return Objects.nonNull(mCertificateInputStream);
     }
 
-    public MockWebServer startMockWebServer(List<MockResponse> responses) throws Exception {
+    private interface MockWebServerInitializer {
+        void initWebServer(MockWebServer mockWebServer);
+    }
+
+    private MockWebServer startMockWebServer(MockWebServerInitializer mockWebServerInitializer)
+            throws Exception {
         if (mPort == UNINITIALIZED) {
+            LogUtil.v("Initializing MockWebServer. Finding port");
             reserveServerListeningPort();
+            LogUtil.v("MockWebServer will use port " + mPort);
+        } else {
+            LogUtil.v("MockWebServer already initialized at port " + mPort);
         }
 
+        LogUtil.v("Initializing MockWebServer");
         mMockWebServer = new MockWebServer();
         if (useHttps()) {
             mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
         }
-        for (MockResponse response : responses) {
-            mMockWebServer.enqueue(response);
-        }
+        mockWebServerInitializer.initWebServer(mMockWebServer);
+        LogUtil.v("Starting MockWebServer");
         mMockWebServer.play(mPort);
+        LogUtil.v("MockWebServer started at port " + mPort);
         return mMockWebServer;
+    }
+
+    public MockWebServer startMockWebServer(List<MockResponse> responses) throws Exception {
+        return startMockWebServer(
+                mockWebServer -> {
+                    for (MockResponse response : responses) {
+                        mMockWebServer.enqueue(response);
+                    }
+                });
     }
 
     public MockWebServer startMockWebServer(Function<RecordedRequest, MockResponse> lambda)
@@ -125,18 +146,10 @@ public class MockWebServerRule implements TestRule {
     }
 
     public MockWebServer startMockWebServer(Dispatcher dispatcher) throws Exception {
-        if (mPort == UNINITIALIZED) {
-            reserveServerListeningPort();
-        }
-
-        mMockWebServer = new MockWebServer();
-        if (useHttps()) {
-            mMockWebServer.useHttps(getTestingSslSocketFactory(), false);
-        }
-        mMockWebServer.setDispatcher(dispatcher);
-
-        mMockWebServer.play(mPort);
-        return mMockWebServer;
+        return startMockWebServer(
+                mockWebServer -> {
+                    mockWebServer.setDispatcher(dispatcher);
+                });
     }
     /**
      * @return the mock web server for this rull and {@code null} if it hasn't been started yet by

@@ -27,6 +27,8 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
 import com.android.adservices.data.common.DBAdData;
+import com.android.adservices.data.customaudience.AdDataConversionStrategy;
+import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.ValidatorTestUtil;
@@ -135,6 +137,8 @@ public class CustomAudienceFieldSizeValidatorTest {
 
     @Test
     public void testAdsTooBig() {
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(true);
         List<AdData> tooBigAds =
                 List.of(
                         new AdData.Builder()
@@ -154,7 +158,7 @@ public class CustomAudienceFieldSizeValidatorTest {
                         CustomAudienceFieldSizeValidator.VIOLATION_TOTAL_ADS_SIZE_TOO_BIG,
                         FLAGS.getFledgeCustomAudienceMaxAdsSizeB(),
                         tooBigAds.stream()
-                                .map(DBAdData::fromServiceObject)
+                                .map(adDataConversionStrategy::fromServiceObject)
                                 .mapToInt(DBAdData::size)
                                 .sum()));
     }

@@ -1,5 +1,9 @@
 {
   "description": "Given 6 sources - s1 (matching enrollment ID with trigger, wins due to install attribution), s2 (non matching source_filters when creating derived source), s3 (non-matching enrollment ID, ignored due to out of range priority), s4 (expired before trigger time), s5 (its derived source loses due to not having install attribution), s6 (no attribution config for enrollmentId). Also, only one of agregation_keys is shared by winning source.",
+  "phflags_override": {
+    "measurement_enable_xna" : "true",
+    "web_context_client_allow_list" : "*"
+  },
   "input": {
     "sources": [
       {

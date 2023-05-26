@@ -162,6 +162,16 @@ public class CustomizedSdkContextTest {
         mSdk.checkResourcesAndAssets();
     }
 
+    @Test
+    public void testGetOpPackageName() throws Exception {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
+        loadSdk();
+        final PackageManager pm =
+                InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
+        assertThat(mSdk.getOpPackageName()).isEqualTo(pm.getSdkSandboxPackageName());
+    }
+
     private void loadSdk() {
         final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
         mSdkSandboxManager.loadSdk(SDK_NAME_1, new Bundle(), Runnable::run, callback);

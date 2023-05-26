@@ -18,9 +18,12 @@ package com.android.adservices.service.topics;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 import android.util.Pair;
 
-import com.android.adservices.LogUtil;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.service.Flags;
@@ -53,8 +56,11 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This class is thread safe.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 public class CacheManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     // The verbose level for dumpsys usage
     private static final int VERBOSE = 1;
     private static final Object SINGLETON_LOCK = new Object();
@@ -131,7 +137,7 @@ public class CacheManager {
                         .map(Topic::getTopic)
                         .collect(Collectors.toCollection(HashSet::new));
 
-        LogUtil.v(
+        sLogger.v(
                 "CacheManager.loadCache(). CachedTopics mapping size is "
                         + cacheFromDb.size()
                         + ", CachedBlockedTopics mapping size is "
@@ -335,6 +341,7 @@ public class CacheManager {
                         && Integer.parseInt(args[0].toLowerCase()) == VERBOSE;
         writer.println("==== CacheManager Dump ====");
         writer.println(String.format("mCachedTopics size: %d", mCachedTopics.size()));
+        writer.println(String.format("mCachedBlockedTopics size: %d", mCachedBlockedTopics.size()));
         if (isVerbose) {
             for (Long epochId : mCachedTopics.keySet()) {
                 writer.println(String.format("Epoch Id: %d \n", epochId));

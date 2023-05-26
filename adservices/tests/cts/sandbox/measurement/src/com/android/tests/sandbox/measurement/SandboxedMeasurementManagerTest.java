@@ -24,7 +24,7 @@ import android.os.Bundle;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.common.AdservicesCtsHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
@@ -53,7 +53,7 @@ public class SandboxedMeasurementManagerTest {
     @Before
     public void setup() throws TimeoutException {
         // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesCtsHelper.isDeviceSupported());
+        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
 
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(sContext, Duration.ofMillis(1000));
@@ -145,5 +145,6 @@ public class SandboxedMeasurementManagerTest {
                         + overrideString);
         ShellUtils.runShellCommand(
                 "setprop debug.adservices.measurement_api_status_kill_switch " + overrideString);
+        ShellUtils.runShellCommand("setprop debug.adservices.adid_kill_switch " + overrideString);
     }
 }

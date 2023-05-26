@@ -18,12 +18,16 @@ package android.adservices.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Test;
 
 /** Unit tests for {@link AppInstallFilters}. */
@@ -133,5 +137,59 @@ public class AppInstallFiltersTest {
         assertThat(filtersArray.length).isEqualTo(2);
         assertThat(filtersArray[0]).isNull();
         assertThat(filtersArray[1]).isNull();
+    }
+
+    @Test
+    public void testGetSizeInBytes() {
+        final AppInstallFilters originalFilters =
+                new AppInstallFilters.Builder().setPackageNames(CommonFixture.PACKAGE_SET).build();
+        int[] size = new int[1];
+        CommonFixture.PACKAGE_SET.forEach(x -> size[0] += x.getBytes().length);
+        assertEquals(size[0], originalFilters.getSizeInBytes());
+    }
+
+    @Test
+    public void testJsonSerialization() throws JSONException {
+        final AppInstallFilters originalFilters =
+                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+        assertEquals(originalFilters, AppInstallFilters.fromJson(originalFilters.toJson()));
+    }
+
+    @Test
+    public void testJsonSerializationNonString() throws JSONException {
+        final AppInstallFilters originalFilters =
+                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+        JSONObject json = originalFilters.toJson();
+        JSONArray mixedArray = json.getJSONArray(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME);
+        mixedArray.put(0);
+        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, mixedArray);
+        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationNulls() throws JSONException {
+        final AppInstallFilters originalFilters =
+                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+        JSONObject json = originalFilters.toJson();
+        JSONArray mixedArray = json.getJSONArray(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME);
+        mixedArray.put(null);
+        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, mixedArray);
+        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationWrongType() throws JSONException {
+        JSONObject json = new JSONObject();
+        json.put(AppInstallFilters.PACKAGE_NAMES_FIELD_NAME, "value");
+        assertThrows(JSONException.class, () -> AppInstallFilters.fromJson(json));
+    }
+
+    @Test
+    public void testJsonSerializationUnrelatedKey() throws JSONException {
+        final AppInstallFilters originalFilters =
+                AppInstallFiltersFixture.getValidAppInstallFiltersBuilder().build();
+        JSONObject json = originalFilters.toJson();
+        json.put("key", "value");
+        assertEquals(originalFilters, AppInstallFilters.fromJson(originalFilters.toJson()));
     }
 }

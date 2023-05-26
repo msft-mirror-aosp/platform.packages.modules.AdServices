@@ -72,10 +72,27 @@ interface IAdServicesManager {
     boolean wasGaUxNotificationDisplayed();
 
     /**
-     * Saves information to the storage that topics consent page was displayed for the
-     * first time to the user.
+     * Saves information to the storage that user explicitly interacted with consent.
+     *
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
      */
-    void recordTopicsConsentPageDisplayed();
+    void recordUserManualInteractionWithConsent(in int interactionId);
+
+    /**
+     * Returns information about the user's manual interaction with consent.
+     * Current state:
+     * <ul>
+     *    <li> -1 means no manual interaction recorded </li>
+     *    <li> 0 means no data about interaction </li>
+     *    <li> 1 means manual interaction recorded </li>
+     * </ul>
+     */
+    int getUserManualInteractionWithConsent();
 
     /**
      * Record a blocked topic.
@@ -96,26 +113,6 @@ interface IAdServicesManager {
      * Clear all blocked topics.
      */
     void clearAllBlockedTopics();
-
-    /**
-     * Returns information whether topics consent page was displayed or not.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
-     */
-    boolean wasTopicsConsentPageDisplayed();
-
-    /**
-     * Saves information to the storage that fledge consent page was displayed for the
-     * first time to the user.
-     */
-    void recordFledgeAndMsmtConsentPageDisplayed();
-
-    /**
-     * Returns information whether fledge and measurement consent page was displayed or not.
-     *
-     * @return true if fledge and measurement consent page was displayed, otherwise false.
-     */
-    boolean wasFledgeAndMsmtConsentPageDisplayed();
 
     /**
       * Saves the PP API default consent of a user.
@@ -177,6 +174,10 @@ interface IAdServicesManager {
        */
      boolean getDefaultAdIdState();
 
+    String getCurrentPrivacySandboxFeature();
+
+    void setCurrentPrivacySandboxFeature(in String featureType);
+
     List<String> getKnownAppsWithConsent(in List<String> installedPackages);
 
     List<String> getAppsWithRevokedConsent(in List<String> installedPackages);
@@ -192,4 +193,34 @@ interface IAdServicesManager {
     boolean setConsentForAppIfNew(in String packageName,in int packageUid,in boolean isConsentRevoked);
 
     void clearConsentForUninstalledApp(in String packageName,in int packageUid);
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    boolean isAdIdEnabled();
+
+    /** Saves the isAdIdEnabled bit. */
+    void setAdIdEnabled(boolean isAdIdEnabled);
+
+    /** Returns whether the isU18Account bit is true. */
+    boolean isU18Account();
+
+    /** Saves the isU18Account bit. */
+    void setU18Account(boolean isU18Account);
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    boolean isEntryPointEnabled();
+
+    /** Saves the isEntryPointEnabled bit. */
+    void setEntryPointEnabled(boolean isEntryPointEnabled);
+
+    /** Returns whether the isAdultAccount bit is true. */
+    boolean isAdultAccount();
+
+    void setAdultAccount(boolean isAdultAccount);
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    boolean wasU18NotificationDisplayed();
+
+    /** Saves the wasU18NotificationDisplayed bit. */
+    void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed);
+
 }

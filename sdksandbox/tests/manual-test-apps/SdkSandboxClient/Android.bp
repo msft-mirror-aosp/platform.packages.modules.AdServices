@@ -23,6 +23,7 @@ android_test_helper_app {
     srcs: ["src/**/sdksandboxclient/*.java"],
     static_libs: [
         "SdkInterfaces",
+        "modules-utils-backgroundthread",
         "modules-utils-build",
     ],
     resource_dirs: ["res"],

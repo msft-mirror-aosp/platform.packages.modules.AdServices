@@ -17,7 +17,8 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.FIRST_ENTRY_REQUEST_TIMESTAMP;
-import static com.android.adservices.service.AdServicesConfig.CONSENT_NOTIFICATION_JOB_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
+import static com.android.adservices.spe.AdservicesJobInfo.CONSENT_NOTIFICATION_JOB;
 
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
@@ -26,9 +27,11 @@ import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.PersistableBundle;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -36,8 +39,10 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
+import com.android.adservices.spe.AdservicesJobServiceLogger;
 
 import com.google.android.libraries.mobiledatadownload.GetFileGroupRequest;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFileGroup;
@@ -50,8 +55,10 @@ import java.util.concurrent.ExecutionException;
  * Consent Notification job. This will be run every day during acceptable hours (provided by PH
  * flags) to trigger the Notification for Privacy Sandbox.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationJobService extends JobService {
-
+    static final int CONSENT_NOTIFICATION_JOB_ID = CONSENT_NOTIFICATION_JOB.getJobId();
     static final long MILLISECONDS_IN_THE_DAY = 86400000L;
 
     static final String ADID_ENABLE_STATUS = "adid_enable_status";
@@ -188,6 +195,18 @@ public class ConsentNotificationJobService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         LogUtil.d("ConsentNotificationJobService.onStartJob");
+
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
+
+        if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
+            LogUtil.d(
+                    "Disabling ConsentNotificationJobService job because it's running in"
+                            + " ExtServices on T+");
+            return skipAndCancelBackgroundJob(
+                    params,
+                    AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
+        }
+
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
         }
@@ -226,7 +245,15 @@ public class ConsentNotificationJobService extends JobService {
                                             .execute(this, isEuNotification);
                                 }
                             } finally {
-                                jobFinished(params, false);
+                                boolean shouldRetry = false;
+                                AdservicesJobServiceLogger.getInstance(
+                                                ConsentNotificationJobService.this)
+                                        .recordJobFinished(
+                                                CONSENT_NOTIFICATION_JOB_ID,
+                                                /* isSuccessful= */ true,
+                                                shouldRetry);
+
+                                jobFinished(params, shouldRetry);
                             }
                         });
         return true;
@@ -235,7 +262,26 @@ public class ConsentNotificationJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LogUtil.d("ConsentNotificationJobService.onStopJob");
-        return true;
+
+        boolean shouldRetry = true;
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStopJob(params, CONSENT_NOTIFICATION_JOB_ID, shouldRetry);
+        return shouldRetry;
+    }
+
+    private boolean skipAndCancelBackgroundJob(final JobParameters params, int skipReason) {
+        this.getSystemService(JobScheduler.class).cancel(CONSENT_NOTIFICATION_JOB_ID);
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordJobSkipped(CONSENT_NOTIFICATION_JOB_ID, skipReason);
+
+        // Tell the JobScheduler that the job has completed and does not need to be
+        // rescheduled.
+        jobFinished(params, false);
+
+        // Returning false means that this job has completed its work.
+        return false;
     }
 
     private void handleOtaStrings(long firstEntryRequestTimestamp, boolean isEuNotification) {

@@ -60,7 +60,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     private int mInitializationCount = 0;
 
     boolean mIsDisabledResponse = false;
+    boolean mWasVisibilityPatchChecked = false;
     public boolean dieOnLoad = false;
+
+    public boolean failInitialization = false;
 
     private SharedPreferencesUpdate mLastSyncUpdate = null;
 
@@ -86,7 +89,11 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
 
     @Override
     public void initialize(
-            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled) {
+            ISdkToServiceCallback sdkToServiceCallback, boolean isCustomizedSdkContextEnabled)
+            throws IllegalStateException {
+        if (failInitialization) {
+            throw new IllegalStateException();
+        }
         mInitializationCount++;
     }
 
@@ -122,6 +129,7 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
     @Override
     public void isDisabled(ISdkSandboxDisabledCallback callback) {
         try {
+            mWasVisibilityPatchChecked = true;
             callback.onResult(mIsDisabledResponse);
         } catch (RemoteException e) {
             e.rethrowAsRuntimeException();
@@ -204,6 +212,10 @@ public class FakeSdkSandboxService extends ISdkSandboxService.Stub {
             int errorCode, String errorMsg, FakeRequestSurfacePackageCallbackBinder callback)
             throws RemoteException {
         callback.onSurfacePackageError(errorCode, errorMsg, System.currentTimeMillis());
+    }
+
+    public boolean wasVisibilityPatchChecked() {
+        return mWasVisibilityPatchChecked;
     }
 
     public void setIsDisabledResponse(boolean response) {

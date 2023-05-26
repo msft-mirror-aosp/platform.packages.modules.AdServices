@@ -16,12 +16,14 @@
 
 package com.android.adservices.ui.settings.fragments;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,6 +40,8 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel;
 import java.util.function.Function;
 
 /** Fragment for the blocked topics view of the AdServices Settings App. */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsBlockedTopicsFragment extends Fragment {
 
     @Override

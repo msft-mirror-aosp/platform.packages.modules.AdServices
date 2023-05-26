@@ -87,15 +87,6 @@ public final class PermissionHelper {
         return status == PackageManager.PERMISSION_GRANTED;
     }
 
-    /** @return {@code true} if the caller has the permission to invoke the App Install API. */
-    public static boolean hasAppInstallPermission(@NonNull Context context) {
-        // TODO(b/236268316): Add check for SDK permission.
-        int status =
-                context.checkCallingOrSelfPermission(
-                        AdServicesPermissions.ACCESS_ADSERVICES_APP_INSTALL);
-        return status == PackageManager.PERMISSION_GRANTED;
-    }
-
     /**
      * @return {@code true} if the caller has the permission to invoke AdService's state
      *     modification API.

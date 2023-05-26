@@ -18,8 +18,8 @@ package com.android.adservices.service.measurement;
 
 
 import android.net.Uri;
+import android.os.RemoteException;
 
-import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.service.measurement.actions.Action;
 import com.android.adservices.service.measurement.actions.RegisterSource;
 import com.android.adservices.service.measurement.actions.RegisterWebSource;
@@ -59,23 +59,27 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
         return data(TEST_DIR_NAME, E2ETest::preprocessTestJson);
     }
 
-    public E2EImpressionNoiseMockTest(Collection<Action> actions, ReportObjects expectedOutput,
-            ParamsProvider paramsProvider, String name) throws DatastoreException {
-        super(actions, expectedOutput, paramsProvider, name);
+    public E2EImpressionNoiseMockTest(
+            Collection<Action> actions,
+            ReportObjects expectedOutput,
+            ParamsProvider paramsProvider,
+            String name,
+            Map<String, String> phFlagsMap)
+            throws RemoteException {
+        super(actions, expectedOutput, paramsProvider, name, phFlagsMap);
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(sDatastoreManager, mFlags);
         mMeasurementImpl =
                 TestObjectProvider.getMeasurementImpl(
                         sDatastoreManager,
                         mClickVerifier,
                         mMeasurementDataDeleter,
-                        sEnrollmentDao);
+                        mMockContentResolver);
         mAsyncRegistrationQueueRunner =
                 TestObjectProvider.getAsyncRegistrationQueueRunner(
                         TestObjectProvider.Type.NOISY,
                         sDatastoreManager,
                         mAsyncSourceFetcher,
                         mAsyncTriggerFetcher,
-                        sEnrollmentDao,
                         mDebugReportApi);
         getExpectedTriggerDataDistributions();
     }
@@ -84,7 +88,7 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
@@ -92,13 +96,14 @@ public class E2EImpressionNoiseMockTest extends E2EMockTest {
     void processAction(RegisterWebSource sourceRegistration) throws IOException, JSONException {
         super.processAction(sourceRegistration);
         if (sourceRegistration.mDebugReporting) {
-            processDebugReportApiJob();
+            processActualDebugReportApiJob();
         }
     }
 
     @Override
-    void processEventReports(List<EventReport> eventReports, List<Uri> destinations,
-            List<JSONObject> payloads) throws JSONException {
+    void processActualEventReports(
+            List<EventReport> eventReports, List<Uri> destinations, List<JSONObject> payloads)
+            throws JSONException {
         // Each report-destination × event-ID should have the same count of trigger_data as in the
         // expected output, but the trigger_data value distribution should be different. The test
         // is currently supporting only one reporting job, which batches multiple reports at once,

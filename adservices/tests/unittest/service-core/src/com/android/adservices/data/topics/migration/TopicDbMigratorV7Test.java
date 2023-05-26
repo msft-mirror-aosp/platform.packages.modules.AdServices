@@ -18,14 +18,11 @@ package com.android.adservices.data.topics.migration;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Mockito.when;
-
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
@@ -111,11 +108,6 @@ public class TopicDbMigratorV7Test {
         assertThat(topicsDao.retrieveTopicToContributorsMap(epochId))
                 .isEqualTo(topicContributorsMap);
 
-        // Now downgrade db and upgrade it again.
-        when(mMockFlags.getEnableTopicMigration()).thenReturn(false);
-        mTopicsDbHelper.onDowngrade(
-                db, DbHelper.DATABASE_VERSION_V7, DbHelper.CURRENT_DATABASE_VERSION);
-        when(mMockFlags.getEnableTopicMigration()).thenReturn(true);
         new TopicDbMigratorV7().performMigration(db);
         // Commit the schema change
         db.setTransactionSuccessful();

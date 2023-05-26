@@ -34,8 +34,6 @@ import java.util.Objects;
  *
  * @hide
  */
-
-// TODO(b/267712947) Un-hide Contextual Ads for API review
 public final class ContextualAds implements Parcelable {
     @NonNull private final AdTechIdentifier mBuyer;
     @NonNull private final Uri mDecisionLogicUri;

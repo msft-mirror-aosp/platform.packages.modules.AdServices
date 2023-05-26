@@ -33,10 +33,6 @@
         <option name="package" value="com.android.adservices.tests.cts.topics.appupdate"/>
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.DeviceSetup" >
-        <option name="force-skip-system-props" value="true" />
-    </target_preparer>
-
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <!-- Disable global/topics kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
@@ -46,6 +42,7 @@
         <!-- Override Consent Manager to debug mode to grant user consent -->
         <option name="run-command" value="setprop debug.adservices.consent_manager_debug_mode true" />
         <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE" />
         <!-- Override the flag to disable Topics enrollment check. -->
         <option name="run-command" value="setprop debug.adservices.disable_topics_enrollment_check true" />
         <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->

@@ -21,7 +21,7 @@ import android.os.Process;
 import com.android.modules.utils.build.SdkLevel;
 
 /**
- * Utility class that contains methods associated with {@link Process} that need be handled in a
+ * Utility class that contains methods associated with {@link Process} that need to be handled in a
  * backward-compatible manner.
  */
 public final class ProcessCompatUtils {

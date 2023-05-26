@@ -15,12 +15,14 @@
  */
 package com.android.server.adservices.consent;
 
+
 import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.common.BooleanFileDatastore;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,6 +67,10 @@ public final class ConsentManager {
     static final String MEASUREMENT_DEFAULT_CONSENT = "MEASUREMENT_DEFAULT_CONSENT";
 
     @VisibleForTesting static final String DEFAULT_AD_ID_STATE = "DEFAULT_AD_ID_STATE";
+
+    @VisibleForTesting
+    static final String MANUAL_INTERACTION_WITH_CONSENT_RECORDED =
+            "MANUAL_INTERACTION_WITH_CONSENT_RECORDED";
 
     private ConsentManager(@NonNull BooleanFileDatastore datastore) {
         Objects.requireNonNull(datastore);
@@ -220,36 +226,6 @@ public final class ConsentManager {
         }
     }
 
-    /**
-     * Saves information to the storage that topics consent page was displayed for the first time to
-     * the user.
-     */
-    public void recordTopicsConsentPageDisplayed() throws IOException {
-        synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(TOPICS_CONSENT_PAGE_DISPLAYED, true);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record topics consent page failed due to"
-                                + " IOException thrown by Datastore.");
-            }
-        }
-    }
-
-    /**
-     * Returns information whether topics consent page was displayed or not.
-     *
-     * @return true if topics consent page was displayed, otherwise false.
-     */
-    public boolean wasTopicsConsentPageDisplayed() {
-        synchronized (this) {
-            Boolean displayed = mDatastore.get(TOPICS_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
-        }
-    }
-
     /** Saves the default consent of a user. */
     public void recordDefaultConsent(boolean defaultConsent) throws IOException {
         synchronized (this) {
@@ -323,6 +299,50 @@ public final class ConsentManager {
         }
     }
 
+    /** Saves the information whether the user interated manually with the consent. */
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        synchronized (this) {
+            try {
+                switch (interaction) {
+                    case -1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, false);
+                        break;
+                    case 0:
+                        mDatastore.remove(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+                        break;
+                    case 1:
+                        mDatastore.put(MANUAL_INTERACTION_WITH_CONSENT_RECORDED, true);
+                        break;
+                    default:
+                        throw new IllegalArgumentException(
+                                String.format(
+                                        "InteractionId < %d > can not be handled.", interaction));
+                }
+            } catch (IOException e) {
+                LogUtil.e(
+                        e,
+                        "Record manual interaction with consent failed due to IOException thrown"
+                                + " by Datastore: "
+                                + e.getMessage());
+            }
+        }
+    }
+
+    /** Returns information whether user interacted with consent manually. */
+    public int getUserManualInteractionWithConsent() {
+        synchronized (this) {
+            Boolean userManualInteractionWithConsent =
+                    mDatastore.get(MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
+            if (userManualInteractionWithConsent == null) {
+                return 0;
+            } else if (Boolean.TRUE.equals(userManualInteractionWithConsent)) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+    }
+
     /**
      * Returns the default consent state.
      *
@@ -383,33 +403,30 @@ public final class ConsentManager {
         }
     }
 
-    /**
-     * Saves information to the storage that Fledge and Msmt consent was displayed for the first
-     * time to the user.
-     */
-    public void recordFledgeAndMsmtConsentPageDisplayed() throws IOException {
+    /** Set the current enabled privacy sandbox feature. */
+    public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
         synchronized (this) {
-            try {
-                // TODO(b/229725886): add metrics / logging
-                mDatastore.put(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, true);
-            } catch (IOException e) {
-                LogUtil.e(
-                        e,
-                        "Record fledge and Msmt consent page failed due to "
-                                + "IOException thrown by Datastore.");
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                try {
+                    if (featureType.name().equals(currentFeatureType)) {
+                        mDatastore.put(featureType.name(), true);
+                    } else {
+                        mDatastore.put(featureType.name(), false);
+                    }
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature."
+                                    + e.getMessage());
+                }
             }
         }
     }
 
-    /**
-     * Returns information whether fledge and msmt consent page was displayed or not.
-     *
-     * @return true if fledge and msmt consent page was displayed, otherwise false.
-     */
-    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
+    /** Returns whether a privacy sandbox feature is enabled. */
+    public boolean isPrivacySandboxFeatureEnabled(PrivacySandboxFeatureType featureType) {
         synchronized (this) {
-            Boolean displayed = mDatastore.get(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED);
-            return displayed != null ? displayed : false;
+            Boolean isFeatureEnabled = mDatastore.get(featureType.name());
+            return isFeatureEnabled != null ? isFeatureEnabled : false;
         }
     }
 
@@ -444,6 +461,113 @@ public final class ConsentManager {
     public void tearDownForTesting() {
         synchronized (this) {
             mDatastore.tearDownForTesting();
+        }
+    }
+
+    @VisibleForTesting static final String IS_AD_ID_ENABLED = "IS_AD_ID_ENABLED";
+
+    /** Returns whether the isAdIdEnabled bit is true. */
+    public boolean isAdIdEnabled() {
+        synchronized (this) {
+            Boolean isAdIdEnabled = mDatastore.get(IS_AD_ID_ENABLED);
+            return isAdIdEnabled != null ? isAdIdEnabled : false;
+        }
+    }
+
+    /** Set the AdIdEnabled bit in system server. */
+    public void setAdIdEnabled(boolean isAdIdEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_AD_ID_ENABLED, isAdIdEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setAdIdEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_U18_ACCOUNT = "IS_U18_ACCOUNT";
+
+    /** Returns whether the isU18Account bit is true. */
+    public boolean isU18Account() {
+        synchronized (this) {
+            Boolean isU18Account = mDatastore.get(IS_U18_ACCOUNT);
+            return isU18Account != null ? isU18Account : false;
+        }
+    }
+
+    /** Set the U18Account bit in system server. */
+    public void setU18Account(boolean isU18Account) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_U18_ACCOUNT, isU18Account);
+            } catch (IOException e) {
+                LogUtil.e(e, "setU18Account operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_ENTRY_POINT_ENABLED = "IS_ENTRY_POINT_ENABLED";
+
+    /** Returns whether the isEntryPointEnabled bit is true. */
+    public boolean isEntryPointEnabled() {
+        synchronized (this) {
+            Boolean isEntryPointEnabled = mDatastore.get(IS_ENTRY_POINT_ENABLED);
+            return isEntryPointEnabled != null ? isEntryPointEnabled : false;
+        }
+    }
+
+    /** Set the EntryPointEnabled bit in system server. */
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_ENTRY_POINT_ENABLED, isEntryPointEnabled);
+            } catch (IOException e) {
+                LogUtil.e(e, "setEntryPointEnabled operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting static final String IS_ADULT_ACCOUNT = "IS_ADULT_ACCOUNT";
+
+    /** Returns whether the isAdultAccount bit is true. */
+    public boolean isAdultAccount() {
+        synchronized (this) {
+            Boolean isAdultAccount = mDatastore.get(IS_ADULT_ACCOUNT);
+            return isAdultAccount != null ? isAdultAccount : false;
+        }
+    }
+
+    /** Set the AdultAccount bit in system server. */
+    public void setAdultAccount(boolean isAdultAccount) throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(IS_ADULT_ACCOUNT, isAdultAccount);
+            } catch (IOException e) {
+                LogUtil.e(e, "setAdultAccount operation failed: " + e.getMessage());
+            }
+        }
+    }
+
+    @VisibleForTesting
+    static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    public boolean wasU18NotificationDisplayed() {
+        synchronized (this) {
+            Boolean wasU18NotificationDisplayed = mDatastore.get(WAS_U18_NOTIFICATION_DISPLAYED);
+            return wasU18NotificationDisplayed != null ? wasU18NotificationDisplayed : false;
+        }
+    }
+
+    /** Set the U18NotificationDisplayed bit in system server. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed)
+            throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(WAS_U18_NOTIFICATION_DISPLAYED, wasU18NotificationDisplayed);
+            } catch (IOException e) {
+                LogUtil.e(e, "setU18NotificationDisplayed operation failed: " + e.getMessage());
+            }
         }
     }
 }

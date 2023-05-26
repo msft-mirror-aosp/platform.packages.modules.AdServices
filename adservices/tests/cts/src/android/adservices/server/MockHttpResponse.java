@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
-package com.google.android.adservices.cts.server;
+package android.adservices.server;
 
 import com.google.auto.value.AutoValue;
 
 @AutoValue
 public abstract class MockHttpResponse {
 
-    abstract byte[] body();
+    abstract String getBody();
+
+    public static android.adservices.server.MockHttpResponse.Builder builder() {
+        return new AutoValue_MockHttpResponse.Builder();
+    }
+
+    @AutoValue.Builder
+    public abstract static class Builder {
+        public abstract android.adservices.server.MockHttpResponse.Builder setBody(String body);
+
+        public abstract MockHttpResponse build();
+    }
 }

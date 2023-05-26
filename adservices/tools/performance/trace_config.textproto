@@ -40,7 +40,10 @@ data_sources {
       ftrace_events: "fastrpc/fastrpc_dma_stat"
       ftrace_events: "lowmemorykiller/lowmemory_kill"
 
+      # AdServices package name on T+
       atrace_apps: "com.google.android.adservices.api"
+      # AdServices package name on S- (go/rbc-design)
+      atrace_apps: "com.google.android.ext.adservices.api"
       atrace_apps: "lmkd"
 
       atrace_categories: "aidl"

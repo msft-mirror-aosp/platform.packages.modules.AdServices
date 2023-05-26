@@ -18,6 +18,8 @@ package com.android.tests.sdksandbox;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.app.ActivityManager;
+import android.app.ApplicationExitInfo;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.EmptyActivity;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
@@ -28,6 +30,7 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.DropBoxManager;
+import android.os.Process;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -44,8 +47,6 @@ import java.util.concurrent.TimeUnit;
 public class SdkSandboxMetricsTestApp {
 
     private SdkSandboxManager mSdkSandboxManager;
-    private ICrashTestSdkApi mSdk;
-
     private static final String SDK_PACKAGE = "com.android.tests.sdkprovider.crashtest";
     private static final String TAG_SYSTEM_APP_CRASH = "system_app_crash";
     private static final int N_DROPBOX_HEADER_BYTES = 1024;
@@ -76,9 +77,44 @@ public class SdkSandboxMetricsTestApp {
     }
 
     @Test
+    public void testSdkCanAccessSdkSandboxExitReasons() throws Exception {
+        mRule.getScenario();
+        generateSdkSandboxCrash();
+
+        // Restart the SDK sandbox
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        final ICrashTestSdkApi sdk =
+                ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+        final ApplicationExitInfo info = sdk.getLastApplicationExitInfo();
+        assertThat(info).isNotNull();
+        assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+    }
+
+    @Test
+    public void testAppWithDumpPermissionCanAccessSdkSandboxExitReasons() throws Exception {
+        mRule.getScenario();
+        generateSdkSandboxCrash();
+
+        final ActivityManager am = mContext.getSystemService(ActivityManager.class);
+        assertThat(am).isNotNull();
+
+        final ApplicationExitInfo info =
+                am.getHistoricalProcessExitReasons(
+                                mContext.getPackageManager().getSdkSandboxPackageName(), 0, -1)
+                        .get(0);
+        assertThat(info).isNotNull();
+        assertThat(info.getRealUid()).isEqualTo(Process.toSdkSandboxUid(Process.myUid()));
+        assertThat(info.getReason()).isEqualTo(ApplicationExitInfo.REASON_CRASH);
+    }
+
+    @Test
     public void testCrashSandboxGeneratesDropboxReport() throws Exception {
         mRule.getScenario();
-        CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch latch = new CountDownLatch(1);
         final BroadcastReceiver receiver =
                 new BroadcastReceiver() {
                     @Override
@@ -111,21 +147,10 @@ public class SdkSandboxMetricsTestApp {
                     }
                 };
 
-        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                Runnable::run,
-                () -> {
-                    // Avoid being killed when sandbox crashes
-                });
-
         mContext.registerReceiver(
                 receiver, new IntentFilter(DropBoxManager.ACTION_DROPBOX_ENTRY_ADDED));
-        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
-        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
-        callback.assertLoadSdkIsSuccessful();
-
-        mSdk = ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
-        mSdk.triggerCrash();
+        generateSdkSandboxCrash();
 
         assertThat(latch.await(5, TimeUnit.SECONDS)).isTrue();
         assertThat(mCrashEntryText)
@@ -137,5 +162,22 @@ public class SdkSandboxMetricsTestApp {
                 .contains(
                         String.format(
                                 "SdkSandbox-Library: %s v%d", SDK_PACKAGE_NAME, SDK_VERSION_CODE));
+    }
+
+    private void generateSdkSandboxCrash() throws Exception {
+        final CountDownLatch deathLatch = new CountDownLatch(1);
+        // Avoid being killed when sandbox crashes
+        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(Runnable::run, deathLatch::countDown);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+
+        // Start and crash the SDK sandbox
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+
+        final ICrashTestSdkApi sdk =
+                ICrashTestSdkApi.Stub.asInterface(callback.getSandboxedSdk().getInterface());
+        sdk.triggerCrash();
+        assertThat(deathLatch.await(5, TimeUnit.SECONDS)).isTrue();
     }
 }

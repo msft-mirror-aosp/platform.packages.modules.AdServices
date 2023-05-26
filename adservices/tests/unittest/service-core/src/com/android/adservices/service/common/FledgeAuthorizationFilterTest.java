@@ -190,45 +190,6 @@ public class FledgeAuthorizationFilterTest {
     }
 
     @Test
-    public void testAssertAppHasAppInstallPermission_appHasPermission() {
-        when(PermissionHelper.hasAppInstallPermission(CONTEXT)).thenReturn(true);
-
-        mChecker.assertAppDeclaredAppInstallPermission(CONTEXT, API_NAME_LOGGING_ID);
-
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
-    }
-
-    @Test
-    public void testAssertAppHasAppInstallPermission_appDoesNotHavePermission_throwException() {
-        when(PermissionHelper.hasAppInstallPermission(CONTEXT)).thenReturn(false);
-
-        SecurityException exception =
-                assertThrows(
-                        SecurityException.class,
-                        () ->
-                                mChecker.assertAppDeclaredAppInstallPermission(
-                                        CONTEXT, API_NAME_LOGGING_ID));
-
-        assertEquals(
-                AdServicesStatusUtils.SECURITY_EXCEPTION_PERMISSION_NOT_REQUESTED_ERROR_MESSAGE,
-                exception.getMessage());
-        verify(mAdServicesLoggerMock)
-                .logFledgeApiCallStats(
-                        eq(API_NAME_LOGGING_ID), eq(STATUS_PERMISSION_NOT_REQUESTED), anyInt());
-        verifyNoMoreInteractions(mAdServicesLoggerMock);
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao);
-    }
-
-    @Test
-    public void testAssertAppHasAppInstallPermission_nullContext_throwNpe() {
-        assertThrows(
-                NullPointerException.class,
-                () -> mChecker.assertAppDeclaredAppInstallPermission(null, API_NAME_LOGGING_ID));
-
-        verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
-    }
-
-    @Test
     public void testAssertAdTechHasPermission_hasPermission() {
         when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
                         CommonFixture.VALID_BUYER_1))
@@ -362,5 +323,31 @@ public class FledgeAuthorizationFilterTest {
                                 CONTEXT, PACKAGE_NAME, null, API_NAME_LOGGING_ID));
 
         verifyZeroInteractions(mPackageManager, mEnrollmentDao, mAdServicesLoggerMock);
+    }
+
+    @Test
+    public void testAdTechNotEnrolled_throwSecurityException() {
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(null);
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        mChecker.assertAdTechEnrolled(
+                                CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID));
+    }
+
+    @Test
+    public void testAdTechEnrolled_isEnrolled() {
+        when(mEnrollmentDao.getEnrollmentDataForFledgeByAdTechIdentifier(
+                        CommonFixture.VALID_BUYER_1))
+                .thenReturn(ENROLLMENT_DATA);
+
+        mChecker.assertAdTechEnrolled(CommonFixture.VALID_BUYER_1, API_NAME_LOGGING_ID);
+
+        verify(mEnrollmentDao)
+                .getEnrollmentDataForFledgeByAdTechIdentifier(CommonFixture.VALID_BUYER_1);
+        verifyNoMoreInteractions(mEnrollmentDao);
     }
 }

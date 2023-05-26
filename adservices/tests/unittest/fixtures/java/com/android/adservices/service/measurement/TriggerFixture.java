@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public final class TriggerFixture {
     private TriggerFixture() { }
@@ -38,15 +39,17 @@ public final class TriggerFixture {
     // {@link ValidTriggerParams}
     public static Trigger.Builder getValidTriggerBuilder() {
         return new Trigger.Builder()
-            .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
-            .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
-            .setRegistrant(ValidTriggerParams.REGISTRANT);
+                .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                .setRegistrant(ValidTriggerParams.REGISTRANT)
+                .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN);
     }
 
     // Assume the field values in this Trigger have no relation to the field values in
     // {@link ValidTriggerParams}
     public static Trigger getValidTrigger() {
         return new Trigger.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setAttributionDestination(ValidTriggerParams.ATTRIBUTION_DESTINATION)
                 .setEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
                 .setRegistrant(ValidTriggerParams.REGISTRANT)
@@ -58,6 +61,7 @@ public final class TriggerFixture {
                 .setNotFilters(ValidTriggerParams.TOP_LEVEL_NOT_FILTERS_JSON_STRING)
                 .setAttributionConfig(ValidTriggerParams.ATTRIBUTION_CONFIGS_STRING)
                 .setAdtechBitMapping(ValidTriggerParams.X_NETWORK_KEY_MAPPING)
+                .setRegistrationOrigin(ValidTriggerParams.REGISTRATION_ORIGIN)
                 .build();
     }
 
@@ -148,6 +152,11 @@ public final class TriggerFixture {
                         + "\"AdTechA-enrollment_id\": \"0x1\","
                         + "\"AdTechB-enrollment_id\": \"0x2\""
                         + "}";
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
+
+        public static final String PLATFORM_AD_ID = "test-platform-ad-id";
+        public static final String DEBUG_AD_ID = "test-debug-ad-id";
 
         public static final AggregatableAttributionTrigger buildAggregatableAttributionTrigger() {
             final FilterMap filter =

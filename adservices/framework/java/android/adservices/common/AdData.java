@@ -121,6 +121,9 @@ public final class AdData implements Parcelable {
      * <p>The keys and counts per key are used in frequency cap filtering during ad selection to
      * disqualify associated ads from being submitted to bidding.
      *
+     * <p>Note that these keys can be overwritten along with the ads and other bidding data for a
+     * custom audience during the custom audience's daily update.
+     *
      * @hide
      */
     // TODO(b/221876775): Unhide for frequency cap API review
@@ -163,9 +166,25 @@ public final class AdData implements Parcelable {
 
     @Override
     public String toString() {
-        // TODO(b/221876775): Add ad counter keys and ad filters when frequency cap/filter classes
-        //  are unhidden
-        return "AdData{" + "mRenderUri=" + mRenderUri + ", mMetadata='" + mMetadata + '\'' + '}';
+        return "AdData{"
+                + "mRenderUri="
+                + mRenderUri
+                + ", mMetadata='"
+                + mMetadata
+                + '\''
+                + generateAdCounterKeyString()
+                + generateAdFilterString()
+                + '}';
+    }
+
+    private String generateAdCounterKeyString() {
+        // TODO(b/221876775) Add ad counter keys String when unhidden
+        return "";
+    }
+
+    private String generateAdFilterString() {
+        // TODO(b/266837113) Add ad filters String when unhidden
+        return "";
     }
 
     /** Builder for {@link AdData} objects. */

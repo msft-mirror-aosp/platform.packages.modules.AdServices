@@ -30,9 +30,9 @@ android_test {
         "androidx.test.core",
         "truth-prebuilt",
         "mockito-target-extended-minus-junit4",
-        "ub-uiautomator",
         "services.core",
         "framework-adservices.impl",
+        "adservices-test-utility",
         "service-adservices.impl",
         // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
         "service-sdksandbox.impl",
@@ -42,11 +42,6 @@ android_test {
         "android.test.mock",
         "android.test.runner",
         "framework-configinfrastructure",
-    ],
-    jni_libs: [
-        // Required for ExtendedMockito
-        "libdexmakerjvmtiagent",
-        "libstaticjvmtiagent",
     ],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",

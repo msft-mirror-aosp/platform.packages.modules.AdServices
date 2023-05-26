@@ -34,8 +34,10 @@ import android.os.RemoteException;
 import android.os.SystemClock;
 import android.text.TextUtils;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
-import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.ServiceBinder;
 
 import java.util.ArrayList;
@@ -50,7 +52,10 @@ import java.util.concurrent.Executor;
  * <p>The instance of the {@link TopicsManager} can be obtained using {@link
  * Context#getSystemService} and {@link TopicsManager} class.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public final class TopicsManager {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     /**
      * Constant that represents the service name for {@link TopicsManager} to be used in {@link
      * android.adservices.AdServicesFrameworkInitializer#registerServiceWrappers}
@@ -76,7 +81,11 @@ public final class TopicsManager {
      */
     @NonNull
     public static TopicsManager get(@NonNull Context context) {
-        // On T+, context.getSystemService() does more than just call constructor.
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+        }
+        // On TM+, context.getSystemService() does more than just call constructor.
         return (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                 ? context.getSystemService(TopicsManager.class)
                 : new TopicsManager(context);
@@ -88,6 +97,10 @@ public final class TopicsManager {
      * @hide
      */
     public TopicsManager(Context context) {
+        // TODO(b/269798827): Enable for R.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            throw new IllegalStateException(ILLEGAL_STATE_EXCEPTION_ERROR_MESSAGE);
+        }
         // In case the TopicsManager is initiated from inside a sdk_sandbox process the fields
         // will be immediately rewritten by the initialize method below.
         initialize(context);
@@ -215,7 +228,7 @@ public final class TopicsManager {
                         }
                     });
         } catch (RemoteException e) {
-            LogUtil.e(e, "RemoteException");
+            sLogger.e(e, "RemoteException");
             callback.onError(e);
         }
     }

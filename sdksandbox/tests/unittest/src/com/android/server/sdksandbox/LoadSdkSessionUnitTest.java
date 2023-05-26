@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallbackBinder;
 import android.app.sdksandbox.testutils.FakeRequestSurfacePackageCallbackBinder;
@@ -52,12 +53,18 @@ public class LoadSdkSessionUnitTest {
         mInjector = new SdkSandboxManagerService.Injector(mContext);
         mSdkSandboxService = new FakeSdkSandboxService();
         mTestCallingInfo = new CallingInfo(Process.myUid(), TEST_PACKAGE);
+
+        // Required for using MATCH_ANY_USER when fetching installed SDK.
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
     }
 
     @Test
     public void testLoadSdkSessionIsInitiallyPendingLoad() {
         LoadSdkSession sdkSession =
-                new LoadSdkSession(mContext, mInjector, "random", mTestCallingInfo, null, null);
+                new LoadSdkSession(
+                        mContext, null, mInjector, "random", mTestCallingInfo, null, null);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
         assertThat(sdkSession.getSandboxedSdk()).isNull();
     }
@@ -65,7 +72,8 @@ public class LoadSdkSessionUnitTest {
     @Test
     public void testGetSdkProviderInfo_SdkDoesNotExist() {
         LoadSdkSession sdkSession =
-                new LoadSdkSession(mContext, mInjector, "random", mTestCallingInfo, null, null);
+                new LoadSdkSession(
+                        mContext, null, mInjector, "random", mTestCallingInfo, null, null);
         assertThat(sdkSession.mSdkProviderInfo).isNull();
         assertThat(sdkSession.getSdkProviderErrorIfExists()).contains("not found for loading");
     }
@@ -73,7 +81,8 @@ public class LoadSdkSessionUnitTest {
     @Test
     public void testGetSdkProviderInfo_SdkIsValid() {
         LoadSdkSession sdkSession =
-                new LoadSdkSession(mContext, mInjector, SDK_NAME, mTestCallingInfo, null, null);
+                new LoadSdkSession(
+                        mContext, null, mInjector, SDK_NAME, mTestCallingInfo, null, null);
 
         assertThat(sdkSession.mSdkProviderInfo).isNotNull();
         assertThat(sdkSession.mSdkProviderInfo.getSdkProviderClassName())
@@ -89,7 +98,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -105,7 +120,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -122,7 +143,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -143,7 +170,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -166,7 +199,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Throw a DeadObjectException when loading the SDK.
         mSdkSandboxService.dieOnLoad = true;
@@ -181,7 +220,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -200,7 +245,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -218,7 +269,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -237,7 +294,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
         assertThat(sdkSession.getStatus()).isEqualTo(LoadSdkSession.LOAD_PENDING);
 
         // Request to load the SDK in this session, but don't complete the request.
@@ -259,7 +322,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session and fail it.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -278,7 +347,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -302,7 +377,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -326,7 +407,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);
@@ -348,7 +435,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         FakeRequestSurfacePackageCallbackBinder surfacePackageCallback =
                 new FakeRequestSurfacePackageCallbackBinder();
@@ -366,7 +459,13 @@ public class LoadSdkSessionUnitTest {
         FakeLoadSdkCallbackBinder callback = new FakeLoadSdkCallbackBinder();
         LoadSdkSession sdkSession =
                 new LoadSdkSession(
-                        mContext, mInjector, SDK_NAME, mTestCallingInfo, new Bundle(), callback);
+                        mContext,
+                        null,
+                        mInjector,
+                        SDK_NAME,
+                        mTestCallingInfo,
+                        new Bundle(),
+                        callback);
 
         // Load the SDK in this session.
         sdkSession.load(mSdkSandboxService, "", "", -1, -1);

@@ -27,6 +27,8 @@ public class KeyedFrequencyCapFixture {
     public static final String KEY3 = "key3";
     public static final String KEY4 = "key4";
     public static final int VALID_COUNT = 10;
+    public static final int FILTER_COUNT = 1;
+    public static final int FILTER_EXCEED_COUNT = FILTER_COUNT + 1;
     public static final Duration ONE_DAY_DURATION = Duration.ofDays(1);
 
     public static final ImmutableSet<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_SET =
@@ -39,7 +41,7 @@ public class KeyedFrequencyCapFixture {
     public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(String key) {
         return new KeyedFrequencyCap.Builder()
                 .setAdCounterKey(key)
-                .setMaxCount(1)
+                .setMaxCount(FILTER_COUNT)
                 .setInterval(ONE_DAY_DURATION);
     }
 }

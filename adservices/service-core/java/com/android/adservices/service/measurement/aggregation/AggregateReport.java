@@ -59,6 +59,8 @@ public class AggregateReport {
     @Nullable private UnsignedLong mTriggerDebugKey;
     private String mSourceId;
     private String mTriggerId;
+    private UnsignedLong mDedupKey;
+    private Uri mRegistrationOrigin;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -94,6 +96,8 @@ public class AggregateReport {
         mDebugReportStatus = AggregateReport.DebugReportStatus.NONE;
         mSourceDebugKey = null;
         mTriggerDebugKey = null;
+        mDedupKey = null;
+        mRegistrationOrigin = null;
     }
 
     @Override
@@ -116,7 +120,9 @@ public class AggregateReport {
                 && Objects.equals(mSourceDebugKey, aggregateReport.mSourceDebugKey)
                 && Objects.equals(mTriggerDebugKey, aggregateReport.mTriggerDebugKey)
                 && Objects.equals(mSourceId, aggregateReport.mSourceId)
-                && Objects.equals(mTriggerId, aggregateReport.mTriggerId);
+                && Objects.equals(mTriggerId, aggregateReport.mTriggerId)
+                && Objects.equals(mDedupKey, aggregateReport.mDedupKey)
+                && Objects.equals(mRegistrationOrigin, aggregateReport.mRegistrationOrigin);
     }
 
     @Override
@@ -135,7 +141,9 @@ public class AggregateReport {
                 mSourceDebugKey,
                 mTriggerDebugKey,
                 mSourceId,
-                mTriggerId);
+                mTriggerId,
+                mDedupKey,
+                mRegistrationOrigin);
     }
 
     /**
@@ -226,6 +234,17 @@ public class AggregateReport {
      */
     public String getApiVersion() {
         return mApiVersion;
+    }
+
+    /** Deduplication key assigned to theis aggregate report. */
+    @Nullable
+    public UnsignedLong getDedupKey() {
+        return mDedupKey;
+    }
+
+    /** Returns registration origin used to register the source */
+    public Uri getRegistrationOrigin() {
+        return mRegistrationOrigin;
     }
 
     /**
@@ -400,6 +419,20 @@ public class AggregateReport {
         /** See {@link AggregateReport#getTriggerId()} */
         public AggregateReport.Builder setTriggerId(String triggerId) {
             mAttributionReport.mTriggerId = triggerId;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getDedupKey()} */
+        @NonNull
+        public AggregateReport.Builder setDedupKey(@Nullable UnsignedLong dedupKey) {
+            mAttributionReport.mDedupKey = dedupKey;
+            return this;
+        }
+
+        /** See {@link AggregateReport#getRegistrationOrigin()} ()} */
+        @NonNull
+        public AggregateReport.Builder setRegistrationOrigin(Uri registrationOrigin) {
+            mAttributionReport.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 

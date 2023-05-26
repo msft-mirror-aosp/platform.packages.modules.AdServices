@@ -26,11 +26,12 @@ import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Embedded;
 import androidx.room.Entity;
+import androidx.room.ProvidedTypeConverter;
 import androidx.room.TypeConverter;
 import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.DBAdData;
-import com.android.adservices.data.common.FledgeRoomConverters;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.internal.util.Preconditions;
 
@@ -145,6 +146,7 @@ public class DBCustomAudience {
      *     owner app identifier
      * @param currentTime the timestamp when calling the method
      * @param defaultExpireIn the default expiration from activation
+     * @param flags adservices flags
      * @return storage model
      */
     @NonNull
@@ -152,11 +154,13 @@ public class DBCustomAudience {
             @NonNull CustomAudience parcelable,
             @NonNull String callerPackageName,
             @NonNull Instant currentTime,
-            @NonNull Duration defaultExpireIn) {
+            @NonNull Duration defaultExpireIn,
+            @NonNull Flags flags) {
         Objects.requireNonNull(parcelable);
         Objects.requireNonNull(callerPackageName);
         Objects.requireNonNull(currentTime);
         Objects.requireNonNull(defaultExpireIn);
+        Objects.requireNonNull(flags);
 
         // Setting default value to be currentTime.
         // Make it easier at query for activated CAs.
@@ -174,6 +178,9 @@ public class DBCustomAudience {
                 || parcelable.getTrustedBiddingData() == null
                 || parcelable.getUserBiddingSignals() == null
                 ? Instant.EPOCH : currentTime;
+        AdDataConversionStrategy adDataConversionStrategy =
+                AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                        flags.getFledgeAdSelectionFilteringEnabled());
 
         return new DBCustomAudience.Builder()
                 .setName(parcelable.getName())
@@ -190,7 +197,7 @@ public class DBCustomAudience {
                         parcelable.getAds().isEmpty()
                                 ? null
                                 : parcelable.getAds().stream()
-                                        .map(DBAdData::fromServiceObject)
+                                        .map(adDataConversionStrategy::fromServiceObject)
                                         .collect(Collectors.toList()))
                 .setUserBiddingSignals(parcelable.getUserBiddingSignals())
                 .build();
@@ -532,24 +539,26 @@ public class DBCustomAudience {
 
     /**
      * Room DB type converters.
+     *
      * <p>Register custom type converters here.
+     *
      * <p>{@link TypeConverter} registered here only apply to data access with {@link
      * DBCustomAudience}
      */
+    @ProvidedTypeConverter
     public static class Converters {
 
-        private static final String RENDER_URI_FIELD_NAME = "renderUri";
-        private static final String METADATA_FIELD_NAME = "metadata";
+        private final AdDataConversionStrategy mAdDataConversionStrategy;
 
-        private Converters() {
+        public Converters(boolean filteringEnabled) {
+            mAdDataConversionStrategy =
+                    AdDataConversionStrategyFactory.getAdDataConversionStrategy(filteringEnabled);
         }
 
-        /**
-         * Serialize {@link List<DBAdData>} to Json.
-         */
+        /** Serialize {@link List<DBAdData>} to Json. */
         @TypeConverter
         @Nullable
-        public static String toJson(@Nullable List<DBAdData> adDataList) {
+        public String toJson(@Nullable List<DBAdData> adDataList) {
             if (adDataList == null) {
                 return null;
             }
@@ -557,7 +566,7 @@ public class DBCustomAudience {
             try {
                 JSONArray jsonArray = new JSONArray();
                 for (DBAdData adData : adDataList) {
-                    jsonArray.put(toJson(adData));
+                    jsonArray.put(mAdDataConversionStrategy.toJson(adData));
                 }
                 return jsonArray.toString();
             } catch (JSONException jsonException) {
@@ -565,12 +574,10 @@ public class DBCustomAudience {
             }
         }
 
-        /**
-         * Deserialize {@link List<DBAdData>} from Json.
-         */
+        /** Deserialize {@link List<DBAdData>} from Json. */
         @TypeConverter
         @Nullable
-        public static List<DBAdData> fromJson(String json) {
+        public List<DBAdData> fromJson(String json) {
             if (json == null) {
                 return null;
             }
@@ -580,33 +587,12 @@ public class DBCustomAudience {
                 List<DBAdData> result = new ArrayList<>();
                 for (int i = 0; i < array.length(); i++) {
                     JSONObject jsonObject = array.getJSONObject(i);
-                    result.add(fromJson(jsonObject));
+                    result.add(mAdDataConversionStrategy.fromJson(jsonObject));
                 }
                 return result;
             } catch (JSONException jsonException) {
                 throw new RuntimeException("Error deserialize List<AdData>.", jsonException);
             }
-        }
-
-        /**
-         * Serialize {@link DBAdData} to {@link JSONObject}.
-         */
-        private static JSONObject toJson(DBAdData adData) throws JSONException {
-            return new org.json.JSONObject()
-                    .put(
-                            RENDER_URI_FIELD_NAME,
-                            FledgeRoomConverters.serializeUri(adData.getRenderUri()))
-                    .put(METADATA_FIELD_NAME, adData.getMetadata());
-        }
-
-        /**
-         * Deserialize {@link DBAdData} from {@link JSONObject}.
-         */
-        private static DBAdData fromJson(JSONObject json) throws JSONException {
-            String renderUriString = json.getString(RENDER_URI_FIELD_NAME);
-            String metadata = json.getString(METADATA_FIELD_NAME);
-            Uri renderUri = FledgeRoomConverters.deserializeUri(renderUriString);
-            return new DBAdData(renderUri, metadata);
         }
     }
 }

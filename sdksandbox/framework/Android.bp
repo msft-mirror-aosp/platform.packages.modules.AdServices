@@ -30,14 +30,12 @@ filegroup {
 
 filegroup {
     name: "framework-sdksandbox-sources",
+    defaults: ["framework-sources-module-defaults"],
     srcs: [
       "java/**/*.java",
       ":framework-sdksandbox-aidl-sources",
     ],
-    visibility: [
-        "//frameworks/base",
-        "//packages/modules/AdServices:__subpackages__",
-    ],
+    visibility: ["//packages/modules/AdServices:__subpackages__"],
     path: "java",
 }
 

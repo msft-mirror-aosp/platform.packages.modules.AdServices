@@ -41,14 +41,19 @@ import android.os.HandlerThread;
 import android.os.UserHandle;
 import android.provider.DeviceConfig;
 import android.util.ArrayMap;
+import android.util.Dumpable;
 
+import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.adservices.data.topics.TopicsDao;
+import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.sdksandbox.SdkSandboxManagerLocal;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -87,16 +92,30 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     private final Context mContext;
 
+    @GuardedBy("mRegisterReceiverLock")
     private BroadcastReceiver mSystemServicePackageChangedReceiver;
+
+    @GuardedBy("mRegisterReceiverLock")
     private BroadcastReceiver mSystemServiceUserActionReceiver;
 
+    @GuardedBy("mRegisterReceiverLock")
     private HandlerThread mHandlerThread;
+
+    @GuardedBy("mRegisterReceiverLock")
     private Handler mHandler;
 
+    @GuardedBy("mSetPackageVersionLock")
     private int mAdServicesModuleVersion;
+
+    @GuardedBy("mSetPackageVersionLock")
     private String mAdServicesModuleName;
-    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-    private Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+
+    @GuardedBy("mRollbackCheckLock")
+    private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackFrom =
+            new ArrayMap<>();
+
+    @GuardedBy("mRollbackCheckLock")
+    private final Map<Integer, VersionedPackage> mAdServicesPackagesRolledBackTo = new ArrayMap<>();
 
     // This will be triggered when there is a flag change.
     private final DeviceConfig.OnPropertiesChangedListener mOnFlagsChangedListener =
@@ -127,16 +146,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     }
 
     /** @hide */
-    public static class Lifecycle extends SystemService {
-        private AdServicesManagerService mService;
+    public static final class Lifecycle extends SystemService implements Dumpable {
+        private final AdServicesManagerService mService;
 
         /** @hide */
         public Lifecycle(Context context) {
-            super(context);
-            TopicsDao topicsDao = TopicsDao.getInstance(context);
-            mService =
+            this(
+                    context,
                     new AdServicesManagerService(
-                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
+                            context,
+                            new UserInstanceManager(
+                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+        }
+
+        /** @hide */
+        @VisibleForTesting
+        public Lifecycle(Context context, AdServicesManagerService service) {
+            super(context);
+            mService = service;
+            LogUtil.d("AdServicesManagerService constructed!");
         }
 
         /** @hide */
@@ -160,6 +188,17 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 throw new IllegalStateException(
                         "SdkSandboxManagerLocal not found when registering AdServicesManager!");
             }
+        }
+
+        @Override
+        public String getDumpableName() {
+            return "AdServices";
+        }
+
+        @Override
+        public void dump(PrintWriter writer, String[] args) {
+            // Usage: adb shell dumpsys system_server_dumper --name AdServices
+            mService.dump(/* fd= */ null, writer, args);
         }
     }
 
@@ -398,6 +437,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void recordUserManualInteractionWithConsent(int interaction) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "recordUserManualInteractionWithConsent() for User Identifier %d, interaction %d",
+                userIdentifier, interaction);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .recordUserManualInteractionWithConsent(interaction);
+        } catch (IOException e) {
+            LogUtil.e(
+                    e, "Fail to record default manual interaction with consent: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getTopicsDefaultConsent() {
         enforceAdServicesManagerPermission();
 
@@ -466,6 +524,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public int getUserManualInteractionWithConsent() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v(
+                "wasUserManualInteractionWithConsentRecorded() for User Identifier %d",
+                userIdentifier);
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .getUserManualInteractionWithConsent();
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get manual interaction with consent recorded.");
+            return 0;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean wasGaUxNotificationDisplayed() {
         enforceAdServicesManagerPermission();
 
@@ -477,75 +554,6 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                     .wasGaUxNotificationDisplayed();
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get the wasGaUxNotificationDisplayed.");
-            return false;
-        }
-    }
-
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordTopicsConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("recordTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordTopicsConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to Record Topics Consent Page Displayed.");
-        }
-    }
-
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public boolean wasTopicsConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("wasTopicsConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            return mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .wasTopicsConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to get the wasTopicsConsentPageDisplayed.");
-            return false;
-        }
-    }
-
-    /** method to Record Fledge and Msmt consent page displayed or not */
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public void recordFledgeAndMsmtConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v(
-                "recordFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .recordFledgeAndMsmtConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to Record Fledge and Msmt Consent Page Displayed.");
-        }
-    }
-
-    /** method to get Fledge and Msmt consent page displayed or not */
-    @Override
-    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
-    public boolean wasFledgeAndMsmtConsentPageDisplayed() {
-        enforceAdServicesManagerPermission();
-
-        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
-        LogUtil.v("wasFledgeAndMsmtConsentPageDisplayed() for User Identifier %d", userIdentifier);
-        try {
-            return mUserInstanceManager
-                    .getOrCreateUserConsentManagerInstance(userIdentifier)
-                    .wasFledgeAndMsmtConsentPageDisplayed();
-        } catch (IOException e) {
-            LogUtil.e(e, "Fail to get the wasFledgeAndMsmtConsentPageDisplayed.");
             return false;
         }
     }
@@ -564,6 +572,44 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         } catch (IOException e) {
             LogUtil.e(e, "Fail to get the default consent: " + e.getMessage());
             return false;
+        }
+    }
+
+    /** Get the currently running privacy sandbox feature on device. */
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public String getCurrentPrivacySandboxFeature() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("getCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
+        try {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                if (mUserInstanceManager
+                        .getOrCreateUserConsentManagerInstance(userIdentifier)
+                        .isPrivacySandboxFeatureEnabled(featureType)) {
+                    return featureType.name();
+                }
+            }
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to get the privacy sandbox feature state: " + e.getMessage());
+        }
+        return PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name();
+    }
+
+    /** Set the currently running privacy sandbox feature on device. */
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setCurrentPrivacySandboxFeature(String featureType) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setCurrentPrivacySandboxFeature() for User Identifier %d", userIdentifier);
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setCurrentPrivacySandboxFeature(featureType);
+        } catch (IOException e) {
+            LogUtil.e(e, "Fail to set current privacy sandbox feature: " + e.getMessage());
         }
     }
 
@@ -753,6 +799,25 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         }
     }
 
+    @Override
+    @RequiresPermission(android.Manifest.permission.DUMP)
+    protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+        mContext.enforceCallingPermission(android.Manifest.permission.DUMP, /* message= */ null);
+
+        synchronized (mSetPackageVersionLock) {
+            pw.printf("mAdServicesModuleName: %s\n", mAdServicesModuleName);
+            pw.printf("mAdServicesModuleVersion: %d\n", mAdServicesModuleVersion);
+        }
+        synchronized (mRegisterReceiverLock) {
+            pw.printf("mHandlerThread: %s\n", mHandlerThread);
+        }
+        synchronized (mRollbackCheckLock) {
+            pw.printf("mAdServicesPackagesRolledBackFrom: %s\n", mAdServicesPackagesRolledBackFrom);
+            pw.printf("mAdServicesPackagesRolledBackTo: %s\n", mAdServicesPackagesRolledBackTo);
+        }
+        mUserInstanceManager.dump(pw, args);
+    }
+
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public void recordAdServicesDeletionOccurred(
             @AdServicesManager.DeletionApiType int deletionType) {
@@ -931,16 +996,14 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         synchronized (mRollbackCheckLock) {
             if (!FlagsFactory.getFlags().getAdServicesSystemServiceEnabled()) {
                 LogUtil.d("AdServicesSystemServiceEnabled is FALSE.");
-                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                resetRollbackArraysRCLocked();
                 return;
             }
 
             RollbackManager rollbackManager = mContext.getSystemService(RollbackManager.class);
             if (rollbackManager == null) {
                 LogUtil.d("Failed to get the RollbackManager service.");
-                mAdServicesPackagesRolledBackFrom = new ArrayMap<>();
-                mAdServicesPackagesRolledBackTo = new ArrayMap<>();
+                resetRollbackArraysRCLocked();
                 return;
             }
             List<RollbackInfo> recentlyCommittedRollbacks =
@@ -964,6 +1027,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
                 }
             }
         }
+    }
+
+    @GuardedBy("mRollbackCheckLock")
+    private void resetRollbackArraysRCLocked() {
+        mAdServicesPackagesRolledBackFrom.clear();
+        mAdServicesPackagesRolledBackTo.clear();
     }
 
     @VisibleForTesting
@@ -1105,5 +1174,180 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext.enforceCallingPermission(
                 AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
                 ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdIdEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdIdEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdIdEnabled(isAdIdEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdIdEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isU18Account() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isU18Account();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isU18Account().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18Account(boolean isU18Account) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18Account(isU18Account);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18Account().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isEntryPointEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isEntryPointEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isEntryPointEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setEntryPointEnabled(isEntryPointEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setEntryPointEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdultAccount() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdultAccount();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdultAccount().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdultAccount(boolean isAdultAccount) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdultAccount(isAdultAccount);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdultAccount().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasU18NotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("wasU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasU18NotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call wasU18NotificationDisplayed().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18NotificationDisplayed().");
+        }
     }
 }

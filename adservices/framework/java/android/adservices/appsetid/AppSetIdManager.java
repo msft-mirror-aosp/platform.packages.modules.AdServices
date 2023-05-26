@@ -28,6 +28,8 @@ import android.os.OutcomeReceiver;
 import android.os.RemoteException;
 import android.os.SystemClock;
 
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
@@ -38,6 +40,8 @@ import java.util.concurrent.Executor;
 /**
  * AppSetIdManager provides APIs for app and ad-SDKs to access appSetId for non-monetizing purpose.
  */
+// TODO(b/269798827): Enable for R.
+@RequiresApi(Build.VERSION_CODES.S)
 public class AppSetIdManager {
     /**
      * Service used for registering AppSetIdManager in the system service registry.

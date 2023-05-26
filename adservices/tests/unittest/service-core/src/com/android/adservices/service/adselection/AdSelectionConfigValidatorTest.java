@@ -25,14 +25,30 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.AdWithBid;
+import android.adservices.adselection.ContextualAds;
+import android.adservices.adselection.ContextualAdsFixture;
+import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.net.Uri;
 
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdDataValidator;
+import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorTestUtil;
+import com.android.adservices.service.common.ValidatorUtil;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class AdSelectionConfigValidatorTest {
     private static final AdTechIdentifier EMPTY_STRING = AdTechIdentifier.fromString("");
@@ -58,6 +74,7 @@ public class AdSelectionConfigValidatorTest {
             Uri.parse("https://www.developer.android.com/test/trusted_signals_uri");
     private static final Uri TRUSTED_SIGNALS_URI_INCONSISTENT =
             Uri.parse("https://developer.invalid.com/test/trusted_signals_uri");
+    private static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/logic/";
     private static final String AD_SELECTION_VIOLATION_PREFIX =
             String.format(
                     "Invalid object of type %s. The violations are:",
@@ -67,6 +84,15 @@ public class AdSelectionConfigValidatorTest {
                     .setSeller(SELLER_VALID)
                     .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                     .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_CONSISTENT);
+
+    private Flags mFlags;
+    private PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+
+    @Before
+    public void setup() {
+        mFlags = FlagsFactory.getFlagsForTest();
+        mPrebuiltLogicGenerator = new PrebuiltLogicGenerator(mFlags);
+    }
 
     private String generateInconsistentSellerAndDecisionLogicUriMessage(
             String uriType, AdTechIdentifier seller, Uri decisionLogicUri) {
@@ -80,7 +106,8 @@ public class AdSelectionConfigValidatorTest {
     @Test
     public void testVerifyAdSelectionConfigSuccess() {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
@@ -92,7 +119,8 @@ public class AdSelectionConfigValidatorTest {
                         .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT_WITH_PREFIX)
                         .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_CONSISTENT_WITH_PREFIX)
                         .build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         adSelectionConfigValidator.validate(adSelectionConfig);
     }
 
@@ -100,7 +128,8 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyEmptySeller() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setSeller(EMPTY_STRING).build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -116,7 +145,8 @@ public class AdSelectionConfigValidatorTest {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setSeller(SELLER_NOT_DOMAIN_NAME).build();
 
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -131,7 +161,8 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyInvalidSeller() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setSeller(SELLER_INVALID).build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -151,7 +182,8 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyNoHostSeller() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setSeller(SELLER_NO_HOST).build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -166,7 +198,8 @@ public class AdSelectionConfigValidatorTest {
     public void testVerifyNoHostDecisionLogicUri() {
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilder.setDecisionLogicUri(DECISION_LOGIC_URI_NO_HOST).build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -186,7 +219,8 @@ public class AdSelectionConfigValidatorTest {
                 mAdSelectionConfigBuilder
                         .setDecisionLogicUri(DECISION_LOGIC_URI_INCONSISTENT)
                         .build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -207,7 +241,8 @@ public class AdSelectionConfigValidatorTest {
                 mAdSelectionConfigBuilder
                         .setTrustedScoringSignalsUri(Uri.parse("/this/is/relative/path"))
                         .build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -221,12 +256,11 @@ public class AdSelectionConfigValidatorTest {
 
     @Test
     public void testVerifyTrustedScoringSignalsUriIsNotHTTPS() {
-
+        Uri trustedScoringSignal = Uri.parse("http://google.com");
         AdSelectionConfig adSelectionConfig =
-                mAdSelectionConfigBuilder
-                        .setTrustedScoringSignalsUri(Uri.parse("http://google.com"))
-                        .build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+                mAdSelectionConfigBuilder.setTrustedScoringSignalsUri(trustedScoringSignal).build();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -235,7 +269,10 @@ public class AdSelectionConfigValidatorTest {
                 thrown,
                 AD_SELECTION_VIOLATION_PREFIX,
                 ImmutableList.of(
-                        String.format(URI_IS_NOT_HTTPS, TRUSTED_SCORING_SIGNALS_URI_TYPE)));
+                        String.format(
+                                URI_IS_NOT_HTTPS,
+                                TRUSTED_SCORING_SIGNALS_URI_TYPE,
+                                trustedScoringSignal)));
     }
 
     @Test
@@ -247,7 +284,8 @@ public class AdSelectionConfigValidatorTest {
                         .setDecisionLogicUri(DECISION_LOGIC_URI_CONSISTENT)
                         .setTrustedScoringSignalsUri(TRUSTED_SIGNALS_URI_INCONSISTENT)
                         .build();
-        AdSelectionConfigValidator adSelectionConfigValidator = new AdSelectionConfigValidator();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
         IllegalArgumentException thrown =
                 assertThrows(
                         IllegalArgumentException.class,
@@ -264,5 +302,88 @@ public class AdSelectionConfigValidatorTest {
                                 TRUSTED_SCORING_SIGNALS_URI_TYPE,
                                 SELLER_VALID_WITH_PREFIX,
                                 TRUSTED_SIGNALS_URI_INCONSISTENT)));
+    }
+
+    @Test
+    public void testContextualAdsDecisionLogicEtldMismatch() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        ContextualAds contextualAds2 =
+                ContextualAdsFixture.generateContextualAds(buyer2, ImmutableList.of(100.0, 200.0))
+                        .setDecisionLogicUri(
+                                CommonFixture.getUri(
+                                        CommonFixture.VALID_BUYER_1, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .build();
+        buyerContextualAds.put(buyer2, contextualAds2);
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder.setBuyerContextualAds(buyerContextualAds).build();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> adSelectionConfigValidator.validate(adSelectionConfig));
+        ValidatorTestUtil.assertValidationFailuresMatch(
+                thrown,
+                AD_SELECTION_VIOLATION_PREFIX,
+                ImmutableList.of(
+                        AdSelectionConfigValidator.CONTEXTUAL_ADS_DECISION_LOGIC_FIELD_NAME));
+    }
+
+    @Test
+    public void testContextualAdsRenderUriEtldMismatch() {
+        Map<AdTechIdentifier, ContextualAds> buyerContextualAds = new HashMap<>();
+        AdTechIdentifier buyer2 = CommonFixture.VALID_BUYER_2;
+        ImmutableList<Double> bids = ImmutableList.of(100.0, 200.0);
+        ContextualAds contextualAds2 =
+                ContextualAdsFixture.generateContextualAds(buyer2, bids)
+                        .setDecisionLogicUri(
+                                CommonFixture.getUri(buyer2, BUYER_BIDDING_LOGIC_URI_PATH))
+                        .setAdsWithBid(
+                                bids.stream()
+                                        .map(
+                                                bid ->
+                                                        new AdWithBid(
+                                                                AdDataFixture.getValidAdDataByBuyer(
+                                                                        CommonFixture.VALID_BUYER_1,
+                                                                        bid.intValue()),
+                                                                bid))
+                                        .collect(Collectors.toList()))
+                        .build();
+        // Creating ads which have a render Uri with a different buyer
+        buyerContextualAds.put(buyer2, contextualAds2);
+        AdSelectionConfig adSelectionConfig =
+                mAdSelectionConfigBuilder.setBuyerContextualAds(buyerContextualAds).build();
+        AdSelectionConfigValidator adSelectionConfigValidator =
+                new AdSelectionConfigValidator(mPrebuiltLogicGenerator);
+        List<String> violations =
+                bids.stream()
+                        .map(
+                                bid -> {
+                                    return String.format(
+                                            AdDataValidator.VIOLATION_FORMAT,
+                                            new AdWithBid(
+                                                            AdDataFixture.getValidAdDataByBuyer(
+                                                                    CommonFixture.VALID_BUYER_1,
+                                                                    bid.intValue()),
+                                                            bid)
+                                                    .getAdData(),
+                                            String.format(
+                                                    AdTechUriValidator
+                                                            .IDENTIFIER_AND_URI_ARE_INCONSISTENT,
+                                                    ValidatorUtil.AD_TECH_ROLE_BUYER,
+                                                    CommonFixture.VALID_BUYER_2,
+                                                    ValidatorUtil.AD_TECH_ROLE_BUYER,
+                                                    AdDataValidator.RENDER_URI_FIELD_NAME,
+                                                    CommonFixture.getUri(
+                                                                    CommonFixture.VALID_BUYER_1,
+                                                                    BUYER_BIDDING_LOGIC_URI_PATH)
+                                                            .getHost()));
+                                })
+                        .collect(Collectors.toList());
+        ValidatorTestUtil.assertViolationContainsOnly(
+                adSelectionConfigValidator.getValidationViolations(adSelectionConfig),
+                violations.get(0),
+                violations.get(1));
     }
 }

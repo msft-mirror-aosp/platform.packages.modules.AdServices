@@ -116,12 +116,16 @@ public class DevContextFilter {
     }
 
     /**
-     * Returns true if the callingAppPackage is debuggable.
+     * Returns true if the callingAppPackage is debuggable and false if it is not or if {@code
+     * callingAppPackage} is null.
      *
      * @param callingAppPackage the calling app package
      */
     @VisibleForTesting
     public boolean isDebuggable(String callingAppPackage) {
+        if (Objects.isNull(callingAppPackage)) {
+            return false;
+        }
         try {
             ApplicationInfo applicationInfo =
                     PackageManagerCompatUtils.getApplicationInfo(

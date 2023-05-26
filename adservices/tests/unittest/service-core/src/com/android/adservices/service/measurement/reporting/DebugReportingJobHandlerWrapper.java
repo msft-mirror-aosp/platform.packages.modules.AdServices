@@ -25,8 +25,8 @@ import android.net.Uri;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 
+import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -46,7 +46,7 @@ public class DebugReportingJobHandlerWrapper {
         ArgumentCaptor<Uri> reportDestination = ArgumentCaptor.forClass(Uri.class);
         ArgumentCaptor<DebugReport> debugReport = ArgumentCaptor.forClass(DebugReport.class);
         verify(debugReportingJobHandler, atLeast(0)).createReportJsonPayload(debugReport.capture());
-        ArgumentCaptor<JSONObject> reportPayload = ArgumentCaptor.forClass(JSONObject.class);
+        ArgumentCaptor<JSONArray> reportPayload = ArgumentCaptor.forClass(JSONArray.class);
         verify(debugReportingJobHandler, atLeast(0))
                 .makeHttpPostRequest(reportDestination.capture(), reportPayload.capture());
 
