@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service.ui.ux;
+package com.android.adservices.service.ui.enrollment;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 
-import com.google.errorprone.annotations.Immutable;
+/** Base enrollment channel for all privacy sandbox UXs. */
+@RequiresApi(Build.VERSION_CODES.S)
+public interface PrivacySandboxEnrollmentChannel {
 
-/** Base UX for all privacy sandbox UXs. */
-@Immutable
-public interface PrivacySandboxUx {
+    /** Is a user eligible for a particular UX enrollment channel. */
+    boolean isEligible(
+            PrivacySandboxUxCollection ux,
+            ConsentManager consentManager,
+            UxStatesManager uxStatesManager);
 
-    /** Whether a user is eligible for a particular privacy sandbox UX. */
-    boolean isEligible(ConsentManager consentManager, UxStatesManager uxStatesManager);
-
-    /** Enroll a user through one of the enrollment channels when needed. */
-    void selectEnrollmentChannel(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager);
-
-    /** Select a specific mode of the UX for the user. */
-    void selectMode(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager);
+    /** Enroll a user through the notification channel. */
+    void enroll(Context context, ConsentManager consentManager);
 }
