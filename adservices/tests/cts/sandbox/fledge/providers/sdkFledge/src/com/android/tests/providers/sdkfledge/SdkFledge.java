@@ -411,10 +411,10 @@ public class SdkFledge extends SandboxedSdkProvider {
         /*
         try {
             UpdateAdCounterHistogramRequest updateHistogramRequest =
-                    new UpdateAdCounterHistogramRequest.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_CLICK)
-                            .setCallerAdTech(AD_SELECTION_CONFIG.getSeller())
+                    new UpdateAdCounterHistogramRequest.Builder(
+                                    adSelectionId,
+                                    FrequencyCapFilters.AD_EVENT_TYPE_CLICK,
+                                    AD_SELECTION_CONFIG.getSeller())
                             .build();
             mAdSelectionClient
                     .updateAdCounterHistogram(updateHistogramRequest)

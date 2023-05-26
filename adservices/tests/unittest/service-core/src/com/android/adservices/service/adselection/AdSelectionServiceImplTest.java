@@ -6676,11 +6676,11 @@ public class AdSelectionServiceImplTest {
     public void testUpdateAdCounterHistogramNullCallbackThrows() throws InterruptedException {
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
         UpdateAdCounterHistogramInput inputParams =
-                new UpdateAdCounterHistogramInput.Builder()
-                        .setAdSelectionId(10)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(CommonFixture.VALID_BUYER_1)
-                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                new UpdateAdCounterHistogramInput.Builder(
+                                10,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                CommonFixture.VALID_BUYER_1,
+                                TEST_PACKAGE_NAME)
                         .build();
 
         // Wait for the logging call, which happens after the callback

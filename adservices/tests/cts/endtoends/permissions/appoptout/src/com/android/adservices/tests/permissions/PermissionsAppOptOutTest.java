@@ -311,10 +311,10 @@ public class PermissionsAppOptOutTest {
                         .build();
 
         UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(AdTechIdentifier.fromString("seller.example.com"))
+                new UpdateAdCounterHistogramRequest.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                AdTechIdentifier.fromString("seller.example.com"))
                         .build();
 
         ExecutionException exception =
@@ -336,10 +336,10 @@ public class PermissionsAppOptOutTest {
                         .build();
 
         UpdateAdCounterHistogramRequest request =
-                new UpdateAdCounterHistogramRequest.Builder()
-                        .setAdSelectionId(adSelectionId)
-                        .setAdEventType(FrequencyCapFilters.AD_EVENT_TYPE_VIEW)
-                        .setCallerAdTech(AdTechIdentifier.fromString("test.com"))
+                new UpdateAdCounterHistogramRequest.Builder(
+                                adSelectionId,
+                                FrequencyCapFilters.AD_EVENT_TYPE_VIEW,
+                                AdTechIdentifier.fromString("test.com"))
                         .build();
 
         mAdSelectionClient.updateAdCounterHistogram(request).get();

@@ -18,13 +18,11 @@ package android.adservices.adselection;
 
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID;
 import static android.adservices.adselection.AdSelectionOutcome.UNSET_AD_SELECTION_ID_MESSAGE;
-import static android.adservices.common.FrequencyCapFilters.AD_EVENT_TYPE_INVALID;
 import static android.adservices.common.FrequencyCapFilters.AD_EVENT_TYPE_WIN;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FrequencyCapFilters;
 import android.annotation.NonNull;
-import android.annotation.Nullable;
 import android.os.OutcomeReceiver;
 
 import com.android.internal.util.Preconditions;
@@ -140,11 +138,22 @@ public class UpdateAdCounterHistogramRequest {
 
     /** Builder for {@link UpdateAdCounterHistogramRequest} objects. */
     public static final class Builder {
-        private long mAdSelectionId = UNSET_AD_SELECTION_ID;
-        @FrequencyCapFilters.AdEventType private int mAdEventType = AD_EVENT_TYPE_INVALID;
-        @Nullable private AdTechIdentifier mCallerAdTech;
+        private long mAdSelectionId;
+        @FrequencyCapFilters.AdEventType private int mAdEventType;
+        @NonNull private AdTechIdentifier mCallerAdTech;
 
-        public Builder() {}
+        public Builder(
+                long adSelectionId, int adEventType, @NonNull AdTechIdentifier callerAdTech) {
+            Preconditions.checkArgument(
+                    adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
+            Preconditions.checkArgument(
+                    adEventType != AD_EVENT_TYPE_WIN, DISALLOW_AD_EVENT_TYPE_WIN_MESSAGE);
+            Objects.requireNonNull(callerAdTech, UNSET_CALLER_ADTECH_MESSAGE);
+
+            mAdSelectionId = adSelectionId;
+            mAdEventType = adEventType;
+            mCallerAdTech = callerAdTech;
+        }
 
         /**
          * Gets the ad selection ID with which the rendered ad's events are associated.
@@ -153,6 +162,8 @@ public class UpdateAdCounterHistogramRequest {
          */
         @NonNull
         public Builder setAdSelectionId(long adSelectionId) {
+            Preconditions.checkArgument(
+                    adSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
             mAdSelectionId = adSelectionId;
             return this;
         }
@@ -183,21 +194,9 @@ public class UpdateAdCounterHistogramRequest {
             return this;
         }
 
-        /**
-         * Builds the {@link UpdateAdCounterHistogramRequest} object.
-         *
-         * @throws NullPointerException if the caller's {@link AdTechIdentifier} is not set
-         * @throws IllegalArgumentException if the ad selection ID is not set
-         */
+        /** Builds the {@link UpdateAdCounterHistogramRequest} object. */
         @NonNull
-        public UpdateAdCounterHistogramRequest build()
-                throws NullPointerException, IllegalArgumentException {
-            Preconditions.checkArgument(
-                    mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
-            Preconditions.checkArgument(
-                    mAdEventType != AD_EVENT_TYPE_INVALID, UNSET_AD_EVENT_TYPE_MESSAGE);
-            Objects.requireNonNull(mCallerAdTech, UNSET_CALLER_ADTECH_MESSAGE);
-
+        public UpdateAdCounterHistogramRequest build() {
             return new UpdateAdCounterHistogramRequest(this);
         }
     }
