@@ -403,7 +403,8 @@ public final class PhFlags implements Flags {
             "consent_notification_minimal_delay_before_interval_ends";
 
     // Consent Notification debug mode keys.
-    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
+    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
+            "consent_notification_debug_mode";
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
