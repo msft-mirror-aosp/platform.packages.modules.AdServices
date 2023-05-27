@@ -547,4 +547,27 @@ public final class ConsentManager {
             }
         }
     }
+
+    @VisibleForTesting
+    static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
+
+    /** Returns whether the wasU18NotificationDisplayed bit is true. */
+    public boolean wasU18NotificationDisplayed() {
+        synchronized (this) {
+            Boolean wasU18NotificationDisplayed = mDatastore.get(WAS_U18_NOTIFICATION_DISPLAYED);
+            return wasU18NotificationDisplayed != null ? wasU18NotificationDisplayed : false;
+        }
+    }
+
+    /** Set the U18NotificationDisplayed bit in system server. */
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed)
+            throws IOException {
+        synchronized (this) {
+            try {
+                mDatastore.put(WAS_U18_NOTIFICATION_DISPLAYED, wasU18NotificationDisplayed);
+            } catch (IOException e) {
+                LogUtil.e(e, "setU18NotificationDisplayed operation failed: " + e.getMessage());
+            }
+        }
+    }
 }

@@ -1315,4 +1315,39 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             LogUtil.e(e, "Failed to call setAdultAccount().");
         }
     }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasU18NotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("wasU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasU18NotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call wasU18NotificationDisplayed().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18NotificationDisplayed().");
+        }
+    }
 }

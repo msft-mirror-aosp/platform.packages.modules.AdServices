@@ -46,8 +46,10 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -218,15 +220,27 @@ public class SharedDbHelper extends SQLiteOpenHelper {
         try (Cursor cursor = oldDb.query(table, null, null, null, null, null, null, null)) {
             // Enrollment table is moving to Site based enrollment.
             // We are filtering out records with duplicated sites.
-            Set<Uri> sites = new HashSet<>();
+            Set<Uri> duplicateSites = new HashSet<>();
+            Map<Uri, ContentValues> siteToEnrollmentMap = new HashMap<>();
             while (cursor.moveToNext()) {
                 Optional<Uri> site = tryGetSiteFromEnrollmentRow(cursor);
-                if (site.isEmpty() || sites.add(site.get())) {
-                    ContentValues contentValues = new ContentValues();
-                    DatabaseUtils.cursorRowToContentValues(cursor, contentValues);
+                ContentValues contentValues = new ContentValues();
+                DatabaseUtils.cursorRowToContentValues(cursor, contentValues);
+                if (site.isEmpty()) {
                     newDb.insert(table, null, contentValues);
+                } else if (siteToEnrollmentMap.containsKey(site.get())) {
+                    duplicateSites.add(site.get());
+                } else {
+                    siteToEnrollmentMap.put(site.get(), contentValues);
                 }
             }
+            siteToEnrollmentMap.forEach(
+                    (site, enrollment) -> {
+                        if (duplicateSites.contains(site)) {
+                            return;
+                        }
+                        newDb.insert(table, null, enrollment);
+                    });
         }
     }
 
