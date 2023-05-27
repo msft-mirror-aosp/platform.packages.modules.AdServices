@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"التطبيقات التي حظرتها"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"إعادة ضبط البيانات المقترَحة من التطبيقات"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"‏من الشائع أن تتذكر التطبيقات التي تستخدمها المحتوى الذي تهتم به لتخصيص تجربتك. يمكن للتطبيقات أيضًا تخزين معلومات من خلال Android حول المواضيع التي تهمك.\n\nعلى سبيل المثال، إذا كنت تستخدم تطبيقًا للتدريب على الماراثون، قد يحدِّد التطبيق أنك مهتم بأحذية الجري. إذا استخدمت لاحقًا تطبيقًا مختلفًا، يمكن لهذا التطبيق أن يعرض لك إعلانًا عن أحذية للجري اقترَحه التطبيق الأول.\n\nيحذف Android تلقائيًا البيانات المقترَحة من التطبيقات بانتظام. إذا استخدمت تطبيقًا مرة أخرى، قد يظهر في القائمة من جديد، أو يمكنك منع تطبيق من اقتراح إعلانات لك.\n\nفي تطبيقاتك، قد يكون الإعلان الذي يظهر لك مخصّصًا بناءً على هذا الإعداد وإعدادات مواضيع الإعلان وإعدادات المعرّف الإعلاني، وما إذا كان التطبيق الذي تستخدمه يخصِّص الإعلانات أم لا."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"رسم توضيحي ملوّن للرموز التي تمثّل المواضيع ذات الأهمية، مثلاً الموسيقى والأخبار والرياضة"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"رسم توضيحي ملوّن لقفل داخل دائرة"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"رسم توضيحي صغير بالأبيض والأسود لتسع نقاط تشكِّل مربعًا"</string>

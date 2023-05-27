@@ -33,7 +33,9 @@ import com.google.common.collect.ImmutableList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Flags Implementation that delegates to DeviceConfig. */
@@ -45,6 +47,8 @@ public final class PhFlags implements Flags {
     // Common Keys
     static final String KEY_MAINTENANCE_JOB_PERIOD_MS = "maintenance_job_period_ms";
     static final String KEY_MAINTENANCE_JOB_FLEX_MS = "maintenance_job_flex_ms";
+
+    static final String KEY_ERROR_CODE_LOGGING_DENY_LIST = "error_code_logging_deny_list";
 
     // Topics keys
     static final String KEY_TOPICS_EPOCH_JOB_PERIOD_MS = "topics_epoch_job_period_ms";
@@ -364,7 +368,7 @@ public final class PhFlags implements Flags {
             "fledge_report_interaction_request_permits_per_second";
 
     // Adservices enable status keys.
-    static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
+    public static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
 
     // AdServices error logging enabled
     static final String KEY_ADSERVICES_ERROR_LOGGING_ENABLED = "adservice_error_logging_enabled";
@@ -395,7 +399,8 @@ public final class PhFlags implements Flags {
             "consent_notification_minimal_delay_before_interval_ends";
 
     // Consent Notification debug mode keys.
-    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
+    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
+            "consent_notification_debug_mode";
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
@@ -436,7 +441,7 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
 
-    static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+    public static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
@@ -3098,12 +3103,14 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND
                         + " = "
                         + getFledgeReportInteractionRequestPermitsPerSecond());
-        writer.println("==== AdServices PH Flags Error Logging Enabled ====");
+        writer.println("==== AdServices PH Flags Error Logging ====");
         writer.println(
                 "\t"
                         + KEY_ADSERVICES_ERROR_LOGGING_ENABLED
                         + " = "
                         + getAdServicesErrorLoggingEnabled());
+        writer.println(
+                "\t" + KEY_ERROR_CODE_LOGGING_DENY_LIST + " = " + getErrorCodeLoggingDenyList());
 
         writer.println("==== AdServices PH Flags Dump UI Related Flags ====");
         writer.println(
@@ -3262,6 +3269,38 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public ImmutableList<Integer> getErrorCodeLoggingDenyList() {
+        String defaultErrorCodeLoggingDenyStr =
+                ERROR_CODE_LOGGING_DENY_LIST.stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","));
+
+        String errorCodeLoggingDenyStr =
+                DeviceConfig.getString(
+                        NAMESPACE_ADSERVICES,
+                        KEY_ERROR_CODE_LOGGING_DENY_LIST,
+                        defaultErrorCodeLoggingDenyStr);
+        if (TextUtils.isEmpty(errorCodeLoggingDenyStr)) {
+            return ImmutableList.of();
+        }
+        errorCodeLoggingDenyStr = errorCodeLoggingDenyStr.trim();
+        String[] errorCodeLoggingDenyStrList = errorCodeLoggingDenyStr.split(",");
+
+        List<Integer> errorCodeLoggingDenyIntList = new ArrayList<>();
+
+        for (String errorCode : errorCodeLoggingDenyStrList) {
+            try {
+                int errorCodeInteger = Integer.parseInt(errorCode.trim());
+                errorCodeLoggingDenyIntList.add(errorCodeInteger);
+            } catch (NumberFormatException e) {
+                LogUtil.e("Parsing denied error code logging failed for " + errorCode);
+                // TODO (b/283323414) : Add CEL for this.
+            }
+        }
+        return ImmutableList.copyOf(errorCodeLoggingDenyIntList);
+    }
+
+    @Override
     public long getMeasurementDebugJoinKeyHashLimit() {
         return DeviceConfig.getLong(
                 NAMESPACE_ADSERVICES,
@@ -3297,7 +3336,7 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
     }
 
-    static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
+    public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
     @Override
     public boolean getU18UxEnabled() {
@@ -3315,5 +3354,21 @@ public final class PhFlags implements Flags {
                 NAMESPACE_ADSERVICES,
                 /* flagName */ KEY_ENABLE_AD_SERVICES_SYSTEM_API,
                 /* defaultValue */ DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API);
+    }
+
+    @Override
+    public Map<String, Boolean> getUxFlags() {
+        Map<String, Boolean> uxMap = new HashMap<>();
+        uxMap.put(KEY_UI_DIALOGS_FEATURE_ENABLED, getUIDialogsFeatureEnabled());
+        uxMap.put(KEY_UI_DIALOG_FRAGMENT_ENABLED, getUiDialogFragmentEnabled());
+        uxMap.put(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, isEeaDeviceFeatureEnabled());
+        uxMap.put(KEY_IS_EEA_DEVICE, isEeaDevice());
+        uxMap.put(KEY_RECORD_MANUAL_INTERACTION_ENABLED, getRecordManualInteractionEnabled());
+        uxMap.put(KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
+        uxMap.put(KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
+        uxMap.put(KEY_UI_FEATURE_TYPE_LOGGING_ENABLED, isUiFeatureTypeLoggingEnabled());
+        uxMap.put(KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
+        uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
+        return uxMap;
     }
 }

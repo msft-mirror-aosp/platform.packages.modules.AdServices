@@ -69,12 +69,12 @@ public final class DeleteExpiredJobService extends JobService {
         LogUtil.d("DeleteExpiredJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
+                    long earliestValidInsertion =
+                            System.currentTimeMillis()
+                                    - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
                     DatastoreManagerFactory.getDatastoreManager(this)
                             .runInTransaction(
-                                    dao ->
-                                            dao.deleteExpiredRecords(
-                                                    FlagsFactory.getFlags()
-                                                            .getMeasurementDataExpiryWindowMs()));
+                                    dao -> dao.deleteExpiredRecords(earliestValidInsertion));
 
                     boolean shouldRetry = false;
                     AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)
