@@ -368,7 +368,7 @@ public final class PhFlags implements Flags {
             "fledge_report_interaction_request_permits_per_second";
 
     // Adservices enable status keys.
-    static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
+    public static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
 
     // AdServices error logging enabled
     static final String KEY_ADSERVICES_ERROR_LOGGING_ENABLED = "adservice_error_logging_enabled";
@@ -399,7 +399,8 @@ public final class PhFlags implements Flags {
             "consent_notification_minimal_delay_before_interval_ends";
 
     // Consent Notification debug mode keys.
-    static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE = "consent_notification_debug_mode";
+    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
+            "consent_notification_debug_mode";
 
     // Consent Manager debug mode keys.
     static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
@@ -440,7 +441,7 @@ public final class PhFlags implements Flags {
 
     static final String KEY_UI_DIALOG_FRAGMENT_ENABLED = "ui_dialog_fragment_enabled";
 
-    static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
+    public static final String KEY_GA_UX_FEATURE_ENABLED = "ga_ux_enabled";
 
     // Back-compat keys
     static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
@@ -3335,7 +3336,7 @@ public final class PhFlags implements Flags {
                 /* defaultValue */ DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK);
     }
 
-    static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
+    public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
 
     @Override
     public boolean getU18UxEnabled() {
