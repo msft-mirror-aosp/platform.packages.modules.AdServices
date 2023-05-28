@@ -20,11 +20,12 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+/* Collection of beta UX enrollment channels. */
 @RequiresApi(Build.VERSION_CODES.S)
 public enum BetaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
-    CONSENT_NOTIFICATION_DEBUG_CHANNEL(0, new ConsentNotificationDebugChannel()),
+    CONSENT_NOTIFICATION_DEBUG_CHANNEL(/* priority= */ 0, new ConsentNotificationDebugChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(1, new FirstConsentNotificationChannel());
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 1, new FirstConsentNotificationChannel());
 
     private final int mPriority;
 
