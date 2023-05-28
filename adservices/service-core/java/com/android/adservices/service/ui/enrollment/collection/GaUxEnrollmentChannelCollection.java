@@ -25,9 +25,11 @@ import androidx.annotation.RequiresApi;
 public enum GaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
     CONSENT_NOTIFICATION_DEBUG_CHANNEL(/* priority= */ 0, new ConsentNotificationDebugChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 1, new FirstConsentNotificationChannel()),
+    ALREADY_ENROLLED_CHANNEL(/* priority= */ 1, new AlreadyEnrolledChannel()),
 
-    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new ReconsentNotificationChannel());
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel()),
+
+    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new ReconsentNotificationChannel());
 
     private final int mPriority;
 
