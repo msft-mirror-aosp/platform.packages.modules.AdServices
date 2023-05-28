@@ -17,6 +17,7 @@ package com.android.adservices.ui.settings.delegates;
 
 import android.content.Intent;
 import android.os.Build;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
@@ -153,6 +154,8 @@ public class AppsActionDelegate {
                 .setText(R.string.settingsUI_reset_apps_ga_title);
         ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
                 .setText(R.string.settingsUI_apps_view_no_apps_ga_text);
+        ((TextView) mAppsActivity.findViewById(R.id.no_apps_state))
+                .setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     private void setBetaAppsViewText() {

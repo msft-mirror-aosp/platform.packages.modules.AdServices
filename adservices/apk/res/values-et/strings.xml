@@ -211,6 +211,16 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Blokeeritud rakendused"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Lähtesta rakenduste soovitatud andmed"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"On tavapärane, et teie kasutatud rakendused jätavad kasutuskogemuse isikupärastamiseks meelde teile huvipakkuvad teemad. Rakendused saavad nende teemade kohta teavet ka Androidi kaudu talletada.\n\nNäiteks kui kasutate maratoniks ettevalmistamise rakendust, võib see rakendus otsustada, et teile pakuvad huvi jooksujalanõud. Kui kasutate hiljem muud rakendust, võib see teile jooksujalanõude reklaami näidata, nagu seda soovitas esimene rakendus.\n\nAndroid kustutab rakenduste soovitatud andmeid automaatselt ja regulaarselt. Rakendused, mida uuesti kasutate, võivad loendisse tagasi ilmuda. Teil on võimalik blokeerida reklaamide soovitamine konkreetsetest rakendustest.\n\nRakendustes kuvatud reklaamid võivad olla isikupärastatud olenevalt sellest seadest, reklaamiteemade seadest, teie reklaami-ID seadetest ja sellest, kas kasutatav rakendus isikupärastab reklaame."</string>
+    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
+    <skip />
+    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
+    <skip />
+    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
+    <skip />
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Värviline illustratsioon sümbolitest, mis kujutavad huvipakkuvaid teemasid, nagu muusika, uudised ja sport"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Värviline illustratsioon ringi sees olevast lukust"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Väike mustvalge illustratsioon, kus üheksa punkti moodustavad ruudu"</string>

@@ -35,10 +35,10 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.enrollment.EnrollmentTables;
+import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -133,7 +133,7 @@ public class MobileDataDownloadTest {
     private StaticMockitoSession mStaticMockSession = null;
     private SynchronousFileStorage mFileStorage;
     private FileDownloader mFileDownloader;
-    private DbHelper mDbHelper;
+    private SharedDbHelper mDbHelper;
     private MobileDataDownload mMdd;
 
     @Mock Flags mMockFlags;
@@ -171,7 +171,7 @@ public class MobileDataDownloadTest {
         mFileDownloader =
                 MobileDataDownloadFactory.getFileDownloader(mContext, mMockFlags, mFileStorage);
 
-        mDbHelper = DbTestUtil.getDbHelperForTest();
+        mDbHelper = DbTestUtil.getSharedDbHelperForTest();
 
         when(mConsentManager.getConsent()).thenReturn(AdServicesApiConsent.GIVEN);
         // Mock static method ConsentManager.getInstance() to return test ConsentManager
