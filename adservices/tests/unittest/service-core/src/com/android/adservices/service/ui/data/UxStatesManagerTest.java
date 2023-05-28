@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.ui;
+package com.android.adservices.service.ui.data;
 
 import static com.google.common.truth.Truth.assertThat;
 
