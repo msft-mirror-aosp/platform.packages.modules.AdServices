@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -2216,5 +2218,18 @@ public interface Flags {
     /** enableAdServices system API feature flag.. */
     default boolean getEnableAdServicesSystemApi() {
         return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
+
+    /** Disables client error logging for the list of error codes. Default value is empty list. */
+    ImmutableList<Integer> ERROR_CODE_LOGGING_DENY_LIST = ImmutableList.of();
+
+    /** Returns a list of error codes for which we don't want to do error logging. */
+    default ImmutableList<Integer> getErrorCodeLoggingDenyList() {
+        return ERROR_CODE_LOGGING_DENY_LIST;
+    }
+
+    /** Returns the map of UX flags. */
+    default Map<String, Boolean> getUxFlags() {
+        return new HashMap<>();
     }
 }

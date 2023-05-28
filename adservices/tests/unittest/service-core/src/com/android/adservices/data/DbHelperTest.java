@@ -117,6 +117,10 @@ public class DbHelperTest {
         assertFalse(doesTableExist(db, "msmt_xna_ignored_sources"));
     }
 
+    public static void assertEnrollmentTableDoesNotExist(SQLiteDatabase db) {
+        assertFalse(doesTableExist(db, "enrollment-data"));
+    }
+
     @Test
     public void testGetDbFileSize() {
         final String databaseName = "testsize.db";

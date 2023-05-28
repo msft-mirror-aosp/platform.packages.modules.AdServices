@@ -47,8 +47,9 @@ public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
     }
 
     public void runActionToTest() {
+        long earliestValidInsertion =
+                System.currentTimeMillis() - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
         new SQLDatastoreManager(DbTestUtil.getMeasurementDbHelperForTest())
-                .runInTransaction(
-                        dao -> dao.deleteExpiredRecords(Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS));
+                .runInTransaction(dao -> dao.deleteExpiredRecords(earliestValidInsertion));
     }
 }

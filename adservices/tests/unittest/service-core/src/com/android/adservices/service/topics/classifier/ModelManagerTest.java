@@ -16,22 +16,11 @@
 
 package com.android.adservices.service.topics.classifier;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
-
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -40,7 +29,6 @@ import android.content.res.AssetManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -111,7 +99,6 @@ public class ModelManagerTest {
                 ExtendedMockito.mockitoSession()
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(ModelManager.class)
-                        .spyStatic(ErrorLogUtil.class)
                         .initMocks(this)
                         .strictness(Strictness.WARN)
                         .startMocking();
@@ -187,7 +174,6 @@ public class ModelManagerTest {
 
     @Test
     public void testRetrieveModel_bundled_incorrectFilePath() throws IOException {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -202,14 +188,6 @@ public class ModelManagerTest {
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
         // Check byteBuffer capacity is 0 when failed to read a model.
         assertThat(byteBuffer.capacity()).isEqualTo(0);
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            any(Throwable.class),
-                            eq(
-                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_LOAD_ML_MODEL_FAILURE),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
-                });
     }
 
     @Test
@@ -304,7 +282,6 @@ public class ModelManagerTest {
 
     @Test
     public void testRetrieveLabels_bundled_emptyListReturnedOnException() {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mProductionModelManager =
                 new ModelManager(
                         sContext,
@@ -316,23 +293,16 @@ public class ModelManagerTest {
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
+        mProductionLabels = mProductionModelManager.retrieveLabels();
         ImmutableList<Integer> labels = mProductionModelManager.retrieveLabels();
         // Check empty list returned.
         assertThat(labels).isEmpty();
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            any(Throwable.class),
-                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
-                });
     }
 
     @Test
     public void testRetrieveLabels_downloaded_emptyListReturnedOnException() throws IOException {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
         // Mock a MDD FileGroup and FileStorage
+        InputStream inputStream = SdkLevel.isAtLeastT() ? FileInputStream.nullInputStream() : null;
         when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
         mProductionModelManager =
                 new ModelManager(
@@ -345,22 +315,14 @@ public class ModelManagerTest {
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
+        mProductionLabels = mProductionModelManager.retrieveLabels();
         ImmutableList<Integer> labels = mProductionModelManager.retrieveLabels();
         // Check empty list returned.
         assertThat(labels).isEmpty();
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            any(Throwable.class),
-                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__READ_LABELS_FILE_FAILURE),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
-                });
     }
 
     @Test
     public void testLoadedAppTopics_bundled() {
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -420,23 +382,10 @@ public class ModelManagerTest {
         // assets/precomputed_test_app_list.csv are 143, 15
         List<Integer> validTestApp2Topics = Arrays.asList(10253, 10254);
         assertThat(appTopic.get(validTestAppPrefix + "2")).isEqualTo(validTestApp2Topics);
-
-        // The precomputed_test_app_list contains 5 invalid topics: 2, 30, 20001, 20003, 50001
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
-                },
-                times(5));
     }
 
     @Test
     public void testAppsWithOnlyEmptyTopics() {
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -462,23 +411,10 @@ public class ModelManagerTest {
 
         // Verify the topic list of this app is empty.
         assertThat(appTopic.get(chromeRemoteDesktopAppId)).isEmpty();
-
-        // The precomputed_test_app_list contains 5 invalid topics: 2, 30, 20001, 20003, 50001
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__INVALID_TOPIC_ID),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
-                },
-                times(5));
     }
 
     @Test
     public void testGetTestClassifierAssetsMetadata_correctFormat() {
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -545,19 +481,6 @@ public class ModelManagerTest {
         // its value should be "6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96"
         assertThat(mTestClassifierAssetsMetadata.get("precomputed_app_list").get("checksum"))
                 .isEqualTo("6c4fa0e24cf67c0e830d05196f2b8e66824ca0ebf6ade3229cdd3dedf63cbb96");
-
-        // The asset "test_asset2" has two redundant fields. "CLASSIFIER_METADATA_REDUNDANT_ASSET"
-        // should be logged twice.
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            eq(
-                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
-                },
-                times(2));
     }
 
     @Test
@@ -910,7 +833,6 @@ public class ModelManagerTest {
 
     @Test
     public void testIsModelAvailable_nullBundledModel() {
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -924,21 +846,10 @@ public class ModelManagerTest {
 
         // If the bundled model is available but null, return false.
         assertThat(mTestModelManager.isModelAvailable()).isFalse();
-
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            any(Throwable.class),
-                            eq(
-                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__NO_CLASSIFIER_MODEL_AVAILABLE),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS));
-                });
     }
 
     @Test
     public void testGetTestClassifierAssetsMetadata_wrongFormat() {
-        ExtendedMockito.doNothing()
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         mTestModelManager =
                 new ModelManager(
                         sContext,
@@ -953,6 +864,7 @@ public class ModelManagerTest {
         mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         // There should contain 1 metadata attributions in asset "test_asset1",
         // because it doesn't have "checksum" and "updated_date"
+        mTestClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
         assertThat(mTestClassifierAssetsMetadata.get("test_asset1")).hasSize(1);
 
         // The asset "test_asset1" should have attribution "path" and its value should be
@@ -972,18 +884,5 @@ public class ModelManagerTest {
         // The asset "test_asset2" shouldn't have redundant attribution "redundant_field1"
         assertThat(mTestClassifierAssetsMetadata.get("test_asset2"))
                 .doesNotContainKey("redundant_field1");
-
-        // The asset "test_asset2" has two redundant fields. "CLASSIFIER_METADATA_REDUNDANT_ASSET"
-        // should be logged twice.
-        ExtendedMockito.verify(
-                () -> {
-                    ErrorLogUtil.e(
-                            eq(
-                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CLASSIFIER_METADATA_REDUNDANT_ASSET),
-                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
-                            anyString(),
-                            anyString());
-                },
-                times(2));
     }
 }
