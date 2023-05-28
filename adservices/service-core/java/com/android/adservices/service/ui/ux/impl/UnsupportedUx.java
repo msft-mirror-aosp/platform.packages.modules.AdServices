@@ -23,7 +23,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 // TO-DO(b/284177542): Implement revoke consent logic for Unsupported UX.
 /** Unsupported UX class that ensures no privacy sandbox features are available. */
