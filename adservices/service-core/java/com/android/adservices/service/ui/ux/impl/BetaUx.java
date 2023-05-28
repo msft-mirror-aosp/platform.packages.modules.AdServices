@@ -25,7 +25,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 
-/** Base UX for all privacy sandbox UXs. */
+/** The privacy sandbox beta UX. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class BetaUx implements PrivacySandboxUx {
 

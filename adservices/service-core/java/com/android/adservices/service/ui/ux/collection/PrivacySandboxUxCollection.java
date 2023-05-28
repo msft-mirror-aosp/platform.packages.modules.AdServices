@@ -23,13 +23,13 @@ import androidx.annotation.RequiresApi;
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)
 public enum PrivacySandboxUxCollection {
-    UNSUPPORTED_UX(0, new UnsupportedUx()),
+    UNSUPPORTED_UX(/* priority= */ 0, new UnsupportedUx()),
 
-    GA_UX(1, new GaUx()),
+    GA_UX(/* priority= */ 1, new GaUx()),
 
-    U18_UX(2, new U18Ux()),
+    U18_UX(/* priority= */ 2, new U18Ux()),
 
-    BETA_UX(3, new BetaUx());
+    BETA_UX(/* priority= */ 3, new BetaUx());
 
     private final int mPriority;
     private final PrivacySandboxUx mUx;
