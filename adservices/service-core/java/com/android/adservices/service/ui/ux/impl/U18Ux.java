@@ -23,7 +23,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 /** The privacy sandbox Beta UX that are released along with the other Beta features. */
 @RequiresApi(Build.VERSION_CODES.S)
