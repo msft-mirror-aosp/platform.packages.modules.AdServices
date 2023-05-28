@@ -20,23 +20,31 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.ui.enrollment.BetaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.GaUxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannelCollection;
+import com.android.adservices.service.ui.enrollment.U18UxEnrollmentChannelCollection;
+
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)
 public enum PrivacySandboxUxCollection {
-    UNSUPPORTED_UX(0, new UnsupportedUx()),
+    UNSUPPORTED_UX(0, new UnsupportedUx(), new PrivacySandboxEnrollmentChannelCollection[0]),
 
-    GA_UX(1, new GaUx()),
+    GA_UX(1, new GaUx(), GaUxEnrollmentChannelCollection.values()),
 
-    U18_UX(2, new U18Ux()),
+    U18_UX(2, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
 
-    BETA_UX(3, new BetaUx());
+    BETA_UX(3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
 
     private final int mPriority;
     private final PrivacySandboxUx mUx;
+    private final PrivacySandboxEnrollmentChannelCollection[] mEcc;
 
-    PrivacySandboxUxCollection(int priority, PrivacySandboxUx ux) {
+    PrivacySandboxUxCollection(
+            int priority, PrivacySandboxUx ux, PrivacySandboxEnrollmentChannelCollection[] ecc) {
         mPriority = priority;
         mUx = ux;
+        mEcc = ecc;
     }
 
     public int getPriority() {
@@ -45,5 +53,9 @@ public enum PrivacySandboxUxCollection {
 
     public PrivacySandboxUx getUx() {
         return mUx;
+    }
+
+    public PrivacySandboxEnrollmentChannelCollection[] getEnrollmentChannelCollection() {
+        return mEcc;
     }
 }
