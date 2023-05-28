@@ -21,7 +21,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 
 /** Base enrollment channel for all privacy sandbox UXs. */
