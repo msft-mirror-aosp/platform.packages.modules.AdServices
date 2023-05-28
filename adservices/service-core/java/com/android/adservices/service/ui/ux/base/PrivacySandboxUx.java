@@ -18,7 +18,7 @@ package com.android.adservices.service.ui.ux;
 import android.content.Context;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 import com.google.errorprone.annotations.Immutable;
 
