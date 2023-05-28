@@ -23,7 +23,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 
 /** The privacy sandbox (general availability) GA UX. */
 @RequiresApi(Build.VERSION_CODES.S)
