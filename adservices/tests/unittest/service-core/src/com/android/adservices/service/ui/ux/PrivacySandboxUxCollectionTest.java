@@ -56,10 +56,18 @@ public class PrivacySandboxUxCollectionTest {
     }
 
     @Test
-    public void uxCollectionTest_ctorCheck() {
+    public void uxCollectionTest_uxCheck() {
         assertThat(PrivacySandboxUxCollection.UNSUPPORTED_UX.getUx()).isNotNull();
         assertThat(PrivacySandboxUxCollection.GA_UX.getUx()).isNotNull();
         assertThat(PrivacySandboxUxCollection.U18_UX.getUx()).isNotNull();
         assertThat(PrivacySandboxUxCollection.BETA_UX.getUx()).isNotNull();
+    }
+
+    @Test
+    public void uxCollectionTest_enrollmentChannelCollectionCheck() {
+        assertEquals(0, PrivacySandboxUxCollection.UNSUPPORTED_UX.getEnrollmentChannelCollection().length);
+        assertEquals(4, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
+        assertEquals(3, PrivacySandboxUxCollection.BETA_UX.getEnrollmentChannelCollection().length);
+        assertEquals(3, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
     }
 }
