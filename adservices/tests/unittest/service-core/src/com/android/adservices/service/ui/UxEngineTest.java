@@ -126,4 +126,37 @@ public class UxEngineTest {
         assertThat(mUxEngine.getEligibleUxCollection())
                 .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX);
     }
+
+    @Test
+    public void getEligibleUxCollectionTest_gaAndU18Eligible() {
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(true).when(mConsentManager).isAdultAccount();
+        doReturn(true).when(mConsentManager).isU18Account();
+
+        // U18 UX should have higher priority than adult UX.
+        assertThat(mUxEngine.getEligibleUxCollection())
+                .isEqualTo(PrivacySandboxUxCollection.U18_UX);
+    }
+
+    @Test
+    public void getEligibleUxCollectionTest_betaAndU18Eligible() {
+        doReturn(true).when(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
+        doReturn(false).when(mUxStatesManager).getFlag(KEY_GA_UX_FEATURE_ENABLED);
+        doReturn(true).when(mConsentManager).isAdultAccount();
+        doReturn(true).when(mConsentManager).isU18Account();
+
+        // U18 UX should have higher priority than adult UX.
+        assertThat(mUxEngine.getEligibleUxCollection())
+                .isEqualTo(PrivacySandboxUxCollection.U18_UX);
+    }
+
+    @Test
+    public void getEligibleUxCollectionTest_nonAdultAndNonU18() {
+        doReturn(false).when(mConsentManager).isAdultAccount();
+        doReturn(false).when(mConsentManager).isU18Account();
+
+        assertThat(mUxEngine.getEligibleUxCollection())
+                .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+    }
 }

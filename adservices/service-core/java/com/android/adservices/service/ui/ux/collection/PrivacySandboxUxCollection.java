@@ -33,9 +33,9 @@ public enum PrivacySandboxUxCollection {
             new UnsupportedUx(),
             new PrivacySandboxEnrollmentChannelCollection[0]),
 
-    GA_UX(/* priority= */ 1, new GaUx(), GaUxEnrollmentChannelCollection.values()),
+    U18_UX(/* priority= */ 1, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
 
-    U18_UX(/* priority= */ 2, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
+    GA_UX(/* priority= */ 2, new GaUx(), GaUxEnrollmentChannelCollection.values()),
 
     BETA_UX(/* priority= */ 3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
 
