@@ -20,17 +20,22 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+/* Collection of GA UX enrollment channels. */
 @RequiresApi(Build.VERSION_CODES.S)
-public enum U18UxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
-    CONSENT_NOTIFICATION_DEBUG_CHANNEL(0, new ConsentNotificationDebugChannel()),
+public enum GaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentChannelCollection {
+    CONSENT_NOTIFICATION_DEBUG_CHANNEL(/* priority= */ 0, new ConsentNotificationDebugChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(1, new FirstConsentNotificationChannel());
+    ALREADY_ENROLLED_CHANNEL(/* priority= */ 1, new AlreadyEnrolledChannel()),
+
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel()),
+
+    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new ReconsentNotificationChannel());
 
     private final int mPriority;
 
     private final PrivacySandboxEnrollmentChannel mEnrollmentChannel;
 
-    U18UxEnrollmentChannelCollection(
+    GaUxEnrollmentChannelCollection(
             int priority, PrivacySandboxEnrollmentChannel enrollmentChannel) {
         mPriority = priority;
         mEnrollmentChannel = enrollmentChannel;
