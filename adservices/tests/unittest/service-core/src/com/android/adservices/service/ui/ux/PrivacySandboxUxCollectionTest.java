@@ -34,8 +34,8 @@ public class PrivacySandboxUxCollectionTest {
         PrivacySandboxUxCollection[] uxCollection = PrivacySandboxUxCollection.values();
 
         assertEquals(PrivacySandboxUxCollection.UNSUPPORTED_UX, uxCollection[0]);
-        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[1]);
-        assertEquals(PrivacySandboxUxCollection.U18_UX, uxCollection[2]);
+        assertEquals(PrivacySandboxUxCollection.U18_UX, uxCollection[1]);
+        assertEquals(PrivacySandboxUxCollection.GA_UX, uxCollection[2]);
         assertEquals(PrivacySandboxUxCollection.BETA_UX, uxCollection[3]);
     }
 
@@ -43,14 +43,14 @@ public class PrivacySandboxUxCollectionTest {
     public void uxCollectionTest_priorityCheck() {
         assertThat(
                         PrivacySandboxUxCollection.UNSUPPORTED_UX.getPriority()
-                                < PrivacySandboxUxCollection.GA_UX.getPriority())
-                .isTrue();
-        assertThat(
-                        PrivacySandboxUxCollection.GA_UX.getPriority()
                                 < PrivacySandboxUxCollection.U18_UX.getPriority())
                 .isTrue();
         assertThat(
                         PrivacySandboxUxCollection.U18_UX.getPriority()
+                                < PrivacySandboxUxCollection.GA_UX.getPriority())
+                .isTrue();
+        assertThat(
+                        PrivacySandboxUxCollection.GA_UX.getPriority()
                                 < PrivacySandboxUxCollection.BETA_UX.getPriority())
                 .isTrue();
     }
@@ -58,16 +58,18 @@ public class PrivacySandboxUxCollectionTest {
     @Test
     public void uxCollectionTest_uxCheck() {
         assertThat(PrivacySandboxUxCollection.UNSUPPORTED_UX.getUx()).isNotNull();
-        assertThat(PrivacySandboxUxCollection.GA_UX.getUx()).isNotNull();
         assertThat(PrivacySandboxUxCollection.U18_UX.getUx()).isNotNull();
+        assertThat(PrivacySandboxUxCollection.GA_UX.getUx()).isNotNull();
         assertThat(PrivacySandboxUxCollection.BETA_UX.getUx()).isNotNull();
     }
 
     @Test
     public void uxCollectionTest_enrollmentChannelCollectionCheck() {
-        assertEquals(0, PrivacySandboxUxCollection.UNSUPPORTED_UX.getEnrollmentChannelCollection().length);
+        assertEquals(
+                0,
+                PrivacySandboxUxCollection.UNSUPPORTED_UX.getEnrollmentChannelCollection().length);
+        assertEquals(3, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
         assertEquals(4, PrivacySandboxUxCollection.GA_UX.getEnrollmentChannelCollection().length);
         assertEquals(3, PrivacySandboxUxCollection.BETA_UX.getEnrollmentChannelCollection().length);
-        assertEquals(3, PrivacySandboxUxCollection.U18_UX.getEnrollmentChannelCollection().length);
     }
 }

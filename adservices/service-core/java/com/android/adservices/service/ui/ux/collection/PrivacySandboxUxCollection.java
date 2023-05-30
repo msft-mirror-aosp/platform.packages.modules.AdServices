@@ -28,13 +28,16 @@ import com.android.adservices.service.ui.enrollment.U18UxEnrollmentChannelCollec
 /** Collection of privacy sandbox UXs, ordered by their priority. */
 @RequiresApi(Build.VERSION_CODES.S)
 public enum PrivacySandboxUxCollection {
-    UNSUPPORTED_UX(0, new UnsupportedUx(), new PrivacySandboxEnrollmentChannelCollection[0]),
+    UNSUPPORTED_UX(
+            /* priority= */ 0,
+            new UnsupportedUx(),
+            new PrivacySandboxEnrollmentChannelCollection[0]),
 
-    GA_UX(1, new GaUx(), GaUxEnrollmentChannelCollection.values()),
+    U18_UX(/* priority= */ 1, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
 
-    U18_UX(2, new U18Ux(), U18UxEnrollmentChannelCollection.values()),
+    GA_UX(/* priority= */ 2, new GaUx(), GaUxEnrollmentChannelCollection.values()),
 
-    BETA_UX(3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
+    BETA_UX(/* priority= */ 3, new BetaUx(), BetaUxEnrollmentChannelCollection.values());
 
     private final int mPriority;
     private final PrivacySandboxUx mUx;

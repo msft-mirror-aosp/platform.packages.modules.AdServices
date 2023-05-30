@@ -36,11 +36,11 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             UxStatesManager uxStatesManager) {
         switch (uxCollection) {
             case GA_UX:
-                return !consentManager.wasGaUxNotificationDisplayed();
+                return consentManager.wasGaUxNotificationDisplayed();
             case BETA_UX:
-                return !consentManager.wasNotificationDisplayed();
+                return consentManager.wasNotificationDisplayed();
             case U18_UX:
-                return !consentManager.wasU18NotificationDisplayed();
+                return consentManager.wasU18NotificationDisplayed();
             default:
                 // Unsupport and non-valid UXs can never have enrollment channels.
                 return false;
