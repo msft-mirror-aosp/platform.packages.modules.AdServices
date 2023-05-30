@@ -93,11 +93,16 @@ public class SdkSandboxManagerTest {
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
+        unloadAllSdks();
         mScenario = mRule.getScenario();
     }
 
     @After
     public void tearDown() {
+        unloadAllSdks();
+    }
+
+    private void unloadAllSdks() {
         try {
             mSdkSandboxManager.unloadSdk(SDK_NAME_1);
             mSdkSandboxManager.unloadSdk(SDK_NAME_2);
