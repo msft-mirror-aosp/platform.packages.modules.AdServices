@@ -104,6 +104,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private final int mCallerUid;
     @NonNull private final PrebuiltLogicGenerator mPrebuiltLogicGenerator;
+    private DebugReportingEnabledScriptStrategy mDebugReportingScriptStrategy;
 
     /**
      * @param adSelectionEntryDao DAO to access ad selection storage
@@ -148,6 +149,7 @@ public class OutcomeSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mContext = context;
         mFlags = flags;
+        mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
 
         mAdOutcomeSelector =
                 new AdOutcomeSelectorImpl(
@@ -155,7 +157,8 @@ public class OutcomeSelectionRunner {
                                 mContext,
                                 flags::getEnforceIsolateMaxHeapSize,
                                 flags::getIsolateMaxHeapSizeBytes,
-                                adCounterKeyCopier),
+                                adCounterKeyCopier,
+                                mDebugReportingScriptStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
