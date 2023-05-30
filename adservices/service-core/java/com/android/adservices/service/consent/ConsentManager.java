@@ -55,6 +55,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
+import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
@@ -116,6 +117,7 @@ public class ConsentManager {
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
     private final AppSearchConsentManager mAppSearchConsentManager;
+    private final UserProfileIdManager mUserProfileIdManager;
 
     private static final Object LOCK = new Object();
 
@@ -129,6 +131,7 @@ public class ConsentManager {
             @NonNull AdServicesManager adServicesManager,
             @NonNull BooleanFileDatastore booleanFileDatastore,
             @NonNull AppSearchConsentManager appSearchConsentManager,
+            @NonNull UserProfileIdManager userProfileIdManager,
             @NonNull Flags flags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(topicsWorker);
@@ -137,6 +140,7 @@ public class ConsentManager {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
         Objects.requireNonNull(booleanFileDatastore);
+        Objects.requireNonNull(userProfileIdManager);
 
         if (consentSourceOfTruth != Flags.PPAPI_ONLY
                 && consentSourceOfTruth != Flags.APPSEARCH_ONLY) {
@@ -157,6 +161,7 @@ public class ConsentManager {
         mAppInstallDao = appInstallDao;
 
         mAppSearchConsentManager = appSearchConsentManager;
+        mUserProfileIdManager = userProfileIdManager;
         mFlags = flags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
@@ -214,6 +219,7 @@ public class ConsentManager {
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
+                                    UserProfileIdManager.getInstance(context),
                                     // TODO(b/260601944): Remove Flag Instance.
                                     FlagsFactory.getFlags(),
                                     consentSourceOfTruth);
@@ -241,6 +247,8 @@ public class ConsentManager {
             resetTopicsAndBlockedTopics();
             resetAppsAndBlockedApps();
             resetMeasurement();
+            resetUserProfileId();
+            mUserProfileIdManager.getOrCreateId();
         } catch (IOException e) {
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
@@ -265,6 +273,7 @@ public class ConsentManager {
             resetAppsAndBlockedApps();
             resetMeasurement();
             resetEnrollment();
+            resetUserProfileId();
 
             BackgroundJobsManager.unscheduleAllBackgroundJobs(
                     context.getSystemService(JobScheduler.class));
@@ -295,6 +304,10 @@ public class ConsentManager {
         try {
             // reset all state data which should be removed
             resetByApi(apiType);
+
+            if (AdServicesApiType.FLEDGE == apiType) {
+                mUserProfileIdManager.getOrCreateId();
+            }
         } catch (IOException e) {
             throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
         }
@@ -1809,11 +1822,16 @@ public class ConsentManager {
                 break;
             case FLEDGE:
                 resetAppsAndBlockedApps();
+                resetUserProfileId();
                 break;
             case MEASUREMENTS:
                 resetMeasurement();
                 break;
         }
+    }
+
+    private void resetUserProfileId() {
+        mUserProfileIdManager.deleteId();
     }
 
     @VisibleForTesting
