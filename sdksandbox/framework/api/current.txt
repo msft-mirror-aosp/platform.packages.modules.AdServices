@@ -93,6 +93,7 @@ package android.app.sdksandbox.sdkprovider {
 
   public class SdkSandboxController {
     method @NonNull public java.util.List<android.app.sdksandbox.AppOwnedSdkSandboxInterface> getAppOwnedSdkSandboxInterfaces();
+    method @NonNull public String getClientPackageName();
     method @NonNull public android.content.SharedPreferences getClientSharedPreferences();
     method @NonNull public java.util.List<android.app.sdksandbox.SandboxedSdk> getSandboxedSdks();
     method @NonNull public android.os.IBinder registerSdkSandboxActivityHandler(@NonNull android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler);
