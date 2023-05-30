@@ -18,6 +18,8 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdservicesJobInfo.MAINTENANCE_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyLong;
@@ -34,6 +36,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -49,6 +52,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.FledgeMaintenanceTasksWorker;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.stats.Clock;
@@ -118,6 +122,7 @@ public class MaintenanceJobServiceTest {
                         .spyStatic(TopicsWorker.class)
                         .spyStatic(FlagsFactory.class)
                         .spyStatic(AdservicesJobServiceLogger.class)
+                        .spyStatic(ErrorLogUtil.class)
                         .mockStatic(ServiceCompatUtils.class)
                         .initMocks(this)
                         .strictness(Strictness.LENIENT)
@@ -519,6 +524,8 @@ public class MaintenanceJobServiceTest {
 
     @Test
     public void testScheduleIfNeeded_scheduledWithKillSwitchOn() {
+        ExtendedMockito.doNothing()
+                .when(() -> ErrorLogUtil.e(anyInt(), anyInt(), anyString(), anyString()));
         // Killswitch is on.
         doReturn(true).when(mMockFlags).getTopicsKillSwitch();
 
@@ -528,6 +535,15 @@ public class MaintenanceJobServiceTest {
         // The first invocation of scheduleIfNeeded() schedules the job.
         assertThat(EpochJobService.scheduleIfNeeded(CONTEXT, /* forceSchedule */ false)).isFalse();
         assertThat(JOB_SCHEDULER.getPendingJob(MAINTENANCE_JOB_ID)).isNull();
+        ExtendedMockito.verify(
+                ()-> {
+                    ErrorLogUtil.e(
+                            eq(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED),
+                            eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS),
+                            anyString(),
+                            anyString());
+                }
+        );
     }
 
     @Test
