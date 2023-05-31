@@ -19,8 +19,8 @@ package android.adservices.clients.adselection;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionManager;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.NonNull;
@@ -118,7 +118,7 @@ public class AdSelectionClient {
      * @hide
      */
     @NonNull
-    public ListenableFuture<Void> reportInteraction(@NonNull ReportInteractionRequest request) {
+    public ListenableFuture<Void> reportInteraction(@NonNull ReportEventRequest request) {
         // TODO(b/274723533): Uncomment this after un-hiding
 /*
         return CallbackToFutureAdapter.getFuture(

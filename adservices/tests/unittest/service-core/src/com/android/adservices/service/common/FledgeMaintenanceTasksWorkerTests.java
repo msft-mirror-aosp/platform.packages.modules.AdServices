@@ -20,7 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.room.Room;
@@ -55,7 +55,7 @@ public class FledgeMaintenanceTasksWorkerTests {
 
     private static final String CLICK_EVENT = "click";
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final Uri SELLER_CLICK_URI = Uri.parse("https://www.seller.com/" + CLICK_EVENT);
 
     private static final DBAdSelection DB_AD_SELECTION =

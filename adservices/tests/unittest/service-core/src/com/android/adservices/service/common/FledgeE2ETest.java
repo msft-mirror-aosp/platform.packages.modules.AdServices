@@ -56,11 +56,11 @@ import android.adservices.adselection.BuyersDecisionLogic;
 import android.adservices.adselection.ContextualAds;
 import android.adservices.adselection.ContextualAdsFixture;
 import android.adservices.adselection.DecisionLogic;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersCallback;
 import android.adservices.adselection.SetAppInstallAdvertisersInput;
 import android.adservices.adselection.UpdateAdCounterHistogramInput;
@@ -228,9 +228,9 @@ public class FledgeE2ETest {
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final long BINDER_ELAPSED_TIMESTAMP = 100L;
     private static final List<Double> BIDS_FOR_BUYER_1 = ImmutableList.of(1.1, 2.2);

@@ -46,9 +46,9 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.never;
 
 import android.adservices.adselection.CustomAudienceSignalsFixture;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
@@ -120,9 +120,9 @@ public class InteractionReporterTest {
     private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
 
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
     private static final String CLICK_EVENT = "click";
 
     private AdSelectionEntryDao mAdSelectionEntryDao;

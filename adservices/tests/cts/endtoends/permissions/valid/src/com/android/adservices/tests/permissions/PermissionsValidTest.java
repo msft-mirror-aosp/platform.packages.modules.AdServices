@@ -199,13 +199,13 @@ public class PermissionsValidTest {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
 
-        ReportInteractionRequest request =
-                new ReportInteractionRequest(
+        ReportEventRequest request =
+                new ReportEventRequest(
                         adSelectionId,
                         interactionKey,
                         interactionData,
-                        ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                | ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER);
+                        ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
 
         ExecutionException exception =
                 assertThrows(

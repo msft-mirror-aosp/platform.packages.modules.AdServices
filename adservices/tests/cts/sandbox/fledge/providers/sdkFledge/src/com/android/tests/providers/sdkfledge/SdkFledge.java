@@ -19,8 +19,8 @@ package com.android.tests.providers.sdkfledge;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -137,9 +137,9 @@ public class SdkFledge extends SandboxedSdkProvider {
     private static final String HTTPS_SCHEME = "https";
 
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
@@ -377,15 +377,15 @@ public class SdkFledge extends SandboxedSdkProvider {
         // TODO(b/274837158) Uncomment after API is un-hidden
 
         //        try {
-        //            ReportInteractionRequest reportInteractionClickRequest =
-        //                    new ReportInteractionRequest(
+        //            ReportEventRequest reportInteractionClickRequest =
+        //                    new ReportEventRequest(
         //                            adSelectionId,
         //                            CLICK_INTERACTION,
         //                            INTERACTION_DATA,
         //                            BUYER_DESTINATION | SELLER_DESTINATION);
         //
-        //            ReportInteractionRequest reportInteractionHoverRequest =
-        //                    new ReportInteractionRequest(
+        //            ReportEventRequest reportInteractionHoverRequest =
+        //                    new ReportEventRequest(
         //                            adSelectionId,
         //                            HOVER_INTERACTION,
         //                            INTERACTION_DATA,
