@@ -57,9 +57,8 @@ public final class DeleteUninstalledJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling DeleteUninstalledJobService job because it's running in ExtServices"
@@ -68,6 +67,9 @@ public final class DeleteUninstalledJobService extends JobService {
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
             LogUtil.e("DeleteUninstalledJobService is disabled");
