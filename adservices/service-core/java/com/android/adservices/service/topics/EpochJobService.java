@@ -18,9 +18,9 @@ package com.android.adservices.service.topics;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.spe.AdservicesJobInfo.TOPICS_EPOCH_JOB;
 
@@ -37,6 +37,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
@@ -54,20 +55,21 @@ import com.google.common.util.concurrent.ListenableFuture;
 @RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        sLogger.d("EpochJobService.onStartJob");
-
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
-            sLogger.d("Disabling EpochJobService job because it's running in ExtServices on T+");
+            LogUtil.d("Disabling EpochJobService job because it's running in ExtServices on T+");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        LoggerFactory.getTopicsLogger().d("EpochJobService.onStartJob");
+
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
@@ -75,7 +77,8 @@ public final class EpochJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                     this.getClass().getSimpleName(),
                     new Object() {}.getClass().getEnclosingMethod().getName());
-            sLogger.e("Topics API is disabled, skipping and cancelling EpochJobService");
+            LoggerFactory.getTopicsLogger()
+                    .e("Topics API is disabled, skipping and cancelling EpochJobService");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON);
@@ -96,7 +99,7 @@ public final class EpochJobService extends JobService {
                 new FutureCallback<Void>() {
                     @Override
                     public void onSuccess(Void result) {
-                        sLogger.d("Epoch Computation succeeded!");
+                        LoggerFactory.getTopicsLogger().d("Epoch Computation succeeded!");
 
                         boolean shouldRetry = false;
                         AdservicesJobServiceLogger.getInstance(EpochJobService.this)
@@ -114,7 +117,8 @@ public final class EpochJobService extends JobService {
                                 t,
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE,
                                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
-                        sLogger.e(t, "Failed to handle JobService: " + params.getJobId());
+                        LoggerFactory.getTopicsLogger()
+                                .e(t, "Failed to handle JobService: " + params.getJobId());
 
                         boolean shouldRetry = false;
                         AdservicesJobServiceLogger.getInstance(EpochJobService.this)
@@ -136,7 +140,7 @@ public final class EpochJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        sLogger.d("EpochJobService.onStopJob");
+        LoggerFactory.getTopicsLogger().d("EpochJobService.onStopJob");
 
         // Tell JobScheduler not to reschedule the job because it's unknown at this stage if the
         // execution is completed or not to avoid executing the task twice.
@@ -163,7 +167,7 @@ public final class EpochJobService extends JobService {
                         .build();
 
         jobScheduler.schedule(job);
-        sLogger.d("Scheduling Epoch job ...");
+        LoggerFactory.getTopicsLogger().d("Scheduling Epoch job ...");
     }
 
     /**
@@ -180,7 +184,8 @@ public final class EpochJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                     new Object() {}.getClass().getSimpleName(),
                     new Object() {}.getClass().getEnclosingMethod().getName());
-            sLogger.e("Topics API is disabled, skip scheduling the EpochJobService");
+            LoggerFactory.getTopicsLogger()
+                    .e("Topics API is disabled, skip scheduling the EpochJobService");
             return false;
         }
 
@@ -191,7 +196,7 @@ public final class EpochJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
                     new Object() {}.getClass().getSimpleName(),
                     new Object() {}.getClass().getEnclosingMethod().getName());
-            sLogger.e("Cannot fetch Job Scheduler!");
+            LoggerFactory.getTopicsLogger().e("Cannot fetch Job Scheduler!");
             return false;
         }
 
@@ -206,9 +211,10 @@ public final class EpochJobService extends JobService {
 
             if (flagsEpochJobPeriodMs == epochJobPeriodMs
                     && flagsEpochJobFlexMs == epochJobFlexMs) {
-                sLogger.i(
-                        "Epoch Job Service has been scheduled with same parameters, skip"
-                                + " rescheduling!");
+                LoggerFactory.getTopicsLogger()
+                        .i(
+                                "Epoch Job Service has been scheduled with same parameters, skip"
+                                        + " rescheduling!");
                 return false;
             }
         }
