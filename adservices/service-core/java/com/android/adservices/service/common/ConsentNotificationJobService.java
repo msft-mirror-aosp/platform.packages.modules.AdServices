@@ -194,10 +194,8 @@ public class ConsentNotificationJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        LogUtil.d("ConsentNotificationJobService.onStartJob");
-
-        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling ConsentNotificationJobService job because it's running in"
@@ -206,6 +204,9 @@ public class ConsentNotificationJobService extends JobService {
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        LogUtil.d("ConsentNotificationJobService.onStartJob");
+        AdservicesJobServiceLogger.getInstance(this).recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance(this));
