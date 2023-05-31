@@ -57,6 +57,8 @@ import java.util.concurrent.ExecutorService;
 public class AdSelectionEncryptionKeyManagerTest {
     private static final Long EXPIRY_TTL_1SEC = 1L;
 
+    private static final int TIMEOUT_MS = 500;
+
     private static final String AUCTION_KEY_FETCH_URI = "https://foo.bar/auctionkey";
     private static final String JOIN_KEY_FETCH_URI = "https://foo.bar/joinkey";
 
@@ -242,8 +244,9 @@ public class AdSelectionEncryptionKeyManagerTest {
                 .isNull();
 
         AdSelectionEncryptionKey actualKey =
-                mKeyManager.fetchAndPersistActiveKeysOfType(
-                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION);
+                mKeyManager.fetchPersistAndGetActiveKeyOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION, TIMEOUT_MS)
+                        .get();
 
         assertThat(actualKey).isNotNull();
     }
@@ -262,8 +265,9 @@ public class AdSelectionEncryptionKeyManagerTest {
                 .isNull();
 
         AdSelectionEncryptionKey actualKey =
-                mKeyManager.fetchAndPersistActiveKeysOfType(
-                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN);
+                mKeyManager.fetchPersistAndGetActiveKeyOfType(
+                        AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.JOIN, TIMEOUT_MS)
+                        .get();
 
         assertThat(actualKey).isNotNull();
     }
