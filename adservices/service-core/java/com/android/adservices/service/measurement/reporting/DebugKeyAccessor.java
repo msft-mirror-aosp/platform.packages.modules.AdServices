@@ -20,7 +20,8 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.util.Pair;
 
-import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreException;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
@@ -38,27 +39,26 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /** Util class for DebugKeys */
 public class DebugKeyAccessor {
     @NonNull private final Flags mFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
-    @NonNull private final DatastoreManager mDatastoreManager;
+    @NonNull private final IMeasurementDao mMeasurementDao;
 
-    public DebugKeyAccessor(DatastoreManager datastoreManager) {
-        this(FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance(), datastoreManager);
+    public DebugKeyAccessor(IMeasurementDao measurementDao) {
+        this(FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance(), measurementDao);
     }
 
     @VisibleForTesting
     DebugKeyAccessor(
             @NonNull Flags flags,
             @NonNull AdServicesLogger adServicesLogger,
-            @NonNull DatastoreManager datastoreManager) {
+            @NonNull IMeasurementDao measurementDao) {
         mFlags = flags;
         mAdServicesLogger = adServicesLogger;
-        mDatastoreManager = datastoreManager;
+        mMeasurementDao = measurementDao;
     }
 
     /**
@@ -83,7 +83,8 @@ public class DebugKeyAccessor {
     }
 
     /** Returns DebugKey according to the permissions set */
-    public Pair<UnsignedLong, UnsignedLong> getDebugKeys(Source source, Trigger trigger) {
+    public Pair<UnsignedLong, UnsignedLong> getDebugKeys(Source source, Trigger trigger)
+            throws DatastoreException {
         Set<String> allowedEnrollmentsString =
                 new HashSet<>(
                         AllowLists.splitAllowList(
@@ -180,7 +181,7 @@ public class DebugKeyAccessor {
 
     /** Returns DebugKey according to the permissions set */
     public Pair<UnsignedLong, UnsignedLong> getDebugKeysForVerboseTriggerDebugReport(
-            @NonNull Source source, Trigger trigger) {
+            @NonNull Source source, Trigger trigger) throws DatastoreException {
         if (source == null) {
             if (trigger.getDestinationType() == EventSurfaceType.WEB
                     && trigger.hasArDebugPermission()) {
@@ -356,14 +357,9 @@ public class DebugKeyAccessor {
                 && Objects.nonNull(trigger.getPlatformAdId());
     }
 
-    private boolean isEnrollmentIdWithinUniqueAdIdLimit(String enrollmentId) {
-        Optional<Long> numUniqueOpt =
-                mDatastoreManager.runInTransactionWithResult(
-                        dao -> dao.countDistinctDebugAdIdsUsedByEnrollment(enrollmentId));
-        if (!numUniqueOpt.isPresent()) {
-            return false;
-        }
-        long numUnique = numUniqueOpt.get();
+    private boolean isEnrollmentIdWithinUniqueAdIdLimit(String enrollmentId)
+            throws DatastoreException {
+        long numUnique = mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(enrollmentId);
         return numUnique < mFlags.getMeasurementPlatformDebugAdIdMatchingLimit();
     }
 
