@@ -125,10 +125,11 @@ public class AdIdManagerTest {
         getAdIdAndVerifyRateLimitReached(adIdManager);
 
         // Verify limit reached
-        // If the test takes less than 1 second, this test is reliable due to the rate limiter
-        // limits queries per second. If duration is longer than a second, skip it.
+        // If the test takes less than 1 second / permits per second, this test is reliable due to
+        // the rate limiter limits queries per second. If duration is longer than a second, skip it.
         final boolean reachedLimit = getAdIdAndVerifyRateLimitReached(adIdManager);
-        final boolean executedInLessThanOneSec = (System.currentTimeMillis() - nowInMillis) < 1_000;
+        final boolean executedInLessThanOneSec =
+                (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
             assertTrue(reachedLimit);
         }
