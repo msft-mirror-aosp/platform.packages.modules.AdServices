@@ -37,6 +37,11 @@ android_test {
     // See b/233124651 for details.
     compile_multilib: "both",
     min_sdk_version: "Tiramisu",
+
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
     static_libs: [
         "androidx.concurrent_concurrent-futures",
         "androidx.test.rules",
@@ -59,6 +64,7 @@ android_test {
         "framework-annotations-lib",
         "framework-configinfrastructure",
         "framework-sdksandbox.impl",
+        "auto_value_annotations",
     ],
     test_suites: [
         "general-tests",

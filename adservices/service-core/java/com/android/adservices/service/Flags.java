@@ -840,6 +840,41 @@ public interface Flags {
         return FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
     }
 
+    // TODO(b/278054645): Configure key fetch URI for auction.
+    String AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI = "https://";
+
+    /**
+     * @return Uri to fetch auction encryption key for fledge ad selection.
+     */
+    default String getAdSelectionDataAuctionKeyFetchUri() {
+        return AD_SELECTION_DATA_AUCTION_KEY_FETCH_URI;
+    }
+
+    String AD_SELECTION_DATA_JOIN_KEY_FETCH_URI =
+            "https://chromekanonymity-pa.googleapis.com/v1/proxy/keys";
+
+    /**
+     * @return Uri to fetch join encryption key for fledge ad selection.
+     */
+    default String getAdSelectionDataJoinKeyFetchUri() {
+        return AD_SELECTION_DATA_JOIN_KEY_FETCH_URI;
+    }
+
+    int AD_SELECTION_DATA_AUCTION_KEY_SHARDING = 5;
+
+    /**
+     * @return Shard count for using auction key for fledge ad selection.
+     */
+    default int getAdSelectionDataAuctionKeySharding() {
+        return AD_SELECTION_DATA_AUCTION_KEY_SHARDING;
+    }
+
+    long AD_SELECTION_DATA_ENCRYPTION_KEY_MAX_AGE_SECONDS = TimeUnit.DAYS.toSeconds(14);
+
+    default long getAdSelectionDataEncryptionKeyMaxAgeSeconds() {
+        return AD_SELECTION_DATA_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+    }
+
     boolean FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED = true;
 
     /** Returns whether to compress requests sent off device for ad selection. */
