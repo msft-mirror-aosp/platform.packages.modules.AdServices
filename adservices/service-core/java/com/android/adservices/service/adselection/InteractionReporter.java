@@ -16,14 +16,14 @@
 
 package com.android.adservices.service.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
@@ -76,7 +76,7 @@ public class InteractionReporter {
     private static final int LOGGING_API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
-    @ReportInteractionRequest.ReportingDestination
+    @ReportEventRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
 
@@ -261,7 +261,7 @@ public class InteractionReporter {
                 mBackgroundExecutorService.submit(
                         () -> {
                             List<Uri> resultingReportingUris = new ArrayList<>();
-                            for (@ReportInteractionRequest.ReportingDestination
+                            for (@ReportEventRequest.ReportingDestination
                             int destination : POSSIBLE_DESTINATIONS) {
                                 if (bitExists(destination, destinationsBitField)) {
                                     if (mAdSelectionEntryDao.doesRegisteredAdInteractionExist(
@@ -356,8 +356,8 @@ public class InteractionReporter {
     }
 
     private boolean bitExists(
-            @ReportInteractionRequest.ReportingDestination int bit,
-            @ReportInteractionRequest.ReportingDestination int bitSet) {
+            @ReportEventRequest.ReportingDestination int bit,
+            @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
     }
 
