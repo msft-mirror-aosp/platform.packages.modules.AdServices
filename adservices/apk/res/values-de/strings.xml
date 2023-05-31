@@ -143,8 +143,10 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Blockierung aufheben"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Interessen, die ich blockiert habe"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Alle Interessen zurücksetzen"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Momentan sind keine Interessen vorhanden"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Momentan sind keine Themen vorhanden"</string>
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
+    <skip />
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Das Betaprogramm für Android-Datenschutz bei Anzeigen bietet neue Funktionen, mit denen Apps dir Werbung präsentieren können, die für dich möglicherweise interessant ist. Diese Technologien nutzen keine Geräte-IDs.\n\nAndroid kann schätzen, welche Art von Werbung dich möglicherweise interessiert, und diese Interessen vorübergehend auf deinem Gerät speichern. So können Apps dir relevante Werbung präsentieren, ohne dabei deine Aktivitäten auf Websites und in Apps anderer Entwickler zu erfassen."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Du hast keine blockierten Interessen"</string>
@@ -157,7 +159,8 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Blockierte Apps ansehen"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Von Apps geschätzte Interessen zurücksetzen"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Derzeit schätzen keine Apps Interessen für dich"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Momentan sind keine Apps vorhanden"</string>
+    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
+    <skip />
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Das Betaprogramm für Android-Datenschutz bei Anzeigen bietet neue Funktionen, mit denen Apps dir Werbung präsentieren können, die für dich möglicherweise interessant sind. Diese Technologien nutzen keine Geräte-IDs.\n\nApps können schätzen, welche Art von Werbung dich möglicherweise interessiert, und diese Interessen vorübergehend auf deinem Gerät speichern. So können Apps dir relevante Werbung präsentieren, ohne dabei deine Aktivitäten auf Websites und in Apps anderer Entwickler zu erfassen."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Du hast keine blockierten Apps"</string>
@@ -195,6 +198,8 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android schließt aufgrund der in letzter Zeit von dir genutzten Apps und der Häufigkeit ihrer Nutzung auf Themen, die dich interessieren könnten."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Von dir genutzte Apps können auch aufgrund dessen, wie du sie verwendest, feststellen, was dir gefällt."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Anzeigen zu messen. Android gibt Apps aber nur Zugang zu bestimmten Arten von Daten."</string>
+    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
+    <skip />
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"An / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> Themen"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Aktiviert / # Thema}other{Aktiviert / # Themen}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"An / <xliff:g id="APPS_COUNT">%1$d</xliff:g> Apps"</string>
@@ -211,16 +216,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Apps, die keine Vorschläge machen dürfen"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Daten zu App-Vorschlägen zurücksetzen"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Es ist üblich, dass in Apps, die du verwendest, Themen gespeichert werden, die dich interessieren, um deine Nutzung zu personalisieren. Apps können auch in Android Informationen über deine Themen speichern.\n\nWenn du zum Beispiel eine App zum Marathontraining nutzt, könnte daraus geschlossen werden, dass du dich für Laufschuhe interessierst. Wenn du dann später eine andere App verwendest, zeigt dir diese App möglicherweise aufgrund von Vorschlägen der ersten App Werbung für Laufschuhe.\n\nIn Android werden Daten zu App-Vorschlägen regelmäßig automatisch gelöscht. Apps, die du wiederholt verwendest, können aber wieder in die Liste aufgenommen werden. Du kannst auch verhindern, dass eine App dir Werbung vorschlägt.\n\nOb in deinen Apps personalisierte Werbung angezeigt wird, hängt von dieser Einstellung, der Einstellung zu Anzeigenthemen, den Einstellungen zu deiner Werbe-ID und davon ab, ob die jeweilige App personalisierte Werbung nutzt."</string>
-    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
-    <skip />
-    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
-    <skip />
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Neue Funktion zum Datenschutz bei Werbung verfügbar"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Nur sehr wenige Informationen werden zwischen Apps ausgetauscht, um die Leistung von Werbung messen zu können"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Wir führen eine neue Funktion zum Datenschutz bei Werbung ein. Diese Funktion heißt „Erfolgsmessung von Anzeigen“. Android gibt nur sehr begrenzte Informationen zwischen Apps weiter, z. B. wann dir Werbung gezeigt wurde, damit Apps die Leistung von Werbung messen können."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Du kannst Änderungen in den Datenschutzeinstellungen für Werbung vornehmen."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Von dir genutzte Apps können von Android Informationen abfragen, die dazu beitragen, die Leistung ihrer Werbung zu messen. Android gibt Apps aber nur Zugang zu bestimmten Arten von Daten."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Farbige Abbildung von Symbolen, die Themen wie Musik, Nachrichten und Sport repräsentieren"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Farbige Abbildung eines Schlosses in einem Kreis"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Kleine schwarz-weiße Abbildung mit neun Punkten, die ein Quadrat bilden"</string>
