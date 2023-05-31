@@ -2460,6 +2460,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println(
                 "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
@@ -2825,6 +2830,12 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
+
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
+                        + " = "
+                        + getMeasurementEnableCoarseEventReportDestinations());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -3180,11 +3191,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
     }
 
-    @Override
-    public boolean isEnrollmentBlocklisted(String enrollmentId) {
-        return getEnrollmentBlocklist().contains(enrollmentId);
-    }
-
     @VisibleForTesting
     @Override
     public ImmutableList<String> getEnrollmentBlocklist() {
@@ -3370,5 +3376,16 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
         uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
         return uxMap;
+    }
+
+    static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
+            "measurement_enable_coarse_event_report_destinations";
+
+    @Override
+    public boolean getMeasurementEnableCoarseEventReportDestinations() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS);
     }
 }
