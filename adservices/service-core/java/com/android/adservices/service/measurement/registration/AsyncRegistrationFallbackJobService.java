@@ -44,9 +44,8 @@ public class AsyncRegistrationFallbackJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling AsyncRegistrationFallbackJobService job because it's running in"
@@ -55,6 +54,9 @@ public class AsyncRegistrationFallbackJobService extends JobService {
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID);
 
         if (FlagsFactory.getFlags().getAsyncRegistrationFallbackJobKillSwitch()) {
             LogUtil.e("AsyncRegistrationFallbackJobService is disabled");
