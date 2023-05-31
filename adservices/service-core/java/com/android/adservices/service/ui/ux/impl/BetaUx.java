@@ -26,8 +26,11 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.base.PrivacySandboxEnrollmentChannel;
 
+import com.google.errorprone.annotations.Immutable;
+
 /** The privacy sandbox beta UX. */
 @RequiresApi(Build.VERSION_CODES.S)
+@Immutable
 public class BetaUx implements PrivacySandboxUx {
 
     /** Whether a user is eligible for the privacy sandbox Beta UX. */
