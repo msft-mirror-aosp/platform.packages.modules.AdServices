@@ -16,8 +16,8 @@
 
 package android.adservices.adselection;
 
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
-import static android.adservices.adselection.ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -26,7 +26,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ReportInteractionRequestTest {
+public class ReportEventRequestTest {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
     private String mInteractionData;
@@ -40,14 +40,14 @@ public class ReportInteractionRequestTest {
     }
 
     @Test
-    public void testBuildReportInteractionRequestSuccess() throws Exception {
-        ReportInteractionRequest request =
-                new ReportInteractionRequest(
+    public void testBuildReportEventRequestSuccess() throws Exception {
+        ReportEventRequest request =
+                new ReportEventRequest(
                         AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS);
 
         assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, request.getInteractionKey());
-        assertEquals(mInteractionData, request.getInteractionData());
+        assertEquals(INTERACTION_KEY, request.getEventKey());
+        assertEquals(mInteractionData, request.getEventData());
         assertEquals(DESTINATIONS, request.getReportingDestinations());
     }
 
@@ -56,8 +56,7 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionRequest(
-                            0, INTERACTION_KEY, mInteractionData, DESTINATIONS);
+                    new ReportEventRequest(0, INTERACTION_KEY, mInteractionData, DESTINATIONS);
                 });
     }
 
@@ -66,8 +65,7 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionRequest(
-                            AD_SELECTION_ID, null, mInteractionData, DESTINATIONS);
+                    new ReportEventRequest(AD_SELECTION_ID, null, mInteractionData, DESTINATIONS);
                 });
     }
 
@@ -76,8 +74,7 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportInteractionRequest(
-                            AD_SELECTION_ID, INTERACTION_KEY, null, DESTINATIONS);
+                    new ReportEventRequest(AD_SELECTION_ID, INTERACTION_KEY, null, DESTINATIONS);
                 });
     }
 
@@ -86,8 +83,7 @@ public class ReportInteractionRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportInteractionRequest(
-                            AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0);
+                    new ReportEventRequest(AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0);
                 });
     }
 }

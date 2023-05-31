@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import android.adservices.adselection.ReportInteractionRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
@@ -146,7 +146,7 @@ public abstract class AdSelectionEntryDao {
     public abstract boolean doesRegisteredAdInteractionExist(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Get the ad selection entry by its unique key ad_selection_id.
@@ -287,7 +287,7 @@ public abstract class AdSelectionEntryDao {
     public abstract Uri getRegisteredAdInteractionUri(
             long adSelectionId,
             String interactionKey,
-            @ReportInteractionRequest.ReportingDestination int destination);
+            @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated
@@ -484,8 +484,7 @@ public abstract class AdSelectionEntryDao {
             "SELECT COUNT(*) FROM registered_ad_interactions WHERE ad_selection_id ="
                     + " :adSelectionId AND destination = :reportingDestination")
     public abstract long getNumRegisteredAdInteractionsPerAdSelectionAndDestination(
-            long adSelectionId,
-            @ReportInteractionRequest.ReportingDestination int reportingDestination);
+            long adSelectionId, @ReportEventRequest.ReportingDestination int reportingDestination);
 
     /**
      * Inserts a list of {@link DBRegisteredAdInteraction}s into the database, enforcing these

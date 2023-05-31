@@ -32,8 +32,8 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
-import android.adservices.adselection.ReportInteractionRequest;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -297,9 +297,9 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                     + "}";
 
     private static final int BUYER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_BUYER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
-            ReportInteractionRequest.FLAG_REPORTING_DESTINATION_SELLER;
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
     private static final String INTERACTION_DATA = "{\"key\":\"value\"}";
 
@@ -888,15 +888,15 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .reportImpression(reportImpressionRequest)
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
-        ReportInteractionRequest reportInteractionClickRequest =
-                new ReportInteractionRequest(
+        ReportEventRequest reportInteractionClickRequest =
+                new ReportEventRequest(
                         outcome.getAdSelectionId(),
                         CLICK_INTERACTION,
                         INTERACTION_DATA,
                         BUYER_DESTINATION | SELLER_DESTINATION);
 
-        ReportInteractionRequest reportInteractionHoverRequest =
-                new ReportInteractionRequest(
+        ReportEventRequest reportInteractionHoverRequest =
+                new ReportEventRequest(
                         outcome.getAdSelectionId(),
                         HOVER_INTERACTION,
                         INTERACTION_DATA,
