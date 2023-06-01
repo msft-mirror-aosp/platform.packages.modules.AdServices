@@ -46,8 +46,14 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class ContentProviderRestrictionsTestApp {
     private SdkSandboxManager mSdkSandboxManager;
+
+    // Keep the value consistent with SdkSandboxmanagerService.ENFORCE_CONTENT_PROVIDER_RESTRICTIONS
     private static final String ENFORCE_CONTENT_PROVIDER_RESTRICTIONS =
             "enforce_content_provider_restrictions";
+
+    // Keep the value consistent with SdkSandboxmanagerService.PROPERTY_CONTENTPROVIDER_ALLOWLIST.
+    private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
+            "contentprovider_allowlist_per_targetSdkVersion";
 
     private static final String SDK_PACKAGE =
             "com.android.tests.sdkprovider.restrictions.contentproviders";
@@ -58,6 +64,7 @@ public class ContentProviderRestrictionsTestApp {
             new ActivityScenarioRule<>(SdkSandboxEmptyActivity.class);
 
     private String mInitialContentProviderRestrictionValue;
+    private String mInitialContentProviderAllowlistValue;
 
     @Before
     public void setup() {
@@ -72,6 +79,9 @@ public class ContentProviderRestrictionsTestApp {
         mInitialContentProviderRestrictionValue =
                 DeviceConfig.getProperty(
                         DeviceConfig.NAMESPACE_ADSERVICES, ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
+        mInitialContentProviderAllowlistValue =
+                DeviceConfig.getProperty(
+                        DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST);
 
         // Greedily unload SDK to reduce flakiness
         mSdkSandboxManager.unloadSdk(SDK_PACKAGE);
@@ -83,7 +93,13 @@ public class ContentProviderRestrictionsTestApp {
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
                 mInitialContentProviderRestrictionValue,
-                false);
+                /*makeDefault=*/ false);
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_CONTENTPROVIDER_ALLOWLIST,
+                mInitialContentProviderAllowlistValue,
+                /*makeDefault=*/ false);
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -136,6 +152,45 @@ public class ContentProviderRestrictionsTestApp {
 
         assertThrows(
                 SecurityException.class, () -> contentProvidersSdkApi.registerContentObserver());
+    }
+
+    @Test
+    public void testGetContentProvider_DeviceConfigAllowlistApplied() throws Exception {
+        mRule.getScenario();
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
+                "true",
+                /*makeDefault=*/ false);
+
+        // Base64 encoded proto ContentProviderAllowlists containing mappings to the string
+        // 'com.android.textclassifier.icons' and 'user_dictionary'.
+        final String encodedAllowlist =
+                "CjcIIhIzCiBjb20uYW5kcm9pZC50ZXh0Y2xhc3NpZmllci5pY29ucwoPdXNlcl9kaWN0aW9uYXJ5";
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PROPERTY_CONTENTPROVIDER_ALLOWLIST,
+                encodedAllowlist,
+                false);
+
+        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        mSdkSandboxManager.loadSdk(SDK_PACKAGE, new Bundle(), Runnable::run, callback);
+        callback.assertLoadSdkIsSuccessful();
+        final SandboxedSdk sandboxedSdk = callback.getSandboxedSdk();
+
+        final IBinder binder = sandboxedSdk.getInterface();
+        final IContentProvidersSdkApi contentProvidersSdkApi =
+                IContentProvidersSdkApi.Stub.asInterface(binder);
+
+        contentProvidersSdkApi.getContentProviderByAuthority("com.android.textclassifier.icons");
+        contentProvidersSdkApi.getContentProvider();
+
+        assertThrows(
+                SecurityException.class,
+                () ->
+                        contentProvidersSdkApi.getContentProviderByAuthority(
+                                "com.android.blockednumber"));
     }
 
     @Test(expected = Test.None.class /* no exception expected */)
