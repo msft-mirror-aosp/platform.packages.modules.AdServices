@@ -56,7 +56,6 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_mainline_modules: ["com.google.android.adservices.apex"],
     data: [":com.example.adservices.samples.ui.consenttestapp"],
     instrumentation_for: "AdServicesApk",
@@ -104,7 +103,6 @@ android_test {
         "general-tests",
         "mts-extservices"
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
     data: [":com.example.adservices.samples.ui.consenttestapp"],

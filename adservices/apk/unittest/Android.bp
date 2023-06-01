@@ -43,7 +43,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
         "mts-adservices",
@@ -81,7 +80,6 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
     ],
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     test_suites: [
         "general-tests",
         "mts-extservices",
