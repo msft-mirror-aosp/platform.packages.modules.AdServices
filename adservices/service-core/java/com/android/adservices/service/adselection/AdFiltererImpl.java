@@ -35,7 +35,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /** Holds filters to remove ads from the selectAds auction. */
 public final class AdFiltererImpl implements AdFilterer {
@@ -235,7 +234,7 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     private boolean doesAdPassFrequencyCapFiltersForWinType(
-            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            List<KeyedFrequencyCap> keyedFrequencyCaps,
             AdTechIdentifier buyer,
             String customAudienceOwner,
             String customAudienceName,
@@ -261,7 +260,7 @@ public final class AdFiltererImpl implements AdFilterer {
     }
 
     private boolean doesAdPassFrequencyCapFiltersForNonWinType(
-            Set<KeyedFrequencyCap> keyedFrequencyCaps,
+            List<KeyedFrequencyCap> keyedFrequencyCaps,
             int adEventType,
             AdTechIdentifier buyer,
             Instant currentTime) {

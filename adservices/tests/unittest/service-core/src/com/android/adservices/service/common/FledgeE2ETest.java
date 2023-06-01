@@ -175,7 +175,7 @@ public class FledgeE2ETest {
     public static final FrequencyCapFilters CLICK_ONCE_PER_DAY_KEY1 =
             new FrequencyCapFilters.Builder()
                     .setKeyedFrequencyCapsForClickEvents(
-                            Collections.singleton(
+                            ImmutableList.of(
                                     new KeyedFrequencyCap.Builder(
                                                     KeyedFrequencyCapFixture.KEY1,
                                                     1,
