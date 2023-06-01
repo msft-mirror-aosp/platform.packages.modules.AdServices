@@ -73,7 +73,6 @@ android_app {
     optimize: {
         proguard_flags_files: ["proguard.flags"],
     },
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     apex_available: ["com.android.extservices"],
 }
 
@@ -83,6 +82,7 @@ android_app {
     min_sdk_version: "Tiramisu",
     certificate: ":com.android.adservices.api.certificate",
     privileged: true,
+    privapp_allowlist: ":privapp_allowlist_com.android.adservices.api.xml",
     srcs: [
         "java/**/*.java",
     ],
@@ -118,7 +118,6 @@ android_app {
         shrink_resources: true,
         proguard_flags_files: ["proguard.flags"],
     },
-    required: ["privapp_allowlist_com.android.adservices.api.xml"],
     apex_available: ["com.android.adservices"],
 }
 
