@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACK_COMPAT_GET_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_CONSENT_MIGRATED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_CLASSIFIER_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_EPOCH_COMPUTATION_GET_TOP_TOPICS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED;
@@ -357,6 +358,21 @@ public class StatsdAdServicesLogger implements AdServicesLogger, StatsdAdService
                 measurementDelayedSourceRegistrationStats.getCode(),
                 measurementDelayedSourceRegistrationStats.getRegistrationStatus(),
                 measurementDelayedSourceRegistrationStats.getRegistrationDelay());
+    }
+
+    /** log method for consent migrations. */
+    public void logConsentMigrationStats(ConsentMigrationStats stats) {
+        if (mFlags.getAdservicesConsentMigrationLoggingEnabled()) {
+            AdServicesStatsLog.write(
+                    AD_SERVICES_CONSENT_MIGRATED,
+                    stats.getMsmtConsent(),
+                    stats.getTopicsConsent(),
+                    stats.getFledgeConsent(),
+                    stats.getDefaultConsent(),
+                    stats.getMigrationType().getMigrationTypeValue(),
+                    stats.getRegion(),
+                    stats.getMigrationStatus().getMigrationStatusValue());
+        }
     }
 
     @NonNull
