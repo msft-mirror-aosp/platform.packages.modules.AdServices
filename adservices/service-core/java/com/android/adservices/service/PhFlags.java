@@ -146,6 +146,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
             "measurement_max_distinct_destinations_in_active_source";
 
+    static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
+            "measurement_enable_coarse_event_report_destinations";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -3377,9 +3380,6 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
         return uxMap;
     }
-
-    static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
-            "measurement_enable_coarse_event_report_destinations";
 
     @Override
     public boolean getMeasurementEnableCoarseEventReportDestinations() {
