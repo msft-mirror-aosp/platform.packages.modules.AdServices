@@ -106,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String APP_OWNED_INTERFACE_REGISTERED = "app-owned-interface_registered";
     private static final String CUSTOMIZED_SDK_CONTEXT_ENABLED = "customized_sdk_context_enabled";
     private static final String SANDBOXED_SDK_BINDER = "com.android.sdksandboxclient.SANDBOXED_SDK";
+    private static final String SANDBOXED_SDK_KEY =
+            "com.android.sdksandboxclient.SANDBOXED_SDK_KEY";
 
     private Bundle mSavedInstanceState = new Bundle();
     private boolean mSdksLoaded = false;
@@ -141,6 +143,7 @@ public class MainActivity extends AppCompatActivity {
         if (savedInstanceState != null) {
             mSavedInstanceState.putAll(savedInstanceState);
             mSdksLoaded = savedInstanceState.getBoolean(SDKS_LOADED_KEY);
+            mSandboxedSdk = savedInstanceState.getParcelable(SANDBOXED_SDK_KEY);
         }
 
         mExecutor.execute(
@@ -270,6 +273,7 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(outState);
         outState.putAll(mSavedInstanceState);
         outState.putBoolean(SDKS_LOADED_KEY, mSdksLoaded);
+        outState.putParcelable(SANDBOXED_SDK_KEY, mSandboxedSdk);
     }
 
     private void registerDeathCallbackButton() {
