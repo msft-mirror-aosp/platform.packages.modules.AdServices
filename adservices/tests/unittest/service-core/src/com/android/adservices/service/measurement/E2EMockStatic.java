@@ -22,11 +22,11 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
 import com.android.modules.utils.testing.StaticMockFixture;
-import com.android.modules.utils.testing.StaticMockFixtureRule;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import org.mockito.stubbing.Answer;
@@ -105,7 +105,7 @@ public final class E2EMockStatic implements StaticMockFixture {
     @Override
     public void tearDown() { }
 
-    public static class E2EMockStaticRule extends StaticMockFixtureRule {
+    public static class E2EMockStaticRule extends AdServicesExtendedMockitoRule {
         public E2EMockStaticRule(E2ETest.ParamsProvider paramsProvider) {
             super(TestableDeviceConfig::new, () -> new E2EMockStatic(paramsProvider));
         }
