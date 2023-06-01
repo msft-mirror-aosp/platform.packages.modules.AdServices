@@ -2051,6 +2051,14 @@ public interface Flags {
         return GA_UX_FEATURE_ENABLED;
     }
 
+    /** add speed bump dialogs when turning on or off the toggle of Topics, apps, measurement */
+    boolean TOGGLE_SPEED_BUMP_ENABLED = false;
+
+    /** Returns if the toggle speed bump dialog feature is enabled. */
+    default boolean getToggleSpeedBumpEnabled() {
+        return TOGGLE_SPEED_BUMP_ENABLED;
+    }
+
     long ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS = (int) TimeUnit.HOURS.toMillis(1);
 
     /** Returns the interval in which to run Registration Job Queue Service. */
