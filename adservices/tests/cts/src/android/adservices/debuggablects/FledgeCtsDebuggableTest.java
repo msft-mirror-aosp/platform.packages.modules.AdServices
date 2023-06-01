@@ -889,18 +889,20 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         ReportEventRequest reportInteractionClickRequest =
-                new ReportEventRequest(
-                        outcome.getAdSelectionId(),
-                        CLICK_INTERACTION,
-                        INTERACTION_DATA,
-                        BUYER_DESTINATION | SELLER_DESTINATION);
+                new ReportEventRequest.Builder(
+                                outcome.getAdSelectionId(),
+                                CLICK_INTERACTION,
+                                INTERACTION_DATA,
+                                BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
 
         ReportEventRequest reportInteractionHoverRequest =
-                new ReportEventRequest(
-                        outcome.getAdSelectionId(),
-                        HOVER_INTERACTION,
-                        INTERACTION_DATA,
-                        BUYER_DESTINATION | SELLER_DESTINATION);
+                new ReportEventRequest.Builder(
+                                outcome.getAdSelectionId(),
+                                HOVER_INTERACTION,
+                                INTERACTION_DATA,
+                                BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
 
         // Performing interaction reporting, and asserting that no exception is thrown
         mAdSelectionClient
