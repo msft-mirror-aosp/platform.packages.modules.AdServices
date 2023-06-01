@@ -531,7 +531,7 @@ public class MainActivity extends AppCompatActivity {
             fout.close();
             File file = new File(getApplicationContext().getFilesDir(), fileName);
             ParcelFileDescriptor pFd =
-                    ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_WRITE);
+                    ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY);
             IBinder binder = mSandboxedSdk.getInterface();
             ISdkApi sdkApi = ISdkApi.Stub.asInterface(binder);
             String parsedValue = sdkApi.parseFileDescriptor(pFd);
