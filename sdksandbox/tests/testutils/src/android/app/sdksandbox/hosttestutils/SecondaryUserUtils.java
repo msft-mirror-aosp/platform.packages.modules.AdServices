@@ -75,6 +75,17 @@ public class SecondaryUserUtils {
         }
     }
 
+    public void switchToSecondaryUser() throws Exception {
+        mTest.getDevice().switchUser(mSecondaryUserId);
+        for (int i = 0; i < NUMBER_OF_POLLS; ++i) {
+            if (mTest.getDevice().getCurrentUser() == mSecondaryUserId) {
+                return;
+            }
+            Thread.sleep(POLL_INTERVAL_IN_MILLIS);
+        }
+        fail("Could not switch to user " + mSecondaryUserId);
+    }
+
     private void waitForUserDataDeletion(int userId) throws Exception {
         final String deSdkSandboxDataRootPath = "/data/misc_de/" + userId + "/sdksandbox";
         for (int i = 0; i < NUMBER_OF_POLLS; ++i) {
