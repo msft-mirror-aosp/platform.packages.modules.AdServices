@@ -79,6 +79,7 @@ import android.provider.DeviceConfig;
 import android.text.TextUtils;
 import android.util.ArrayMap;
 import android.util.ArraySet;
+import android.util.Base64;
 import android.util.Log;
 import android.webkit.WebViewUpdateService;
 
@@ -98,6 +99,8 @@ import com.android.server.LocalManagerRegistry;
 import com.android.server.SystemService;
 import com.android.server.am.ActivityManagerLocal;
 import com.android.server.pm.PackageManagerLocal;
+import com.android.server.sdksandbox.proto.ContentProvider.AllowedContentProviders;
+import com.android.server.sdksandbox.proto.ContentProvider.ContentProviderAllowlists;
 import com.android.server.wm.ActivityInterceptorCallback;
 import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
@@ -105,6 +108,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -209,6 +213,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
     private static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
     private static final String PROPERTY_CUSTOMIZED_SDK_CONTEXT_ENABLED =
             "sdksandbox_customized_sdk_context_enabled";
+    private static final String PROPERTY_CONTENTPROVIDER_ALLOWLIST =
+            "contentprovider_allowlist_per_targetSdkVersion";
     private static final boolean DEFAULT_VALUE_DISABLE_SDK_SANDBOX = true;
     private static final boolean DEFAULT_VALUE_CUSTOMIZED_SDK_CONTEXT_ENABLED = false;
 
@@ -1701,6 +1707,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
                         DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
 
+        @GuardedBy("mLock")
+        private Map<Integer, AllowedContentProviders> mContentProviderAllowlistPerTargetSdkVersion =
+                getContentProviderDeviceConfigAllowlist();
+
         SdkSandboxSettingsListener(Context context) {
             mContext = context;
         }
@@ -1758,6 +1768,12 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
         }
 
+        Map<Integer, AllowedContentProviders> getContentProviderAllowlistPerTargetSdkVersion() {
+            synchronized (mLock) {
+                return mContentProviderAllowlistPerTargetSdkVersion;
+            }
+        }
+
         @Override
         public void onPropertiesChanged(@NonNull DeviceConfig.Properties properties) {
             synchronized (mLock) {
@@ -1795,10 +1811,39 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                                             PROPERTY_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS,
                                             DEFAULT_VALUE_ENFORCE_CONTENT_PROVIDER_RESTRICTIONS);
                             break;
+                        case PROPERTY_CONTENTPROVIDER_ALLOWLIST:
+                            mContentProviderAllowlistPerTargetSdkVersion =
+                                    getContentProviderDeviceConfigAllowlist();
+                            break;
                         default:
                     }
                 }
             }
+        }
+
+        private static Map<Integer, AllowedContentProviders>
+                getContentProviderDeviceConfigAllowlist() {
+            final String base64 =
+                    DeviceConfig.getProperty(
+                            DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_CONTENTPROVIDER_ALLOWLIST);
+
+            // Content providers are restricted by default. If the property is not set, or it is an
+            // empty string, there are no content providers to allowlist.
+            if (TextUtils.isEmpty(base64)) {
+                return new ArrayMap<>();
+            }
+
+            final byte[] decode = Base64.decode(base64, Base64.DEFAULT);
+            ContentProviderAllowlists contentProviderAllowlistsProto = null;
+            try {
+                contentProviderAllowlistsProto = ContentProviderAllowlists.parseFrom(decode);
+            } catch (Exception e) {
+                Log.e(TAG, "Could not parse content provider allowlist " + e);
+            }
+            if (contentProviderAllowlistsProto != null) {
+                return contentProviderAllowlistsProto.getAllowlistPerTargetSdkMap();
+            }
+            return new ArrayMap<>();
         }
     }
 
@@ -2294,14 +2339,27 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         return EXTRA_SANDBOXED_ACTIVITY_HANDLER;
     }
 
-    private static ArraySet<String> getContentProviderAllowlist() {
+    private ArraySet<String> getContentProviderAllowlist() {
         final String curWebViewPackageName = WebViewUpdateService.getCurrentWebViewPackageName();
         final ArraySet<String> contentProviderAuthoritiesAllowlist = new ArraySet<>();
+        // TODO(b/279557220): Make curWebViewPackageName a static variable once fixed.
         for (String webViewAuthority :
                 new String[] {
                     WEBVIEW_DEVELOPER_MODE_CONTENT_PROVIDER, WEBVIEW_SAFE_MODE_CONTENT_PROVIDER
                 }) {
             contentProviderAuthoritiesAllowlist.add(curWebViewPackageName + '.' + webViewAuthority);
+        }
+
+        synchronized (mLock) {
+            Map<Integer, AllowedContentProviders> contentProviderAllowlistPerTargetSdkVersion =
+                    mSdkSandboxSettingsListener.getContentProviderAllowlistPerTargetSdkVersion();
+            // TODO: Filter out the allowlist based on targetSdkVersion.
+            contentProviderAllowlistPerTargetSdkVersion
+                    .values()
+                    .forEach(
+                            allowedContentProviders ->
+                                    contentProviderAuthoritiesAllowlist.addAll(
+                                            allowedContentProviders.getAuthoritiesList()));
         }
 
         return contentProviderAuthoritiesAllowlist;

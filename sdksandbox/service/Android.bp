@@ -82,6 +82,7 @@ java_sdk_library {
         "modules-utils-backgroundthread",
         "modules-utils-build",
         "modules-utils-shell-command-handler",
+        "sdksandbox-service-proto-lite",
     ],
     defaults: [
         "framework-system-server-module-defaults",
