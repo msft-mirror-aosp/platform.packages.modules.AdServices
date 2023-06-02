@@ -29,13 +29,7 @@
             android:layout_width="match_parent"
             android:orientation="vertical"
         >
-            <Button
-                android:id="@+id/reset_preferences_button"
-                android:layout_marginTop="10dp"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="@string/reset_preferences"
-                android:textAllCaps="false" />
+
             <TextView
                 android:id="@+id/feature_flags_title"
                 android:layout_gravity="start"
@@ -69,14 +63,6 @@
                 android:layout_gravity="start"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:textAllCaps="false" />
-
-            <Button
-                android:id="@+id/register_death_callback_button"
-                android:layout_gravity="start"
-                android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:text="@string/register_death_callback"
                 android:textAllCaps="false" />
 
             <TextView
@@ -131,6 +117,22 @@
             />
 
             <Button
+                android:id="@+id/add_death_callback_button"
+                android:layout_gravity="start"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/add_death_callback"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/remove_death_callback_button"
+                android:layout_gravity="start"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/remove_death_callback"
+                android:textAllCaps="false" />
+
+            <Button
                 android:id="@+id/get_filedescriptor_button"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
@@ -170,6 +172,14 @@
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:text="@string/dump_sandbox"
+                android:textAllCaps="false" />
+
+            <Button
+                android:id="@+id/reset_preferences_button"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:text="@string/reset_preferences"
                 android:textAllCaps="false" />
 
             <TextView
