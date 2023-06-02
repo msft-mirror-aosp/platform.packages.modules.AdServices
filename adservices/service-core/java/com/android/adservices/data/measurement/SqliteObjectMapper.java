@@ -182,6 +182,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 builder::setRegistrationOrigin);
+        setBooleanColumn(
+                cursor,
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                builder::setCoarseEventReportDestinations);
         return builder.build();
     }
 
