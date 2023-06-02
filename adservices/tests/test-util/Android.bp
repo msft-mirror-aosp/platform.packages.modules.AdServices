@@ -21,6 +21,20 @@ filegroup {
     srcs: [
         "java/**/*.java",
     ],
+    exclude_srcs: [
+        "java/com/android/adservices/mockito/*.java",
+    ],
+    path: "java",
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+    ],
+}
+
+filegroup {
+    name: "adservices-mockito-sources",
+    srcs: [
+        "java/com/android/adservices/mockito/*.java",
+    ],
     path: "java",
     visibility: [
         "//packages/modules/AdServices/adservices/tests:__subpackages__",
@@ -37,12 +51,26 @@ android_library {
     libs: [
         "framework-adservices-lib",
         "framework-annotations-lib",
-        "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
     ],
     static_libs: [
         "androidx.test.runner",
         "compatibility-device-util-axt",
-        "mockito-target-extended-minus-junit4",
     ],
     apex_available: ["com.android.adservices", "com.android.extservices"],
+}
+
+java_defaults {
+    name: "adservices-extended-mockito-defaults",
+    srcs: [
+        ":adservices-mockito-sources",
+    ],
+    defaults: [
+        "modules-utils-testable-device-config-defaults",
+    ],
+    libs: [
+        "services.core.unboosted", // For LocalManagerRegistry on ExtendedMockitoExpectations
+    ],
+    visibility: [
+        "//packages/modules/AdServices/adservices/tests:__subpackages__",
+    ],
 }
