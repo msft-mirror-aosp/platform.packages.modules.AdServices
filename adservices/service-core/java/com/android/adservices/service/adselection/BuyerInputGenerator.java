@@ -101,7 +101,7 @@ public class BuyerInputGenerator {
     private ListenableFuture<List<DBCustomAudience>> getBuyersCustomAudience() {
         return mBackgroundExecutorService.submit(
                 () ->
-                        mCustomAudienceDao.getAllActiveCustomAudience(
+                        mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
                                 mClock.instant(),
                                 mFlags.getFledgeCustomAudienceActiveTimeWindowInMs()));
     }
