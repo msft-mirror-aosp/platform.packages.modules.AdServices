@@ -189,6 +189,36 @@ public class PhFlagsFixture {
                 false);
     }
 
+    /**
+     * Enables test to override the flag enabling Protected Audience's event-level debug reporting.
+     *
+     * @param enable whether enable or disable the check
+     */
+    public static void overrideFledgeEventLevelDebugReportingEnabled(boolean enable) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED,
+                Boolean.toString(enable),
+                false);
+    }
+
+    public static void overrideFledgeEventLevelDebugReportingBatchDelay(int batchDelayInSeconds) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS,
+                Integer.toString(batchDelayInSeconds),
+                false);
+    }
+
+    public static void overrideFledgeEventLevelDebugReportingMaxItemsPerBatch(
+            int maxItemsPerBatch) {
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                PhFlags.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH,
+                Integer.toString(maxItemsPerBatch),
+                false);
+    }
+
     public static void overrideEnforceIsolateMaxHeapSize(boolean value) {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
