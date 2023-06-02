@@ -4404,6 +4404,82 @@ public final class AsyncSourceFetcherTest {
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
+    @Test
+    public void fetchSource_withFeatureDisabledCoarseDestinationProvided_valueIgnored()
+            throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(false).when(mFlags).getMeasurementEnableCoarseEventReportDestinations();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"432000\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"coarse_event_report_destinations\": "
+                                                + "\"true\",\n"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertFalse(result.getCoarseEventReportDestinations());
+    }
+
+    @Test
+    public void fetchSource_withFeatureEnabledCoarseDestinationProvided_valueParsed()
+            throws Exception {
+        RegistrationRequest request =
+                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        doReturn(true).when(mFlags).getMeasurementEnableCoarseEventReportDestinations();
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Source",
+                                List.of(
+                                        "{\n"
+                                                + "  \"destination\": \"android-app://com"
+                                                + ".myapps\",\n"
+                                                + "  \"priority\": \"123\",\n"
+                                                + "  \"expiry\": \"432000\",\n"
+                                                + "  \"source_event_id\": \"987654321\",\n"
+                                                + "  \"install_attribution_window\": \"272800\",\n"
+                                                + "  \"coarse_event_report_destinations\": "
+                                                + "\"true\",\n"
+                                                + "  \"post_install_exclusivity_window\": "
+                                                + "\"987654\"\n"
+                                                + "}\n")));
+        AsyncRedirect asyncRedirect = new AsyncRedirect();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirect);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertTrue(fetch.isPresent());
+        Source result = fetch.get();
+        assertTrue(result.getCoarseEventReportDestinations());
+    }
+
     private RegistrationRequest buildRequest(String registrationUri) {
         return buildRequest(registrationUri, null);
     }

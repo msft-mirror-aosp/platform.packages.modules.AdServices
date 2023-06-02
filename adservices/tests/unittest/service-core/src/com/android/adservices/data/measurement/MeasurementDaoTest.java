@@ -212,6 +212,9 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getPlatformAdId(), source.getPlatformAdId());
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
+        assertEquals(
+                validSource.getCoarseEventReportDestinations(),
+                source.getCoarseEventReportDestinations());
 
         // Assert destinations were inserted into the source destination table.
 
