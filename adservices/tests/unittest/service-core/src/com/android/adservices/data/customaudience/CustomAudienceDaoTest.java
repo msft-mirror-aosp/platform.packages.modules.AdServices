@@ -1008,6 +1008,29 @@ public class CustomAudienceDaoTest {
     }
 
     @Test
+    public void testGetAllActiveCustomAudienceForServerSideAuctionInactiveCAs() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        DBCustomAudience caWithNullUserBiddingSignals =
+                CUSTOM_AUDIENCE_ACTIVE
+                        .cloneToBuilder()
+                        .setOwner(OWNER_2)
+                        .setBuyer(BUYER_2)
+                        .setName(NAME_2)
+                        .setUserBiddingSignals(null)
+                        .build();
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_ACTIVE, DAILY_UPDATE_URI_1);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                caWithNullUserBiddingSignals, DAILY_UPDATE_URI_2);
+        List<DBCustomAudience> result =
+                mCustomAudienceDao.getAllActiveCustomAudienceForServerSideAuction(
+                        CURRENT_TIME, TEST_FLAGS.getFledgeCustomAudienceActiveTimeWindowInMs());
+        assertThat(result).containsExactly(CUSTOM_AUDIENCE_ACTIVE, caWithNullUserBiddingSignals);
+    }
+
+    @Test
     public void testGetActiveCustomAudienceByBuyersActivatedCAs() {
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
