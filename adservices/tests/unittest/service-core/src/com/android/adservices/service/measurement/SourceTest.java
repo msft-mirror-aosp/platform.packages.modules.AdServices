@@ -118,6 +118,7 @@ public class SourceTest {
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
+                        .setCoarseEventReportDestinations(true)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -158,6 +159,7 @@ public class SourceTest {
                         .setPlatformAdId(debugAppAdId)
                         .setDebugAdId(debugWebAdId)
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
+                        .setCoarseEventReportDestinations(true)
                         .build());
     }
 
@@ -321,6 +323,13 @@ public class SourceTest {
                         .build(),
                 SourceFixture.getValidSourceBuilder()
                         .setRegistrationOrigin(WebUtil.validUri("https://subdomain2.example.test"))
+                        .build());
+        assertNotEquals(
+                SourceFixture.getValidSourceBuilder()
+                        .setCoarseEventReportDestinations(false)
+                        .build(),
+                SourceFixture.getValidSourceBuilder()
+                        .setCoarseEventReportDestinations(true)
                         .build());
     }
 
