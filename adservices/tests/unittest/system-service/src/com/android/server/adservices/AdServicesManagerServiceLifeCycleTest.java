@@ -15,8 +15,8 @@
  */
 package com.android.server.adservices;
 
-import static com.android.adservices.common.ExtendedMockitoExpectations.mockGetLocalManager;
-import static com.android.adservices.common.ExtendedMockitoExpectations.mockGetLocalManagerNotFound;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManager;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManagerNotFound;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doNothing;
