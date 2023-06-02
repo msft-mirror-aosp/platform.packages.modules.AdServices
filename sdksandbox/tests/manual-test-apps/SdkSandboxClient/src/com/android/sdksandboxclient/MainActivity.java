@@ -281,8 +281,8 @@ public class MainActivity extends AppCompatActivity {
                 v -> {
                     // Register for sandbox death event.
                     mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                            Runnable::run, () -> makeToast("Sdk Sandbox process died"));
-                    makeToast("Registered death callback");
+                            Runnable::run, () -> toastAndLog(INFO, "Sdk Sandbox process died"));
+                    toastAndLog(INFO, "Registered death callback");
                 });
     }
 
@@ -597,7 +597,7 @@ public class MainActivity extends AppCompatActivity {
                     mSdkToSdkCommEnabled = !mSdkToSdkCommEnabled;
                     if (mSdkToSdkCommEnabled) {
                         mSdkToSdkCommButton.setText("Disable SDK to SDK comm");
-                        toastAndLog(INFO, "Sdk Sdk Comm Enabled");
+                        toastAndLog(INFO, "Sdk to Sdk Comm Enabled");
                         AlertDialog.Builder builder = new AlertDialog.Builder(this);
                         builder.setTitle("Choose winning SDK");
 
@@ -648,7 +648,7 @@ public class MainActivity extends AppCompatActivity {
                         builder.show();
                     } else {
                         mSdkToSdkCommButton.setText("Enable SDK to SDK comm");
-                        toastAndLog(INFO, "Sdk Sdk Comm Disabled");
+                        toastAndLog(INFO, "Sdk to Sdk Comm Disabled");
                     }
                 });
     }
