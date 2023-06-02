@@ -28,14 +28,15 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesSupportRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.CompatAdServicesTestUtils;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -96,10 +97,11 @@ public class TopicsManagerTest {
             "Incorrect taxonomy version detected. Please repo sync, build and install the new"
                     + " apex.";
 
+    // Skip the test if it runs on unsupported platforms.
+    @Rule public final AdServicesSupportRule mAdServicesSupportRule = new AdServicesSupportRule();
+
     @Before
     public void setup() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
         // Kill adservices process to avoid interfering from other tests.
         AdservicesTestHelper.killAdservicesProcess(ADSERVICES_PACKAGE_NAME);
 

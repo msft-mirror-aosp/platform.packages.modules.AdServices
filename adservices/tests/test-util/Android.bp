@@ -49,6 +49,7 @@ android_library {
         ":adservices-test-utility-sources",
     ],
     libs: [
+        "error_prone_annotations",
         "framework-adservices-lib",
         "framework-annotations-lib",
     ],
