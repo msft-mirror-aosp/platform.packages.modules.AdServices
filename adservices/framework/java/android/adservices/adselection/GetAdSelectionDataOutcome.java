@@ -34,10 +34,11 @@ import java.util.Objects;
  *
  * @hide
  */
-public class GetAdSelectionDataOutcome implements Parcelable {
+public final class GetAdSelectionDataOutcome implements Parcelable {
     private final long mAdSelectionId;
     @Nullable private final String mAdSelectionData;
 
+    @NonNull
     public static final Creator<GetAdSelectionDataOutcome> CREATOR =
             new Creator<>() {
                 @Override
@@ -73,17 +74,19 @@ public class GetAdSelectionDataOutcome implements Parcelable {
     }
 
     /** Returns the adSelectionId that identifies the AdSelection. */
+    @Nullable
     public long getAdSelectionId() {
         return mAdSelectionId;
     }
 
     /** Returns the adSelectionData that is collected from device. */
+    @Nullable
     public String getAdSelectionData() {
         return mAdSelectionData;
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(@NonNull Parcel dest, int flags) {
         Objects.requireNonNull(dest);
         Objects.requireNonNull(mAdSelectionData);
 

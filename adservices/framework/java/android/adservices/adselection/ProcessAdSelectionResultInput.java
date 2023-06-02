@@ -28,7 +28,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class ProcessAdSelectionResultInput implements Parcelable {
+public final class ProcessAdSelectionResultInput implements Parcelable {
     @Nullable private final ProcessAdSelectionResultRequest mProcessAdSelectionResultRequest;
     @Nullable private final String mCallerPackageName;
 
