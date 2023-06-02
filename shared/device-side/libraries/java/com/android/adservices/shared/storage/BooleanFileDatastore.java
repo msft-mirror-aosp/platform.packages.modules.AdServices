@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -405,6 +406,23 @@ public class BooleanFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix) {
+        writer.printf("%smDatastoreVersion: %d\n", prefix, mDatastoreVersion);
+        writer.printf("%smPreviousStoredVersion: %d\n", prefix, mPreviousStoredVersion);
+        writer.printf("%smVersionKey: %s\n", prefix, mVersionKey);
+        writer.printf(
+                "%smAtomicFile: %s (last modified at %d):\n",
+                prefix,
+                mAtomicFile.getBaseFile().getAbsolutePath(),
+                mAtomicFile.getLastModifiedTime());
+        int size = mLocalMap.size();
+        writer.printf("%s%d entries\n", prefix, size);
+
+        // TODO(b/299942046): decide whether it's ok to dump the entries themselves (perhaps passing
+        // an argument).
     }
 
     /** For tests only */
