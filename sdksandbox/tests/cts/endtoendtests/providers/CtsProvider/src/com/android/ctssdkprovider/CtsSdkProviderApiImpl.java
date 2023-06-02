@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
-    private Context mContext;
+    private final Context mContext;
     private static final String CLIENT_PACKAGE_NAME = "com.android.tests.sdksandbox.endtoend";
     private static final String SDK_NAME = "com.android.ctssdkprovider";
     private static final String CURRENT_USER_ID =
@@ -197,6 +197,12 @@ public class CtsSdkProviderApiImpl extends ICtsSdkProviderApi.Stub {
         IBinder token = controller.registerSdkSandboxActivityHandler(activityHandler);
         controller.unregisterSdkSandboxActivityHandler(activityHandler);
         iActivityStarter.startActivity(token);
+    }
+
+    @Override
+    public String getClientPackageName() {
+        SdkSandboxController controller = mContext.getSystemService(SdkSandboxController.class);
+        return controller.getClientPackageName();
     }
 
     /* Sends an error if the expected resource/asset does not match the read value. */

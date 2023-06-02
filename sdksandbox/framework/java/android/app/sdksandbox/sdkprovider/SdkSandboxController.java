@@ -202,6 +202,18 @@ public class SdkSandboxController {
         mSdkSandboxActivityRegistry.unregister(sdkSandboxActivityHandler);
     }
 
+    /**
+     * Returns the package name of the client app.
+     *
+     * @throws UnsupportedOperationException if the controller is obtained from an unexpected
+     *     context. Use {@link SandboxedSdkProvider#getContext()} for the right context.
+     */
+    @NonNull
+    public String getClientPackageName() {
+        enforceSandboxedSdkContextInitialization();
+        return ((SandboxedSdkContext) mContext).getClientPackageName();
+    }
+
     private void enforceSandboxedSdkContextInitialization() {
         if (!(mContext instanceof SandboxedSdkContext)) {
             throw new UnsupportedOperationException(
