@@ -62,6 +62,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
 
+import com.google.common.collect.ImmutableList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -585,7 +587,8 @@ class AttributionJobHandler {
                                 eventTrigger,
                                 debugKeyPair,
                                 mEventReportWindowCalcDelegate,
-                                mSourceNoiseHandler)
+                                mSourceNoiseHandler,
+                                getEventReportDestinations(source, trigger.getDestinationType()))
                         .build();
 
         // Call provisionEventReportQuota since it has side-effects affecting source and
@@ -597,6 +600,18 @@ class AttributionJobHandler {
 
         finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
         return TriggeringStatus.ATTRIBUTED;
+    }
+
+    private List<Uri> getEventReportDestinations(@NonNull Source source, int destinationType) {
+        ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && source.getCoarseEventReportDestinations()) {
+            Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
+            Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
+        } else {
+            destinations.addAll(source.getAttributionDestinations(destinationType));
+        }
+        return destinations.build();
     }
 
     private boolean provisionEventReportQuota(
