@@ -381,6 +381,7 @@ public class EventReport {
             return this;
         }
 
+        // TODO (b/285607306): cleanup since this doesn't just do "populateFromSourceAndTrigger"
         /** Populates fields using {@link Source}, {@link Trigger} and {@link EventTrigger}. */
         public Builder populateFromSourceAndTrigger(
                 @NonNull Source source,
@@ -388,7 +389,8 @@ public class EventReport {
                 @NonNull EventTrigger eventTrigger,
                 @Nullable Pair<UnsignedLong, UnsignedLong> debugKeyPair,
                 @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-                @NonNull SourceNoiseHandler sourceNoiseHandler) {
+                @NonNull SourceNoiseHandler sourceNoiseHandler,
+                List<Uri> eventReportDestinations) {
             mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
@@ -397,8 +399,7 @@ public class EventReport {
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
             mBuilding.mStatus = Status.PENDING;
-            mBuilding.mAttributionDestinations =
-                    source.getAttributionDestinations(trigger.getDestinationType());
+            mBuilding.mAttributionDestinations = eventReportDestinations;
             mBuilding.mReportTime =
                     eventReportWindowCalcDelegate.getReportingTime(
                             source, trigger.getTriggerTime(), trigger.getDestinationType());
@@ -417,7 +418,6 @@ public class EventReport {
             mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
             return this;
         }
-
 
         private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
             UnsignedLong triggerData = eventTrigger.getTriggerData();

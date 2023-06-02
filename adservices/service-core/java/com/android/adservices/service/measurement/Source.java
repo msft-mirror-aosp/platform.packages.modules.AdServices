@@ -83,6 +83,7 @@ public class Source {
     @Nullable private String mDebugAdId;
     private Uri mRegistrationOrigin;
     @Nullable private ReportSpec mFlexEventReportSpec;
+    private boolean mCoarseEventReportDestinations;
 
     @IntDef(value = {Status.ACTIVE, Status.IGNORED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -224,7 +225,8 @@ public class Source {
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
                 && Objects.equals(mRegistrationOrigin, source.mRegistrationOrigin)
                 && Objects.equals(mDebugAdId, source.mDebugAdId)
-                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec);
+                && Objects.equals(mFlexEventReportSpec, source.mFlexEventReportSpec)
+                && mCoarseEventReportDestinations == source.mCoarseEventReportDestinations;
     }
 
     @Override
@@ -262,7 +264,8 @@ public class Source {
                 mRegistrationOrigin,
                 mDebugAdId,
                 mDebugJoinKey,
-                mFlexEventReportSpec);
+                mFlexEventReportSpec,
+                mCoarseEventReportDestinations);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -546,6 +549,15 @@ public class Source {
         return mDebugAdId;
     }
 
+    /**
+     * Indicates whether event report for this source should be generated with the destinations
+     * where the conversion occurred or merge app and web destinations. Set to true of both app and
+     * web destination should be merged into the array of event report.
+     */
+    public boolean getCoarseEventReportDestinations() {
+        return mCoarseEventReportDestinations;
+    }
+
     /** Returns registration origin used to register the source */
     public Uri getRegistrationOrigin() {
         return mRegistrationOrigin;
@@ -693,6 +705,7 @@ public class Source {
             builder.setDebugAdId(copyFrom.mDebugAdId);
             builder.setRegistrationOrigin(copyFrom.mRegistrationOrigin);
             builder.setFlexEventReportSpec(copyFrom.mFlexEventReportSpec);
+            builder.setCoarseEventReportDestinations(copyFrom.mCoarseEventReportDestinations);
             return builder;
         }
 
@@ -973,6 +986,13 @@ public class Source {
         @NonNull
         public Builder setFlexEventReportSpec(@Nullable ReportSpec flexEventReportSpec) {
             mBuilding.mFlexEventReportSpec = flexEventReportSpec;
+            return this;
+        }
+
+        /** See {@link Source#getCoarseEventReportDestinations()} */
+        @NonNull
+        public Builder setCoarseEventReportDestinations(boolean coarseEventReportDestinations) {
+            mBuilding.mCoarseEventReportDestinations = coarseEventReportDestinations;
             return this;
         }
 
