@@ -7280,7 +7280,8 @@ public class MeasurementDaoTest {
                         trigger.parseEventTriggers().get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags))
+                        new SourceNoiseHandler(mFlags),
+                        source.getAttributionDestinations(trigger.getDestinationType()))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
