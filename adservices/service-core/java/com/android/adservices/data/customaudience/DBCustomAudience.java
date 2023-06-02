@@ -369,6 +369,26 @@ public class DBCustomAudience {
                 mAds);
     }
 
+    /**
+     * @return a new builder instance created from this object's cloned data
+     * @hide
+     */
+    @NonNull
+    public DBCustomAudience.Builder cloneToBuilder() {
+        return new DBCustomAudience.Builder()
+                .setOwner(this.mOwner)
+                .setBuyer(this.mBuyer)
+                .setName(this.mName)
+                .setExpirationTime(this.mExpirationTime)
+                .setActivationTime(this.mActivationTime)
+                .setCreationTime(this.mCreationTime)
+                .setLastAdsAndBiddingDataUpdatedTime(this.mLastAdsAndBiddingDataUpdatedTime)
+                .setUserBiddingSignals(this.mUserBiddingSignals)
+                .setTrustedBiddingData(this.mTrustedBiddingData)
+                .setBiddingLogicUri(this.mBiddingLogicUri)
+                .setAds(this.mAds);
+    }
+
     @Override
     public String toString() {
         return "DBCustomAudience{"
