@@ -19,5 +19,7 @@ package android.adservices.adselection;
 /**
  * This defines the ProcessAdSelectionResultRequest class, a request created by SDKs which contains
  * the encrypted data client obtained from the Bidding and Auction server.
+ *
+ * @hide
  */
 parcelable ProcessAdSelectionResultRequest;

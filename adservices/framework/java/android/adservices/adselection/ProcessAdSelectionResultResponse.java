@@ -34,7 +34,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class ProcessAdSelectionResultResponse implements Parcelable {
+public final class ProcessAdSelectionResultResponse implements Parcelable {
     private final long mAdSelectionId;
     @NonNull private final Uri mAdRenderUri;
 

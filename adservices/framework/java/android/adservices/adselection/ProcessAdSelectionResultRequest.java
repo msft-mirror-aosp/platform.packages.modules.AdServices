@@ -59,7 +59,9 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
             };
 
     public ProcessAdSelectionResultRequest(
-            long adSelectionId, AdTechIdentifier seller, String adSelectionResult) {
+            long adSelectionId,
+            @Nullable AdTechIdentifier seller,
+            @Nullable String adSelectionResult) {
         this.mAdSelectionId = adSelectionId;
         this.mSeller = seller;
         this.mAdSelectionResult = adSelectionResult;
@@ -138,12 +140,14 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         public Builder() {}
 
         /** Sets the ad selection id {@link Long}. */
+        @NonNull
         public ProcessAdSelectionResultRequest.Builder setAdSelectionId(long adSelectionId) {
             this.mAdSelectionId = adSelectionId;
             return this;
         }
 
         /** Sets the seller {@link AdTechIdentifier}. */
+        @NonNull
         public ProcessAdSelectionResultRequest.Builder setSeller(
                 @Nullable AdTechIdentifier seller) {
             this.mSeller = seller;
@@ -151,6 +155,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         }
 
         /** Sets the ad selection result {@link String}. */
+        @NonNull
         public ProcessAdSelectionResultRequest.Builder setAdSelectionResult(
                 @Nullable String adSelectionResult) {
             this.mAdSelectionResult = adSelectionResult;

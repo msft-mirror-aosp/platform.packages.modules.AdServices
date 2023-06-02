@@ -123,6 +123,121 @@ public class AdSelectionManager {
     }
 
     /**
+     * Collects device data for ad selection.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void getAdSelectionData(
+            @NonNull GetAdSelectionDataRequest getAdSelectionDataRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<GetAdSelectionDataOutcome, Exception> receiver) {
+        Objects.requireNonNull(getAdSelectionDataRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.getAdSelectionData(
+                    new GetAdSelectionDataInput.Builder()
+                            .setAdSelectionDataRequest(getAdSelectionDataRequest)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new GetAdSelectionDataCallback.Stub() {
+                        @Override
+                        public void onSuccess(GetAdSelectionDataResponse resultParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onResult(
+                                                    new GetAdSelectionDataOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setAdSelectionData(
+                                                                    resultParcel
+                                                                            .getAdSelectionData())
+                                                            .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
+     * Processes the ad selection results from the server-side.
+     *
+     * @hide
+     */
+    @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
+    public void processAdSelectionResult(
+            @NonNull ProcessAdSelectionResultRequest processAdSelectionResultRequest,
+            @NonNull @CallbackExecutor Executor executor,
+            @NonNull OutcomeReceiver<AdSelectionOutcome, Exception> receiver) {
+        Objects.requireNonNull(processAdSelectionResultRequest);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(receiver);
+
+        try {
+            final AdSelectionService service = getService();
+            service.processAdSelectionResult(
+                    new ProcessAdSelectionResultInput.Builder()
+                            .setProcessAdSelectionResultRequest(processAdSelectionResultRequest)
+                            .setCallerPackageName(getCallerPackageName())
+                            .build(),
+                    new CallerMetadata.Builder()
+                            .setBinderElapsedTimestamp(SystemClock.elapsedRealtime())
+                            .build(),
+                    new ProcessAdSelectionResultCallback.Stub() {
+                        @Override
+                        public void onSuccess(ProcessAdSelectionResultResponse resultParcel) {
+                            executor.execute(
+                                    () ->
+                                            receiver.onResult(
+                                                    new AdSelectionOutcome.Builder()
+                                                            .setAdSelectionId(
+                                                                    resultParcel.getAdSelectionId())
+                                                            .setRenderUri(
+                                                                    resultParcel.getAdRenderUri())
+                                                            .build()));
+                        }
+
+                        @Override
+                        public void onFailure(FledgeErrorResponse failureParcel) {
+                            executor.execute(
+                                    () -> {
+                                        receiver.onError(
+                                                AdServicesStatusUtils.asException(failureParcel));
+                                    });
+                        }
+                    });
+        } catch (NullPointerException e) {
+            sLogger.e(e, "Unable to find the AdSelection service.");
+            receiver.onError(
+                    new IllegalStateException("Unable to find the AdSelection service.", e));
+        } catch (RemoteException e) {
+            sLogger.e(e, "Failure of AdSelection service.");
+            receiver.onError(new IllegalStateException("Failure of AdSelection service.", e));
+        }
+    }
+
+    /**
      * Runs the ad selection process on device to select a remarketing ad for the caller
      * application.
      *

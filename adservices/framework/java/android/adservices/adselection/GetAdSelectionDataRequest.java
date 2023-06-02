@@ -32,7 +32,7 @@ import java.util.Objects;
  *
  * @hide
  */
-public class GetAdSelectionDataRequest implements Parcelable {
+public final class GetAdSelectionDataRequest implements Parcelable {
     @Nullable private final AdTechIdentifier mSeller;
 
     @NonNull
@@ -51,7 +51,7 @@ public class GetAdSelectionDataRequest implements Parcelable {
                 }
             };
 
-    private GetAdSelectionDataRequest(AdTechIdentifier seller) {
+    private GetAdSelectionDataRequest(@Nullable AdTechIdentifier seller) {
         this.mSeller = seller;
     }
 
@@ -77,6 +77,7 @@ public class GetAdSelectionDataRequest implements Parcelable {
     /**
      * @return a AdTechIdentifier of the seller, for example "www.example-ssp.com"
      */
+    @Nullable
     public AdTechIdentifier getSeller() {
         return mSeller;
     }
@@ -105,6 +106,7 @@ public class GetAdSelectionDataRequest implements Parcelable {
         public Builder() {}
 
         /** Sets the seller {@link AdTechIdentifier}. */
+        @NonNull
         public GetAdSelectionDataRequest.Builder setSeller(@Nullable AdTechIdentifier seller) {
             this.mSeller = seller;
             return this;
