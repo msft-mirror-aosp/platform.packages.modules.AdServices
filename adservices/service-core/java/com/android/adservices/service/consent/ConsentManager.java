@@ -105,7 +105,6 @@ public class ConsentManager {
     public static final int UNKNOWN = 0;
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
-    private final Context mContext;
     private final Flags mFlags;
     private final TopicsWorker mTopicsWorker;
     private final BooleanFileDatastore mDatastore;
@@ -121,7 +120,6 @@ public class ConsentManager {
     private static final Object LOCK = new Object();
 
     ConsentManager(
-            @NonNull Context context,
             @NonNull TopicsWorker topicsWorker,
             @NonNull AppConsentDao appConsentDao,
             @NonNull EnrollmentDao enrollmentDao,
@@ -133,7 +131,6 @@ public class ConsentManager {
             @NonNull AppSearchConsentManager appSearchConsentManager,
             @NonNull Flags flags,
             @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
-        Objects.requireNonNull(context);
         Objects.requireNonNull(topicsWorker);
         Objects.requireNonNull(appConsentDao);
         Objects.requireNonNull(measurementImpl);
@@ -150,7 +147,6 @@ public class ConsentManager {
             Objects.requireNonNull(appSearchConsentManager);
         }
 
-        mContext = context;
         mAdServicesManager = adServicesManager;
         mTopicsWorker = topicsWorker;
         mDatastore = booleanFileDatastore;
@@ -209,7 +205,6 @@ public class ConsentManager {
                 if (sConsentManager == null) {
                     sConsentManager =
                             new ConsentManager(
-                                    context,
                                     TopicsWorker.getInstance(context),
                                     appConsentDao,
                                     EnrollmentDao.getInstance(context),
