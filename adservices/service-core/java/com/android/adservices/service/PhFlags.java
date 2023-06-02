@@ -146,6 +146,9 @@ public final class PhFlags implements Flags {
     static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
             "measurement_max_distinct_destinations_in_active_source";
 
+    static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
+            "measurement_enable_coarse_event_report_destinations";
+
     // FLEDGE Custom Audience keys
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = "fledge_custom_audience_max_count";
     static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT =
@@ -2515,6 +2518,11 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean isEnrollmentBlocklisted(String enrollmentId) {
+        return getEnrollmentBlocklist().contains(enrollmentId);
+    }
+
+    @Override
     public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
         writer.println(
                 "\t" + KEY_ENABLE_AD_SERVICES_SYSTEM_API + " = " + getEnableAdServicesSystemApi());
@@ -2880,6 +2888,12 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE
                         + " = "
                         + getMeasurementMaxDistinctDestinationsInActiveSource());
+
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS
+                        + " = "
+                        + getMeasurementEnableCoarseEventReportDestinations());
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
                 "\t" + KEY_FLEDGE_SELECT_ADS_KILL_SWITCH + " = " + getFledgeSelectAdsKillSwitch());
@@ -3262,11 +3276,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementRollbackDeletionAppSearchKillSwitch());
     }
 
-    @Override
-    public boolean isEnrollmentBlocklisted(String enrollmentId) {
-        return getEnrollmentBlocklist().contains(enrollmentId);
-    }
-
     @VisibleForTesting
     @Override
     public ImmutableList<String> getEnrollmentBlocklist() {
@@ -3452,5 +3461,13 @@ public final class PhFlags implements Flags {
         uxMap.put(KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
         uxMap.put(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, getConsentNotificationDebugMode());
         return uxMap;
+    }
+
+    @Override
+    public boolean getMeasurementEnableCoarseEventReportDestinations() {
+        return DeviceConfig.getBoolean(
+                NAMESPACE_ADSERVICES,
+                /* flagName */ KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS,
+                /* defaultValue */ DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS);
     }
 }

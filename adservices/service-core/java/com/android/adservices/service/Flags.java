@@ -2276,4 +2276,15 @@ public interface Flags {
     default Map<String, Boolean> getUxFlags() {
         return new HashMap<>();
     }
+
+    /** Enable feature to unify destinations for event reports by default. */
+    boolean DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS = true;
+
+    /**
+     * Returns true if event reporting destinations are enabled to be reported in a coarse manner,
+     * i.e. both app and web destinations are merged into a single array in the event report.
+     */
+    default boolean getMeasurementEnableCoarseEventReportDestinations() {
+        return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
+    }
 }
