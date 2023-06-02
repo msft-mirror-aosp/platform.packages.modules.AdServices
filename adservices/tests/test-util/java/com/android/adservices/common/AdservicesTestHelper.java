@@ -17,15 +17,12 @@
 package com.android.adservices.common;
 
 import android.annotation.NonNull;
-import android.app.Instrumentation;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.util.Log;
-
-import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.compatibility.common.util.ShellUtils;
@@ -108,13 +105,10 @@ public class AdservicesTestHelper {
      * Check whether the device is supported. Adservices doesn't support non-phone device.
      *
      * @return if the device is supported.
+     * @deprecated use {@link AdServicesSupportRule} instead.
      */
+    @Deprecated
     public static boolean isDeviceSupported() {
-        final Instrumentation inst = InstrumentationRegistry.getInstrumentation();
-        PackageManager pm = inst.getContext().getPackageManager();
-        return !pm.hasSystemFeature(PackageManager.FEATURE_RAM_LOW) // Android Go Devices
-                && !pm.hasSystemFeature(PackageManager.FEATURE_WATCH)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)
-                && !pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+        return AdServicesSupportRule.isDeviceSupported();
     }
 }
