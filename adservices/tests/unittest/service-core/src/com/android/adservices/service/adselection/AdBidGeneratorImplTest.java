@@ -154,11 +154,25 @@ public class AdBidGeneratorImplTest {
     private static final String JSON_EXCEPTION_MESSAGE = "Badly formatted JSON";
     private static final List<GenerateBidResult> GENERATE_BIDS_RESPONSE =
             AD_WITH_BIDS.stream()
-                    .map(input -> GenerateBidResult.of(input, Uri.EMPTY, Uri.EMPTY))
+                    .map(
+                            adWithBid ->
+                                    GenerateBidResult.builder()
+                                            .setAdWithBid(adWithBid)
+                                            .setCustomAudienceName("test_ca")
+                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
+                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
+                                            .build())
                     .collect(Collectors.toList());
     private static final List<GenerateBidResult> GENERATE_NON_POSITIVE_BIDS_RESPONSE =
             AD_WITH_NON_POSITIVE_BIDS.stream()
-                    .map(input -> GenerateBidResult.of(input, Uri.EMPTY, Uri.EMPTY))
+                    .map(
+                            adWithBid ->
+                                    GenerateBidResult.builder()
+                                            .setAdWithBid(adWithBid)
+                                            .setCustomAudienceName("test_ca")
+                                            .setCustomAudienceBuyer(CommonFixture.VALID_BUYER_1)
+                                            .setOwnerAppPackage(CommonFixture.TEST_PACKAGE_NAME)
+                                            .build())
                     .collect(Collectors.toList());
     @Rule public final MockitoRule rule = MockitoJUnit.rule();
     private static final String FETCH_JAVA_SCRIPT_PATH = "/fetchJavascript/";

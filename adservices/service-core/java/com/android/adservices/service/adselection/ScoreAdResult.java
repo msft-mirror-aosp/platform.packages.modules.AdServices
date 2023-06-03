@@ -16,8 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+
 import androidx.annotation.Nullable;
+
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -25,18 +28,48 @@ abstract class ScoreAdResult {
     abstract Double getAdScore();
 
     @Nullable
+    abstract String getCustomAudienceName();
+
+    @Nullable
+    abstract String getOwnerAppPackage();
+
+    @Nullable
+    abstract AdTechIdentifier getPublisher();
+
+    @Nullable
+    abstract AdTechIdentifier getCustomAudienceBuyer();
+
+    @Nullable
     abstract Uri getWinDebugReportUri();
 
     @Nullable
     abstract Uri getLossDebugReportUri();
 
-    static ScoreAdResult of(
-            Double adScore, @Nullable Uri winDebugReportUri, @Nullable Uri lossDebugReportUri) {
-        // TODO(b/284449758): Handle seller reject reason when scoring work is complete.
-        return new AutoValue_ScoreAdResult(adScore, winDebugReportUri, lossDebugReportUri);
+    @Nullable
+    abstract String getSellerRejectReason();
+
+    static Builder builder() {
+        return new AutoValue_ScoreAdResult.Builder();
     }
 
-    static ScoreAdResult of(Double adScore) {
-        return new AutoValue_ScoreAdResult(adScore, Uri.EMPTY, Uri.EMPTY);
+    @AutoValue.Builder
+    abstract static class Builder {
+        abstract Builder setAdScore(Double adScore);
+
+        abstract Builder setCustomAudienceName(String customAudienceName);
+
+        abstract Builder setOwnerAppPackage(String ownerAppPackage);
+
+        abstract Builder setPublisher(AdTechIdentifier value);
+
+        abstract Builder setCustomAudienceBuyer(AdTechIdentifier customAudienceOwner);
+
+        abstract Builder setWinDebugReportUri(Uri winDebugReportUri);
+
+        abstract Builder setLossDebugReportUri(Uri lossDebugReportUri);
+
+        abstract Builder setSellerRejectReason(String sellerRejectReason);
+
+        abstract ScoreAdResult build();
     }
 }

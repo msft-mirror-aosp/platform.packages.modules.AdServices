@@ -499,8 +499,11 @@ public class AdSelectionScriptEngine {
                 Uri debugReportingLossUri =
                         extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
                 results.add(
-                        GenerateBidResult.of(
-                                adWithBid, debugReportingWinUri, debugReportingLossUri));
+                        GenerateBidResult.builder()
+                                .setAdWithBid(adWithBid)
+                                .setWinDebugReportUri(debugReportingWinUri)
+                                .setLossDebugReportUri(debugReportingLossUri)
+                                .build());
             }
         } catch (IllegalArgumentException e) {
             sLogger.w(
@@ -537,7 +540,12 @@ public class AdSelectionScriptEngine {
                         extractValidUri(json.optString(DEBUG_REPORTING_WIN_URI_FIELD_NAME, ""));
                 Uri debugReportingLossUri =
                         extractValidUri(json.optString(DEBUG_REPORTING_LOSS_URI_FIELD_NAME, ""));
-                result.add(ScoreAdResult.of(score, debugReportingWinUri, debugReportingLossUri));
+                result.add(
+                        ScoreAdResult.builder()
+                                .setAdScore(score)
+                                .setWinDebugReportUri(debugReportingWinUri)
+                                .setLossDebugReportUri(debugReportingLossUri)
+                                .build());
             }
         }
 
