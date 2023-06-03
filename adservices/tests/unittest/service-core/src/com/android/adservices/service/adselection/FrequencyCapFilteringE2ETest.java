@@ -85,7 +85,7 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 
 import org.junit.After;
@@ -147,8 +147,8 @@ public class FrequencyCapFilteringE2ETest {
                     .setAdCounterIntKeys(AdDataFixture.getAdCounterKeys())
                     .build();
 
-    private static final ImmutableSet<KeyedFrequencyCap> CLICK_FILTERS =
-            ImmutableSet.of(
+    private static final ImmutableList<KeyedFrequencyCap> CLICK_FILTERS =
+            ImmutableList.of(
                     new KeyedFrequencyCap.Builder(
                                     KeyedFrequencyCapFixture.KEY1, 1, Duration.ofSeconds(1))
                             .build());

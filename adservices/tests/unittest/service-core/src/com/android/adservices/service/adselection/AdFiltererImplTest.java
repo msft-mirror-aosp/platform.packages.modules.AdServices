@@ -321,17 +321,17 @@ public class AdFiltererImplTest {
 
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);
@@ -521,7 +521,7 @@ public class AdFiltererImplTest {
 
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForCustomAudienceAfterTime(
                         anyInt(),
                         any(),
@@ -531,17 +531,17 @@ public class AdFiltererImplTest {
                         any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_IMPRESSION), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_VIEW), any());
         verify(
                         mFrequencyCapDaoMock,
-                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.size()))
+                        times(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.size()))
                 .getNumEventsForBuyerAfterTime(
                         anyInt(), any(), eq(FrequencyCapFilters.AD_EVENT_TYPE_CLICK), any());
         verifyNoMoreInteractions(mAppInstallDaoMock, mFrequencyCapDaoMock);

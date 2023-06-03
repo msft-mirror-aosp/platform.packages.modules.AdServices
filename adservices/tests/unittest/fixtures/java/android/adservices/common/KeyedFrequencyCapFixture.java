@@ -16,7 +16,7 @@
 
 package android.adservices.common;
 
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
 
 import java.time.Duration;
 
@@ -32,8 +32,8 @@ public class KeyedFrequencyCapFixture {
     public static final int FILTER_EXCEED_COUNT = FILTER_COUNT;
     public static final Duration ONE_DAY_DURATION = Duration.ofDays(1);
 
-    public static final ImmutableSet<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_SET =
-            ImmutableSet.of(
+    public static final ImmutableList<KeyedFrequencyCap> VALID_KEYED_FREQUENCY_CAP_LIST =
+            ImmutableList.of(
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY1).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY2).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
