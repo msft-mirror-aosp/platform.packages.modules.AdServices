@@ -29,7 +29,7 @@ import android.content.Context;
 
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.PrivacySandboxUxCollection;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
@@ -82,7 +82,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.GA_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isFalse();
+                .isTrue();
     }
 
     @Test
@@ -94,7 +94,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.GA_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isTrue();
+                .isFalse();
     }
 
     @Test
@@ -106,7 +106,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.BETA_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isFalse();
+                .isTrue();
     }
 
     @Test
@@ -118,7 +118,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.BETA_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isTrue();
+                .isFalse();
     }
 
     @Test
@@ -130,7 +130,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.U18_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isFalse();
+                .isTrue();
     }
 
     @Test
@@ -142,7 +142,7 @@ public class AlreadyEnrolledChannelTest {
                                 mPrivacySandboxUxCollection.U18_UX,
                                 mConsentManager,
                                 mUxStatesManager))
-                .isTrue();
+                .isFalse();
     }
 
     @Test

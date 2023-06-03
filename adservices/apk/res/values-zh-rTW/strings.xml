@@ -143,8 +143,10 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"解除封鎖"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"你已封鎖的興趣"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"重設所有興趣"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"目前沒有可顯示的興趣喜好"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"目前沒有可顯示的主題"</string>
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
+    <skip />
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\nAndroid 可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"你沒有封鎖任何興趣喜好"</string>
@@ -157,7 +159,8 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"查看封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"重設應用程式推測的興趣喜好"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"目前沒有任何應用程式推測你的興趣喜好"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"目前沒有可顯示的應用程式"</string>
+    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
+    <skip />
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android 廣告隱私權 Beta 版提供全新功能，可讓應用程式用來向你顯示可能喜歡的廣告。這些技術並未使用裝置 ID。\n\n應用程式可以推測你可能感興趣的廣告類別，並在裝置上暫時儲存你的興趣喜好。這樣一來，應用程式不必追蹤你在其他開發商的網站和應用程式內的活動，也能向你顯示貼近需求的廣告。"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"你沒有封鎖任何應用程式"</string>
@@ -195,6 +198,8 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android 會根據你最近使用的應用程式以及使用頻率，記錄你感興趣的主題。"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"你使用的應用程式也能根據你的使用方式，判斷你喜愛的主題。"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"你使用的應用程式可要求 Android 提供相關資訊，以便評估所顯示廣告的成效。Android 允許應用程式收集少數幾種資料。"</string>
+    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
+    <skip />
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"已啟用/<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> 個主題"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{已開啟/# 個主題}other{已開啟/# 個主題}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"已啟用/<xliff:g id="APPS_COUNT">%1$d</xliff:g> 個應用程式"</string>
@@ -211,16 +216,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"你封鎖的應用程式"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"重設應用程式建議的資料"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"你使用的應用程式往往會記住你感興趣的主題，以便提供個人化的使用體驗。此外，應用程式也可將主題相關資訊儲存在 Android。\n\n舉例來說，如果你使用有關馬拉松訓練的應用程式，該應用程式可能會判斷你對跑鞋感興趣。假如你之後使用其他應用程式，當中可能會顯示馬拉松訓練應用程式建議的跑鞋廣告。\n\nAndroid 會定期自動刪除應用程式建議的資料。你日後再度使用的應用程式可能會重新顯示在清單中。你也可以透過封鎖的方式禁止應用程式建議廣告。\n\n你可能會在應用程式中看到個人化廣告，這類廣告的顯示依據如下：這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。"</string>
-    <!-- no translation found for notificationUI_u18_notification_title (4880509503177562077) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_notification_content (6734418183242286936) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body1 (5384339364319615715) -->
-    <skip />
-    <!-- no translation found for notificationUI_u18_body3 (4511974346169641579) -->
-    <skip />
-    <!-- no translation found for settingsUI_u18_main_view_measurement_info (1709326915590855853) -->
-    <skip />
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"全新廣告隱私權功能已上線"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"評估廣告成效時，應用程式間只能分享有限的資料"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"我們將推出「廣告評估」這項全新的廣告隱私權功能。Android 現在只會在應用程式間分享有限的資訊 (例如向使用者放送廣告的時段)，協助應用程式評估廣告成效。"</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"你可以前往廣告隱私權設定進行變更。"</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"你使用的應用程式可要求 Android 提供資訊，以便評估廣告成效。Android 僅允許應用程式收集少數幾種資料。"</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"這張彩色插圖中的圓圈內有一個鎖頭"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"這張小型黑白插圖中有由九個圓點組成的正方形"</string>
