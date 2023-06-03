@@ -111,6 +111,7 @@ public class ContentValueFixtures {
         // Added in V12.
         public static final String TRIGGER_SPECS = "sample_trigger_specs";
         public static final int MAX_BUCKET_INCREMENTS = 3;
+        public static final int COARSE_EVENT_REPORT_DESTINATIONS = 1;
 
         // Added in V13.
         public static final String PLATFORM_AD_ID = "sample_platform_ad_id";
@@ -548,6 +549,18 @@ public class ContentValueFixtures {
         values.put(
                 MeasurementTables.SourceContract.REGISTRATION_ORIGIN,
                 SourceValues.REGISTRATION_ORIGIN.toString());
+        return values;
+    }
+
+    public static ContentValues generateSourceContentValuesV15() {
+        return generateSourceContentValuesV14();
+    }
+
+    public static ContentValues generateSourceContentValuesV16() {
+        ContentValues values = generateSourceContentValuesV15();
+        values.put(
+                MeasurementTables.SourceContract.COARSE_EVENT_REPORT_DESTINATIONS,
+                SourceValues.COARSE_EVENT_REPORT_DESTINATIONS);
         return values;
     }
 
