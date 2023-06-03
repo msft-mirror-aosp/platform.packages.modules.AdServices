@@ -68,14 +68,17 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
     /**
      * The data format is measurement_enable_configurable_event_reporting_windows flag, sourceType,
      * sourceEventReportWindow (limit), cooldown window, appDestination, webDestination
-     * configuredEarlyReportingWindows and expectedProbability.
+     * configuredEarlyReportingWindows, coarse destination and expectedProbability. Each test
+     * description has numbers like 1-1-1, 2-1-2, 3-3-3 etc. These signify max reports, trigger data
+     * bits and reporting windows count respectively. For e.g., 2-1-2 stands for 2 maximum
+     * conversions, 1 trigger data bit (0 or 1) and 2 available reporting windows.
      */
     @Parameterized.Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(
                 new Object[][] {
                     {
-                        "non-configured, EVENT, 1-1-1, app",
+                        "non-configured, EVENT, 1-1-1, app, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -83,10 +86,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, EVENT, 2-1-2, app, install detection",
+                        "non-configured, EVENT, 2-1-2, app, install detection, fine "
+                                + "destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -94,10 +99,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, EVENT, 1-1-1, web",
+                        "non-configured, EVENT, 1-1-1, web, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -105,10 +111,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         null, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, EVENT, 1-1-1, app and web",
+                        "non-configured, EVENT, 1-1-1, app and web, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -116,10 +123,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, EVENT, 2-1-2, app & web, install detection",
+                        "non-configured, EVENT, 2-1-2, app & web, install detection, fine"
+                                + " destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -127,10 +136,24 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // app destination
                         new Long[] {}, // early reporting windows
-                        INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
+                        false, // coarse destinations
+                        INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY,
                     },
                     {
-                        "non-configured, NAVIGATION, 3-3-3, app",
+                        "non-configured, EVENT, 2-1-2, app & web, install detection, coarse"
+                                + " destinations",
+                        false, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(10), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // app destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY,
+                    },
+                    {
+                        "non-configured, NAVIGATION, 3-3-3, app, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -138,10 +161,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, NAVIGATION, 3-3-3, app, install detection",
+                        "non-configured, NAVIGATION, 3-3-3, app, install detection, fine "
+                                + "destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -149,10 +174,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, NAVIGATION, 3-3-3, web",
+                        "non-configured, NAVIGATION, 3-3-3, web, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -160,10 +186,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         null,
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, NAVIGATION, 3-3-3, app & web",
+                        "non-configured, NAVIGATION, 3-3-3, app & web, fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -171,10 +198,24 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "non-configured, NAVIGATION, 3-3-3, app & web, install detection",
+                        "non-configured, NAVIGATION, 3-3-3, app & web, coarse destinations",
+                        false, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        0, // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        NAVIGATION_NOISE_PROBABILITY, // probability
+                    },
+                    {
+                        "non-configured, NAVIGATION, 3-3-3, app & web, install detection,"
+                                + " fine destinations",
                         false, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -182,10 +223,24 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
-                        INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
+                        false, // coarse destinations
+                        INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
-                        "configured, EVENT, 1-1-1, app",
+                        "non-configured, NAVIGATION, 3-3-3, app & web, install detection,"
+                                + " coarse destinations",
+                        false, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                    },
+                    {
+                        "configured, EVENT, 1-1-1, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -193,10 +248,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, EVENT, 1-1-2, app",
+                        "configured, EVENT, 1-1-2, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -204,10 +260,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1)}, // early reporting windows
-                        0.0000042
+                        false, // coarse destinations
+                        0.0000042,
                     },
                     {
-                        "configured, EVENT, 1-1-3, app",
+                        "configured, EVENT, 1-1-3, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -215,10 +272,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1), DAYS.toSeconds(1)},
-                        0.0000058
+                        false, // coarse destinations
+                        0.0000058, // probability
                     },
                     {
-                        "configured, EVENT, 1-1-2(1 effective window), app",
+                        "configured, EVENT, 1-1-2(1 effective window), app, fine " + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -226,10 +284,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {DAYS.toSeconds(15)}, // early reporting windows
+                        false, // coarse destinations
                         EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, EVENT, 1-1-3(2 effective window), app",
+                        "configured, EVENT, 1-1-3(2 effective window), app, fine " + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         HOURS.toMillis(6), // source event report window
@@ -237,10 +296,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1), DAYS.toSeconds(1)},
-                        0.0000042
+                        false, // coarse destinations
+                        0.0000042,
                     },
                     {
-                        "configured, EVENT, 2-1-3(2 effective windows), app, install detection",
+                        "configured, EVENT, 2-1-3(2 effective windows), app, install "
+                                + "detection, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         HOURS.toMillis(6), // source event report window
@@ -250,10 +311,56 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         new Long[] {
                             HOURS.toSeconds(1), DAYS.toSeconds(1)
                         }, // early reporting windows
-                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY
+                        false, // coarse destinations
+                        INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, EVENT, 1-1-1, web, (install cooldown - unused)",
+                        "configured, EVENT, 2-1-3, app, install detection, fine " + "destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(6), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        null, // web destination
+                        new Long[] {
+                            HOURS.toSeconds(1), DAYS.toSeconds(1)
+                        }, // early reporting windows
+                        false, // coarse destinations
+                        0.0000233, // probability
+                    },
+                    {
+                        "configured, EVENT, 2-1-3, app & web, install detection, fine "
+                                + "destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(6), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {
+                            HOURS.toSeconds(1), DAYS.toSeconds(1)
+                        }, // early reporting windows
+                        false, // coarse destinations
+                        0.0000757, // probability
+                    },
+                    {
+                        "configured, EVENT, 2-1-3, app & web, install detection, coarse "
+                                + "destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(6), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {
+                            HOURS.toSeconds(1), DAYS.toSeconds(1)
+                        }, // early reporting windows
+                        true, // coarse destinations
+                        0.0000233, // probability
+                    },
+                    {
+                        "configured, EVENT, 1-1-1, web, (install cooldown - unused), fine"
+                                + " destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -261,13 +368,16 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         null, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
                         // It is different from "non-configured, 2-1-2, app & web, install
-                        // detection" because we reject 20 states resulting into only 25 states in
+                        // detection" because we reject 20 states resulting into only 25
+                        // states in
                         // that case. Here we assume all 45 states to be valid.
-                        "configured, EVENT, 2-1-2, app & web, install detection",
+                        "configured, EVENT, 2-1-2, app & web, install detection, fine "
+                                + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -275,10 +385,29 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {HOURS.toSeconds(1)}, // early reporting windows
+                        false, // coarse destinations
                         0.0000374, // probability
                     },
                     {
-                        "configured (ignored due to empty), EVENT, 2-1-2, app, install detection",
+                        // It is different from "non-configured, 2-1-2, app & web, install
+                        // detection, coarse destinations" because we reject 20 states
+                        // resulting into only 25 states in that case. Here we assume all
+                        // 45 states to be valid.
+                        "configured, EVENT, 2-1-2, app & web, install detection, coarse "
+                                + "destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(10), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {HOURS.toSeconds(1)}, // early reporting windows
+                        true, // coarse destinations
+                        0.0000125, // probability
+                    },
+                    {
+                        "configured (ignored due to empty), EVENT, 2-1-2, app, install "
+                                + "detection, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -286,10 +415,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         INSTALL_ATTR_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, EVENT, 1-1-1, app & web",
+                        "configured, EVENT, 1-1-1, app & web, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.EVENT, // source type
                         DAYS.toMillis(10), // source event report window
@@ -297,10 +427,23 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // app destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         DUAL_DESTINATION_EVENT_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-1, app",
+                        "configured, EVENT, 1-1-1, app & web, coarse destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.EVENT, // source type
+                        DAYS.toMillis(10), // source event report window
+                        0, // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // app destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        EVENT_NOISE_PROBABILITY, // probability
+                    },
+                    {
+                        "configured, NAVIGATION, 3-3-1, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -308,10 +451,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         0.0001372, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-2, app",
+                        "configured, NAVIGATION, 3-3-2, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -319,10 +463,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1)}, // early reporting windows
-                        0.0008051
+                        false, // coarse destinations
+                        0.0008051, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-3, app",
+                        "configured, NAVIGATION, 3-3-3, app, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -330,10 +475,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1), DAYS.toSeconds(1)},
+                        false, // coarse destinations
                         NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-2 (1 effective window), app",
+                        "configured, NAVIGATION, 3-3-2 (1 effective window), app, fine "
+                                + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(2), // source event report window
@@ -341,10 +488,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {DAYS.toMillis(3)}, // early reporting windows
-                        0.0001372
+                        false, // coarse destinations
+                        0.0001372, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-3 (2 effective windows), app",
+                        "configured, NAVIGATION, 3-3-3 (2 effective windows), app, fine "
+                                + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         HOURS.toMillis(6), // source event report window
@@ -352,10 +501,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(1), DAYS.toSeconds(1)},
-                        0.0008051
+                        false, // coarse destinations
+                        0.0008051, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-1, app, install detection",
+                        "configured, NAVIGATION, 3-3-1, app, install detection, fine "
+                                + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -363,10 +514,12 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         0.0001372, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-1, web, install detection",
+                        "configured, NAVIGATION, 3-3-1, web, install detection, fine "
+                                + "destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -374,10 +527,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         null, // app destination
                         WEB_DESTINATIONS, // app destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         0.0001372, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-1, app & web",
+                        "configured, NAVIGATION, 3-3-1, app & web, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -385,10 +539,24 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // app destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         0.0008051, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-1, app & web, install detection",
+                        "configured, NAVIGATION, 3-3-1, app & web, coarse destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        0, // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // app destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        0.0001372, // probability
+                    },
+                    {
+                        "configured, NAVIGATION, 3-3-1, app & web, install detection, "
+                                + "fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -396,10 +564,25 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // app destination
                         new Long[] {}, // early reporting windows
+                        false, // coarse destinations
                         0.0008051, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-3, app & web, install detection",
+                        "configured, NAVIGATION, 3-3-1, app & web, install detection, "
+                                + "coarse destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // app destination
+                        new Long[] {}, // early reporting windows
+                        true, // coarse destinations
+                        0.0001372, // probability
+                    },
+                    {
+                        "configured, NAVIGATION, 3-3-3, app & web, install detection, fine"
+                                + " destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -407,10 +590,24 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {HOURS.toSeconds(2), DAYS.toSeconds(2)},
+                        false, // coarse destinations
                         INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
                     },
                     {
-                        "configured, NAVIGATION, 3-3-3, app, install detection",
+                        "configured, NAVIGATION, 3-3-3, app & web, install detection, "
+                                + "coarse destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        DAYS.toMillis(1), // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {HOURS.toSeconds(2), DAYS.toSeconds(2)},
+                        true, // coarse destinations
+                        INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY,
+                    },
+                    {
+                        "configured, NAVIGATION, 3-3-3, app, install detection, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -418,10 +615,11 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         null, // web destination
                         new Long[] {HOURS.toSeconds(2), DAYS.toSeconds(2)},
+                        false, // coarse destinations
                         INSTALL_ATTR_NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                     {
-                        "configured, NAVIGATION, 3-3-3, app & web",
+                        "configured, NAVIGATION, 3-3-3, app & web, fine destinations",
                         true, // measurement_enable_configurable_event_reporting_windows
                         Source.SourceType.NAVIGATION, // source type
                         DAYS.toMillis(10), // source event report window
@@ -429,7 +627,20 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         ATTRIBUTION_DESTINATIONS, // app destination
                         WEB_DESTINATIONS, // web destination
                         new Long[] {HOURS.toSeconds(2), DAYS.toSeconds(2)},
-                        DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY,
+                        false, // coarse destinations
+                        DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY, // probability
+                    },
+                    {
+                        "configured, NAVIGATION, 3-3-3, app & web, coarse destinations",
+                        true, // measurement_enable_configurable_event_reporting_windows
+                        Source.SourceType.NAVIGATION, // source type
+                        DAYS.toMillis(10), // source event report window
+                        0, // install cooldown window
+                        ATTRIBUTION_DESTINATIONS, // app destination
+                        WEB_DESTINATIONS, // web destination
+                        new Long[] {HOURS.toSeconds(2), DAYS.toSeconds(2)},
+                        true, // coarse destinations
+                        NAVIGATION_NOISE_PROBABILITY, // probability
                     },
                 });
     }
@@ -443,6 +654,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
             List<Uri> appDestinations,
             List<Uri> webDestinations,
             Long[] earlyReportingWindows,
+            boolean coarseDestination,
             double expectedProbability) {
         mDescription = description;
         mIsEnableConfigurableEventReportingWindows = isEnableConfigurableEventReportingWindows;
@@ -455,6 +667,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
                         .setInstallCooldownWindow(coolDownWindow)
                         .setAppDestinations(appDestinations)
                         .setWebDestinations(webDestinations)
+                        .setCoarseEventReportDestinations(coarseDestination)
                         .build();
         mEarlyReportingWindows = earlyReportingWindows;
         mExpectedProbability = expectedProbability;
@@ -473,6 +686,7 @@ public class SourceNoiseHandlerAttributionProbabilityTest {
         doReturn(convertEarlyReportingWindowFlagString(mEarlyReportingWindows))
                 .when(flags)
                 .getMeasurementEventReportsCtcEarlyReportingWindows();
+        doReturn(true).when(flags).getMeasurementEnableCoarseEventReportDestinations();
 
         // Execution
         double actualProbability =

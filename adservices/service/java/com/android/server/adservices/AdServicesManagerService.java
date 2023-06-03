@@ -16,6 +16,7 @@
 package com.android.server.adservices;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
+import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
@@ -151,11 +152,19 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
 
         /** @hide */
         public Lifecycle(Context context) {
-            super(context);
-            TopicsDao topicsDao = TopicsDao.getInstance(context);
-            mService =
+            this(
+                    context,
                     new AdServicesManagerService(
-                            context, new UserInstanceManager(topicsDao, ADSERVICES_BASE_DIR));
+                            context,
+                            new UserInstanceManager(
+                                    TopicsDao.getInstance(context), ADSERVICES_BASE_DIR)));
+        }
+
+        /** @hide */
+        @VisibleForTesting
+        public Lifecycle(Context context, AdServicesManagerService service) {
+            super(context);
+            mService = service;
             LogUtil.d("AdServicesManagerService constructed!");
         }
 
@@ -164,9 +173,19 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         public void onStart() {
             LogUtil.d("AdServicesManagerService started!");
 
-            // TODO(b/262282035): Fix this work around in U+.
-            // TODO(b/263128170): Add cts-root tests to make sure that we can start the
-            //  AdServicesManager in U+
+            boolean published = false;
+
+            try {
+                publishBinderService();
+                published = true;
+            } catch (RuntimeException e) {
+                LogUtil.w(
+                        e,
+                        "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
+                        AD_SERVICES_SYSTEM_SERVICE);
+            }
+
+            // TODO(b/282239822): Remove this workaround (and try-catch above) on Android VIC
 
             // Register the AdServicesManagerService with the SdkSandboxManagerService.
             // This is a workaround for b/262282035.
@@ -175,11 +194,20 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             SdkSandboxManagerLocal sdkSandboxManagerLocal =
                     LocalManagerRegistry.getManager(SdkSandboxManagerLocal.class);
             if (sdkSandboxManagerLocal != null) {
-                sdkSandboxManagerLocal.registerAdServicesManagerService(mService);
+                sdkSandboxManagerLocal.registerAdServicesManagerService(mService, published);
             } else {
                 throw new IllegalStateException(
                         "SdkSandboxManagerLocal not found when registering AdServicesManager!");
             }
+        }
+
+        // Need to encapsulate call to publishBinderService(...) because:
+        // - Superclass method is protected final (hence it cannot be mocked or extended)
+        // - Underlying method calls ServiceManager.addService(), which is hidden (and hence cannot
+        //   be mocked by our tests)
+        @VisibleForTesting
+        void publishBinderService() {
+            publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
         }
 
         @Override
@@ -1166,5 +1194,180 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         mContext.enforceCallingPermission(
                 AdServicesPermissions.ACCESS_ADSERVICES_MANAGER,
                 ERROR_MESSAGE_NOT_PERMITTED_TO_CALL_ADSERVICESMANAGER_API);
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdIdEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdIdEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdIdEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdIdEnabled(boolean isAdIdEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdIdEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdIdEnabled(isAdIdEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdIdEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isU18Account() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isU18Account();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isU18Account().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18Account(boolean isU18Account) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18Account() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18Account(isU18Account);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18Account().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isEntryPointEnabled() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isEntryPointEnabled();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isEntryPointEnabled().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setEntryPointEnabled(boolean isEntryPointEnabled) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setEntryPointEnabled() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setEntryPointEnabled(isEntryPointEnabled);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setEntryPointEnabled().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean isAdultAccount() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("isAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .isAdultAccount();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call isAdultAccount().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setAdultAccount(boolean isAdultAccount) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setAdultAccount() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setAdultAccount(isAdultAccount);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setAdultAccount().");
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public boolean wasU18NotificationDisplayed() {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("wasU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            return mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .wasU18NotificationDisplayed();
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call wasU18NotificationDisplayed().");
+            return false;
+        }
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
+        enforceAdServicesManagerPermission();
+
+        final int userIdentifier = getUserIdentifierFromBinderCallingUid();
+        LogUtil.v("setU18NotificationDisplayed() for User Identifier %d", userIdentifier);
+
+        try {
+            mUserInstanceManager
+                    .getOrCreateUserConsentManagerInstance(userIdentifier)
+                    .setU18NotificationDisplayed(wasU18NotificationDisplayed);
+        } catch (IOException e) {
+            LogUtil.e(e, "Failed to call setU18NotificationDisplayed().");
+        }
     }
 }

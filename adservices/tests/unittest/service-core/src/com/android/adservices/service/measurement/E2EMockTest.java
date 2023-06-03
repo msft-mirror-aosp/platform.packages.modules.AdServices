@@ -143,7 +143,7 @@ public abstract class E2EMockTest extends E2ETest {
         mEnrollmentDao =
                 new EnrollmentDao(
                         ApplicationProvider.getApplicationContext(),
-                        DbTestUtil.getDbHelperForTest(),
+                        DbTestUtil.getSharedDbHelperForTest(),
                         mFlags,
                         /* enable seed */ true);
 
@@ -282,6 +282,15 @@ public abstract class E2EMockTest extends E2ETest {
                         triggerRegistration.mAdIdPermission,
                         triggerRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // To test interactions with deletion of expired records, run event reporting and deletion
+        // before performing attribution.
+        processAction(new EventReportingJob(
+                triggerRegistration.mTimestamp - TimeUnit.MINUTES.toMillis(1)));
+        long earliestValidInsertion =
+                triggerRegistration.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+        runDeleteExpiredRecordsJob(earliestValidInsertion);
+
         Assert.assertTrue(
                 "AttributionJobHandler.performPendingAttributions returned false",
                 mAttributionHelper.performPendingAttributions());
@@ -377,6 +386,10 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(EventReportingJob reportingJob) throws IOException, JSONException {
+        long earliestValidInsertion =
+                reportingJob.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+        runDeleteExpiredRecordsJob(earliestValidInsertion);
+
         Object[] eventCaptures =
                 EventReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
@@ -394,6 +407,10 @@ public abstract class E2EMockTest extends E2ETest {
 
     @Override
     void processAction(AggregateReportingJob reportingJob) throws IOException, JSONException {
+        long earliestValidInsertion =
+                reportingJob.mTimestamp - Flags.MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
+        runDeleteExpiredRecordsJob(earliestValidInsertion);
+
         Object[] aggregateCaptures =
                 AggregateReportingJobHandlerWrapper.spyPerformScheduledPendingReportsInWindow(
                         mEnrollmentDao,
@@ -585,6 +602,12 @@ public abstract class E2EMockTest extends E2ETest {
             Map<String, List<Map<String, List<String>>>> uriToResponseHeadersMap, String uri) {
         List<Map<String, List<String>>> responseList = uriToResponseHeadersMap.get(uri);
         return responseList.remove(0);
+    }
+
+    private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
+        sDatastoreManager
+                .runInTransaction(
+                        dao -> dao.deleteExpiredRecords(earliestValidInsertion));
     }
 
     void updateEnrollment(String uri) {

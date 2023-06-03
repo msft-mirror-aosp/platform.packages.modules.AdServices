@@ -143,8 +143,10 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"Ondoa kizuizi"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mambo yanayokuvutia uliyoyazuia"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"Weka upya mambo yote yanayokuvutia"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Hakuna mambo yanayokuvutia ya kuonyesha kwa sasa"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Hakuna mada za kuonyesha kwa sasa"</string>
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
+    <skip />
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Mazingira ya Faragha"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nAndroid inaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvutia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Huna mambo yanayokuvutia uliyozuia"</string>
@@ -157,7 +159,8 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Angalia programu ulizozuia"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"Weka upya mambo yanayokuvutia yaliyokadiriwa na programu"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Huna programu zinazokadiria mambo yanayokuvutia kwa sasa"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Hakuna programu za kuonyesha kwa sasa"</string>
+    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
+    <skip />
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Mazingira ya Faragha"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Toleo la beta la faragha ya matangazo kwenye Android hutoa vipengele vipya ambavyo programu zinaweza kutumia ili zikuonyeshe matangazo ambayo huenda ukayapenda. Teknolojia hizi hazitumii vitambulishi vya kifaa.\n\nProgramu zako zinaweza kukadiria aina ya matangazo ambayo huenda yakakuvutia na kuhifadhi mambo haya yanayokuvitia kwa muda kwenye kifaa chako. Hali hii huwezesha programu kukuonyesha matangazo yanayokufaa, bila kufuatilia shughuli zako kwenye tovuti na programu za wasanidi programu wengine."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Huna programu ulizozuia"</string>
@@ -195,6 +198,8 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android hutambua mada zinazokuvutia kulingana na programu ulizotumia hivi karibuni pamoja na jinsi unavyozitumia mara kwa mara."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Pia, programu unazotumia zinaweza kubainisha unachopenda kulingana na jinsi unavyozitumia."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Programu unazotumia zinaweza kuiomba Android maelezo ili kuzisaidia zipime utendaji wa matangazo yao. Android huziwezesha programu kukusanya aina chache za data."</string>
+    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
+    <skip />
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Umewasha / mada <xliff:g id="TOPICS_COUNT">%1$d</xliff:g>"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Imewashwa / mada #}other{Zimewashwa / mada #}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Imewashwa / programu <xliff:g id="APPS_COUNT">%1$d</xliff:g>"</string>
@@ -211,6 +216,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Programu ulizozuia"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"Weka upya data inayopendekezwa na programu"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Ni kawaida kwa programu unazotumia kukumbuka mambo yanayokuvutia ili kuweka mapendeleo kwenye matumizi yako. Programu zinaweza pia kuhifadhi maelezo kwenye Android kuhusu mada zako.\n\nKwa mfano, ikiwa unatumia programu inayohusu mafunzo ya mbio, programu inaweza kuamua kuwa unavutiwa na viatu vya mazoezi ya kukimbia. Baadaye, ukitumia programu tofauti, programu hiyo inaweza kukuonyesha tangazo la viatu vya mazoezi ya kukimbia lililopendekezwa na programu ya kwanza.\n\nAndroid hufuta kiotomatiki data iliyopendekezwa na programu mara kwa mara. Huenda programu unayotumia tena ikaonekana tena kwenye orodha. Au unaweza kuizuia programu isikupendekezee matangazo.\n\nKwenye programu zako, tangazo unaloona linaweza kuwekewa mapendeleo, kulingana na mipangilio hii, mipangilio ya mada za matangazo, mipangilio ya kitambulisho chako cha matangazo na ikiwa programu unayotumia inaweka mapendeleo kwenye matangazo."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Kipengele kipya cha faragha ya matangazo kinapatikana"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Data mahususi pekee ndiyo hushirikiwa kati ya programu ili kusaidia kupima utendaji wa matangazo"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Tunazindua kipengele kipya cha faragha ya matangazo kinachojulikana kama upimaji wa matangazo. Android hushiriki data mahususi pekee kati ya programu, kama vile wakati ulipoonyeshwa tangazo, ili kuwezesha programu kupima utendaji wa matangazo."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Unaweza kutekeleza mabadiliko kwenye mipangilio ya faragha ya matangazo."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Programu unazotumia zinaweza kuomba idhini ya kufikia data mahususi kwenye Android ili kuziwezesha kupima utendaji wa matangazo. Android huziwezesha programu kukusanya aina chache za data."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Mchoro unaovutia wa ishara unaowakilisha mada unazopendelea kama vile muziki, habari na michezo"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Mchoro unaovutia wa kufuli ikiwa ndani ya duara"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Mchoro mdogo wenye rangi nyeusi na nyeupe ulio na nukta tisa unaounda umbo mraba"</string>

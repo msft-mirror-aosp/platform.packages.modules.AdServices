@@ -34,6 +34,8 @@ import com.google.common.collect.ImmutableList;
 import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -2216,5 +2218,29 @@ public interface Flags {
     /** enableAdServices system API feature flag.. */
     default boolean getEnableAdServicesSystemApi() {
         return DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
+    }
+
+    /** Disables client error logging for the list of error codes. Default value is empty list. */
+    ImmutableList<Integer> ERROR_CODE_LOGGING_DENY_LIST = ImmutableList.of();
+
+    /** Returns a list of error codes for which we don't want to do error logging. */
+    default ImmutableList<Integer> getErrorCodeLoggingDenyList() {
+        return ERROR_CODE_LOGGING_DENY_LIST;
+    }
+
+    /** Returns the map of UX flags. */
+    default Map<String, Boolean> getUxFlags() {
+        return new HashMap<>();
+    }
+
+    /** Enable feature to unify destinations for event reports by default. */
+    boolean DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS = true;
+
+    /**
+     * Returns true if event reporting destinations are enabled to be reported in a coarse manner,
+     * i.e. both app and web destinations are merged into a single array in the event report.
+     */
+    default boolean getMeasurementEnableCoarseEventReportDestinations() {
+        return DEFAULT_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
     }
 }

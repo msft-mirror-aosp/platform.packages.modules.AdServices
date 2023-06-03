@@ -47,9 +47,8 @@ public final class DeleteExpiredJobService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        AdservicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
-
+        // Always ensure that the first thing this job does is check if it should be running, and
+        // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d(
                     "Disabling DeleteExpiredJobService job because it's running in ExtServices on"
@@ -58,6 +57,9 @@ public final class DeleteExpiredJobService extends JobService {
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS);
         }
+
+        AdservicesJobServiceLogger.getInstance(this)
+                .recordOnStartJob(MEASUREMENT_DELETE_EXPIRED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteExpiredKillSwitch()) {
             LogUtil.e("DeleteExpiredJobService is disabled");
@@ -69,12 +71,12 @@ public final class DeleteExpiredJobService extends JobService {
         LogUtil.d("DeleteExpiredJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
+                    long earliestValidInsertion =
+                            System.currentTimeMillis()
+                                    - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
                     DatastoreManagerFactory.getDatastoreManager(this)
                             .runInTransaction(
-                                    dao ->
-                                            dao.deleteExpiredRecords(
-                                                    FlagsFactory.getFlags()
-                                                            .getMeasurementDataExpiryWindowMs()));
+                                    dao -> dao.deleteExpiredRecords(earliestValidInsertion));
 
                     boolean shouldRetry = false;
                     AdservicesJobServiceLogger.getInstance(DeleteExpiredJobService.this)

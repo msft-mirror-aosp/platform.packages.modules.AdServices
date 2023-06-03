@@ -735,4 +735,5 @@
     <public type="string" name="notificationUI_u18_right_control_button_text" id="0x7f017d32" />
     <public type="string" name="settingsUI_u18_measurement_view_title" id="0x7f017d31" />
     <public type="string" name="settingsUI_u18_main_view_measurement_info" id="0x7f017d30" />
+    <public type="string" name="settingsU_main_view_learn_more" id="0x7f017d2f" />
 </resources>

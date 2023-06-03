@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.common;
 
+import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED;
 import static android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED;
+
+import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 
 import android.annotation.NonNull;
 import android.content.BroadcastReceiver;
@@ -38,8 +42,12 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
+import com.android.adservices.service.measurement.WipeoutStatus;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.MeasurementWipeoutStats;
 import com.android.adservices.service.topics.TopicsWorker;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import java.util.Objects;
 import java.util.concurrent.Executor;
@@ -75,20 +83,35 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     private static final int DEFAULT_PACKAGE_UID = -1;
     private static boolean sFilteringEnabled;
 
+    private static final Object LOCK = new Object();
+
     /** Enable the PackageChangedReceiver */
     public static boolean enableReceiver(@NonNull Context context, @NonNull Flags flags) {
-        sFilteringEnabled = BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
-        try {
-            context.getPackageManager()
-                    .setComponentEnabledSetting(
-                            new ComponentName(context, PackageChangedReceiver.class),
-                            COMPONENT_ENABLED_STATE_ENABLED,
-                            PackageManager.DONT_KILL_APP);
-        } catch (IllegalArgumentException e) {
-            LogUtil.e("enableService failed for %s", context.getPackageName());
-            return false;
+        return changeReceiverState(context, flags, COMPONENT_ENABLED_STATE_ENABLED);
+    }
+
+    /** Disable the PackageChangedReceiver */
+    public static boolean disableReceiver(@NonNull Context context, @NonNull Flags flags) {
+        return changeReceiverState(context, flags, COMPONENT_ENABLED_STATE_DISABLED);
+    }
+
+    private static boolean changeReceiverState(
+            @NonNull Context context, @NonNull Flags flags, int state) {
+        synchronized (LOCK) {
+            sFilteringEnabled =
+                    BinderFlagReader.readFlag(flags::getFledgeAdSelectionFilteringEnabled);
+            try {
+                context.getPackageManager()
+                        .setComponentEnabledSetting(
+                                new ComponentName(context, PackageChangedReceiver.class),
+                                state,
+                                PackageManager.DONT_KILL_APP);
+            } catch (IllegalArgumentException e) {
+                LogUtil.e("enableService failed for %s", context.getPackageName());
+                return false;
+            }
+            return true;
         }
-        return true;
     }
 
     /**
@@ -102,32 +125,46 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         LogUtil.d("PackageChangedReceiver received a broadcast: " + intent.getAction());
-        Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
-        int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
-        switch (intent.getAction()) {
-                // The broadcast is received from the system. On S- devices, we do this because
-                // there is no service running in the system server.
-            case Intent.ACTION_PACKAGE_FULLY_REMOVED:
-                handlePackageFullyRemoved(context, packageUri, packageUid);
-                break;
-            case Intent.ACTION_PACKAGE_DATA_CLEARED:
-                handlePackageDataCleared(context, packageUri);
-                break;
-                // The broadcast is received from the system service. On T+ devices, we do this so
-                // that the PP API process is not woken up if the flag is disabled.
-            case PACKAGE_CHANGED_BROADCAST:
-                switch (intent.getStringExtra(ACTION_KEY)) {
-                    case PACKAGE_FULLY_REMOVED:
-                        handlePackageFullyRemoved(context, packageUri, packageUid);
-                        break;
-                    case PACKAGE_ADDED:
-                        handlePackageAdded(context, packageUri);
-                        break;
-                    case PACKAGE_DATA_CLEARED:
-                        handlePackageDataCleared(context, packageUri);
-                        break;
-                }
-                break;
+
+        // On T+, this should never be executed from ext services module
+        String packageName = context.getPackageName();
+        if (SdkLevel.isAtLeastT()
+                && packageName != null
+                && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
+            LogUtil.i(
+                    "Aborting attempt to receive in PackageChangedReceiver on T+ for"
+                            + " ExtServices");
+            return;
+        }
+        synchronized (LOCK) {
+            Uri packageUri = Uri.parse(intent.getData().getSchemeSpecificPart());
+            int packageUid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+            switch (intent.getAction()) {
+                    // The broadcast is received from the system. On S- devices, we do this because
+                    // there is no service running in the system server.
+                case Intent.ACTION_PACKAGE_FULLY_REMOVED:
+                    handlePackageFullyRemoved(context, packageUri, packageUid);
+                    break;
+                case Intent.ACTION_PACKAGE_DATA_CLEARED:
+                    handlePackageDataCleared(context, packageUri);
+                    break;
+                    // The broadcast is received from the system service. On T+ devices, we do this
+                    // so
+                    // that the PP API process is not woken up if the flag is disabled.
+                case PACKAGE_CHANGED_BROADCAST:
+                    switch (intent.getStringExtra(ACTION_KEY)) {
+                        case PACKAGE_FULLY_REMOVED:
+                            handlePackageFullyRemoved(context, packageUri, packageUid);
+                            break;
+                        case PACKAGE_ADDED:
+                            handlePackageAdded(context, packageUri);
+                            break;
+                        case PACKAGE_DATA_CLEARED:
+                            handlePackageDataCleared(context, packageUri);
+                            break;
+                    }
+                    break;
+            }
         }
     }
 
@@ -158,6 +195,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () -> MeasurementImpl.getInstance(context).deletePackageRecords(packageUri));
+
+        // Log wipeout event triggered by request to uninstall package on device
+        WipeoutStatus wipeoutStatus = new WipeoutStatus();
+        wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.UNINSTALL);
+        logWipeoutStats(wipeoutStatus);
     }
 
     @VisibleForTesting
@@ -172,6 +214,11 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                 () -> {
                     MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
                 });
+
+        // Log wipeout event triggered by request (from Android) to delete data of package on device
+        WipeoutStatus wipeoutStatus = new WipeoutStatus();
+        wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CLEAR_DATA);
+        logWipeoutStats(wipeoutStatus);
     }
 
     @VisibleForTesting
@@ -323,5 +370,14 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
         return SharedStorageDatabase.getInstance(context);
+    }
+
+    private void logWipeoutStats(WipeoutStatus wipeoutStatus) {
+        AdServicesLoggerImpl.getInstance()
+                .logMeasurementWipeoutStats(
+                        new MeasurementWipeoutStats.Builder()
+                                .setCode(AD_SERVICES_MEASUREMENT_WIPEOUT)
+                                .setWipeoutType(wipeoutStatus.getWipeoutType().ordinal())
+                                .build());
     }
 }

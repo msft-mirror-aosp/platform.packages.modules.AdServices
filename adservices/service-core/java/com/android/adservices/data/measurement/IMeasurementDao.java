@@ -38,6 +38,7 @@ import com.android.adservices.service.measurement.reporting.DebugReport;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /** Interface for Measurement related data access operations. */
@@ -189,6 +190,13 @@ public interface IMeasurementDao {
     List<Source> getMatchingActiveSources(Trigger trigger) throws DatastoreException;
 
     /**
+     * Queries and returns the most recent matching delayed {@link Source} (Optional) for the
+     * provided {@link Trigger}.
+     */
+    Optional<Source> getNearestDelayedMatchingActiveSource(@NonNull Trigger trigger)
+            throws DatastoreException;
+
+    /**
      * Updates the {@link Source.Status} value for the provided list of {@link Source}
      *
      * @param sourceIds list of sources.
@@ -327,7 +335,7 @@ public interface IMeasurementDao {
     boolean deleteAppRecords(Uri uri) throws DatastoreException;
 
     /** Deletes all expired records in measurement tables. */
-    void deleteExpiredRecords(long expiryWindowMs) throws DatastoreException;
+    void deleteExpiredRecords(long earliestValidInsertion) throws DatastoreException;
 
     /**
      * Mark relevant source as install attributed.
