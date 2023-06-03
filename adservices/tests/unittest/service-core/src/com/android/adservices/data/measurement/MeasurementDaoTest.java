@@ -212,6 +212,9 @@ public class MeasurementDaoTest {
         assertEquals(validSource.getPlatformAdId(), source.getPlatformAdId());
         assertEquals(validSource.getDebugAdId(), source.getDebugAdId());
         assertEquals(validSource.getRegistrationOrigin(), source.getRegistrationOrigin());
+        assertEquals(
+                validSource.getCoarseEventReportDestinations(),
+                source.getCoarseEventReportDestinations());
 
         // Assert destinations were inserted into the source destination table.
 
@@ -7277,7 +7280,8 @@ public class MeasurementDaoTest {
                         trigger.parseEventTriggers().get(0),
                         new Pair<>(null, null),
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags))
+                        new SourceNoiseHandler(mFlags),
+                        source.getAttributionDestinations(trigger.getDestinationType()))
                 .setSourceEventId(source.getEventId())
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
