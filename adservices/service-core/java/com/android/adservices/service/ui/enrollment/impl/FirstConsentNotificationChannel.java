@@ -45,7 +45,7 @@ public class FirstConsentNotificationChannel implements PrivacySandboxEnrollment
         // Reconsent bit does not matter here.
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ false);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ false);
     }
 }

@@ -45,7 +45,7 @@ public class ConsentNotificationDebugChannel implements PrivacySandboxEnrollment
         // The reconsent bit does not matter to the debug mode.
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ false);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ false);
     }
 }
