@@ -30,7 +30,20 @@ android_library {
 	    "packages/modules/AdServices/adservices/libraries",
         ],
     },
+    plugins: [
+        "androidx.room_room-compiler-plugin",
+        "auto_value_plugin",
+        "auto_annotation_plugin"
+    ],
+    javacflags: [
+        "-Aroom.schemaLocation=packages/modules/AdServices/adservices/libraries/cobalt/schemas",
+    ],
+    libs: [
+        "androidx.room_room-runtime",
+        "auto_value_annotations"
+    ],
     static_libs: [
+        "androidx.annotation_annotation",
         "guava",
         "libprotobuf-java-lite",
     ],

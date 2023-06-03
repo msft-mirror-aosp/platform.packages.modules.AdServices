@@ -16,7 +16,7 @@ package {
 }
 
 android_test {
-    name: "CobaltUnitTests",
+    name: "AdServicesCobaltUnitTests",
     srcs: [
         "src/**/*.java",
     ],
@@ -24,13 +24,21 @@ android_test {
     manifest: "AndroidManifest.xml",
     test_config: "AndroidTest.xml",
     static_libs: [
-	"androidx.test.runner",
+        "androidx.test.core",
+        "androidx.test.runner",
+        "androidx.room_room-runtime",
+        "androidx.room_room-testing",
         "adservices-cobalt",
-    	"truth-prebuilt",
+        "truth-prebuilt",
     ],
     libs: [
         "android.test.base",
         "android.test.runner",
     ],
     sdk_version: "test_current",
+    test_suites: [
+        "general-tests",
+        "mts-adservices"
+    ],
+    test_mainline_modules: ["com.google.android.adservices.apex"],
 }
