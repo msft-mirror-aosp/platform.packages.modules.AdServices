@@ -29,8 +29,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import java.util.Collections;
-
 /** Unit tests for {@link FrequencyCapFilters}. */
 // TODO(b/221876775): Move to CTS tests once public APIs are unhidden
 @SmallTest
@@ -40,23 +38,23 @@ public class FrequencyCapFiltersTest {
         final FrequencyCapFilters originalFilters =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForWinEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForImpressionEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForViewEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForClickEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .build();
 
         assertThat(originalFilters.getKeyedFrequencyCapsForWinEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(originalFilters.getKeyedFrequencyCapsForImpressionEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(originalFilters.getKeyedFrequencyCapsForViewEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(originalFilters.getKeyedFrequencyCapsForClickEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
     }
 
     @Test
@@ -64,13 +62,13 @@ public class FrequencyCapFiltersTest {
         final FrequencyCapFilters originalFilters =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForWinEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForImpressionEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForViewEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForClickEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .build();
 
         Parcel targetParcel = Parcel.obtain();
@@ -80,13 +78,13 @@ public class FrequencyCapFiltersTest {
                 FrequencyCapFilters.CREATOR.createFromParcel(targetParcel);
 
         assertThat(filtersFromParcel.getKeyedFrequencyCapsForWinEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(filtersFromParcel.getKeyedFrequencyCapsForImpressionEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(filtersFromParcel.getKeyedFrequencyCapsForViewEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(filtersFromParcel.getKeyedFrequencyCapsForClickEvents())
-                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                .containsExactlyElementsIn(KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
     }
 
     @Test
@@ -141,13 +139,13 @@ public class FrequencyCapFiltersTest {
         final FrequencyCapFilters originalFilters =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForWinEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForImpressionEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForViewEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForClickEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .build();
 
         final String expectedString =
@@ -156,10 +154,10 @@ public class FrequencyCapFiltersTest {
                                 + " mKeyedFrequencyCapsForImpressionEvents=%s,"
                                 + " mKeyedFrequencyCapsForViewEvents=%s,"
                                 + " mKeyedFrequencyCapsForClickEvents=%s}",
-                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET,
-                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET,
-                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET,
-                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET);
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST,
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST,
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST,
+                        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST);
         assertThat(originalFilters.toString()).isEqualTo(expectedString);
     }
 
@@ -208,16 +206,16 @@ public class FrequencyCapFiltersTest {
         final FrequencyCapFilters originalFilters =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForWinEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForImpressionEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForViewEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .setKeyedFrequencyCapsForClickEvents(
-                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET)
+                                KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST)
                         .build();
         final int[] setSize = new int[1];
-        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_SET.forEach(
+        KeyedFrequencyCapFixture.VALID_KEYED_FREQUENCY_CAP_LIST.forEach(
                 x -> setSize[0] += x.getSizeInBytes());
         assertEquals(setSize[0] * 4L, originalFilters.getSizeInBytes());
     }
@@ -235,9 +233,8 @@ public class FrequencyCapFiltersTest {
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.WIN_EVENTS_FIELD_NAME);
-        assertEquals(
-                Collections.EMPTY_SET,
-                FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForWinEvents());
+        assertThat(FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForWinEvents())
+                .isEmpty();
     }
 
     @Test
@@ -246,9 +243,8 @@ public class FrequencyCapFiltersTest {
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.IMPRESSION_EVENTS_FIELD_NAME);
-        assertEquals(
-                Collections.EMPTY_SET,
-                FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForImpressionEvents());
+        assertThat(FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForImpressionEvents())
+                .isEmpty();
     }
 
     @Test
@@ -257,9 +253,8 @@ public class FrequencyCapFiltersTest {
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.VIEW_EVENTS_FIELD_NAME);
-        assertEquals(
-                Collections.EMPTY_SET,
-                FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForViewEvents());
+        assertThat(FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForViewEvents())
+                .isEmpty();
     }
 
     @Test
@@ -268,9 +263,8 @@ public class FrequencyCapFiltersTest {
                 FrequencyCapFiltersFixture.getValidFrequencyCapFiltersBuilder().build();
         JSONObject json = originalFilters.toJson();
         json.remove(FrequencyCapFilters.CLICK_EVENTS_FIELD_NAME);
-        assertEquals(
-                Collections.EMPTY_SET,
-                FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForClickEvents());
+        assertThat(FrequencyCapFilters.fromJson(json).getKeyedFrequencyCapsForClickEvents())
+                .isEmpty();
     }
 
     @Test

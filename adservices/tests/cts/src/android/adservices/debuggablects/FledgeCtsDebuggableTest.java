@@ -2070,7 +2070,7 @@ public class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
         FrequencyCapFilters nonWinFilter =
                 new FrequencyCapFilters.Builder()
                         .setKeyedFrequencyCapsForImpressionEvents(
-                                ImmutableSet.of(
+                                ImmutableList.of(
                                         new KeyedFrequencyCap.Builder(
                                                         keyToFilter, 1, Duration.ofSeconds(10))
                                                 .build()))
