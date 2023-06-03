@@ -34,10 +34,7 @@ import java.util.Objects;
  *
  * <p>Frequency caps define the maximum rate an event can occur within a given time interval. If the
  * frequency cap is exceeded, the associated ad will be filtered out of ad selection.
- *
- * @hide
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public final class KeyedFrequencyCap implements Parcelable {
     /** @hide */
     @VisibleForTesting public static final String AD_COUNTER_KEY_FIELD_NAME = "ad_counter_key";

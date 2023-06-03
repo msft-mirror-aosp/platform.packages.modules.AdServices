@@ -17,6 +17,7 @@
 package android.adservices.common;
 
 import android.adservices.adselection.ReportImpressionRequest;
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.os.OutcomeReceiver;
@@ -42,14 +43,11 @@ import java.util.concurrent.Executor;
  * <p>Frequency caps filters combine an event type with a list of {@link KeyedFrequencyCap} objects
  * to define a collection of ad filters. If any of these frequency caps are exceeded for a given ad,
  * the ad will be removed from the group of ads submitted to a buyer adtech's bidding function.
- *
- * @hide
  */
-// TODO(b/221876775): Unhide for frequency cap API review
 public final class FrequencyCapFilters implements Parcelable {
     /**
      * Event types which are used to update ad counter histograms, which inform frequency cap
-     * filtering in FLEDGE.
+     * filtering in Protected Audience.
      *
      * @hide
      */
@@ -69,8 +67,8 @@ public final class FrequencyCapFilters implements Parcelable {
     public static final int AD_EVENT_TYPE_INVALID = -1;
 
     /**
-     * The WIN ad event type is automatically populated within the FLEDGE service for any winning ad
-     * which is returned from FLEDGE ad selection.
+     * The WIN ad event type is automatically populated within the Protected Audience service for
+     * any winning ad which is returned from Protected Audience ad selection.
      *
      * <p>It should not be used to manually update an ad counter histogram.
      */
@@ -138,6 +136,10 @@ public final class FrequencyCapFilters implements Parcelable {
      * <p>These frequency caps apply to events for ads that were selected as winners in ad
      * selection. Winning ads are used to automatically increment the associated counter keys on the
      * win event type.
+     *
+     * <p>Note that the {@link #AD_EVENT_TYPE_WIN} event type cannot be updated manually using the
+     * {@link android.adservices.adselection.AdSelectionManager#updateAdCounterHistogram(
+     * UpdateAdCounterHistogramRequest, Executor, OutcomeReceiver)} API.
      */
     @NonNull
     public List<KeyedFrequencyCap> getKeyedFrequencyCapsForWinEvents() {
@@ -149,9 +151,14 @@ public final class FrequencyCapFilters implements Parcelable {
      * #AD_EVENT_TYPE_IMPRESSION} event type.
      *
      * <p>These frequency caps apply to events which correlate to an impression as interpreted by an
-     * adtech. Note that events are not automatically counted when calling {@link
+     * adtech.
+     *
+     * <p>Note that events are not automatically counted when calling {@link
      * android.adservices.adselection.AdSelectionManager#reportImpression(ReportImpressionRequest,
-     * Executor, OutcomeReceiver)}.
+     * Executor, OutcomeReceiver)}. Instead, the {@link #AD_EVENT_TYPE_IMPRESSION} event type must
+     * be updated using the {@link
+     * android.adservices.adselection.AdSelectionManager#updateAdCounterHistogram(
+     * UpdateAdCounterHistogramRequest, Executor, OutcomeReceiver)} API.
      */
     @NonNull
     public List<KeyedFrequencyCap> getKeyedFrequencyCapsForImpressionEvents() {
@@ -163,7 +170,10 @@ public final class FrequencyCapFilters implements Parcelable {
      * #AD_EVENT_TYPE_VIEW} event type.
      *
      * <p>These frequency caps apply to events which correlate to a view as interpreted by an
-     * adtech.
+     * adtech. View events are counted when the {@link
+     * android.adservices.adselection.AdSelectionManager#updateAdCounterHistogram(
+     * UpdateAdCounterHistogramRequest, Executor, OutcomeReceiver)} API is invoked with the {@link
+     * #AD_EVENT_TYPE_VIEW} event type.
      */
     @NonNull
     public List<KeyedFrequencyCap> getKeyedFrequencyCapsForViewEvents() {
@@ -175,7 +185,10 @@ public final class FrequencyCapFilters implements Parcelable {
      * #AD_EVENT_TYPE_CLICK} event type.
      *
      * <p>These frequency caps apply to events which correlate to a click as interpreted by an
-     * adtech.
+     * adtech. Click events are counted when the {@link
+     * android.adservices.adselection.AdSelectionManager#updateAdCounterHistogram(
+     * UpdateAdCounterHistogramRequest, Executor, OutcomeReceiver)} API is invoked with the {@link
+     * #AD_EVENT_TYPE_CLICK} event type.
      */
     @NonNull
     public List<KeyedFrequencyCap> getKeyedFrequencyCapsForClickEvents() {
