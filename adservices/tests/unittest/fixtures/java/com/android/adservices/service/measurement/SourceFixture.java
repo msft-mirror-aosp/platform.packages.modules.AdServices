@@ -78,6 +78,7 @@ public final class SourceFixture {
                 .setPlatformAdId(ValidSourceParams.PLATFORM_AD_ID)
                 .setDebugAdId(ValidSourceParams.DEBUG_AD_ID)
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
+                .setCoarseEventReportDestinations(true)
                 .build();
     }
 

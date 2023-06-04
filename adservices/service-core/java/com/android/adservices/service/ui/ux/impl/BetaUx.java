@@ -23,9 +23,10 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.ui.UxStatesManager;
+import com.android.adservices.service.ui.data.UxStatesManager;
+import com.android.adservices.service.ui.enrollment.PrivacySandboxEnrollmentChannel;
 
-/** Base UX for all privacy sandbox UXs. */
+/** The privacy sandbox beta UX. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class BetaUx implements PrivacySandboxUx {
 
@@ -36,9 +37,11 @@ public class BetaUx implements PrivacySandboxUx {
     }
 
     /** Enroll user through one of the available Beta UX enrollment channels if needed. */
-    public void selectEnrollmentChannel(
-            Context context, ConsentManager consentManager, UxStatesManager uxStatesManager) {
-        // TO-DO(b/284172919): Add enrollment logic.
+    public void handleEnrollment(
+            PrivacySandboxEnrollmentChannel enrollmentChannel,
+            Context context,
+            ConsentManager consentManager) {
+        enrollmentChannel.enroll(context, consentManager);
     }
 
     /** Select one of the available Beta UX modes for the user. */

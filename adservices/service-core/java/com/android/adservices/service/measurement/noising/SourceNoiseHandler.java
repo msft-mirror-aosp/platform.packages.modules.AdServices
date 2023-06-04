@@ -27,12 +27,14 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -151,14 +153,18 @@ public class SourceNoiseHandler {
         }
 
         // Both destinations are set and install attribution is supported
-        if (source.hasWebDestinations() && isInstallDetectionEnabled(source)) {
+        if (!shouldReportCoarseDestinations(source)
+                && source.hasWebDestinations()
+                && isInstallDetectionEnabled(source)) {
             return source.getSourceType() == Source.SourceType.EVENT
                     ? PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.INSTALL_ATTR_DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
         }
 
         // Both destinations are set but install attribution isn't supported
-        if (source.hasAppDestinations() && source.hasWebDestinations()) {
+        if (!shouldReportCoarseDestinations(source)
+                && source.hasAppDestinations()
+                && source.hasWebDestinations()) {
             return source.getSourceType() == Source.SourceType.EVENT
                     ? PrivacyParams.DUAL_DESTINATION_EVENT_NOISE_PROBABILITY
                     : PrivacyParams.DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY;
@@ -199,7 +205,8 @@ public class SourceNoiseHandler {
     }
 
     private boolean isVtcDualDestinationModeWithPostInstallEnabled(Source source) {
-        return source.getSourceType() == Source.SourceType.EVENT
+        return !shouldReportCoarseDestinations(source)
+                && source.getSourceType() == Source.SourceType.EVENT
                 && source.hasWebDestinations()
                 && isInstallDetectionEnabled(source);
     }
@@ -210,7 +217,9 @@ public class SourceNoiseHandler {
      * @return number of the destination type
      */
     private int getDestinationTypeMultiplier(Source source) {
-        return source.hasAppDestinations() && source.hasWebDestinations()
+        return !shouldReportCoarseDestinations(source)
+                        && source.hasAppDestinations()
+                        && source.hasWebDestinations()
                 ? DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER
                 : SINGLE_DESTINATION_IMPRESSION_NOISE_MULTIPLIER;
     }
@@ -225,8 +234,14 @@ public class SourceNoiseHandler {
      * @return app or web destination {@link Uri}
      */
     private List<Uri> resolveFakeReportDestinations(Source source, int destinationIdentifier) {
+        if (shouldReportCoarseDestinations(source)) {
+            ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
+            Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
+            Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
+            return destinations.build();
+        }
+
         if (source.hasAppDestinations() && source.hasWebDestinations()) {
-            // It could be a direct destinationIdentifier == 0 check, but
             return destinationIdentifier % DUAL_DESTINATION_IMPRESSION_NOISE_MULTIPLIER == 0
                     ? source.getAppDestinations()
                     : source.getWebDestinations();
@@ -239,6 +254,11 @@ public class SourceNoiseHandler {
 
     private boolean isInstallDetectionEnabled(@NonNull Source source) {
         return source.getInstallCooldownWindow() > 0 && source.hasAppDestinations();
+    }
+
+    private boolean shouldReportCoarseDestinations(Source source) {
+        return mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && source.getCoarseEventReportDestinations();
     }
 
     private List<Source.FakeReport> generateVtcDualDestinationPostInstallFakeReports(

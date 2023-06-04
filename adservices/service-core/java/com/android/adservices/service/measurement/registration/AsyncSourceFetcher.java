@@ -293,6 +293,12 @@ public class AsyncSourceFetcher {
             builder.setWebDestinations(destinationList);
         }
 
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && !json.isNull(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS)) {
+            builder.setCoarseEventReportDestinations(
+                    json.getBoolean(SourceHeaderContract.COARSE_EVENT_REPORT_DESTINATIONS));
+        }
+
         if (shouldMatchAtLeastOneWebDestination && !matchedOneWebDestination) {
             LogUtil.d("Expected at least one web_destination to match with the supplied one!");
             return false;
@@ -518,6 +524,7 @@ public class AsyncSourceFetcher {
         String DEBUG_REPORTING = "debug_reporting";
         String DEBUG_JOIN_KEY = "debug_join_key";
         String DEBUG_AD_ID = "debug_ad_id";
+        String COARSE_EVENT_REPORT_DESTINATIONS = "coarse_event_report_destinations";
     }
 
     private interface SourceRequestContract {

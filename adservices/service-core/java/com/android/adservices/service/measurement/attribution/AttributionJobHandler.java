@@ -62,6 +62,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
 
+import com.google.common.collect.ImmutableList;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -340,7 +342,7 @@ class AttributionJobHandler {
                                                     - AGGREGATE_MIN_REPORT_DELAY))
                                     + AGGREGATE_MIN_REPORT_DELAY);
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                    new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+                    new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
             UnsignedLong sourceDebugKey = debugKeyPair.first;
             UnsignedLong triggerDebugKey = debugKeyPair.second;
 
@@ -575,7 +577,7 @@ class AttributionJobHandler {
         source.setWebDestinations(destinations.second);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager).getDebugKeys(source, trigger);
+                new DebugKeyAccessor(measurementDao).getDebugKeys(source, trigger);
 
         EventReport newEventReport =
                 new EventReport.Builder()
@@ -585,7 +587,8 @@ class AttributionJobHandler {
                                 eventTrigger,
                                 debugKeyPair,
                                 mEventReportWindowCalcDelegate,
-                                mSourceNoiseHandler)
+                                mSourceNoiseHandler,
+                                getEventReportDestinations(source, trigger.getDestinationType()))
                         .build();
 
         // Call provisionEventReportQuota since it has side-effects affecting source and
@@ -597,6 +600,18 @@ class AttributionJobHandler {
 
         finalizeEventReportCreation(source, eventTrigger, newEventReport, measurementDao);
         return TriggeringStatus.ATTRIBUTED;
+    }
+
+    private List<Uri> getEventReportDestinations(@NonNull Source source, int destinationType) {
+        ImmutableList.Builder<Uri> destinations = new ImmutableList.Builder<>();
+        if (mFlags.getMeasurementEnableCoarseEventReportDestinations()
+                && source.getCoarseEventReportDestinations()) {
+            Optional.ofNullable(source.getAppDestinations()).ifPresent(destinations::addAll);
+            Optional.ofNullable(source.getWebDestinations()).ifPresent(destinations::addAll);
+        } else {
+            destinations.addAll(source.getAttributionDestinations(destinationType));
+        }
+        return destinations.build();
     }
 
     private boolean provisionEventReportQuota(
@@ -743,7 +758,8 @@ class AttributionJobHandler {
      * @return true for a match, false otherwise
      */
     private boolean doTopLevelFiltersMatch(
-            @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao) {
+            @NonNull Source source, @NonNull Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         try {
             FilterMap sourceFilters = source.getFilterData();
             List<FilterMap> triggerFilterSet = extractFilterSet(trigger.getFilters());
@@ -770,7 +786,8 @@ class AttributionJobHandler {
     }
 
     private Optional<EventTrigger> findFirstMatchingEventTrigger(
-            Source source, Trigger trigger, IMeasurementDao measurementDao) {
+            Source source, Trigger trigger, IMeasurementDao measurementDao)
+            throws DatastoreException {
         try {
             FilterMap sourceFiltersData = source.getFilterData();
             List<EventTrigger> eventTriggers = trigger.parseEventTriggers();
@@ -835,7 +852,8 @@ class AttributionJobHandler {
             List<AggregateHistogramContribution> contributions,
             Source source,
             Trigger trigger,
-            IMeasurementDao measurementDao) {
+            IMeasurementDao measurementDao)
+            throws DatastoreException {
         int newAggregateContributions = source.getAggregateContributions();
         for (AggregateHistogramContribution contribution : contributions) {
             try {
