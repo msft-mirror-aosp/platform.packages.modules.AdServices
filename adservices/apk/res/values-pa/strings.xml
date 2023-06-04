@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ਅਣਬਲਾਕ ਕਰੋ"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"ਤੁਹਾਡੇ ਵੱਲੋਂ ਬਲਾਕ ਕੀਤੀਆਂ ਗਈਆਂ ਦਿਲਚਸਪੀਆਂ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"ਸਾਰੀਆਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"ਇਸ ਵੇਲੇ ਦਿਖਾਉਣ ਲਈ ਕੋਈ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ।"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"ਫ਼ਿਲਹਾਲ ਦਿਖਾਉਣ ਲਈ ਕੋਈ ਵਿਸ਼ਾ ਨਹੀਂ ਹੈ।\n"<a href="https://support.google.com/android?p=ad_privacy">"ਵਿਗਿਆਪਨ ਦੇ ਵਿਸ਼ਿਆਂ"</a>" ਬਾਰੇ ਹੋਰ ਜਾਣੋ"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ਦਾ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਨਵੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਮੁਹੱਈਆ ਕਰਵਾਉਂਦਾ ਹੈ, ਜਿਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਤੁਹਾਡੇ ਮਨਪਸੰਦ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਵਰਤ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਤਕਨਾਲੋਜੀਆਂ ਡੀਵਾਈਸ ਪਛਾਣਕਰਤਾਵਾਂ ਦੀ ਵਰਤੋਂ ਨਹੀਂ ਕਰਦੀਆਂ।\n\nAndroid ਤੁਹਾਡੇ ਦਿਲਚਸਪੀ ਵਾਲੇ ਵਿਗਿਆਪਨਾਂ ਦੀਆਂ ਕਿਸਮਾਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦਾ ਹੈ, ਅਤੇ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ \'ਤੇ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦਾ ਹੈ। ਇਸ ਨਾਲ ਐਪਾਂ ਨੂੰ ਹੋਰ ਵਿਕਾਸਕਾਰਾਂ ਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਅਤੇ ਐਪਾਂ \'ਤੇ ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨੂੰ ਟਰੈਕ ਕੀਤੇ ਬਿਨਾਂ, ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਦਿਲਚਸਪੀ ਨਹੀਂ ਹੈ"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ਬਲਾਕ ਕੀਤੀਆਂ ਗਈਆਂ ਐਪਾਂ ਨੂੰ ਦੇਖੋ"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"ਐਪਾਂ ਦੀਆਂ ਅੰਦਾਜ਼ਨ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰੋ"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"ਕੋਈ ਵੀ ਐਪ ਹਾਲੇ ਤੁਹਾਡੇ ਲਈ ਦਿਲਚਸਪੀਆਂ ਨਹੀਂ ਬਣਾ ਰਹੀ ਹੈ"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"ਇਸ ਵੇਲੇ ਦਿਖਾਉਣ ਲਈ ਕੋਈ ਐਪ ਨਹੀਂ ਹੈ। \n"<a href="https://support.google.com/android?p=ad_privacy">"ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਵਿਗਿਆਪਨਾਂ"</a>" ਬਾਰੇ ਹੋਰ ਜਾਣੋ"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"ਪ੍ਰਾਈਵੇਸੀ ਸੈਂਡਬਾਕਸ"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ਦਾ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ ਸੰਬੰਧੀ ਬੀਟਾ ਵਰਜਨ ਨਵੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਮੁਹੱਈਆ ਕਰਵਾਉਂਦਾ ਹੈ, ਜਿਨ੍ਹਾਂ ਨੂੰ ਐਪਾਂ ਤੁਹਾਡੇ ਮਨਪਸੰਦ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਲਈ ਵਰਤ ਸਕਦੀਆਂ ਹਨ। ਇਹ ਤਕਨਾਲੋਜੀਆਂ ਡੀਵਾਈਸ ਪਛਾਣਕਰਤਾਵਾਂ ਦੀ ਵਰਤੋਂ ਨਹੀਂ ਕਰਦੀਆਂ।\n\nਐਪਾਂ ਤੁਹਾਡੇ ਦਿਲਚਸਪੀ ਵਾਲੇ ਵਿਗਿਆਪਨਾਂ ਦੀਆਂ ਕਿਸਮਾਂ ਬਾਰੇ ਅੰਦਾਜ਼ਾ ਲਗਾ ਸਕਦੀਆਂ ਹਨ, ਅਤੇ ਉਨ੍ਹਾਂ ਦਿਲਚਸਪੀਆਂ ਨੂੰ ਤੁਹਾਡੇ ਡੀਵਾਈਸ \'ਤੇ ਕੁਝ ਸਮੇਂ ਲਈ ਰੱਖਿਅਤ ਕਰ ਸਕਦੀਆਂ ਹਨ। ਇਸ ਨਾਲ ਐਪਾਂ ਨੂੰ ਹੋਰ ਵਿਕਾਸਕਾਰਾਂ ਦੀਆਂ ਵੈੱਬਸਾਈਟਾਂ ਅਤੇ ਐਪਾਂ \'ਤੇ ਤੁਹਾਡੀ ਸਰਗਰਮੀ ਨੂੰ ਟਰੈਕ ਕੀਤੇ ਬਿਨਾਂ, ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਵਿਗਿਆਪਨ ਦਿਖਾਉਣ ਦੀ ਆਗਿਆ ਮਿਲਦੀ ਹੈ।"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ਤੁਹਾਡੇ ਕੋਲ ਕੋਈ ਬਲਾਕ ਕੀਤੀ ਐਪ ਨਹੀਂ ਹੈ"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"ਕੀ ਐਪਾਂ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਵਿਗਿਆਪਨਾਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"ਤੁਹਾਡੀ ਸੂਚੀ ਵਿੱਚ ਮੌਜੂਦ ਐਪਾਂ ਤੋਂ ਪ੍ਰਾਪਤ ਵਿਗਿਆਪਨ ਸੰਬੰਧੀ ਸੁਝਾਅ ਦਾ ਡਾਟਾ ਮਿਟਾ ਦਿੱਤਾ ਜਾਵੇਗਾ ਅਤੇ ਐਪਾਂ ਅੱਗੇ ਵਾਸਤੇ ਨਵੇਂ ਵਿਗਿਆਪਨਾਂ ਦਾ ਸੁਝਾਅ ਦੇਣਗੀਆਂ। ਤੁਹਾਨੂੰ ਹਾਲੇ ਵੀ ਕੁਝ ਸੰਬੰਧਿਤ ਵਿਗਿਆਪਨ ਦਿਸ ਸਕਦੇ ਹਨ।"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"ਐਪ ਡਾਟਾ ਰੀਸੈੱਟ ਕੀਤਾ ਗਿਆ ਸੀ"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"ਕੀ ਸਾਰੇ ਵਿਸ਼ਿਆਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"ਕੀ ਐਪਾਂ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਵਿਗਿਆਪਨਾਂ ਨੂੰ ਰੀਸੈੱਟ ਕਰਨਾ ਹੈ?"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ਵਿਗਿਆਪਨ ਵਿਸ਼ੇ"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"ਐਪ ਵੱਲੋਂ ਸੁਝਾਏ ਗਏ ਵਿਗਿਆਪਨ"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android ਤੁਹਾਡੇ ਵੱਲੋਂ ਹਾਲ ਹੀ ਵਿੱਚ ਵਰਤੀਆਂ ਗਈਆਂ ਐਪਾਂ ਅਤੇ ਉਨ੍ਹਾਂ ਨੂੰ ਵਰਤੇ ਜਾਣ ਦੀ ਗਿਣਤੀ ਦੇ ਆਧਾਰ \'ਤੇ ਦਿਲਚਸਪੀ ਦੇ ਵਿਸ਼ਿਆਂ ਨੂੰ ਨੋਟ ਕਰਦਾ ਹੈ।"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"ਜਿਨ੍ਹਾਂ ਐਪਾਂ ਨੂੰ ਤੁਸੀਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਉਨ੍ਹਾਂ ਨੂੰ ਵਰਤੇ ਜਾਣ ਦੇ ਤਰੀਕੇ ਦੇ ਆਧਾਰ \'ਤੇ ਇਹ ਵੀ ਨਿਰਧਾਰਿਤ ਕਰ ਸਕਦੀਆਂ ਹਨ ਕਿ ਤੁਹਾਨੂੰ ਕੀ ਪਸੰਦ ਹੈ।"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"ਜੋ ਐਪਾਂ ਤੁਸੀਂ ਵਰਤਦੇ ਹੋ, ਉਹ ਆਪਣੇ ਵਿਗਿਆਪਨਾਂ ਦੀ ਕਾਰਗੁਜ਼ਾਰੀ ਦਾ ਮੁਲਾਂਕਣ ਕਰਨ ਵਿੱਚ ਉਨ੍ਹਾਂ ਦੀ ਮਦਦ ਵਾਸਤੇ Android ਤੋਂ ਜਾਣਕਾਰੀ ਮੰਗ ਸਕਦੀਆਂ ਹਨ। Android, ਐਪਾਂ ਨੂੰ ਸੀਮਤ ਕਿਸਮ ਦਾ ਡਾਟਾ ਇਕੱਤਰ ਕਰਨ ਦੀ ਆਗਿਆ ਦਿੰਦਾ ਹੈ।"</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android \'ਤੇ ਵਿਗਿਆਪਨ ਪਰਦੇਦਾਰੀ"</a>" ਬਾਰੇ ਹੋਰ ਜਾਣੋ"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ਚਾਲੂ / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ਵਿਸ਼ੇ"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ਚਾਲੂ / # ਵਿਸ਼ਾ}one{ਚਾਲੂ / # ਵਿਸ਼ਾ}other{ਚਾਲੂ / # ਵਿਸ਼ੇ}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ਚਾਲੂ / <xliff:g id="APPS_COUNT">%1$d</xliff:g> ਐਪਾਂ"</string>
