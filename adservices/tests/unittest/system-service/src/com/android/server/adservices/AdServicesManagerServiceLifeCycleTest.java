@@ -15,10 +15,13 @@
  */
 package com.android.server.adservices;
 
-import static com.android.adservices.common.ExtendedMockitoExpectations.mockGetLocalManager;
-import static com.android.adservices.common.ExtendedMockitoExpectations.mockGetLocalManagerNotFound;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManager;
+import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetLocalManagerNotFound;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import android.content.Context;
@@ -40,7 +43,8 @@ public final class AdServicesManagerServiceLifeCycleTest {
     @Mock private AdServicesManagerService mService;
     @Mock private SdkSandboxManagerLocal mSdkSandboxManagerLocal;
 
-    private AdServicesManagerService.Lifecycle mLifecycle;
+    // Need to use a spy to mock publishBinderService()
+    private AdServicesManagerService.Lifecycle mSpyLifecycle;
     private StaticMockitoSession mMockSession;
 
     // TODO(b/281577492): use ExtendedMockitoRule and remove these 2 session methods
@@ -61,7 +65,8 @@ public final class AdServicesManagerServiceLifeCycleTest {
     @Before
     public void setUp() {
         startMockitoSession();
-        mLifecycle = new AdServicesManagerService.Lifecycle(mContext, mService);
+        mSpyLifecycle = spy(new AdServicesManagerService.Lifecycle(mContext, mService));
+        doNothing().when(mSpyLifecycle).publishBinderService();
         mockGetLocalManager(SdkSandboxManagerLocal.class, mSdkSandboxManagerLocal);
     }
 
@@ -69,13 +74,32 @@ public final class AdServicesManagerServiceLifeCycleTest {
     public void testOnStart_noSdkSandboxManagerLocal() {
         mockGetLocalManagerNotFound(SdkSandboxManagerLocal.class);
 
-        assertThrows(IllegalStateException.class, () -> mLifecycle.onStart());
+        assertThrows(IllegalStateException.class, () -> mSpyLifecycle.onStart());
+    }
+
+    @Test
+    public void testOnStart_binderRegistrationFails() {
+        doThrow(new RuntimeException("D'OH!")).when(mSpyLifecycle).publishBinderService();
+
+        mSpyLifecycle.onStart();
+
+        verifyBinderPublished();
+        verifyAdServiceRegisteredOnSdkManager(/* published= */ false);
     }
 
     @Test
     public void testOnStart() {
-        mLifecycle.onStart();
+        mSpyLifecycle.onStart();
 
-        verify(mSdkSandboxManagerLocal).registerAdServicesManagerService(mService);
+        verifyBinderPublished();
+        verifyAdServiceRegisteredOnSdkManager(/* published= */ true);
+    }
+
+    private void verifyAdServiceRegisteredOnSdkManager(boolean published) {
+        verify(mSdkSandboxManagerLocal).registerAdServicesManagerService(mService, published);
+    }
+
+    private void verifyBinderPublished() {
+        verify(mSpyLifecycle).publishBinderService();
     }
 }

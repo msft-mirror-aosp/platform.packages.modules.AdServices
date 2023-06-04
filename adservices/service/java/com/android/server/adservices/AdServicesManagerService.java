@@ -16,6 +16,7 @@
 package com.android.server.adservices;
 
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_MANAGER;
+import static android.app.adservices.AdServicesManager.AD_SERVICES_SYSTEM_SERVICE;
 
 import android.adservices.common.AdServicesPermissions;
 import android.annotation.NonNull;
@@ -172,9 +173,19 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
         public void onStart() {
             LogUtil.d("AdServicesManagerService started!");
 
-            // TODO(b/262282035): Fix this work around in U+.
-            // TODO(b/263128170): Add cts-root tests to make sure that we can start the
-            //  AdServicesManager in U+
+            boolean published = false;
+
+            try {
+                publishBinderService();
+                published = true;
+            } catch (RuntimeException e) {
+                LogUtil.w(
+                        e,
+                        "Failed to publish %s service; will piggyback it into SdkSandbox anyways",
+                        AD_SERVICES_SYSTEM_SERVICE);
+            }
+
+            // TODO(b/282239822): Remove this workaround (and try-catch above) on Android VIC
 
             // Register the AdServicesManagerService with the SdkSandboxManagerService.
             // This is a workaround for b/262282035.
@@ -183,11 +194,20 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
             SdkSandboxManagerLocal sdkSandboxManagerLocal =
                     LocalManagerRegistry.getManager(SdkSandboxManagerLocal.class);
             if (sdkSandboxManagerLocal != null) {
-                sdkSandboxManagerLocal.registerAdServicesManagerService(mService);
+                sdkSandboxManagerLocal.registerAdServicesManagerService(mService, published);
             } else {
                 throw new IllegalStateException(
                         "SdkSandboxManagerLocal not found when registering AdServicesManager!");
             }
+        }
+
+        // Need to encapsulate call to publishBinderService(...) because:
+        // - Superclass method is protected final (hence it cannot be mocked or extended)
+        // - Underlying method calls ServiceManager.addService(), which is hidden (and hence cannot
+        //   be mocked by our tests)
+        @VisibleForTesting
+        void publishBinderService() {
+            publishBinderService(AD_SERVICES_SYSTEM_SERVICE, mService);
         }
 
         @Override

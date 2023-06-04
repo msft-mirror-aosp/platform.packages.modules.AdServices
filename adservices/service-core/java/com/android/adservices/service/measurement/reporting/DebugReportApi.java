@@ -244,7 +244,7 @@ public class DebugReportApi {
      * doesn't have related source.
      */
     public void scheduleTriggerNoMatchingSourceDebugReport(
-            Trigger trigger, IMeasurementDao dao, String type) {
+            Trigger trigger, IMeasurementDao dao, String type) throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -257,8 +257,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
@@ -273,7 +272,8 @@ public class DebugReportApi {
             Trigger trigger,
             @Nullable String limit,
             IMeasurementDao dao,
-            String type) {
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -286,8 +286,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
@@ -305,7 +304,8 @@ public class DebugReportApi {
             Trigger trigger,
             UnsignedLong triggerData,
             IMeasurementDao dao,
-            String type) {
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -318,8 +318,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBodyWithAllFields(

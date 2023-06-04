@@ -20,8 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.os.SystemProperties;
 
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.testing.StaticMockFixtureRule;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,8 +32,8 @@ import org.junit.Test;
  */
 public class SysPropForceDefaultValueFixtureTest {
     @Rule
-    public StaticMockFixtureRule mStaticMockFixtureRule =
-            new StaticMockFixtureRule(SysPropForceDefaultValueFixture::new);
+    public AdServicesExtendedMockitoRule mAdServicesExtendedMockitoRule =
+            new AdServicesExtendedMockitoRule(SysPropForceDefaultValueFixture::new);
 
     @Test
     public void testForceToReturnDefaultValue_intValue() {
