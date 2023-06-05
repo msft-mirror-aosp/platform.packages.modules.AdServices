@@ -29,7 +29,9 @@ public enum GaUxEnrollmentChannelCollection implements PrivacySandboxEnrollmentC
 
     FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel()),
 
-    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new ReconsentNotificationChannel());
+    RECONSENT_NOTIFICATION_CHANNEL(/* priority= */ 3, new ReconsentNotificationChannel()),
+
+    GA_GRADUATION_CHANNEL(/* priority= */ 4, new GaGraduationChannel());
 
     private final int mPriority;
 
