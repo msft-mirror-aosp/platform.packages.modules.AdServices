@@ -32,8 +32,11 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Web;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,11 +100,28 @@ public class DebugReportApi {
     private final Context mContext;
     private final Flags mFlags;
     private final DatastoreManager mDatastoreManager;
+    private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
+    private final SourceNoiseHandler mSourceNoiseHandler;
 
     public DebugReportApi(Context context, Flags flags) {
+        this(
+                context,
+                flags,
+                new EventReportWindowCalcDelegate(flags),
+                new SourceNoiseHandler(flags));
+    }
+
+    @VisibleForTesting
+    DebugReportApi(
+            Context context,
+            Flags flags,
+            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
+            SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
         mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
+        mSourceNoiseHandler = sourceNoiseHandler;
     }
 
     /** Schedules the Source Success Debug Report */
@@ -224,7 +244,7 @@ public class DebugReportApi {
      * doesn't have related source.
      */
     public void scheduleTriggerNoMatchingSourceDebugReport(
-            Trigger trigger, IMeasurementDao dao, String type) {
+            Trigger trigger, IMeasurementDao dao, String type) throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -237,8 +257,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(null, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(null, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(null, trigger, null, debugKeyPair, true),
@@ -253,7 +272,8 @@ public class DebugReportApi {
             Trigger trigger,
             @Nullable String limit,
             IMeasurementDao dao,
-            String type) {
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -266,8 +286,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
@@ -285,7 +304,8 @@ public class DebugReportApi {
             Trigger trigger,
             UnsignedLong triggerData,
             IMeasurementDao dao,
-            String type) {
+            String type)
+            throws DatastoreException {
         if (isTriggerDebugFlagDisabled(type)) {
             return;
         }
@@ -298,8 +318,7 @@ public class DebugReportApi {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
-                new DebugKeyAccessor(mDatastoreManager)
-                        .getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
         scheduleReport(
                 type,
                 generateTriggerDebugReportBodyWithAllFields(
@@ -490,12 +509,15 @@ public class DebugReportApi {
                     Body.SCHEDULED_REPORT_TIME,
                     String.valueOf(
                             TimeUnit.MILLISECONDS.toSeconds(
-                                    source.getReportingTime(
+                                    mEventReportWindowCalcDelegate.getReportingTime(
+                                            source,
                                             trigger.getTriggerTime(),
                                             trigger.getDestinationType()))));
             body.put(Body.SOURCE_EVENT_ID, source.getEventId());
             body.put(Body.SOURCE_TYPE, source.getSourceType().getValue());
-            body.put(Body.RANDOMIZED_TRIGGER_RATE, source.getRandomAttributionProbability());
+            body.put(
+                    Body.RANDOMIZED_TRIGGER_RATE,
+                    mSourceNoiseHandler.getRandomAttributionProbability(source));
             if (triggerData != null) {
                 body.put(Body.TRIGGER_DATA, triggerData.toString());
             }

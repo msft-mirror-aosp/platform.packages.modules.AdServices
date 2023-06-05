@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.android.adservices.service.Flags;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -43,16 +45,6 @@ public final class PrivacyParams {
      * Max reports for Install Attributed 'Event' {@link Source}.
      */
     public static final int INSTALL_ATTR_EVENT_SOURCE_MAX_REPORTS = 2;
-
-    /**
-     * Maximum attributions per rate limit window.
-     * Rate limit unit: (Source Site, Destination Site, Reporting Site, Window).
-     */
-    private static final int MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    public static int getMaxAttributionPerRateLimitWindow() {
-        return MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
-    }
 
     /**
      * Rate limit window for (Source Site, Destination Site, Reporting Site, Window) privacy unit.
@@ -114,7 +106,7 @@ public final class PrivacyParams {
      * {@link Source} Noise probability for 'Navigation', when both destinations (app and web) are
      * available on the source.
      */
-    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.017022D;
+    public static final double DUAL_DESTINATION_NAVIGATION_NOISE_PROBABILITY = 0.0170218D;
 
     /**
      * {@link Source} Noise probability for 'Event', when both destinations (app and web) are
@@ -201,27 +193,6 @@ public final class PrivacyParams {
     public static final int MAX_DISTINCT_WEB_DESTINATIONS_IN_SOURCE_REGISTRATION = 3;
 
     /**
-     * Max distinct enrollments for attribution per { Advertiser X Publisher X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION =
-            10;
-
-    public static int getMaxDistinctEnrollmentsPerPublisherXDestinationInAttribution() {
-        return MAX_DISTINCT_ENROLLMENTS_PER_PUBLISHER_X_DESTINATION_IN_ATTRIBUTION;
-    }
-
-    /**
-     * Max distinct advertisers with pending impressions per
-     * { Publisher X Enrollment X TimePeriod }.
-     */
-    private static final int MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE =
-            100;
-
-    public static int getMaxDistinctDestinationsPerPublisherXEnrollmentInActiveSource() {
-        return MAX_DISTINCT_DESTINATIONS_PER_PUBLISHER_X_ENROLLMENT_IN_ACTIVE_SOURCE;
-    }
-
-    /**
      * Max distinct enrollments with source registration per
      * { Publisher X Advertiser X TimePeriod }.
      */
@@ -259,6 +230,13 @@ public final class PrivacyParams {
 
     // place holder for future change
     private static final double MAX_FLEXIBLE_EVENT_INFORMATION_GAIN = Double.MAX_VALUE;
+
+    /**
+     * Maximum early reporting windows configured through {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS} or {@link
+     * Flags#MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS}.
+     */
+    public static final int MAX_CONFIGURABLE_EVENT_REPORT_EARLY_REPORTING_WINDOWS = 2;
 
     public static double getMaxFlexibleEventInformationGain() {
         return MAX_FLEXIBLE_EVENT_INFORMATION_GAIN;

@@ -39,7 +39,6 @@ import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -416,42 +415,30 @@ public class SettingsGaUiAutomatorTest {
     }
 
     @Test
-    public void privacyPolicyLinkTest() throws UiObjectNotFoundException {
+    public void dialogRotateTest() throws UiObjectNotFoundException, RemoteException {
         mTestName = new Object() {}.getClass().getEnclosingMethod().getName();
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled false");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+        ShellUtils.runShellCommand("device_config put adservices ui_dialog_fragment_enabled true");
+        sDevice.unfreezeRotation();
 
-        // First get the package name of device's default browser
-        String packageNameOfDefaultBrowser =
-                ApkTestUtil.getDefaultBrowserPkgName(sDevice, sContext);
-        sDevice.pressHome();
+        ApkTestUtil.launchSettingView(
+                ApplicationProvider.getApplicationContext(), sDevice, LAUNCH_TIMEOUT);
 
-        ApkTestUtil.launchSettingView(sContext, sDevice, LAUNCH_TIMEOUT);
-        /* go to ad measurement page and scroll to the bottom */
-        ApkTestUtil.scrollToAndClick(sDevice, R.string.settingsUI_measurement_view_title);
-        UiScrollable scrollView =
-                new UiScrollable(
-                        new UiSelector().scrollable(true).className("android.widget.ScrollView"));
-        scrollView.scrollToEnd(2);
-        sDevice.waitForIdle(3 * PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        // Select the sentence has privacy policy
-        UiObject sentence = scrollTo(R.string.settingsUI_measurement_view_footer_text);
-        int right = sentence.getBounds().right,
-                bottom = sentence.getBounds().bottom,
-                left = sentence.getBounds().left;
-        // click on the bottom line from left to right several times
-        int countOfClicks = 20;
-        sDevice.waitForIdle(PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT);
-        for (int x = left; x < right; x += (right - left) / countOfClicks) {
-            sDevice.click(x, bottom - 2);
-            if (!sentence.exists()) {
-                sDevice.pressBack();
-                ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-                return;
-            }
+        UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
+        assertThat(consentSwitch.exists()).isTrue();
+        // turn it on if not
+        if (!consentSwitch.isChecked()) {
+            consentSwitch.click();
         }
+        consentSwitch.click();
+        UiObject dialogTitle =
+                ApkTestUtil.getElement(sDevice, R.string.settingsUI_dialog_opt_out_title);
 
-        ApkTestUtil.killDefaultBrowserPkgName(sDevice, sContext);
-        Assert.fail("Web browser not found after several clicks on the last line");
+        assertThat(dialogTitle.exists()).isTrue();
+
+        sDevice.setOrientationRight();
+        assertThat(dialogTitle.exists()).isTrue();
     }
 
     private void checkSubtitleMatchesToggle(String regexResId, int stringIdOfTitle)

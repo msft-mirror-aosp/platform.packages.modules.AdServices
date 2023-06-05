@@ -143,8 +143,10 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"I-unblock"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"Mga interes na na-block mo"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"I-reset ang lahat ng interes"</string>
-    <string name="settingsUI_topics_view_no_topics_text" msgid="912262290260184604">"Walang interes na maipapakita sa ngayon"</string>
-    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="5394760909660084293">"Walang maipapakitang paksa sa ngayon"</string>
+    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
+    <skip />
+    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
+    <skip />
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng Android ang mga uri ng mga ad kung saan ka posibleng may interes, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"Wala kang naka-block na interes"</string>
@@ -157,7 +159,8 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"Tingnan ang mga naka-block na app"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"I-reset ang mga interes na tinatantya ng mga app"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"Walang app na bumubuo ng mga interes para sa iyo sa ngayon"</string>
-    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="8540919050517478161">"Walang app na maipapakita sa ngayon"</string>
+    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
+    <skip />
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Nagbibigay ang beta ng privacy sa mga ad ng Android ng mga bagong feature na magagamit ng mga app para magpakita sa iyo ng mga ad na posibleng magustuhan mo. Hindi gumagamit ang mga teknolohiyang ito ng mga identifier ng device.\n\nMatatantya ng mga app ang mga uri ng mga ad kung saan posibleng interesado ka, at pansamantalang sine-save ang mga interes sa device mo. Nagbibigay-daan ito sa mga app na magpakita sa iyo ng mga may kaugnayang ad, nang hindi sinusubaybayan ang aktibidad mo sa mga website at app mula sa iba pang developer."</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"Wala kang naka-block na app"</string>
@@ -195,6 +198,8 @@
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Nagtatala ang Android ng mga paksa kung saan ka interesado batay sa mga app na kamakailan mong ginamit at kung gaano mo kadalas gamitin ang mga ito."</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"Matutukoy din ng mga ginagamit mong app kung ano ang gusto mo batay sa kung paano mo ginagamit ang mga iyon."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"Puwedeng humiling ng impormasyon sa Android ang mga ginagamit mong app para masukat ng mga ito ang performance ng mga ad ng mga ito. Pinapayagan ng Android ang mga app na mangolekta ng limitadong uri ng data."</string>
+    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
+    <skip />
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"Naka-on / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> (na) paksa"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{Naka-on / # paksa}one{Naka-on / # paksa}other{Naka-on / # na paksa}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"Naka-on / <xliff:g id="APPS_COUNT">%1$d</xliff:g> (na) app"</string>
@@ -211,6 +216,11 @@
     <string name="settingsUI_blocked_apps_ga_title" msgid="1896327995101895088">"Mga app na na-block mo"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="371969808353100852">"I-reset ang data na iminumungkahi ng app"</string>
     <string name="settingsUI_apps_view_footer" msgid="6428897482766556515">"Karaniwang tinatandaan ng mga ginagamit mong app ang mga bagay kung saan ka interesado para ma-personalize ang iyong karanasan. Puwede ring mag-store ang mga app ng impormasyon tungkol sa iyong mga paksa sa Android.\n\nHalimbawa, kung gumagamit ka ng app tungkol sa pagsasanay para sa marathon, posibleng tukuyin ng app na interesado ka sa running shoes. Sa ibang pagkakataon, kung gagamit ka ng ibang app, puwedeng magpakita ang app na iyon sa iyo ng ad para sa running shoes batay sa mungkahi ng naunang app.\n\nRegular na awtomatikong dine-delete ng Android ang data na iminumungkahi ng app. Posibleng lumabas ulit sa listahan ang isang app na ginamit mo ulit. O kaya, puwede kang mag-block ng app sa pagmumungkahi ng mga ad para sa iyo.\n\nSa iyong mga app, posibleng naka-personalize ang ad na nakikita mo, depende sa setting na ito, sa setting ng mga paksa ng ad, sa mga setting mo para sa advertising ID, at kung nagpe-personalize ng mga ad ang ginagamit mong app."</string>
+    <string name="notificationUI_u18_notification_title" msgid="4880509503177562077">"Available ang bagong feature ng privacy sa mga ad"</string>
+    <string name="notificationUI_u18_notification_content" msgid="6734418183242286936">"Napakalimitadong impormasyon lang ang ibinabahagi sa pagitan ng mga app para tumulong sa pagsukat ng performance ng ad"</string>
+    <string name="notificationUI_u18_body1" msgid="5384339364319615715">"Maglulunsad kami ng bagong feature ng privacy sa ad na tinatawag na pagsukat sa ad. Ibinabahagi lang ng Android ang napakalimitadong impormasyon sa pagitan ng mga app, gaya ng kung kailan ipinakita ang isang ad sa iyo, para tulungan ang mga app na sukatin ang performance ng mga ad."</string>
+    <string name="notificationUI_u18_body3" msgid="4511974346169641579">"Puwede kang gumawa ng mga pagbabago sa mga setting ng privacy sa ad."</string>
+    <string name="settingsUI_u18_main_view_measurement_info" msgid="1709326915590855853">"Puwedeng humiling ng impormasyon sa Android ang mga ginagamit mong app para masukat ng mga ito ang performance ng mga ad ng mga ito. Pinapayagan lang ng Android ang mga app na mangolekta ng limitadong uri ng data."</string>
     <string name="ic_consent_notification_ga_image_description" msgid="6146488914437778539">"Makulay na paglalarawan ng mga simbolong kumakatawan sa mga paksang kaiinteresan gaya ng musika, balita, at sports"</string>
     <string name="ic_main_view_ga_image_description" msgid="1846571138870271761">"Makulay na paglalarawan ng lock sa loob ng bilog"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="8171099879240285360">"Maliit na black and white na paglalarawan ng siyam na tuldok na bumubuo ng kuwadrado"</string>
