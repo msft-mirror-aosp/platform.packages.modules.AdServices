@@ -33,7 +33,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -203,7 +202,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testEnableActivities_s() throws Exception {
+    public void testEnableActivities_s() {
         Assume.assumeTrue(
                 Build.VERSION.SDK_INT == Build.VERSION_CODES.S
                         || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
@@ -223,7 +222,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testDisableActivities_tPlus() throws Exception {
+    public void testDisableActivities_tPlus() {
         Assume.assumeTrue(Build.VERSION.SDK_INT == 33);
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
@@ -240,7 +239,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testDisableAdExtServicesServices_tPlus() throws Exception {
+    public void testDisableAdExtServicesServices_tPlus() {
         Assume.assumeTrue(SdkLevel.isAtLeastT());
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
@@ -257,7 +256,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testUpdateAdExtServicesServices_s() throws Exception {
+    public void testUpdateAdExtServicesServices_s() {
         Assume.assumeTrue(
                 Build.VERSION.SDK_INT == Build.VERSION_CODES.S
                         || Build.VERSION.SDK_INT == Build.VERSION_CODES.S_V2);
@@ -276,8 +275,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testUpdateAdExtServicesActivities_withAdServicesPackageSuffix_doesNotUpdate()
-            throws Exception {
+    public void testUpdateAdExtServicesActivities_withAdServicesPackageSuffix_doesNotUpdate() {
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
@@ -293,8 +291,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testDisableAdExtServicesServices_withAdServicesPackageSuffix_doesNotUpdate()
-            throws Exception {
+    public void testDisableAdExtServicesServices_withAdServicesPackageSuffix_doesNotUpdate() {
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
@@ -326,8 +323,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testDisableScheduledBackgroundJobs_withAdServicesPackageSuffix_doesNotUpdate()
-            throws Exception {
+    public void testDisableScheduledBackgroundJobs_withAdServicesPackageSuffix_doesNotUpdate() {
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
         setCommonMocks(AD_SERVICES_APK_PKG_SUFFIX);
@@ -337,7 +333,7 @@ public class AdExtBootCompletedReceiverTest {
     }
 
     @Test
-    public void testDisableScheduledBackgroundJobs_cancelsAllJobs() throws Exception {
+    public void testDisableScheduledBackgroundJobs_cancelsAllJobs() {
         AdExtBootCompletedReceiver bootCompletedReceiver =
                 Mockito.spy(new AdExtBootCompletedReceiver());
 
@@ -362,13 +358,8 @@ public class AdExtBootCompletedReceiverTest {
         verify(mContext, never()).getSystemService(eq(JobScheduler.class));
     }
 
-    private void setCommonMocks(String packageName) throws Exception {
+    private void setCommonMocks(String packageName) {
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
-        when(mContext.getPackageName()).thenReturn(TEST_PACKAGE_NAME);
-
-        PackageInfo packageInfo = Mockito.spy(PackageInfo.class);
-        packageInfo.packageName = packageName;
-        when(mPackageManager.getPackageInfo(eq(packageInfo.packageName), eq(0)))
-                .thenReturn(packageInfo);
+        when(mContext.getPackageName()).thenReturn(packageName);
     }
 }
