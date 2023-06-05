@@ -143,10 +143,8 @@
     <string name="settingsUI_unblock_topic_title" msgid="1710283575567727667">"ပြန်ဖွင့်ရန်"</string>
     <string name="settingsUI_blocked_topics_title" msgid="5030422883546261820">"သင်ပိတ်ထားသော စိတ်ဝင်စားမှုများ"</string>
     <string name="settingsUI_reset_topics_title" msgid="6917960006583871987">"စိတ်ဝင်စားမှုအားလုံးကို အသစ်ပြန်စရန်"</string>
-    <!-- no translation found for settingsUI_topics_view_no_topics_text (6954747579303498382) -->
-    <skip />
-    <!-- no translation found for settingsUI_topics_view_no_topics_ga_text (8043163159679359485) -->
-    <skip />
+    <string name="settingsUI_topics_view_no_topics_text" msgid="6954747579303498382">"လောလောဆယ် ပြရန် စိတ်ဝင်စားမှုများ မရှိပါ။"</string>
+    <string name="settingsUI_topics_view_no_topics_ga_text" msgid="8043163159679359485">"လောလောဆယ် ပြရန် အကြောင်းအရာမရှိပါ။\n"<a href="https://support.google.com/android?p=ad_privacy">"ကြော်ငြာအကြောင်းအရာများ"</a>" အကြောင်း ပိုမိုလေ့လာနိုင်သည်"</string>
     <string name="settingsUI_topics_view_info_text1" msgid="2477020249748216309">"Privacy Sandbox"</string>
     <string name="settingsUI_topics_view_info_text2" msgid="6223353589295876851">"Android ၏ ကြော်ငြာဆိုင်ရာ အချက်အလက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nAndroid က သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များကို ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှင့်သက်ဆိုင်သည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
     <string name="settingsUI_topics_view_no_blocked_topics_text" msgid="6553014185055718781">"ပိတ်ထားသည့် စိတ်ဝင်စားမှုများ မရှိပါ"</string>
@@ -159,8 +157,7 @@
     <string name="settingsUI_view_blocked_apps_title" msgid="379556513199380600">"ပိတ်ထားသောအက်ပ်များ ကြည့်ရန်"</string>
     <string name="settingsUI_reset_apps_title" msgid="6221704974528131179">"အက်ပ်များက ခန့်မှန်းထားသည့် စိတ်ဝင်စားမှုများ ပြင်ဆင်သတ်မှတ်ရန်"</string>
     <string name="settingsUI_apps_view_no_apps_text" msgid="7460005016322426137">"သင့်အတွက် စိတ်ဝင်စားမှုများကို မည်သည့်အက်ပ်ကမျှ မထုတ်သေးပါ"</string>
-    <!-- no translation found for settingsUI_apps_view_no_apps_ga_text (742044210764257860) -->
-    <skip />
+    <string name="settingsUI_apps_view_no_apps_ga_text" msgid="742044210764257860">"လောလောဆယ် ပြရန် အက်ပ်များ မရှိပါ။ \n"<a href="https://support.google.com/android?p=ad_privacy">"အက်ပ်အကြံပြုကြော်ငြာများ"</a>" အကြောင်း ပိုမိုလေ့လာနိုင်သည်"</string>
     <string name="settingsUI_apps_view_info_text1" msgid="7835635425477842692">"Privacy Sandbox"</string>
     <string name="settingsUI_apps_view_info_text2" msgid="308547275474796552">"Android ၏ ကြော်ငြာဆိုင်ရာ အချက်အလက်လုံခြုံမှု စမ်းသပ်အစီအစဉ်သည် သင်နှစ်သက်နိုင်မည့် ကြော်ငြာများပြရန် အက်ပ်များအသုံးပြုနိုင်သော ဝန်ဆောင်မှုသစ်များကို ပံ့ပိုးသည်။ ဤနည်းပညာများသည် စက်ပစ္စည်း သတ်မှတ်မှုစနစ်များကို အသုံးမပြုပါ။\n\nအက်ပ်များက သင်နှစ်သက်နိုင်မည့် ကြော်ငြာအမျိုးအစားများကို ခန့်မှန်းနိုင်ပြီး သင့်စက်တွင် စိတ်ဝင်စားမှုများကို ယာယီသိမ်းနိုင်သည်။ ၎င်းက သင့်လုပ်ဆောင်ချက်များကို ဝဘ်ဆိုက်နှင့် အခြားဆော့ဖ်ဝဲရေးသူများ၏ အက်ပ်များတွင် ခြေရာခံစရာမလိုဘဲ သင်နှင့်သက်ဆိုင်သည့် ကြော်ငြာများအား အက်ပ်များကို ပြခွင့်ပေးသည်။"</string>
     <string name="settingsUI_apps_view_no_blocked_apps_text" msgid="3953560911214151396">"ပိတ်ထားသည့်အက်ပ်များ မရှိပါ"</string>
@@ -190,16 +187,37 @@
     <string name="settingsUI_dialog_reset_app_title" msgid="5177572712117150557">"အက်ပ်အကြံပြု ကြော်ငြာများကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
     <string name="settingsUI_dialog_reset_app_message" msgid="7845329616145691006">"သင့်စာရင်းရှိ အက်ပ်များမှ ကြော်ငြာအကြံပြုချက်ဒေတာကို ဖျက်မည်ဖြစ်ပြီး အက်ပ်များက ယခုမှစ၍ ကြော်ငြာအသစ်များကို အကြံပြုမည်။ ဆက်စပ်သော ကြော်ငြာအချို့ကို မြင်ရနိုင်သေးသည်။"</string>
     <string name="settingsUI_apps_are_reset" msgid="1814400631145418530">"အက်ပ်ဒေတာကို ပြင်ဆင်သတ်မှတ်ထားသည်"</string>
-    <string name="settingsUI_dialog_topics_opt_out_title" msgid="7100008407947225099">"အကြောင်းအရာအားလုံးကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
-    <string name="settingsUI_dialog_apps_opt_out_title" msgid="632296780673559302">"အက်ပ်အကြံပြု ကြော်ငြာများကို ပြင်ဆင်သတ်မှတ်မလား။"</string>
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_title (8121927422479701361) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_in_message (906156509464496182) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_title (729119757000459089) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_topics_opt_out_message (1536431481297878931) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_title (1802639238531107941) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_in_message (6335861029594000364) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_title (2152898453001885432) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_apps_opt_out_message (6894065908128443334) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_title (313317715284771681) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_in_message (1122570790810645916) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_title (1629867723206716370) -->
+    <skip />
+    <!-- no translation found for settingsUI_dialog_measurement_opt_out_message (1050338738668085641) -->
+    <skip />
     <string name="settingsUI_main_view_ga_title" msgid="4149820452019697214">"ကြော်ငြာဆိုင်ရာ အချက်အလက်လုံခြုံမှု"</string>
     <string name="settingsUI_topics_ga_title" msgid="7324482132761824214">"ကြော်ငြာအကြောင်းအရာများ"</string>
     <string name="settingsUI_apps_ga_title" msgid="1527820834800364372">"အက်ပ်အကြံပြု ကြော်ငြာများ"</string>
     <string name="settingsUI_main_view_ad_topics_info" msgid="2643088833140772417">"Android သည် မကြာသေးမီက သင်သုံးခဲ့သော အက်ပ်များနှင့် ၎င်းတို့အား မည်မျှလျှင်တစ်ကြိမ် သုံးသည်အပေါ် အခြေခံ၍ စိတ်ဝင်စားသည့် အကြောင်းအရာများကို မှတ်သားသည်။"</string>
     <string name="settingsUI_main_view_apps_info" msgid="1668244327840008046">"သင်သုံးသောအက်ပ်များက ၎င်းတို့အား အသုံးပြုပုံပေါ် အခြေခံပြီး သင့်နှစ်သက်မှုကိုလည်း ဆုံးဖြတ်နိုင်သည်။"</string>
     <string name="settingsU_main_view_measurement_info" msgid="7950104699961821635">"သင်သုံးသော အက်ပ်များသည် ၎င်းတို့ကြော်ငြာများ၏ စွမ်းဆောင်ရည်ကို တိုင်းတာရန်အတွက် Android ထံမှ အချက်အလက်များ တောင်းနိုင်သည်။ Android သည် အက်ပ်များအား ဒေတာအမျိုးအစားများကို အကန့်အသတ်ဖြင့် စုဆောင်းခွင့်ပြုသည်။"</string>
-    <!-- no translation found for settingsU_main_view_learn_more (2129694798398023916) -->
-    <skip />
+    <string name="settingsU_main_view_learn_more" msgid="2129694798398023916"><a href="https://support.google.com/android?p=ad_privacy">"Android တွင် ကြော်ငြာဆိုင်ရာ အချက်အလက်လုံခြုံမှု"</a>" အကြောင်း ပိုမိုလေ့လာနိုင်သည်"</string>
     <string name="settingsUI_topics_subtitle" msgid="6545976434367750110">"ဖွင့် / အကြောင်းအရာ <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> ခု"</string>
     <string name="settingsUI_topics_subtitle_plural" msgid="4809219115021801972">"{count,plural, =1{ဖွင့် / အကြောင်းအရာ # ခု}other{ဖွင့် / အကြောင်းအရာ # ခု}}"</string>
     <string name="settingsUI_apps_subtitle" msgid="387595280958995973">"ဖွင့် / အက်ပ် <xliff:g id="APPS_COUNT">%1$d</xliff:g> ခု"</string>
