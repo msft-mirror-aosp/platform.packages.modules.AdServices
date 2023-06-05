@@ -591,37 +591,16 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void revokeConsentForApp(@NonNull App app) throws IOException {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), true),
+                () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
                                 mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
-                                true);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mAppConsentDao.setConsentForApp(app.getPackageName(), true);
-                        mAdServicesManager.setConsentForApp(
-                                app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
-                                true);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.revokeConsentForApp(app);
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Error revoke consent for app %s", app.getPackageName());
-            }
-        }
+                                true),
+                () -> mAppSearchConsentManager.revokeConsentForApp(app),
+                /* errorLogger= */ null);
+
         asyncExecute(
                 () -> mCustomAudienceDao.deleteCustomAudienceDataByOwner(app.getPackageName()));
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
@@ -636,37 +615,15 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void restoreConsentForApp(@NonNull App app) throws IOException {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), false),
+                () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
                                 mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
-                                false);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mAppConsentDao.setConsentForApp(app.getPackageName(), false);
-                        mAdServicesManager.setConsentForApp(
-                                app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
-                                false);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.restoreConsentForApp(app);
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Error restore consent for app %s", app.getPackageName());
-            }
-        }
+                                false),
+                () -> mAppSearchConsentManager.restoreConsentForApp(app),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -677,31 +634,12 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetAppsAndBlockedApps() throws IOException {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mAppConsentDao.clearAllConsentData();
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.clearAllAppConsentData();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mAppConsentDao.clearAllConsentData();
-                        mAdServicesManager.clearAllAppConsentData();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.clearAllAppConsentData();
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Error reset apps and blocked apps.");
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.clearAllConsentData(),
+                () -> mAdServicesManager.clearAllAppConsentData(),
+                () -> mAppSearchConsentManager.clearAllAppConsentData(),
+                /* errorLogger= */ null);
+
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
@@ -716,31 +654,12 @@ public class ConsentManager {
      * @throws IOException if the operation fails
      */
     public void resetApps() throws IOException {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mAppConsentDao.clearKnownAppsWithConsent();
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.clearKnownAppsWithConsent();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mAppConsentDao.clearKnownAppsWithConsent();
-                        mAdServicesManager.clearKnownAppsWithConsent();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.clearKnownAppsWithConsent();
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Error reset apps.");
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.clearKnownAppsWithConsent(),
+                () -> mAdServicesManager.clearKnownAppsWithConsent(),
+                () -> mAppSearchConsentManager.clearKnownAppsWithConsent(),
+                /* errorLogger= */ null);
+
         asyncExecute(mCustomAudienceDao::deleteAllCustomAudienceData);
         if (mFlags.getFledgeAdSelectionFilteringEnabled()) {
             asyncExecute(mAppInstallDao::deleteAllAppInstallData);
@@ -874,55 +793,11 @@ public class ConsentManager {
      * @param packageUid the package uid that had been uninstalled.
      */
     public void clearConsentForUninstalledApp(String packageName, int packageUid) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        try {
-                            mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid);
-                        } catch (IOException exception) {
-                            LogUtil.e(
-                                    exception,
-                                    "Clear consent for uninstalled app %s and uid %d failed due to"
-                                            + " IOException",
-                                    packageName,
-                                    packageUid);
-                        }
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        try {
-                            mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid);
-                        } catch (IOException exception) {
-                            LogUtil.e(
-                                    exception,
-                                    "Clear consent for uninstalled app %s and uid %d failed due to"
-                                            + " IOException",
-                                    packageName,
-                                    packageUid);
-                        }
-                        mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            // AppSearch is written only for S- where we don't have permission to
-                            // receive UID info when package is uninstalled, so clear for all.
-                            mAppSearchConsentManager.clearConsentForUninstalledApp(packageName);
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(
-                        e,
-                        "Error clear consent for uninstalled app %s and uid %d.",
-                        packageName,
-                        packageUid);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid),
+                () -> mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid),
+                () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -938,32 +813,11 @@ public class ConsentManager {
         Objects.requireNonNull(packageName);
         Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
 
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        try {
-                            mAppConsentDao.clearConsentForUninstalledApp(packageName);
-                        } catch (IOException exception) {
-                            LogUtil.e(
-                                    exception,
-                                    "Clear consent for uninstalled app %s failed due to"
-                                            + " IOException",
-                                    packageName);
-                        }
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.clearConsentForUninstalledApp(packageName);
-                            break;
-                        }
-                    default:
-                        LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (RuntimeException e) {
-                LogUtil.e(e, "Error clear consent for uninstalled app %s.", packageName);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName),
+                /* systemServiceSetter= */ null,
+                () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
+                /* errorLogger= */ null);
     }
 
     /** Wipes out all the data gathered by Measurement API. */
@@ -984,37 +838,13 @@ public class ConsentManager {
     /**
      * Saves information to the storage that notification was displayed for the first time to the
      * user.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordNotificationDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordNotificationDisplayed();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-                        mAdServicesManager.recordNotificationDisplayed();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.recordNotificationDisplayed();
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record Notification Displayed failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true),
+                () -> mAdServicesManager.recordNotificationDisplayed(),
+                () -> mAppSearchConsentManager.recordNotificationDisplayed(),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -1058,41 +888,13 @@ public class ConsentManager {
     /**
      * Saves information to the storage that GA UX notification was displayed for the first time to
      * the user.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
      */
     public void recordGaUxNotificationDisplayed() {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordGaUxNotificationDisplayed();
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-                        mAdServicesManager.recordGaUxNotificationDisplayed();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.recordGaUxNotificationDisplayed();
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                ErrorLogUtil.e(
-                        e,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_NOTIFICATION,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-                throw new RuntimeException("Record GA UX Notification Displayed failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true),
+                () -> mAdServicesManager.recordGaUxNotificationDisplayed(),
+                () -> mAppSearchConsentManager.recordGaUxNotificationDisplayed(),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -1300,281 +1102,100 @@ public class ConsentManager {
         }
     }
 
-    /**
-     * Saves the PP API default consent bit to storage.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Saves the default consent bit to data stores based on source of truth. */
     public void recordDefaultConsent(boolean defaultConsent) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
-                        mAdServicesManager.recordDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.DEFAULT_CONSENT, defaultConsent);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                ErrorLogUtil.e(
-                        e,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-                throw new RuntimeException("Record default consent failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.DEFAULT_CONSENT, defaultConsent),
+                () -> mAdServicesManager.recordDefaultConsent(defaultConsent),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.DEFAULT_CONSENT, defaultConsent),
+                (e) ->
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
     }
 
-    /**
-     * Saves the topics default consent bit to storage.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Saves the topics default consent bit to data stores based on source of truth. */
     public void recordTopicsDefaultConsent(boolean defaultConsent) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordTopicsDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
-                        mAdServicesManager.recordTopicsDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record topics default consent failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
+                () -> mAdServicesManager.recordTopicsDefaultConsent(defaultConsent),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
+                /* errorLogger= */ null);
     }
 
-    /**
-     * Saves the FLEDGE default consent bit to storage.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Saves the FLEDGE default consent bit to data stores based on source of truth. */
     public void recordFledgeDefaultConsent(boolean defaultConsent) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordFledgeDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
-                        mAdServicesManager.recordFledgeDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record FLEDGE default consent failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
+                () -> mAdServicesManager.recordFledgeDefaultConsent(defaultConsent),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
+                /* errorLogger= */ null);
     }
 
-    /**
-     * Saves the measurement default consent bit to storage.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Saves the measurement default consent bit to data stores based on source of truth. */
     public void recordMeasurementDefaultConsent(boolean defaultConsent) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(
-                                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(
-                                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
-                        mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record measurement default consent failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
+                () -> mAdServicesManager.recordMeasurementDefaultConsent(defaultConsent),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
+                /* errorLogger= */ null);
     }
 
-    /**
-     * Saves the default AdId state.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Saves the default AdId state bit to data stores based on source of truth. */
     public void recordDefaultAdIdState(boolean defaultAdIdState) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordDefaultAdIdState(defaultAdIdState);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-                        mAdServicesManager.recordDefaultAdIdState(defaultAdIdState);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException("Record default AdId state failed", e);
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
+                () -> mAdServicesManager.recordDefaultAdIdState(defaultAdIdState),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
+                /* errorLogger= */ null);
+    }
+
+    private void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
+            throws IOException {
+        for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+            if (featureType.name().equals(currentFeatureType.name())) {
+                mDatastore.put(featureType.name(), true);
+            } else {
+                mDatastore.put(featureType.name(), false);
             }
         }
     }
 
-    /**
-     * Set the current privacy sandbox feature.
-     *
-     * <p>To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To write to
-     * system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
-     */
+    /** Set the current privacy sandbox feature. */
     public void setCurrentPrivacySandboxFeature(PrivacySandboxFeatureType currentFeatureType) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        for (PrivacySandboxFeatureType featureType :
-                                PrivacySandboxFeatureType.values()) {
-                            if (featureType.name().equals(currentFeatureType.name())) {
-                                mDatastore.put(featureType.name(), true);
-                            } else {
-                                mDatastore.put(featureType.name(), false);
-                            }
-                        }
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.setCurrentPrivacySandboxFeature(
-                                currentFeatureType.name());
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        for (PrivacySandboxFeatureType featureType :
-                                PrivacySandboxFeatureType.values()) {
-                            if (featureType.name().equals(currentFeatureType.name())) {
-                                mDatastore.put(featureType.name(), true);
-                            } else {
-                                mDatastore.put(featureType.name(), false);
-                            }
-                        }
-                        mAdServicesManager.setCurrentPrivacySandboxFeature(
-                                currentFeatureType.name());
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setCurrentPrivacySandboxFeature(
-                                    currentFeatureType);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                ErrorLogUtil.e(
-                        e,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-                throw new RuntimeException("Set current privacy sandbox feature failed.", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> setPrivacySandboxFeatureTypeInApp(currentFeatureType),
+                () -> mAdServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name()),
+                () -> mAppSearchConsentManager.setCurrentPrivacySandboxFeature(currentFeatureType),
+                (e) ->
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
     }
 
     /** Saves information to the storage that user interacted with consent manually. */
     public void recordUserManualInteractionWithConsent(@UserManualInteraction int interaction) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        storeUserManualInteractionToPpApi(interaction, mDatastore);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        mAdServicesManager.recordUserManualInteractionWithConsent(interaction);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        storeUserManualInteractionToPpApi(interaction, mDatastore);
-                        mAdServicesManager.recordUserManualInteractionWithConsent(interaction);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.recordUserManualInteractionWithConsent(
-                                    interaction);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.MANUAL_INTERACTION_WITH_CONSENT_RECORDED);
-                }
-            } catch (IOException | RuntimeException e) {
-                ErrorLogUtil.e(
-                        e,
-                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
-                throw new RuntimeException("Record manual interaction with consent failed", e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> storeUserManualInteractionToPpApi(interaction, mDatastore),
+                () -> mAdServicesManager.recordUserManualInteractionWithConsent(interaction),
+                () -> mAppSearchConsentManager.recordUserManualInteractionWithConsent(interaction),
+                (e) ->
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
     }
 
     /**
@@ -1979,70 +1600,27 @@ public class ConsentManager {
     // To write to system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
     @VisibleForTesting
     void setConsentToSourceOfTruth(boolean isGiven) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        setConsentToPpApi(isGiven);
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
-                        setConsentToSystemServer(mAdServicesManager, isGiven);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        // Ensure data is consistent in PPAPI and system server.
-                        setConsentToPpApi(isGiven);
-                        setConsentToSystemServer(mAdServicesManager, isGiven);
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    ConsentConstants.CONSENT_KEY_FOR_ALL, isGiven);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
-            }
-        }
+        executeSettersByConsentSourceOfTruth(
+                () -> setConsentToPpApi(isGiven),
+                () -> setConsentToSystemServer(mAdServicesManager, isGiven),
+                () ->
+                        mAppSearchConsentManager.setConsent(
+                                ConsentConstants.CONSENT_KEY_FOR_ALL, isGiven),
+                /* errorLogger= */ null);
     }
 
     @VisibleForTesting
     void setPerApiConsentToSourceOfTruth(boolean isGiven, AdServicesApiType apiType) {
-        synchronized (LOCK) {
-            try {
-                switch (mConsentSourceOfTruth) {
-                    case Flags.PPAPI_ONLY:
-                        setConsentPerApiToPpApi(apiType, isGiven);
-                        setAggregatedConsentToPpApi();
-                        break;
-                    case Flags.SYSTEM_SERVER_ONLY:
+        executeSettersByConsentSourceOfTruth(
+                () -> {
+                    setConsentPerApiToPpApi(apiType, isGiven);
+                    setAggregatedConsentToPpApi();
+                },
+                () ->
                         setPerApiConsentToSystemServer(
-                                mAdServicesManager, apiType.toConsentApiType(), isGiven);
-                        break;
-                    case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        // Ensure data is consistent in PPAPI and system server.
-                        setConsentPerApiToPpApi(apiType, isGiven);
-                        setPerApiConsentToSystemServer(
-                                mAdServicesManager, apiType.toConsentApiType(), isGiven);
-                        setAggregatedConsentToPpApi();
-                        break;
-                    case Flags.APPSEARCH_ONLY:
-                        if (mFlags.getEnableAppsearchConsentData()) {
-                            mAppSearchConsentManager.setConsent(
-                                    apiType.toPpApiDatastoreKey(), isGiven);
-                            break;
-                        }
-                    default:
-                        throw new RuntimeException(
-                                ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
-                }
-            } catch (IOException | RuntimeException e) {
-                throw new RuntimeException(ConsentConstants.ERROR_MESSAGE_WHILE_SET_CONTENT, e);
-            }
-        }
+                                mAdServicesManager, apiType.toConsentApiType(), isGiven),
+                () -> mAppSearchConsentManager.setConsent(apiType.toPpApiDatastoreKey(), isGiven),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -2240,11 +1818,11 @@ public class ConsentManager {
 
     /** Set the AdIdEnabled bit to storage based on consent_source_of_truth. */
     public void setAdIdEnabled(boolean isAdIdEnabled) {
-        executeSetter(
-                ConsentConstants.IS_AD_ID_ENABLED,
-                isAdIdEnabled,
-                mAdServicesManager::setAdIdEnabled,
-                mAppSearchConsentManager::setAdIdEnabled);
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
+                () -> mAdServicesManager.setAdIdEnabled(isAdIdEnabled),
+                () -> mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled),
+                /* errorLogger= */ null);
     }
 
     /** Returns whether the isU18Account bit is true based on consent_source_of_truth. */
@@ -2276,11 +1854,11 @@ public class ConsentManager {
 
     /** Set the U18Account bit to storage based on consent_source_of_truth. */
     public void setU18Account(boolean isU18Account) {
-        executeSetter(
-                ConsentConstants.IS_U18_ACCOUNT,
-                isU18Account,
-                mAdServicesManager::setU18Account,
-                mAppSearchConsentManager::setU18Account);
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_U18_ACCOUNT, isU18Account),
+                () -> mAdServicesManager.setU18Account(isU18Account),
+                () -> mAppSearchConsentManager.setU18Account(isU18Account),
+                /* errorLogger= */ null);
     }
 
     /** Returns whether the isEntryPointEnabled bit is true based on consent_source_of_truth. */
@@ -2312,11 +1890,11 @@ public class ConsentManager {
 
     /** Set the EntryPointEnabled bit to storage based on consent_source_of_truth. */
     public void setEntryPointEnabled(boolean isEntryPointEnabled) {
-        executeSetter(
-                ConsentConstants.IS_ENTRY_POINT_ENABLED,
-                isEntryPointEnabled,
-                mAdServicesManager::setEntryPointEnabled,
-                mAppSearchConsentManager::setEntryPointEnabled);
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
+                () -> mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled),
+                () -> mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled),
+                /* errorLogger= */ null);
     }
 
     /** Returns whether the isAdultAccount bit is true based on consent_source_of_truth. */
@@ -2348,11 +1926,11 @@ public class ConsentManager {
 
     /** Set the AdultAccount bit to storage based on consent_source_of_truth. */
     public void setAdultAccount(boolean isAdultAccount) {
-        executeSetter(
-                ConsentConstants.IS_ADULT_ACCOUNT,
-                isAdultAccount,
-                mAdServicesManager::setAdultAccount,
-                mAppSearchConsentManager::setAdultAccount);
+        executeSettersByConsentSourceOfTruth(
+                () -> mDatastore.put(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount),
+                () -> mAdServicesManager.setAdultAccount(isAdultAccount),
+                () -> mAppSearchConsentManager.setAdultAccount(isAdultAccount),
+                /* errorLogger= */ null);
     }
 
     /**
@@ -2386,39 +1964,58 @@ public class ConsentManager {
 
     /** Set the U18NotificationDisplayed bit to storage based on consent_source_of_truth. */
     public void setU18NotificationDisplayed(boolean wasU18NotificationDisplayed) {
-        executeSetter(
-                ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED,
-                wasU18NotificationDisplayed,
-                mAdServicesManager::setU18NotificationDisplayed,
-                mAppSearchConsentManager::setU18NotificationDisplayed);
+        executeSettersByConsentSourceOfTruth(
+                () ->
+                        mDatastore.put(
+                                ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED,
+                                wasU18NotificationDisplayed),
+                () -> mAdServicesManager.setU18NotificationDisplayed(wasU18NotificationDisplayed),
+                () ->
+                        mAppSearchConsentManager.setU18NotificationDisplayed(
+                                wasU18NotificationDisplayed),
+                /* errorLogger= */ null);
     }
 
     @FunctionalInterface
-    interface ThrowableSetter<T> {
-        void apply(T t) throws IOException, RuntimeException;
+    interface ThrowableSetter {
+        void apply() throws IOException, RuntimeException;
     }
 
-    private <T> void executeSetter(
-            String consentConstant,
-            T t,
-            ThrowableSetter<T> systemServiceFunction,
-            ThrowableSetter<T> appSearchFunction) {
+    @FunctionalInterface
+    interface ErrorLogger {
+        void apply(Exception e);
+    }
+
+    /**
+     * Generic setter that saves consent data to diffrerent data stores based on the consent source
+     * of truth.
+     *
+     * @param appSetter Function that saves consent data to the app storage.
+     * @param systemServiceSetter Function that saves consent data to the system server.
+     * @param appSearchSetter Function that saves consent data to the appsearch.
+     * @param errorLogger Function that logs exceptions during write operations.
+     */
+    private void executeSettersByConsentSourceOfTruth(
+            ThrowableSetter appSetter,
+            ThrowableSetter systemServiceSetter,
+            ThrowableSetter appSearchSetter,
+            ErrorLogger errorLogger) {
         synchronized (LOCK) {
             try {
                 switch (mConsentSourceOfTruth) {
                     case Flags.PPAPI_ONLY:
-                        mDatastore.put(consentConstant, (boolean) t);
+                        appSetter.apply();
                         break;
                     case Flags.SYSTEM_SERVER_ONLY:
-                        systemServiceFunction.apply(t);
+                        systemServiceSetter.apply();
                         break;
                     case Flags.PPAPI_AND_SYSTEM_SERVER:
-                        mDatastore.put(consentConstant, (boolean) t);
-                        systemServiceFunction.apply(t);
+                        appSetter.apply();
+                        systemServiceSetter.apply();
                         break;
                     case Flags.APPSEARCH_ONLY:
                         if (mFlags.getEnableAppsearchConsentData()) {
-                            appSearchFunction.apply(t);
+                            appSearchSetter.apply();
                         }
                         break;
                     default:
@@ -2426,9 +2023,9 @@ public class ConsentManager {
                                 ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
                 }
             } catch (IOException | RuntimeException e) {
+                errorLogger.apply(e);
                 throw new RuntimeException(
                         getClass().getSimpleName()
-                                + consentConstant
                                 + " failed. "
                                 + e.getMessage());
             }
