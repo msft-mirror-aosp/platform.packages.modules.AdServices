@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
+// TODO(b/243062789): Test should not use CountDownLatch or Sleep.
 @RunWith(JUnit4.class)
 public class TopicsManagerTest {
     private static final String TAG = "TopicsManagerTest";
@@ -70,7 +71,8 @@ public class TopicsManagerTest {
     // Threshold value for classifier confidence set to 0 to allow all topics and avoid filtering.
     private static final float TEST_CLASSIFIER_THRESHOLD = 0.0f;
     // ON_DEVICE_CLASSIFIER
-    private static final int TEST_CLASSIFIER_TYPE = 1;
+    private static final int ON_DEVICE_CLASSIFIER_TYPE = 1;
+    private static final int PRECOMPUTED_CLASSIFIER_TYPE = 2;
 
     // Classifier default constants.
     private static final int DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS = 3;
@@ -244,7 +246,7 @@ public class TopicsManagerTest {
     private void testTopicsManager_runOnDeviceClassifier(boolean useGetMethodToCreateManager)
             throws Exception {
         // Set classifier flag to use on-device classifier.
-        overrideClassifierType(TEST_CLASSIFIER_TYPE);
+        overrideClassifierType(ON_DEVICE_CLASSIFIER_TYPE);
 
         // Set number of top labels returned by the on-device classifier to 5.
         overrideClassifierNumberOfTopLabels(TEST_CLASSIFIER_NUMBER_OF_TOP_LABELS);
@@ -314,6 +316,70 @@ public class TopicsManagerTest {
         overrideClassifierNumberOfTopLabels(DEFAULT_CLASSIFIER_NUMBER_OF_TOP_LABELS);
         // Set classifier threshold back to default.
         overrideClassifierThreshold(DEFAULT_CLASSIFIER_THRESHOLD);
+    }
+
+    @Test
+    public void testTopicsManager_runPrecomputedClassifier_usingGetMethodToCreateManager()
+            throws Exception {
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ true);
+    }
+
+    @Test
+    public void testTopicsManager_runPrecomputedClassifier() throws Exception {
+        testTopicsManager_runPrecomputedClassifier(/* useGetMethodToCreateManager = */ false);
+    }
+
+    private void testTopicsManager_runPrecomputedClassifier(boolean useGetMethodToCreateManager)
+            throws Exception {
+        // Set classifier flag to use precomputed classifier.
+        overrideClassifierType(PRECOMPUTED_CLASSIFIER_TYPE);
+
+        // The Test App has 1 SDK: sdk4
+        // sdk4 calls the Topics API.
+        AdvertisingTopicsClient advertisingTopicsClient4 =
+                new AdvertisingTopicsClient.Builder()
+                        .setContext(sContext)
+                        .setSdkName("sdk4")
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .setUseGetMethodToCreateManagerInstance(useGetMethodToCreateManager)
+                        .build();
+
+        // At beginning, Sdk4 receives no topic.
+        GetTopicsResponse sdk4Result = advertisingTopicsClient4.getTopics().get();
+        assertThat(sdk4Result.getTopics()).isEmpty();
+
+        // Now force the Epoch Computation Job. This should be done in the same epoch for
+        // callersCanLearnMap to have the entry for processing.
+        forceEpochComputationJob();
+
+        // Wait to the next epoch. We will not need to do this after we implement the fix in
+        // go/rb-topics-epoch-scheduling
+        Thread.sleep(TEST_EPOCH_JOB_PERIOD_MS);
+
+        // Since the sdk4 called the Topics API in the previous Epoch, it should receive some topic.
+        sdk4Result = advertisingTopicsClient4.getTopics().get();
+        assertThat(sdk4Result.getTopics()).isNotEmpty();
+
+        // We only have 5 topics classified by the precomputed classifier.
+        // The app will be assigned one random topic from one of these 5 topics.
+        assertThat(sdk4Result.getTopics()).hasSize(1);
+        Topic topic = sdk4Result.getTopics().get(0);
+
+        // Expected asset versions to be bundled in the build.
+        // If old assets are being picked up, repo sync, build and install the new apex again.
+        assertWithMessage(INCORRECT_MODEL_VERSION_MESSAGE)
+                .that(topic.getModelVersion())
+                .isEqualTo(EXPECTED_MODEL_VERSION);
+        assertWithMessage(INCORRECT_TAXONOMY_VERSION_MESSAGE)
+                .that(topic.getTaxonomyVersion())
+                .isEqualTo(EXPECTED_TAXONOMY_VERSION);
+
+        // Top 5 topic ids as listed in precomputed_app_list.csv
+        List<Integer> expectedTopTopicIds = Arrays.asList(10147, 10253, 10175, 10254, 10333);
+        assertThat(topic.getTopicId()).isIn(expectedTopTopicIds);
+
+        // Set classifier flag back to default.
+        overrideClassifierType(DEFAULT_CLASSIFIER_TYPE);
     }
 
     private void overrideTopicsKillSwitch(boolean val) {
