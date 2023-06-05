@@ -52,6 +52,15 @@ public class AppsActivity extends AdServicesBaseActivity {
         initActionDelegate();
     }
 
+    @Override
+    public void initBeta() {}
+
+    @Override
+    public void initGA() {}
+
+    @Override
+    public void initU18() {}
+
     private void initActionDelegate() {
         mActionDelegate =
                 new AppsActionDelegate(this, new ViewModelProvider(this).get(AppsViewModel.class));
