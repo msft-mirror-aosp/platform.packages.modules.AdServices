@@ -42,12 +42,13 @@ public class ReportEventRequestTest {
     @Test
     public void testBuildReportEventRequestSuccess() throws Exception {
         ReportEventRequest request =
-                new ReportEventRequest(
-                        AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS);
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                        .build();
 
         assertEquals(AD_SELECTION_ID, request.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, request.getEventKey());
-        assertEquals(mInteractionData, request.getEventData());
+        assertEquals(INTERACTION_KEY, request.getKey());
+        assertEquals(mInteractionData, request.getData());
         assertEquals(DESTINATIONS, request.getReportingDestinations());
     }
 
@@ -56,7 +57,9 @@ public class ReportEventRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportEventRequest(0, INTERACTION_KEY, mInteractionData, DESTINATIONS);
+                    new ReportEventRequest.Builder(
+                                    0, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                            .build();
                 });
     }
 
@@ -65,7 +68,9 @@ public class ReportEventRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportEventRequest(AD_SELECTION_ID, null, mInteractionData, DESTINATIONS);
+                    new ReportEventRequest.Builder(
+                                    AD_SELECTION_ID, null, mInteractionData, DESTINATIONS)
+                            .build();
                 });
     }
 
@@ -74,7 +79,9 @@ public class ReportEventRequestTest {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    new ReportEventRequest(AD_SELECTION_ID, INTERACTION_KEY, null, DESTINATIONS);
+                    new ReportEventRequest.Builder(
+                                    AD_SELECTION_ID, INTERACTION_KEY, null, DESTINATIONS)
+                            .build();
                 });
     }
 
@@ -83,7 +90,20 @@ public class ReportEventRequestTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> {
-                    new ReportEventRequest(AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0);
+                    new ReportEventRequest.Builder(
+                                    AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0)
+                            .build();
+                });
+    }
+
+    @Test
+    public void testFailsToBuildWithInvalidDestinations() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> {
+                    new ReportEventRequest.Builder(
+                                    AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 5)
+                            .build();
                 });
     }
 }

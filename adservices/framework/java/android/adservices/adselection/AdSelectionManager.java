@@ -470,7 +470,7 @@ public class AdSelectionManager {
      *
      * <p>For each ad event a buyer/seller is interested in reports for, they would invoke {@code
      * registerAdBeacon}, where {@code event_key} is an identifier for that specific event. This
-     * {@code event_key} should match {@link ReportEventRequest#getEventKey()} when the SDK invokes
+     * {@code event_key} should match {@link ReportEventRequest#getKey()} when the SDK invokes
      * {@link #reportEvent}.
      *
      * <p>The output is passed by the {@code receiver}, which either returns an empty {@link Object}
@@ -535,15 +535,17 @@ public class AdSelectionManager {
 
     /**
      * Notifies the service that there is a new ad event to report for the ad selected by the
-     * ad-selection run identified by {@code adSelectionId}. There is no guarantee about when the ad
-     * event will be reported. The event reporting could be delayed and reports could be batched.
+     * ad-selection run identified by {@code adSelectionId}. An ad event is any occurrence that
+     * happens to an ad associated with the given {@code adSelectionId}. There is no guarantee about
+     * when the ad event will be reported. The event reporting could be delayed and reports could be
+     * batched.
      *
-     * <p>Using {@link ReportEventRequest#getEventKey()}, the service will fetch the {@code
-     * reportingUri} that was registered in {@code registerAdBeacon}. See documentation of {@link
+     * <p>Using {@link ReportEventRequest#getKey()}, the service will fetch the {@code reportingUri}
+     * that was registered in {@code registerAdBeacon}. See documentation of {@link
      * #reportImpression} for more details regarding {@code registerAdBeacon}. Then, the service
-     * will attach {@link ReportEventRequest#getEventData()} to the request body of a POST request
-     * and send the request. The body of the POST request will have the {@code content-type} of
-     * {@code text/plain}, and the data will be transmitted in {@code charset=UTF-8}.
+     * will attach {@link ReportEventRequest#getData()} to the request body of a POST request and
+     * send the request. The body of the POST request will have the {@code content-type} of {@code
+     * text/plain}, and the data will be transmitted in {@code charset=UTF-8}.
      *
      * <p>The output is passed by the receiver, which either returns an empty {@link Object} for a
      * successful run, or an {@link Exception} includes the type of the exception thrown and the
@@ -562,10 +564,7 @@ public class AdSelectionManager {
      * or permission is not requested.
      *
      * <p>Events will be reported at most once as a best-effort attempt.
-     *
-     * @hide
      */
-    // TODO(b/261812140): Unhide for report interaction API review
     @RequiresPermission(ACCESS_ADSERVICES_CUSTOM_AUDIENCE)
     public void reportEvent(
             @NonNull ReportEventRequest request,
@@ -580,8 +579,8 @@ public class AdSelectionManager {
             service.reportInteraction(
                     new ReportInteractionInput.Builder()
                             .setAdSelectionId(request.getAdSelectionId())
-                            .setInteractionKey(request.getEventKey())
-                            .setInteractionData(request.getEventData())
+                            .setInteractionKey(request.getKey())
+                            .setInteractionData(request.getData())
                             .setReportingDestinations(request.getReportingDestinations())
                             .setCallerPackageName(getCallerPackageName())
                             .build(),
