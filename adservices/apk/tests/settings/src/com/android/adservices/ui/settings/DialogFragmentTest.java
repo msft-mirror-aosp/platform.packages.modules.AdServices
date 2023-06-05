@@ -196,6 +196,11 @@ public class DialogFragmentTest {
         UiObject consentSwitch = ApkTestUtil.getConsentSwitch(sDevice);
         assertThat(consentSwitch.exists()).isTrue();
 
+        // guarantee in on state
+        if (!consentSwitch.isChecked()) {
+            consentSwitch.click();
+        }
+
         // click switch
         consentSwitch.click();
         UiObject dialogTitle =
