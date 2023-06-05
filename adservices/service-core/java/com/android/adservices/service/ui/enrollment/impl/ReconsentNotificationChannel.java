@@ -47,7 +47,7 @@ public class ReconsentNotificationChannel implements PrivacySandboxEnrollmentCha
     public void enroll(Context context, ConsentManager consentManager) {
         ConsentNotificationJobService.schedule(
                 context,
-                /* AdIdEnabled= */ consentManager.isAdIdEnabled(),
-                /* IsReconsent= */ true);
+                /* adidEnabled= */ consentManager.isAdIdEnabled(),
+                /* reConsentStatus= */ true);
     }
 }
