@@ -315,11 +315,12 @@ public class AdsScoreGeneratorImplTest {
                                 mMockWebServerRule.uriForPath(mTrustedScoringSignalsPath))
                         .build();
 
-        Answer<ListenableFuture<List<Double>>> loggerAnswer =
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
-                    return Futures.immediateFuture(scores);
+                    return Futures.immediateFuture(
+                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -427,11 +428,12 @@ public class AdsScoreGeneratorImplTest {
         }
 
         adsWithBid.addAll(contextualBidAds);
-        Answer<ListenableFuture<List<Double>>> loggerAnswer =
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
-                    return Futures.immediateFuture(scores);
+                    return Futures.immediateFuture(
+                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -569,11 +571,12 @@ public class AdsScoreGeneratorImplTest {
                         .build();
 
         adsWithBid.addAll(contextualBidAds);
-        Answer<ListenableFuture<List<Double>>> loggerAnswer =
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
-                    return Futures.immediateFuture(scores);
+                    return Futures.immediateFuture(
+                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -701,11 +704,12 @@ public class AdsScoreGeneratorImplTest {
         }
 
         adsWithBid.addAll(contextualBidAds);
-        Answer<ListenableFuture<List<Double>>> loggerAnswer =
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
-                    return Futures.immediateFuture(scores);
+                    return Futures.immediateFuture(
+                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
@@ -875,17 +879,18 @@ public class AdsScoreGeneratorImplTest {
                         mAdSelectionEntryDao,
                         mFlags,
                         mAdSelectionExecutionLogger);
-        Answer<ListenableFuture<List<Double>>> loggerAnswer =
+        Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
                 unused -> {
                     mAdSelectionExecutionLogger.startScoreAds();
                     mAdSelectionExecutionLogger.endScoreAds();
-                    return Futures.immediateFuture(scores);
+                    return Futures.immediateFuture(
+                            scores.stream().map(ScoreAdResult::of).collect(Collectors.toList()));
                 };
         Mockito.when(
                         mMockAdSelectionScriptEngine.scoreAds(
                                 differentSellerDecisionLogicJs,
                                 mAdBiddingOutcomeList.stream()
-                                        .map(a -> a.getAdWithBid())
+                                        .map(AdBiddingOutcome::getAdWithBid)
                                         .collect(Collectors.toList()),
                                 mAdSelectionConfig,
                                 mAdSelectionConfig.getSellerSignals(),
@@ -1356,4 +1361,3 @@ public class AdsScoreGeneratorImplTest {
         }
     }
 }
-
