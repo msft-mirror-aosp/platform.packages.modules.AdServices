@@ -25,7 +25,7 @@ import org.junit.Test;
 public class U18UxEnrollmentChannelCollectionTest {
     @Test
     public void u18UxEnrollmentChannelCollectionTest_cardinalityCheck() {
-        assertEquals(3, U18UxEnrollmentChannelCollection.values().length);
+        assertEquals(4, U18UxEnrollmentChannelCollection.values().length);
     }
 
     @Test
@@ -42,6 +42,9 @@ public class U18UxEnrollmentChannelCollectionTest {
         assertEquals(
                 U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL,
                 enrollmentChannelCollection[2]);
+        assertEquals(
+                U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL,
+                enrollmentChannelCollection[3]);
     }
 
     @Test
@@ -58,6 +61,12 @@ public class U18UxEnrollmentChannelCollectionTest {
                                         .FIRST_CONSENT_NOTIFICATION_CHANNEL
                                         .getPriority())
                 .isTrue();
+        assertThat(
+                        U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
+                                        .getPriority()
+                                < U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL
+                                        .getPriority())
+                .isTrue();
     }
 
     @Test
@@ -71,6 +80,8 @@ public class U18UxEnrollmentChannelCollectionTest {
         assertThat(
                         U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL
                                 .getEnrollmentChannel())
+                .isNotNull();
+        assertThat(U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL.getEnrollmentChannel())
                 .isNotNull();
     }
 }
