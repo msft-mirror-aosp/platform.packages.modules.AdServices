@@ -293,6 +293,16 @@ public class UxEngineTest {
                 .isNull();
     }
 
+    @Test
+    public void getEligibleEnrollmentChannelTest_gaUxGraduationDisabled() {
+        doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
+
+        assertThat(
+                        mUxEngine.getEligibleEnrollmentChannelCollection(
+                                PrivacySandboxUxCollection.GA_UX))
+                .isNull();
+    }
+
     // ====================================================================
     // getEligibleEnrollmentChannelTest_betaUx
     // ====================================================================
@@ -326,8 +336,18 @@ public class UxEngineTest {
                 .isEqualTo(BetaUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
     }
 
+    @Test
+    public void getEligibleEnrollmentChannelTest_betaUxU18User() {
+        doReturn(true).when(mConsentManager).wasU18NotificationDisplayed();
+
+        assertThat(
+                        mUxEngine.getEligibleEnrollmentChannelCollection(
+                                PrivacySandboxUxCollection.BETA_UX))
+                .isNull();
+    }
+
     // ====================================================================
-    // getEligibleEnrollmentChannelTest_u18Ux
+    // getEligibleEnrollmentChannelTest_U18Ux
     // ====================================================================
     @Test
     public void getEligibleEnrollmentChannelTest_u18UxConsentDebugModeOn() {
@@ -357,6 +377,26 @@ public class UxEngineTest {
                         mUxEngine.getEligibleEnrollmentChannelCollection(
                                 PrivacySandboxUxCollection.U18_UX))
                 .isEqualTo(U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
+    }
+
+    @Test
+    public void getEligibleEnrollmentChannelTest_u18UxDetention() {
+        doReturn(true).when(mConsentManager).wasGaUxNotificationDisplayed();
+
+        assertThat(
+                        mUxEngine.getEligibleEnrollmentChannelCollection(
+                                PrivacySandboxUxCollection.U18_UX))
+                .isEqualTo(U18UxEnrollmentChannelCollection.U18_DETENTION_CHANNEL);
+    }
+
+    @Test
+    public void getEligibleEnrollmentChannelTest_u18UxBetaUser() {
+        doReturn(true).when(mConsentManager).wasNotificationDisplayed();
+
+        assertThat(
+                        mUxEngine.getEligibleEnrollmentChannelCollection(
+                                PrivacySandboxUxCollection.U18_UX))
+                .isNull();
     }
 
     // =============================================================================================
