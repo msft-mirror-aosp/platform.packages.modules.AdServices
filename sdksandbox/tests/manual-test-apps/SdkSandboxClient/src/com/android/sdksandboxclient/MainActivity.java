@@ -35,6 +35,7 @@ import android.app.sdksandbox.LoadSdkException;
 import android.app.sdksandbox.RequestSurfacePackageException;
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
+import android.app.sdksandbox.SdkSandboxManager.SdkSandboxProcessDeathCallback;
 import android.app.sdksandbox.interfaces.IActivityStarter;
 import android.app.sdksandbox.interfaces.ISdkApi;
 import android.content.Context;
@@ -76,6 +77,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -122,7 +124,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button mResetPreferencesButton;
     private Button mLoadSdksButton;
-    private Button mDeathCallbackButton;
+    private Button mDeathCallbackAddButton;
+    private Button mDeathCallbackRemoveButton;
     private Button mNewBannerAdButton;
     private ImageButton mBannerAdOptionsButton;
     private Button mCreateFileButton;
@@ -137,6 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
     private SandboxedSdk mSandboxedSdk;
     private SharedPreferences mSharedPreferences;
+    private final Stack<SdkSandboxProcessDeathCallback> mDeathCallbacks = new Stack<>();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -176,7 +180,8 @@ public class MainActivity extends AppCompatActivity {
 
         mResetPreferencesButton = findViewById(R.id.reset_preferences_button);
         mLoadSdksButton = findViewById(R.id.load_sdks_button);
-        mDeathCallbackButton = findViewById(R.id.register_death_callback_button);
+        mDeathCallbackAddButton = findViewById(R.id.add_death_callback_button);
+        mDeathCallbackRemoveButton = findViewById(R.id.remove_death_callback_button);
 
         mNewBannerAdButton = findViewById(R.id.new_banner_ad_button);
         mBannerAdOptionsButton = findViewById(R.id.banner_ad_options_button);
@@ -192,7 +197,8 @@ public class MainActivity extends AppCompatActivity {
 
         registerResetPreferencesButton();
         registerLoadSdksButton();
-        registerDeathCallbackButton();
+        registerAddDeathCallbackButton();
+        registerRemoveDeathCallbackButton();
 
         registerNewBannerAdButton();
         registerBannerAdOptionsButton();
@@ -284,14 +290,40 @@ public class MainActivity extends AppCompatActivity {
         outState.putParcelable(SANDBOXED_SDK_KEY, mSandboxedSdk);
     }
 
-    private void registerDeathCallbackButton() {
-        mDeathCallbackButton.setOnClickListener(
+    private void registerAddDeathCallbackButton() {
+        mDeathCallbackAddButton.setOnClickListener(
                 v -> {
-                    // Register for sandbox death event.
-                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
-                            Runnable::run,
-                            () -> logAndDisplayMessage(INFO, "Sdk Sandbox process died"));
-                    logAndDisplayMessage(INFO, "Registered death callback");
+                    synchronized (mDeathCallbacks) {
+                        final int queueSize = mDeathCallbacks.size();
+                        SdkSandboxProcessDeathCallback deathCallback =
+                                () ->
+                                        logAndDisplayMessage(
+                                                INFO,
+                                                "Death callback #"
+                                                        + (queueSize + 1)
+                                                        + " notified.");
+                        mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                                Runnable::run, deathCallback);
+                        mDeathCallbacks.add(deathCallback);
+                        logAndDisplayMessage(
+                                INFO, "Death callback # " + (queueSize + 1) + " added.");
+                    }
+                });
+    }
+
+    private void registerRemoveDeathCallbackButton() {
+        mDeathCallbackRemoveButton.setOnClickListener(
+                v -> {
+                    synchronized (mDeathCallbacks) {
+                        if (mDeathCallbacks.isEmpty()) {
+                            logAndDisplayMessage(INFO, "No death callbacks to remove.");
+                            return;
+                        }
+                        final int queueSize = mDeathCallbacks.size();
+                        SdkSandboxProcessDeathCallback deathCallback = mDeathCallbacks.pop();
+                        mSdkSandboxManager.removeSdkSandboxProcessDeathCallback(deathCallback);
+                        logAndDisplayMessage(INFO, "Death callback #" + (queueSize) + " removed.");
+                    }
                 });
     }
 
