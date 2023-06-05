@@ -72,6 +72,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
     @NonNull protected final PerBuyerBiddingRunner mPerBuyerBiddingRunner;
     @NonNull protected final AdFilterer mAdFilterer;
     @NonNull protected final AdCounterKeyCopier mAdCounterKeyCopier;
+    @NonNull private final DebugReportingScriptStrategy mDebugReportingScriptStrategy;
 
     public OnDeviceAdSelectionRunner(
             @NonNull final Context context,
@@ -107,6 +108,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         Objects.requireNonNull(adFilterer);
         Objects.requireNonNull(adCounterKeyCopier);
 
+        mDebugReportingScriptStrategy = new DebugReportingEnabledScriptStrategy();
         mAdServicesHttpsClient = adServicesHttpsClient;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
@@ -116,7 +118,8 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
                                 context,
                                 () -> flags.getEnforceIsolateMaxHeapSize(),
                                 () -> flags.getIsolateMaxHeapSizeBytes(),
-                                mAdCounterKeyCopier),
+                                mAdCounterKeyCopier,
+                                mDebugReportingScriptStrategy),
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mScheduledExecutor,
@@ -193,6 +196,7 @@ public class OnDeviceAdSelectionRunner extends AdSelectionRunner {
         mPerBuyerBiddingRunner = perBuyerBiddingRunner;
         mAdFilterer = adFilterer;
         mAdCounterKeyCopier = adCounterKeyCopier;
+        mDebugReportingScriptStrategy = new DebugReportingScriptDisabledStrategy();
     }
 
     /**

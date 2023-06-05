@@ -259,7 +259,7 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         sLogger.v("Total Contextual Ads count: %d", contextualBidAds.size());
         adsWithBid.addAll(contextualBidAds);
 
-        FluentFuture<List<Double>> adScores =
+        FluentFuture<List<ScoreAdResult>> adScores =
                 trustedScoringSignals.transformAsync(
                         trustedSignals -> {
                             sLogger.v("Invoking JS engine to generate Ad Scores");
@@ -283,7 +283,10 @@ public class AdsScoreGeneratorImpl implements AdsScoreGenerator {
         return adScores.transform(
                         result -> {
                             Tracing.endAsyncSection(Tracing.SCORE_AD, traceCookie);
-                            return endSuccessfulGetAdScores(result);
+                            return endSuccessfulGetAdScores(
+                                    result.stream()
+                                            .map(ScoreAdResult::getAdScore)
+                                            .collect(Collectors.toList()));
                         },
                         mLightweightExecutorService)
                 .catching(
