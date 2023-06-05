@@ -1151,36 +1151,16 @@ public class InteractionReporterTest {
 
         mMockWebServerRule.startMockWebServer(List.of(new MockResponse(), new MockResponse()));
 
+        char[] largePayload = new char[65 * 1024]; // 65KB
+
         ReportInteractionInput inputParams =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setCallerPackageName(TEST_PACKAGE_NAME)
                         .setInteractionKey(CLICK_EVENT)
-                        .setInteractionData(mInteractionData)
+                        .setInteractionData(new String(largePayload))
                         .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
                         .build();
-
-        // Instantiate flags with small max interaction data size
-        Flags flags =
-                new Flags() {
-                    @Override
-                    public long getFledgeReportInteractionMaxInteractionDataSizeB() {
-                        return 1;
-                    }
-                };
-
-        // Re init interaction reporter with new flags
-        mInteractionReporter =
-                new InteractionReporter(
-                        mAdSelectionEntryDao,
-                        mHttpClient,
-                        mLightweightExecutorService,
-                        mBackgroundExecutorService,
-                        mAdServicesLoggerMock,
-                        flags,
-                        mAdSelectionServiceFilterMock,
-                        MY_UID,
-                        mFledgeAuthorizationFilterMock);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);

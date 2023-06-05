@@ -227,8 +227,6 @@ public final class PhFlags implements Flags {
     static final String
             KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B =
                     "fledge_report_impression_registered_ad_beacons_max_interaction_key_size_b";
-    static final String KEY_FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B =
-            "fledge_report_interaction_max_interaction_data_size_b";
     static final String KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS =
             "fledge_ad_selection_bidding_timeout_per_buyer_ms";
     static final String KEY_FLEDGE_HTTP_CACHE_ENABLE = "fledge_http_cache_enable";
@@ -1312,16 +1310,6 @@ public final class PhFlags implements Flags {
                 KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
                 /* defaultValue */
                 FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B);
-    }
-
-    @Override
-    public long getFledgeReportInteractionMaxInteractionDataSizeB() {
-        return DeviceConfig.getLong(
-                NAMESPACE_ADSERVICES,
-                /* flagName */
-                KEY_FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B,
-                /* defaultValue */
-                FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B);
     }
 
     @Override
@@ -3141,11 +3129,6 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B
                         + " = "
                         + getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB());
-        writer.println(
-                "\t"
-                        + KEY_FLEDGE_REPORT_INTERACTION_MAX_INTERACTION_DATA_SIZE_B
-                        + " = "
-                        + getFledgeReportInteractionMaxInteractionDataSizeB());
         writer.println(
                 "\t"
                         + KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
