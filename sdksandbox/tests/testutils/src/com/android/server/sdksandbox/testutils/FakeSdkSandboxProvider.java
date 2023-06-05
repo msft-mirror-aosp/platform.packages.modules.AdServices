@@ -38,6 +38,8 @@ public class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
     private final ArrayMap<CallingInfo, ISdkSandboxService> mService = new ArrayMap<>();
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
 
+    public static final String FAKE_DUMP_OUTPUT = "FakeDump";
+
     // When set to true, this will fail the bindService call
     private boolean mFailBinding = false;
 
@@ -127,7 +129,7 @@ public class FakeSdkSandboxProvider implements SdkSandboxServiceProvider {
 
     @Override
     public void dump(PrintWriter writer) {
-        writer.println("FakeDump");
+        writer.println(FAKE_DUMP_OUTPUT);
     }
 
     @NonNull
