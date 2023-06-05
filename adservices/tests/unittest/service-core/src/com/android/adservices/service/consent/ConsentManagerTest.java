@@ -2849,7 +2849,6 @@ public class ConsentManagerTest {
 
         ConsentManager consentManager =
                 new ConsentManager(
-                        mContextSpy,
                         topicsWorker,
                         mAppConsentDao,
                         mEnrollmentDao,
@@ -3306,7 +3305,6 @@ public class ConsentManagerTest {
     // Note this method needs to be invoked after other private variables are initialized.
     private ConsentManager getConsentManagerByConsentSourceOfTruth(int consentSourceOfTruth) {
         return new ConsentManager(
-                mContextSpy,
                 mTopicsWorker,
                 mAppConsentDao,
                 mEnrollmentDao,
