@@ -51,11 +51,6 @@ public final class DeleteUninstalledJobService extends JobService {
     private static final Executor sBackgroundExecutor = AdServicesExecutors.getBackgroundExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
         // Always ensure that the first thing this job does is check if it should be running, and
         // cancel itself if it's not supposed to be.
