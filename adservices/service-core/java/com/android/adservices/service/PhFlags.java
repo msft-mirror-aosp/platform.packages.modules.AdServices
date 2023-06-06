@@ -265,6 +265,11 @@ public final class PhFlags implements Flags {
             "fledge_event_level_debug_reporting_batch_delay_seconds";
     static final String KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH =
             "fledge_event_level_debug_reporting_max_items_per_batch";
+    static final String KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION =
+            "fledge_auction_server_compression_algorithm_version";
+    static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
+            "fledge_auction_server_payload_format_version";
+
     // Fledge invoking app status keys
     static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
             "fledge_ad_selection_enforce_foreground_status_run_ad_selection";
@@ -2064,6 +2069,22 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeAuctionServerCompressionAlgorithmVersion() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION,
+                FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION);
+    }
+
+    @Override
+    public int getFledgeAuctionServerPayloadFormatVersion() {
+        return DeviceConfig.getInt(
+                NAMESPACE_ADSERVICES,
+                KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION,
+                FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION);
+    }
+
+    @Override
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
@@ -3165,6 +3186,16 @@ public final class PhFlags implements Flags {
                         + KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED
                         + " = "
                         + getAdSelectionOffDeviceRequestCompressionEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION
+                        + " = "
+                        + getFledgeAuctionServerCompressionAlgorithmVersion());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION
+                        + " = "
+                        + getFledgeAuctionServerPayloadFormatVersion());
 
         writer.println(
                 "\t" + KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE + " = " + getEnforceIsolateMaxHeapSize());

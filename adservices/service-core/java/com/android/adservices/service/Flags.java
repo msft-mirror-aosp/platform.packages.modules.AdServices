@@ -856,6 +856,20 @@ public interface Flags {
         return FLEDGE_AD_SELECTION_OFF_DEVICE_REQUEST_COMPRESSION_ENABLED;
     }
 
+    int FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION = 0;
+
+    /** Returns the compression algorithm version */
+    default int getFledgeAuctionServerCompressionAlgorithmVersion() {
+        return FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
+    }
+
+    int FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION = 0;
+
+    /** Returns the payload formatter version */
+    default int getFledgeAuctionServerPayloadFormatVersion() {
+        return FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION;
+    }
+
     boolean ADSERVICES_ENABLED = false;
 
     default boolean getAdServicesEnabled() {
