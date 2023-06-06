@@ -27,7 +27,9 @@ public enum U18UxEnrollmentChannelCollection implements PrivacySandboxEnrollment
 
     ALREADY_ENROLLED_CHANNEL(/* priority= */ 1, new AlreadyEnrolledChannel()),
 
-    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel());
+    FIRST_CONSENT_NOTIFICATION_CHANNEL(/* priority= */ 2, new FirstConsentNotificationChannel()),
+
+    U18_DETENTION_CHANNEL(/* priority= */ 3, new U18DetentionChannel());
 
     private final int mPriority;
 
