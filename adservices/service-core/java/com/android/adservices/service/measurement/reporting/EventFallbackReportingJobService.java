@@ -52,11 +52,6 @@ public final class EventFallbackReportingJobService extends JobService {
     private static final Executor sBlockingExecutor = AdServicesExecutors.getBlockingExecutor();
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-    }
-
-    @Override
     public boolean onStartJob(JobParameters params) {
         // Always ensure that the first thing this job does is check if it should be running, and
         // cancel itself if it's not supposed to be.
