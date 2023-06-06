@@ -24,6 +24,7 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
+import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.clients.adselection.AdSelectionClient;
@@ -257,35 +258,33 @@ public class PermissionsNoPermTest {
         assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
-    // TODO(b/274723533): Uncomment after un-hiding the API
-    /*
-        @Test
-        public void testPermissionNotRequested_reportInteraction() {
-            long adSelectionId = 1;
-            String interactionKey = "click";
-            String interactionData = "{\"key\":\"value\"}";
+    @Test
+    public void testPermissionNotRequested_reportEvent() {
+        long adSelectionId = 1;
+        String eventKey = "click";
+        String eventData = "{\"key\":\"value\"}";
 
-            AdSelectionClient mAdSelectionClient =
-                    new AdSelectionClient.Builder()
-                            .setContext(sContext)
-                            .setExecutor(CALLBACK_EXECUTOR)
-                            .build();
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
 
-            ReportEventRequest request =
-                    new ReportEventRequest(
-                            adSelectionId,
-                            interactionKey,
-                            interactionData,
-                            ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
-                                    | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                adSelectionId,
+                                eventKey,
+                                eventData,
+                                ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER
+                                        | ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER)
+                        .build();
 
-            ExecutionException exception =
-                    assertThrows(
-                            ExecutionException.class,
-                            () -> mAdSelectionClient.reportInteraction(request).get());
-            assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
-        }
-    */
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.reportEvent(request).get());
+        assertThat(exception.getMessage()).isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
 
     @Test
     public void testPermissionNotRequested_fledgeOverrideAdSelectionConfigRemoteInfo() {
