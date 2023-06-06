@@ -140,10 +140,9 @@ public class AuctionServerPayloadFormatterV0 implements AuctionServerPayloadForm
         // Convert B to KB and round up if necessary
         int sizeInKB = (payloadSize + 1023) >> 10; // Equivalent to (sizeInBytes + 1023) / 1024
 
-        //        int bucketSizeKB = nextPowerOf2(sizeInKB); // get next power of two
         int bucketSizeKB = Arrays.binarySearch(AVAILABLE_BUCKET_SIZES_IN_KB, sizeInKB);
 
-        // Convert KB back to bytes and return
+        // Convert KB back to B
         return bucketSizeKB << 10; // Equivalent to bucketSizeKB * 1024
     }
 
