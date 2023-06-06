@@ -173,36 +173,38 @@ public class ConsentManager {
 
         if (sConsentManager == null) {
             synchronized (LOCK) {
-                // Execute one-time consent migration if needed.
-                int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
-                BooleanFileDatastore datastore = createAndInitializeDataStore(context);
-                AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
-
-                // It is possible that the old value of the flag lingers after OTA until the first
-                // PH sync. In that case, we should not use the stale value, but use the default
-                // instead. The next PH sync will restore the T+ value.
-                if (SdkLevel.isAtLeastT() && consentSourceOfTruth == Flags.APPSEARCH_ONLY) {
-                    consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
-                }
-                AppSearchConsentManager appSearchConsentManager = null;
-                // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to use
-                // AppSearch to write to or read from.
-                if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
-                    appSearchConsentManager = AppSearchConsentManager.getInstance(context);
-                    handleConsentMigrationFromAppSearchIfNeeded(
-                            context,
-                            datastore,
-                            appConsentDao,
-                            appSearchConsentManager,
-                            adServicesManager);
-                }
-
-                // Attempt to migrate consent data from PPAPI to System server if needed.
-                handleConsentMigrationIfNeeded(
-                        context, datastore, adServicesManager, consentSourceOfTruth);
-
                 if (sConsentManager == null) {
+                    // Execute one-time consent migration if needed.
+                    int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
+                    BooleanFileDatastore datastore = createAndInitializeDataStore(context);
+                    AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
+                    AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
+
+                    // It is possible that the old value of the flag lingers after OTA until the
+                    // first
+                    // PH sync. In that case, we should not use the stale value, but use the default
+                    // instead. The next PH sync will restore the T+ value.
+                    if (SdkLevel.isAtLeastT() && consentSourceOfTruth == Flags.APPSEARCH_ONLY) {
+                        consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+                    }
+                    AppSearchConsentManager appSearchConsentManager = null;
+                    // Flag enable_appsearch_consent_data is true on S- and T+ only when we want to
+                    // use
+                    // AppSearch to write to or read from.
+                    if (FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
+                        appSearchConsentManager = AppSearchConsentManager.getInstance(context);
+                        handleConsentMigrationFromAppSearchIfNeeded(
+                                context,
+                                datastore,
+                                appConsentDao,
+                                appSearchConsentManager,
+                                adServicesManager);
+                    }
+
+                    // Attempt to migrate consent data from PPAPI to System server if needed.
+                    handleConsentMigrationIfNeeded(
+                            context, datastore, adServicesManager, consentSourceOfTruth);
+
                     sConsentManager =
                             new ConsentManager(
                                     TopicsWorker.getInstance(context),
