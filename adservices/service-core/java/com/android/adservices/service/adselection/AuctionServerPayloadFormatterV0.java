@@ -19,8 +19,7 @@ package com.android.adservices.service.adselection;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;

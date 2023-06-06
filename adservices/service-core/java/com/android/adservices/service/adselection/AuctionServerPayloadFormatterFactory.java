@@ -17,8 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import com.android.adservices.LoggerFactory;
-
-import com.google.common.annotations.VisibleForTesting;
+import com.android.internal.annotations.VisibleForTesting;
 
 /** Factory for {@link AuctionServerPayloadFormatter} */
 public class AuctionServerPayloadFormatterFactory {

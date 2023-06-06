@@ -54,6 +54,7 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
+        "framework-annotations-lib",
     ],
     test_suites: [
         "general-tests",
@@ -104,6 +105,7 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
         "android.ext.adservices",
+        "framework-annotations-lib",
     ],
     test_suites: [
         "general-tests",
@@ -150,6 +152,7 @@ android_test {
         "android.test.base",
         "android.test.mock.stubs",
         "framework-adservices.impl",
+        "framework-annotations-lib",
     ],
     test_suites: [
         "general-tests",
@@ -196,6 +199,7 @@ android_test {
         "android.ext.adservices",
         "android.test.base",
         "android.test.mock.stubs",
+        "framework-annotations-lib",
     ],
     test_suites: [
         "general-tests",

@@ -33,6 +33,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.classifier.CommonClassifierHelper;
+import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.android.downloader.AndroidDownloaderLogger;
 import com.google.android.downloader.ConnectivityHandler;
@@ -57,7 +58,6 @@ import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigF
 import com.google.android.libraries.mobiledatadownload.populator.ManifestConfigOverrider;
 import com.google.android.libraries.mobiledatadownload.populator.ManifestFileGroupPopulator;
 import com.google.android.libraries.mobiledatadownload.populator.SharedPreferencesManifestFileMetadata;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;

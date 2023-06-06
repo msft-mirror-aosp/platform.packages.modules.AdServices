@@ -41,7 +41,10 @@ android_app {
     srcs: [
         "java/**/*.java",
     ],
-    libs: ["android.ext.adservices"],
+    libs: [
+        "android.ext.adservices",
+        "framework-annotations-lib",
+    ],
     optional_uses_libs: ["android.ext.adservices"],
     manifest: "AdExtServicesManifest.xml",
     package_name: "com.android.ext.adservices.api",
@@ -89,6 +92,7 @@ android_app {
     libs: [
         // Need it to access hidden stuff in framework-adservices.
         "framework-adservices.impl",
+        "framework-annotations-lib",
     ],
     static_libs: [
         "adservices-service-core",
