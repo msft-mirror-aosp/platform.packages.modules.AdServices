@@ -39,6 +39,8 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.measurement VERBOSE"/>
         <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
         <option name="run-command" value="device_config put adservices global_kill_switch false" />
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>

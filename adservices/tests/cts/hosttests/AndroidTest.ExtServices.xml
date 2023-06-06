@@ -36,6 +36,8 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
+        <option name="run-command" value="setprop log.tag.adservices.topics VERBOSE"/>
         <!-- Temporarily disable Device Config sync -->
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
