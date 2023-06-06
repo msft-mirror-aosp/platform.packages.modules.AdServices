@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.adselection.UpdateAdCounterHistogramRequest;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FrequencyCapFilters;
 
@@ -27,7 +28,6 @@ import androidx.test.filters.SmallTest;
 
 import org.junit.Test;
 
-// TODO(b/221876775): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class UpdateAdCounterHistogramRequestTest {
     private static final long VALID_AD_SELECTION_ID = 10;

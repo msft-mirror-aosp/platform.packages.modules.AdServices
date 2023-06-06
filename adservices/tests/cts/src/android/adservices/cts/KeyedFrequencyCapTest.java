@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.KeyedFrequencyCap;
+import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
@@ -32,7 +34,6 @@ import org.junit.Test;
 import java.time.Duration;
 
 /** Unit tests for {@link KeyedFrequencyCap}. */
-// TODO(b/221876775): Move to CTS tests once public APIs are unhidden
 @SmallTest
 public class KeyedFrequencyCapTest {
     @Test

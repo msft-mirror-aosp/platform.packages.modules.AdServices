@@ -192,19 +192,10 @@ public final class AdFilters implements Parcelable {
         return Objects.hash(mFrequencyCapFilters, mAppInstallFilters);
     }
 
+    // TODO(b/266837113) Add app install once it is unhidden
     @Override
     public String toString() {
-        return "AdFilters{" + generateFrequencyCapString() + generateAppInstallString() + "}";
-    }
-
-    private String generateFrequencyCapString() {
-        // TODO(b/221876775) Add fcap once it is unhidden
-        return "";
-    }
-
-    private String generateAppInstallString() {
-        // TODO(b/266837113) Add app install once it is unhidden
-        return "";
+        return "AdFilters{mFrequencyCapFilters=" + mFrequencyCapFilters + '}';
     }
 
     /** Builder for creating {@link AdFilters} objects. */
