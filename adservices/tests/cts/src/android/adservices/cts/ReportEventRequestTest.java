@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package android.adservices.adselection;
+package android.adservices.cts;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+
+import android.adservices.adselection.ReportEventRequest;
 
 import org.json.JSONObject;
 import org.junit.Before;
