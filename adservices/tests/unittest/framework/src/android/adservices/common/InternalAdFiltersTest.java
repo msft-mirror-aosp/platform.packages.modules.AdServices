@@ -36,7 +36,7 @@ import java.util.HashSet;
 /** Unit tests for {@link AdFilters}. */
 // TODO(b/273329939): Delete duplicates once CTS tests are unignored
 @SmallTest
-public class AdFiltersTest {
+public class InternalAdFiltersTest {
 
     private static final String DIFFERENT_PACKAGE_NAME =
             CommonFixture.TEST_PACKAGE_NAME_1 + "arbitrary";
@@ -151,21 +151,6 @@ public class AdFiltersTest {
         final AdFilters differentFilters = new AdFilters.Builder().build();
 
         assertThat(originalFilters.hashCode()).isNotEqualTo(differentFilters.hashCode());
-    }
-
-    @Test
-    public void testToString() {
-        // To avoid conflicts we want to disable this as soon as we unhide an API
-        if (!AdDataFixture.APP_INSTALL_ENABLED && !AdDataFixture.FCAP_ENABLED) {
-            final AdFilters originalFilters =
-                    new AdFilters.Builder()
-                            .setFrequencyCapFilters(
-                                    FrequencyCapFiltersFixture.VALID_FREQUENCY_CAP_FILTERS)
-                            .setAppInstallFilters(
-                                    AppInstallFiltersFixture.VALID_APP_INSTALL_FILTERS)
-                            .build();
-            assertThat(originalFilters.toString()).isEqualTo("AdFilters{}");
-        }
     }
 
     @Test

@@ -166,20 +166,11 @@ public final class AdData implements Parcelable {
                 + mRenderUri
                 + ", mMetadata='"
                 + mMetadata
-                + '\''
-                + generateAdCounterKeyString()
-                + generateAdFilterString()
+                + "', mAdCounterKeys="
+                + mAdCounterKeys
+                + ", mAdFilters="
+                + mAdFilters
                 + '}';
-    }
-
-    private String generateAdCounterKeyString() {
-        // TODO(b/221876775) Add ad counter keys String when unhidden
-        return "";
-    }
-
-    private String generateAdFilterString() {
-        // TODO(b/266837113) Add ad filters String when unhidden
-        return "";
     }
 
     /** Builder for {@link AdData} objects. */
