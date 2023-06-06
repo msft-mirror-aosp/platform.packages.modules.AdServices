@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 
 import com.android.internal.util.Preconditions;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -36,7 +37,7 @@ import java.util.Objects;
  */
 public final class GetAdSelectionDataResponse implements Parcelable {
     private final long mAdSelectionId;
-    @Nullable private final String mAdSelectionData;
+    private final byte[] mAdSelectionData;
 
     public static final Creator<GetAdSelectionDataResponse> CREATOR =
             new Creator<>() {
@@ -53,9 +54,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
                 }
             };
 
-    private GetAdSelectionDataResponse(long adSelectionId, @NonNull String adSelectionData) {
-        Objects.requireNonNull(adSelectionData);
-
+    private GetAdSelectionDataResponse(long adSelectionId, byte[] adSelectionData) {
         this.mAdSelectionId = adSelectionId;
         this.mAdSelectionData = adSelectionData;
     }
@@ -64,7 +63,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
         Objects.requireNonNull(in);
 
         this.mAdSelectionId = in.readLong();
-        this.mAdSelectionData = in.readString();
+        this.mAdSelectionData = in.createByteArray();
     }
 
     @Override
@@ -78,8 +77,13 @@ public final class GetAdSelectionDataResponse implements Parcelable {
     }
 
     /** Returns the adSelectionData that is collected from device. */
-    public String getAdSelectionData() {
-        return mAdSelectionData;
+    @Nullable
+    public byte[] getAdSelectionData() {
+        if (Objects.isNull(mAdSelectionData)) {
+            return null;
+        } else {
+            return Arrays.copyOf(mAdSelectionData, mAdSelectionData.length);
+        }
     }
 
     @Override
@@ -88,7 +92,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
         Objects.requireNonNull(mAdSelectionData);
 
         dest.writeLong(mAdSelectionId);
-        dest.writeString(mAdSelectionData);
+        dest.writeByteArray(mAdSelectionData);
     }
 
     /**
@@ -98,7 +102,7 @@ public final class GetAdSelectionDataResponse implements Parcelable {
      */
     public static final class Builder {
         private long mAdSelectionId;
-        @Nullable private String mAdSelectionData;
+        @Nullable private byte[] mAdSelectionData;
 
         public Builder() {}
 
@@ -111,10 +115,13 @@ public final class GetAdSelectionDataResponse implements Parcelable {
 
         /** Sets the adSelectionData. */
         @NonNull
-        public GetAdSelectionDataResponse.Builder setAdSelectionData(String adSelectionData) {
-            Objects.requireNonNull(adSelectionData);
-
-            this.mAdSelectionData = adSelectionData;
+        public GetAdSelectionDataResponse.Builder setAdSelectionData(
+                @Nullable byte[] adSelectionData) {
+            if (!Objects.isNull(adSelectionData)) {
+                this.mAdSelectionData = Arrays.copyOf(adSelectionData, adSelectionData.length);
+            } else {
+                this.mAdSelectionData = null;
+            }
             return this;
         }
 

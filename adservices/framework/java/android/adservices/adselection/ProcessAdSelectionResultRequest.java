@@ -27,6 +27,7 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -40,7 +41,7 @@ import java.util.Objects;
 public final class ProcessAdSelectionResultRequest implements Parcelable {
     private final long mAdSelectionId;
     @Nullable private final AdTechIdentifier mSeller;
-    @Nullable private final String mAdSelectionResult;
+    @Nullable private final byte[] mAdSelectionResult;
 
     @NonNull
     public static final Parcelable.Creator<ProcessAdSelectionResultRequest> CREATOR =
@@ -58,10 +59,10 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
                 }
             };
 
-    public ProcessAdSelectionResultRequest(
+    private ProcessAdSelectionResultRequest(
             long adSelectionId,
             @Nullable AdTechIdentifier seller,
-            @Nullable String adSelectionResult) {
+            @Nullable byte[] adSelectionResult) {
         this.mAdSelectionId = adSelectionId;
         this.mSeller = seller;
         this.mAdSelectionResult = adSelectionResult;
@@ -72,7 +73,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
 
         this.mAdSelectionId = in.readLong();
         this.mSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
-        this.mAdSelectionResult = in.readString();
+        this.mAdSelectionResult = in.createByteArray();
     }
 
     @Override
@@ -86,7 +87,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
 
         dest.writeLong(mAdSelectionId);
         mSeller.writeToParcel(dest, flags);
-        dest.writeString(mAdSelectionResult);
+        dest.writeByteArray(mAdSelectionResult);
     }
 
     /**
@@ -108,8 +109,12 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
      * @return an ad selection result.
      */
     @Nullable
-    public String getAdSelectionResult() {
-        return mAdSelectionResult;
+    public byte[] getAdSelectionResult() {
+        if (Objects.isNull(mAdSelectionResult)) {
+            return null;
+        } else {
+            return Arrays.copyOf(mAdSelectionResult, mAdSelectionResult.length);
+        }
     }
 
     @Override
@@ -119,12 +124,12 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         ProcessAdSelectionResultRequest that = (ProcessAdSelectionResultRequest) o;
         return mAdSelectionId == that.mAdSelectionId
                 && Objects.equals(mSeller, that.mSeller)
-                && Objects.equals(mAdSelectionResult, that.mAdSelectionResult);
+                && Arrays.equals(mAdSelectionResult, that.mAdSelectionResult);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mSeller, mAdSelectionResult);
+        return Objects.hash(mAdSelectionId, mSeller, Arrays.hashCode(mAdSelectionResult));
     }
 
     /**
@@ -135,7 +140,7 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
     public static final class Builder {
         private long mAdSelectionId;
         @Nullable private AdTechIdentifier mSeller;
-        @Nullable private String mAdSelectionResult;
+        @Nullable private byte[] mAdSelectionResult;
 
         public Builder() {}
 
@@ -157,8 +162,13 @@ public final class ProcessAdSelectionResultRequest implements Parcelable {
         /** Sets the ad selection result {@link String}. */
         @NonNull
         public ProcessAdSelectionResultRequest.Builder setAdSelectionResult(
-                @Nullable String adSelectionResult) {
-            this.mAdSelectionResult = adSelectionResult;
+                @Nullable byte[] adSelectionResult) {
+            if (!Objects.isNull(adSelectionResult)) {
+                this.mAdSelectionResult =
+                        Arrays.copyOf(adSelectionResult, adSelectionResult.length);
+            } else {
+                this.mAdSelectionResult = null;
+            }
             return this;
         }
 
