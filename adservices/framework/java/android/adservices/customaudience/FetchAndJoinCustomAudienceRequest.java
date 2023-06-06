@@ -37,15 +37,16 @@ import java.util.Objects;
  *
  * @hide
  */
-// TODO(b/278016822): Unhide for fetchCustomAudience API review.
-public class FetchCustomAudienceRequest {
+// TODO(b/278016822): Unhide for fetchAndJoinCustomAudience API review.
+public class FetchAndJoinCustomAudienceRequest {
     @NonNull private final Uri mFetchUri;
     @Nullable private final String mName;
     @Nullable private final Instant mActivationTime;
     @Nullable private final Instant mExpirationTime;
     @Nullable private final AdSelectionSignals mUserBiddingSignals;
 
-    private FetchCustomAudienceRequest(@NonNull FetchCustomAudienceRequest.Builder builder) {
+    private FetchAndJoinCustomAudienceRequest(
+            @NonNull FetchAndJoinCustomAudienceRequest.Builder builder) {
         Objects.requireNonNull(builder.mFetchUri);
 
         mFetchUri = builder.mFetchUri;
@@ -105,14 +106,14 @@ public class FetchCustomAudienceRequest {
     }
 
     /**
-     * @return {@code true} only if two {@link FetchCustomAudienceRequest} objects contain the same
-     *     information.
+     * @return {@code true} only if two {@link FetchAndJoinCustomAudienceRequest} objects contain
+     *     the same information.
      */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FetchCustomAudienceRequest)) return false;
-        FetchCustomAudienceRequest that = (FetchCustomAudienceRequest) o;
+        if (!(o instanceof FetchAndJoinCustomAudienceRequest)) return false;
+        FetchAndJoinCustomAudienceRequest that = (FetchAndJoinCustomAudienceRequest) o;
         return mFetchUri.equals(that.mFetchUri)
                 && Objects.equals(mName, that.mName)
                 && Objects.equals(mActivationTime, that.mActivationTime)
@@ -121,7 +122,7 @@ public class FetchCustomAudienceRequest {
     }
 
     /**
-     * @return the hash of the {@link FetchCustomAudienceRequest} object's data.
+     * @return the hash of the {@link FetchAndJoinCustomAudienceRequest} object's data.
      */
     @Override
     public int hashCode() {
@@ -130,11 +131,11 @@ public class FetchCustomAudienceRequest {
     }
 
     /**
-     * @return a human-readable representation of {@link FetchCustomAudienceRequest}.
+     * @return a human-readable representation of {@link FetchAndJoinCustomAudienceRequest}.
      */
     @Override
     public String toString() {
-        return "FetchCustomAudienceRequest{"
+        return "FetchAndJoinCustomAudienceRequest{"
                 + "fetchUri="
                 + mFetchUri
                 + ", name="
@@ -148,7 +149,7 @@ public class FetchCustomAudienceRequest {
                 + '}';
     }
 
-    /** Builder for {@link FetchCustomAudienceRequest} objects. */
+    /** Builder for {@link FetchAndJoinCustomAudienceRequest} objects. */
     public static final class Builder {
         @NonNull private Uri mFetchUri;
         @Nullable private String mName;
@@ -157,8 +158,8 @@ public class FetchCustomAudienceRequest {
         @Nullable private AdSelectionSignals mUserBiddingSignals;
 
         /**
-         * Instantiates a {@link FetchCustomAudienceRequest.Builder} with the {@link Uri} from which
-         * the custom audience is to be fetched.
+         * Instantiates a {@link FetchAndJoinCustomAudienceRequest.Builder} with the {@link Uri}
+         * from which the custom audience is to be fetched.
          */
         public Builder(@NonNull Uri fetchUri) {
             Objects.requireNonNull(fetchUri);
@@ -223,14 +224,14 @@ public class FetchCustomAudienceRequest {
         }
 
         /**
-         * Builds an instance of a {@link FetchCustomAudienceRequest}.
+         * Builds an instance of a {@link FetchAndJoinCustomAudienceRequest}.
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
         @NonNull
-        public FetchCustomAudienceRequest build() {
+        public FetchAndJoinCustomAudienceRequest build() {
             Objects.requireNonNull(mFetchUri);
-            return new FetchCustomAudienceRequest(this);
+            return new FetchAndJoinCustomAudienceRequest(this);
         }
     }
 }

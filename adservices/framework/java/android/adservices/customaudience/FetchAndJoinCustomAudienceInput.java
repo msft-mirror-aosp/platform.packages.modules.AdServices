@@ -32,11 +32,11 @@ import java.util.Objects;
  * The input object wrapping the required and optional parameters needed to fetch a {@link
  * CustomAudience}.
  *
- * <p>Refer to {@link FetchCustomAudienceRequest} for more information about the parameters.
+ * <p>Refer to {@link FetchAndJoinCustomAudienceRequest} for more information about the parameters.
  *
  * @hide
  */
-public final class FetchCustomAudienceInput implements Parcelable {
+public final class FetchAndJoinCustomAudienceInput implements Parcelable {
     @NonNull private final Uri mFetchUri;
     @NonNull private final String mCallerPackageName;
     @Nullable private final String mName;
@@ -45,23 +45,24 @@ public final class FetchCustomAudienceInput implements Parcelable {
     @Nullable private final AdSelectionSignals mUserBiddingSignals;
 
     @NonNull
-    public static final Creator<FetchCustomAudienceInput> CREATOR =
-            new Creator<FetchCustomAudienceInput>() {
+    public static final Creator<FetchAndJoinCustomAudienceInput> CREATOR =
+            new Creator<FetchAndJoinCustomAudienceInput>() {
                 @NonNull
                 @Override
-                public FetchCustomAudienceInput createFromParcel(@NonNull Parcel in) {
+                public FetchAndJoinCustomAudienceInput createFromParcel(@NonNull Parcel in) {
                     Objects.requireNonNull(in);
-                    return new FetchCustomAudienceInput(in);
+                    return new FetchAndJoinCustomAudienceInput(in);
                 }
 
                 @NonNull
                 @Override
-                public FetchCustomAudienceInput[] newArray(int size) {
-                    return new FetchCustomAudienceInput[size];
+                public FetchAndJoinCustomAudienceInput[] newArray(int size) {
+                    return new FetchAndJoinCustomAudienceInput[size];
                 }
             };
 
-    private FetchCustomAudienceInput(@NonNull FetchCustomAudienceInput.Builder builder) {
+    private FetchAndJoinCustomAudienceInput(
+            @NonNull FetchAndJoinCustomAudienceInput.Builder builder) {
         Objects.requireNonNull(builder);
 
         mFetchUri = builder.mFetchUri;
@@ -72,7 +73,7 @@ public final class FetchCustomAudienceInput implements Parcelable {
         mCallerPackageName = builder.mCallerPackageName;
     }
 
-    private FetchCustomAudienceInput(@NonNull Parcel in) {
+    private FetchAndJoinCustomAudienceInput(@NonNull Parcel in) {
         Objects.requireNonNull(in);
 
         mFetchUri = Uri.CREATOR.createFromParcel(in);
@@ -177,14 +178,14 @@ public final class FetchCustomAudienceInput implements Parcelable {
     }
 
     /**
-     * @return {@code true} only if two {@link FetchCustomAudienceInput} objects contain the same
-     *     information.
+     * @return {@code true} only if two {@link FetchAndJoinCustomAudienceInput} objects contain the
+     *     same information.
      */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof FetchCustomAudienceInput)) return false;
-        FetchCustomAudienceInput that = (FetchCustomAudienceInput) o;
+        if (!(o instanceof FetchAndJoinCustomAudienceInput)) return false;
+        FetchAndJoinCustomAudienceInput that = (FetchAndJoinCustomAudienceInput) o;
         return mFetchUri.equals(that.mFetchUri)
                 && mCallerPackageName.equals(that.mCallerPackageName)
                 && Objects.equals(mName, that.mName)
@@ -194,7 +195,7 @@ public final class FetchCustomAudienceInput implements Parcelable {
     }
 
     /**
-     * @return the hash of the {@link FetchCustomAudienceInput} object's data.
+     * @return the hash of the {@link FetchAndJoinCustomAudienceInput} object's data.
      */
     @Override
     public int hashCode() {
@@ -208,11 +209,11 @@ public final class FetchCustomAudienceInput implements Parcelable {
     }
 
     /**
-     * @return a human-readable representation of {@link FetchCustomAudienceInput}.
+     * @return a human-readable representation of {@link FetchAndJoinCustomAudienceInput}.
      */
     @Override
     public String toString() {
-        return "FetchCustomAudienceInput{"
+        return "FetchAndJoinCustomAudienceInput{"
                 + "fetchUri="
                 + mFetchUri
                 + ", name="
@@ -229,7 +230,7 @@ public final class FetchCustomAudienceInput implements Parcelable {
     }
 
     /**
-     * Builder for {@link FetchCustomAudienceInput} objects.
+     * Builder for {@link FetchAndJoinCustomAudienceInput} objects.
      *
      * @hide
      */
@@ -242,8 +243,8 @@ public final class FetchCustomAudienceInput implements Parcelable {
         @Nullable private AdSelectionSignals mUserBiddingSignals;
 
         /**
-         * Instantiates a {@link FetchCustomAudienceInput.Builder} with the {@link Uri} from which
-         * the custom audience is to be fetched and the caller app's package name.
+         * Instantiates a {@link FetchAndJoinCustomAudienceInput.Builder} with the {@link Uri} from
+         * which the custom audience is to be fetched and the caller app's package name.
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
@@ -325,16 +326,16 @@ public final class FetchCustomAudienceInput implements Parcelable {
         }
 
         /**
-         * Builds an instance of a {@link FetchCustomAudienceInput}.
+         * Builds an instance of a {@link FetchAndJoinCustomAudienceInput}.
          *
          * @throws NullPointerException if any non-null parameter is null.
          */
         @NonNull
-        public FetchCustomAudienceInput build() {
+        public FetchAndJoinCustomAudienceInput build() {
             Objects.requireNonNull(mFetchUri);
             Objects.requireNonNull(mCallerPackageName);
 
-            return new FetchCustomAudienceInput(this);
+            return new FetchAndJoinCustomAudienceInput(this);
         }
     }
 }
