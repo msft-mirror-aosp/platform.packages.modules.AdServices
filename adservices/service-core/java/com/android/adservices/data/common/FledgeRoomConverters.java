@@ -24,10 +24,17 @@ import androidx.annotation.Nullable;
 import androidx.room.TypeConverter;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.ohttp.EncapsulatedSharedSecret;
+import com.android.adservices.ohttp.HpkeContextNativeRef;
+import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
+
+import com.google.common.base.Preconditions;
 
 import org.json.JSONArray;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -96,6 +103,48 @@ public class FledgeRoomConverters {
     @Nullable
     public static AdSelectionSignals deserializeAdSelectionSignals(@Nullable String signals) {
         return Optional.ofNullable(signals).map(AdSelectionSignals::fromString).orElse(null);
+    }
+
+    /** Serialize an {@link com.android.adservices.ohttp.EncapsulatedSharedSecret} to String. */
+    @TypeConverter
+    public static String serializeEncapsulatedSharedSecret(
+            EncapsulatedSharedSecret encapsulatedSharedSecret) {
+        Preconditions.checkNotNull(encapsulatedSharedSecret, "Encapsulated shared secret is null.");
+        return new String(encapsulatedSharedSecret.serializeToBytes(), StandardCharsets.UTF_8);
+    }
+
+    /** Deserialize an {@link EncapsulatedSharedSecret} from a String. */
+    @TypeConverter
+    public static EncapsulatedSharedSecret deserializeEncapsulatedSharedSecret(String secret) {
+        Preconditions.checkNotNull(secret, "Serialized secret is null.");
+        return EncapsulatedSharedSecret.create(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** Serialize a {@link com.android.adservices.ohttp.HpkeContextNativeRef}. */
+    @TypeConverter
+    public static long serializeHpkeContextNativeRef(HpkeContextNativeRef hpkeContextNativeRef) {
+        Preconditions.checkNotNull(hpkeContextNativeRef, "HpkeContextNativeRef is null.");
+        return hpkeContextNativeRef.serialize();
+    }
+
+    /** Deserialize a {@link HpkeContextNativeRef}. */
+    @TypeConverter
+    public static HpkeContextNativeRef deserializeHpkeContextNativeRef(long nativeRef) {
+        return HpkeContextNativeRef.fromNativeRefAddress(nativeRef);
+    }
+
+    /** Serialize a {@link ObliviousHttpKeyConfig}. */
+    @TypeConverter
+    public static String serializeObliviousHttpKeyConfig(ObliviousHttpKeyConfig keyConfig) {
+        return Base64.getEncoder().encodeToString(keyConfig.serializeKeyConfigToBytes());
+    }
+
+    /** Deserialize a String to {@link ObliviousHttpKeyConfig}. */
+    @TypeConverter
+    public static ObliviousHttpKeyConfig deserializeObliviousHttpKeyConfig(String keyConfig)
+            throws Exception {
+        return ObliviousHttpKeyConfig.fromSerializedKeyConfig(
+                Base64.getDecoder().decode(keyConfig));
     }
 
     /** Serialize a {@link Set} of Strings into a JSON array as a String. */
