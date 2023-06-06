@@ -39,6 +39,17 @@ public class KeyedFrequencyCapFixture {
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY3).build(),
                     getValidKeyedFrequencyCapBuilderOncePerDay(KEY4).build());
 
+    public static ImmutableList<KeyedFrequencyCap> getExcessiveNumberOfFrequencyCapsList() {
+        ImmutableList.Builder<KeyedFrequencyCap> listBuilder = ImmutableList.builder();
+
+        // Add just one more than the limit
+        for (int key = 0; key <= FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS; key++) {
+            listBuilder.add(getValidKeyedFrequencyCapBuilderOncePerDay(key).build());
+        }
+
+        return listBuilder.build();
+    }
+
     public static KeyedFrequencyCap.Builder getValidKeyedFrequencyCapBuilderOncePerDay(int key) {
         return new KeyedFrequencyCap.Builder(key, FILTER_COUNT, ONE_DAY_DURATION);
     }

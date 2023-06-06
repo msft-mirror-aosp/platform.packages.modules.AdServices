@@ -102,6 +102,16 @@ public final class AdDataTest {
     }
 
     @Test
+    public void testSetExcessiveNumberOfAdCounterKeysThrows() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AdData.Builder()
+                                .setAdCounterKeys(
+                                        AdDataFixture.getExcessiveNumberOfAdCounterKeys()));
+    }
+
+    @Test
     public void testBuildUnsetAdCounterKeysSuccess() {
         AdData validAdData =
                 new AdData.Builder()
