@@ -44,6 +44,17 @@ public class AdDataFixture {
                 .build();
     }
 
+    public static ImmutableSet<Integer> getExcessiveNumberOfAdCounterKeys() {
+        ImmutableSet.Builder<Integer> setBuilder = ImmutableSet.builder();
+
+        // Add just one more than the limit
+        for (int key = 0; key <= AdData.MAX_NUM_AD_COUNTER_KEYS; key++) {
+            setBuilder.add(key);
+        }
+
+        return setBuilder.build();
+    }
+
     public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }

@@ -25,6 +25,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.internal.util.Preconditions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,11 +41,19 @@ import java.util.concurrent.Executor;
 /**
  * A container for the ad filters that are based on frequency caps.
  *
+ * <p>No more than 20 frequency cap filters may be associated with a single ad.
+ *
  * <p>Frequency caps filters combine an event type with a list of {@link KeyedFrequencyCap} objects
  * to define a collection of ad filters. If any of these frequency caps are exceeded for a given ad,
  * the ad will be removed from the group of ads submitted to a buyer adtech's bidding function.
  */
 public final class FrequencyCapFilters implements Parcelable {
+    /** @hide */
+    public static final String NUM_FREQUENCY_CAP_FILTERS_EXCEEDED_FORMAT =
+            "FrequencyCapFilters should have no more than %d filters";
+    /** @hide */
+    public static final int MAX_NUM_FREQUENCY_CAP_FILTERS = 20;
+
     /**
      * Event types which are used to update ad counter histograms, which inform frequency cap
      * filtering in Protected Audience.
@@ -403,9 +412,34 @@ public final class FrequencyCapFilters implements Parcelable {
             return this;
         }
 
-        /** Builds and returns a {@link FrequencyCapFilters} instance. */
+        /**
+         * Builds and returns a {@link FrequencyCapFilters} instance.
+         *
+         * <p>No more than 20 frequency cap filters may be associated with a single ad. If more
+         * total filters than the limit have been set, an {@link IllegalArgumentException} will be
+         * thrown.
+         */
         @NonNull
         public FrequencyCapFilters build() {
+            int numFrequencyCapFilters = 0;
+            if (mKeyedFrequencyCapsForWinEvents != null) {
+                numFrequencyCapFilters += mKeyedFrequencyCapsForWinEvents.size();
+            }
+            if (mKeyedFrequencyCapsForImpressionEvents != null) {
+                numFrequencyCapFilters += mKeyedFrequencyCapsForImpressionEvents.size();
+            }
+            if (mKeyedFrequencyCapsForViewEvents != null) {
+                numFrequencyCapFilters += mKeyedFrequencyCapsForViewEvents.size();
+            }
+            if (mKeyedFrequencyCapsForClickEvents != null) {
+                numFrequencyCapFilters += mKeyedFrequencyCapsForClickEvents.size();
+            }
+
+            Preconditions.checkArgument(
+                    numFrequencyCapFilters <= MAX_NUM_FREQUENCY_CAP_FILTERS,
+                    NUM_FREQUENCY_CAP_FILTERS_EXCEEDED_FORMAT,
+                    MAX_NUM_FREQUENCY_CAP_FILTERS);
+
             return new FrequencyCapFilters(this);
         }
     }
