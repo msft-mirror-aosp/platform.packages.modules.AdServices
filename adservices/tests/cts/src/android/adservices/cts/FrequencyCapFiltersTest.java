@@ -22,10 +22,13 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.FrequencyCapFiltersFixture;
+import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
 import androidx.test.filters.SmallTest;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 
@@ -198,5 +201,83 @@ public class FrequencyCapFiltersTest {
         assertThat(originalFilters.getKeyedFrequencyCapsForImpressionEvents()).isEmpty();
         assertThat(originalFilters.getKeyedFrequencyCapsForViewEvents()).isEmpty();
         assertThat(originalFilters.getKeyedFrequencyCapsForClickEvents()).isEmpty();
+    }
+
+    @Test
+    public void testBuildExcessiveNumberOfWinFilters_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForWinEvents(
+                                        KeyedFrequencyCapFixture
+                                                .getExcessiveNumberOfFrequencyCapsList())
+                                .build());
+    }
+
+    @Test
+    public void testBuildExcessiveNumberOfImpressionFilters_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForImpressionEvents(
+                                        KeyedFrequencyCapFixture
+                                                .getExcessiveNumberOfFrequencyCapsList())
+                                .build());
+    }
+
+    @Test
+    public void testBuildExcessiveNumberOfViewFilters_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForViewEvents(
+                                        KeyedFrequencyCapFixture
+                                                .getExcessiveNumberOfFrequencyCapsList())
+                                .build());
+    }
+
+    @Test
+    public void testBuildExcessiveNumberOfClickFilters_throws() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new FrequencyCapFilters.Builder()
+                                .setKeyedFrequencyCapsForClickEvents(
+                                        KeyedFrequencyCapFixture
+                                                .getExcessiveNumberOfFrequencyCapsList())
+                                .build());
+    }
+
+    @Test
+    public void testBuildExcessiveNumberOfTotalFilters_throws() {
+        final int distributedNumFilters = FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS / 4;
+        ImmutableList.Builder<KeyedFrequencyCap> listBuilder = ImmutableList.builder();
+        for (int key = 0; key < distributedNumFilters; key++) {
+            listBuilder.add(
+                    KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(key)
+                            .build());
+        }
+
+        // Add a spread number of filters across the first three types
+        FrequencyCapFilters.Builder filtersBuilder =
+                new FrequencyCapFilters.Builder()
+                        .setKeyedFrequencyCapsForWinEvents(listBuilder.build())
+                        .setKeyedFrequencyCapsForImpressionEvents(listBuilder.build())
+                        .setKeyedFrequencyCapsForViewEvents(listBuilder.build());
+
+        // Add extra filters to the final list so that the total is exceeded
+        final int numExtraFiltersToExceed =
+                FrequencyCapFilters.MAX_NUM_FREQUENCY_CAP_FILTERS - (4 * distributedNumFilters) + 1;
+        for (int key = 0; key < numExtraFiltersToExceed; key++) {
+            listBuilder.add(
+                    KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(key)
+                            .build());
+        }
+        filtersBuilder.setKeyedFrequencyCapsForClickEvents(listBuilder.build());
+
+        assertThrows(IllegalArgumentException.class, filtersBuilder::build);
     }
 }
