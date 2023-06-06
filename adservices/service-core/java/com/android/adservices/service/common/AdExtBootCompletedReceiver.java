@@ -21,7 +21,6 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
@@ -79,7 +78,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             if (packageName == null
                     || packageName.endsWith(AdServicesCommon.ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
                 // Running within the AdServices package, so don't do anything.
@@ -131,7 +130,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             updateComponents(
                     context,
                     PackageManagerCompatUtils.CONSENT_ACTIVITIES_CLASSES,
@@ -153,7 +152,7 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
         Objects.requireNonNull(context);
 
         try {
-            String packageName = getPackageName(context);
+            String packageName = context.getPackageName();
             updateComponents(
                     context, PackageManagerCompatUtils.SERVICE_CLASSES, packageName, shouldEnable);
             LogUtil.d("Updated state of AdExtServices services: [enable=" + shouldEnable + "]");
@@ -187,11 +186,5 @@ public class AdExtBootCompletedReceiver extends BroadcastReceiver {
                             : PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
                     PackageManager.DONT_KILL_APP);
         }
-    }
-
-    private String getPackageName(Context context) throws PackageManager.NameNotFoundException {
-        PackageManager packageManager = context.getPackageManager();
-        PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
-        return packageInfo.packageName;
     }
 }
